@@ -1,0 +1,3 @@
+demo	file	original	adjusted	api difference
+hex-tactics	demos/hextactics/HexTacticsGame.scala	ObjectMap[Int, Vector2] (x3)	ObjectMap[java.lang.Integer, Vector2]	lls's ObjectMap keeps java's implicit `K <: java.lang.Object` bound (ENGINE-LIMITS G24; the narrow drop measured lls 0 -> 20 and was reverted)
+hex-tactics	demos/hextactics/HexTacticsGame.scala	hexCenters.get(key)	hexCenters.get(java.lang.Integer.valueOf(key))	same: `get[T <: K]` cannot bind `T` to `Int` under that bound

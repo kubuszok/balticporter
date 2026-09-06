@@ -1335,7 +1335,15 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
     Compile / unmanagedSourceDirectories ++= {
       val demos = (ThisBuild / baseDirectory).value / ".." / "sge" / "demos"
       val picked = sys.env.getOrElse("DEMO_CHECK", DemoCheckAll).split(',').map(_.trim).filter(_.nonEmpty).toSeq
-      ("shared" +: picked).map(d => demos / d / "src" / "main" / "scala")
+      ("shared" +: picked).map(d => demos / d / "src" / "main" / "scala") :+
+        (ThisBuild / baseDirectory).value / "ported" / "demo-check" / "adjusted"
+    },
+    // an ADJUSTED copy under ported/demo-check/adjusted replaces sge's file of the same name
+    // (ported/demo-check/ADJUSTMENTS.tsv enumerates the differences; sge itself is never edited).
+    Compile / unmanagedSources := {
+      val all      = (Compile / unmanagedSources).value
+      val adjusted = all.filter(_.getPath.contains("/ported/demo-check/adjusted/")).map(_.getName).toSet
+      all.filterNot(f => adjusted(f.getName) && !f.getPath.contains("/ported/demo-check/adjusted/"))
     },
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
   )

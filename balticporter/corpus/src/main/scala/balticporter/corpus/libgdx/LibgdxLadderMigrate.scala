@@ -314,6 +314,12 @@ object LibgdxLadder:
             "def load[T <: java.lang.Object](fileName: java.lang.String, parameter: sge.assets.AssetLoaderParameters[T])(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]], parameter)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#load"),
             Some("sge's class-tag `load[T](fileName, parameter)` (PROGRESS.md §13.29)"), false)))),
+      // sge's `Screen` gives every lifecycle member but `render` an empty default (a screen overrides
+      // what it needs — the demos implement `show`/`render`/`resize`/`hide`/`close` only).
+      new balticporter.transform.MethodBodyTransform(Map(
+        "com.badlogic.gdx.Screen#show"   -> "{}", "com.badlogic.gdx.Screen#resize" -> "{}",
+        "com.badlogic.gdx.Screen#pause"  -> "{}", "com.badlogic.gdx.Screen#resume" -> "{}",
+        "com.badlogic.gdx.Screen#hide"   -> "{}")),
       // `AssetManager.get` answers `Nullable` in sge (the demos write `.get`); java throws on a miss.
       new balticporter.transform.NullabilityTransform(
         annotations     = Set.empty,

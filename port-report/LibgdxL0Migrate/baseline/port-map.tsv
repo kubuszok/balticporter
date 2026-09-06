@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=47873de358d64b4f	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=e74d4559aed6b63b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1529,12 +1529,12 @@ member	com.badlogic.gdx.Preferences#putLong(String,long)	sge.Preferences#putLong
 member	com.badlogic.gdx.Preferences#putString(String,String)	sge.Preferences#putString(String,String)	Renamed	-	com/badlogic/gdx/Preferences.java	49	69cfc9e8e678d805	
 member	com.badlogic.gdx.Preferences#remove(String)	sge.Preferences#remove(String)	Renamed	-	com/badlogic/gdx/Preferences.java	80	41ff7581e415fb54	
 member	com.badlogic.gdx.Screen#dispose()	sge.Screen#close()	Renamed	-	com/badlogic/gdx/Screen.java	51	c9f01cd8a619c417	
-member	com.badlogic.gdx.Screen#hide()	sge.Screen#hide()	Renamed	-	com/badlogic/gdx/Screen.java	48	035e0b987fdd75bd	
-member	com.badlogic.gdx.Screen#pause()	sge.Screen#pause()	Renamed	-	com/badlogic/gdx/Screen.java	42	5c0f514aec2c522e	
+member	com.badlogic.gdx.Screen#hide()	sge.Screen#hide()	Renamed	-	com/badlogic/gdx/Screen.java	48	44a4562bab1c53cc	
+member	com.badlogic.gdx.Screen#pause()	sge.Screen#pause()	Renamed	-	com/badlogic/gdx/Screen.java	42	13c6266849a3f6e9	
 member	com.badlogic.gdx.Screen#render(Seconds)	sge.Screen#render(Seconds)	Renamed	-	com/badlogic/gdx/Screen.java	36	f2045efe609087ac	
-member	com.badlogic.gdx.Screen#resize(Pixels,Pixels)	sge.Screen#resize(Pixels,Pixels)	Renamed	-	com/badlogic/gdx/Screen.java	39	2803600020007354	
-member	com.badlogic.gdx.Screen#resume()	sge.Screen#resume()	Renamed	-	com/badlogic/gdx/Screen.java	45	118705f09ad52b56	
-member	com.badlogic.gdx.Screen#show()	sge.Screen#show()	Renamed	-	com/badlogic/gdx/Screen.java	32	a783f75db18aaef9	
+member	com.badlogic.gdx.Screen#resize(Pixels,Pixels)	sge.Screen#resize(Pixels,Pixels)	Renamed	-	com/badlogic/gdx/Screen.java	39	e96422dec8e81bbd	
+member	com.badlogic.gdx.Screen#resume()	sge.Screen#resume()	Renamed	-	com/badlogic/gdx/Screen.java	45	5c309164b92b797d	
+member	com.badlogic.gdx.Screen#show()	sge.Screen#show()	Renamed	-	com/badlogic/gdx/Screen.java	32	834a0adadfc88758	
 member	com.badlogic.gdx.ScreenAdapter#dispose()	sge.ScreenAdapter#close()	Renamed	-	com/badlogic/gdx/ScreenAdapter.java	47	c9912c4ca92698de	
 member	com.badlogic.gdx.ScreenAdapter#hide()	sge.ScreenAdapter#hide()	Renamed	-	com/badlogic/gdx/ScreenAdapter.java	35	3e20e26bee492330	
 member	com.badlogic.gdx.ScreenAdapter#pause()	sge.ScreenAdapter#pause()	Renamed	-	com/badlogic/gdx/ScreenAdapter.java	39	ca756cd89b4fd748	
