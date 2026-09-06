@@ -58,7 +58,14 @@ object LibgdxLadder:
   def universalTest(repoRoot: Path, steps: Set[String] = DefaultSteps): PortManifest = universal(repoRoot, steps).extendedBy(PortManifest(
     name        = "sge-l0-test",
     dropMethods = Set(watcherDrop),
-    surface     = List(new balticporter.transform.TestFrameworkTransform(dropFields = Set(watcherDrop))),
+    surface     = List(new balticporter.transform.TestFrameworkTransform(dropFields = Set(watcherDrop))) ++
+      // CT7: `AnimationControllerTest` is constructed by MUnit, so the threaded context cannot reach
+      // it as a parameter — it takes one from the hand-written fixture (`ported/sge-l0/src/test`).
+      (if steps("context") then List(new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
+        balticporter.transform.ContextHolderExtension(
+          holder       = "com.badlogic.gdx.Gdx",
+          selfSupplied = Map("com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest" -> "sge.SgeTestFixture.testSge()")))))
+       else Nil),
     externalParenless = Set(
       "org.junit.runner.Description#getTestClass",
       "org.junit.runner.Description#getMethodName",
@@ -123,6 +130,35 @@ object LibgdxLadder:
     // one class lookup by name becomes a table (`AssetTypeRegistry`, injected), and `ClassReflection`'s
     // statics are `java.lang.Class`'s own — the full port's policy, lifted (`LibgdxPolicy`).
     "net" -> Nil,
+    // sge's renames that need no injection: `Disposable -> java.lang.AutoCloseable` (`dispose` ->
+    // `close`, whole override component), and the two member renames the full port carries
+    // (`InputEvent.type` -> `eventType`, `List.toString(T)` -> `itemToString`: java overloads
+    // `Object.toString`, scala reads a clash).
+    "renames" -> List(
+      new balticporter.transform.TypeRedirectTransform(
+        redirects     = Map("com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable"),
+        memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"))),
+      new balticporter.transform.MemberRenameTransform(renames = Map(
+        "com.badlogic.gdx.scenes.scene2d.InputEvent#type"       -> "eventType",
+        "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)"   -> "itemToString"))),
+    // the implicit `Sge` context instead of the `Gdx` globals: the full port's holder policy lifted
+    // verbatim (attach on the CLASS, read by `summon`, refuse at the boundary, two lazy statics);
+    // the context type is the injected `sge.Sge`. Late by design: every constructor moves.
+    "context" -> List(new balticporter.transform.GlobalsToImplicitsTransform(holders = List(
+      balticporter.transform.ContextHolder(
+        holder   = "com.badlogic.gdx.Gdx",
+        context  = balticporter.transform.ContextType.Injected("sge.Sge"),
+        members  = Map(
+          "app" -> "application", "graphics" -> "graphics", "audio" -> "audio", "input" -> "input",
+          "files" -> "files", "net" -> "net",
+          "gl" -> "graphics.gl20", "gl20" -> "graphics.gl20", "gl30" -> "graphics.gl30",
+          "gl31" -> "graphics.gl31", "gl32" -> "graphics.gl32"),
+        attach   = balticporter.transform.ContextAttach.Class,
+        reader   = balticporter.transform.ContextReader.Summon,
+        boundary = balticporter.transform.ContextBoundary.Refuse,
+        sites    = Map(
+          "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
+          "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),
     "reflection" -> List(
       // `Pools.get` minted a `ReflectionPool` for an unregistered type; java itself offers the
       // refusal (`THROW_ON_REFLECTION_POOL_CREATION`), so the miss throws java's own message and a
@@ -167,6 +203,7 @@ object LibgdxLadder:
     * reflection-free `Json`, `ReflectionException` and the asset-type registry. */
   def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
     "reflection" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides")),
+    "context"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-context")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -187,9 +224,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
