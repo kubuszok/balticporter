@@ -75,6 +75,45 @@
 #    at the first failure rather than measuring a stale emit.
 
 # ---------------------------------------------------------------------------------------------
+# demo-run — sge's pong RUNS on the ported stack: DesktopMain forked from the demo-check project
+# with the frame budget the ADJUSTED launcher reads (-Dsge.demo.frames); the run passes when the
+# process exits 0 after printing DEMO-RUN-FRAMES N. Any exception or non-zero exit fails it.
+# Report: port-report/DemoRun (tests.tsv one row, counts.tsv frames/exit/first exception).
+# ---------------------------------------------------------------------------------------------
+[doc("launch sge's pong on the ported stack for FRAMES frames (default 120), fail on any exception (DEMO=pong)")]
+demo-run:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+    REPORT="$ROOT/port-report/DemoRun"
+    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
+    DEMO="${DEMO:-pong}"; FRAMES="${FRAMES:-120}"
+    case "$DEMO" in pong) MAIN=demos.pong.DesktopMain ;; *) MAIN="${DEMO_MAIN:?set DEMO_MAIN=<fqn of that demo DesktopMain>}" ;; esac
+    echo "-- demo-run: $MAIN for $FRAMES frames against ported/sge-l0 (JVM, forked) --"
+    printf '%s\n' "$FRAMES" > "$ROOT/.balticporter/demo-frames"   # read by demo-check's run task (build.sbt)
+    sbt_test "demo-checkJVM/runMain $MAIN" "$MEASURE_TMP"/demorun.txt
+    rm -f "$ROOT/.balticporter/demo-frames"
+    ST=$?
+    FR=$(grep -o "DEMO-RUN-FRAMES [0-9]*" "$MEASURE_TMP"/demorun.txt | tail -1 | awk '{print $2}')
+    # the FORKED process's first exception; the sbt client's own reconnect chatter is not one
+    EXC=$(grep -v "ipcsocket\|starting a new server\|sbt-serverconnection\|nonzero exit code returned from runner" "$MEASURE_TMP"/demorun.txt | grep -m1 -E "Exception|UnsatisfiedLinkError|Error: " | sed 's/\t/ /g' | cut -c1-200)
+    if [ "$ST" = 0 ] && [ -n "$FR" ]; then OUT=pass; else OUT=fail; fi
+    printf '#suite\ttest\tstatus\n%s\t%s\t%s\n' "demos.$DEMO" "DesktopMain" "$OUT" > "$REPORT/run-latest/tests.tsv"
+    printf 'demo\tframes\texit\tfirst-exception\n%s\t%s\t%s\t%s\n' "$DEMO" "${FR:-0}" "$ST" "${EXC:--}" > "$REPORT/run-latest/counts.tsv"
+    echo "demo-run: $DEMO frames=${FR:-0} exit=$ST outcome=$OUT"
+    [ -n "$EXC" ] && echo "   first exception: $EXC"
+    grep -E "^\[error\]|Exception|at sge\.|at demos\." "$MEASURE_TMP"/demorun.txt | head -25
+    if [ -f "$REPORT/baseline/tests.tsv" ] && grep -q "	pass$" "$REPORT/baseline/tests.tsv" && [ "$OUT" != pass ]; then
+      echo "!! demo-run REGRESSED — the baseline records a pass and this run did not"; exit 1
+    fi
+    [ "$OUT" = pass ] || { echo "!! demo-run FAILED — full output: $MEASURE_TMP/demorun.txt"; exit 1; }
+    echo "demo-run GREEN: $DEMO rendered $FR frames on the ported stack"
+    echo "   promote with: just baseline-accept DemoRun"
+
+
+# ---------------------------------------------------------------------------------------------
 # Policy: sbt project identifiers, emitted-port directories, upstream trees, compile dependencies.
 # A module rename is a change HERE and nowhere else.
 # ---------------------------------------------------------------------------------------------

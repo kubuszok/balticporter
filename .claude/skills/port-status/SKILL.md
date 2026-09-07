@@ -23,6 +23,10 @@ TSV into ONE table plus a bullet list. Plain technical English: no internal ids,
 - **not passing**: every name in `failing` and `skipped-names`, plus `declared-failures` (the
   escape-hatch rows) and `declared-lost` (upstream tests the port does not run). Never fold
   these into "passing".
+- **runs**: does a demo RUN on this module's stack? Read from the `DemoRun` baseline (the `demo-run`
+  lane: sge's pong launched on the ported core for a fixed number of frames): `frames=N` is a run
+  that rendered and exited cleanly, `fail(exit=…)` a crash, `-` never launched. Only the core the
+  lane targets carries a value; a compile count says nothing about this column.
 - **last measured**: the baseline's commit date. The frozen family is not re-measured; say when
   it last was.
 - **conventions**: `live` rows carry the new conventions; `frozen` rows carry the OLD POLICY.

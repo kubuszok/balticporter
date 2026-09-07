@@ -1342,9 +1342,20 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
     Compile / unmanagedSourceDirectories ++= {
       val demos = (ThisBuild / baseDirectory).value / ".." / "sge" / "demos"
       val picked = sys.env.getOrElse("DEMO_CHECK", DemoCheckAll).split(',').map(_.trim).filter(_.nonEmpty).toSeq
-      ("shared" +: picked).map(d => demos / d / "src" / "main" / "scala") :+
+      ("shared" +: picked).flatMap(d => Seq(demos / d / "src" / "main" / "scala", demos / d / "src" / "main" / "scaladesktop")) :+
         (ThisBuild / baseDirectory).value / "ported" / "demo-check" / "adjusted"
     },
+    // `just demo-run`: sge's DesktopMain forked on the ported stack (PROGRESS.md §13.30 step 4) — Panama
+    // needs native access, GLFW needs the first thread on macOS; the frame budget arrives as -Dsge.demo.frames.
+    Compile / run / fork := true,
+    Compile / run / javaOptions ++= Seq("--enable-native-access=ALL-UNNAMED") ++
+      (if (sys.props("os.name").toLowerCase.contains("mac")) Seq("-XstartOnFirstThread") else Seq.empty) ++ {
+        // the lane's frame budget: a marker file, read when the run task executes (an env var never
+        // reaches a warm server, and `set` cannot name a projectMatrix row by its sbt id)
+        val marker = (ThisBuild / baseDirectory).value / ".balticporter" / "demo-frames"
+        if (marker.exists) Seq("-Dsge.demo.frames=" + IO.read(marker).trim) else Seq.empty
+      },
+    Compile / run / connectInput := false,
     // an ADJUSTED copy under ported/demo-check/adjusted replaces sge's file of the same name
     // (ported/demo-check/ADJUSTMENTS.tsv enumerates the differences; sge itself is never edited).
     Compile / unmanagedSources := {

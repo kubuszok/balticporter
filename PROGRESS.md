@@ -1952,6 +1952,23 @@ injected copy overwrote the minted unit and 30 scene2d members broke), sge's `GL
 `Nullable` on `gl30..32`/`newCursor`/`Clipboard.contents`, `FileType` as a top-level enum, the
 extension hooks on `Application`. Held: 0 errors, 216/220, demo-check 0, `members` 0 moved.
 
+**Step 4 landed (2026-09-07 11:39): PONG RENDERS ON THE PORTED STACK.** `just demo-run` forks
+`demos.pong.DesktopMain` from the demo-check project (sge's demo sources + the `scaladesktop`
+mains; the adjusted `DesktopLauncher` copy exits after `-Dsge.demo.frames=N`, handed over through
+`.balticporter/demo-frames` because a warm sbt server sees no env var and `set` cannot name a
+projectMatrix row by its sbt id) with `--enable-native-access=ALL-UNNAMED` and
+`-XstartOnFirstThread`; the provider snapshots resolve GLFW, EGL/GLESv2 (ANGLE), miniaudio and the
+ops library; EGL 1.5 initialises; **120 frames rendered, exit 0** — `port-report/DemoRun`
+(`tests.tsv` one row, `counts.tsv` frames/exit/first exception), `just port-status` shows it in
+the `runs` column. The one runtime defect on the way: `WindowingOpsJvm.setErrorCallback`'s
+`MethodHandle.invoke` under `Nullable.fold` was compiled with `B = Nothing` (a signature-polymorphic
+call takes its return type from the expected type) and threw `ClassCastException` at the first
+frame; `: Unit` at both sites (the only two `Nothing$` descriptors in the whole JVM half, checked
+with `javap`). What this run proves and what it does not: the window opens, GL renders, input and
+timers run through the ported core for 120 frames on macOS/aarch64; pong reads the keyboard only
+when a key is down, so key handling is compiled but not exercised; audio and files are wired but
+pong plays no sound and loads no asset; nothing off the JVM runs yet.
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside

@@ -5,3 +5,4 @@ sge/platform/ConcurrencyOpsDesktop.scala	sge/src/main/scaladesktop/sge/platform/
 sge/utils/Log.scala	sge/src/main/scala/sge/utils/Log.scala	copied verbatim	GlOpsJvm and WindowingOpsJvm log EGL/GLFW failures through it
 sge/utils/LogPlatform.scala	sge/src/main/scalajvm/sge/utils/LogPlatform.scala	REWRITTEN over java.lang.System.Logger	sge logs through scribe; the port carries no logging dependency
 (omitted)	sge/src/main/scalajvm/sge/{DesktopApplicationFactory,audio/DesktopAudioRecorder,net/HttpBackendFactoryImpl}.scala	not copied in step 1	desktop layer (step 3); SgeError and sttp dependencies
+sge/platform/WindowingOpsJvm.scala	sge/src/main/scalajvm/sge/platform/WindowingOpsJvm.scala	setErrorCallback: both MethodHandle.invoke results ascribed `: Unit`	under fold[B] the port inferred B = Nothing for the signature-polymorphic invoke (ClassCastException at the first frame of pong); one site in 5,000 lines of Panama code
