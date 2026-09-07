@@ -1917,6 +1917,18 @@ fixtures no longer SEED after the emitted-unit fence (K51 xv), `PackageRenameTra
 (`allowPackageSplit` declaring nothing) and `VisibilitySpec` (overloaded name at an arity). Their
 fixtures need units the run emits; not on pong's path, a card of its own.
 
+**Step 2 landed (2026-09-07): `natives` step** — the 59 `native` members carry bodies through
+`MethodBodyTransform` (`LibgdxNativeBodies`, keyed by java descriptor), each one line into a
+port-written object injected with the step: `BufferUtilsNative` (JNI `Buffer` = base address, so a
+`MemorySegment` view of the whole buffer; array work through `PlatformOps.buffer`), `ETC1Native`
+(bytes out, contract, bytes back — sge's own shape), `Gdx2DNative` (the `long` handle keys a table
+of pixel buffers drawn by sge's `Gdx2dDraw`, copied verbatim; decode through `PlatformOps.gdx2d`);
+`Matrix4`'s three strided loops over the class's own single-vector statics. `@scala.native` in
+`src_managed`: 59 -> 0 (the emitter drops the annotation once a body exists). The pixels flow had
+reached `ETC1`'s sizes (sge keeps `Int` there): fenced by type. Held: 0 errors, 216/220, demo-check
+0; `members` 79 moved (the 59 bodies, ETC1's signatures). The residue COUNT for native members is
+still owed (a lane row per bodyless native; today the number is read by grep).
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside

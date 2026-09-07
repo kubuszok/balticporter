@@ -31,7 +31,7 @@ policy	3
 port-map	75
 portability(all)	153
 portability(emitted)	69
-portability(injected)	11
+portability(injected)	12
 porter-notes	0
 remediation	15
 resources	8

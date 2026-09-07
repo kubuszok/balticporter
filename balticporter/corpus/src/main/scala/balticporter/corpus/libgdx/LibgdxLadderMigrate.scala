@@ -152,6 +152,9 @@ object LibgdxLadder:
   def stepsFor(sel: Set[String]): Map[String, List[balticporter.tir.Phase]] = Map(
     // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
     "backend-jvm" -> Nil,
+    // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
+    // `LibgdxNativeBodies`, the objects they call injected (`Gdx2DNative`, `BufferUtilsNative`, `ETC1Native`).
+    "natives" -> List(new balticporter.transform.MethodBodyTransform(LibgdxNativeBodies.all)),
     "witness" -> List(
       new balticporter.transform.GlobalsToImplicitsTransform(requiredGivens =
         balticporter.transform.ElementWitnessTransform.constructorGivens(CoreWitnessSubjects, LlsPolicy.Witness)),
@@ -289,7 +292,9 @@ object LibgdxLadder:
         "com.badlogic.gdx.graphics.GL30#glTexImage2D", "com.badlogic.gdx.graphics.GL30#glTexImage3D",
         "com.badlogic.gdx.graphics.GL30#glTexSubImage2D", "com.badlogic.gdx.graphics.GL30#glTexSubImage3D",
         "com.badlogic.gdx.graphics.GL30#glCopyTexSubImage3D", "com.badlogic.gdx.graphics.GL30#glBlitFramebuffer",
-        "com.badlogic.gdx.graphics.GL30#glRenderbufferStorageMultisample"))))),
+        "com.badlogic.gdx.graphics.GL30#glRenderbufferStorageMultisample",
+        // sge sizes ETC1 in plain Int throughout (its JNI-shaped statics answer through the contract, §13.30 step 2)
+        "com.badlogic.gdx.graphics.glutils.ETC1"))))),
     // sge's helper API the demos use: the `gl` alias, `rendering { … }` around `begin`/`end`,
     // class-tag `load` and a `Nullable` `get` on the asset manager.
     "helpers" -> List(
@@ -620,6 +625,7 @@ object LibgdxLadder:
     "time"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-time")),
     "glenum"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-glenum")),
     "backend-jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm")),
+    "natives"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -640,9 +646,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
