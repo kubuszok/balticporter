@@ -2068,3 +2068,91 @@ exercises the Tiled loaders today.
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside
 ANGLE/GLFW with no Scala frame to attribute (a platform question, not a porting one).
+
+### 13.31 sge core's own suite against the port — each class of distance answered by a mechanism (plan 2026-09-07)
+
+**Done** = `just sge-suite-check` is green and baselined: sge core's own test tree (`sge/src/test/scala`
++ `scalajvm`, 221 files, ~2,170 tests; sge never edited, adjusted copies enumerated as for
+`demo-check`) compiles against `port-sge-l0` with none of sge's build; then `just sge-suite-run`
+baselines `tests.tsv` and every failure is a divergence row (java wins on behaviour, §3.5). JVM row;
+`demo-run` stays 12/12 throughout. `just measure-all` green at every step.
+
+**Facts (measured 2026-09-07 15:30, scratch project, port regenerated at 0 = 0).** 1,616 errors in
+137 of 221 files; 0 tests run. By family (a site can sit in two rows):
+
+| family | errors | answer |
+|---|---|---|
+| `Seconds`/`Pixels` where sge's slot keeps the opaque and the port's keeps `Float`/`Int`, or the reverse; most of the 113 `assertEquals` mismatches | ~350 | step 1 (derived seeds) |
+| scene2d/pool/actions API shapes: `Table.add` overloads, `getCells`, `addPool[T: ClassTag](() => T)`, parenless `length`/`size`, `touchable` visibility | ~300 | steps 1, 5 |
+| `FileType` top-level (86), `Key`/`Button` opaques (60), scribe (9) | ~155 | steps 2, 4 |
+| Android layer (`scalajvm`: GL adapters, `AndroidFileHandle`, input state; 13 sge-only files) | 152 | step 3 |
+| Tiled (76), particles (40), typed JSON documents (12) | ~130 | step 6 |
+| context: `FileHandle(file)` without a clause in sge, `AssetManager(resolver, defaultLoaders)`, `No given Sge` on particle VALUE classes that only LOG | ~85 | steps 1, 2 |
+| sge's HTTP stack (`SgeHttpClient/Request/Response`, sttp types; 8 sge-only files) | 84 | step 4 |
+| `Nullable` vs plain: `Game.screen`, `Actor` parents, `Vector3` results | ~70 | step 1 |
+| rest: `frameDuration` var vs val, `isLooping`, `Intersector`/VBO overloads, `FloatArray` vs `DynamicArray[Float]` | ~290 | steps 1, 5 |
+
+File sets: 35 sge core files with no port twin (14 Android, 8 net, `Vectors`/`Matrices`/`GridPoints`
+merges, `Degrees`/`Radians`/`Epsilon`/`GLHandle`/`Position`, `I18nBundle`, `BufferOps`,
+`ParticleEffectCodecs`); 110 port files sge dropped (50 `utils` collections and JSON, 13 compression,
+7 resolvers, 8 split math files) — harmless for the suite, a decision list for later. 28
+reconciliation edits already sit in the injected files (each one an API divergence).
+
+**Design rule for this section.** The reference port is the ORACLE for API SPELLING (§3.5: exact
+hand-port parity) and never for behaviour. A policy that is a SPELLING — which slot is `Seconds`,
+which member is nullable, which accessor is parenless, which name changed — is DERIVED from sge's
+tree by the parity parser and published as a value; a policy that is a DECISION — what is dropped,
+what is injected, what a body does — stays authored. Hand-listing 36 GL20 slots (§13.30 step 1) was
+the wrong shape: it is re-derived per member and drifts with sge.
+
+**Steps, in dependency order** (standing orders §13.29; one measured change per commit, `before->after`):
+
+0. *Instrument.* `sge-suite-check` as a project beside `demo-check` (sge's two test dirs, munit
+   1.3.6 + scalacheck, adjusted copies + `ADJUSTMENTS.tsv`), lane + `port-report/SgeSuiteCheck`
+   with errors ATTRIBUTED to the families above (message classifier + `srcmap`), baselined at 1,616.
+   Android and net tests stay in the count. `sge-suite-run` (`testOnly *`, `tests.tsv`) added
+   when the compile is green.
+1. *Engine — reference-derived policy, §1(b).* `ApiParity` (scalameta) already parses the hand
+   port; it publishes `derived-policy.tsv`: one row per (family, member, sge spelling). Each spelling
+   phase takes `derive: Derivation` — `Off` (default, no-op) or `FromReference(family)` —
+   feeding: opaque slot → `OpaqueSpec.hints` (param index and result); nullable member →
+   `NullabilityTransform.nullableMembers`; parenless member → `NullaryArityTransform.force`;
+   renamed member/type → `MemberRenameTransform`/`typeRenames`; a class sge declares WITHOUT a
+   context clause → the context step's exclusion. Obligations: the fingerprint carries the
+   reference commit and the derived set's digest (`SurfacePolicy`); each derived row is a
+   `reason=configured source=reference` note; a row the phase cannot honour is `derived(refused)`,
+   counted; a derived spelling that would change BEHAVIOUR (a `remove` by value, a mutating vs
+   returning member) is refused by construction — derivation reads signatures only. Nothing in the
+   engine names sge; the tree is the parameter. Expected: ~350 opaque + ~70 nullable + ~20 arity +
+   part of the ~300 shapes; 1,616 -> ~1,000.
+2. *Logging seam.* `Gdx.app.log/error/debug` → sge's context-free `Log` (a `ClassTable` redirect),
+   so a class that only logs takes no context (sge COMMENTED the call out in the particle values —
+   a skip, not a model; the port keeps java's call). sge's `LogPlatform` over scribe injected
+   verbatim on the JVM row (scribe dependency), replacing the port-written `System.Logger` one.
+3. *Engine — per-platform source sets.* `PortManifest.platformDirs`: an injection dir and an
+   emission dir per platform row (`scalajvm`/`scalajs`/`scalanative`/`scaladesktop` →
+   `src_managed/<row>/scala`), `SbtGen` wiring them; the existing `inject` becomes the shared row.
+   Then the Android layer (13 files) lands in `scalajvm`; JS/Native get their homes (§13.30 card).
+4. *Authored decisions.* sge's HTTP stack injected (8 files, sttp on the JVM row; the desktop `Net`
+   reconciled — its `Unsupported` refusal goes); `FileType` via `flattenNestedTypes`; `Degrees`/
+   `Radians`/`Epsilon`/`GLHandle`/`Position` as `OpaqueSpec`s with step-1 seeds; `I18NBundle` →
+   `I18nBundle` rename; `BufferOps` injected; `Vectors`/`Matrices` file merges deferred (parity
+   `file-merge` is compile-neutral).
+5. *Hand-port-extra members.* Parity's `hand-port-extra` rows for core, each with sge's source
+   span, promoted to `AddMembersTransform` entries (`getCells`, `addPool[T: ClassTag](() => T)`,
+   `MapProperties.getAs`, `MapLayers.byType`, `PlayMode.isLooping`, `AlignMode`, …); collection
+   retargets `FloatArray`/`IntArray`/`ShortArray` → `DynamicArray[Prim]` as retarget rows. The
+   candidate list is PUBLISHED by the check; the port promotes, never re-types by hand.
+6. *JSON step, parts 3–4.* Tiled after steps 1 and 5 make the maps conventions hold (§13.30 card);
+   particles derived with a sealed facade and the `class` discriminator (the maintainer's aim) —
+   a facade needing sge-side changes is a stop-and-report.
+7. *Run.* `sge-suite-run`; each failure through `divergence-investigator`; verdicts in
+   `ported/sge-l0/divergence-verdicts.tsv`; java wins unless a recorded decision says otherwise.
+
+**Engine vs policy in this plan:** steps 1 and 3 are engine (two mechanisms, both §1(b), both
+useful to every next library with a hand port to match); everything else is policy or injection
+and can move to sge's repository once those two ship in a snapshot.
+
+**Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
+hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
+needing a dependency that is not on Central; the particle facade.
