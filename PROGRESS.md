@@ -2222,6 +2222,22 @@ what they hold (sge's `scalajs/` 60 and `scalanative/` 19 files, their dependenc
 JS/Native rows in `build.sbt`) is the second half of this step, measured as `expected-errors.js`
 and `.native` once the rows exist.
 
+**Step 3, the rows (2026-09-07 19:40): `port-sge-l0` has JS and Native rows.** `build.sbt` splits the
+JVM-only dependencies onto the JVM row (jnigen loader, multiarch panama, the pnm providers), the JS
+row takes `scalajs-dom` 2.8.1, the Native row `sn-provider-sge`/`sn-provider-curl`; sge's `scalajs/`
+(60) and `scalanative/` (19) layers are injected verbatim as the `js`/`native` rows, and sge's
+`scaladesktop` layer (26 files, GLFW over the platform ops traits) serves BOTH the JVM and Native
+rows as in sge's own matrix (`desktop/` roots under both). `gdx-l0-measure` compiles the rows under
+`BP_FULL=1` (`expected-errors.js`/`.native`); the sbt server takes a 6 GB heap (`.jvmopts`) — the
+three rows exhausted the default. **First honest counts: JS 110, Native 68**, JVM 0 = 0 held.
+Residue by family: the natives step's JVM handle tables (`BufferUtilsNative`, `Gdx2DNative`,
+`ETC1Native`) referenced from SHARED bodies — 56 on each row — need a JS and a Native implementation
+each (sge's own rows have theirs); the JVM-only `gdx-jnigen-loader` jar leaking through `UIUtils`
+and `GdxNativesLoader` (5 + 1 per row: a JVM-row concern in shared code); sge's HTTP stack not yet
+injected (4 per row, step 4); on JS only, the browser layer's `Key`/`Button`/`Position`/`FileType`/
+`XmlElement` spellings (the same convention cards as the suite's); on Native only, `AngleGL32Native`'s
+`DebugProc` (2). No sge test row runs yet.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

@@ -646,6 +646,8 @@ gdx-l0-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0measure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxl0measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxl0measure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    # the JS and Native rows (PROGRESS.md §13.31 step 3): BP_FULL=1 compiles them, baselined as expected-errors.{js,native}
+    full_compiles "port-sge-l0JS/compile" "port-sge-l0Native/compile" "" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0measure.txt | sort | uniq -c | sort -rn | head
     echo
     echo "-- correlation: every error located to its member and its Java origin --"

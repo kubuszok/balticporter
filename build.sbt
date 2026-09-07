@@ -548,13 +548,7 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
     name := "balticporter-port-sge-l0",
     resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
     libraryDependencies ++= Seq(
-      "com.badlogicgames.gdx"  % "gdx-jnigen-loader" % "2.5.2",
       // sge's JVM platform layer (PROGRESS.md §13.30): Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE).
-      "com.kubuszok"          %% "multiarch-core"         % "0.4.0",
-      "com.kubuszok"          %% "multiarch-panama-api"   % "0.4.0",
-      "com.kubuszok"          %% "multiarch-panama-jdk"   % "0.4.0",
-      "com.kubuszok"           % "pnm-provider-sge-desktop" % "0.1.2-33-gcf10406-SNAPSHOT",
-      "com.kubuszok"           % "pnm-provider-sge-angle"   % "0.1.2-33-gcf10406-SNAPSHOT",
       // sge's typed JSON/UBJSON documents (Kindlings-derived codecs; PROGRESS.md §13.30, JSON step)
       "com.kubuszok"          %% "kindlings-jsoniter-derivation" % "0.3.2",
       "com.kubuszok"          %% "kindlings-jsoniter-json"       % "0.3.2",
@@ -569,7 +563,23 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
     Test / scalacOptions    += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
   )
-  .jvmPlatform(scalaVersions = Seq(scalaV))
+  // the three rows sge publishes for (CLAUDE.md §1.5); each row's own layer is injected through
+  // `PortManifest.platformDirs` (src_managed/<row>/scala) and its dependencies stand on the row
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    libraryDependencies ++= Seq(
+      "com.badlogicgames.gdx"  % "gdx-jnigen-loader" % "2.5.2",
+      // sge's JVM platform layer (PROGRESS.md §13.30): Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE)
+      "com.kubuszok"          %% "multiarch-core"         % "0.4.0",
+      "com.kubuszok"          %% "multiarch-panama-api"   % "0.4.0",
+      "com.kubuszok"          %% "multiarch-panama-jdk"   % "0.4.0",
+      "com.kubuszok"           % "pnm-provider-sge-desktop" % "0.1.2-33-gcf10406-SNAPSHOT",
+      "com.kubuszok"           % "pnm-provider-sge-angle"   % "0.1.2-33-gcf10406-SNAPSHOT")))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings ++ Seq(
+    libraryDependencies += "org.scala-js" %% "scalajs-dom" % "2.8.1"))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "com.kubuszok" % "sn-provider-sge"  % "0.1.2-33-gcf10406-SNAPSHOT",
+      "com.kubuszok" % "sn-provider-curl" % "0.4.0")))
 
 // ---------------------------------------------------------------------------------------------
 // port-sge-anim8 — anim8-gdx (ported/sge-anim8). Dependent on sge. sge_relaxed_flags.

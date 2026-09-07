@@ -674,9 +674,20 @@ object LibgdxLadder:
     * sge's `scalajvm`/`scaladesktop` layers and the port's own JVM-only files go to the `jvm` row
     * (`src_managed/jvm/scala`), which only that row compiles. */
   def stepPlatformInjects(repoRoot: Path): Map[String, Map[String, List[Path]]] = Map(
-    "backend-jvm"     -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/jvm"))),
+    // sge's `scaladesktop` layer (GLFW over the platform ops traits) serves BOTH the JVM and the
+    // Native rows, as in sge's own matrix: `desktop/` roots are listed under both
+    "backend-jvm"     -> Map(
+      "jvm"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/jvm"),
+                       repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/desktop")),
+      // sge's browser and native layers, verbatim (scalajs/ 60, scalanative/ 19 files)
+      "js"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/js")),
+      "native" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/native"),
+                       repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/desktop"))),
     "natives"         -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives/jvm"))),
-    "backend-desktop" -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/jvm"))),
+    "backend-desktop" -> Map(
+      "jvm"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/jvm"),
+                       repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/desktop")),
+      "native" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/desktop"))),
   ).withDefaultValue(Map.empty)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the

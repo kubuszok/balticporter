@@ -1,0 +1,61 @@
+/*
+ * Ported from libGDX - https://github.com/libgdx/libgdx
+ * Original source: backends/gdx-backends-gwt/.../GwtFiles.java
+ * Original authors: mzechner, Nathan Sweet
+ * Licensed under the Apache License, Version 2.0
+ *
+ * Migration notes:
+ *   Renames: GwtFiles -> BrowserFiles
+ *   Convention: Scala.js only; uses BrowserAssetLoader (build-time-embedded
+ *     resources via multiarch.resources.PlatformResources) instead of GWT Preloader
+ *   Convention: Only Internal FileType supported (browser has no filesystem)
+ *   Idiom: unsupported browser capabilities -> SgeError.Unsupported (ISS-771)
+ *   Audited: 2026-03-08
+ *
+ * Scala port copyright 2025-2026 Mateusz Kubuszok
+ */
+package sge
+package files
+
+/** Browser implementation of [[Files]]. Only [[FileType.Internal]] is supported.
+  *
+  * Assets are served synchronously from build-time-embedded resources via [[BrowserAssetLoader]].
+  *
+  * @param assetLoader
+  *   the asset loader backed by embedded resources
+  */
+class BrowserFiles(val assetLoader: BrowserAssetLoader) extends sge.Files {
+
+  override def getFileHandle(path: String, fileType: FileType): FileHandle =
+    fileType match {
+      case FileType.Internal =>
+        BrowserFileHandle(assetLoader, path, FileType.Internal)
+      case FileType.Classpath =>
+        BrowserFileHandle(assetLoader, path, FileType.Classpath)
+      case other =>
+        throw utils.SgeError.Unsupported(s"FileType $other is not supported in browser")
+    }
+
+  override def classpath(path: String): FileHandle =
+    BrowserFileHandle(assetLoader, path, FileType.Classpath)
+
+  override def internal(path: String): FileHandle =
+    BrowserFileHandle(assetLoader, path, FileType.Internal)
+
+  override def external(path: String): FileHandle =
+    throw utils.SgeError.Unsupported("External files are not supported in browser")
+
+  override def absolute(path: String): FileHandle =
+    throw utils.SgeError.Unsupported("Absolute files are not supported in browser")
+
+  override def local(path: String): FileHandle =
+    throw utils.SgeError.Unsupported("Local files are not supported in browser")
+
+  override def externalStoragePath: String = ""
+
+  override def isExternalStorageAvailable: Boolean = false
+
+  override def localStoragePath: String = ""
+
+  override def isLocalStorageAvailable: Boolean = false
+}
