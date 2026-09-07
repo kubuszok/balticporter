@@ -102,8 +102,56 @@ object LibgdxLadder:
   /** the GL statics' two-hop path: the property step renames the getter (`gl20`); before it, the call. */
   private def glPath(sel: Set[String], n: String): String =
     if sel("properties") then s"graphics.gl$n" else s"graphics.getGL$n()"
+  /** sge's remaining GL enums (all in the injected `GLEnum.scala`): one opaque per family, seeded at
+    * every GL parameter sge types with it, GL20 through GL32 (PROGRESS.md §13.30 step 1: sge's ANGLE
+    * bindings implement THAT surface). A `def`: a phase instance carries binding state. */
+  private def glEnum(name: String, hints: String*): balticporter.tir.Phase = glEnumExcept(name, Set.empty, hints*)
+  /** `except`: declarations the flow would reach that sge keeps `Int` (member or parameter names under `com.badlogic.gdx.graphics.`). */
+  private def glEnumExcept(name: String, except: Set[String], hints: String*): balticporter.tir.Phase =
+    new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.graphics." + name,
+      target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics." + name, wrapName = "apply", unwrapName = "toInt"),
+      hints      = hints.map("com.badlogic.gdx.graphics." + _).toSet,
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+      scope      = balticporter.tir.RuleScope.Everywhere(except.map("com.badlogic.gdx.graphics." + _))))
+  private def moreGlEnums: List[balticporter.tir.Phase] = List(
+    glEnum("BufferTarget", "GL20#glBindBuffer#target", "GL20#glBufferData#target", "GL20#glBufferSubData#target", "GL20#glGetBufferParameteriv#target",
+      "GL30#glUnmapBuffer#target", "GL30#glGetBufferPointerv#target", "GL30#glMapBufferRange#target", "GL30#glFlushMappedBufferRange#target",
+      "GL30#glBindBufferRange#target", "GL30#glBindBufferBase#target", "GL30#glCopyBufferSubData#readTarget", "GL30#glCopyBufferSubData#writeTarget",
+      "GL30#glGetBufferParameteri64v#target"),
+    glEnum("BufferUsage", "GL20#glBufferData#usage"),
+    glEnum("TextureTarget", "GL20#glBindTexture#target", "GL20#glCompressedTexImage2D#target", "GL20#glCompressedTexSubImage2D#target",
+      "GL20#glCopyTexImage2D#target", "GL20#glCopyTexSubImage2D#target", "GL20#glTexImage2D#target", "GL20#glTexParameterf#target",
+      "GL20#glTexSubImage2D#target", "GL20#glFramebufferTexture2D#textarget", "GL20#glGenerateMipmap#target", "GL20#glGetTexParameterfv#target",
+      "GL20#glGetTexParameteriv#target", "GL20#glTexParameterfv#target", "GL20#glTexParameteri#target", "GL20#glTexParameteriv#target",
+      "GL30#glTexImage2D#target", "GL30#glTexImage3D#target", "GL30#glTexSubImage2D#target", "GL30#glTexSubImage3D#target", "GL30#glCopyTexSubImage3D#target",
+      "GL31#glTexStorage2DMultisample#target", "GL31#glGetTexLevelParameteriv#target", "GL31#glGetTexLevelParameterfv#target",
+      "GL32#glTexParameterIiv#target", "GL32#glTexParameterIuiv#target", "GL32#glGetTexParameterIiv#target", "GL32#glGetTexParameterIuiv#target",
+      "GL32#glTexBuffer#target", "GL32#glTexBufferRange#target", "GL32#glTexStorage3DMultisample#target"),
+    glEnum("BlendFactor", "GL20#glBlendFunc#sfactor", "GL20#glBlendFunc#dfactor", "GL20#glBlendFuncSeparate#srcRGB", "GL20#glBlendFuncSeparate#dstRGB",
+      "GL20#glBlendFuncSeparate#srcAlpha", "GL20#glBlendFuncSeparate#dstAlpha", "GL32#glBlendFunci#src", "GL32#glBlendFunci#dst",
+      "GL32#glBlendFuncSeparatei#srcRGB", "GL32#glBlendFuncSeparatei#dstRGB", "GL32#glBlendFuncSeparatei#srcAlpha", "GL32#glBlendFuncSeparatei#dstAlpha"),
+    glEnum("BlendEquation", "GL20#glBlendEquation#mode", "GL20#glBlendEquationSeparate#modeRGB", "GL20#glBlendEquationSeparate#modeAlpha",
+      "GL32#glBlendEquationi#mode", "GL32#glBlendEquationSeparatei#modeRGB", "GL32#glBlendEquationSeparatei#modeAlpha"),
+    glEnum("CullFace", "GL20#glCullFace#mode", "GL20#glStencilFuncSeparate#face", "GL20#glStencilMaskSeparate#face", "GL20#glStencilOpSeparate#face"),
+    glEnum("ShaderType", "GL20#glCreateShader#type", "GL20#glGetShaderPrecisionFormat#shadertype", "GL31#glCreateShaderProgramv#type"),
+    glEnum("StencilOp", "GL20#glStencilOp#fail", "GL20#glStencilOp#zfail", "GL20#glStencilOp#zpass",
+      "GL20#glStencilOpSeparate#fail", "GL20#glStencilOpSeparate#zfail", "GL20#glStencilOpSeparate#zpass"),
+    // sge keeps `internalformat` a plain Int (only `format` and `type` are typed): fence the flow at the GL sinks
+    glEnumExcept("PixelFormat", Set("GL20#glTexImage2D#internalformat", "GL30#glTexImage2D#internalformat", "GL30#glTexImage3D#internalformat"),
+      "GL20#glCompressedTexSubImage2D#format", "GL20#glReadPixels#format", "GL20#glTexImage2D#format", "GL20#glTexSubImage2D#format",
+      "GL30#glTexImage2D#format", "GL30#glTexImage3D#format", "GL30#glTexSubImage2D#format", "GL30#glTexSubImage3D#format", "GL32#glReadnPixels#format"),
+    glEnum("DataType", "GL20#glDrawElements#type", "GL20#glReadPixels#type", "GL20#glTexImage2D#type", "GL20#glTexSubImage2D#type", "GL20#glVertexAttribPointer#type",
+      "GL30#glDrawRangeElements#type", "GL30#glTexImage2D#type", "GL30#glTexImage3D#type", "GL30#glTexSubImage2D#type", "GL30#glTexSubImage3D#type",
+      "GL30#glVertexAttribIPointer#type", "GL30#glDrawElementsInstanced#type", "GL30#glVertexAttribPointer#type",
+      "GL31#glDrawElementsIndirect#type", "GL31#glVertexAttribFormat#type", "GL31#glVertexAttribIFormat#type",
+      "GL32#glDrawElementsBaseVertex#type", "GL32#glDrawRangeElementsBaseVertex#type", "GL32#glDrawElementsInstancedBaseVertex#type", "GL32#glReadnPixels#type"),
+  )
+
   def Steps: Map[String, List[balticporter.tir.Phase]] = stepsFor(Set.empty)
   def stepsFor(sel: Set[String]): Map[String, List[balticporter.tir.Phase]] = Map(
+    // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
+    "backend-jvm" -> Nil,
     "witness" -> List(
       new balticporter.transform.GlobalsToImplicitsTransform(requiredGivens =
         balticporter.transform.ElementWitnessTransform.constructorGivens(CoreWitnessSubjects, LlsPolicy.Witness)),
@@ -219,11 +267,29 @@ object LibgdxLadder:
         "com.badlogic.gdx.Input#getDeltaX", "com.badlogic.gdx.Input#getDeltaY",
         // a PARAMETER seed is `owner#method#param`
         "com.badlogic.gdx.ApplicationListener#resize#width", "com.badlogic.gdx.ApplicationListener#resize#height",
-        "com.badlogic.gdx.Screen#resize#width", "com.badlogic.gdx.Screen#resize#height"),
+        "com.badlogic.gdx.Screen#resize#width", "com.badlogic.gdx.Screen#resize#height")
+        // sge types these GL20 parameters in `Pixels` (its ANGLE bindings implement that surface, §13.30)
+        ++ Set(
+        "glCompressedTexImage2D#width", "glCompressedTexImage2D#height",
+        "glCompressedTexSubImage2D#xoffset", "glCompressedTexSubImage2D#yoffset", "glCompressedTexSubImage2D#width", "glCompressedTexSubImage2D#height",
+        "glCopyTexImage2D#x", "glCopyTexImage2D#y", "glCopyTexImage2D#width", "glCopyTexImage2D#height",
+        "glCopyTexSubImage2D#xoffset", "glCopyTexSubImage2D#yoffset", "glCopyTexSubImage2D#x", "glCopyTexSubImage2D#y", "glCopyTexSubImage2D#width", "glCopyTexSubImage2D#height",
+        "glReadPixels#x", "glReadPixels#y", "glReadPixels#width", "glReadPixels#height",
+        "glScissor#x", "glScissor#y", "glScissor#width", "glScissor#height",
+        "glTexImage2D#width", "glTexImage2D#height",
+        "glTexSubImage2D#xoffset", "glTexSubImage2D#yoffset", "glTexSubImage2D#width", "glTexSubImage2D#height",
+        "glViewport#x", "glViewport#y", "glViewport#width", "glViewport#height",
+        "glRenderbufferStorage#width", "glRenderbufferStorage#height",
+        ).map("com.badlogic.gdx.graphics.GL20#" + _),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
       // sge sizes a `Pixmap` in plain `Int` (image dimensions are not screen pixels; the demos write
       // `Pixmap(w, h, format)`): the flow stops at its declarations, the call sites coerce.
-      scope      = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap"))))),
+      scope      = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap",
+        // sge types GL20's sizes in `Pixels` and keeps GL30's plain `Int`: the flow stops at these members, the calls coerce
+        "com.badlogic.gdx.graphics.GL30#glTexImage2D", "com.badlogic.gdx.graphics.GL30#glTexImage3D",
+        "com.badlogic.gdx.graphics.GL30#glTexSubImage2D", "com.badlogic.gdx.graphics.GL30#glTexSubImage3D",
+        "com.badlogic.gdx.graphics.GL30#glCopyTexSubImage3D", "com.badlogic.gdx.graphics.GL30#glBlitFramebuffer",
+        "com.badlogic.gdx.graphics.GL30#glRenderbufferStorageMultisample"))))),
     // sge's helper API the demos use: the `gl` alias, `rendering { … }` around `begin`/`end`,
     // class-tag `load` and a `Nullable` `get` on the asset manager.
     "helpers" -> List(
@@ -428,7 +494,7 @@ object LibgdxLadder:
         "com.badlogic.gdx.assets.AssetLoadingTask"))))),
     // sge's typed GL enums (`GLEnum.scala`, injected) at the GL20 parameters the demos reach; the raw
     // `GL_*` constants stay java's `inline val`s (a constant is never a seed, K51 xv) and wrap at the call.
-    "glenum" -> List(
+    "glenum" -> (List(
       new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.EnableCap",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.EnableCap", wrapName = "apply", unwrapName = "toInt"),
@@ -438,21 +504,23 @@ object LibgdxLadder:
       new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.PrimitiveMode",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.PrimitiveMode", wrapName = "apply", unwrapName = "toInt"),
-        hints      = Set("com.badlogic.gdx.graphics.GL20#glDrawArrays#mode", "com.badlogic.gdx.graphics.GL20#glDrawElements#mode"),
+        hints      = Set("GL20#glDrawArrays#mode", "GL20#glDrawElements#mode", "GL30#glDrawRangeElements#mode", "GL30#glBeginTransformFeedback#primitiveMode",
+          "GL30#glDrawArraysInstanced#mode", "GL30#glDrawElementsInstanced#mode", "GL31#glDrawArraysIndirect#mode", "GL31#glDrawElementsIndirect#mode",
+          "GL32#glDrawElementsBaseVertex#mode", "GL32#glDrawRangeElementsBaseVertex#mode", "GL32#glDrawElementsInstancedBaseVertex#mode").map("com.badlogic.gdx.graphics." + _),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
         scope      = balticporter.tir.RuleScope.Everywhere(Set.empty))),
       new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.CompareFunc",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.CompareFunc", wrapName = "apply", unwrapName = "toInt"),
-        hints      = Set("com.badlogic.gdx.graphics.GL20#glDepthFunc#func"),
+        hints      = Set("com.badlogic.gdx.graphics.GL20#glDepthFunc#func", "com.badlogic.gdx.graphics.GL20#glStencilFunc#func", "com.badlogic.gdx.graphics.GL20#glStencilFuncSeparate#func"),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
         scope      = balticporter.tir.RuleScope.Everywhere(Set.empty))),
       new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.ClearMask",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.ClearMask", wrapName = "apply", unwrapName = "toInt"),
-        hints      = Set("com.badlogic.gdx.graphics.GL20#glClear#mask"),
+        hints      = Set("com.badlogic.gdx.graphics.GL20#glClear#mask", "com.badlogic.gdx.graphics.GL30#glBlitFramebuffer#mask"),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty)))),
+        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty)))) ++ moreGlEnums),
     // `WorldUnits`: world-space sizes are not bare `Float`s (sge's opaque type, injected from sge's
     // own file). Seeded at the viewport's and the camera's world-size fields.
     "worldunits" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
@@ -551,6 +619,7 @@ object LibgdxLadder:
     "audio"      -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-audio")),
     "time"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-time")),
     "glenum"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-glenum")),
+    "backend-jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -571,9 +640,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

@@ -280,17 +280,21 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     // strip `()` for parenless members (MemberRenamer renames the name but not the arity),
     // expanded to the whole override component so a dependent's own override follows too.
     val graph2 = OverrideGraph.build(renamed)
+    val renamedByName = renamed.symbols.all.toList.groupBy(_.name)
     val parenlessRoots = memberRenameEntries.filter(_.memberShape.form == "parenless")
       .flatMap { e =>
         val upBare   = PortMapTransform.bareKey(e.upstream)
         val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
         val emitBare = PortMapTransform.bareKey(e.emitted)
+        val ownerFqn = PortMapTransform.ownerOf(upBare)
+        val newName  = PortMapTransform.simpleNameOf(emitBare)
         // a renamed member still sits in the UPSTREAM package here (package-rename runs last):
-        // `com...OctreeNode#leaf`, neither the upstream key (`#isLeaf`) nor the emitted one (`sge...`)
-        val renamedInUpNs = PortMapTransform.ownerOf(upBare) + "#" + PortMapTransform.simpleNameOf(emitBare)
-        renamed.symbols.all.iterator.find(s =>
-          (s.fullName == inEmitNs || s.fullName == emitBare || s.fullName == upBare || s.fullName == renamedInUpNs)
-            && PolicyBinder.isExecutable(s.info)).map(_.id)
+        // the emitted simple name under the upstream OWNER — found through the owner symbol, never
+        // a rebuilt `owner#name` string; the entry's arity picks among overloads (`ofKind`)
+        val renamedInUpNs = renamedByName.getOrElse(newName, Nil)
+          .filter(s => renamed.symbolOf(s.owner).exists(_.fullName == ownerFqn))
+        val byKey = List(inEmitNs, emitBare, upBare).flatMap(k => renamed.symbols.all.filter(_.fullName == k))
+        ofKind(e, (byKey ++ renamedInUpNs).distinctBy(_.id).filter(s => PolicyBinder.isExecutable(s.info))).map(_.id)
       }.toSet
     val parenlessSyms = parenlessRoots.flatMap(r => graph2.closureOf(r).members)
 

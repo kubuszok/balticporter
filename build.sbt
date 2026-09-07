@@ -537,8 +537,15 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
   .settings(portSourceGenerators("sge-l0") *)
   .settings(
     name := "balticporter-port-sge-l0",
+    resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
     libraryDependencies ++= Seq(
       "com.badlogicgames.gdx"  % "gdx-jnigen-loader" % "2.5.2",
+      // sge's JVM platform layer (PROGRESS.md §13.30): Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE).
+      "com.kubuszok"          %% "multiarch-core"         % "0.4.0",
+      "com.kubuszok"          %% "multiarch-panama-api"   % "0.4.0",
+      "com.kubuszok"          %% "multiarch-panama-jdk"   % "0.4.0",
+      "com.kubuszok"           % "pnm-provider-sge-desktop" % "0.1.2-33-gcf10406-SNAPSHOT",
+      "com.kubuszok"           % "pnm-provider-sge-angle"   % "0.1.2-33-gcf10406-SNAPSHOT",
       "org.scalameta"         %% "munit"             % "1.2.0" % Test,
       "junit"                  % "junit"             % "4.13.2" % Test,
       "org.junit.jupiter"      % "junit-jupiter"     % "5.10.2" % Test,

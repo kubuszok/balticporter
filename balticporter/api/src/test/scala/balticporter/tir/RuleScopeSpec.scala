@@ -124,6 +124,19 @@ class RuleScopeSpec extends munit.FunSuite:
     assert(!RuleScope.Everywhere(Set("com.foo.Bar#m")).includes(p, param))
   }
 
+  test("a PARAMETER the frontend names `Class#m#p` is placed by that name — one parameter can be fenced alone") {
+    val cls   = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
+    val meth  = Symbol(SymId(2), "m", "com.foo.Bar#m", Flags(), cls.id, TypeRepr.MethodType(Nil, TypeRepr.NoType))
+    val p1    = Symbol(SymId(3), "p", "com.foo.Bar#m#p", Flags(isParam = true), meth.id, TypeRepr.NoType)
+    val q1    = Symbol(SymId(4), "q", "com.foo.Bar#m#q", Flags(isParam = true), meth.id, TypeRepr.NoType)
+    val prog  = new Program(Nil, SymbolTable(List(cls, meth, p1, q1)), Xref.build(Nil), MemberIndex.empty)
+    assert(!RuleScope.Everywhere(Set("com.foo.Bar#m#p")).includes(prog, p1))
+    assert(RuleScope.Everywhere(Set("com.foo.Bar#m#p")).includes(prog, q1))
+    assert(RuleScope.Only(Set("com.foo.Bar#m#p")).includes(prog, p1))
+    assert(!RuleScope.Only(Set("com.foo.Bar#m#p")).includes(prog, q1))
+    assert(!RuleScope.Everywhere(Set("com.foo.Bar#m")).includes(prog, q1)) // the member still covers both
+  }
+
   test("a member is in scope with its type, and a type is NOT in scope with one of its members") {
     val p = program
     assert(RuleScope.Only(Set("com.foo.Bar")).includes(p, sym(p, "com.foo.Bar#m")))

@@ -82,13 +82,15 @@ object RuleScope:
   def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
 
   /** Does this symbol's OWN `fullName` place it, or is the owner chain the only evidence there is?
-    * STRUCTURAL (the owner is a method), never a shape test on the string (§4.56): a method-LOCAL
-    * is named by its SIMPLE NAME (`items` matches every local called `items` in the program) and a
-    * PARAMETER is `?#p`, both silently. Neither name identifies anything, so neither is consulted. */
+    * STRUCTURAL (§4.56): under a METHOD owner a name places the symbol only when it is the owner's
+    * own `fullName` plus `#name` — a PARAMETER as the frontend names it (`Class#m#p`, the spelling a
+    * hint uses, so a scope can fence ONE parameter). A method-LOCAL's SIMPLE NAME (`items` matches
+    * every local so called) and a nameless `?#p` identify nothing and are never consulted. */
   def placedByOwnName(program: Program, sym: Symbol): Boolean =
-    !program.symbolOf(sym.owner).exists(_.info match
-      case _: TypeRepr.MethodType | _: TypeRepr.PolyType => true
-      case _                                             => false)
+    program.symbolOf(sym.owner) match
+      case Some(o) if o.info.isInstanceOf[TypeRepr.MethodType] || o.info.isInstanceOf[TypeRepr.PolyType] =>
+        sym.fullName == o.fullName + "#" + sym.name
+      case _ => true
 
   /** does `prefix` — a package, a type or a member FQN — NAME `fullName`? The whole §4.56 trap in
     * one line: a bare `startsWith` makes `com.foo` cover `com.foobar`, silently, with a green

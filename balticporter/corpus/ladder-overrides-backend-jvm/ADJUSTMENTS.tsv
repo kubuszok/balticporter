@@ -1,0 +1,7 @@
+#file	origin	adjustment	why
+sge/graphics/AngleGL32.scala	sge/src/main/scalajvm/sge/graphics/AngleGL32.scala	+import sge.graphics.GL32.DebugProc	java nests DebugProc in the interface -> the port emits it in the companion; sge nests it in the trait
+sge/platform/package.scala	sge-jvm-platform/api/src/main/scala/sge/platform/package.scala	copied verbatim	the PanamaProvider alias sge's core JVM row takes from its platform-api module
+sge/platform/ConcurrencyOpsDesktop.scala	sge/src/main/scaladesktop/sge/platform/ConcurrencyOpsDesktop.scala	copied verbatim	PlatformOps.concurrency; sge keeps it in the desktop dir
+sge/utils/Log.scala	sge/src/main/scala/sge/utils/Log.scala	copied verbatim	GlOpsJvm and WindowingOpsJvm log EGL/GLFW failures through it
+sge/utils/LogPlatform.scala	sge/src/main/scalajvm/sge/utils/LogPlatform.scala	REWRITTEN over java.lang.System.Logger	sge logs through scribe; the port carries no logging dependency
+(omitted)	sge/src/main/scalajvm/sge/{DesktopApplicationFactory,audio/DesktopAudioRecorder,net/HttpBackendFactoryImpl}.scala	not copied in step 1	desktop layer (step 3); SgeError and sttp dependencies

@@ -1,0 +1,1108 @@
+/*
+ * SGE - Scala Game Engine
+ * Copyright 2025-2026 Mateusz Kubuszok
+ * Licensed under the Apache License, Version 2.0
+ *
+ * Migration notes:
+ *   Origin: SGE-original JVM implementation of WindowingOps
+ *   Convention: Panama FFM downcall handles to GLFW shared library
+ *   Convention: GLFW callbacks use Panama upcall stubs
+ *   Convention: String params allocated in confined arenas (auto-freed)
+ *   Idiom: split packages
+ *   Audited: 2026-03-08
+ */
+package sge
+package platform
+
+import java.lang.foreign.*
+import java.lang.foreign.ValueLayout.*
+import java.lang.invoke.MethodHandle
+import lowlevel.Nullable
+
+/** JVM implementation of [[WindowingOps]] via Panama FFM downcall handles to the GLFW shared library.
+  *
+  * Each method creates a downcall handle to the corresponding GLFW C function. Callbacks use Panama upcall stubs that delegate to Scala functions.
+  *
+  * @param lib
+  *   a `SymbolLookup` for the GLFW shared library (e.g. libglfw.dylib / glfw3.dll)
+  */
+class WindowingOpsJvm(lib: SymbolLookup) extends WindowingOps {
+
+  private val linker: Linker = Linker.nativeLinker()
+
+  private def h(name: String, desc: FunctionDescriptor): MethodHandle =
+    linker.downcallHandle(
+      lib.find(name).orElseThrow(() => new UnsatisfiedLinkError(s"GLFW symbol not found: $name")),
+      desc
+    )
+
+  // ─── Layout aliases ────────────────────────────────────────────────────
+
+  private val I: ValueLayout.OfInt    = JAVA_INT
+  private val D: ValueLayout.OfDouble = JAVA_DOUBLE
+  private val P: AddressLayout        = ADDRESS
+
+  // ─── Method handles (lazy to avoid loading unused symbols) ──────────
+
+  private lazy val hInit           = h("glfwInit", FunctionDescriptor.of(I))
+  private lazy val hTerminate      = h("glfwTerminate", FunctionDescriptor.ofVoid())
+  private lazy val hCreateWindow   = h("glfwCreateWindow", FunctionDescriptor.of(P, I, I, P, P, P))
+  private lazy val hDestroyWindow  = h("glfwDestroyWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hShouldClose    = h("glfwWindowShouldClose", FunctionDescriptor.of(I, P))
+  private lazy val hSetShouldClose = h("glfwSetWindowShouldClose", FunctionDescriptor.ofVoid(P, I))
+  private lazy val hSwapBuffers    = h("glfwSwapBuffers", FunctionDescriptor.ofVoid(P))
+  private lazy val hPollEvents     = h("glfwPollEvents", FunctionDescriptor.ofVoid())
+  private lazy val hSetTitle       = h("glfwSetWindowTitle", FunctionDescriptor.ofVoid(P, P))
+  private lazy val hGetWinSize     = h("glfwGetWindowSize", FunctionDescriptor.ofVoid(P, P, P))
+  private lazy val hSetWinSize     = h("glfwSetWindowSize", FunctionDescriptor.ofVoid(P, I, I))
+  private lazy val hGetWinPos      = h("glfwGetWindowPos", FunctionDescriptor.ofVoid(P, P, P))
+  private lazy val hSetWinPos      = h("glfwSetWindowPos", FunctionDescriptor.ofVoid(P, I, I))
+  private lazy val hGetFbSize      = h("glfwGetFramebufferSize", FunctionDescriptor.ofVoid(P, P, P))
+  private lazy val hIconify        = h("glfwIconifyWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hRestore        = h("glfwRestoreWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hMaximize       = h("glfwMaximizeWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hShowWindow     = h("glfwShowWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hHideWindow     = h("glfwHideWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hFocusWindow    = h("glfwFocusWindow", FunctionDescriptor.ofVoid(P))
+  private lazy val hGetClip        = h("glfwGetClipboardString", FunctionDescriptor.of(P, P))
+  private lazy val hSetClip        = h("glfwSetClipboardString", FunctionDescriptor.ofVoid(P, P))
+  private lazy val hGetInputMode   = h("glfwGetInputMode", FunctionDescriptor.of(I, P, I))
+  private lazy val hSetInputMode   = h("glfwSetInputMode", FunctionDescriptor.ofVoid(P, I, I))
+  private lazy val hCreateCursor   = h("glfwCreateStandardCursor", FunctionDescriptor.of(P, I))
+  // glfwCreateCursor(const GLFWimage* image, int xhot, int yhot) -> GLFWcursor*. Core GLFW (not
+  // platform-specific), so the symbol is present in the shipped libglfw on every platform.
+  private lazy val hCreateImgCursor = h("glfwCreateCursor", FunctionDescriptor.of(P, P, I, I))
+  private lazy val hSetCursor       = h("glfwSetCursor", FunctionDescriptor.ofVoid(P, P))
+  private lazy val hDestroyCursor   = h("glfwDestroyCursor", FunctionDescriptor.ofVoid(P))
+  private lazy val hGetPrimMon      = h("glfwGetPrimaryMonitor", FunctionDescriptor.of(P))
+  private lazy val hGetMonitors     = h("glfwGetMonitors", FunctionDescriptor.of(P, P))
+  private lazy val hGetMonName      = h("glfwGetMonitorName", FunctionDescriptor.of(P, P))
+  private lazy val hGetMonPos       = h("glfwGetMonitorPos", FunctionDescriptor.ofVoid(P, P, P))
+  private lazy val hSetWinMon       = h("glfwSetWindowMonitor", FunctionDescriptor.ofVoid(P, P, I, I, I, I, I))
+  private lazy val hGetWinMon       = h("glfwGetWindowMonitor", FunctionDescriptor.of(P, P))
+  private lazy val hSetWinAttrib    = h("glfwSetWindowAttrib", FunctionDescriptor.ofVoid(P, I, I))
+  private lazy val hGetWinAttrib    = h("glfwGetWindowAttrib", FunctionDescriptor.of(I, P, I))
+  private lazy val hSetSizeLimits   = h("glfwSetWindowSizeLimits", FunctionDescriptor.ofVoid(P, I, I, I, I))
+  private lazy val hReqAttention    = h("glfwRequestWindowAttention", FunctionDescriptor.ofVoid(P))
+  private lazy val hMakeCtxCurr     = h("glfwMakeContextCurrent", FunctionDescriptor.ofVoid(P))
+  private lazy val hSwapInterval    = h("glfwSwapInterval", FunctionDescriptor.ofVoid(I))
+  private lazy val hExtSupported    = h("glfwExtensionSupported", FunctionDescriptor.of(I, P))
+  private lazy val hGetMonPhys      = h("glfwGetMonitorPhysicalSize", FunctionDescriptor.ofVoid(P, P, P))
+  private lazy val hGetVidModes     = h("glfwGetVideoModes", FunctionDescriptor.of(P, P, P))
+  private lazy val hGetVidMode      = h("glfwGetVideoMode", FunctionDescriptor.of(P, P))
+  private lazy val hWindowHint      = h("glfwWindowHint", FunctionDescriptor.ofVoid(I, I))
+  private lazy val hDefaultHints    = h("glfwDefaultWindowHints", FunctionDescriptor.ofVoid())
+  private lazy val hGetMouseBtn     = h("glfwGetMouseButton", FunctionDescriptor.of(I, P, I))
+  private lazy val hSetCursorPos    = h("glfwSetCursorPos", FunctionDescriptor.ofVoid(P, D, D))
+  private lazy val hGetTime         = h("glfwGetTime", FunctionDescriptor.of(D))
+  private lazy val hGetPlatform     = h("glfwGetPlatform", FunctionDescriptor.of(I))
+  private lazy val hSetWinIcon      = h("glfwSetWindowIcon", FunctionDescriptor.ofVoid(P, I, P))
+
+  // Cached CALayer address — set once per window at creation, reused by updateNativeLayerScale.
+  // Map from GLFW window handle → CALayer address (macOS only).
+  private val cachedLayerAddresses: java.util.HashMap[Long, Long] = new java.util.HashMap()
+
+  // Platform-native window handle getters (from glfw3native.h)
+  private lazy val hGetCocoaWindow: Option[MethodHandle] = {
+    val opt = lib.find("glfwGetCocoaWindow")
+    if (opt.isPresent) Some(linker.downcallHandle(opt.get(), FunctionDescriptor.of(P, P))) else None
+  }
+
+  // Objective-C runtime handles for getting the contentView from an NSWindow.
+  // ANGLE on macOS (Metal backend) may not recognize NSWindow directly;
+  // it reliably accepts NSView (contentView) for eglCreateWindowSurface.
+  // Objective-C runtime symbols — already loaded by GLFW's Cocoa backend.
+  // Use loaderLookup + defaultLookup to find them without needing explicit dlopen.
+  private lazy val objcLookup: SymbolLookup = {
+    val loader  = SymbolLookup.loaderLookup()
+    val default = linker.defaultLookup()
+    // Chain: first try loader (loaded libs), then default (system C library)
+    name => { val r = loader.find(name); if (r.isPresent) r else default.find(name) }
+  }
+  private lazy val hSelRegisterName: MethodHandle =
+    linker.downcallHandle(objcLookup.find("sel_registerName").orElseThrow(), FunctionDescriptor.of(P, P))
+  private lazy val hObjcMsgSend: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_msgSend").orElseThrow(), FunctionDescriptor.of(P, P, P))
+  // objc_msgSend variant for sending a BOOL (int) argument
+  private lazy val hObjcMsgSendBool: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_msgSend").orElseThrow(), FunctionDescriptor.ofVoid(P, P, JAVA_INT))
+  // objc_msgSend variant for sending a CGFloat (double on 64-bit) argument — used for setContentsScale:
+  private lazy val hObjcMsgSendDouble: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_msgSend").orElseThrow(), FunctionDescriptor.ofVoid(P, P, JAVA_DOUBLE))
+  // objc_msgSend variant returning NSUInteger (long on 64-bit) — used for [NSArray count]
+  private lazy val hObjcMsgSendCount: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_msgSend").orElseThrow(), FunctionDescriptor.of(JAVA_LONG, P, P))
+  // objc_msgSend variant taking NSUInteger and returning pointer — used for [NSArray objectAtIndex:]
+  private lazy val hObjcMsgSendIndex: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_msgSend").orElseThrow(), FunctionDescriptor.of(P, P, P, JAVA_LONG))
+  // objc_getClass — look up an Objective-C class by name
+  private lazy val hObjcGetClass: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_getClass").orElseThrow(), FunctionDescriptor.of(P, P))
+  // objc_msgSend variant for void class methods (no extra args) — used for [CATransaction begin/commit]
+  private lazy val hObjcMsgSendVoid: MethodHandle =
+    linker.downcallHandle(objcLookup.find("objc_msgSend").orElseThrow(), FunctionDescriptor.ofVoid(P, P))
+  private lazy val hGetX11Window: Option[MethodHandle] = {
+    val opt = lib.find("glfwGetX11Window")
+    if (opt.isPresent) Some(linker.downcallHandle(opt.get(), FunctionDescriptor.of(JAVA_LONG, P))) else None
+  }
+  private lazy val hGetWin32Window: Option[MethodHandle] = {
+    val opt = lib.find("glfwGetWin32Window")
+    if (opt.isPresent) Some(linker.downcallHandle(opt.get(), FunctionDescriptor.of(P, P))) else None
+  }
+  // glfwGetWaylandWindow returns the wl_surface* for the given GLFW window (glfw3native.h).
+  private lazy val hGetWaylandWindow: Option[MethodHandle] = {
+    val opt = lib.find("glfwGetWaylandWindow")
+    if (opt.isPresent) Some(linker.downcallHandle(opt.get(), FunctionDescriptor.of(P, P))) else None
+  }
+
+  // Callback setters
+  private lazy val hSetFbSizeCb   = h("glfwSetFramebufferSizeCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetFocusCb    = h("glfwSetWindowFocusCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetIconifyCb  = h("glfwSetWindowIconifyCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetMaximizeCb = h("glfwSetWindowMaximizeCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetCloseCb    = h("glfwSetWindowCloseCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetDropCb     = h("glfwSetDropCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetRefreshCb  = h("glfwSetWindowRefreshCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetKeyCb      = h("glfwSetKeyCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetCharCb     = h("glfwSetCharCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetScrollCb   = h("glfwSetScrollCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetCurPosCb   = h("glfwSetCursorPosCallback", FunctionDescriptor.of(P, P, P))
+  private lazy val hSetMouseBtnCb = h("glfwSetMouseButtonCallback", FunctionDescriptor.of(P, P, P))
+
+  // ─── Helpers ────────────────────────────────────────────────────────
+
+  private def ptr(handle: Long): MemorySegment =
+    MemorySegment.ofAddress(handle)
+
+  private def ptrVal(seg: MemorySegment): Long =
+    seg.address()
+
+  /** Allocate a UTF-8 C string in the given arena. */
+  private def cStr(arena: Arena, s: String): MemorySegment =
+    arena.allocateFrom(s)
+
+  /** Read a null-terminated UTF-8 C string from a pointer. */
+  private def readCStr(seg: MemorySegment): String =
+    seg.reinterpret(Long.MaxValue).getString(0)
+
+  /** Read two ints from output pointers. */
+  private def readTwoInts(arena: Arena, invoke: (MemorySegment, MemorySegment) => Unit): (Int, Int) = {
+    val px = arena.allocate(I)
+    val py = arena.allocate(I)
+    invoke(px, py)
+    (px.get(I, 0), py.get(I, 0))
+  }
+
+  // Upcall stub arena — kept alive for the process lifetime.
+  // Used ONLY for the process-lifetime error-callback stub (see init()); every
+  // per-window callback stub gets its own closeable arena (callbackArenas below)
+  // so it can be freed when the callback is re-set or the window is destroyed.
+  private val upcallArena: Arena = Arena.ofAuto()
+
+  // Per-(window, callback-kind) upcall-stub arenas. Each GLFW callback setter
+  // installs its stub in a dedicated Arena.ofShared() so the stub can be freed
+  // exactly when it stops being referenced by GLFW — i.e. when the callback is
+  // re-set (with a new stub or NULL) or the window is destroyed. Without this,
+  // every stub would live in the long-lived upcallArena forever → one leaked
+  // upcall stub per registration (and per re-registration / per window).
+  // Key: (windowHandle, kind) where kind identifies the callback slot.
+  private val callbackArenas =
+    new java.util.concurrent.ConcurrentHashMap[(Long, String), java.lang.foreign.Arena]()
+
+  /** Install (or clear) a per-window GLFW callback upcall stub, freeing the previously installed stub's arena.
+    *
+    * Invariant: install-new-before-close-old. GLFW retains the previously installed upcall-stub pointer until we hand it a new one (or NULL). We must therefore install the new stub first and only
+    * then close the old arena; closing it first would free a stub GLFW may still invoke from a driver/event thread → use-after-free.
+    *
+    * @param window
+    *   the GLFW window handle
+    * @param kind
+    *   the callback slot identifier (e.g. "key", "focus")
+    * @param makeStub
+    *   builds the upcall stub in the supplied arena (must NOT use upcallArena)
+    * @param install
+    *   invokes the GLFW setter with the new stub (or NULL)
+    * @param isNull
+    *   whether the caller's callback was null (clear the slot)
+    */
+  private def installWindowCallback(
+    window:   Long,
+    kind:     String,
+    makeStub: Arena => MemorySegment,
+    install:  MemorySegment => Unit,
+    isNull:   Boolean
+  ): Unit =
+    if (isNull) {
+      // Clear the slot first (GLFW drops the old stub pointer), then free its arena.
+      install(MemorySegment.NULL)
+      Option(callbackArenas.remove((window, kind))).foreach(_.close())
+    } else {
+      val a    = Arena.ofShared()
+      val stub = makeStub(a)
+      // Install the new stub BEFORE freeing the old one.
+      install(stub)
+      val old = callbackArenas.put((window, kind), a)
+      if (old != null) {
+        old.close()
+      }
+    }
+
+  // ─── Initialization ────────────────────────────────────────────────────
+
+  private lazy val hInitHint = h("glfwInitHint", FunctionDescriptor.ofVoid(I, I))
+
+  // Tracks whether the caller explicitly chose a GLFW_PLATFORM (e.g. headless tests pin
+  // GLFW_PLATFORM_NULL). If so, init() must not override it with the Linux X11 default (ISS-761).
+  private var platformHintSet: Boolean = false
+
+  override def setInitHint(hint: Int, value: Int): Unit = {
+    if (hint == WindowingOps.GLFW_PLATFORM) platformHintSet = true
+    hInitHint.invoke(hint, value)
+  }
+
+  // glfwSetErrorCallback(GLFWerrorfun callback) -> previous GLFWerrorfun.
+  // GLFWerrorfun signature: void(*)(int error, const char* description).
+  private lazy val hSetErrorCb = h("glfwSetErrorCallback", FunctionDescriptor.of(P, P))
+
+  // Application-installed error callback (via setErrorCallback), or Nullable.empty to fall back to
+  // logging. errorCallbackStub below dispatches through this field, so an app callback installed
+  // BEFORE init() survives init()'s (re-)installation of the same persistent stub (ISS-807) —
+  // mirroring the Native backend's field-dispatch. When empty, GLFW errors log via utils.Log.
+  private var appErrorCallback: Nullable[(Int, String) => Unit] = Nullable.empty
+
+  // The error-callback upcall stub must outlive init() — GLFW invokes it whenever
+  // an error is reported, for the whole process lifetime. Allocate it in the
+  // long-lived upcallArena (Arena.ofAuto), NOT a confined arena we close (a freed
+  // stub would be a use-after-free when GLFW reports an error). It dispatches to the
+  // application-installed callback if present, else logs (mirrors LibGDX's GLFWErrorCallback).
+  private lazy val errorCallbackStub: MemorySegment = {
+    val desc   = FunctionDescriptor.ofVoid(I, P)
+    val target = java.lang.invoke.MethodHandles
+      .lookup()
+      .bind(
+        new AnyRef {
+          @scala.annotation.nowarn("id=E198")
+          def invoke(error: Int, description: MemorySegment): Unit = {
+            // description is a NUL-terminated UTF-8 C string owned by GLFW.
+            // NULL guards against GLFW passing no description.
+            val message =
+              if (description.address() == 0L) ""
+              else readCStr(description)
+            appErrorCallback.fold {
+              utils.Log.error(s"GLFW error 0x${java.lang.Integer.toHexString(error)}: $message")
+            }(cb => cb(error, message))
+          }
+        },
+        "invoke",
+        java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[Int], classOf[MemorySegment])
+      )
+    linker.upcallStub(target, desc, upcallArena)
+  }
+
+  override def init(): Boolean = {
+    // Install a GLFW error callback BEFORE glfwInit so init-time errors surface
+    // (glfwSetErrorCallback is valid before glfwInit). LibGDX installs a
+    // GLFWErrorCallback at init so GLFW failures are logged rather than dropped.
+    hSetErrorCb.invoke(errorCallbackStub)
+    // ISS-761: on Linux, force the X11 GLFW platform before glfwInit. SGE's GL context is created
+    // by ANGLE/EGL against the native window handle (getNativeWindowHandle), and that EGL path is
+    // wired for X11 window IDs; letting GLFW auto-select Wayland would hand back a wl_surface* that
+    // the ANGLE/EGL setup does not consume. This is an SGE-original choice (no LibGDX analogue) —
+    // upstream lwjgl3 also defaults to X11 in practice. Wayland support stays behind ISS-761.
+    // Skipped when the caller already pinned a platform (e.g. headless tests use GLFW_PLATFORM_NULL).
+    if (!platformHintSet && System.getProperty("os.name", "").toLowerCase.contains("linux")) {
+      hInitHint.invoke(WindowingOps.GLFW_PLATFORM, WindowingOps.GLFW_PLATFORM_X11)
+    }
+    val result = hInit.invoke().asInstanceOf[Int]
+    result != 0
+  }
+
+  override def terminate(): Unit =
+    hTerminate.invoke()
+
+  override def platform: Int =
+    hGetPlatform.invoke().asInstanceOf[Int]
+
+  override def setErrorCallback(callback: Nullable[(Int, String) => Unit]): Unit =
+    callback.fold {
+      // Empty clears the application callback (trait contract) — drop back to GLFW having no callback.
+      appErrorCallback = Nullable.empty
+      hSetErrorCb.invoke(MemorySegment.NULL)
+    } { cb =>
+      // Record the application callback and install the persistent dispatcher stub. Field-dispatch
+      // (not a fresh per-callback stub) is what lets a callback installed BEFORE init() survive
+      // init()'s own installation of the same stub (ISS-807). The stub outlives this call — GLFW
+      // retains it for the process lifetime — so it lives in the long-lived upcallArena.
+      appErrorCallback = Nullable(cb)
+      hSetErrorCb.invoke(errorCallbackStub)
+    }
+
+  // ─── Window lifecycle ──────────────────────────────────────────────────
+
+  override def createWindow(width: Int, height: Int, title: String): Long = {
+    val arena = Arena.ofConfined()
+    try {
+      val result = hCreateWindow.invoke(width, height, cStr(arena, title), MemorySegment.NULL, MemorySegment.NULL)
+      ptrVal(result.asInstanceOf[MemorySegment])
+    } finally arena.close()
+  }
+
+  override def createWindow(width: Int, height: Int, title: String, monitorHandle: Long, refreshRate: Int): Long =
+    if (monitorHandle == 0L) createWindow(width, height, title)
+    else {
+      // Faithful to Lwjgl3Application.createGlfwWindow (Lwjgl3Application.java:515-518): set the
+      // GLFW_REFRESH_RATE hint, then create the window directly on the target monitor so it opens
+      // fullscreen there.
+      hWindowHint.invoke(WindowingOps.GLFW_REFRESH_RATE, refreshRate)
+      val arena = Arena.ofConfined()
+      try {
+        val result = hCreateWindow.invoke(width, height, cStr(arena, title), ptr(monitorHandle), MemorySegment.NULL)
+        ptrVal(result.asInstanceOf[MemorySegment])
+      } finally arena.close()
+    }
+
+  override def destroyWindow(windowHandle: Long): Unit = {
+    // Destroy the window first — GLFW drops all of its callback-stub pointers as
+    // part of teardown — then free every per-callback arena owned by this window
+    // so its upcall stubs are released (otherwise they would leak for the rest of
+    // the process lifetime).
+    hDestroyWindow.invoke(ptr(windowHandle))
+    val it = callbackArenas.entrySet().iterator()
+    while (it.hasNext) {
+      val entry = it.next()
+      if (entry.getKey._1 == windowHandle) {
+        entry.getValue.close()
+        it.remove()
+      }
+    }
+  }
+
+  override def windowShouldClose(windowHandle: Long): Boolean = {
+    val result = hShouldClose.invoke(ptr(windowHandle)).asInstanceOf[Int]
+    result != 0
+  }
+
+  override def setWindowShouldClose(windowHandle: Long, value: Boolean): Unit =
+    hSetShouldClose.invoke(ptr(windowHandle), if (value) 1 else 0)
+
+  override def swapBuffers(windowHandle: Long): Unit =
+    hSwapBuffers.invoke(ptr(windowHandle))
+
+  override def pollEvents(): Unit =
+    hPollEvents.invoke()
+
+  override def getNativeWindowHandle(windowHandle: Long): Long = {
+    val currentPlatform = this.platform
+    if (currentPlatform == WindowingOps.GLFW_PLATFORM_COCOA) {
+      val nsWindow = hGetCocoaWindow
+        .map { mh =>
+          mh.invoke(ptr(windowHandle)).asInstanceOf[MemorySegment]
+        }
+        .getOrElse(throw new UnsupportedOperationException("glfwGetCocoaWindow not available"))
+      // Get the contentView's CALayer from NSWindow — ANGLE's Metal backend needs a CALayer
+      val arena = Arena.ofConfined()
+      try {
+        val selContentView = hSelRegisterName.invoke(arena.allocateFrom("contentView")).asInstanceOf[MemorySegment]
+        val contentView    = hObjcMsgSend.invoke(nsWindow, selContentView).asInstanceOf[MemorySegment]
+
+        // Enable layer-backing on the contentView (needed for ANGLE Metal)
+        val selSetWantsLayer = hSelRegisterName.invoke(arena.allocateFrom("setWantsLayer:")).asInstanceOf[MemorySegment]
+        hObjcMsgSendBool.invoke(contentView, selSetWantsLayer, 1) // YES
+
+        // Get the CALayer
+        val selLayer = hSelRegisterName.invoke(arena.allocateFrom("layer")).asInstanceOf[MemorySegment]
+        val layer    = hObjcMsgSend.invoke(contentView, selLayer).asInstanceOf[MemorySegment]
+
+        // Set contentsScale to match the display's backing scale factor (Retina support).
+        // Without this, ANGLE's Metal backend renders at 1x into the CALayer, producing
+        // a tiny canvas in the bottom-left corner on HiDPI displays.
+        val (fbW, _)            = getFramebufferSize(windowHandle)
+        val (winW, _)           = getWindowSize(windowHandle)
+        val scale               = if (winW > 0) fbW.toDouble / winW.toDouble else 1.0
+        val selSetContentsScale = hSelRegisterName.invoke(arena.allocateFrom("setContentsScale:")).asInstanceOf[MemorySegment]
+        hObjcMsgSendDouble.invoke(layer, selSetContentsScale, scale)
+
+        val addr = layer.address()
+        cachedLayerAddresses.put(windowHandle, addr)
+        addr
+      } finally arena.close()
+    } else if (currentPlatform == WindowingOps.GLFW_PLATFORM_X11) {
+      hGetX11Window
+        .map { mh =>
+          mh.invoke(ptr(windowHandle)).asInstanceOf[Long]
+        }
+        .getOrElse(throw new UnsupportedOperationException("glfwGetX11Window not available"))
+    } else if (currentPlatform == WindowingOps.GLFW_PLATFORM_WIN32) {
+      hGetWin32Window
+        .map { mh =>
+          ptrVal(mh.invoke(ptr(windowHandle)).asInstanceOf[MemorySegment])
+        }
+        .getOrElse(throw new UnsupportedOperationException("glfwGetWin32Window not available"))
+    } else if (currentPlatform == WindowingOps.GLFW_PLATFORM_WAYLAND) {
+      // Wayland (ISS-761): return the wl_surface* for EGL. SGE forces the X11 GLFW platform on
+      // Linux in init() (see above), so this branch normally stays dormant on the ANGLE/EGL path;
+      // it exists so getNativeWindowHandle is total under a Wayland session GLFW is built for.
+      hGetWaylandWindow
+        .map { mh =>
+          ptrVal(mh.invoke(ptr(windowHandle)).asInstanceOf[MemorySegment])
+        }
+        .getOrElse(throw new UnsupportedOperationException("glfwGetWaylandWindow not available"))
+    } else {
+      throw new UnsupportedOperationException(s"getNativeWindowHandle not supported on platform $currentPlatform")
+    }
+  }
+
+  override def beginNoAnimationTransaction(): Unit =
+    if (platform == WindowingOps.GLFW_PLATFORM_COCOA) {
+      val arena = Arena.ofConfined()
+      try {
+        val caTransaction        = hObjcGetClass.invoke(arena.allocateFrom("CATransaction")).asInstanceOf[MemorySegment]
+        val selBegin             = hSelRegisterName.invoke(arena.allocateFrom("begin")).asInstanceOf[MemorySegment]
+        val selSetDisableActions = hSelRegisterName.invoke(arena.allocateFrom("setDisableActions:")).asInstanceOf[MemorySegment]
+        hObjcMsgSendVoid.invoke(caTransaction, selBegin)
+        hObjcMsgSendBool.invoke(caTransaction, selSetDisableActions, 1)
+      } finally arena.close()
+    }
+
+  override def commitTransaction(): Unit =
+    if (platform == WindowingOps.GLFW_PLATFORM_COCOA) {
+      val arena = Arena.ofConfined()
+      try {
+        val caTransaction = hObjcGetClass.invoke(arena.allocateFrom("CATransaction")).asInstanceOf[MemorySegment]
+        val selCommit     = hSelRegisterName.invoke(arena.allocateFrom("commit")).asInstanceOf[MemorySegment]
+        hObjcMsgSendVoid.invoke(caTransaction, selCommit)
+      } finally arena.close()
+    }
+
+  override def updateNativeLayerScale(windowHandle: Long): Unit =
+    if (platform == WindowingOps.GLFW_PLATFORM_COCOA) {
+      hGetCocoaWindow.foreach { mh =>
+        val nsWindow  = mh.invoke(ptr(windowHandle)).asInstanceOf[MemorySegment]
+        val (fbW, _)  = getFramebufferSize(windowHandle)
+        val (winW, _) = getWindowSize(windowHandle)
+        val scale     = if (winW > 0) fbW.toDouble / winW.toDouble else 1.0
+        val arena     = Arena.ofConfined()
+        try {
+          val selContentView = hSelRegisterName.invoke(arena.allocateFrom("contentView")).asInstanceOf[MemorySegment]
+          val contentView    = hObjcMsgSend.invoke(nsWindow, selContentView).asInstanceOf[MemorySegment]
+          val selLayer       = hSelRegisterName.invoke(arena.allocateFrom("layer")).asInstanceOf[MemorySegment]
+          val layer          = hObjcMsgSend.invoke(contentView, selLayer).asInstanceOf[MemorySegment]
+          val selScale       = hSelRegisterName.invoke(arena.allocateFrom("setContentsScale:")).asInstanceOf[MemorySegment]
+          hObjcMsgSendDouble.invoke(layer, selScale, scale)
+          // ANGLE's Metal backend creates a CAMetalLayer sublayer whose contentsScale
+          // must also be updated — it only reads the parent's scale at creation time.
+          val selSublayers = hSelRegisterName.invoke(arena.allocateFrom("sublayers")).asInstanceOf[MemorySegment]
+          val sublayers    = hObjcMsgSend.invoke(layer, selSublayers).asInstanceOf[MemorySegment]
+          if (sublayers.address() != 0L) {
+            val selCount         = hSelRegisterName.invoke(arena.allocateFrom("count")).asInstanceOf[MemorySegment]
+            val count            = hObjcMsgSendCount.invoke(sublayers, selCount).asInstanceOf[Long]
+            val selObjectAtIndex = hSelRegisterName.invoke(arena.allocateFrom("objectAtIndex:")).asInstanceOf[MemorySegment]
+            var i                = 0L
+            while (i < count) {
+              val sublayer = hObjcMsgSendIndex.invoke(sublayers, selObjectAtIndex, i).asInstanceOf[MemorySegment]
+              hObjcMsgSendDouble.invoke(sublayer, selScale, scale)
+              i += 1
+            }
+          }
+          cachedLayerAddresses.put(windowHandle, layer.address())
+        } finally arena.close()
+      }
+    }
+
+  // ─── Window properties ─────────────────────────────────────────────────
+
+  override def setWindowTitle(windowHandle: Long, title: String): Unit = {
+    val arena = Arena.ofConfined()
+    try hSetTitle.invoke(ptr(windowHandle), cStr(arena, title))
+    finally arena.close()
+  }
+
+  override def getWindowSize(windowHandle: Long): (Int, Int) = {
+    val arena = Arena.ofConfined()
+    try readTwoInts(arena, (px, py) => hGetWinSize.invoke(ptr(windowHandle), px, py))
+    finally arena.close()
+  }
+
+  override def setWindowSize(windowHandle: Long, width: Int, height: Int): Unit =
+    hSetWinSize.invoke(ptr(windowHandle), width, height)
+
+  override def getWindowPos(windowHandle: Long): (Int, Int) = {
+    val arena = Arena.ofConfined()
+    try readTwoInts(arena, (px, py) => hGetWinPos.invoke(ptr(windowHandle), px, py))
+    finally arena.close()
+  }
+
+  override def setWindowPos(windowHandle: Long, x: Int, y: Int): Unit =
+    hSetWinPos.invoke(ptr(windowHandle), x, y)
+
+  override def getFramebufferSize(windowHandle: Long): (Int, Int) = {
+    val arena = Arena.ofConfined()
+    try readTwoInts(arena, (px, py) => hGetFbSize.invoke(ptr(windowHandle), px, py))
+    finally arena.close()
+  }
+
+  override def iconifyWindow(windowHandle: Long): Unit =
+    hIconify.invoke(ptr(windowHandle))
+
+  override def restoreWindow(windowHandle: Long): Unit =
+    hRestore.invoke(ptr(windowHandle))
+
+  override def maximizeWindow(windowHandle: Long): Unit =
+    hMaximize.invoke(ptr(windowHandle))
+
+  override def showWindow(windowHandle: Long): Unit =
+    hShowWindow.invoke(ptr(windowHandle))
+
+  override def hideWindow(windowHandle: Long): Unit =
+    hHideWindow.invoke(ptr(windowHandle))
+
+  override def focusWindow(windowHandle: Long): Unit =
+    hFocusWindow.invoke(ptr(windowHandle))
+
+  override def setWindowSizeLimits(windowHandle: Long, minWidth: Int, minHeight: Int, maxWidth: Int, maxHeight: Int): Unit =
+    hSetSizeLimits.invoke(ptr(windowHandle), minWidth, minHeight, maxWidth, maxHeight)
+
+  override def requestWindowAttention(windowHandle: Long): Unit =
+    hReqAttention.invoke(ptr(windowHandle))
+
+  override def setWindowAttrib(windowHandle: Long, attrib: Int, value: Int): Unit =
+    hSetWinAttrib.invoke(ptr(windowHandle), attrib, value)
+
+  override def getWindowAttrib(windowHandle: Long, attrib: Int): Int =
+    hGetWinAttrib.invoke(ptr(windowHandle), attrib).asInstanceOf[Int]
+
+  // ─── Clipboard ─────────────────────────────────────────────────────────
+
+  override def getClipboardString(windowHandle: Long): String = {
+    val result = hGetClip.invoke(ptr(windowHandle)).asInstanceOf[MemorySegment]
+    if (result == MemorySegment.NULL || result.address() == 0L) null
+    else readCStr(result)
+  }
+
+  override def setClipboardString(windowHandle: Long, content: String): Unit = {
+    val arena = Arena.ofConfined()
+    try hSetClip.invoke(ptr(windowHandle), cStr(arena, content))
+    finally arena.close()
+  }
+
+  // ─── Input mode ────────────────────────────────────────────────────────
+
+  override def getInputMode(windowHandle: Long, mode: Int): Int =
+    hGetInputMode.invoke(ptr(windowHandle), mode).asInstanceOf[Int]
+
+  override def setInputMode(windowHandle: Long, mode: Int, value: Int): Unit =
+    hSetInputMode.invoke(ptr(windowHandle), mode, value)
+
+  // ─── Cursor ────────────────────────────────────────────────────────────
+
+  override def createStandardCursor(shape: Int): Long =
+    ptrVal(hCreateCursor.invoke(shape).asInstanceOf[MemorySegment])
+
+  override def createCursor(pixmap: sge.graphics.Pixmap, xHotspot: Int, yHotspot: Int): Long = {
+    val arena = Arena.ofConfined()
+    try {
+      // Build a GLFWimage { int width; int height; unsigned char* pixels; } from the pixmap and call
+      // glfwCreateCursor(image, xhot, yhot) (Lwjgl3Cursor.java:72-76). GLFW copies the pixel data
+      // before returning, so the native buffer is freed with the confined arena.
+      // pixmap.pixels is SHARED with the caller and with the Pixmap's own state (Gdx2DPixmap returns
+      // its backing buffer by identity); read it WITHOUT advancing its position by draining a
+      // duplicate() view (independent position/limit/mark), mirroring the Native twin
+      // (WindowingOpsNative.scala:494-495). Positioning the shared buffer here reset the caller's
+      // position, corrupting any later read of the same pixmap (ISS-833; sibling of the ISS-809 Native fix).
+      val pixels = pixmap.pixels.duplicate()
+      pixels.position(0)
+      val numBytes  = pixels.remaining()
+      val nativeBuf = arena.allocate(numBytes.toLong)
+      nativeBuf.copyFrom(MemorySegment.ofBuffer(pixels))
+      val image = arena.allocate(GlfwImageSize)
+      image.set(I, 0L, pixmap.width.toInt)
+      image.set(I, 4L, pixmap.height.toInt)
+      image.set(P, 8L, nativeBuf)
+      ptrVal(hCreateImgCursor.invoke(image, xHotspot, yHotspot).asInstanceOf[MemorySegment])
+    } finally arena.close()
+  }
+
+  override def setCursor(windowHandle: Long, cursorHandle: Long): Unit =
+    hSetCursor.invoke(ptr(windowHandle), ptr(cursorHandle))
+
+  override def destroyCursor(cursorHandle: Long): Unit =
+    hDestroyCursor.invoke(ptr(cursorHandle))
+
+  // ─── Monitor ───────────────────────────────────────────────────────────
+
+  override def primaryMonitor: Long =
+    ptrVal(hGetPrimMon.invoke().asInstanceOf[MemorySegment])
+
+  override def monitors: Array[Long] = {
+    val arena = Arena.ofConfined()
+    try {
+      val countSeg = arena.allocate(I)
+      val result   = hGetMonitors.invoke(countSeg).asInstanceOf[MemorySegment]
+      if (result == MemorySegment.NULL || result.address() == 0L) Array.empty
+      else {
+        val count = countSeg.get(I, 0)
+        val ptrs  = result.reinterpret(P.byteSize() * count.toLong)
+        Array.tabulate(count)(i => ptrs.getAtIndex(P, i.toLong).address())
+      }
+    } finally arena.close()
+  }
+
+  override def getMonitorName(monitorHandle: Long): String = {
+    val result = hGetMonName.invoke(ptr(monitorHandle)).asInstanceOf[MemorySegment]
+    if (result == MemorySegment.NULL || result.address() == 0L) ""
+    else readCStr(result)
+  }
+
+  override def getMonitorPos(monitorHandle: Long): (Int, Int) = {
+    val arena = Arena.ofConfined()
+    try readTwoInts(arena, (px, py) => hGetMonPos.invoke(ptr(monitorHandle), px, py))
+    finally arena.close()
+  }
+
+  override def getMonitorPhysicalSize(monitorHandle: Long): (Int, Int) = {
+    val arena = Arena.ofConfined()
+    try readTwoInts(arena, (px, py) => hGetMonPhys.invoke(ptr(monitorHandle), px, py))
+    finally arena.close()
+  }
+
+  // ─── Fullscreen ────────────────────────────────────────────────────────
+
+  override def setWindowMonitor(windowHandle: Long, monitorHandle: Long, x: Int, y: Int, width: Int, height: Int, refreshRate: Int): Unit =
+    hSetWinMon.invoke(ptr(windowHandle), ptr(monitorHandle), x, y, width, height, refreshRate)
+
+  override def getWindowMonitor(windowHandle: Long): Long =
+    ptrVal(hGetWinMon.invoke(ptr(windowHandle)).asInstanceOf[MemorySegment])
+
+  // ─── Video modes ───────────────────────────────────────────────────────
+
+  // GLFWvidmode struct: { int width, height, redBits, greenBits, blueBits, refreshRate } = 6 ints = 24 bytes
+  private val VidModeSize: Long = 24L
+
+  override def getVideoModes(monitorHandle: Long): Array[(Int, Int, Int, Int, Int, Int)] = {
+    val arena = Arena.ofConfined()
+    try {
+      val countSeg = arena.allocate(I)
+      val result   = hGetVidModes.invoke(ptr(monitorHandle), countSeg).asInstanceOf[MemorySegment]
+      if (result == MemorySegment.NULL || result.address() == 0L) Array.empty
+      else {
+        val count = countSeg.get(I, 0)
+        val buf   = result.reinterpret(VidModeSize * count.toLong)
+        Array.tabulate(count) { i =>
+          val off = VidModeSize * i.toLong
+          (
+            buf.get(I, off),
+            buf.get(I, off + 4),
+            buf.get(I, off + 20),
+            buf.get(I, off + 8),
+            buf.get(I, off + 12),
+            buf.get(I, off + 16)
+          )
+        }
+      }
+    } finally arena.close()
+  }
+
+  override def getVideoMode(monitorHandle: Long): (Int, Int, Int, Int, Int, Int) = {
+    val result = hGetVidMode.invoke(ptr(monitorHandle)).asInstanceOf[MemorySegment]
+    if (result == MemorySegment.NULL || result.address() == 0L) (0, 0, 0, 0, 0, 0)
+    else {
+      val buf = result.reinterpret(VidModeSize)
+      (
+        buf.get(I, 0),
+        buf.get(I, 4),
+        buf.get(I, 20),
+        buf.get(I, 8),
+        buf.get(I, 12),
+        buf.get(I, 16)
+      )
+    }
+  }
+
+  // ─── Window hints ───────────────────────────────────────────────────────
+
+  override def setWindowHint(hint: Int, value: Int): Unit =
+    hWindowHint.invoke(hint, value)
+
+  override def defaultWindowHints(): Unit =
+    hDefaultHints.invoke()
+
+  // ─── Context ──────────────────────────────────────────────────────────
+
+  override def makeContextCurrent(windowHandle: Long): Unit =
+    hMakeCtxCurr.invoke(ptr(windowHandle))
+
+  override def setSwapInterval(interval: Int): Unit =
+    hSwapInterval.invoke(interval)
+
+  override def extensionSupported(extension: String): Boolean = {
+    val arena = Arena.ofConfined()
+    try {
+      val result = hExtSupported.invoke(cStr(arena, extension)).asInstanceOf[Int]
+      result != 0
+    } finally arena.close()
+  }
+
+  // ─── Input polling ──────────────────────────────────────────────────
+
+  override def getMouseButton(windowHandle: Long, button: Int): Int =
+    hGetMouseBtn.invoke(ptr(windowHandle), button).asInstanceOf[Int]
+
+  override def setCursorPos(windowHandle: Long, x: Double, y: Double): Unit =
+    hSetCursorPos.invoke(ptr(windowHandle), x, y)
+
+  // ─── Time ──────────────────────────────────────────────────────────────
+
+  override def time: Double =
+    hGetTime.invoke().asInstanceOf[Double]
+
+  // ─── Callbacks (upcall stubs) ──────────────────────────────────────────
+
+  override def setFramebufferSizeCallback(windowHandle: Long, callback: Nullable[(Long, Int, Int) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "framebufferSize",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, w: Int, h: Int): Unit = callback.get(win.address(), w, h)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int], classOf[Int])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetFbSizeCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setWindowFocusCallback(windowHandle: Long, callback: Nullable[(Long, Boolean) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "focus",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, focused: Int): Unit = callback.get(win.address(), focused != 0)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetFocusCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setWindowIconifyCallback(windowHandle: Long, callback: Nullable[(Long, Boolean) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "iconify",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, iconified: Int): Unit = callback.get(win.address(), iconified != 0)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetIconifyCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setWindowMaximizeCallback(windowHandle: Long, callback: Nullable[(Long, Boolean) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "maximize",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, maximized: Int): Unit = callback.get(win.address(), maximized != 0)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetMaximizeCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setWindowCloseCallback(windowHandle: Long, callback: Nullable[Long => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "close",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment): Unit = callback.get(win.address())
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetCloseCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setDropCallback(windowHandle: Long, callback: Nullable[(Long, Array[String]) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "drop",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I, P)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, count: Int, paths: MemorySegment): Unit = {
+                val reinterpreted = paths.reinterpret(P.byteSize() * count.toLong)
+                val arr           = Array.tabulate(count) { i =>
+                  val strPtr = reinterpreted.getAtIndex(P, i.toLong)
+                  strPtr.reinterpret(Long.MaxValue).getString(0)
+                }
+                callback.get(win.address(), arr)
+              }
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int], classOf[MemorySegment])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetDropCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setWindowRefreshCallback(windowHandle: Long, callback: Nullable[Long => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "refresh",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment): Unit = callback.get(win.address())
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetRefreshCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  // ─── Input callbacks ─────────────────────────────────────────────────
+
+  override def setKeyCallback(windowHandle: Long, callback: Nullable[(Long, Int, Int, Int, Int) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "key",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I, I, I, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, key: Int, scancode: Int, action: Int, mods: Int): Unit =
+                callback.get(win.address(), key, scancode, action, mods)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(
+              classOf[Unit],
+              classOf[MemorySegment],
+              classOf[Int],
+              classOf[Int],
+              classOf[Int],
+              classOf[Int]
+            )
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetKeyCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setCharCallback(windowHandle: Long, callback: Nullable[(Long, Int) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "char",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, codepoint: Int): Unit = callback.get(win.address(), codepoint)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetCharCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setScrollCallback(windowHandle: Long, callback: Nullable[(Long, Double, Double) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "scroll",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, D, D)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, xOff: Double, yOff: Double): Unit =
+                callback.get(win.address(), xOff, yOff)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Double], classOf[Double])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetScrollCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setCursorPosCallback(windowHandle: Long, callback: Nullable[(Long, Double, Double) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "cursorPos",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, D, D)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, x: Double, y: Double): Unit =
+                callback.get(win.address(), x, y)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Double], classOf[Double])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetCurPosCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  override def setMouseButtonCallback(windowHandle: Long, callback: Nullable[(Long, Int, Int, Int) => Unit]): Unit =
+    installWindowCallback(
+      windowHandle,
+      "mouseButton",
+      arena => {
+        val desc   = FunctionDescriptor.ofVoid(P, I, I, I)
+        val target = java.lang.invoke.MethodHandles
+          .lookup()
+          .bind(
+            new AnyRef {
+              @scala.annotation.nowarn("id=E198")
+              def invoke(win: MemorySegment, button: Int, action: Int, mods: Int): Unit =
+                callback.get(win.address(), button, action, mods)
+            },
+            "invoke",
+            java.lang.invoke.MethodType.methodType(classOf[Unit], classOf[MemorySegment], classOf[Int], classOf[Int], classOf[Int])
+          )
+        linker.upcallStub(target, desc, arena)
+      },
+      stub => hSetMouseBtnCb.invoke(ptr(windowHandle), stub),
+      callback.isEmpty
+    )
+
+  // ─── Window icon ────────────────────────────────────────────────────
+
+  // GLFWimage struct layout: { int width; int height; unsigned char* pixels; }
+  // 64-bit: 4 + 4 + 8 = 16 bytes (pointer aligned)
+  private val GlfwImageSize: Long = 16L
+
+  override def setWindowIcon(windowHandle: Long, images: Array[sge.graphics.Pixmap]): Unit =
+    if (images.isEmpty) {
+      hSetWinIcon.invoke(ptr(windowHandle), 0, MemorySegment.NULL)
+    } else {
+      val arena = Arena.ofConfined()
+      try {
+        val buf = arena.allocate(GlfwImageSize * images.length)
+        var i   = 0
+        while (i < images.length) {
+          val pixmap = images(i)
+          // Drain a duplicate() view so the caller's shared pixmap buffer position is left untouched
+          // (ISS-833, same non-destructive read as createCursor / the Native twin WindowingOpsNative.scala:588).
+          val pixels = pixmap.pixels.duplicate()
+          pixels.position(0)
+          val numBytes  = pixels.remaining()
+          val nativeBuf = arena.allocate(numBytes.toLong)
+          // Copy pixel bytes from Java ByteBuffer to native memory
+          val slice = MemorySegment.ofBuffer(pixels)
+          nativeBuf.copyFrom(slice)
+          // Write GLFWimage fields
+          val base = buf.asSlice(GlfwImageSize * i.toLong, GlfwImageSize)
+          base.set(I, 0L, pixmap.width.toInt)
+          base.set(I, 4L, pixmap.height.toInt)
+          base.set(P, 8L, nativeBuf)
+          i += 1
+        }
+        hSetWinIcon.invoke(ptr(windowHandle), images.length, buf)
+      } finally arena.close()
+    }
+}
+
+object WindowingOpsJvm {
+
+  /** Creates a WindowingOpsJvm from a GLFW library loaded from the system library path.
+    *
+    * GLFW is compiled from vendored source as part of the native-components Rust build, so it is always available alongside libsge_native_ops in `java.library.path`. No external GLFW installation
+    * required.
+    *
+    * @param libName
+    *   the library name (e.g. "glfw")
+    */
+  def apply(libName: String = "glfw"): WindowingOpsJvm = {
+    val found = multiarch.core.NativeLibLoader.load(libName)
+    // Use System.load to load the library via the system's dynamic linker,
+    // which correctly handles macOS framework dependencies (Cocoa, IOKit, etc.)
+    System.load(found.toAbsolutePath.toString)
+    val lookup = SymbolLookup.loaderLookup()
+    new WindowingOpsJvm(lookup)
+  }
+}
+
+/** Platform seam giving shared desktop code a default [[WindowingOps]] for pre-launch monitor/display-mode queries (see `DesktopApplicationConfig` companion). A same-named object exists in the Native
+  * source tree so shared code can reference `sge.platform.DesktopWindowing` uniformly — the same expect/actual pattern SGE uses for `HttpBackendFactoryImpl`.
+  */
+private[sge] object DesktopWindowing {
+
+  /** Creates a fresh, uninitialized default windowing ops. The caller is responsible for `init()`. */
+  def default(): WindowingOps = WindowingOpsJvm()
+}

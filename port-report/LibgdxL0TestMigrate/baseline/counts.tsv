@@ -1,5 +1,5 @@
 #check	count
-base-surface	648
+base-surface	653
 break-catch	0
 cast-conversion	0
 catalog(consulted)	103
@@ -35,7 +35,7 @@ portability(injected)	0
 porter-notes	0
 remediation	2
 rewrite-callsites	1
-signature	47
+signature	12
 substitution(dangling)	0
 substitution(emitted)	0
 switch-null	0

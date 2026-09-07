@@ -1889,6 +1889,34 @@ commit, `before->after` in the subject):
    low-survival ones (application, config, graphics, audio engine) stay copied. Each swap keeps
    `demo-run` green.
 
+**Step 1 landed (2026-09-07): `backend-jvm` injection step** — sge's seven contract traits, its JVM
+platform half (Panama, `*OpsJvm`/`*OpsPanama`, the four ANGLE bindings, the desktop concurrency ops,
+the `PanamaProvider` alias from sge's platform-api module) and its `Log` over a JDK `System.Logger`
+(sge logs through scribe; `ADJUSTMENTS.tsv` in the injection directory lists every non-verbatim
+file). `port-sge-l0`'s JVM row gained `multiarch-core`/`-panama-api`/`-panama-jdk` 0.4.0 and the two
+native-provider snapshots. Measured: the ANGLE bindings implement sge's TYPED GL surface, so the
+GL-enum step grew from four opaques to fourteen (`BufferTarget`, `BufferUsage`, `TextureTarget`,
+`BlendFactor`, `BlendEquation`, `CullFace`, `ShaderType`, `StencilOp`, `PixelFormat`, `DataType`,
+hinted at every GL20–GL32 parameter sge types) and the pixels step names sge's 36 `Pixels`
+positions in GL20 — 57 -> 8 -> 4 -> 0 errors; two flows had to be FENCED where sge keeps a plain
+`Int` (`internalformat`, GL30's sizes), which needed a parameter-level scope entry: `RuleScope`
+now places a parameter by its own `Class#m#p` name (the spelling hints already use), locals and
+`?#p` still through their owners (universal, `RuleScopeSpec`). Held: ladder 0 errors, suite
+216/220, lls 0, demo-check 0; `members` 984 moved, all in the GL-typed graphics units; new counted
+residue `portability(injected)` 0 -> 12 (JVM-only APIs in JVM files — the per-platform source-set
+gap R14 names). Not copied yet: `DesktopApplicationFactory`, `DesktopAudioRecorder` (needs
+`SgeError`), `HttpBackendFactoryImpl` (sttp) — step 3's.
+
+Beside it: the port-map follow's parenless pass rebuilt a member key as a STRING (`owner#name`,
+the one shape `PolicyKeyLintSpec` forbids) and so picked overloads by name — replaced by an
+owner-symbol lookup through the phase's own arity picker; the test port lost 35 spurious
+`signature` rows (`Mesh#getIndicesBuffer(boolean)` read as the parenless `getIndicesBuffer`).
+**Spec debt (pre-existing, measured 2026-09-07 with today's changes stashed):** six corpus specs are
+red on master — `OpaqueMintOwnershipSpec` ×3 and `PrimitiveToOpaqueTransformSpec` (O8) whose
+fixtures no longer SEED after the emitted-unit fence (K51 xv), `PackageRenameTransformSpec`
+(`allowPackageSplit` declaring nothing) and `VisibilitySpec` (overloaded name at an arity). Their
+fixtures need units the run emits; not on pong's path, a card of its own.
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside
