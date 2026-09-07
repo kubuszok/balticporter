@@ -5787,3 +5787,29 @@ demo-check:
     echo "-- first lines --"
     grep -A3 -E "^-- \[E" "$MEASURE_TMP"/democheck.txt | grep -E "^\s*\|[A-Za-z]" | sed -E 's/^\s*\|//; s/`[^`]*`/X/g' | cut -c1-90 | sort | uniq -c | sort -rn | head -12
     headline "$ERRORS" "$REPORT"
+
+# sge-suite-check — sge core's OWN test tree (sge/src/test/{scala,scalajvm}) compiled against
+# ported/sge-l0 (PROGRESS.md §13.31 step 0). Errors attributed to the plan's families through
+# ported/sge-suite-check/families.tsv; baselined like demo-check (a drop-in style count).
+[doc("sge core's own test suite against the ladder port — compile, count, attribute to families")]
+sge-suite-check:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+    REPORT="$ROOT/port-report/SgeSuiteCheck"
+    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
+    echo "-- sge core's own suite (scala + scalajvm) against ported/sge-l0 --"
+    sbt_compile "sge-suite-checkJVM/compile" "$MEASURE_TMP"/sgesuite.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/sgesuite.txt
+    echo "TOTAL ERRORS: $ERRORS"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    cp "$REPORT/run-latest/errors-count" "$REPORT/run-latest/errors-count.dropin.suite"
+    classify_errors "$MEASURE_TMP"/sgesuite.txt "$ROOT/ported/sge-suite-check/families.tsv" "$REPORT/run-latest"
+    echo "-- by family --"; cat "$REPORT/run-latest/families.tsv"
+    echo "-- files with errors: $(cut -f2 "$REPORT/run-latest/errors-by-family.tsv" | sort -u | wc -l | tr -d ' ') --"
+    echo "-- by file (top) --"
+    cut -f2 "$REPORT/run-latest/errors-by-family.tsv" | sed -E 's#.*/sge/src/test/##' | sort | uniq -c | sort -rn | head -15
+    headline "$ERRORS" "$REPORT"

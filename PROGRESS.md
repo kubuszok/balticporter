@@ -2153,6 +2153,15 @@ the wrong shape: it is re-derived per member and drifts with sge.
 useful to every next library with a hand port to match); everything else is policy or injection
 and can move to sge's repository once those two ship in a snapshot.
 
+**Step 0 landed (2026-09-07 16:00): `just sge-suite-check`**, a project beside `demo-check` (sge's
+`scala` + `scalajvm` test dirs, munit 1.3.6), errors attributed by `ported/sge-suite-check/families.tsv`
+(first matching regex over the whole error block; `classify_errors` in `scripts/_lib.sh`), report
+`port-report/SgeSuiteCheck` (`families.tsv`, `errors-by-family.tsv`), baselined at 1,616 = 1,616.
+Attributed: member-shape 291, opaque-time-pixels 275, android 216, nullable 127, filetype 93, net 93,
+tiled 83, type-shape 77, opaque-key-button 73, arity 68, assertion-mismatch 57, context 54,
+particles 49, other 27, logging 9 (1,592 blocks carry a header; 24 are scalac's continuation
+lines). Each later step quotes this table `before->after`.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

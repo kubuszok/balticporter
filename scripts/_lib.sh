@@ -1688,3 +1688,30 @@ shim_tree() {
   fi
   return 0
 }
+
+# classify_errors <compile log> <families.tsv> <out dir>
+# Attributes every `-- [Exxx]` block of a scalac log to the FIRST family whose regex matches the
+# block (mechanism; the table is the port's policy, PROGRESS.md §13.31 step 0). Writes
+# <out>/families.tsv (family, count) and <out>/errors-by-family.tsv (family, file, line).
+classify_errors() {
+  local log="$1" table="$2" out="$3"
+  mkdir -p "$out"
+  awk -F'\t' -v table="$table" '
+    BEGIN { n=0; while ((getline l < table) > 0) { if (l ~ /^#/ || l == "") continue; split(l, a, "\t"); fam[++n]=a[1]; rx[n]=a[2] } }
+    function flush(   i, f, file, line) {
+      if (blk == "") return
+      f="other"; for (i=1;i<=n;i++) if (blk ~ rx[i]) { f=fam[i]; break }
+      file=hdr; sub(/^-- \[E[0-9]+\][^:]*: /, "", file); line="-"
+      if (match(file, /:[0-9]+:[0-9]+ *$/)) { line=substr(file, RSTART+1); sub(/:.*/, "", line); file=substr(file, 1, RSTART-1) }
+      sub(/^.*\/\.\.\//, "../", file)
+      cnt[f]++; print f "\t" file "\t" line >> rows
+      blk=""; hdr=""
+    }
+    /^-- \[E[0-9]+\]/ { flush(); hdr=$0; blk=$0; next }
+    { if (hdr != "") blk = blk "\n" $0 }
+    END { flush(); for (f in cnt) print f "\t" cnt[f] > fams }
+  ' rows="$out/errors-by-family.tsv" fams="$out/families.tsv.unsorted" "$log"
+  : > "$out/errors-by-family.tsv.keep"; rm -f "$out/errors-by-family.tsv.keep"
+  [ -f "$out/families.tsv.unsorted" ] && sort -t"$(printf '\t')" -k2,2nr "$out/families.tsv.unsorted" > "$out/families.tsv" || : > "$out/families.tsv"
+  rm -f "$out/families.tsv.unsorted"
+}

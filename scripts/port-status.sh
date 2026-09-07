@@ -5,7 +5,7 @@
 cd "$(dirname "$0")/.." || exit 1
 # POLICY: the reports the loop still measures (PROGRESS.md §13.29 standing order 5). Everything
 # else is the frozen family on the OLD full-policy core; update this list when a port moves.
-LIVE="LlsMigrate LlsDifferential LibgdxL0Migrate LibgdxL0TestMigrate DemoCheck DemoRun"
+LIVE="LlsMigrate LlsDifferential LibgdxL0Migrate LibgdxL0TestMigrate DemoCheck DemoRun SgeSuiteCheck"
 printf "report\tmodule\tstatus\tjvm\tjs\tnative\tref-suite\ttests\tpass\tfail\tskipped\tfailing\tskipped-names\tdeclared-failures\tdeclared-lost\truns\tlast-baseline\n"
 for b in port-report/*/baseline; do
   r=$(basename "$(dirname "$b")")

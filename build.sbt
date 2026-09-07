@@ -1381,3 +1381,34 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
+
+// sge-suite-check — sge core's OWN test tree compiled against the ladder port (PROGRESS.md §13.31 step 0):
+// the drop-in gate for the JVM row. sge is never edited; an adjusted copy under
+// ported/sge-suite-check/adjusted replaces sge's file of the same relative path (ADJUSTMENTS.tsv).
+lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-l0`)
+  .settings(
+    name := "balticporter-sge-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit"            % "1.3.6",
+      "org.scalameta" %% "munit-scalacheck" % "1.3.1"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories ++= {
+      val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
+      Seq(t / "scala", t / "scalajvm", (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check" / "adjusted")
+    },
+    Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
+    Compile / unmanagedSources := {
+      val all = (Compile / unmanagedSources).value
+      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
+      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
+    },
+    // the suite's test bodies are Compile sources here (the gate is the COMPILE); `run` later calls munit's own main
+    Compile / run / fork := true,
+    Compile / run / javaOptions += "--enable-native-access=ALL-UNNAMED",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV))

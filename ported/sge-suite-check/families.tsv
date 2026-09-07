@@ -1,0 +1,16 @@
+# family	regex over the whole error block (first match wins, top to bottom) — PROGRESS.md §13.31's table
+android	Android
+net	SgeHttp|Sttp|HttpMethod|HttpBackend|sge\.net\.
+tiled	Tmj|Tiled|TileLayer|MapProperties|MapLayers|MapObject|MapGroupLayer|maps/tiled
+particles	particles|ParticleEmitter|ResourceData|ParticleBatch
+opaque-time-pixels	sge\.utils\.Seconds|sge\.Pixels|Seconds\(|Pixels\(
+opaque-key-button	Not found: (type )?(Key|Button)|Input\.Buttons|Input\.Keys|value (Key|Button) is not a member
+filetype	FileType
+logging	scribe|LogPlatform
+context	No given `sge\.Sge`|using x\$[0-9]+: sge\.Sge|defaultLoaders|constructor FileHandle
+nullable	Nullable
+arity	must be called with \(\) argument|does not take parameters|does not take more parameters
+assertion-mismatch	missing argument for parameter clue|munit\.Compare
+member-shape	Reassignment to val|is not a member of|cannot be accessed|can only be accessed|Not found:
+type-shape	None of the overloaded alternatives|Required:|Found:|does not take type parameters
+other	.
