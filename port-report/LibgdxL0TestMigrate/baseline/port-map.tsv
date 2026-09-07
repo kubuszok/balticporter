@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=9ca2c9ccb1b37b68	jdk=22
+# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=f7ed6a2948ff0d72	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=,assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -32,9 +32,10 @@ type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	sge.utils.SortTest$Nul
 type	com.badlogic.gdx.utils.SortedIntListTest	sge.utils.SortedIntListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader	sge.graphics.g3d.loader.G3dModelLoader	Dropped	-		0		form=class
 type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		form=class
-type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Json	sge.utils.LegacyJson	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
@@ -220,10 +221,10 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	sge.uti
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(DynamicArray)	sge.utils.JsonMatcherTests#toString(DynamicArray<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	3ee61596813b3573	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,Array)	sge.utils.JsonMatcherTests#toString(JsonMatcher,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1494	5d2f682263f1af8f	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	e0f89f74a6b6856e	
-member	com.badlogic.gdx.utils.JsonTest#<stmt1>	sge.utils.JsonTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	11	2e1cbbff80a35641	
-member	com.badlogic.gdx.utils.JsonTest#<stmt2>	sge.utils.JsonTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	18	a139b40b2b1e42a1	
-member	com.badlogic.gdx.utils.JsonTest#<stmt3>	sge.utils.JsonTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	26	1ca3d99d786d0508	
-member	com.badlogic.gdx.utils.JsonTest#<stmt4>	sge.utils.JsonTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	33	c243fa1e4b03ab38	
+member	com.badlogic.gdx.utils.JsonTest#<stmt1>	sge.utils.JsonTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	11	7738ea765a7a89a4	
+member	com.badlogic.gdx.utils.JsonTest#<stmt2>	sge.utils.JsonTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	18	a4c8f857c35ab273	
+member	com.badlogic.gdx.utils.JsonTest#<stmt3>	sge.utils.JsonTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	26	8dd6e453f9943dd8	
+member	com.badlogic.gdx.utils.JsonTest#<stmt4>	sge.utils.JsonTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	33	f022f173bd65a180	
 member	com.badlogic.gdx.utils.JsonValueTest#<stmt1>	sge.utils.JsonValueTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonValueTest.java	10	0f5dd7d89acf2f6c	
 member	com.badlogic.gdx.utils.JsonValueTest#<stmt2>	sge.utils.JsonValueTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonValueTest.java	34	702077dc7f440204	
 member	com.badlogic.gdx.utils.JsonValueTest#<stmt3>	sge.utils.JsonValueTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonValueTest.java	63	d81025c0390ab0de	

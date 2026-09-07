@@ -2025,6 +2025,30 @@ primitive types, plain keyframe values. Held: 0 errors, 216/220, demo-check 0; `
 `TmjJson`/`TiledProjectJson`), particles (20 files, sge has `ParticleEffectCodecs`), `Skin`
 (java `Json` reflection — sge's replacement to check), `HttpRequestBuilder`, `AssetManager`.
 
+**JSON step, part 2 (2026-09-07 14:00): Skin reads the Kindlings JSON AST.** sge's `Skin`,
+`SkinStyleReader` (a type class per style where java set fields by reflection) and `LenientJson`
+(libGDX's lenient skin dialect over the AST) injected; java's `Skin` dropped. The two Skins expose
+the same surface the port's 24 UI classes call, so no caller moved. The name `Json` had to be
+freed: java's reflective `Json`, dropped by the reflection step and stubbed, is now
+`LegacyJson` by a `typeRenames` entry (its 20 particle-class users and 46 `read`/`write` overrides
+follow the rename; `members` 189 moved on that alone). Seams reconciled in the copies
+(`ADJUSTMENTS.tsv`): accessor parens, nested `BitmapFont.BitmapFontData`, non-nullable ctor
+arguments, `setName`/`setScale`/`setUseIntegerPositions`, the runtime's `foreach` for lls's
+`leanView`, `setEnabled[V <: AnyRef]` against the port's `Styleable`, `.orNull` where the port's
+style field is plain. The pixels flow had reached `NinePatch(left, right)` and not `(top,
+bottom)`: fenced by type (sge sizes it in `Int`). Held: 0 errors, 216/220, demo-check 0.
+**Remaining on the java stack:** the particle system (53 files, all present in the port; 20 of
+them carry 46 `LegacyJson` `read`/`write` overrides), Tiled (5 loaders), `HttpRequestBuilder`,
+`AssetManager`. **Particle finding for the maintainer:** sge's `ParticleEffectCodecs` is 47
+HAND-WRITTEN jsoniter codecs (2,060 lines) plus `ResourceData.fromJson` over the AST — not
+derivation: libGDX's save format tags every value `{"class": <java FQN>, ...}` and mixes tagged
+wrappers with untagged fields. Kindlings' jsoniter derivation has `discriminatorFieldName` and
+`adtLeafClassNameMapper`, which cover the tagged-object part for SEALED hierarchies; the
+particle value/influencer/modifier hierarchies are open java classes, so deriving them means
+declaring the leaf set (a sealed facade or an explicit codec list). That is the design choice
+before the particle step: copy sge's hand-written codecs (fast, against the maintainer's aim) or
+derive with a declared leaf set and the `class` discriminator (the aim, needs the facade).
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside

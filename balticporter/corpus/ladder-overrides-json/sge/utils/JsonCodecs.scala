@@ -23,8 +23,8 @@ import hearth.kindlings.jsoniterderivation.KindlingsJsonValueCodec
 import hearth.kindlings.ubjsonderivation.UBJsonValueCodec
 import hearth.kindlings.ubjsonderivation.internal.runtime.UBJsonDerivationUtils
 
-// (port) the `Json` AST alias and its codec given are left out while java's reflective `sge.utils.Json` stub
-// still stands for Skin and the particle system (ADJUSTMENTS.tsv); typed documents need neither
+// Re-export kindlings Json codec given so consumers can `import sge.utils.given`
+given JsonCodec[Json] = hearth.kindlings.jsoniterjson.codec.JsonCodec.jsonValueCodec
 
 /** Type alias for jsoniter-scala's codec. Consumers derive codecs with:
   * {{{
@@ -80,6 +80,12 @@ inline def readFromString[A](json: String)(using codec: JsonCodec[A]): A = _read
 
 /** Deserialize a JSON input stream to a typed value. Inline to preserve macro scope for Scala.js. */
 inline def readFromStream[A](stream: java.io.InputStream)(using codec: JsonCodec[A]): A = _readFromStream[A](stream)(using codec)
+
+/** Re-export of kindlings' JSON AST type for polymorphic JSON fields. */
+type Json = hearth.kindlings.jsoniterjson.Json
+
+/** Companion for pattern matching and construction (`Json.Str`, `Json.Num`, etc.). */
+val Json: hearth.kindlings.jsoniterjson.Json.type = hearth.kindlings.jsoniterjson.Json
 
 /** Re-export of kindlings' `JsonObject` for building JSON objects from key-value pairs. */
 type JsonObject = hearth.kindlings.jsoniterjson.JsonObject

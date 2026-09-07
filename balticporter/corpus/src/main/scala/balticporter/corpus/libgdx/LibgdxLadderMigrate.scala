@@ -299,7 +299,9 @@ object LibgdxLadder:
         "com.badlogic.gdx.graphics.GL30#glCopyTexSubImage3D", "com.badlogic.gdx.graphics.GL30#glBlitFramebuffer",
         "com.badlogic.gdx.graphics.GL30#glRenderbufferStorageMultisample",
         // sge sizes ETC1 in plain Int throughout (its JNI-shaped statics answer through the contract, §13.30 step 2)
-        "com.badlogic.gdx.graphics.glutils.ETC1"))))),
+        "com.badlogic.gdx.graphics.glutils.ETC1",
+        // sge sizes a NinePatch in plain Int (the flow had reached `left`/`right` and not `top`/`bottom`)
+        "com.badlogic.gdx.graphics.g2d.NinePatch"))))),
     // sge's helper API the demos use: the `gl` alias, `rendering { … }` around `begin`/`end`,
     // class-tag `load` and a `Nullable` `get` on the asset manager.
     "helpers" -> List(
@@ -597,7 +599,7 @@ object LibgdxLadder:
 
   /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
   val stepTypeDrops: Map[String, Set[String]] = Map(
-    "json" -> Set("com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader"),
+    "json" -> Set("com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader", "com.badlogic.gdx.scenes.scene2d.ui.Skin"),
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
     // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
     // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
@@ -678,7 +680,9 @@ object LibgdxLadder:
       surface        = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)) :+
                        balticporter.transform.PortMapTransform.forBases("lls"),
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
-      typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList"),
+      // java's reflective `Json` (dropped by the reflection step, a refusing stub injected) keeps the name
+      // `LegacyJson`: `Json` is the Kindlings JSON AST sge's Skin and Tiled loaders read (json step).
+      typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", "com.badlogic.gdx.utils.Json" -> "LegacyJson"),
       resources      = List(ResourceTree(
         root  = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,
         files = List(

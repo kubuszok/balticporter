@@ -1,3 +1,5 @@
+// (json step) java's reflective `Json` lives on under the name `LegacyJson` — the name `Json` is the Kindlings JSON AST
+// (`sge.utils.JsonCodecs`); the stub goes with the particle system's and Skin's last references (PROGRESS.md §13.30).
 package sge.utils
 
 import sge.files.FileHandle
@@ -6,7 +8,7 @@ import sge.utils.JsonWriter.OutputType
 import java.io.{InputStream, Reader, StringWriter, Writer}
 
 /** INJECTED SCALA (Substitutions.inject) — substitution seam for libGDX's `Json`. */
-class Json {
+class LegacyJson {
 
   def this(outputType: OutputType) = {
     this()
@@ -30,10 +32,10 @@ class Json {
   private var usePrototypes: Boolean           = true
   private var typeName: String                 = "class"
   @scala.annotation.nowarn("msg=not read") // set by the setter; read by the codec at the swap point
-  private var defaultSerializer: Json.Serializer[?] = null
+  private var defaultSerializer: LegacyJson.Serializer[?] = null
   private val classToTag                       = lowlevel.util.ObjectMap[Class[?], String]()
   private val tagToClass                       = lowlevel.util.ObjectMap[String, Class[?]]()
-  private val classToSerializer                = lowlevel.util.ObjectMap[Class[?], Json.Serializer[?]]()
+  private val classToSerializer                = lowlevel.util.ObjectMap[Class[?], LegacyJson.Serializer[?]]()
   /** THE SWAP POINT: bind the Kindlings Jsoniter/UBJson codec here and delegate the reflective
     * paths to it. Until then they fail loudly rather than pretending to decode. */
   private def codec(operation: String): Nothing =
@@ -60,7 +62,7 @@ class Json {
     if (this.writer != null) { this.writer.setOutputType(outputType) }
   }
 
-  def setDefaultSerializer(defaultSerializer: Json.Serializer[?]): Unit =
+  def setDefaultSerializer(defaultSerializer: LegacyJson.Serializer[?]): Unit =
     this.defaultSerializer = defaultSerializer
 
   /** Java's parameter is `Serializer<T>`; ours is `Serializer[?]`, for the same reason `read`
@@ -68,11 +70,11 @@ class Json {
     * raw anonymous class's expected type does not propagate into its parent, so it infers
     * `Nothing` and `Serializer[Nothing]` matches no `Serializer[X]`. javac accepted it unchecked
     * too, and the map below is untyped anyway, so the erased registration is the faithful one. */
-  def setSerializer[T](`type`: Class[T], serializer: Json.Serializer[?]): Unit =
+  def setSerializer[T](`type`: Class[T], serializer: LegacyJson.Serializer[?]): Unit =
     this.classToSerializer.put(`type`, serializer)
 
-  def getSerializer[T](`type`: Class[T]): Json.Serializer[T] =
-    this.classToSerializer.get(`type`).asInstanceOf[Json.Serializer[T]]
+  def getSerializer[T](`type`: Class[T]): LegacyJson.Serializer[T] =
+    this.classToSerializer.get(`type`).asInstanceOf[LegacyJson.Serializer[T]]
 
   def addClassTag(tag: String, `type`: Class[?]): Unit = {
     this.tagToClass.put(tag, `type`)
@@ -136,14 +138,14 @@ class Json {
       case null                        => this.writer.value(null)
       case v: (String | java.lang.Number | java.lang.Boolean | java.lang.Character) =>
         this.writer.value(v)
-      case s: Json.Serializable =>
+      case s: LegacyJson.Serializable =>
         writeObjectStart(s.getClass, knownType)
         s.write(this)
         writeObjectEnd()
       case v =>
         val serializer = this.classToSerializer.get(v.getClass)
         if (!serializer.isEmpty) {
-          serializer.get.asInstanceOf[Json.Serializer[Object]].write(this, v, knownType)
+          serializer.get.asInstanceOf[LegacyJson.Serializer[Object]].write(this, v, knownType)
         } else { codec("Json.writeValue of " + v.getClass.getName) }
     }
   }
@@ -258,22 +260,22 @@ class Json {
     this.reader.parse(json).prettyPrint(settings)
 }
 
-object Json {
+object LegacyJson {
 
   /** a type's custom read/write strategy — the Kindlings codec's counterpart. */
   trait Serializer[T] {
-    def write(json: Json, `object`: T, knownType: Class[?]): Unit
-    def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object
+    def write(json: LegacyJson, `object`: T, knownType: Class[?]): Unit
+    def read(json: LegacyJson, jsonData: JsonValue, `type`: Class[?]): Object
   }
 
   abstract class ReadOnlySerializer[T] extends Serializer[T] {
-    def write(json: Json, `object`: T, knownType: Class[?]): Unit = ()
-    def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object
+    def write(json: LegacyJson, `object`: T, knownType: Class[?]): Unit = ()
+    def read(json: LegacyJson, jsonData: JsonValue, `type`: Class[?]): Object
   }
 
   /** implemented by types that serialize themselves — the non-reflective path, kept fully working. */
   trait Serializable {
-    def write(json: Json): Unit
-    def read(json: Json, jsonData: JsonValue): Unit
+    def write(json: LegacyJson): Unit
+    def read(json: LegacyJson, jsonData: JsonValue): Unit
   }
 }
