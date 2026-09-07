@@ -1827,3 +1827,69 @@ asking; every item below is a decision the maintainer already took.
 11. *Stop and report* (rather than decide) when a step would need a decision not on this list,
     when a suite loses tests with no step delta to name it, or when a mechanism gap needs more than
     one wave.
+
+### 13.30 First running demo — pong on the JVM (goal set 2026-09-07; executes §13.29 R14's accepted route)
+
+**Done** = `just demo-run` is green and baselined: sge's `demos/pong` + `demos/shared` sources
+(adjusted copies under `ported/demo-check/adjusted/`, enumerated in `ADJUSTMENTS.tsv`; sge never
+edited) compile against `port-sge-l0` + `port-sge-noise` and NOTHING of sge's own build, and
+`demos.pong.DesktopMain` opens a window on the ported stack, renders a fixed number of frames
+(a frame budget read from a system property by the ADJUSTED launcher copy) and exits 0; any
+exception, `UnsatisfiedLinkError` or non-zero exit fails the lane. JVM on the macOS host only; the
+demo's JS/Native/Android rows are the next goal. `just port-status` gains a `runs` column.
+
+**Facts the route rests on (measured 2026-09-07).**
+- The port leaves **59** java `native` members as bodyless `@scala.native` defs (`BufferUtils` 31,
+  `Gdx2DPixmap` 17, `ETC1` 8, `Matrix4` 3), not 20 as R14 said; each throws `UnsatisfiedLinkError`
+  at first use. sge answers them through one hub, `sge.platform.PlatformOps` (per-platform object:
+  `buffer`, `etc1`, `gdx2d`, `concurrency` built eagerly; `windowing`, `audio`, `gl` set by the
+  application), over seven core traits (`sge/src/main/scala/sge/platform/*Ops.scala`, 1,362 lines).
+- sge's JVM half is 21 files / 5,168 lines under `sge/src/main/scalajvm` (Android files excluded):
+  `platform/` (Panama, `*OpsJvm`, `*OpsPanama`, `SgeNativeOpsLib`), `graphics/AngleGL2x/3x`,
+  `DesktopApplicationFactory`, the audio recorder, `net/HttpBackendFactoryImpl`, four `*Platform`
+  helpers. The desktop layer is 27 files / 4,350 lines under `sge/src/main/scaladesktop`.
+- The native libraries need no build here: `com.kubuszok % pnm-provider-sge-desktop`
+  (`libglfw`, `libsge_audio`, `libsge_native_ops` per platform) and `pnm-provider-sge-angle`
+  (`GLESv2`/`EGL`), version `0.1.2-33-gcf10406-SNAPSHOT`, are cached from the Sonatype snapshots
+  repository (`~/Library/Caches/Coursier/v1/https/central.sonatype.com/repository/maven-snapshots`);
+  loading goes through `multiarch-core` / `multiarch-panama-jdk` 0.4.0 (Maven Central). sge's JVM
+  row also declares `ch.epfl.lamp %% gears`. The fork needs `--enable-native-access=ALL-UNNAMED`
+  and, on macOS, `-XstartOnFirstThread` (sge `build.sbt` 153–160).
+- The launcher chain is three files: `demos/pong/.../scaladesktop/DesktopMain` →
+  `demos/shared/.../scaladesktop/DesktopLauncher` (`DesktopApplicationConfig`,
+  `DesktopApplicationFactory(app, config)`) → `SingleSceneApp`.
+
+**Steps, in the order the dependencies dictate** (standing order 3; each a measured change, one
+commit, `before->after` in the subject):
+1. *Contract + JVM implementations as injections.* Copy the seven contract traits and the 21 JVM
+   files into a ladder injection step (`backend-jvm`), add the four dependencies to
+   `port-sge-l0`'s JVM row with the snapshots resolver. Compile-only exit: `gdx-l0-measure` stays 0.
+2. *The 59 native members answered.* Each `@scala.native` member gets a body calling the contract,
+   through the EXISTING body-substitution mechanism keyed by signature (standing order 7: a new
+   mechanism only if the existing one refuses); where sge rewrote the whole class in pure Scala
+   (`Gdx2DPixmap` drawing, `Matrix4`'s three vector loops) the body is sge's, copied. The emitter's
+   `@scala.native` arm then has zero sites in this port, and the residue is COUNTED (a lane row per
+   remaining native member, expected 0). Exit: 0 `@scala.native` in `src_managed`, `gdx-l0-measure`
+   0, test lane 216/220 held.
+3. *Desktop layer.* Copy the 27 `scaladesktop` files as a second injection step (`backend-desktop`),
+   fix the seams where the port's API differs from sge's (`Nullable`, properties, opaque units: the
+   demo check has already priced these families) — by a ladder step where the port is wrong by our
+   conventions, by an edit of the COPIED file where sge's spelling is the divergence (recorded per
+   file, as `ADJUSTMENTS.tsv` does for demos). Exit: `demo-check` 0 with pong's `DesktopMain`
+   included (the check gains the `scaladesktop` demo dirs).
+4. *`demo-run` lane.* `Justfile` recipe + `scripts/_lib.sh` mechanism: forked `runMain
+   demos.pong.DesktopMain` with the flags above and a frame budget, `port-report/DemoRun/`
+   baselined (`frames`, exit status, first exception if any), `port-status` reads it. Exit: green
+   on this host. **Report to the maintainer when pong first renders — this is the milestone the
+   whole ladder was for.**
+5. *R14's part (2), after pong runs and without breaking the run:* replace the copied
+   high-survival desktop files (window, input, cursor, files, preferences, net, sync) one at a
+   time with engine-ported ones from `gdx-backend-lwjgl3`/`gdx-backend-headless` through an
+   LWJGL-static → contract redirect table (`StaticForwarder`/`ClassTable` policy); the
+   low-survival ones (application, config, graphics, audio engine) stay copied. Each swap keeps
+   `demo-run` green.
+
+**Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
+ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
+port's emitted surface by a body substitution or a listed ladder step; the run failing inside
+ANGLE/GLFW with no Scala frame to attribute (a platform question, not a porting one).
