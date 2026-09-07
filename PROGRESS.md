@@ -2049,6 +2049,21 @@ declaring the leaf set (a sealed facade or an explicit codec list). That is the 
 before the particle step: copy sge's hand-written codecs (fast, against the maintainer's aim) or
 derive with a declared leaf set and the `class` discriminator (the aim, needs the facade).
 
+**JSON step, part 3 (Tiled) — MEASURED AND REVERTED (2026-09-07 14:10): 55 errors, a maps-package
+card, not a loader swap.** Injecting sge's five Tiled JSON loaders plus `TmjJson`/`TiledProjectJson`
+over the port's java maps package fails in seven families: 13 accessor parens, 13 assorted
+(`Nullable[Json].asString`, `-=` on a Float where sge holds an opaque, `Nullable.isEmpty`
+arity), 8 Nullable-vs-plain (sge's `tiles.get`, `MapGroupLayer`, `MapObject` answer `Nullable`),
+7 members the port's maps API lacks (`MapProperties.getAs`, `MapLayers.byType`, Nullable tile
+lookups), 5 `Pixels`-vs-`Int` map sizes, 5 constructor/collection shapes, and 4 where the STILL-JAVA
+`BaseTmxMapLoader` (XML) inherits sge's base loader and meets its `HashMap`/`IntMap`/`() => Unit`
+fields. The JSON reading itself (typed `TmjJson` with derived codecs) is not where it breaks: sge's
+loaders assume sge's CONVENTIONS on the maps package. So Tiled is done after those conventions are
+ladder steps (Nullable getters on the maps types — nullability policy; `getAs`/`byType` —
+AddMembers; the base-loader fields shared with the TMX loaders), or by injecting the maps package
+whole with its TMX half. Staging reverted to the measured part-2 state; no demo or port test
+exercises the Tiled loaders today.
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside
