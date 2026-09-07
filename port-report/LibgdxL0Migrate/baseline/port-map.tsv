@@ -243,7 +243,6 @@ type	com.badlogic.gdx.graphics.g3d.environment.PointLight	sge.graphics.g3d.envir
 type	com.badlogic.gdx.graphics.g3d.environment.ShadowMap	sge.graphics.g3d.environment.ShadowMap	Renamed	-		0		form=trait
 type	com.badlogic.gdx.graphics.g3d.environment.SphericalHarmonics	sge.graphics.g3d.environment.SphericalHarmonics	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(float[]) statics=coeff
 type	com.badlogic.gdx.graphics.g3d.environment.SpotLight	sge.graphics.g3d.environment.SpotLight	Renamed	-		0		form=class parents=sge.graphics.g3d.environment.BaseLight primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader	sge.graphics.g3d.loader.G3dModelLoader	Renamed	-		0		companion=yes form=class parents=sge.assets.loaders.ModelLoader primary=(BaseJsonReader,FileHandleResolver) primaryKind=unique-root primaryVis=public secondaries=(BaseJsonReader) statics=VERSION_HI,VERSION_LO
 type	com.badlogic.gdx.graphics.g3d.loader.MtlLoader	sge.graphics.g3d.loader.MtlLoader	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=ObjMaterial
 type	com.badlogic.gdx.graphics.g3d.loader.MtlLoader$ObjMaterial	sge.graphics.g3d.loader.MtlLoader$ObjMaterial	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.g3d.loader.ObjLoader	sge.graphics.g3d.loader.ObjLoader	Renamed	-		0		companion=yes form=class parents=sge.assets.loaders.ModelLoader primary=(FileHandleResolver) primaryKind=unique-root primaryVis=public secondaries=() statics=Group,ObjLoaderParameters,logWarning
@@ -922,6 +921,7 @@ type	com.badlogic.gdx.utils.viewport.ScalingViewport	sge.utils.viewport.ScalingV
 type	com.badlogic.gdx.utils.viewport.ScreenViewport	sge.utils.viewport.ScreenViewport	Renamed	-		0		form=class parents=sge.utils.viewport.Viewport primary=(Camera) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.badlogic.gdx.utils.viewport.StretchViewport	sge.utils.viewport.StretchViewport	Renamed	-		0		form=class parents=sge.utils.viewport.ScalingViewport primary=(Scaling,WorldUnits,WorldUnits,Camera) primaryKind=synthesised-primary primaryVis=protected secondaries=(WorldUnits,WorldUnits);(WorldUnits,WorldUnits,Camera)
 type	com.badlogic.gdx.utils.viewport.Viewport	sge.utils.viewport.Viewport	Renamed	-		0		flags=abstract form=class primary=() primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader	sge.graphics.g3d.loader.G3dModelLoader	Substituted	-		0		companion=yes form=class parents=sge.assets.loaders.ModelLoader primary=(BaseJsonReader,FileHandleResolver) primaryKind=unique-root primaryVis=public secondaries=(BaseJsonReader) statics=VERSION_HI,VERSION_LO
 type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		companion=yes form=class primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=HttpClientResponse
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		companion=yes form=class parents=sge.utils.Pool primary=(Function0,int,int) primaryKind=unique-root primaryVis=public secondaries=(Function0);(Function0,int) statics=PoolSupplier tparams="[T <: java.lang.Object]"
@@ -992,6 +992,8 @@ type		sge.graphics.AngleGL32	Added	-		0
 type		sge.graphics.GLEnum	Added	-		0		
 type		sge.graphics.g2d.Gdx2DNative	Added	-		0		
 type		sge.graphics.g2d.Gdx2dDraw	Added	-		0		
+type		sge.graphics.g3d.loader.G3dBinaryModelLoader	Added	-		0		
+type		sge.graphics.g3d.loader.G3dModelJson	Added	-		0		
 type		sge.graphics.g3d.particles.AssetTypeRegistry	Added	-		0		
 type		sge.graphics.glutils.ETC1Native	Added	-		0		
 type		sge.net.DesktopNet	Added	-		0		
@@ -1026,6 +1028,7 @@ type		sge.platform.package	Added	-		0
 type		sge.scenes.scene2d.utils.UIUtilsPlatform	Added	-		0		
 type		sge.utils.BufferUtilsNative	Added	-		0		
 type		sge.utils.DynamicArrayOps	Added	-		0		
+type		sge.utils.JsonCodecs	Added	-		0		
 type		sge.utils.Log	Added	-		0		
 type		sge.utils.LogPlatform	Added	-		0		
 type		sge.utils.Millis	Added	-		0		

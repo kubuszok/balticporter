@@ -546,6 +546,10 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
       "com.kubuszok"          %% "multiarch-panama-jdk"   % "0.4.0",
       "com.kubuszok"           % "pnm-provider-sge-desktop" % "0.1.2-33-gcf10406-SNAPSHOT",
       "com.kubuszok"           % "pnm-provider-sge-angle"   % "0.1.2-33-gcf10406-SNAPSHOT",
+      // sge's typed JSON/UBJSON documents (Kindlings-derived codecs; PROGRESS.md §13.30, JSON step)
+      "com.kubuszok"          %% "kindlings-jsoniter-derivation" % "0.3.2",
+      "com.kubuszok"          %% "kindlings-jsoniter-json"       % "0.3.2",
+      "com.kubuszok"          %% "kindlings-ubjson-derivation"   % "0.3.2",
       "org.scalameta"         %% "munit"             % "1.2.0" % Test,
       "junit"                  % "junit"             % "4.13.2" % Test,
       "org.junit.jupiter"      % "junit-jupiter"     % "5.10.2" % Test,

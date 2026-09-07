@@ -1,0 +1,5 @@
+#file	origin	adjustment	why
+sge/utils/JsonCodecs.scala	sge/src/main/scala/sge/utils/JsonCodecs.scala	+given UBJsonConfig = default.withTransientNone	the binary codec omits None like the text one; sge's default wrote UBJSON nulls java's g3d loader read as present values (PROGRESS.md §13.30, JSON step)
+sge/graphics/g3d/loader/G3dModelLoader.scala	sge/src/main/scala/sge/graphics/g3d/loader/G3dModelLoader.scala	binary flag + java-shaped secondary ctor (reader, resolver); loadModelData in the port's ModelLoader signature	the emitted AssetManager registers `new G3dModelLoader(new JsonReader()/UBJsonReader(), resolver)`; the reader only selects the spelling
+sge/graphics/g3d/loader/G3dBinaryModelLoader.scala	sge/src/main/scala/sge/graphics/g3d/loader/G3dBinaryModelLoader.scala	body folded into the flag	same class, sge's name kept
+sge/graphics/g3d/loader/G3dModelJson.scala	sge/src/main/scala/sge/graphics/g3d/loader/G3dModelJson.scala	copied verbatim	the typed g3d document with derived JSON and UBJSON codecs

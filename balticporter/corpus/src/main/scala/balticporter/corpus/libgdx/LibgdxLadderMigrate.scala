@@ -157,6 +157,9 @@ object LibgdxLadder:
     "natives" -> List(new balticporter.transform.MethodBodyTransform(LibgdxNativeBodies.all)),
     // sge's desktop backend (GLFW window, input, files, preferences, net, miniaudio), copied (PROGRESS.md §13.30 step 3): injections only.
     "backend-desktop" -> Nil,
+    // sge's typed JSON/UBJSON documents with Kindlings-derived codecs replace java's reflective JSON stack, one
+    // consumer family at a time (PROGRESS.md §13.30, JSON step): first the g3d model loader.
+    "json" -> Nil,
     "witness" -> List(
       new balticporter.transform.GlobalsToImplicitsTransform(requiredGivens =
         balticporter.transform.ElementWitnessTransform.constructorGivens(CoreWitnessSubjects, LlsPolicy.Witness)),
@@ -594,6 +597,7 @@ object LibgdxLadder:
 
   /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
   val stepTypeDrops: Map[String, Set[String]] = Map(
+    "json" -> Set("com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader"),
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
     // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
     // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
@@ -629,6 +633,7 @@ object LibgdxLadder:
     "backend-jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm")),
     "natives"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives")),
     "backend-desktop" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop")),
+    "json"        -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-json")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -649,9 +654,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

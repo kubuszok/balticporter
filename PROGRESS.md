@@ -2006,6 +2006,25 @@ binary-model conventions for its reader), the demo assets and sge's asset genera
 the demo-check project. Not exercised by a 120-frame run with no input: key handling beyond
 polling, audio playback beyond loading, network beyond construction, window resize.
 
+**JSON step, part 1 (2026-09-07 13:40): the g3d model loader reads through Kindlings-derived codecs.**
+Decided by the maintainer: java's reflective JSON/UBJSON stack goes, sge's typed documents with
+derived codecs (jsoniter for text, Kindlings UBJSON for binary) come in, one consumer family at a
+time. Part 1 injects sge's `JsonCodecs`, `G3dModelJson`, `G3dModelLoader` and
+`G3dBinaryModelLoader` and DROPS java's `G3dModelLoader`. Two conventions decided ONCE in the
+injected codec file rather than per reader: the binary codec omits `None` like the text one
+(`given UBJsonConfig = default.withTransientNone`; sge's default wrote UBJSON nulls), and the
+Kindlings reader speaks the current UBJSON draft (`i` = int8), so the demo's `.g3db` needs no
+adjustment any more (the asset-showcase demo copy is gone; its ADJUSTMENTS rows too). Seams
+reconciled in the copies (the directory's `ADJUSTMENTS.tsv`): a java-shaped secondary constructor
+`(reader, resolver)` on the loader — the emitted `AssetManager` registers loaders inside its
+CONSTRUCTOR body, which `MethodBodyTransform` cannot substitute (a mechanism card: constructor-body
+substitution, or an asset-loader registry seam); the `Json` AST alias left out while java's
+reflective `Json` stub still serves Skin and particles; `path()`/`toArray()` parens, `Int`
+primitive types, plain keyframe values. Held: 0 errors, 216/220, demo-check 0; `members` 20 moved
+(the dropped loader's callers). Remaining families on the java stack: Tiled (5 files, sge has
+`TmjJson`/`TiledProjectJson`), particles (20 files, sge has `ParticleEffectCodecs`), `Skin`
+(java `Json` reflection — sge's replacement to check), `HttpRequestBuilder`, `AssetManager`.
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside
