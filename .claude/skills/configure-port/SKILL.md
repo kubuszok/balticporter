@@ -144,6 +144,7 @@ manifest {
   dropMethods    = []
   packageRenames { "space.earlygrey.simplegraphs" = "sge.graphs" }
   inject         = ["../../mylib-overrides"]
+  platformDirs   = { jvm = ["../../mylib-overrides-jvm"] }   # a hand port's scalajvm/scaladesktop layer; js/native rows likewise
   surface = [
     { transform = "collections" },
     { transform = "mutable-params" },

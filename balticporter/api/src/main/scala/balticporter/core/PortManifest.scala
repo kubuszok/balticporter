@@ -52,6 +52,11 @@ final case class PortManifest(
     resolutions: Map[String, String] = Map.empty,
     /** ready-made Scala this module ships. NOT inherited — see the class doc. */
     inject: List[Path] = Nil,
+    /** ready-made Scala PER PLATFORM ROW — `jvm`/`js`/`native` (sbt-projectmatrix's names) → roots
+      * copied to `src_managed/<row>/scala`, which only that row compiles; `inject` is the shared row.
+      * A hand port's `scalajvm`/`scaladesktop`/`scalajs`/`scalanative` layers land here. NOT
+      * inherited (a build artefact, like `inject`). `PROGRESS.md` §13.31 step 3. */
+    platformDirs: Map[String, List[Path]] = Map.empty,
     /** UPSTREAM `META-INF/services/<interface FQN>` FILES this module ships — the SPI half of the
       * deliverable no phase can carry. Missing it means `ServiceLoader.load` finds zero providers,
       * silently, with no compile error or check count (`ENGINE-LIMITS.md` P5). A §1(b) declaration,
@@ -297,7 +302,8 @@ final case class PortManifest(
     *
     * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own
     * injections only, exactly as [[inject]] is declared per module (§1.5). */
-  lazy val injectedFqns: Set[String] = Substitutions.injectedSources(inject).map(_._1).toSet
+  lazy val injectedFqns: Set[String] =
+    Substitutions.injectedSources(inject ++ platformDirs.values.flatten.toList).map(_._1).toSet
 
   /** does this module — or anything in its policy chain — SHIP ready-made Scala at `fqn`? `fqn`
     * is upstream; asked through [[renamed]] since an injection root is in the port's own

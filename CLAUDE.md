@@ -94,7 +94,7 @@ the two ports compile alone and not together. The shared surface is a VALUE — 
 | inherited — a fact about the SHARED SURFACE | not inherited — this module's build |
 |---|---|
 | `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`, `provenance`, `runtimeMode`, `supportSources`, `project` |
-| `typeRenames`, `subPackages`, `flattenNestedTypes`, `allowPackageSplit` | **`inject`**, `targets`, `verdictOverrides`, `dependencies` |
+| `typeRenames`, `subPackages`, `flattenNestedTypes`, `allowPackageSplit` | **`inject`**, **`platformDirs`** (`jvm`/`js`/`native` → `src_managed/<row>/scala`, only that row compiles it), `targets`, `verdictOverrides`, `dependencies` |
 
 - `targets`: a dependent may narrow, never widen (fatal; widen the BASE instead). All-platform is the
   stated intent; a `Verdict.Depend` is answered by DECLARING the artifact, never a rewrite (P6).

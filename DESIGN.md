@@ -2193,3 +2193,15 @@ does not re-derive: it reads the rows its bases PUBLISHED (`derived-policy.tsv` 
 and applies them as facts — the opaque phase retypes a base slot's symbol without emitting it, so
 this module's calls into it are coerced; the nullability phase retypes a base member it does not
 own the same way (O8 read as a value).
+
+### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
+
+A reference port is a `projectMatrix`: `scala/` shared, `scalajvm/`/`scaladesktop/`, `scalajs/`,
+`scalanative/` per row. `inject` is the SHARED row (`src_managed/main/scala`, every row compiles
+it); `platformDirs` maps a row (`jvm`/`js`/`native`, sbt-projectmatrix's names) to injection roots
+copied to `src_managed/<row>/scala`, which only that row's `sourceGenerators` pick up
+(`virtualAxes`; a plain project is the JVM row). A JVM-only layer no longer has to be shared source
+that the JS and Native rows cannot compile, and the same upstream path may hold three different
+files, one per row. Not inherited, like `inject`; `injectedFqns` unions the rows (a name a row
+supplies is a name the port owns). No portability scan on a row: its platform is declared by the
+row. `PROGRESS.md` §13.31 step 3.

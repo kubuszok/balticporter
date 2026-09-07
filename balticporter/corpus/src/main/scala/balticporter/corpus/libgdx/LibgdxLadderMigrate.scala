@@ -663,11 +663,21 @@ object LibgdxLadder:
     "audio"      -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-audio")),
     "time"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-time")),
     "glenum"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-glenum")),
-    "backend-jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm")),
-    "natives"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives")),
-    "backend-desktop" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop")),
+    // the backend steps' SHARED half (sge's `scala/` files); their JVM half is a platform row below
+    "backend-jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/shared")),
+    "natives"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives/shared")),
+    "backend-desktop" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/shared")),
     "json"        -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-json")),
   ).withDefaultValue(Nil)
+
+  /** Per step, the PLATFORM ROWS' injections (`PortManifest.platformDirs`, PROGRESS.md §13.31 step 3):
+    * sge's `scalajvm`/`scaladesktop` layers and the port's own JVM-only files go to the `jvm` row
+    * (`src_managed/jvm/scala`), which only that row compiles. */
+  def stepPlatformInjects(repoRoot: Path): Map[String, Map[String, List[Path]]] = Map(
+    "backend-jvm"     -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/jvm"))),
+    "natives"         -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives/jvm"))),
+    "backend-desktop" -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/jvm"))),
+  ).withDefaultValue(Map.empty)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
     * witness replaces (each has a portable twin; the full port dropped the same, `LibgdxPolicy`). */
@@ -706,6 +716,8 @@ object LibgdxLadder:
       // sge ships `TextFormatter` public (java: package-private): declared, the split publishes it (K51 xviii).
       allowPackageSplit = if steps("helpers") then Set("com.badlogic.gdx.utils.TextFormatter") else Set.empty,
       inject         = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
+      platformDirs   = StepOrder.filter(steps).flatMap(stepPlatformInjects(repoRoot)(_).toList)
+                         .groupMapReduce(_._1)(_._2)(_ ++ _),
       // a dependent FOLLOWS the base's published member spellings (`first()` -> `first`, D14): the
       // port-map follow reads what lls PUBLISHED, never re-derives it (CLAUDE.md §1.5).
       surface        = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)) :+

@@ -2210,6 +2210,18 @@ also skips a clause another phase already put there. Numbers: `sge-l0` 0 = 0, su
 logging 9 -> 0, context 54 -> 41 (the value classes and loaders that only logged take no context),
 assertion-mismatch 54 -> 53, particles 45 -> 42.
 
+**Step 3, the mechanism (2026-09-07 19:10): `PortManifest.platformDirs`** (`DESIGN.md` §8.31) — a
+row (`jvm`/`js`/`native`) → injection roots copied to `src_managed/<row>/scala`, picked up only by
+that row's `sourceGenerators` (`virtualAxes`; a plain project is the JVM row; `SbtGen` writes the
+jvm line for generated builds); `inject` stays the shared row; `injectedFqns` unions the rows. The
+ladder's three backend steps split by sge origin: `shared/` (sge's `scala/` files: 22) and `jvm/`
+(`scalajvm` + `scaladesktop` + the port's own JVM files: 52) under each step directory
+(`stepPlatformInjects`). Numbers held: `sge-l0` 0 = 0, suite 216/220, `sge-suite-check` 1,194 =
+1,194, `demo-check` 0, `demo-run` 12/12, `lls` unchanged. The JS and Native rows now have a home;
+what they hold (sge's `scalajs/` 60 and `scalanative/` 19 files, their dependencies, the port's own
+JS/Native rows in `build.sbt`) is the second half of this step, measured as `expected-errors.js`
+and `.native` once the rows exist.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

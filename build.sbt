@@ -390,6 +390,15 @@ def portSourceGenerators(dir: String): Seq[Setting[?]] = Seq(
     val pd = (ThisBuild / baseDirectory).value / "ported" / dir
     ((pd / "src_managed" / "main" / "scala") ** "*.scala").get()
   }.taskValue,
+  // the row's own injected layer (`PortManifest.platformDirs`): src_managed/<jvm|js|native>/scala
+  Compile / sourceGenerators += Def.task {
+    val pd   = (ThisBuild / baseDirectory).value / "ported" / dir
+    // a plain (non-matrix) project has no `virtualAxes` and is the JVM row
+    val rows = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
+      case Seq() => Seq("jvm")
+      case rs    => rs
+    rows.flatMap(r => ((pd / "src_managed" / r / "scala") ** "*.scala").get())
+  }.taskValue,
   Test / sourceGenerators += Def.task {
     val pd = (ThisBuild / baseDirectory).value / "ported" / dir
     ((pd / "src_managed" / "test" / "scala") ** "*.scala").get()

@@ -707,6 +707,25 @@ final case class PortRun(
           injected += 1
         }
     }
+    // ---- platform rows: a hand port's per-platform layer, copied to src_managed/<row>/scala ----
+    // (main source set only; a row's own portability is declared by the row, so no scan)
+    val rowRoots: Map[String, List[Path]] =
+      if sourceSet.configName == "main" then manifest.map(_.platformDirs).getOrElse(Map.empty) else Map.empty
+    rowRoots.toList.sortBy(_._1).foreach { (row, roots) =>
+      val rowDir = SbtGen.managedDir(portRoot, row)
+      wipe(rowDir)
+      var n = 0
+      roots.filter(Files.exists(_)).foreach { root =>
+        Files.walk(root).iterator().asScala.filter(p => p.toString.endsWith(".scala")).toList.sorted.foreach { src =>
+          val rel = root.relativize(src).toString.replace('\\', '/')
+          val dst = rowDir.resolve(rel)
+          Files.createDirectories(dst.getParent)
+          Files.writeString(dst, injectionNotes(rel) + Files.readString(src))
+          n += 1
+        }
+      }
+      say(s"platform row `$row`: $n injected file(s) -> $rowDir")
+    }
     // Scan injected text for portability violations.
     val injectedViolations = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
       SubstitutionCheck.scalaSources(root).flatMap { src =>
@@ -729,7 +748,7 @@ final case class PortRun(
     val shapes = translated.emitter.emittedShapes
     // Injected type shapes fill the map for dropped+injected types.
     val injectedTypeShapes: Map[String, String] =
-      balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject).renderedTypeShapes
+      balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ rowRoots.values.flatten.toList).renderedTypeShapes
     // Include nested types in the map (schema 3+). Use `allClassDefs` not `cd.body` recursion.
     def emittedFqns(cd: Tree.ClassDef): List[String] =
       StandardTraversal.allClassDefs(cd)(using program).flatMap(c => program.symbolOf(c.symbol).map(_.fullName))

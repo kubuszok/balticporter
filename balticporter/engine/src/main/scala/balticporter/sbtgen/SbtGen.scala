@@ -148,6 +148,8 @@ object SbtGen:
       |// …and the RESOURCE half, which a sourceGenerator cannot carry: a `META-INF/services`
       |// descriptor the run wrote is on the CLASSPATH or the ServiceLoader finds nothing, and
       |// "finds nothing" is exactly the silent failure the key exists to remove.
+      |// a platform row's injected layer (`PortManifest.platformDirs`); a plain project is the JVM row
+      |Compile / unmanagedSourceDirectories += baseDirectory.value / "src_managed" / "jvm" / "scala"
       |Compile / unmanagedResourceDirectories += baseDirectory.value / "src_managed" / "main" / "resources"
       |Test / unmanagedResourceDirectories += baseDirectory.value / "src_managed" / "test" / "resources"
       |cleanFiles += baseDirectory.value / "src_managed"
