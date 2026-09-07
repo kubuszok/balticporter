@@ -1,0 +1,533 @@
+/*
+ * Ported from libGDX - https://github.com/libgdx/libgdx
+ * Original source: backends/gdx-backend-lwjgl3/.../Lwjgl3Graphics.java
+ * Original authors: badlogic
+ * Licensed under the Apache License, Version 2.0
+ *
+ * Migration notes:
+ *   Renames: Lwjgl3Graphics -> DesktopGraphics
+ *   Convention: GLFW calls abstracted through WindowingOps FFI trait
+ *   Convention: GL instances created based on ANGLE config, not reflective Class.forName
+ *   Convention: Lwjgl3Monitor/Lwjgl3DisplayMode inner classes -> DesktopMonitor/DesktopDisplayMode
+ *   Idiom: split packages; Nullable; no return
+ *   Audited: 2026-03-08
+ *
+ * Scala port copyright 2025-2026 Mateusz Kubuszok
+ */
+package sge
+
+import sge.graphics.{ Cursor, GL20, GL30, GL31, GL32, Pixmap }
+import sge.graphics.Cursor.SystemCursor
+import sge.graphics.glutils.{ GLVersion, HdpiMode }
+import sge.platform.WindowingOps
+import lowlevel.Nullable
+import sge.utils.{ BufferUtils, Seconds }
+
+/** Desktop implementation of [[Graphics]]. Manages the GL context, frame timing, display mode queries, and cursor.
+  *
+  * All windowing system calls are routed through the [[WindowingOps]] FFI trait, which abstracts GLFW/SDL3 for both JVM (Panama) and Native (@extern) backends.
+  *
+  * @param window
+  *   the desktop window this graphics instance belongs to
+  * @param windowing
+  *   the windowing FFI operations
+  * @author
+  *   badlogic (original implementation)
+  */
+class DesktopGraphics private[sge] (
+  private[sge] val window: DesktopWindow,
+  private val windowing:   WindowingOps
+) extends Graphics
+    with AutoCloseable {
+
+  // ─── GL instances ─────────────────────────────────────────────────────
+
+  private var _gl20:      GL20           = scala.compiletime.uninitialized
+  private var _gl30:      Nullable[GL30] = Nullable.empty
+  private var _gl31:      Nullable[GL31] = Nullable.empty
+  private var _gl32:      Nullable[GL32] = Nullable.empty
+  private var _glVersion: GLVersion      = scala.compiletime.uninitialized
+
+  // ─── Frame state ──────────────────────────────────────────────────────
+
+  @volatile private var _backBufferWidth:  Int     = 0
+  @volatile private var _backBufferHeight: Int     = 0
+  @volatile private var _logicalWidth:     Int     = 0
+  @volatile private var _logicalHeight:    Int     = 0
+  @volatile private var _isContinuous:     Boolean = true
+
+  private var _extensions:        Nullable[Set[String]] = Nullable.empty
+  private var _bufferFormat:      Graphics.BufferFormat = scala.compiletime.uninitialized
+  private var _lastFrameTime:     Long                  = -1L
+  private var _deltaTime:         Seconds               = Seconds.zero
+  private var _resetDeltaTime:    Boolean               = false
+  private var _frameId:           Long                  = 0L
+  private var _frameCounterStart: Long                  = 0L
+  private var _frames:            Int                   = 0
+  private var _fps:               Int                   = 0
+
+  // ─── Fullscreen state ─────────────────────────────────────────────────
+
+  private var windowPosXBeforeFullscreen:   Int                          = 0
+  private var windowPosYBeforeFullscreen:   Int                          = 0
+  private var windowWidthBeforeFullscreen:  Int                          = 0
+  private var windowHeightBeforeFullscreen: Int                          = 0
+  private var displayModeBeforeFullscreen:  Nullable[DesktopDisplayMode] = Nullable.empty
+
+  // ─── Initialization ───────────────────────────────────────────────────
+
+  private[sge] def initGL(gl20: GL20, gl30: Nullable[GL30], gl31: Nullable[GL31], gl32: Nullable[GL32]): Unit = {
+    _gl20 = gl20
+    _gl30 = gl30
+    _gl31 = gl31
+    _gl32 = gl32
+    updateFramebufferInfo()
+    initiateGL()
+    windowing.setFramebufferSizeCallback(window.windowHandle, Nullable(onFramebufferResize))
+  }
+
+  private def initiateGL(): Unit = {
+    val versionString  = _gl20.glGetString(GL20.GL_VERSION)
+    val vendorString   = _gl20.glGetString(GL20.GL_VENDOR)
+    val rendererString = _gl20.glGetString(GL20.GL_RENDERER)
+    // the port's GLVersion carries the context (it logs a malformed version string through it); the
+    // context is built after graphics exist, so the window's current one is handed over as-is
+    given Sge = window.sgeContext
+    _glVersion = new GLVersion(Application.ApplicationType.Desktop, versionString, vendorString, rendererString)
+  }
+
+  private val onFramebufferResize: (Long, Int, Int) => Unit = { (_, _, _) =>
+    val oldBbW = _backBufferWidth
+    val oldBbH = _backBufferHeight
+    updateFramebufferInfo()
+    // Suppress Core Animation implicit animations for the entire resize cycle —
+    // without this, ANGLE's CAMetalLayer smoothly animates to the new size.
+    windowing.beginNoAnimationTransaction()
+    windowing.updateNativeLayerScale(window.windowHandle)
+    if (window.isListenerInitialized() && (_backBufferWidth != oldBbW || _backBufferHeight != oldBbH)) {
+      window.makeCurrent()
+      _gl20.glViewport(Pixels.zero, Pixels.zero, Pixels(_backBufferWidth), Pixels(_backBufferHeight))
+      window.listener.resize(width, height)
+      update()
+      window.listener.render()
+      sge.platform.PlatformOps.gl.swapEglBuffers(window.eglContext)
+    }
+    windowing.commitTransaction()
+  }
+
+  // ─── Frame info ───────────────────────────────────────────────────────
+
+  private[sge] def updateFramebufferInfo(): Unit = {
+    val (fbW, fbH) = windowing.getFramebufferSize(window.windowHandle)
+    _backBufferWidth = fbW
+    _backBufferHeight = fbH
+    val (winW, winH) = windowing.getWindowSize(window.windowHandle)
+    _logicalWidth = winW
+    _logicalHeight = winH
+    val c = window.config
+    _bufferFormat = Graphics.BufferFormat(c.r, c.g, c.b, c.a, c.depth, c.stencil, c.samples, false)
+  }
+
+  private[sge] def update(): Unit = {
+    val time = System.nanoTime()
+    if (_lastFrameTime == -1L) _lastFrameTime = time
+    if (_resetDeltaTime) {
+      _resetDeltaTime = false
+      _deltaTime = Seconds.zero
+    } else {
+      _deltaTime = Seconds((time - _lastFrameTime) / 1000000000.0f)
+    }
+    _lastFrameTime = time
+
+    if (time - _frameCounterStart >= 1000000000L) {
+      _fps = _frames
+      _frames = 0
+      _frameCounterStart = time
+    }
+    _frames += 1
+    _frameId += 1
+  }
+
+  def resetDeltaTime(): Unit = _resetDeltaTime = true
+
+  // ─── GL availability ──────────────────────────────────────────────────
+
+  override def GL30Available: Boolean = _gl30.isDefined
+  override def GL31Available: Boolean = _gl31.isDefined
+  override def GL32Available: Boolean = _gl32.isDefined
+
+  override def gl20: GL20           = _gl20
+  override def gl30: GL30 = _gl30.orNull
+  override def gl31: GL31 = _gl31.orNull
+  override def gl32: GL32 = _gl32.orNull
+
+  override def gl20_=(value: GL20): Unit = _gl20 = value
+  override def gl30_=(value: GL30): Unit = _gl30 = Nullable(value)
+  override def gl31_=(value: GL31): Unit = _gl31 = Nullable(value)
+  override def gl32_=(value: GL32): Unit = _gl32 = Nullable(value)
+
+  // ─── Dimensions ───────────────────────────────────────────────────────
+
+  override def width: Pixels =
+    Pixels(if (window.config.hdpiMode == HdpiMode.Pixels) _backBufferWidth else _logicalWidth)
+
+  override def height: Pixels =
+    Pixels(if (window.config.hdpiMode == HdpiMode.Pixels) _backBufferHeight else _logicalHeight)
+
+  override def backBufferWidth:  Pixels = Pixels(_backBufferWidth)
+  override def backBufferHeight: Pixels = Pixels(_backBufferHeight)
+
+  def logicalWidth:  Int = _logicalWidth
+  def logicalHeight: Int = _logicalHeight
+
+  override def backBufferScale: Float =
+    if (_logicalWidth != 0) _backBufferWidth.toFloat / _logicalWidth.toFloat else 1f
+
+  // ─── Frame timing ────────────────────────────────────────────────────
+
+  override def frameId:         Long    = _frameId
+  // java keeps a raw (unsmoothed) delta; sge dropped it — the port's Graphics still declares it
+  override def rawDeltaTime: Seconds = deltaTime
+  override def deltaTime:       Seconds = _deltaTime
+  override def framesPerSecond: Int     = _fps
+
+  // ─── Type / version ──────────────────────────────────────────────────
+
+  override def `type`: Graphics.GraphicsType = Graphics.GraphicsType.LWJGL3
+  override def GLVersion:    sge.graphics.glutils.GLVersion    = _glVersion
+
+  // ─── DPI / density ───────────────────────────────────────────────────
+
+  override def ppiX: Float = ppcX * 2.54f
+  override def ppiY: Float = ppcY * 2.54f
+
+  override def ppcX: Float = {
+    val mon          = currentDesktopMonitor
+    val (sizeXmm, _) = windowing.getMonitorPhysicalSize(mon.monitorHandle)
+    if (sizeXmm == 0) 1f
+    else {
+      val mode = getDesktopDisplayMode(mon)
+      mode.width / sizeXmm.toFloat * 10f
+    }
+  }
+
+  override def ppcY: Float = {
+    val mon          = currentDesktopMonitor
+    val (_, sizeYmm) = windowing.getMonitorPhysicalSize(mon.monitorHandle)
+    if (sizeYmm == 0) 1f
+    else {
+      val mode = getDesktopDisplayMode(mon)
+      mode.height / sizeYmm.toFloat * 10f
+    }
+  }
+
+  override def density: Float = ppiX / 160f
+
+  // ─── Safe insets (none on desktop) ────────────────────────────────────
+
+  override def safeInsetLeft:   Pixels = Pixels.zero
+  override def safeInsetTop:    Pixels = Pixels.zero
+  override def safeInsetBottom: Pixels = Pixels.zero
+  override def safeInsetRight:  Pixels = Pixels.zero
+
+  // ─── Display modes / monitors ─────────────────────────────────────────
+
+  override def supportsDisplayModeChange(): Boolean = true
+
+  override def primaryMonitor: Graphics.Monitor = {
+    val handle = windowing.primaryMonitor
+    toDesktopMonitor(handle).toMonitor
+  }
+
+  override def monitor: Graphics.Monitor = currentDesktopMonitor.toMonitor
+
+  override def monitors: Array[Graphics.Monitor] =
+    windowing.monitors.map(h => toDesktopMonitor(h).toMonitor)
+
+  override def displayModes: Array[Graphics.DisplayMode] =
+    getDesktopDisplayModes(currentDesktopMonitor).map(registerMode)
+
+  override def getDisplayModes(monitor: Graphics.Monitor): Array[Graphics.DisplayMode] = {
+    // Find the desktop monitor matching by name and position
+    val desktopMon = findDesktopMonitor(monitor)
+    getDesktopDisplayModes(desktopMon).map(registerMode)
+  }
+
+  override def displayMode: Graphics.DisplayMode =
+    registerMode(getDesktopDisplayMode(currentDesktopMonitor))
+
+  override def getDisplayMode(monitor: Graphics.Monitor): Graphics.DisplayMode = {
+    val desktopMon = findDesktopMonitor(monitor)
+    registerMode(getDesktopDisplayMode(desktopMon))
+  }
+
+  // ─── Desktop-specific monitor/display helpers ─────────────────────────
+
+  private def toDesktopMonitor(handle: Long): DesktopMonitor = {
+    val name   = windowing.getMonitorName(handle)
+    val (x, y) = windowing.getMonitorPos(handle)
+    DesktopMonitor(handle, x, y, name)
+  }
+
+  private[sge] def currentDesktopMonitor: DesktopMonitor = {
+    val monitors = windowing.monitors.map(toDesktopMonitor)
+    if (monitors.isEmpty) toDesktopMonitor(windowing.primaryMonitor)
+    else {
+      val (windowX, windowY)          = windowing.getWindowPos(window.windowHandle)
+      val (windowWidth, windowHeight) = windowing.getWindowSize(window.windowHandle)
+      var bestOverlap                 = 0
+      var result                      = monitors(0)
+      var i                           = 0
+      while (i < monitors.length) {
+        val mon      = monitors(i)
+        val mode     = getDesktopDisplayMode(mon)
+        val overlapX = scala.math.max(0, scala.math.min(windowX + windowWidth, mon.virtualX + mode.width) - scala.math.max(windowX, mon.virtualX))
+        val overlapY = scala.math.max(0, scala.math.min(windowY + windowHeight, mon.virtualY + mode.height) - scala.math.max(windowY, mon.virtualY))
+        val overlap  = overlapX * overlapY
+        if (overlap > bestOverlap) {
+          bestOverlap = overlap
+          result = mon
+        }
+        i += 1
+      }
+      result
+    }
+  }
+
+  private def findDesktopMonitor(monitor: Graphics.Monitor): DesktopMonitor = {
+    val monitors = windowing.monitors.map(toDesktopMonitor)
+    monitors.find(m => m.name == monitor.name && m.virtualX == monitor.virtualX && m.virtualY == monitor.virtualY).getOrElse(toDesktopMonitor(windowing.primaryMonitor))
+  }
+
+  private def getDesktopDisplayModes(monitor: DesktopMonitor): Array[DesktopDisplayMode] =
+    windowing.getVideoModes(monitor.monitorHandle).map { case (w, h, rr, rb, gb, bb) =>
+      DesktopDisplayMode(monitor.monitorHandle, w, h, rr, rb + gb + bb)
+    }
+
+  private def getDesktopDisplayMode(monitor: DesktopMonitor): DesktopDisplayMode = {
+    val (w, h, rr, rb, gb, bb) = windowing.getVideoMode(monitor.monitorHandle)
+    DesktopDisplayMode(monitor.monitorHandle, w, h, rr, rb + gb + bb)
+  }
+
+  // Maps every core Graphics.DisplayMode INSTANCE this Graphics has handed out back to the native
+  // monitor handle it was queried from. The original Lwjgl3Graphics carries the monitor inside a
+  // Lwjgl3DisplayMode subclass and recovers it by casting the DisplayMode passed to
+  // setFullscreenMode (Lwjgl3Graphics.java:415/416). Graphics.DisplayMode is a final case class and
+  // cannot be subclassed, so we record the monitor per handed-out instance here instead. The table
+  // MUST be keyed by reference identity, not equals/hashCode: Graphics.DisplayMode has structural
+  // equality and two monitors routinely expose structurally-equal modes (any dual same-model
+  // monitor setup), which an equality-keyed map would collide onto one monitor. Keys are held
+  // weakly so handed-out modes can be collected once callers drop them; cleared entries are removed
+  // from the reference queue on every access.
+
+  /** A weak, identity-compared key for [[modeMonitorHandles]]: hashes by `System.identityHashCode` of the referent and equates only when both referents are the same live instance (`eq`). */
+  final private class ModeKey(mode: Graphics.DisplayMode) extends java.lang.ref.WeakReference[Graphics.DisplayMode](mode, modeKeyQueue) {
+    private val identityHash: Int = System.identityHashCode(mode)
+
+    override def hashCode(): Int = identityHash
+
+    override def equals(other: Any): Boolean = other match {
+      case that: ModeKey =>
+        (this eq that) || {
+          val mode = get // WeakReference.get — Java interop boundary, may be null once collected
+          (mode ne null) && (mode eq that.get)
+        }
+      case _ => false
+    }
+  }
+
+  private val modeKeyQueue:       java.lang.ref.ReferenceQueue[Graphics.DisplayMode] = new java.lang.ref.ReferenceQueue()
+  private val modeMonitorHandles: java.util.HashMap[ModeKey, java.lang.Long]         = new java.util.HashMap()
+
+  /** Drops entries whose mode instance has been garbage-collected. Must be called with [[modeMonitorHandles]]'s lock held. */
+  private def expungeStaleModeKeys(): Unit = {
+    var ref = modeKeyQueue.poll()
+    while (ref ne null) { // ReferenceQueue.poll — Java interop boundary, null when empty
+      modeMonitorHandles.remove(ref)
+      ref = modeKeyQueue.poll()
+    }
+  }
+
+  /** Converts a desktop display mode to the core representation and records the monitor it belongs to, so [[setFullscreenMode]] can later target that same monitor. */
+  private def registerMode(desktopMode: DesktopDisplayMode): Graphics.DisplayMode = {
+    val mode = desktopMode.toDisplayMode
+    modeMonitorHandles.synchronized {
+      expungeStaleModeKeys()
+      modeMonitorHandles.put(new ModeKey(mode), java.lang.Long.valueOf(desktopMode.monitorHandle))
+    }
+    mode
+  }
+
+  /** Recovers the desktop display mode (with its monitor handle) for a core [[Graphics.DisplayMode]] passed back to [[setFullscreenMode]]. Mirrors the original's `(Lwjgl3DisplayMode)displayMode` cast
+    * (Lwjgl3Graphics.java:416): the monitor is the one this exact mode instance was queried from. A mode the caller constructed directly (never obtained from a query) has no recorded handle, so it
+    * falls back to the current monitor.
+    */
+  private def resolveDesktopMode(displayMode: Graphics.DisplayMode): DesktopDisplayMode = {
+    val handle = modeMonitorHandles.synchronized {
+      expungeStaleModeKeys()
+      Nullable(modeMonitorHandles.get(new ModeKey(displayMode))).fold(currentDesktopMonitor.monitorHandle)(_.longValue)
+    }
+    DesktopDisplayMode(handle, displayMode.width, displayMode.height, displayMode.refreshRate, displayMode.bitsPerPixel)
+  }
+
+  // ─── Fullscreen / windowed ────────────────────────────────────────────
+
+  override def setFullscreenMode(displayMode: Graphics.DisplayMode): Boolean = {
+    window.input.resetPollingStates()
+    val newMode = resolveDesktopMode(displayMode)
+    if (fullscreen) {
+      val currentMode = getDesktopDisplayMode(currentDesktopMonitor)
+      if (currentMode.monitorHandle == newMode.monitorHandle && currentMode.refreshRate == newMode.refreshRate) {
+        // same monitor and refresh rate
+        windowing.setWindowSize(window.windowHandle, newMode.width, newMode.height)
+      } else {
+        // different monitor and/or refresh rate
+        windowing.setWindowMonitor(window.windowHandle, newMode.monitorHandle, 0, 0, newMode.width, newMode.height, newMode.refreshRate)
+      }
+    } else {
+      // store window position so we can restore it when switching from fullscreen to windowed later
+      storeCurrentWindowPositionAndDisplayMode()
+      // switch from windowed to fullscreen
+      windowing.setWindowMonitor(window.windowHandle, newMode.monitorHandle, 0, 0, newMode.width, newMode.height, newMode.refreshRate)
+    }
+    updateFramebufferInfo()
+    setVSync(window.config.vSyncEnabled)
+    true
+  }
+
+  private def storeCurrentWindowPositionAndDisplayMode(): Unit = {
+    windowPosXBeforeFullscreen = window.positionX
+    windowPosYBeforeFullscreen = window.positionY
+    windowWidthBeforeFullscreen = _logicalWidth
+    windowHeightBeforeFullscreen = _logicalHeight
+    displayModeBeforeFullscreen = Nullable(getDesktopDisplayMode(currentDesktopMonitor))
+  }
+
+  override def setWindowedMode(width: Int, height: Int): Boolean = {
+    window.input.resetPollingStates()
+    if (!fullscreen) {
+      if (width.toInt != _logicalWidth || height.toInt != _logicalHeight) {
+        windowing.setWindowSize(window.windowHandle, width.toInt, height.toInt)
+        // Center the window on current monitor
+        val mon  = currentDesktopMonitor
+        val mode = getDesktopDisplayMode(mon)
+        val newX = mon.virtualX + (mode.width - width.toInt) / 2
+        val newY = mon.virtualY + (mode.height - height.toInt) / 2
+        window.setPosition(newX, newY)
+      }
+    } else {
+      if (displayModeBeforeFullscreen.isEmpty) {
+        storeCurrentWindowPositionAndDisplayMode()
+      }
+      val refreshRate = displayModeBeforeFullscreen.fold(0)(_.refreshRate)
+      if (width.toInt != windowWidthBeforeFullscreen || height.toInt != windowHeightBeforeFullscreen) {
+        val mon  = currentDesktopMonitor
+        val mode = getDesktopDisplayMode(mon)
+        val newX = mon.virtualX + (mode.width - width.toInt) / 2
+        val newY = mon.virtualY + (mode.height - height.toInt) / 2
+        windowing.setWindowMonitor(window.windowHandle, 0L, newX, newY, width.toInt, height.toInt, refreshRate)
+      } else {
+        windowing.setWindowMonitor(
+          window.windowHandle,
+          0L,
+          windowPosXBeforeFullscreen,
+          windowPosYBeforeFullscreen,
+          width.toInt,
+          height.toInt,
+          refreshRate
+        )
+      }
+    }
+    updateFramebufferInfo()
+    true
+  }
+
+  override def setTitle(title: String): Unit =
+    windowing.setWindowTitle(window.windowHandle, if (title == null) "" else title) // null-safe — callers may pass null title
+
+  override def setUndecorated(undecorated: Boolean): Unit = {
+    window.config.windowDecorated = !undecorated
+    windowing.setWindowAttrib(window.windowHandle, WindowingOps.GLFW_DECORATED, if (undecorated) 0 else 1)
+  }
+
+  override def setResizable(resizable: Boolean): Unit = {
+    window.config.windowResizable = resizable
+    windowing.setWindowAttrib(window.windowHandle, WindowingOps.GLFW_RESIZABLE, if (resizable) 1 else 0)
+  }
+
+  override def setVSync(vsync: Boolean): Unit = {
+    window.config.vSyncEnabled = vsync
+    sge.platform.PlatformOps.gl.setSwapInterval(if (vsync) 1 else 0)
+  }
+
+  override def setForegroundFPS(fps: Int): Unit =
+    window.config.foregroundFPS = fps
+
+  // ─── Buffer format / extensions ──────────────────────────────────────
+
+  override def bufferFormat: Graphics.BufferFormat = _bufferFormat
+
+  override def supportsExtension(extension: String): Boolean = {
+    // The GLFW window is created GLFW_NO_API — ANGLE (not GLFW) owns the GL
+    // context — so glfwExtensionSupported() has no current GL context and
+    // always returns false. Consult the live GL context instead, mirroring
+    // AndroidGraphics. The desktop ANGLE context is GL ES 3.0 core, where
+    // glGetString(GL_EXTENSIONS) returns null, so enumerate via the indexed
+    // glGetStringi(GL_EXTENSIONS, i) form. Cache the computed set lazily.
+    val exts = _extensions.fold {
+      val computed = _gl30.fold {
+        // Defensive ES 2.0 fallback: no ES 3.0 context, read the legacy
+        // space-separated GL_EXTENSIONS string instead of returning false.
+        val s = _gl20.glGetString(GL20.GL_EXTENSIONS)
+        if (s == null) Set.empty[String] else s.split(' ').filter(_.nonEmpty).toSet // null-safe — ES2 driver may return null
+      } { gl30 =>
+        val countBuf = BufferUtils.newIntBuffer(16)
+        gl30.glGetIntegerv(GL30.GL_NUM_EXTENSIONS, countBuf)
+        val count = countBuf.get(0)
+        (0 until count).iterator.map(i => gl30.glGetStringi(GL20.GL_EXTENSIONS, i)).filter(s => (s ne null) && s.nonEmpty).toSet
+      }
+      _extensions = Nullable(computed)
+      computed
+    }(identity)
+    exts.contains(extension)
+  }
+
+  // ─── Continuous rendering ─────────────────────────────────────────────
+
+  override def continuousRendering_=(isContinuous: Boolean): Unit =
+    _isContinuous = isContinuous
+
+  override def continuousRendering: Boolean = _isContinuous
+
+  override def requestRendering(): Unit =
+    window.requestRendering()
+
+  override def fullscreen: Boolean =
+    windowing.getWindowMonitor(window.windowHandle) != 0L
+
+  // ─── Cursor ───────────────────────────────────────────────────────────
+
+  override def newCursor(pixmap: Pixmap, xHotspot: Int, yHotspot: Int): Cursor =
+    DesktopCursor.create(windowing, pixmap, xHotspot, yHotspot).orNull
+
+  override def setCursor(cursor: Cursor): Unit = cursor match {
+    case dc: DesktopCursor =>
+      windowing.setCursor(window.windowHandle, dc.glfwCursor)
+    case _ => ()
+  }
+
+  override def setSystemCursor(systemCursor: SystemCursor): Unit =
+    DesktopCursor.setSystemCursor(window.windowHandle, systemCursor)
+
+  // ─── Lifecycle ────────────────────────────────────────────────────────
+
+  override def close(): Unit = {
+    // Cleanup callback — the window's close() will destroy the native window
+  }
+}
+
+object DesktopGraphics {
+
+  /** GL_TEXTURE_CUBE_MAP_SEAMLESS constant (desktop GL 3.2 extension). */
+  private[sge] val GL_TEXTURE_CUBE_MAP_SEAMLESS: Int = 0x884f
+}

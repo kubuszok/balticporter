@@ -1929,6 +1929,29 @@ reached `ETC1`'s sizes (sge keeps `Int` there): fenced by type. Held: 0 errors, 
 0; `members` 79 moved (the 59 bodies, ETC1's signatures). The residue COUNT for native members is
 still owed (a lane row per bodyless native; today the number is read by grep).
 
+**Step 3 landed (2026-09-07): `backend-desktop` injection step** — sge's 27 desktop files, its
+no-op services, `SgeError`, `SgeExtension`/`FrameHookHost`/`HeadlessApplicationConfig`,
+`WavInputStream`, `DesktopApplicationFactory` and the audio recorder; 138 -> 33 -> 4 -> 0 errors.
+The copies implement sge's spellings of the core traits where the port keeps java's, so each was
+reconciled to the PORT (every edit in the directory's `ADJUSTMENTS.tsv`): Key/Button -> Int and
+Nanos/Pixels unwrapped at the input queue; `x/y/deltaX/pressure(pointer)` -> `getX…`;
+`setInputProcessor` -> `inputProcessor_=`; `glVersion`/`graphicsType`/`setContinuousRendering` ->
+`GLVersion`/`` `type` ``/`continuousRendering_=`; `gl30..32` plain (null when absent); `newCursor`
+and `setWindowedMode` in Int; `Music.position`/`volume` as Float, java's completion listener kept
+beside sge's `onComplete`; `AudioDevice.isMono` -> `mono`; `Clipboard.contents: String`;
+`Preferences.put/get` over `mutable.Map[String, ?]`; `Files.FileType` from the companion;
+`FileHandle(file, type)(using Sge)` with the context read per call (`DesktopFiles(() => ctx)`),
+which is why sge added the external-path parameter; java's Application logging surface and
+FrameHookHost supplied by a port-written `JavaLoggingApplication`; `DesktopNet` port-shaped with
+HTTP refused (`NetJavaImpl` is dropped by the net step and nothing replaces it yet). Not copied:
+`XmlReaderImpl` (the port's XmlReader is java's), `PoolManager` (MINTED by the pool step — an
+injected copy overwrote the minted unit and 30 scene2d members broke), sge's `GLVersion` (its
+`glType` vs the port callers' `` `type` ``). **Ladder-step cards from this reconciliation**
+(sge's conventions the port lacks): `Input.Key`/`Button` opaques, `Nanos` on input events,
+`Pixels` at `InputProcessor`/`setCursorPosition`/`setWindowedMode`, `Music.Position`,
+`Nullable` on `gl30..32`/`newCursor`/`Clipboard.contents`, `FileType` as a top-level enum, the
+extension hooks on `Application`. Held: 0 errors, 216/220, demo-check 0, `members` 0 moved.
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside

@@ -155,6 +155,8 @@ object LibgdxLadder:
     // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
     // `LibgdxNativeBodies`, the objects they call injected (`Gdx2DNative`, `BufferUtilsNative`, `ETC1Native`).
     "natives" -> List(new balticporter.transform.MethodBodyTransform(LibgdxNativeBodies.all)),
+    // sge's desktop backend (GLFW window, input, files, preferences, net, miniaudio), copied (PROGRESS.md §13.30 step 3): injections only.
+    "backend-desktop" -> Nil,
     "witness" -> List(
       new balticporter.transform.GlobalsToImplicitsTransform(requiredGivens =
         balticporter.transform.ElementWitnessTransform.constructorGivens(CoreWitnessSubjects, LlsPolicy.Witness)),
@@ -626,6 +628,7 @@ object LibgdxLadder:
     "glenum"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-glenum")),
     "backend-jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm")),
     "natives"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives")),
+    "backend-desktop" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -646,9 +649,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
