@@ -45,6 +45,10 @@ final class ElementWitnessTransform(
 
   /** policy keys are written in the UPSTREAM namespace; package rename runs LAST (§4.56). */
   override def runsBefore: Set[String] = Set("package-rename")
+  /** after the context step: `carriesClause` reads the `MkArray` clause `requiredGivens` threads,
+    * and mints the boxed fallback only where none stands — the other order minted both, and two
+    * givens of one type made every construction ambiguous (12 errors, `PROGRESS.md` §13.31 step 2). */
+  override def runsAfter: Set[String] = Set("globals->implicits")
 
   /** every seam this retyping opened and could not close (CLAUDE.md §1(b)). */
   def accountedBy: Set[String] = Set(ElementWitnessCheck.Name)

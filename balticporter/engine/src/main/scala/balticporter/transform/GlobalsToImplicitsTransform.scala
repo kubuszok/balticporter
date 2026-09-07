@@ -29,6 +29,11 @@ final class GlobalsToImplicitsTransform(
 
   /** policy keys are written in the UPSTREAM namespace; package rename runs LAST (§4.56). */
   override def runsBefore: Set[String] = Set("package-rename")
+  /** a call a port SUBSTITUTED is never a global read: the threading closure must see the calls
+    * as they will be emitted, or a class whose only read was the replaced call keeps a clause
+    * nothing supplies (`PROGRESS.md` §13.31 step 2; the merged instance sits at the EARLIEST
+    * declared slot, so declaration order alone cannot place it). */
+  override def runsAfter: Set[String] = Set("call-site-substitution")
 
   /** the holders this instance runs, each with its extensions folded in. A dangling extension —
     * naming a holder nothing in the chain declares — folds into nothing; see [[danglingFindings]]. */
@@ -416,10 +421,25 @@ final class GlobalsToImplicitsTransform(
             if ctors.isEmpty then t
             else t.copy(body = t.body.map {
               case d: Tree.DefDef if ctors.contains(d.symbol) =>
-                val params = entries.map { (_, appliedType) =>
+                // a clause another phase already put there (`ElementWitnessTransform` threads the
+                // same witness) is not added twice: order-independent, as the witness phase's own
+                // `carriesClause` check is — two givens of one type make every construction ambiguous
+                val carried: Set[(String, SymId)] = d.paramss.flatten.flatMap { v =>
+                  if !p.symbolOf(v.symbol).exists(_.flags.isGiven) then Nil
+                  else v.tpt.tpe match
+                    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, w), List(TypeRepr.TypeRef(_, e))) =>
+                      p.symbolOf(w).map(ws => (ws.fullName, e)).toList
+                    case _ => Nil
+                }.toSet
+                val params = entries.filterNot { (givenTypeSym, appliedType) =>
+                  appliedType match
+                    case TypeRepr.AppliedType(_, List(TypeRepr.TypeRef(_, e))) =>
+                      p.symbolOf(givenTypeSym).exists(gs => carried((gs.fullName, e)))
+                    case _ => false
+                }.map { (_, appliedType) =>
                   mint.usingParam(d.symbol, appliedType.toString, appliedType, d.origin)
                 }
-                d.copy(paramss = d.paramss :+ params)
+                if params.isEmpty then d else d.copy(paramss = d.paramss :+ params)
               case s => s
             })
           case _ => t

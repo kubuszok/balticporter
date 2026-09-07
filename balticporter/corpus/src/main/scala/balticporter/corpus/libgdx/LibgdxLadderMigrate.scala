@@ -162,6 +162,16 @@ object LibgdxLadder:
     // the reference-derived spelling step: no phase of its own — it switches `derive` on in the
     // opaque, nullability and arity phases and declares sge's tree as the manifest's reference.
     "derive" -> Nil,
+    // java's `Gdx.app.log/error/debug(tag, msg[, t])` become sge's context-free `Log` (PROGRESS.md
+    // §13.31 step 2): a class that only LOGS then takes no context (sge commented the particle
+    // values' call out — a skip; the port keeps java's call). Placed BEFORE the context step.
+    "logging" -> List(new balticporter.transform.CallSiteSubstitutionTransform(Map(
+      "com.badlogic.gdx.Application#log(String,String)"             -> "sge.utils.Log.info({arg0} + \": \" + {arg1})",
+      "com.badlogic.gdx.Application#log(String,String,Throwable)"   -> "sge.utils.Log.info({arg0} + \": \" + {arg1} + \"\\n\" + {arg2})",
+      "com.badlogic.gdx.Application#error(String,String)"           -> "sge.utils.Log.error({arg0} + \": \" + {arg1})",
+      "com.badlogic.gdx.Application#error(String,String,Throwable)" -> "sge.utils.Log.error({arg0} + \": \" + {arg1}, {arg2})",
+      "com.badlogic.gdx.Application#debug(String,String)"           -> "sge.utils.Log.debug({arg0} + \": \" + {arg1})",
+      "com.badlogic.gdx.Application#debug(String,String,Throwable)" -> "sge.utils.Log.debug({arg0} + \": \" + {arg1} + \"\\n\" + {arg2})"))),
     // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
     "backend-jvm" -> Nil,
     // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
@@ -677,9 +687,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

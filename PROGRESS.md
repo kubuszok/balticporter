@@ -2196,6 +2196,20 @@ Open from this step: the 101 ambiguous overload sets (a per-candidate type compa
 most), the 199 unmatched types (java-only, sge dropped them — a decision list), parenless rows on
 members the arity phase still refuses (its own guards).
 
+**Step 2 landed (2026-09-07 18:20): the logging step.** `Gdx.app.log/error/debug(tag, msg[, t])` — the
+six `Application` callees — become sge's context-free `sge.utils.Log` through `CallSiteSubstitutionTransform`
+(34 sites), and sge's JVM `LogPlatform` (scribe 3.19.0) is injected verbatim in place of the
+port-written `System.Logger` one. Two ORDERING facts the step forced, both engine constraints: the
+context step runs after call-site substitution (a substituted call is never a global read; the three
+declared `globals->implicits` instances merge at the EARLIEST slot, so declaration order alone could
+not place it — every logging-only class kept a clause nothing supplied), and the array-witness phase
+runs after the context step (its `carriesClause` reads the `MkArray` clause `requiredGivens`
+threads; the other order minted both and 12 constructions went ambiguous). `requiredGivens` now
+also skips a clause another phase already put there. Numbers: `sge-l0` 0 = 0, suite 216/220, `lls`
+0 = 0 and 189/191, `demo-check` 0 = 0, `context-seam` 14 -> 12, **`sge-suite-check` 1,219 -> 1,194**:
+logging 9 -> 0, context 54 -> 41 (the value classes and loaders that only logged take no context),
+assertion-mismatch 54 -> 53, particles 45 -> 42.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.
