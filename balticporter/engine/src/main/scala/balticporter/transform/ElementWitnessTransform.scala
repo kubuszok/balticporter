@@ -320,6 +320,13 @@ final class ElementWitnessTransform(
 
     val mint = new WitnessMinter(program0)
 
+    /** `Object[] local = <element-typed array>` — java's raw view of its own array (the frontend's
+      * covariance cast). Once the element may be a PRIMITIVE the view is a run-time
+      * `ClassCastException` (an `int[]` is no `Object[]`), so such a LOCAL keeps the element type
+      * and the cast goes; a view this phase cannot repair stays counted (`ErasedArrayCast`, K41). */
+    val retypedLocals = collection.mutable.LinkedHashMap.empty[SymId, TypeRepr]
+    val pendingErased = collection.mutable.LinkedHashMap.empty[Origin, (String, String, SymId)]
+
     // ---- the per-declaration rewrite ---------------------------------------------------------
 
     /** `scala.Predef.summon[<witness>[<elem>]]`, as TEXT: the clause is ANONYMOUS (a named context
@@ -341,6 +348,10 @@ final class ElementWitnessTransform(
       case other                                                          => other
 
     def recast(t: Term, arrayTpe: TypeRepr, at: Origin): Term =
+      // a cast an arm consumes is REPAIRED, not a raw view left in the emitted text
+      t match
+        case Tree.Typed(_, tpt, _, o) if isArrayType(program0, tpt.tpe) => pendingErased.remove(o)
+        case _                                                          => ()
       Tree.Typed(unwrapArrayCast(t), TypeTree(arrayTpe, at), arrayTpe, at)
 
     /** WHAT EACH CLASS MUST SUPPLY ITSELF — the element types at which a class this phase did NOT
@@ -444,7 +455,42 @@ final class ElementWitnessTransform(
         case Tree.Apply(Tree.Select(l, op, st, so), List(r), m, tp, o)
             if isRefIdentity(program0, m) && (needsRef(l) || needsRef(r)) =>
           Tree.Apply(Tree.Select(asAnyRef(l), op, st, so), List(asAnyRef(r)), m, tp, o)
+        // (6) an access through a retyped alias yields the element, not java's `Object`
+        case a @ Tree.ArrayAccess(Tree.Ident(sym, _, _), _, _, _) if retypedLocals.contains(sym) =>
+          retypedLocals(sym) match
+            case TypeRepr.AppliedType(_, List(el)) => a.copy(tpe = el)
+            case _                                 => a
         case other => other
+
+      /** `Object[] keys = this.keys` — the alias keeps the ELEMENT type; the covariance cast goes. */
+      override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef = v.rhs match
+        case Some(Tree.Typed(inner, tpt, _, o)) if isObjectArray(v.tpt.tpe) && isObjectArray(tpt.tpe) =>
+          elemOf(inner.tpe, elemSet) match
+            case Some((_, arrTpe)) =>
+              pendingErased.remove(o)
+              retypedLocals(v.symbol) = arrTpe
+              v.copy(tpt = TypeTree(arrTpe, v.tpt.origin), rhs = Some(inner))
+            case scala.None => v
+        // `Object item = items[i]` through a retyped alias: java read an Object, so the element is
+        // presented as one (a primitive element boxes here, as it did behind java's Object[])
+        case Some(rhs) if isObjectLike(v.tpt.tpe) && isElemRef(rhs.tpe) =>
+          v.copy(rhs = Some(Tree.Typed(rhs, TypeTree(v.tpt.tpe, rhs.origin), v.tpt.tpe, rhs.origin)))
+        case _ => v
+
+      private def isObjectLike(t: TypeRepr): Boolean =
+        t == TypeRepr.TypeRef(TypeRepr.NoPrefix, mint.javaObject) || ElementWitnessTransform.isObjectType(program0, t)
+      private def isElemRef(t: TypeRepr): Boolean = t match
+        case TypeRepr.TypeRef(_, s) => elemSet(s) || unboundClassTparams(s)
+        case _                      => false
+
+      override def transformIdent(i: Tree.Ident)(using Program): Term =
+        retypedLocals.get(i.sym).map(t => i.copy(tpe = t)).getOrElse(i)
+
+      private def isObjectArray(t: TypeRepr): Boolean = t match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, arr), List(el))
+            if program0.symbolOf(arr).exists(_.fullName == "scala.Array") =>
+          ElementWitnessTransform.isObjectType(program0, el)
+        case _ => false
 
       private def needsRef(t: Term): Boolean = t.tpe match
         case TypeRepr.TypeRef(_, s) => unboundClassTparams(s)
@@ -551,10 +597,11 @@ final class ElementWitnessTransform(
               if program0.symbolOf(arr).exists(_.fullName == "scala.Array") => dropped(e)
           case _ => false
         if castsToObjectArray && fromDropped then
-          refuse(ElementWitnessCheck.Issue.ErasedArrayCast, owner,
+          // deferred: a local ALIAS of the array is repaired by `transformValDef` below and removes
+          // its entry; whatever is left is counted once the class is rewritten
+          pendingErased.getOrElseUpdate(o, (owner,
             "an element-typed array is presented as `Array[java.lang.Object]` — java's RAW view of " +
-              "its own receiver, which no longer holds once the element type may be a primitive",
-            o, unit)
+              "its own receiver, which no longer holds once the element type may be a primitive", unit))
 
       /** the four creation shapes, and the refusal for everything else this arm recognises. */
       private def creation(inner: Term, e: SymId, arrTpe: TypeRepr, o: Origin): Option[Term] =
@@ -676,6 +723,9 @@ final class ElementWitnessTransform(
       case other => other
 
     val units1 = program0.units.map(u => rewriteClass(u, unitOf(u)))
+    // the raw views no local alias repaired are the refusals
+    pendingErased.foreach { case (o, (owner, detail, unit)) =>
+      refuse(ElementWitnessCheck.Issue.ErasedArrayCast, owner, detail, o, unit) }
 
     // ---- the SYMBOL side of the bound drop ----------------------------------------------------
     val symbols1 = unboundClassTparams.foldLeft(program0.symbols) { (tbl, tp) =>
@@ -683,6 +733,9 @@ final class ElementWitnessTransform(
         case Some(s) => tbl.updated(s.copy(info = ElementWitnessTransform.withoutObjectBound(program0, s.info)))
         case None    => tbl
     }
+    // the SYMBOL side of the alias repair: the local's info is the element-typed array now
+    val symbols1b = retypedLocals.foldLeft(symbols1) { case (tbl, (id, tpe)) =>
+      tbl.get(id).fold(tbl)(s => tbl.updated(s.copy(info = tpe))) }
 
     // ---- an UNBOUNDED WILDCARD at a position this phase unbound --------------------------------
     // java's RAW type. While the parameter was `<: java.lang.Object` the capture conformed to
@@ -705,7 +758,7 @@ final class ElementWitnessTransform(
 
     val units2   = units1.map(u => StandardTraversal.mapClassDef(wildcardFill, u)(using program0))
     val symbols2 = StandardTraversal.mapSymbols(wildcardFill,
-                     SymbolTable(symbols1.all ++ mint.minted))(using program0)
+                     SymbolTable(symbols1b.all ++ mint.minted))(using program0)
 
     // ---- what the fill OWES: a class literal's payload, and java's unchecked conversion ---------
     // `mapClassDef` maps a literal's TYPE but not the type a class literal CARRIES (a reified

@@ -1969,6 +1969,43 @@ timers run through the ported core for 120 frames on macOS/aarch64; pong reads t
 when a key is down, so key handling is compiled but not exercised; audio and files are wired but
 pong plays no sound and loads no asset; nothing off the JVM runs yet.
 
+**All twelve demos through the run lane (census 2026-09-07 12:00; `DEMO=all just demo-run`).**
+Eight render 120 frames out of the box: space-shooter, tile-world, viewer-3d, particle-show,
+shader-lab, net-chat, curve-playground, viewport-gallery (pong's failure in that batch was an sbt
+build glitch after a reload, green alone). Four did not, each a different family:
+- **game-screens** exited with no frames counted: it has its own `DesktopMain` (a `Game`, not a
+  `DemoScene`), so the shared launcher's budget never applied — an adjusted main wraps the
+  listener in `DesktopLauncher.budgeted`; renders 120 frames.
+- **hex-tactics** crashed in `ArrayMap.indexOfKey`: `ClassCastException: [I cannot be cast to
+  [Ljava.lang.Object;`. Java's `Object[] keys = this.keys` is a raw VIEW of a type-parameter array;
+  the witness step lets `ArrayMap[Int, String]` hold an `int[]`, and the port kept the alias as an
+  `Array[Object]` cast — one of the 28 `ErasedArrayCast` refusals lls had COUNTED and never
+  repaired, firing at run time. Repaired in `ElementWitnessTransform` (universal, K41): a local
+  alias keeps the ELEMENT type and the cast goes; a read of it into java's `Object` local is
+  presented as `Object` (boxes a primitive); casts an existing arm consumes (`copyOf`, `fill`) are
+  no longer double-counted; what no alias repairs stays counted. lls `witness` 70 -> 50.
+- **asset-showcase** failed on `models/octahedron.g3db`: "Unrecognized data type" from
+  `UBJsonReader`. Not a translation defect: the file is written in the CURRENT UBJSON draft (`i` =
+  one byte) by sge's own `UBJsonCodec` (sge dropped java's reader), while java's reader defaults to
+  the OLD draft (`i` = two bytes) that libGDX's fbx-conv files use — java's behaviour, kept. The
+  adjusted demo copy registers the `.g3db` loader with a new-draft reader (`oldFormat = false`).
+  With the draft right the file parsed and the loader threw "Expected Color values <> than
+  three": sge's codec writes every `None` field as a JSON null (`ambient: Z`), and java's
+  `G3dModelLoader` reads a null child as a PRESENT colour (`if (ambient != null)` is true for a
+  null-typed JsonValue); the JSON-text file omits absent fields, which is why the `.g3dj` cube
+  loaded untouched. The adjusted reader also drops null members, as sge's codec reads `None`.
+  Both are facts about sge's WRITER against java's LOADER, recorded here for the maintainer: a
+  sge user's `.g3db` files will need the same two settings, or the loader a decision. JsonReader,
+  UBJsonReader and G3dModelLoader are reflection-free java-derived code; only the reflective
+  object mapper `Json` is stubbed.
+- **pong** (see above): green.
+
+**12 of 12 demos render 120 frames on the ported stack (2026-09-07 12:30)**: one engine repair
+(the witness alias), two demo adjustments (a frame budget for a demo with its own main, sge's
+binary-model conventions for its reader), the demo assets and sge's asset generator wired into
+the demo-check project. Not exercised by a 120-frame run with no input: key handling beyond
+polling, audio playback beyond loading, network beyond construction, window resize.
+
 **Stop and report** (beside standing order 11): a native symbol the two provider snapshots do not
 ship (a Rust build would be a decision); a core class whose sge copy cannot be reconciled with the
 port's emitted surface by a body substitution or a listed ladder step; the run failing inside

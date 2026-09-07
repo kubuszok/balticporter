@@ -80,7 +80,7 @@
 # process exits 0 after printing DEMO-RUN-FRAMES N. Any exception or non-zero exit fails it.
 # Report: port-report/DemoRun (tests.tsv one row, counts.tsv frames/exit/first exception).
 # ---------------------------------------------------------------------------------------------
-[doc("launch sge's pong on the ported stack for FRAMES frames (default 120), fail on any exception (DEMO=pong)")]
+[doc("launch sge's demos on the ported stack for FRAMES frames each (default 120), fail on any exception (DEMO=pong|all|<name>)")]
 demo-run:
     #!/usr/bin/env bash
     cd "{{root}}"
@@ -89,27 +89,49 @@ demo-run:
     . scripts/_lib.sh
     REPORT="$ROOT/port-report/DemoRun"
     mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
-    DEMO="${DEMO:-pong}"; FRAMES="${FRAMES:-120}"
-    case "$DEMO" in pong) MAIN=demos.pong.DesktopMain ;; *) MAIN="${DEMO_MAIN:?set DEMO_MAIN=<fqn of that demo DesktopMain>}" ;; esac
-    echo "-- demo-run: $MAIN for $FRAMES frames against ported/sge-l0 (JVM, forked) --"
-    printf '%s\n' "$FRAMES" > "$ROOT/.balticporter/demo-frames"   # read by demo-check's run task (build.sbt)
-    sbt_test "demo-checkJVM/runMain $MAIN" "$MEASURE_TMP"/demorun.txt
-    rm -f "$ROOT/.balticporter/demo-frames"
-    ST=$?
-    FR=$(grep -o "DEMO-RUN-FRAMES [0-9]*" "$MEASURE_TMP"/demorun.txt | tail -1 | awk '{print $2}')
-    # the FORKED process's first exception; the sbt client's own reconnect chatter is not one
-    EXC=$(grep -v "ipcsocket\|starting a new server\|sbt-serverconnection\|nonzero exit code returned from runner" "$MEASURE_TMP"/demorun.txt | grep -m1 -E "Exception|UnsatisfiedLinkError|Error: " | sed 's/\t/ /g' | cut -c1-200)
-    if [ "$ST" = 0 ] && [ -n "$FR" ]; then OUT=pass; else OUT=fail; fi
-    printf '#suite\ttest\tstatus\n%s\t%s\t%s\n' "demos.$DEMO" "DesktopMain" "$OUT" > "$REPORT/run-latest/tests.tsv"
-    printf 'demo\tframes\texit\tfirst-exception\n%s\t%s\t%s\t%s\n' "$DEMO" "${FR:-0}" "$ST" "${EXC:--}" > "$REPORT/run-latest/counts.tsv"
-    echo "demo-run: $DEMO frames=${FR:-0} exit=$ST outcome=$OUT"
-    [ -n "$EXC" ] && echo "   first exception: $EXC"
-    grep -E "^\[error\]|Exception|at sge\.|at demos\." "$MEASURE_TMP"/demorun.txt | head -25
-    if [ -f "$REPORT/baseline/tests.tsv" ] && grep -q "	pass$" "$REPORT/baseline/tests.tsv" && [ "$OUT" != pass ]; then
-      echo "!! demo-run REGRESSED — the baseline records a pass and this run did not"; exit 1
+    FRAMES="${FRAMES:-120}"
+    ALL="pong space-shooter hex-tactics tile-world viewer-3d particle-show shader-lab net-chat game-screens curve-playground asset-showcase viewport-gallery"
+    main_of() { case "$1" in
+      pong) echo demos.pong.DesktopMain ;; space-shooter) echo demos.spaceshooter.DesktopMain ;; hex-tactics) echo demos.hextactics.DesktopMain ;;
+      tile-world) echo demos.tileworld.DesktopMain ;; viewer-3d) echo demos.viewer3d.DesktopMain ;; particle-show) echo demos.particles.DesktopMain ;;
+      shader-lab) echo demos.shaders.DesktopMain ;; net-chat) echo demos.netchat.DesktopMain ;; game-screens) echo demos.gamescreens.DesktopMain ;;
+      curve-playground) echo demos.curves.DesktopMain ;; asset-showcase) echo demos.assets.DesktopMain ;; viewport-gallery) echo demos.viewports.DesktopMain ;;
+      *) if [ -n "${DEMO_MAIN:-}" ]; then echo "$DEMO_MAIN"; else echo "unknown demo $1 (set DEMO_MAIN=<main class>)" >&2; exit 2; fi ;; esac; }
+    case "${DEMO:-pong}" in all) DEMOS="$ALL" ;; *) DEMOS="${DEMO:-pong}" ;; esac
+    printf '#suite\ttest\tstatus\n' > "$REPORT/run-latest/tests.tsv"
+    printf 'demo\tframes\texit\tfirst-exception\n' > "$REPORT/run-latest/counts.tsv"
+    FAILS=0
+    for DEMO in $DEMOS; do
+      MAIN=$(main_of "$DEMO") || exit 2
+      echo "-- demo-run: $DEMO ($MAIN) for $FRAMES frames against ported/sge-l0 (JVM, forked) --"
+      printf '%s\n' "$FRAMES" > "$ROOT/.balticporter/demo-frames"   # read by demo-check's run task (build.sbt)
+      sbt_test "demo-checkJVM/runMain $MAIN" "$MEASURE_TMP"/demorun-$DEMO.txt
+      ST=$?
+      rm -f "$ROOT/.balticporter/demo-frames"
+      cp "$MEASURE_TMP"/demorun-$DEMO.txt "$MEASURE_TMP"/demorun.txt
+      FR=$(grep -o "DEMO-RUN-FRAMES [0-9]*" "$MEASURE_TMP"/demorun-$DEMO.txt | tail -1 | awk '{print $2}')
+      # the FORKED process's first exception; the sbt client's own reconnect chatter is not one
+      EXC=$(grep -v "ipcsocket\|starting a new server\|sbt-serverconnection\|nonzero exit code returned from runner" "$MEASURE_TMP"/demorun-$DEMO.txt | grep -m1 -E "Exception|UnsatisfiedLinkError|Error: " | sed 's/\t/ /g' | cut -c1-200)
+      if [ "$ST" = 0 ] && [ -n "$FR" ]; then OUT=pass; else OUT=fail; FAILS=$((FAILS+1)); fi
+      printf '%s\t%s\t%s\n' "demos.$DEMO" "DesktopMain" "$OUT" >> "$REPORT/run-latest/tests.tsv"
+      printf '%s\t%s\t%s\t%s\n' "$DEMO" "${FR:-0}" "$ST" "${EXC:--}" >> "$REPORT/run-latest/counts.tsv"
+      echo "demo-run: $DEMO frames=${FR:-0} exit=$ST outcome=$OUT"
+      [ -n "$EXC" ] && echo "   first exception: $EXC"
+      [ "$OUT" = pass ] || grep -E "^\[error\]|Exception|at sge\.|at demos\." "$MEASURE_TMP"/demorun-$DEMO.txt | grep -v "sbt-serverconnection\|ipcsocket\|at sbt\." | head -12
+    done
+    echo "-- demo-run summary --"; cut -f1-3 "$REPORT/run-latest/counts.tsv" | column -t
+    # gate: a demo the baseline records as passing must pass; a new demo failing is reported, not yet a regression
+    REG=0
+    if [ -f "$REPORT/baseline/tests.tsv" ]; then
+      while IFS=$'\t' read -r suite test st; do
+        [ "$st" = pass ] || continue
+        now=$(awk -F'\t' -v s="$suite" '$1==s{print $3}' "$REPORT/run-latest/tests.tsv")
+        if [ -n "$now" ] && [ "$now" != pass ]; then echo "!! demo-run REGRESSED: $suite passed in the baseline and did not now"; REG=1; fi
+      done < <(grep -v '^#' "$REPORT/baseline/tests.tsv")
     fi
-    [ "$OUT" = pass ] || { echo "!! demo-run FAILED — full output: $MEASURE_TMP/demorun.txt"; exit 1; }
-    echo "demo-run GREEN: $DEMO rendered $FR frames on the ported stack"
+    [ "$REG" = 0 ] || exit 1
+    [ "$FAILS" = 0 ] || { echo "!! demo-run: $FAILS demo(s) did not render — outputs under $MEASURE_TMP/demorun-<demo>.txt"; exit 1; }
+    echo "demo-run GREEN: every demo run rendered $FRAMES frames on the ported stack"
     echo "   promote with: just baseline-accept DemoRun"
 
 

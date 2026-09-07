@@ -27,6 +27,12 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
       |    for (int i = 0; i < size; i++) if (items[i] == value) return true;
       |    return false;
       |  }
+      |  boolean contains (T value) {
+      |    Object[] items = this.items;
+      |    for (int i = 0; i < size; i++) { Object item = items[i]; if (value.equals(item)) return true; }
+      |    return false;
+      |  }
+      |  void sortAll () { Arrays.sort(items); }
       |  Bag (Class<?> type, int n) { items = (T[])java.lang.reflect.Array.newInstance(type, n); }
       |  Bag (int n, Supplier<T[]> s) { items = s.get(n); }
       |  <V> V[] toArray (Class<V> type) { return (V[])java.lang.reflect.Array.newInstance(type, size); }
@@ -170,6 +176,19 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   // ---- the refusals ---------------------------------------------------------------------------
 
   private def findingsOf(t: ElementWitnessTransform, p: Ported) = t.refusals(p.after, p.after.units)
+
+  test("`Object[] items = this.items` keeps the ELEMENT type (an int[] is no Object[]); a raw view at an Object[] formal stays counted") {
+    val t = phase()
+    val r = run(t)
+    // the alias: element-typed, no covariance cast, and its reads yield the element
+    assert(clue(r.out).contains("val items: scala.Array[T] = this.items"))
+    assert(!r.out.contains("val items: scala.Array[java.lang.Object] = this.items.asInstanceOf"))
+    // a read into java's `Object` local presents the element as one (a primitive element boxes)
+    assert(clue(r.out).contains("val item: java.lang.Object = items(i).asInstanceOf[java.lang.Object]"))
+    // `Arrays.sort(items)` hands the array to an `Object[]` formal — no alias to retype, so counted
+    val fs = findingsOf(t, r).filter(_.issue == ElementWitnessCheck.Issue.ErasedArrayCast)
+    assertEquals(clue(fs).size, 1)
+  }
 
   test("a `null` sentinel at an element slot of a bound-KEPT subject is counted, never rewritten") {
     val t = phase()

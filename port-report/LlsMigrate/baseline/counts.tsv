@@ -61,5 +61,5 @@ trivia(recovered)	0
 try-resource	0
 unused-symbol(handled)	2
 unused-symbol(refused)	0
-witness	70
+witness	50
 upstream	libGDX@4b4d2c4fd05786d848c42cb69266dd2dd6839983

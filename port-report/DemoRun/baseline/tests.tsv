@@ -1,2 +1,13 @@
 #suite	test	status
 demos.pong	DesktopMain	pass
+demos.space-shooter	DesktopMain	pass
+demos.hex-tactics	DesktopMain	pass
+demos.tile-world	DesktopMain	pass
+demos.viewer-3d	DesktopMain	pass
+demos.particle-show	DesktopMain	pass
+demos.shader-lab	DesktopMain	pass
+demos.net-chat	DesktopMain	pass
+demos.game-screens	DesktopMain	pass
+demos.curve-playground	DesktopMain	pass
+demos.asset-showcase	DesktopMain	pass
+demos.viewport-gallery	DesktopMain	pass

@@ -29,6 +29,31 @@ object DesktopLauncher {
     }
   }
 
+  /** The same budget around any ApplicationListener (demos with their own main, e.g. game-screens). */
+  final class FrameBudgetListener(inner: ApplicationListener, budget: Int)(using sge: Sge) extends ApplicationListener {
+    private var frames = 0
+    override def create(): Unit = inner.create()
+    override def resize(width: _root_.sge.Pixels, height: _root_.sge.Pixels): Unit = inner.resize(width, height)
+    override def render(): Unit = {
+      inner.render()
+      frames += 1
+      if (frames >= budget) {
+        println(s"DEMO-RUN-FRAMES $frames")
+        sge.application.exit()
+      }
+    }
+    override def pause(): Unit = inner.pause()
+    override def resume(): Unit = inner.resume()
+    override def dispose(): Unit = inner.dispose()
+  }
+
+  /** Wraps `app` in the budget when `-Dsge.demo.frames` is set; otherwise `app` itself. */
+  def budgeted(app: Sge ?=> ApplicationListener): Sge ?=> ApplicationListener =
+    sys.props.get("sge.demo.frames").map(_.trim.toInt) match {
+      case Some(n) => new FrameBudgetListener(app, n)
+      case None    => app
+    }
+
   def launch(scene: DemoScene, title: String, width: Int = 800, height: Int = 600): Unit = {
     val config = DesktopApplicationConfig()
     config.title = title

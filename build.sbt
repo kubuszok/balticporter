@@ -1335,6 +1335,7 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   // tile-world imports `sge.noise.*`: the (standalone) noise4j port rides on the classpath as-is
   .dependsOn(`port-sge-l0`, `port-sge-noise`)
+  .settings(SgeDemoAssetGenerator.settings *)
   .settings(
     name := "balticporter-demo-check",
     publish / skip := true,
@@ -1356,12 +1357,22 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
         if (marker.exists) Seq("-Dsge.demo.frames=" + IO.read(marker).trim) else Seq.empty
       },
     Compile / run / connectInput := false,
+    // the demos' assets: asset-showcase ships g3dj/g3db models as resources and sge GENERATES its
+    // textures and sounds (project/SgeDemoAssetGenerator.scala, copied from sge's demo build)
+    Compile / unmanagedResourceDirectories ++= {
+      val demos = (ThisBuild / baseDirectory).value / ".." / "sge" / "demos"
+      Seq(demos / "asset-showcase" / "src" / "main" / "resources")
+    },
+    Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
     // an ADJUSTED copy under ported/demo-check/adjusted replaces sge's file of the same name
     // (ported/demo-check/ADJUSTMENTS.tsv enumerates the differences; sge itself is never edited).
     Compile / unmanagedSources := {
       val all      = (Compile / unmanagedSources).value
-      val adjusted = all.filter(_.getPath.contains("/ported/demo-check/adjusted/")).map(_.getName).toSet
-      all.filterNot(f => adjusted(f.getName) && !f.getPath.contains("/ported/demo-check/adjusted/"))
+      // keyed by the path under the LAST `demos/` segment (`demos/pong/DesktopMain.scala`), never by
+      // the bare file name — twelve demos each have a `DesktopMain.scala`
+      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/demos/"); if (i < 0) p else p.substring(i + 1) }
+      val adjusted = all.filter(_.getPath.contains("/ported/demo-check/adjusted/")).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/demo-check/adjusted/"))
     },
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
   )
