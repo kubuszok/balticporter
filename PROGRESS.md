@@ -2162,6 +2162,40 @@ tiled 83, type-shape 77, opaque-key-button 73, arity 68, assertion-mismatch 57, 
 particles 49, other 27, logging 9 (1,592 blocks carry a header; 24 are scalac's continuation
 lines). Each later step quotes this table `before->after`.
 
+**Step 1 landed (2026-09-07 18:30): the derive step — spelling read off sge's tree.** `ReferencePolicy`
+(engine, `DESIGN.md` §8.30) matches every emitted java member to sge's declaration at the same nesting
+path (a static or a static nested type also under the companion, `/Outer$`), name and EXPLICIT arity
+(using clauses excluded; a getter/setter pair at the property; a constructor at the reference's
+constructors or the companion `apply`), same-named types told apart by the renamed package; the
+agreeing slots feed the opaque, nullability and arity phases under their `derive` switch
+(`OpaqueSpec.derive`, `deriveMembers`, `NullaryArityTransform.derive`; the ladder's `derive` step
+turns all three on and makes every opaque spec reference-only). 2,708 rows (opaque 866, nullable 733,
+parenless 1,109; 101 ambiguous overload sets counted, 199 java types without a twin), published as
+`derived-policy.tsv` and the `derived(*)` lanes; the test module inherits them as facts; an
+OVERLOADED java name's rows are keyed by descriptor (`Attributes#get(long)`), so one overload's
+spelling never reaches another (`DerivedPolicy.keysOf`). Numbers: `sge-l0` 0 = 0 (through 73 -> 13
+-> 3 -> 14 -> 38 -> 2 -> 8 -> 0 as the engine seams and the injected files' stale reconciliations
+were closed), suite 216/220 held, `lls` 0 = 0 and 189/191, `demo-check` 0 = 0, **`demo-run` 12/12
+x 120 frames** (the first run had 2 of 12 down: a cast of a wrapped value — `(T) attributes.get(type)`
+— was a `ClassCastException` only at run time, §4.4's kind of defect), **`sge-suite-check` 1,616 ->
+1,219**: opaque-time-pixels 275 -> 7, nullable 127 -> 66, arity 68 -> 42, member-shape 291 -> 271,
+assertion-mismatch 57 -> 54; android 216, filetype 93, net 93, tiled 75, key/button 73, context 54,
+particles 45 untouched (their steps).
+Engine seams the step forced, all universal: a derived seed is EXACT (no flow growth; closed under
+override edges only), a `switch` on a seed reads the selector at the primitive, `boxed == 1` unboxes
+through `.get`, a FINAL ctor-assigned field keeps its uninitialised form under a nullability retype,
+`new T[]{a, b}` coerces its elements, a cast of a wrapped value unwraps by the cast's target, one
+`ReturnSites` walk for every return and tail, a widened literal at a seed slot wraps, a deriving
+phase's fingerprint is the SWITCH (a bind-time digest made the base's map look stale to its
+dependent). The unboxing comparison is confined to a PRIMITIVE operand: against a reference
+(`obj == this` in `equals`) java compares references and null is legal — the wider rule moved two
+of lls's `ArrayMap` members before it was narrowed. Injected files lost 20 reconciliation lines back to sge's
+text (Pixels/Nanos at the input queue, `newCursor`/`setWindowedMode`/`setCursorPosition`, `file`,
+`path`, `nameWithoutExtension`, `loadModelData`); `rawDeltaTime: Float` stays java's (sge has none).
+Open from this step: the 101 ambiguous overload sets (a per-candidate type comparison would settle
+most), the 199 unmatched types (java-only, sge dropped them — a decision list), parenless rows on
+members the arity phase still refuses (its own guards).
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

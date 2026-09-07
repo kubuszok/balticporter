@@ -18,6 +18,9 @@ final case class ParityRef(
       * of them is listed as `api-parity(hand-original)` and compared against nothing. EMPTY = every
       * file is a party (the pre-parameter behaviour, §1b's no-op). */
     upstreamMarkers: List[String] = ParityRef.DefaultUpstreamMarkers,
+    /** run the surface COMPARISON (`api-parity(*)` lanes). `false` keeps the reference as the
+      * source phases DERIVE spelling policy from (`RunScope.derived`) without the report. */
+    compare: Boolean = true,
 )
 
 object ParityRef:

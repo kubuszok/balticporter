@@ -2161,3 +2161,35 @@ text at statement position at the end of the nominated owner's body — name, ar
 by the engine, `MethodBodyTransform`'s contract). §1(b): mechanism engine, policy per-library, empty
 map=no-op, ADD-scoped `Only(Set.empty)` default, `SurfacePolicy`+`MergeablePolicy` (independent
 owners union, same owner+name refuses). `.conf` key `add-members`. ashley drop-in 4/4/4; gdx 0/0/0.
+
+### 8.30 Spelling policy is DERIVED from the reference port; decisions stay authored (`ReferencePolicy`)
+
+The hand port is the oracle for API SPELLING (`CLAUDE.md` §3.5) and never for behaviour. So a
+policy that is a spelling — which primitive slot is an opaque type, which member returns wrapped,
+which nullary accessor is parenless — is read off the reference tree the manifest already declares
+(`PortManifest.parity`, parsed by `ApiParityCheck.parseSurface`) rather than hand-listed per member:
+`ReferencePolicy.derive` matches every emitted java member to the reference declaration at the same
+nesting path, name and EXPLICIT arity (`using` clauses excluded), and each agreeing slot becomes a
+`DerivedPolicy.Row`, published on `RunScope.derived` and in `derived-policy.tsv`. A phase consumes
+the rows only under its own `derive` switch (`OpaqueSpec.derive`, `NullabilityTransform.deriveMembers`,
+`NullaryArityTransform.derive`; off is §1(b)'s no-op), its fingerprint carrying the derived set's
+digest so a reference edit moves the port map. Overloads at one key that disagree derive only the
+agreed rows and are counted (`derived(ambiguous)`); a java type with no twin is counted
+(`derived(unmatched)`). Signatures only, by construction: no row can describe what a member DOES.
+What is dropped, injected, or given a body remains an authored decision. Nothing in the engine names
+a library; the tree is the parameter. Measured: `PROGRESS.md` §13.31 step 1.
+
+Three refinements the first run forced. (1) A DERIVED seed is EXACT: the reference already spells
+every slot of its surface, so nothing is grown from it by flow propagation — growth is the device
+for a hand-written seed list, and from 632 derived slots it rode the port's own int utilities
+(`IntArray`, a `JsonWriter` bitmask: 73 errors). The one closure a derived seed does take is the
+OVERRIDE edge (`FlowPropagation.overrideEdges`): a java-only intermediate absent from the reference
+(`InputAdapter`) keeps its parent's signature. Under the derive step a spec is reference-only — no
+hand hints, no fence. (2) The fingerprint segment is the SWITCH (`derive=reference`), never the
+derived digest: a bind-time value made the base's published map look stale to its dependent, and
+the intrusion screen then could not clear a test-only class. The reference is an INPUT, recorded in
+the report (`derived-policy.tsv`, `derived(rows)` findings), like the java sources. (3) A DEPENDENT
+does not re-derive: it reads the rows its bases PUBLISHED (`derived-policy.tsv` beside the port map)
+and applies them as facts — the opaque phase retypes a base slot's symbol without emitting it, so
+this module's calls into it are coerced; the nullability phase retypes a base member it does not
+own the same way (O8 read as a value).

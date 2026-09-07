@@ -17,6 +17,7 @@
 package sge
 
 import sge.graphics.glutils.HdpiMode
+import sge.utils.Nanos
 import sge.input.NativeInputConfiguration
 import sge.platform.WindowingOps
 import lowlevel.Nullable
@@ -72,7 +73,7 @@ class DefaultDesktopInput private[sge] (
     action match {
       case GLFW_PRESS =>
         val gdxKey = getGdxKeyCode(key)
-        eventQueue.keyDown(gdxKey, System.nanoTime())
+        eventQueue.keyDown(gdxKey, Nanos(System.nanoTime()))
         pressedKeyCount += 1
         keyJustPressed = true
         pressedKeys(gdxKey.toInt) = true
@@ -86,11 +87,11 @@ class DefaultDesktopInput private[sge] (
         pressedKeyCount -= 1
         pressedKeys(gdxKey.toInt) = false
         window.graphics.requestRendering()
-        eventQueue.keyUp(gdxKey, System.nanoTime())
+        eventQueue.keyUp(gdxKey, Nanos(System.nanoTime()))
       case GLFW_REPEAT =>
         if (_lastCharacter != 0) {
           window.graphics.requestRendering()
-          eventQueue.keyTyped(_lastCharacter, System.nanoTime())
+          eventQueue.keyTyped(_lastCharacter, Nanos(System.nanoTime()))
         }
       case _ => ()
     }
@@ -100,13 +101,13 @@ class DefaultDesktopInput private[sge] (
     if ((codepoint & 0xff00) != 0xf700) {
       _lastCharacter = codepoint.toChar
       window.graphics.requestRendering()
-      eventQueue.keyTyped(codepoint.toChar, System.nanoTime())
+      eventQueue.keyTyped(codepoint.toChar, Nanos(System.nanoTime()))
     }
   }
 
   private val onScroll: (Long, Double, Double) => Unit = { (_, scrollX, scrollY) =>
     window.graphics.requestRendering()
-    eventQueue.scrolled(-scrollX.toFloat, -scrollY.toFloat, System.nanoTime())
+    eventQueue.scrolled(-scrollX.toFloat, -scrollY.toFloat, Nanos(System.nanoTime()))
   }
 
   private val onCursorPos: (Long, Double, Double) => Unit = { (_, x, y) =>
@@ -128,28 +129,28 @@ class DefaultDesktopInput private[sge] (
     }
 
     window.graphics.requestRendering()
-    val time = System.nanoTime()
+    val time = Nanos(System.nanoTime())
     if (_mousePressed > 0) {
-      eventQueue.touchDragged(_mouseX, _mouseY, 0, time)
+      eventQueue.touchDragged(Pixels(_mouseX), Pixels(_mouseY), 0, time)
     } else {
-      eventQueue.mouseMoved(_mouseX, _mouseY, time)
+      eventQueue.mouseMoved(Pixels(_mouseX), Pixels(_mouseY), time)
     }
   }
 
   private val onMouseButton: (Long, Int, Int, Int) => Unit = { (_, button, action, _) =>
     val gdxButton = toGdxButton(button)
     if (button == -1 || gdxButton != -1) {
-      val time = System.nanoTime()
+      val time = Nanos(System.nanoTime())
       if (action == GLFW_PRESS) {
         _mousePressed += 1
         _justTouched = true
         _justPressedButtons(gdxButton.toInt) = true
         window.graphics.requestRendering()
-        eventQueue.touchDown(_mouseX, _mouseY, 0, gdxButton, time)
+        eventQueue.touchDown(Pixels(_mouseX), Pixels(_mouseY), 0, gdxButton, time)
       } else {
         _mousePressed = scala.math.max(0, _mousePressed - 1)
         window.graphics.requestRendering()
-        eventQueue.touchUp(_mouseX, _mouseY, 0, gdxButton, time)
+        eventQueue.touchUp(Pixels(_mouseX), Pixels(_mouseY), 0, gdxButton, time)
       }
     }
   }
@@ -332,7 +333,7 @@ class DefaultDesktopInput private[sge] (
   override def cursorCatched: Boolean =
     windowing.getInputMode(window.windowHandle, GLFW_CURSOR) == GLFW_CURSOR_DISABLED
 
-  override def setCursorPosition(x: Int, y: Int): Unit = {
+  override def setCursorPosition(x: Pixels, y: Pixels): Unit = {
     var cx = x.toInt
     var cy = y.toInt
     if (window.config.hdpiMode == HdpiMode.Pixels) {

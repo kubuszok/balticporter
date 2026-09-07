@@ -254,7 +254,7 @@ class DesktopWindow private[sge] (
           if (pixmap.format != sge.graphics.Pixmap.Format.RGBA8888) {
             val rgba = new sge.graphics.Pixmap(pixmap.width.toInt, pixmap.height.toInt, sge.graphics.Pixmap.Format.RGBA8888)
             rgba.setBlending(sge.graphics.Pixmap.Blending.None)
-            rgba.drawPixmap(pixmap, 0, 0)
+            rgba.drawPixmap(pixmap, Pixels.zero, Pixels.zero)
             tmpPixmaps(i) = rgba
             pixmaps(i) = rgba
           } else {

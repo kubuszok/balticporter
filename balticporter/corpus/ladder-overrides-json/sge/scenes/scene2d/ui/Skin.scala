@@ -84,7 +84,7 @@ class Skin()(using Sge) extends AutoCloseable {
     */
   def this(skinFile: FileHandle)(using Sge) = {
     this()
-    val atlasFile = skinFile.sibling(skinFile.nameWithoutExtension() + ".atlas")
+    val atlasFile = skinFile.sibling(skinFile.nameWithoutExtension + ".atlas")
     if (atlasFile.exists) {
       _atlas = Nullable(TextureAtlas(atlasFile))
       _atlas.foreach(addRegions)
@@ -202,7 +202,7 @@ class Skin()(using Sge) extends AutoCloseable {
     if (!fontFile.exists) throw SgeError.InvalidInput("Font file not found: " + fontFile)
 
     // Use a region with the same name as the font, else use a PNG file in the same directory as the FNT file.
-    val regionName = fontFile.nameWithoutExtension()
+    val regionName = fontFile.nameWithoutExtension
     try {
       val font: BitmapFont = {
         val regions = getRegions(regionName)

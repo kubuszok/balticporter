@@ -29,7 +29,7 @@ class DesktopFileHandle(internalFile: File, fileType: FileType)(using ctx: Sge) 
     } else new DesktopFileHandle(p, fileType)
   }
 
-  override def file(): File =
+  override def file: File =
     if (fileType == FileType.External) new File(ctx.files.externalStoragePath, internalFile.getPath())
     else if (fileType == FileType.Local) new File(DesktopFileHandle.localPath, internalFile.getPath())
     else internalFile

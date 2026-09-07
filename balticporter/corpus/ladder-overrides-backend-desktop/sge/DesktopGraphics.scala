@@ -187,7 +187,7 @@ class DesktopGraphics private[sge] (
 
   override def frameId:         Long    = _frameId
   // java keeps a raw (unsmoothed) delta; sge dropped it — the port's Graphics still declares it
-  override def rawDeltaTime: Seconds = deltaTime
+  override def rawDeltaTime: Float = deltaTime.toFloat  // java's getRawDeltaTime: sge has no such member, the port keeps the Float
   override def deltaTime:       Seconds = _deltaTime
   override def framesPerSecond: Int     = _fps
 
@@ -403,7 +403,7 @@ class DesktopGraphics private[sge] (
     displayModeBeforeFullscreen = Nullable(getDesktopDisplayMode(currentDesktopMonitor))
   }
 
-  override def setWindowedMode(width: Int, height: Int): Boolean = {
+  override def setWindowedMode(width: Pixels, height: Pixels): Boolean = {
     window.input.resetPollingStates()
     if (!fullscreen) {
       if (width.toInt != _logicalWidth || height.toInt != _logicalHeight) {
@@ -507,8 +507,8 @@ class DesktopGraphics private[sge] (
 
   // ─── Cursor ───────────────────────────────────────────────────────────
 
-  override def newCursor(pixmap: Pixmap, xHotspot: Int, yHotspot: Int): Cursor =
-    DesktopCursor.create(windowing, pixmap, xHotspot, yHotspot).orNull
+  override def newCursor(pixmap: Pixmap, xHotspot: Pixels, yHotspot: Pixels): Nullable[Cursor] =
+    DesktopCursor.create(windowing, pixmap, xHotspot.toInt, yHotspot.toInt)
 
   override def setCursor(cursor: Cursor): Unit = cursor match {
     case dc: DesktopCursor =>

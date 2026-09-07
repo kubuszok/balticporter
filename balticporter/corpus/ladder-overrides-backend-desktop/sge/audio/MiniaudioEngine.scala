@@ -114,7 +114,7 @@ class MiniaudioEngine private[sge] (
       // may be inside a JAR, resolve via file() first; if that doesn't exist on
       // disk, extract from the classpath to a temporary file.
       val resolvedPath = {
-        val f = file.file()
+        val f = file.file
         if (f.exists()) f.getAbsolutePath
         else {
           val tmp = java.io.File.createTempFile("sge-music-", "-" + file.name)

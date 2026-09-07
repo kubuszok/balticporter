@@ -90,9 +90,15 @@ object FlowPropagation:
       case other                      => refSym(other).toList
 
     program.units.foreach(walkStat(_, SymId.None))
-    // the OVERRIDE edge: a method and what it overrides share one signature (§4.55, whole
-    // component or nothing) — its result moves with theirs, its i-th parameter with their i-th.
-    // `Screen.render(delta)` retyped alone left `ScreenAdapter.render(float)` behind (1 error).
+    out.toList ++ overrideEdges(program)
+
+  /** the OVERRIDE edge: a method and what it overrides share one signature (§4.55, whole
+    * component or nothing) — its result moves with theirs, its i-th parameter with their i-th.
+    * `Screen.render(delta)` retyped alone left `ScreenAdapter.render(float)` behind (1 error).
+    * Its own function: an EXACT seed set (a reference-derived one) is closed under these edges
+    * and no other (`PROGRESS.md` §13.31 step 1). */
+  def overrideEdges(program: Program): List[(SymId, SymId)] =
+    val out = collection.mutable.ListBuffer[(SymId, SymId)]()
     val graph = balticporter.tir.OverrideGraph.build(program)
     program.symbols.all.foreach { s =>
       if s.flags.isOverride && program.owns(s.id) then

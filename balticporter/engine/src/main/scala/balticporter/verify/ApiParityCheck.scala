@@ -112,7 +112,19 @@ object ApiParityCheck:
       accessLevel: String = "public",
       targetName: String = "",
       constantType: String = "",
+      /** a `def` written WITHOUT a parameter clause (`def x: T`) — a fact of the spelling, not of
+        * the arity. `ReferencePolicy` reads it; `compare` does not. */
+      parenless: Boolean = false,
+      /** parameters in `using`/`implicit` clauses, counted at the END of `paramTypes`; the explicit
+        * arity a JAVA member is matched against is `arity - usingCount`. */
+      usingCount: Int = 0,
+      /** the file's package — NOT part of the path or the match key (`compare` is package-blind);
+        * `ReferencePolicy` reads it to tell two same-named types apart. */
+      pkg: String = "",
   ):
+    /** the explicit (non-`using`) parameter types — what a java signature can be matched against. */
+    def explicitParamTypes: List[String] = paramTypes.dropRight(usingCount)
+    def explicitArity: Int = arity - usingCount
     /** A CONSTANT initialiser — the rhs is a literal, so the declaration has a constant type. */
     def constantInit: Boolean = constantType.nonEmpty
 
@@ -245,7 +257,10 @@ object ApiParityCheck:
         case Parsed.Success(tree) =>
           val header = text.linesIterator.take(HeaderLines).toList
           if markers.isEmpty || markers.exists(m => header.exists(_.contains(m))) then
-            collectDecls(tree, "", decls)
+            val mine = List.newBuilder[SurfaceDecl]
+            collectDecls(tree, "", mine)
+            val pkg = packageOf(tree)
+            mine.result().foreach(d => decls += d.copy(pkg = pkg))
           else
             val own = List.newBuilder[SurfaceDecl]
             collectDecls(tree, "", own)
@@ -345,6 +360,16 @@ object ApiParityCheck:
           accessLevel = extractAccessLevel(d.mods),
         )
         ctorParams(d.name.value, d.mods.exists(_.isInstanceOf[Mod.Case]), d.ctor, path, subst)
+        // the PRIMARY constructor as a `ctor` declaration: what `new X(...)` takes. Read by
+        // `ReferencePolicy` (a java constructor's slots); `compare` leaves ctors out.
+        out += SurfaceDecl(
+          path = s"$path/${d.name.value}",
+          kind = "ctor",
+          name = "<init>",
+          arity = defArity(d.ctor.paramClauses.toList),
+          paramTypes = defParamTypes(d.ctor.paramClauses.toList, subst),
+          usingCount = usingArity(d.ctor.paramClauses.toList),
+        )
         walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Trait if isAccessible(d.mods) =>
         val own   = tparamNames(d.tparamClause.values)
@@ -405,6 +430,18 @@ object ApiParityCheck:
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
+          parenless = clauses.isEmpty,
+          usingCount = usingArity(clauses),
+        )
+      case d: Ctor.Secondary if isAccessible(d.mods) =>
+        val subst = substFor(scope, Nil)
+        out += SurfaceDecl(
+          path = path,
+          kind = "ctor",
+          name = "<init>",
+          arity = defArity(d.paramClauses.toList),
+          paramTypes = defParamTypes(d.paramClauses.toList, subst),
+          usingCount = usingArity(d.paramClauses.toList),
         )
       case d: Decl.Def if isAccessible(d.mods) =>
         val clauses = d.paramClauseGroups.flatMap(_.paramClauses)
@@ -421,6 +458,8 @@ object ApiParityCheck:
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
+          parenless = clauses.isEmpty,
+          usingCount = usingArity(clauses),
         )
       case d: Defn.Val if isAccessible(d.mods) =>
         d.pats.foreach {
@@ -517,8 +556,24 @@ object ApiParityCheck:
 
     top(tree, path)
 
+  /** the dotted package chain of a source file (`package a.b; package c` → `a.b.c`); empty at none. */
+  private def packageOf(tree: Tree): String =
+    def go(t: Tree, acc: List[String]): List[String] = t match
+      case s: Source => s.stats.collectFirst { case p: Pkg => go(p, acc) }.getOrElse(acc)
+      case p: Pkg    => p.stats.collectFirst { case q: Pkg => go(q, acc :+ p.ref.syntax) }.getOrElse(acc :+ p.ref.syntax)
+      case _         => acc
+    go(tree, Nil).mkString(".")
+
   private def defArity(clauses: List[Term.ParamClause]): Int =
     clauses.map(_.values.length).sum
+
+  /** parameters in `using`/`implicit` clauses (a clause-level modifier in scala 3; scala 2's
+    * `implicit` sits on the first parameter). */
+  private def usingArity(clauses: List[Term.ParamClause]): Int =
+    clauses.filter { c =>
+      c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]) ||
+        c.values.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
+    }.map(_.values.length).sum
 
   /** The type a CONSTANT initialiser gives an unascribed `val` — a value literal, optionally
     * negated. Empty where the rhs is not one: `null` and `()` are neither a primitive nor a String,
@@ -702,9 +757,9 @@ object ApiParityCheck:
       javaFields: Set[String] = Set.empty,
   ): List[Divergence] =
     val inverseRenames = renames.map((k, v) => (v, k))
-    val normRef = reference.map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
-
-    val emittedByKey  = emitted.groupBy(_.matchKey)
+    // constructors are a derivation input, not a compared surface (the factory family reads them)
+    val normRef = reference.filterNot(_.kind == "ctor").map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
+    val emittedByKey  = emitted.filterNot(_.kind == "ctor").groupBy(_.matchKey)
     val refByKey      = normRef.groupBy(_.matchKey)
     val allKeys       = (emittedByKey.keySet ++ refByKey.keySet).toList.sorted
 

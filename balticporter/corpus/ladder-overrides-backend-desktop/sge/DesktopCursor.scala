@@ -75,7 +75,7 @@ object DesktopCursor {
     // converts non-RGBA8888 input. GLFW copies the pixels in createCursor, so the copy is transient.
     val pixmapCopy = new Pixmap(width, height, Pixmap.Format.RGBA8888)
     pixmapCopy.setBlending(Pixmap.Blending.None)
-    pixmapCopy.drawPixmap(pixmap, 0, 0)
+    pixmapCopy.drawPixmap(pixmap, Pixels.zero, Pixels.zero)
     val glfwCursor =
       try windowing.createCursor(pixmapCopy, xHotspot, yHotspot)
       finally pixmapCopy.close()

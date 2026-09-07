@@ -116,7 +116,7 @@ class NoopGraphics(
 
   override def frameId: Long = _frameId
 
-  override def rawDeltaTime: Seconds = deltaTime
+  override def rawDeltaTime: Float = deltaTime.toFloat  // java's getRawDeltaTime: sge has no such member, the port keeps the Float
   override def deltaTime: Seconds = _deltaTime
 
   override def framesPerSecond: Int = _fps
@@ -171,7 +171,7 @@ class NoopGraphics(
 
   override def setFullscreenMode(displayMode: Graphics.DisplayMode): Boolean = false
 
-  override def setWindowedMode(width: Int, height: Int): Boolean = false
+  override def setWindowedMode(width: Pixels, height: Pixels): Boolean = false
 
   override def setTitle(title: String): Unit = {}
 
@@ -203,7 +203,7 @@ class NoopGraphics(
 
   // ---- cursor (no-ops) ----
 
-  override def newCursor(pixmap: Pixmap, xHotspot: Int, yHotspot: Int): Cursor = null
+  override def newCursor(pixmap: Pixmap, xHotspot: Pixels, yHotspot: Pixels): Nullable[Cursor] = Nullable.empty
 
   override def setCursor(cursor: Cursor): Unit = {}
 

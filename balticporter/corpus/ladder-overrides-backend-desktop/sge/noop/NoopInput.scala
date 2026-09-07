@@ -156,5 +156,5 @@ final class NoopInput extends Input {
 
   override def cursorCatched: Boolean = _cursorCatched
 
-  override def setCursorPosition(x: Int, y: Int): Unit = {}
+  override def setCursorPosition(x: Pixels, y: Pixels): Unit = {}
 }

@@ -21,6 +21,9 @@ final case class OpaqueSpec(
       * `Mint` (default) synthesises the companion; `Existing(typeFqn, wrapName, unwrapName)`
       * retypes against a type that already exists (`ENGINE-LIMITS.md` O6 CLOSED). */
     target: OpaqueSpec.Target = OpaqueSpec.Target.Mint,
+    /** also seed from the run's [[DerivedPolicy]] — the slots the REFERENCE port spells at this
+      * spec's target type (`RunScope.derived`, `PROGRESS.md` §13.31 step 1). Off is the no-op. */
+    derive: Boolean = false,
 ):
   // Refused LOUDLY at construction, because every one of these produces emitted Scala that is
   // wrong in a way no count would show.

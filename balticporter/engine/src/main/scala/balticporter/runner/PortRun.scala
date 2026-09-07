@@ -4,9 +4,9 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, ElementWitnessCheck, ElementWitnessTransform, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
-import balticporter.verify.ApiParityCheck
+import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, DerivedPolicy, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, ElementWitnessCheck, ElementWitnessTransform, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, NullaryArityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
+import balticporter.verify.{ApiParityCheck, ReferencePolicy}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -988,7 +988,19 @@ final case class PortRun(
     println(RewriteCallSitesCheck.summary(rewriteFindings, translated.rewrites, program))
 
     // ---- API parity (when manifest.parity is declared; not inherited) ----
-    manifest.flatMap(_.parity).foreach { ref =>
+    lastDerived.foreach { d =>
+      ReferencePolicy.Lanes.foreach(l => CheckReport.record(l, d.findings.filter(_.check == l)))
+      if CheckReport.enabled then
+        Files.createDirectories(CheckReport.runDir)
+        Files.writeString(CheckReport.runDir.resolve("derived-policy.tsv"),
+          (DerivedPolicy.Header :: d.policy.rows.sortBy(r => (r.family.toString, r.upstream)).map(_.tsv)).mkString("", "\n", "\n"))
+      say(s"DERIVED POLICY: ${d.policy.rows.size} row(s) from the reference port " +
+        s"(opaque ${d.policy.rows.count(_.family == DerivedPolicy.Family.OpaqueSlot)}, " +
+        s"nullable ${d.policy.nullableMembers.size}, parenless ${d.policy.parenless.size}; " +
+        s"${d.findings.count(_.check == ReferencePolicy.LaneAmbiguous)} ambiguous, " +
+        s"${d.findings.count(_.check == ReferencePolicy.LaneUnmatched)} types without a twin)")
+    }
+    manifest.flatMap(_.parity).filter(_.compare).foreach { ref =>
       val parityRenames = if ref.packageMapping.nonEmpty then ref.packageMapping
                           else manifest.map(_.effectivePackageRenames).getOrElse(Map.empty)
       val parityFindings = ApiParityCheck.check(ref, emitDir, parityRenames,
@@ -1459,7 +1471,9 @@ final case class PortRun(
       (if effectivePhases.exists(_.isInstanceOf[balticporter.transform.TestFrameworkTransform])
        then Set(balticporter.transform.TestFrameworkTransform.Refused) else Set.empty) ++
       // API parity lanes (conditional on manifest.parity).
-      (if manifest.exists(_.parity.isDefined) then ApiParityCheck.AllLanes else Set.empty) ++
+      (if manifest.exists(_.parity.exists(_.compare)) then ApiParityCheck.AllLanes else Set.empty) ++
+      // reference-derived policy lanes (conditional on a deriving phase; PROGRESS.md §13.31 step 1).
+      (if derivationRuns then ReferencePolicy.Lanes.toSet else Set.empty) ++
       // Opaque boundary (conditional on pipeline).
       (if effectivePhases.exists(_.isInstanceOf[PrimitiveToOpaqueTransform]) then
          Set(OpaqueBoundaryCheck.Name) else Set.empty) ++
@@ -1663,14 +1677,65 @@ final case class PortRun(
         .flatMap(p => p.map.toOption.toList.flatMap(_.members.map(_.upstream)))
         .toSet
     }
-    RunScope.of(partitionUnits(parsed)._1.map(_.symbol).toSet,
+    val emittedUnits = partitionUnits(parsed)._1.map(_.symbol).toSet
+    RunScope.of(emittedUnits,
                 manifest.map(_.contributedSubjects).getOrElse(Map.empty),
                 // Targets and verdict overrides for in-pipeline portability reasoning.
                 RunScope.PlatformPolicy(targets, verdictOverrides),
                 substituted,
                 memberUp,
                 // types this run drops+injects -- retarget must not resolve through the parent (item 2).
-                policySubs.dropTypes)
+                policySubs.dropTypes,
+                derivedPolicy(parsed, emittedUnits))
+
+  // ---- reference-derived spelling policy (PROGRESS.md §13.31 step 1) ----------------------------
+  /** the opaque targets of the deriving specs; empty when no phase derives. */
+  private def derivingOpaqueTargets: Set[String] =
+    effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive => p.spec.typeFqn }.toSet
+  private def anyPhaseDerives: Boolean =
+    derivingOpaqueTargets.nonEmpty || effectivePhases.exists {
+      case n: NullabilityTransform  => n.deriveMembers
+      case a: NullaryArityTransform => a.derive
+      case _                        => false
+    }
+  /** the reference surface, parsed ONCE per run (a determinism run translates twice). A deriving
+    * phase with no reference declared, or an unparseable one, is fatal: it would silently no-op. */
+  private lazy val referenceSurface: List[ApiParityCheck.SurfaceDecl] =
+    manifest.flatMap(_.parity) match
+      case scala.None =>
+        sys.error(s"[$label] a phase derives policy from the reference port but the manifest declares no `parity` reference")
+      case Some(ref) =>
+        ApiParityCheck.parseSurface(ref.roots, ref.upstreamMarkers) match
+          case Right((decls, _)) => decls
+          case Left(err)         => sys.error(s"[$label] reference port unparseable: $err")
+  /** the last derivation, for the report (`derived(*)` lanes, `derived-policy.tsv`). */
+  private var lastDerived: Option[ReferencePolicy.Result] = scala.None
+  /** a DEPENDENT inherits the base's deriving phases without a reference of its own: the base's
+    * derived spellings reach it through the base's PUBLISHED map (§1.5), and its own units have
+    * no twin to read — nothing to derive, nothing fatal, no lane. */
+  private def derivationRuns: Boolean =
+    anyPhaseDerives && !manifest.exists(m => m.parity.isEmpty && m.bases.nonEmpty)
+  /** the rows the bases PUBLISHED: a dependent's call into a base-retyped member is coerced off
+    * them (O8 read as a value), its own units having no reference twin to derive from. */
+  private lazy val inheritedDerived: DerivedPolicy =
+    val baseNames = manifest.map(_.bases.map(_.name).toSet).getOrElse(Set.empty)
+    if baseNames.isEmpty then DerivedPolicy.empty
+    else
+      val rows = PortMap.discover(PortMap.reportRoot, exclude = manifest.map(_.name).toSet,
+                                  configured = manifest.map(_.baseReports).getOrElse(Nil))
+        .filter(p => baseNames(p.module))
+        .flatMap(p => DerivedPolicy.read(p.path.getParent.resolve("derived-policy.tsv")).rows)
+      if rows.nonEmpty then say(s"DERIVED POLICY (inherited from ${baseNames.toList.sorted.mkString(",")}): ${rows.distinct.size} row(s)")
+      DerivedPolicy(rows.distinct)
+  private def derivedPolicy(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
+    if !anyPhaseDerives then DerivedPolicy.empty
+    else if !derivationRuns then inheritedDerived
+    else
+      val m = manifest.get
+      val r = ReferencePolicy.derive(parsed, referenceSurface, emitted,
+        m.effectiveTypeRenames, m.effectiveFlattenNestedTypes, derivingOpaqueTargets, m.effectivePackageRenames)
+      lastDerived = Some(r)
+      r.policy
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)

@@ -20,6 +20,7 @@ object BuiltinFactories:
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
     new ClassToTraitFactory, new RegistryFactory, new ElementWitnessFactory,
+    new NullaryArityFactory,
   )
 
 // (a) — no policy; empty config object
@@ -297,6 +298,7 @@ final class PrimitiveToOpaqueFactory extends TransformFactory:
                      .getOrElse(OpaqueSpec.Primitive.Int),
       extraHints = config.strings("extraHints").getOrElse(Nil).toSet,
       scope      = TransformFactory.scopeOf(config),
+      derive     = config.bool("derive").getOrElse(false),
     ))
 
 /** `.conf` shape for `nullability`: `annotations`, `target` (union|named|option), `wrapper`
@@ -331,7 +333,19 @@ final class NullabilityFactory extends TransformFactory:
       target          = target,
       scope           = TransformFactory.scopeOf(config),
       nullableMembers = config.strings("nullableMembers").getOrElse(Nil).toSet,
+      deriveMembers   = config.bool("derive").getOrElse(false),
     )
+
+/** `.conf` shape for `nullary-arity`: `scope` (default `Only([])`, the no-op — it MINTS an arity),
+  * `force` (exact FQNs whose `()` goes despite a side-effecting body), `derive` (parenless where the
+  * reference port is; `PROGRESS.md` §13.31 step 1). */
+final class NullaryArityFactory extends TransformFactory:
+  def name = "nullary-arity"
+  def fromConfig(config: ConfigView): Phase =
+    new NullaryArityTransform(
+      scope  = TransformFactory.scopeOf(config, default = RuleScope.Only(Set.empty)),
+      force  = config.strings("force").getOrElse(Nil).toSet,
+      derive = config.bool("derive").getOrElse(false))
 
 /** `.conf` shape for `globals-to-implicits`: `holders` (each an entry with `holder`, `context`
   * — `inject`/`mint` — `members`, `attach`/`reader`/`boundary`, `sites`, `selfSupplied`,

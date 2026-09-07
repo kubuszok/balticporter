@@ -626,7 +626,7 @@ gdx-l0-measure:
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||Exception in thread|^\s+at balticporter\." <<<"$MIGRATE_OUT" | head -20
       exit 1
     fi
     echo "-- migration (ALL checks, untruncated, as the migration printed them) --"
@@ -681,7 +681,7 @@ gdx-measure:
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||Exception in thread|^\s+at balticporter\." <<<"$MIGRATE_OUT" | head -20
       exit 1
     fi
 
@@ -752,7 +752,7 @@ gdx-test-measure:
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
       echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
+      grep -E "^\[error\].*\.scala:[0-9]+|Exception in thread|^\s+at balticporter\.|^  [A-Z][A-Za-z]+: " <<<"$MIGRATE_OUT" | head -20
       exit 1
     fi
 
@@ -859,7 +859,7 @@ gdx-l0-test-measure:
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
       echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
+      grep -E "^\[error\].*\.scala:[0-9]+|Exception in thread|^\s+at balticporter\.|^  [A-Z][A-Za-z]+: " <<<"$MIGRATE_OUT" | head -20
       exit 1
     fi
 
@@ -2290,7 +2290,7 @@ jbump-measure:
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.jbump.JbumpMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||Exception in thread|^\s+at balticporter\." <<<"$MIGRATE_OUT" | head -20
       exit 1
     fi
 
@@ -2432,7 +2432,7 @@ usl-measure:
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.visuiusl.UslMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
-      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||Exception in thread|^\s+at balticporter\." <<<"$MIGRATE_OUT" | head -20
       exit 1
     fi
 

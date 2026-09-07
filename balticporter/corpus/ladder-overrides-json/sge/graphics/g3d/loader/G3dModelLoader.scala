@@ -53,8 +53,8 @@ class G3dModelLoader(resolver: FileHandleResolver, binary: Boolean = false)(usin
     * the reader only says which spelling of the document this loader reads (ADJUSTMENTS.tsv). */
   def this(reader: sge.utils.BaseJsonReader, resolver: FileHandleResolver)(using Sge) =
     this(resolver, reader.isInstanceOf[sge.utils.UBJsonReader])
-  override def loadModelData(fileHandle: FileHandle, parameters: ModelLoader.ModelParameters): ModelData =
-    parseModel(fileHandle)
+  override def loadModelData(fileHandle: FileHandle, parameters: Nullable[ModelLoader.ModelParameters]): Nullable[ModelData] =
+    Nullable(parseModel(fileHandle))
 
   def parseModel(handle: FileHandle): ModelData = {
     val json  = if (binary) handle.readUBJson[G3dModelJson] else handle.readJson[G3dModelJson]
@@ -67,7 +67,7 @@ class G3dModelLoader(resolver: FileHandleResolver, binary: Boolean = false)(usin
 
     model.id = json.id
     parseMeshes(model, json.meshes)
-    parseMaterials(model, json.materials, handle.parent().path())
+    parseMaterials(model, json.materials, handle.parent().path)
     parseNodes(model, json.nodes)
     parseAnimations(model, json.animations)
     model
@@ -92,7 +92,7 @@ class G3dModelLoader(resolver: FileHandleResolver, binary: Boolean = false)(usin
 
         val jsonPart = ModelMeshPart()
         jsonPart.id = partId
-        jsonPart.primitiveType = parseType(meshPart.tpe).toInt
+        jsonPart.primitiveType = parseType(meshPart.tpe)
         jsonPart.indices = meshPart.indices.toArray
         parts.add(jsonPart)
       }

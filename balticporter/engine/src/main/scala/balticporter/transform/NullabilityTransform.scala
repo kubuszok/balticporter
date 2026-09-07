@@ -17,7 +17,14 @@ final class NullabilityTransform(
       * against `Symbol.fullName` at bind time — same mechanism and counts as annotation selection.
       * Empty is the no-op. `ENGINE-LIMITS.md` O4, K13.6 */
     val nullableMembers: Set[String] = Set.empty,
+    /** also take the members the REFERENCE port returns wrapped (`RunScope.derived`,
+      * `PROGRESS.md` §13.31 step 1); off is the no-op. */
+    val deriveMembers: Boolean = false,
 ) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
+
+  /** `nullableMembers` plus the derived ones once bound. */
+  private var derivedMembers: Set[String] = Set.empty
+  private def effectiveMembers: Set[String] = nullableMembers ++ derivedMembers
 
   import NullabilityTransform.*
   import NullabilityBoundaryCheck.{Finding, Issue}
@@ -66,6 +73,8 @@ final class NullabilityTransform(
     records     = binder.recordsFor(name)
     runScope    = binder.run
     ownSubjects = binder.run.contributed(name)
+    if deriveMembers then
+      derivedMembers = binder.run.derived.nullableMembers
 
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings ++ deadMemberFindings)
@@ -75,7 +84,8 @@ final class NullabilityTransform(
   def surfaceFingerprint: String =
     val targetSeg = target match { case Target.Union => ""; case t => s"|${t.tag}" }
     val memberSeg = if nullableMembers.isEmpty then "" else s"|members=${nullableMembers.toList.sorted.mkString(",")}"
-    s"${annotations.toList.sorted.mkString(",")}$targetSeg|${scope.fingerprint}$memberSeg"
+    val derSeg    = if deriveMembers then "|derive=reference" else ""
+    s"${annotations.toList.sorted.mkString(",")}$targetSeg|${scope.fingerprint}$memberSeg$derSeg"
 
   /** Every shared-surface subject this instance's policy is keyed on — annotation FQNs,
     * nullableMembers and scope entries — through [[MergeablePolicy.subjectOf]]. A dependent
@@ -110,7 +120,7 @@ final class NullabilityTransform(
         case Nil => (for { t <- mergedTarget; s <- scopeMerged } yield
           MergeablePolicy.Merged(
             new NullabilityTransform(annotations ++ o.annotations, t, s,
-              nullableMembers ++ o.nullableMembers),
+              nullableMembers ++ o.nullableMembers, deriveMembers || o.deriveMembers),
             o.subjects -- subjects)
         )
         case whys => Left(whys.mkString("; "))
@@ -173,7 +183,7 @@ final class NullabilityTransform(
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
     primSyms = Set.empty; matchedMembers.clear()
     // §1(b) no-op: nothing bound, nothing to do.
-    if boundAnnots.isEmpty && nullableMembers.isEmpty then return program
+    if boundAnnots.isEmpty && effectiveMembers.isEmpty then return program
 
     var table = program.symbols
     var next  = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
@@ -229,8 +239,11 @@ final class NullabilityTransform(
       val hits = s.annotations.filter(a => headSym(a.tpe).exists(boundAnnots.contains))
       // annotation wins over nullableMembers (the fallback for an unannotated hand-wrapped member).
       val memberHit = if hits.nonEmpty then scala.None
-                      else nullableMembers.find(_ == s.fullName)
-      if (hits.nonEmpty || memberHit.isDefined) && retypable(program, s.id) then
+                      else { val keys = DerivedPolicy.keysOf(program, s); effectiveMembers.find(keys) }
+      // a DERIVED member this module does not own is the base's published fact: its symbol is
+      // retyped so this module's reads of it are coerced; the base's declaration is never emitted here
+      val derivedFact = memberHit.exists(derivedMembers.contains) && !program.owns(s.id)
+      if (hits.nonEmpty || memberHit.isDefined) && (retypable(program, s.id) || derivedFact) then
         val key = if hits.nonEmpty
                   then hits.flatMap(a => headSym(a.tpe)).flatMap(boundAnnots.get).sorted.head
                   else { matchedMembers += memberHit.get; memberHit.get }
@@ -691,7 +704,10 @@ final class NullabilityTransform(
         if isWrapper then out.rhs match
           // an uninitialised @Null field defaults to JVM null, which is NOT the wrapper's empty
           // sentinel (isEmpty would read false); init to W.empty. Not applied to parameters.
-          case scala.None if !p.symbolOf(v.symbol).exists(_.flags.isParam) =>
+          // …but not a FINAL one: java assigns it in every constructor before any read (definite
+          // assignment), and an rhs here turns the emitter's var placeholder into a `final val`
+          // the constructors can no longer assign (`AssetDescriptor.params`, §13.31 step 1).
+          case scala.None if !p.symbolOf(v.symbol).exists(s => s.flags.isParam || (s.flags.isFinal && !s.flags.isMutable)) =>
             out.copy(rhs = Some(wrap(t, Tree.Literal(Constant.NullC, TypeRepr.NoType, v.origin))))
           case _ =>
             out.copy(rhs = out.rhs.map(coerceTo(t, _)))
@@ -811,6 +827,17 @@ final class NullabilityTransform(
 
   override def transformTerm(t: Term)(using Program): Term = t match
     case a: Tree.Assign      if isWrapper => a.copy(rhs = coerceTo(a.lhs.tpe, a.rhs))
+    // `(T) wrapped` — java casts the VALUE; the wrapper is not it (`Attributes.get`: a
+    // `ClassCastException` at run time, 2 of 12 demos). Unwrapped at the cast, by the cast's target.
+    case x: Tree.Typed       if isWrapper && isWrapped(x.expr) && !isWrapperType(x.tpt.tpe) =>
+      x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
+    // `new T[]{ a, b }`: each element sits at a slot of the ARRAY's element type — a wrapped
+    // field handed to a `int[][]` literal is unwrapped like any other slot (`PixmapPacker`)
+    case n: Tree.NewArray    if isWrapper && n.init.isDefined =>
+      val elemWant = n.tpe match
+        case TypeRepr.AppliedType(_, List(el)) => el
+        case _                                 => TypeRepr.NoType
+      n.copy(init = n.init.map(_.map(coerceTo(elemWant, _))))
     case a: Tree.ArrayLength if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
     case a: Tree.ArrayAccess if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
     // java's `x instanceof T` is false for null: test the unwrapped value, never the wrapper
@@ -1019,6 +1046,14 @@ final class NullabilityTransform(
       (opName, t.args) match
         case (Some("==" | "eq"), List(a)) if isWrapped(recv) && isNullLit(a) => Some(isEmpty(recv, o))
         case (Some("!=" | "ne"), List(a)) if isWrapped(recv) && isNullLit(a) => Some(negate(isEmpty(recv, o), o))
+        // `boxed == 1` / `1 == boxed`: java UNBOXES the wrapped side ONLY against a PRIMITIVE
+        // operand (JLS 15.21.1, NPE on null) — `.get` is that dereference. Against a reference
+        // (`obj == this` in an `equals`) java compares references and null is a legal operand, so
+        // the wrapped side is left alone (the emitter's `eq` reads it).
+        case (Some("==" | "!="), List(a)) if isWrapped(recv) && isPrimitiveSlot(a.tpe) =>
+          Some(t.copy(fun = Tree.Select(unwrap(recv), op, TypeRepr.NoType, o)))
+        case (Some("==" | "!="), List(a)) if isWrapped(a) && isPrimitiveSlot(recv.tpe) =>
+          Some(t.copy(args = List(unwrap(a))))
         case _ => scala.None
     case _ => scala.None
 
@@ -1038,23 +1073,9 @@ final class NullabilityTransform(
     * class or local class returns from THAT, not this. The default arm does not descend, so a
     * later node kind is a MISSED rewrite — loud, never wrong. A `Commented` wrapper is read
     * THROUGH (§4.58). */
-  private def mapReturns(want: TypeRepr, t: Term, f: (TypeRepr, Term) => Term): Term = t match
-    case x: Tree.Return       => x.copy(expr = x.expr.map(f(want, _)))
-    case x: Tree.Block        => x.copy(stats = x.stats.map { case s: Term => mapReturns(want, s, f); case s => s },
-                                        expr = mapReturns(want, x.expr, f))
-    case x: Tree.If           => x.copy(thenp = mapReturns(want, x.thenp, f), elsep = mapReturns(want, x.elsep, f))
-    case x: Tree.While        => x.copy(body = mapReturns(want, x.body, f))
-    case x: Tree.DoWhile      => x.copy(body = mapReturns(want, x.body, f))
-    case x: Tree.For          => x.copy(body = mapReturns(want, x.body, f))
-    case x: Tree.ForEach      => x.copy(body = mapReturns(want, x.body, f))
-    case x: Tree.Synchronized => x.copy(body = mapReturns(want, x.body, f))
-    case x: Tree.Labeled      => x.copy(stmt = mapReturns(want, x.stmt, f))
-    case x: Tree.Commented    => x.copy(stmt = mapReturns(want, x.stmt, f))
-    case x: Tree.Try          => x.copy(body = mapReturns(want, x.body, f),
-                                        catches = x.catches.map(c => c.copy(body = mapReturns(want, c.body, f))),
-                                        finalizer = x.finalizer.map(mapReturns(want, _, f)))
-    case x: Tree.Match        => x.copy(cases = x.cases.map(c => c.copy(body = mapReturns(want, c.body, f))))
-    case other                => other
+  private def mapReturns(want: TypeRepr, t: Term, f: (TypeRepr, Term) => Term): Term =
+    ReturnSites.map(t)(f(want, _))
+
 
   /** the type variables a type mentions THAT THIS UNIT CANNOT NAME — [[mentionsTypeParam]]'s
     * question without a `Program`, narrowed to what's actually out of reach. A variable declared

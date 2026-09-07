@@ -11,8 +11,14 @@ import balticporter.tir.*
 final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
                                   /** members whose `()` goes although the body has behaviour — the reference
                                     * port's decision, by exact FQN; every other guard still applies (K51 xvii). */
-                                  val force: Set[String] = Set.empty)
+                                  val force: Set[String] = Set.empty,
+                                  /** also drop `()` where the REFERENCE port declares the accessor
+                                    * parenless (`RunScope.derived`, `PROGRESS.md` §13.31 step 1). */
+                                  val derive: Boolean = false)
     extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
+
+  private var derivedForce: Set[String] = Set.empty
+  private def forced(fqn: String): Boolean = force(fqn) || derivedForce(fqn)
 
   def name: String = "nullary-arity"
 
@@ -20,7 +26,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
   override def runsBefore: Set[String] = Set("package-rename")
 
   def idiomKinds: Set[IdiomKind] =
-    if scope == RuleScope.Only(Set.empty) then Set.empty
+    if scope == RuleScope.Only(Set.empty) && !derive then Set.empty
     else Set(IdiomKind.NullaryArity)
 
   def accountedBy: Set[String] = Set(IdiomCheck.Residue)
@@ -31,7 +37,8 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
   def surfaceFingerprint: String =
     val sc = if scope == RuleScope.Only(Set.empty) then "" else s"scope=${scope.fingerprint}"
     val fc = if force.isEmpty then "" else s"force=${force.toList.sorted.mkString(",")}"
-    List(sc, fc).filter(_.nonEmpty).mkString(";")
+    val dr = if derive then "derive=reference" else ""
+    List(sc, fc, dr).filter(_.nonEmpty).mkString(";")
 
   def subjects: Set[String] = scope.entries ++ force.map(MergeablePolicy.subjectOf)
 
@@ -48,7 +55,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
         case _ =>
           Left(s"`nullary-arity` scope disagrees: one is `Only` and the other is `Everywhere`")
       merged.map { composedScope =>
-        val phase = new NullaryArityTransform(composedScope, force ++ n.force)
+        val phase = new NullaryArityTransform(composedScope, force ++ n.force, derive || n.derive)
         val added = n.subjects -- subjects
         MergeablePolicy.Merged(phase, added)
       }
@@ -65,6 +72,8 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
   def bindPolicy(binder: PolicyBinder): Unit =
     runScope          = binder.run
     substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
+    if derive then
+      derivedForce  = binder.run.derived.parenless
 
   // ---- the run --------------------------------------------------------------------------
 
@@ -106,7 +115,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
             refuse(program, s.id, "NotExecutable",
               "the symbol's `info` is not a `MethodType`/`PolyType`, so this phase cannot read the " +
               "parameter clause it would drop")
-          else if !scope.includes(program, s) then
+          else if !scope.includes(program, s) && !derivedForce(s.fullName) then
             refuse(program, s.id, "OutOfScope",
               s"the phase's `RuleScope` excludes it (entry `${scope.entryFor(program, s).getOrElse("?")}`)")
           else
@@ -115,7 +124,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
               refuse(program, s.id, "AnchoredClosure",
                 closure.anchorReason(program).getOrElse(
                   "the override component reaches a declaration this program cannot move"))
-            else if !isGetterLike(program, d) && !force(s.fullName) then
+            else if !isGetterLike(program, d) && !forced(s.fullName) then
               refuse(program, s.id, "SideEffectingBody",
                 "the body contains assignments or calls to non-getter members — dropping `()` " +
                 "would change the call's meaning from 'do something and return' to 'read a value'")

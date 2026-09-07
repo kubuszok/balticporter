@@ -105,16 +105,23 @@ object LibgdxLadder:
   /** sge's remaining GL enums (all in the injected `GLEnum.scala`): one opaque per family, seeded at
     * every GL parameter sge types with it, GL20 through GL32 (PROGRESS.md §13.30 step 1: sge's ANGLE
     * bindings implement THAT surface). A `def`: a phase instance carries binding state. */
-  private def glEnum(name: String, hints: String*): balticporter.tir.Phase = glEnumExcept(name, Set.empty, hints*)
+  /** the derive step: an opaque spec's seeds and fence are the REFERENCE's alone (PROGRESS.md §13.31
+    * step 1) — the hand-listed hints and the propagation fences were the pre-derivation device. */
+  private def opaque(spec: balticporter.tir.OpaqueSpec)(using derive: Boolean): balticporter.tir.Phase =
+    new balticporter.transform.PrimitiveToOpaqueTransform(
+      if derive then spec.copy(hints = Set.empty, extraHints = Set.empty, scope = balticporter.tir.RuleScope.Everywhere(Set.empty), derive = true)
+      else spec)
+  private def glEnum(name: String, hints: String*)(using derive: Boolean): balticporter.tir.Phase = glEnumExcept(name, Set.empty, hints*)
   /** `except`: declarations the flow would reach that sge keeps `Int` (member or parameter names under `com.badlogic.gdx.graphics.`). */
-  private def glEnumExcept(name: String, except: Set[String], hints: String*): balticporter.tir.Phase =
-    new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+  private def glEnumExcept(name: String, except: Set[String], hints: String*)(using derive: Boolean): balticporter.tir.Phase =
+    opaque(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.graphics." + name,
       target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics." + name, wrapName = "apply", unwrapName = "toInt"),
       hints      = hints.map("com.badlogic.gdx.graphics." + _).toSet,
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-      scope      = balticporter.tir.RuleScope.Everywhere(except.map("com.badlogic.gdx.graphics." + _))))
-  private def moreGlEnums: List[balticporter.tir.Phase] = List(
+      scope      = balticporter.tir.RuleScope.Everywhere(except.map("com.badlogic.gdx.graphics." + _)),
+      derive     = derive))
+  private def moreGlEnums(using derive: Boolean): List[balticporter.tir.Phase] = List(
     glEnum("BufferTarget", "GL20#glBindBuffer#target", "GL20#glBufferData#target", "GL20#glBufferSubData#target", "GL20#glGetBufferParameteriv#target",
       "GL30#glUnmapBuffer#target", "GL30#glGetBufferPointerv#target", "GL30#glMapBufferRange#target", "GL30#glFlushMappedBufferRange#target",
       "GL30#glBindBufferRange#target", "GL30#glBindBufferBase#target", "GL30#glCopyBufferSubData#readTarget", "GL30#glCopyBufferSubData#writeTarget",
@@ -149,7 +156,12 @@ object LibgdxLadder:
   )
 
   def Steps: Map[String, List[balticporter.tir.Phase]] = stepsFor(Set.empty)
-  def stepsFor(sel: Set[String]): Map[String, List[balticporter.tir.Phase]] = Map(
+  def stepsFor(sel: Set[String]): Map[String, List[balticporter.tir.Phase]] =
+    given derive: Boolean = sel("derive")
+    Map(
+    // the reference-derived spelling step: no phase of its own — it switches `derive` on in the
+    // opaque, nullability and arity phases and declares sge's tree as the manifest's reference.
+    "derive" -> Nil,
     // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
     "backend-jvm" -> Nil,
     // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
@@ -183,7 +195,8 @@ object LibgdxLadder:
     "nullability" -> List(new balticporter.transform.NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
-      scope       = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")))),
+      scope       = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
+      deriveMembers = sel("derive"))),
     // lls's added API on core's own collections, and the factories core's subclasses of lls's
     // types must declare themselves (`LibgdxEnrich`).
     "enrich" -> List(LibgdxEnrich.transform(w = true, n = sel("nullability"))),
@@ -236,10 +249,11 @@ object LibgdxLadder:
     // `Seconds`: a frame delta is not a bare `Float` (sge's opaque type, injected from sge's own
     // file). Seeded at the two producers on `Graphics`; the phase propagates along pure moves
     // (`render(delta)`, `act(delta)`) and coerces at the boundary.
-    "seconds" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+    "seconds" -> List(opaque(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.utils.Seconds",
       target     = balticporter.tir.OpaqueSpec.Target.Existing(
         typeFqn = "sge.utils.Seconds", wrapName = "apply", unwrapName = "toFloat"),
+      derive     = sel("derive"),
       hints      = Set("com.badlogic.gdx.Graphics#getDeltaTime", "com.badlogic.gdx.Graphics#getRawDeltaTime"),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
       // core's own declarations, never the base's: a shared int utility (`MathUtils.isPowerOfTwo`)
@@ -262,10 +276,11 @@ object LibgdxLadder:
     // `Pixels`: a screen coordinate or size is not a bare `Int` (sge's opaque type, injected).
     // Seeded at the producers on `Graphics` and `Input` and at the two resize callbacks; the
     // phase propagates along pure moves and coerces at the boundary.
-    "pixels" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+    "pixels" -> List(opaque(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.Pixels",
       target     = balticporter.tir.OpaqueSpec.Target.Existing(
         typeFqn = "sge.Pixels", wrapName = "apply", unwrapName = "toInt"),
+      derive     = sel("derive"),
       hints      = Set(
         "com.badlogic.gdx.Graphics#getWidth", "com.badlogic.gdx.Graphics#getHeight",
         "com.badlogic.gdx.Graphics#getBackBufferWidth", "com.badlogic.gdx.Graphics#getBackBufferHeight",
@@ -410,7 +425,7 @@ object LibgdxLadder:
           "com.badlogic.gdx.maps.tiled.TiledMapTileLayer#setCell#cell"))),
     // sge's audio opaques (`Volume`, `Pitch`, `Pan`, `SoundId`), each fenced to the files sge keeps it in.
     "audio" -> List(
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.audio.Volume",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Volume", wrapName = "unsafeMake", unwrapName = "toFloat"),
         hints      = Set(
@@ -428,7 +443,7 @@ object LibgdxLadder:
         "com.badlogic.gdx.audio.Music",
         "com.badlogic.gdx.audio.AudioDevice",
         "com.badlogic.gdx.Input")))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.audio.Pitch",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Pitch", wrapName = "unsafeMake", unwrapName = "toFloat"),
         hints      = Set(
@@ -438,7 +453,7 @@ object LibgdxLadder:
         underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
         scope      = balticporter.tir.RuleScope.Only(Set(
         "com.badlogic.gdx.audio.Sound")))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.audio.Pan",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Pan", wrapName = "unsafeMake", unwrapName = "toFloat"),
         hints      = Set(
@@ -450,7 +465,7 @@ object LibgdxLadder:
         scope      = balticporter.tir.RuleScope.Only(Set(
         "com.badlogic.gdx.audio.Sound",
         "com.badlogic.gdx.audio.Music")))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.audio.SoundId",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.SoundId", wrapName = "apply", unwrapName = "toLong"),
         hints      = Set(
@@ -468,7 +483,7 @@ object LibgdxLadder:
         "com.badlogic.gdx.audio.Sound"))))),
     // sge's time opaques (`Millis`, `Nanos`) over `TimeUtils`, fenced to sge's files.
     "time" -> List(
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.utils.Millis",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.utils.Millis", wrapName = "apply", unwrapName = "toLong"),
         hints      = Set(
@@ -483,7 +498,7 @@ object LibgdxLadder:
         "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile",
         "com.badlogic.gdx.scenes.scene2d.utils.ClickListener",
         "com.badlogic.gdx.assets.AssetManager")))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.utils.Nanos",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.utils.Nanos", wrapName = "apply", unwrapName = "toLong"),
         hints      = Set(
@@ -507,38 +522,43 @@ object LibgdxLadder:
     // sge's typed GL enums (`GLEnum.scala`, injected) at the GL20 parameters the demos reach; the raw
     // `GL_*` constants stay java's `inline val`s (a constant is never a seed, K51 xv) and wrap at the call.
     "glenum" -> (List(
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.EnableCap",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.EnableCap", wrapName = "apply", unwrapName = "toInt"),
         hints      = Set("com.badlogic.gdx.graphics.GL20#glEnable#cap", "com.badlogic.gdx.graphics.GL20#glDisable#cap", "com.badlogic.gdx.graphics.GL20#glIsEnabled#cap"),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty),
+        derive     = derive)),
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.PrimitiveMode",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.PrimitiveMode", wrapName = "apply", unwrapName = "toInt"),
         hints      = Set("GL20#glDrawArrays#mode", "GL20#glDrawElements#mode", "GL30#glDrawRangeElements#mode", "GL30#glBeginTransformFeedback#primitiveMode",
           "GL30#glDrawArraysInstanced#mode", "GL30#glDrawElementsInstanced#mode", "GL31#glDrawArraysIndirect#mode", "GL31#glDrawElementsIndirect#mode",
           "GL32#glDrawElementsBaseVertex#mode", "GL32#glDrawRangeElementsBaseVertex#mode", "GL32#glDrawElementsInstancedBaseVertex#mode").map("com.badlogic.gdx.graphics." + _),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty),
+        derive     = derive)),
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.CompareFunc",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.CompareFunc", wrapName = "apply", unwrapName = "toInt"),
         hints      = Set("com.badlogic.gdx.graphics.GL20#glDepthFunc#func", "com.badlogic.gdx.graphics.GL20#glStencilFunc#func", "com.badlogic.gdx.graphics.GL20#glStencilFuncSeparate#func"),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty))),
-      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty),
+        derive     = derive)),
+      opaque(balticporter.tir.OpaqueSpec(
         fqn        = "com.badlogic.gdx.graphics.ClearMask",
         target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.graphics.ClearMask", wrapName = "apply", unwrapName = "toInt"),
         hints      = Set("com.badlogic.gdx.graphics.GL20#glClear#mask", "com.badlogic.gdx.graphics.GL30#glBlitFramebuffer#mask"),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty)))) ++ moreGlEnums),
+        scope      = balticporter.tir.RuleScope.Everywhere(Set.empty),
+        derive     = derive))) ++ moreGlEnums),
     // `WorldUnits`: world-space sizes are not bare `Float`s (sge's opaque type, injected from sge's
     // own file). Seeded at the viewport's and the camera's world-size fields.
-    "worldunits" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+    "worldunits" -> List(opaque(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.WorldUnits",
       target     = balticporter.tir.OpaqueSpec.Target.Existing(
         typeFqn = "sge.WorldUnits", wrapName = "apply", unwrapName = "toFloat"),
+      derive     = sel("derive"),
       hints      = Set(
         "com.badlogic.gdx.utils.viewport.Viewport#worldWidth", "com.badlogic.gdx.utils.viewport.Viewport#worldHeight",
         "com.badlogic.gdx.graphics.Camera#viewportWidth", "com.badlogic.gdx.graphics.Camera#viewportHeight"),
@@ -563,7 +583,8 @@ object LibgdxLadder:
         scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))),
       new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
         // sge's `clip.hasContents` — parenless although the body reads the platform clipboard
-        force = Set("com.badlogic.gdx.utils.Clipboard#hasContents"))),
+        force = Set("com.badlogic.gdx.utils.Clipboard#hasContents"),
+        derive = sel("derive"))),
     // sge's graphics API spellings the demos use: `ShapeRenderer.rect -> rectangle` (its four
     // overloads, one component) and the `drawing(type) { … }` helper around `begin`/`end`.
     "graphics" -> List(
@@ -656,9 +677,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
@@ -693,6 +714,11 @@ object LibgdxLadder:
           "com/badlogic/gdx/graphics/g3d/shaders/depth.fragment.glsl"))),
       dependencies   = List(balticporter.catalog.ArtifactDep("com.badlogicgames.gdx", "gdx-jnigen-loader", "2.5.2",
                                                              balticporter.catalog.CrossKind.Java)),
+      // the derive step's reference: sge core's own tree (the three source rows the JVM build sees);
+      // spelling is DERIVED from it, the comparison report stays off until the surface is close.
+      parity         = if steps("derive") then Some(balticporter.core.ParityRef(
+        roots   = List("scala", "scalajvm", "scaladesktop").map(d => repoRoot.resolve(s"../sge/sge/src/main/$d").normalize),
+        compare = false)) else None,
     ))
 
 /** The ladder port's TEST source set: libGDX's own `gdx/test` tree converted to MUnit on the

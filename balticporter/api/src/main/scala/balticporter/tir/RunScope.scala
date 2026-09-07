@@ -41,6 +41,10 @@ trait RunScope:
     * own opaque FQN, a direct read rather than a re-derivation (CLAUDE.md §4.55). */
   def baseMemberUpstream: Set[String] = Set.empty
 
+  /** spelling policy derived from the manifest's reference port (`PortManifest.parity`); empty when
+    * no reference is declared or no phase derives. [[DerivedPolicy]], `PROGRESS.md` §13.31 step 1. */
+  def derived: DerivedPolicy = DerivedPolicy.empty
+
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds. [[emits]] takes a
     * top-level unit (the run's classification granularity); every caller climbs the owner chain to
     * it. Written once here since the climb is fuel-bounded and a caller's own would be free to
@@ -90,12 +94,15 @@ object RunScope:
          platform: PlatformPolicy = PlatformPolicy.everyPlatform,
          substituted: Set[String] = Set.empty,
          memberUpstream: Set[String] = Set.empty,
-         ownSubstituted: Set[String] = Set.empty): RunScope =
+         ownSubstituted: Set[String] = Set.empty,
+         derivedPolicy: DerivedPolicy = DerivedPolicy.empty): RunScope =
     val p = platform
     val s = substituted
     val mu = memberUpstream
     val os = ownSubstituted
+    val dp = derivedPolicy
     new RunScope:
+      override def derived: DerivedPolicy                 = dp
       def emits(unit: SymId): Boolean                     = emitted(unit)
       def contributed(phase: String): Option[Set[String]] = own.get(phase)
       override def platform: PlatformPolicy               = p

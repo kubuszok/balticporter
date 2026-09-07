@@ -29,7 +29,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     val tgt = spec.target match
       case OpaqueSpec.Target.Mint => ""
       case OpaqueSpec.Target.Existing(t, w, u) => s";target=$t;wrap=$w;unwrap=$u"
-    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt"
+    // a deriving spec's surface is the REFERENCE's: the derived set's digest once bound, the
+    // switch alone before (PROGRESS.md §13.31 step 1)
+    val der = if spec.derive then ";derive=reference" else ""
+    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt$der"
 
   /** every shared-surface subject this instance's policy is keyed on — the leading type FQN of
     * each hint and each scope entry, through [[MergeablePolicy.subjectOf]]. Over-approximate:
@@ -75,6 +78,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
             extraHints = spec.extraHints ++ o.spec.extraHints,
             scope      = mergedScope,
             target     = spec.target,
+            derive     = spec.derive || o.spec.derive,
           ))
           Right(MergeablePolicy.Merged(merged, o.subjects -- subjects))
         case whys => Left(whys.mkString("; "))
@@ -114,10 +118,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   /** which top-level units this run emits; not derivable from the `Program` a phase is handed
     * (a dependent's contains its base's units). Defaults to the base-port answer. */
   private var runScope: RunScope = RunScope.whole
+  /** seeds the run's [[DerivedPolicy]] spells at this spec's target; empty unless `spec.derive`. */
+  private var derivedHints: Set[String] = Set.empty
 
   /** nothing to bind — this phase's policy is a predicate and an FQN set. Used only for [[runScope]]. */
   def bindPolicy(binder: PolicyBinder): Unit =
     runScope = binder.run
+    if spec.derive then
+      derivedHints  = binder.run.derived.opaqueSeeds(spec.typeFqn)
     // method fullNames whose base port-map upstream descriptor mentions this spec's opaque FQN —
     // such a callee had its parameter retyped by the base, so coerceArgs must not unwrap.
     // the simple-name check is intentional: the port map descriptor uses the simple name.
@@ -140,6 +148,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // with the same fullName, and `find` on that would be non-deterministic — the ORIGINAL id is
     // what existing symbols' `info` still references, so prefer the lowest (the frontend's).
     primSym = program.symbols.all.filter(_.fullName == spec.underlyingFqn).minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
+    narrowerPrimSyms = {
+      val mine = WideningOrder.indexOf(spec.underlyingFqn)
+      program.symbols.all.filter(s => { val i = WideningOrder.indexOf(s.fullName); i >= 0 && i < mine }).map(_.id).toSet
+    }
     if primSym == SymId.None then return program
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
     boxedPrimSym = program.symbols.all.filter(_.fullName == spec.underlying.boxedFqn).minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
@@ -150,7 +162,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     def fenced(s: Symbol): Boolean = spec.scope.includes(program, s)
     // a hint may also name something a SIBLING spec already claimed — admitted here on purpose so
     // refuseOverlap can see it, rather than silently finding nothing.
-    val named = program.symbols.all.filter(s => spec.hints(s.fullName) || spec.extraHints(s.fullName))
+    val named = program.symbols.all.filter(s => spec.hints(s.fullName) || spec.extraHints(s.fullName) ||
+      DerivedPolicy.keysOf(program, s).exists(derivedHints))
     val hints = named
       .filter(s => fenced(s) && (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined))
       .map(_.id).toSet
@@ -166,9 +179,22 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     def isConstant(id: SymId): Boolean = program.definitionOf(id) match
       case Some(v: Tree.ValDef) => program.symbolOf(id).exists(s => ClassInitTriggerCheck.constantVariable(v, s)(using program))
       case _                    => false
-    seeds = FlowPropagation.grow(program, hints, id => program.symbolOf(id).exists(s =>
+    // a DERIVED seed is exact: the reference port already spells every slot of its surface, so
+    // nothing is grown from it — growth is the device for a hand-written seed list, and from 632
+    // derived slots it rode the port's own int utilities (`IntArray`, a `JsonWriter` bitmask)
+    def admissible(id: SymId): Boolean = program.symbolOf(id).exists(s =>
       (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)
-        && runScope.emits(unitOf(program, id)) && !isConstant(id)))
+        && runScope.emits(unitOf(program, id)) && !isConstant(id))
+    // a DERIVED slot in a unit this run does not emit is the BASE's published fact (O8 read as a
+    // value): retyping its symbol here coerces this module's calls into it, and emits nothing
+    def admissibleDerived(id: SymId): Boolean = program.symbolOf(id).exists(s =>
+      (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s) && !isConstant(id))
+    val (derivedIds, grownFrom) = hints.partition(id => program.symbolOf(id).exists(s =>
+      DerivedPolicy.keysOf(program, s).exists(derivedHints) && !spec.hints(s.fullName) && !spec.extraHints(s.fullName)))
+    // …except under the OVERRIDE edge: an override keeps its parent's signature, and a java-only
+    // intermediate (`InputAdapter`, absent from the reference) has no row of its own to say so
+    seeds = FlowPropagation.grow(program, grownFrom, admissible) ++
+      FlowPropagation.grow(FlowPropagation.overrideEdges(program), derivedIds, admissibleDerived)
     refuseOverlap(program)
     if seeds.isEmpty then return program
 
@@ -493,6 +519,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       if carriesOpaque(a.lhs) then a.copy(rhs = wrapFor(a.rhs, lhsDeclType(a.lhs)))
       else a.copy(rhs = unwrapIfOpaque(a.rhs))
     case x: Tree.ArrayAccess => x.copy(index = unwrapIfOpaque(x.index))
+    // a `switch` on a seed: java compares the selector to int CONSTANTS, which stay int (K51 xv),
+    // so the selector is read at the primitive; the emitter's null arm (§4.4) then sees an `Int`
+    // selector and writes none — an opaque over a primitive is never null.
+    case m: Tree.Match if carriesOpaque(m.scrutinee) => m.copy(scrutinee = unwrapIfOpaque(m.scrutinee))
     case other => other
 
   private def isSeedMethod(m: SymId)(using p: Program): Boolean =
@@ -586,7 +616,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     * (Java's auto-unbox is implicit in the TIR) — an opaque type IS the primitive at the JVM
     * level, so `Align(integerValue)` auto-unboxes the same way java's `int x = integerValue` does. */
   private def wrapCall(e: Term): Term =
-    if isPrim(e.tpe) || isBoxedPrim(e.tpe) then
+    if isPrim(e.tpe) || isBoxedPrim(e.tpe) || widensToPrim(e.tpe) then
       Tree.Apply(Tree.Ident(objSym, TypeRepr.NoType, e.origin), List(e), applySym, opaqueRef, e.origin)
     else e
 
@@ -604,25 +634,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       else if carriesOpaque(l) then unwrapCall(l)
       else l)
 
-  private def wrapReturns(body: Term)(using Program): Term = body match
-    case Tree.Return(Some(e), tp, o) if isPrim(e.tpe) => Tree.Return(Some(wrap(e)), tp, o)
-    case b: Tree.Block  => b.copy(stats = b.stats.map { case s: Term => wrapReturns(s); case s => s }, expr = wrapReturns(b.expr))
-    case i: Tree.If     => i.copy(thenp = wrapReturns(i.thenp), elsep = wrapReturns(i.elsep))
-    case e if isPrim(e.tpe) => wrap(e)
-    case other          => other
+  private def wrapReturns(body: Term)(using Program): Term =
+    ReturnSites.map(body)(e => if isPrim(e.tpe) then wrap(e) else e, e => if isPrim(e.tpe) then wrap(e) else e)
 
   /** the dual, for a method that kept the primitive and returns a value carrying a seed. Only a
     * `return` and the body's tail are coerced — an ordinary statement is not a value the method
     * yields. */
   private def unwrapReturns(body: Term)(using Program): Term =
-    def walk(t: Term, tail: Boolean): Term = t match
-      case Tree.Return(Some(e), tp, o) => Tree.Return(Some(unwrapIfOpaque(e)), tp, o)
-      case b: Tree.Block => b.copy(stats = b.stats.map { case s: Term => walk(s, false); case s => s },
-                                   expr = walk(b.expr, tail))
-      case i: Tree.If    => i.copy(thenp = walk(i.thenp, tail), elsep = walk(i.elsep, tail))
-      case other if tail => unwrapIfOpaque(other)
-      case other         => other
-    walk(body, true)
+    ReturnSites.map(body)(unwrapIfOpaque, unwrapIfOpaque)
 
   private def isOpaque(t: Term): Boolean   = headSym(t.tpe).contains(opaqueSym)
   private def isOpaqueArray(t: Term): Boolean = t.tpe match
@@ -630,6 +649,11 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       s == arraySym && e == opaqueSym
     case _ => false
   private def isPrim(t: TypeRepr): Boolean = headSym(t).contains(primSym)
+  /** java widens a narrower primitive at an assignment or argument (JLS 5.2, 5.3): `lastTime = 0`
+    * at a `long` seed is the literal `0`, and `Nanos(0)` widens the same way. */
+  private def widensToPrim(t: TypeRepr): Boolean = headSym(t).exists(narrowerPrimSyms)
+  private var narrowerPrimSyms: Set[SymId] = Set.empty
+  private val WideningOrder = List("scala.Byte", "scala.Short", "scala.Char", "scala.Int", "scala.Long", "scala.Float", "scala.Double")
   /** is this the boxed form of the spec's primitive (`java.lang.Integer` for `Int`)? Auto-unboxes
     * to the primitive, so `Align(integerValue)` is valid. */
   private def isBoxedPrim(t: TypeRepr): Boolean = boxedPrimSym != SymId.None && headSym(t).contains(boxedPrimSym)
