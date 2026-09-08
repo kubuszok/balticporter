@@ -26,6 +26,16 @@ final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
   def nullableIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.NullableMember))
   def parenlessIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.Parenless))
   def keepNameIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.KeepName))
+  /** (owner upstream FQN, property, getter name, setter name) — the bean step's configured-pair shape */
+  def propertyPairs: List[(String, String, String, Option[String])] =
+    def split(up: String): (String, String) =
+      val i = up.lastIndexOf('#'); val bare = up.take(i); val name = up.drop(i + 1).takeWhile(_ != '(')
+      (bare, name)
+    val getters = rows.filter(_.family == Family.Property).map(r => (split(r.upstream), r.target))
+    val setters = rows.filter(_.family == Family.PropertySetter).map(r => (split(r.upstream), r.target)).toMap
+    getters.map { case ((owner, g), prop) =>
+      (owner, prop, g, setters.collectFirst { case ((o, sname), p) if o == owner && p == prop => sname })
+    }.distinct
 
   /** upstream symbol fullNames (parameters `C#m#p`, methods and fields `C#m`) the reference spells
     * at the opaque type `targetFqn` (an `OpaqueSpec.Target.Existing` FQN, or a Mint's `fqn`). */
@@ -52,7 +62,10 @@ object DerivedPolicy:
     case OpaqueSlot, NullableMember, Parenless,
       /** a java accessor the reference keeps under its OWN name (`setInputProcessor` beside
         * `inputProcessor`): the bean step leaves the pair alone */
-      KeepName
+      KeepName,
+      /** a java getter / setter the reference spells as a `var`/`val` PROPERTY (`target` is its name):
+        * the bean step folds the pair as if configured — fluent setters included, under its own guards */
+      Property, PropertySetter
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN

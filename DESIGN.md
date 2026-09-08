@@ -2210,7 +2210,10 @@ own the same way (O8 read as a value). (4) Rows are RESOLVED to symbol ids befor
 `getCurrentEventTime` into `currentEventTime`) would otherwise leave a later deriving phase with a
 key nothing answers to — a `SymId` survives every rename. (5) A constant the reference spells at the
 opaque type (`Keys.A: Key`) is a derived seed: the constant rule (K51 xv) is about a hand hint reaching
-a constant by propagation.
+a constant by propagation. (6) A java accessor pair the reference spells as a `var`/`val` of the
+property's name, with no def of the java name, is a `Property`/`PropertySetter` row: the bean step
+folds it AS IF CONFIGURED — so the detector's refusal of a fluent setter (K51 xix) is answered by the
+reference's own spelling, under the same guards a configured pair takes; a configured key still wins.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

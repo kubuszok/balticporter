@@ -143,7 +143,16 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     runScope          = binder.run
     substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
     if derive then keepIds = binder.run.derived.keepNameIds
-    val (entries, malformed) = BeanPropertyTransform.parse(pairs)
+    val (configured, malformed) = BeanPropertyTransform.parse(pairs)
+    // derived pairs (the reference's `var x` for java's `getX`/`setX`): configured keys win
+    val derivedEntries =
+      if !derive then Nil
+      else binder.run.derived.propertyPairs.flatMap { case (owner, prop, g, s) =>
+        val key = MemberKey(owner, prop).render
+        Option.when(!configured.exists(_.key == key))(
+          BeanPropertyTransform.Entry(key, g + s.fold("")("/" + _), owner, prop, g, s))
+      }
+    val entries = configured ++ derivedEntries
     parsed      = entries
     ownFindings = malformed
     bound = entries.flatMap { e =>
@@ -178,7 +187,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   override def run(program: Program): Program =
     getters = Map.empty; setters = Map.empty; lhsOf = Map.empty; collapsed = Nil
     val scopeActive = scope != RuleScope.Only(Set.empty)
-    if pairs.isEmpty && !scopeActive then return program
+    if pairs.isEmpty && parsed.isEmpty && !scopeActive then return program
 
     val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
     def refuse(e: BeanPropertyTransform.Entry, why: String): scala.None.type =

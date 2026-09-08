@@ -222,6 +222,24 @@ class ReferencePolicySpec extends FunSuite:
     assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.In#getX()", "com.example.gfx.In#getX(int)"))
   }
 
+  test("a java accessor pair the reference spells as a `var` derives a property pair, fluent setter included") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Conf {
+        |  private int maxLength;
+        |  public int getMaxLength() { return maxLength; }
+        |  public Conf setMaxLength(int m) { maxLength = m; return this; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |class Conf { var maxLength: Int = 0 }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    assertEquals(r.policy.propertyPairs, List(("com.example.gfx.Conf", "maxLength", "getMaxLength", Some("setMaxLength"))))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

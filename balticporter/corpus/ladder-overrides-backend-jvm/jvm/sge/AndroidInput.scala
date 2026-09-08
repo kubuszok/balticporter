@@ -1,0 +1,451 @@
+/*
+ * Ported from libGDX - https://github.com/libgdx/libgdx
+ * Original source: backends/gdx-backend-android/.../DefaultAndroidInput.java
+ * Original authors: mzechner
+ * Licensed under the Apache License, Version 2.0
+ *
+ * Migration notes:
+ *   Renames: DefaultAndroidInput -> AndroidInput
+ *   Convention: delegates to ops interfaces; no Activity subclass needed in sge core
+ *   Idiom: split packages; Nullable; opaque types (Key, Button, Pixels, Nanos)
+ *   Audited: 2026-03-08
+ *
+ * Scala port copyright 2025-2026 Mateusz Kubuszok
+ */
+package sge
+
+import sge.Input.*
+import sge.platform.{ AndroidInputState, AndroidMouseHandler, AndroidTouchHandler, DefaultAndroidInputState, KeyEvent }
+import sge.platform.android.{ AndroidConfigOps, HapticsOps, InputDialogCallback, InputMethodOps, SensorOps, TouchInputOps }
+import lowlevel.Nullable
+import sge.utils.Nanos
+
+/** An implementation of [[Input]] for Android.
+  *
+  * Delegates sensor queries to [[SensorOps]], touch/mouse to [[AndroidInputState]] (mutated by [[AndroidTouchHandler]]/[[AndroidMouseHandler]]), keyboard to [[InputMethodOps]], and haptics to
+  * [[HapticsOps]].
+  *
+  * @param config
+  *   the Android application configuration
+  * @param sensorOps
+  *   sensor operations
+  * @param inputMethodOps
+  *   input method (keyboard/dialog) operations
+  * @param hapticsOps
+  *   haptic feedback operations
+  * @param touchInputOps
+  *   touch event data extraction
+  * @param lifecycleOps
+  *   lifecycle operations (for hardware keyboard check)
+  */
+class AndroidInput(
+  private val config:         AndroidConfigOps,
+  private val sensorOps:      SensorOps,
+  private val inputMethodOps: InputMethodOps,
+  private val hapticsOps:     HapticsOps,
+  private val touchInputOps:  TouchInputOps,
+  private val lifecycleOps:   sge.platform.android.AndroidLifecycleOps
+) extends Input {
+
+  // ── Handlers ────────────────────────────────────────────────────────
+
+  private[sge] val inputState:   DefaultAndroidInputState = DefaultAndroidInputState()
+  private[sge] val touchHandler: AndroidTouchHandler      = AndroidTouchHandler(touchInputOps)
+  private[sge] val mouseHandler: AndroidMouseHandler      = AndroidMouseHandler(touchInputOps)
+
+  // ── Key state ──────────────────────────────────────────────────────
+
+  private val pressedKeys:       Array[Boolean] = new Array[Boolean](256)
+  private val justPressedKeys:   Array[Boolean] = new Array[Boolean](256)
+  private var keyCount:          Int            = 0
+  private var _justTouched:      Boolean        = false
+  private var _currentEventTime: Long           = 0L
+
+  // ── Caught keys ────────────────────────────────────────────────────
+
+  private val caughtKeys: Array[Boolean] = new Array[Boolean](256)
+
+  // ── Input processor ────────────────────────────────────────────────
+
+  @volatile private var _inputProcessor: InputProcessor = scala.compiletime.uninitialized
+
+  // ── Keyboard height observer ───────────────────────────────────────
+
+  @volatile private var _keyboardHeightObserver: KeyboardHeightObserver = scala.compiletime.uninitialized
+
+  // ── Sensor queries ─────────────────────────────────────────────────
+
+  override def accelerometerX: Float = sensorOps.accelerometerX
+  override def accelerometerY: Float = sensorOps.accelerometerY
+  override def accelerometerZ: Float = sensorOps.accelerometerZ
+
+  override def gyroscopeX: Float = sensorOps.gyroscopeX
+  override def gyroscopeY: Float = sensorOps.gyroscopeY
+  override def gyroscopeZ: Float = sensorOps.gyroscopeZ
+
+  override def azimuth: Float = sensorOps.azimuth
+  override def pitch:   Float = sensorOps.pitch
+  override def roll:    Float = sensorOps.roll
+
+  override def getRotationMatrix(matrix: Array[Float]): Unit = {
+    val rm = sensorOps.rotationMatrix
+    System.arraycopy(rm, 0, matrix, 0, Math.min(rm.length, matrix.length))
+  }
+
+  // ── Pointer / touch queries ────────────────────────────────────────
+
+  override def maxPointers: Int = AndroidInputState.NUM_TOUCHES
+
+  override def x:               Pixels = Pixels(inputState.getTouchX(0))
+  override def getX(pointer: Int): Pixels = Pixels(inputState.getTouchX(pointer))
+
+  override def deltaX:               Pixels = Pixels(inputState.getDeltaX(0))
+  override def getDeltaX(pointer: Int): Pixels = Pixels(inputState.getDeltaX(pointer))
+
+  override def y:               Pixels = Pixels(inputState.getTouchY(0))
+  override def getY(pointer: Int): Pixels = Pixels(inputState.getTouchY(pointer))
+
+  override def deltaY:               Pixels = Pixels(inputState.getDeltaY(0))
+  override def getDeltaY(pointer: Int): Pixels = Pixels(inputState.getDeltaY(pointer))
+
+  override def touched: Boolean = inputState.synchronized {
+    var i = 0
+    while (i < AndroidInputState.NUM_TOUCHES) {
+      if (inputState.isTouched(i)) return true
+      i += 1
+    }
+    false
+  }
+
+  override def isTouched(pointer: Int): Boolean = inputState.isTouched(pointer)
+
+  override def justTouched(): Boolean = _justTouched
+
+  override def pressure:               Float = inputState.getPressure(0)
+  override def getPressure(pointer: Int): Float = inputState.getPressure(pointer)
+
+  override def isButtonPressed(button: Button): Boolean = inputState.synchronized {
+    val b = button.toInt
+    var i = 0
+    while (i < AndroidInputState.NUM_TOUCHES) {
+      if (inputState.isTouched(i) && inputState.getButton(i) == b) return true
+      i += 1
+    }
+    false
+  }
+
+  override def isButtonJustPressed(button: Button): Boolean =
+    // Simplified: check if just touched with the given button on pointer 0
+    _justTouched && inputState.getButton(0) == button.toInt
+
+  // ── Key state ──────────────────────────────────────────────────────
+
+  override def isKeyPressed(key: Key): Boolean = {
+    val k = key.toInt
+    if (k == Keys.ANY_KEY.toInt) keyCount > 0
+    else if (k >= 0 && k < 256) pressedKeys(k)
+    else false
+  }
+
+  override def isKeyJustPressed(key: Key): Boolean = {
+    val k = key.toInt
+    if (k == Keys.ANY_KEY.toInt) keyCount > 0
+    else if (k >= 0 && k < 256) justPressedKeys(k)
+    else false
+  }
+
+  /** Forward a key-down from the Android View to the key event queue.
+    *
+    * The host Activity/View must call this from its `dispatchKeyEvent` or an `OnKeyListener` wired to the GL surface view. The event is QUEUED here on the UI thread and applied on the render thread
+    * in [[processEvents]] (mirroring the touch event path).
+    *
+    * @param keycode
+    *   the key code (SGE/Android key code)
+    * @return
+    *   true if the key is caught (consumed by the engine)
+    */
+  def onKeyDown(keycode: Int): Boolean = {
+    inputState.postKeyEvent(KeyEvent.KEY_DOWN, keycode, 0, System.nanoTime())
+    isCatchKey(Key(keycode))
+  }
+
+  /** Forward a key-up from the Android View to the key event queue.
+    *
+    * The host Activity/View must call this from its `dispatchKeyEvent` or an `OnKeyListener` wired to the GL surface view. The event is QUEUED here on the UI thread and applied on the render thread
+    * in [[processEvents]] (mirroring the touch event path).
+    *
+    * @param keycode
+    *   the key code (SGE/Android key code)
+    * @return
+    *   true if the key is caught (consumed by the engine)
+    */
+  def onKeyUp(keycode: Int): Boolean = {
+    inputState.postKeyEvent(KeyEvent.KEY_UP, keycode, 0, System.nanoTime())
+    isCatchKey(Key(keycode))
+  }
+
+  /** Forward a typed character from the Android View to the key event queue.
+    *
+    * The host Activity/View must call this from its `dispatchKeyEvent` or an `OnKeyListener` wired to the GL surface view. The event is QUEUED here on the UI thread and applied on the render thread
+    * in [[processEvents]] (mirroring the touch event path).
+    *
+    * @param character
+    *   the typed character
+    */
+  def onKeyTyped(character: Char): Unit =
+    inputState.postKeyEvent(KeyEvent.KEY_TYPED, 0, character, System.nanoTime())
+
+  // ── Text input / keyboard ──────────────────────────────────────────
+
+  override def getTextInput(listener: TextInputListener, title: String, text: String, hint: String): Unit =
+    getTextInput(listener, title, text, hint, OnscreenKeyboardType.Default)
+
+  override def getTextInput(listener: TextInputListener, title: String, text: String, hint: String, `type`: OnscreenKeyboardType): Unit =
+    inputMethodOps.showTextInputDialog(
+      title,
+      text,
+      hint,
+      0, // no max length
+      onscreenKeyboardTypeToAndroidInputType(`type`),
+      new InputDialogCallback {
+        override def onInput(text: String): Unit = listener.input(text)
+        override def onCancel():            Unit = listener.canceled()
+      }
+    )
+
+  override def setOnscreenKeyboardVisible(visible: Boolean): Unit =
+    setOnscreenKeyboardVisible(visible, OnscreenKeyboardType.Default)
+
+  override def setOnscreenKeyboardVisible(visible: Boolean, `type`: OnscreenKeyboardType): Unit =
+    if (visible) inputMethodOps.showKeyboard(onscreenKeyboardTypeToAndroidInputType(`type`))
+    else inputMethodOps.hideKeyboard()
+
+  override def openTextInputField(configuration: input.NativeInputConfiguration): Unit = {
+    configuration.validate()
+    val wrapper   = configuration.textInputWrapper
+    val text      = wrapper.text
+    val selStart  = wrapper.selectionStart
+    val selEnd    = wrapper.selectionEnd
+    val inputType = onscreenKeyboardTypeToAndroidInputType(configuration.`type`)
+    val maxLen    = if (configuration.maxLength < 0) 0 else configuration.maxLength
+    val hint      = configuration.placeholder
+    val mask      = configuration.maskInput
+    val multi     = configuration.multiLine
+    val noCorrect = configuration.preventCorrection
+    val autoComp  = configuration.autoComplete
+    val validator = configuration.validator
+    val closeCb   = configuration.closeCallback
+
+    inputMethodOps.openNativeTextField(
+      text,
+      selStart,
+      selEnd,
+      inputType,
+      maxLen,
+      hint,
+      mask,
+      multi,
+      noCorrect,
+      if (autoComp.isDefined) autoComp.get else null, // scalafix:ok — Java interop boundary
+      (t, ss, se) => wrapper.writeResults(t, ss, se),
+      confirmative =>
+        if (closeCb != null) closeCb.onClose(confirmative) // scalafix:ok — may be uninitialized
+        else false,
+      if (validator != null) s => validator.validate(s) else null // scalafix:ok — may be uninitialized
+    )
+  }
+
+  override def closeTextInputField(isConfirmative: Boolean, callback: Nullable[input.NativeInputConfiguration.NativeInputCloseCallback]): Unit = {
+    inputMethodOps.closeNativeTextField(isConfirmative)
+    callback.foreach(cb => cb.onClose(isConfirmative))
+  }
+
+  override def textInputFieldOpened: Boolean =
+    inputMethodOps.isNativeTextFieldOpen
+
+  override def setKeyboardHeightObserver(observer: KeyboardHeightObserver): Unit =
+    _keyboardHeightObserver = observer
+
+  /** Notify the keyboard height observer of a height change. Called from the platform layer. */
+  private[sge] def notifyKeyboardHeight(height: Int): Unit = {
+    val obs = _keyboardHeightObserver
+    if (obs != null) obs.onKeyboardHeightChanged(height) // scalafix:ok
+  }
+
+  // ── Haptics ────────────────────────────────────────────────────────
+
+  override def vibrate(milliseconds: Int): Unit =
+    hapticsOps.vibrate(milliseconds)
+
+  override def vibrate(milliseconds: Int, fallback: Boolean): Unit =
+    if (hapticsOps.hasHapticsSupport || fallback) hapticsOps.vibrate(milliseconds)
+
+  override def vibrate(milliseconds: Int, amplitude: Int, fallback: Boolean): Unit =
+    hapticsOps.vibrateWithIntensity(milliseconds, amplitude, fallback)
+
+  override def vibrate(vibrationType: VibrationType): Unit =
+    hapticsOps.vibrateHaptic(vibrationType.ordinal)
+
+  // ── Compass ────────────────────────────────────────────────────────
+
+  override def currentEventTime: Nanos = Nanos(_currentEventTime)
+
+  // ── Caught keys ────────────────────────────────────────────────────
+
+  override def setCatchKey(keycode: Key, catchKey: Boolean): Unit = {
+    val k = keycode.toInt
+    if (k >= 0 && k < 256) caughtKeys(k) = catchKey
+  }
+
+  override def isCatchKey(keycode: Key): Boolean = {
+    val k = keycode.toInt
+    k >= 0 && k < 256 && caughtKeys(k)
+  }
+
+  // ── Input processor ────────────────────────────────────────────────
+
+  override def setInputProcessor(processor: InputProcessor): Unit =
+    _inputProcessor = processor
+
+  override def inputProcessor: InputProcessor = _inputProcessor
+
+  // ── Peripherals ────────────────────────────────────────────────────
+
+  override def isPeripheralAvailable(peripheral: Peripheral): Boolean = peripheral match {
+    case Peripheral.HardwareKeyboard => lifecycleOps.hasHardwareKeyboard()
+    case Peripheral.OnscreenKeyboard => true
+    case Peripheral.MultitouchScreen => touchInputOps.supportsMultitouch
+    case Peripheral.Accelerometer    => sensorOps.hasAccelerometer
+    case Peripheral.Compass          => sensorOps.hasCompass
+    case Peripheral.Vibrator         => hapticsOps.hasVibratorAvailable
+    case Peripheral.HapticFeedback   => hapticsOps.hasHapticsSupport
+    case Peripheral.Gyroscope        => sensorOps.hasGyroscope
+    case Peripheral.RotationVector   => sensorOps.hasRotationVector
+    case Peripheral.Pressure         => true // Android supports pressure natively
+  }
+
+  // ── Rotation / orientation ─────────────────────────────────────────
+
+  override def rotation: Int = 0 // requires WindowManager — needs wiring later
+
+  override def nativeOrientation: Orientation =
+    if (sensorOps.nativeOrientation == 0) Orientation.Landscape
+    else Orientation.Portrait
+
+  // ── Cursor (no-op on Android) ──────────────────────────────────────
+
+  override def setCursorCatched(catched: Boolean):           Unit    = ()
+  override def cursorCatched:                                Boolean = false
+  override def setCursorPosition(x:      Pixels, y: Pixels): Unit    = ()
+
+  // ── Per-frame processing ───────────────────────────────────────────
+
+  /** Process queued touch/scroll events through the input processor. Call once per frame from the render loop. */
+  private[sge] def processEvents(): Unit = {
+    // Clear just-pressed state
+    java.util.Arrays.fill(justPressedKeys, false)
+    _justTouched = false
+
+    val processor = _inputProcessor
+
+    inputState.synchronized {
+      val keyEvents    = inputState.drainKeyEvents()
+      val touchEvents  = inputState.drainTouchEvents()
+      val scrollEvents = inputState.drainScrollEvents()
+
+      keyEvents.foreach { e =>
+        _currentEventTime = e.timeStamp
+        e.eventType match {
+          case KeyEvent.KEY_DOWN =>
+            if (e.keyCode >= 0 && e.keyCode < 256) {
+              if (!pressedKeys(e.keyCode)) {
+                pressedKeys(e.keyCode) = true
+                keyCount += 1
+              }
+              justPressedKeys(e.keyCode) = true
+            }
+            if (processor != null) processor.keyDown(Key(e.keyCode)) // scalafix:ok
+
+          case KeyEvent.KEY_UP =>
+            if (e.keyCode >= 0 && e.keyCode < 256) {
+              if (pressedKeys(e.keyCode)) {
+                pressedKeys(e.keyCode) = false
+                keyCount -= 1
+              }
+            }
+            if (processor != null) processor.keyUp(Key(e.keyCode)) // scalafix:ok
+
+          case KeyEvent.KEY_TYPED =>
+            if (processor != null) processor.keyTyped(e.character) // scalafix:ok
+
+          case _ => ()
+        }
+      }
+
+      touchEvents.foreach { e =>
+        _currentEventTime = e.timeStamp
+        e.eventType match {
+          case TouchInputOps.TOUCH_DOWN =>
+            _justTouched = true
+            if (processor != null) processor.touchDown(Pixels(e.x), Pixels(e.y), e.pointer, Input.Button(e.button)) // scalafix:ok
+
+          case TouchInputOps.TOUCH_UP =>
+            if (processor != null) processor.touchUp(Pixels(e.x), Pixels(e.y), e.pointer, Input.Button(e.button)) // scalafix:ok
+
+          case TouchInputOps.TOUCH_DRAGGED =>
+            if (processor != null) processor.touchDragged(Pixels(e.x), Pixels(e.y), e.pointer) // scalafix:ok
+
+          case TouchInputOps.TOUCH_MOVED =>
+            if (processor != null) processor.mouseMoved(Pixels(e.x), Pixels(e.y)) // scalafix:ok
+
+          case TouchInputOps.TOUCH_CANCELLED =>
+            if (processor != null) processor.touchCancelled(Pixels(e.x), Pixels(e.y), e.pointer, Input.Button(e.button)) // scalafix:ok
+
+          case _ => ()
+        }
+      }
+
+      scrollEvents.foreach { e =>
+        _currentEventTime = e.timeStamp
+        if (processor != null) processor.scrolled(e.scrollAmountX.toFloat, e.scrollAmountY.toFloat) // scalafix:ok
+      }
+    }
+  }
+
+  /** Forward a touch event from the Android View to the touch handler.
+    *
+    * The host Activity must call this from its `dispatchTouchEvent` or an `OnTouchListener` wired to the GL surface view.
+    *
+    * @param event
+    *   the Android `MotionEvent` (as `AnyRef`)
+    */
+  def onTouchEvent(event: AnyRef): Unit =
+    touchHandler.onTouch(event, inputState)
+
+  /** Forward a generic motion event (mouse hover/scroll) from the Android View.
+    *
+    * @param event
+    *   the Android `MotionEvent` (as `AnyRef`)
+    * @return
+    *   true if the event was handled
+    */
+  def onGenericMotionEvent(event: AnyRef): Boolean =
+    mouseHandler.onGenericMotion(event, inputState)
+
+  /** Register sensor listeners based on configuration. */
+  private[sge] def registerSensors(): Unit = sensorOps.registerListeners(config)
+
+  /** Unregister sensor listeners. */
+  private[sge] def unregisterSensors(): Unit = sensorOps.unregisterListeners()
+
+  // ── Keyboard type mapping ──────────────────────────────────────────
+
+  private def onscreenKeyboardTypeToAndroidInputType(`type`: OnscreenKeyboardType): Int = `type` match {
+    case OnscreenKeyboardType.Default   => 0x00000001 // TYPE_CLASS_TEXT
+    case OnscreenKeyboardType.NumberPad => 0x00000002 // TYPE_CLASS_NUMBER
+    case OnscreenKeyboardType.PhonePad  => 0x00000003 // TYPE_CLASS_PHONE
+    case OnscreenKeyboardType.Email     => 0x00000001 | 0x00000020 // TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+    case OnscreenKeyboardType.Password  => 0x00000001 | 0x00000080 // TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_PASSWORD
+    case OnscreenKeyboardType.URI       => 0x00000001 | 0x00000010 // TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_URI
+  }
+}

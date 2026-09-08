@@ -2273,6 +2273,37 @@ wrapped for-each iterable is dereferenced. `sge-l0` 0 = 0, Native 0, JS 14 = 14,
 `demo-run` 12/12, **`sge-suite-check` 893 -> 875** (member-shape 217 -> 190; context 41 -> 50, a
 regression to read: nine more sites want a context after the split and the math opaques).
 
+**Cards from the residue at 875 (2026-09-08 03:00).** *member-shape 190* is a list of hand-port extras
+and renames, each a few members (step 5's list): lls's `DynamicArray.length` (a BASE extra),
+`Animation.PlayMode.isLooping/isReversed`, `PoolManager.addPool[T: ClassTag]`, `FileHandleResolver.
+Resolution/Prefix`, `TextureAtlasData.Region`, `AudioUtils` (sge-only), `Polygon.vertex`, the vector
+operators (`+`, `*` — extension methods in sge), `Actor.touchable`/`InputEvent.eventType` exposed
+vars, `gl20Available` casing, `Nullable[GL20]`/`Nullable[String]` at two more members. *context 50*
+is the classes sge builds WITHOUT a context and gives their dependencies as constructor parameters
+(`GLProfiler(gl)`, `VertexBufferObject`, `PerformanceCounter`, `AssetManager`, `Logger`,
+`ObjLoader`): a constructor-shape family, not a threading one. *android 193*: landed below (52 left, all the file layer's shape). *tiled 75*, *particles 42*: the JSON step's parts 3–4.
+*filetype 39*: sge's context-free `FileHandle(file, type, externalPath)` — the file layer's shape.
+
+**Android layer and derived `var` pairs (2026-09-08 03:20).** sge core's JVM row now carries
+`sge-jvm-platform/api` (31 ops interfaces) and sge's 14 `scalajvm` Android adapters as JVM-row
+injections, reconciled exactly as the desktop copies were (`type`, `GLVersion`, `GL3xAvailable`,
+`gl3x: GL3x`, `getX(pointer)`, parenless `exists`, `Preferences.put/get` over `mutable.Map[String, ?]`,
+`Audio.close()`, `FileHandle(file, type)(using Sge)` with a context thunk on the files adapter,
+`JavaLoggingApplication` for logging + frame hooks) — `ADJUSTMENTS.tsv` lists every one. Engine
+(universal): the deriver reads a java accessor pair the reference spells as a `var`/`val` as
+`Property`/`PropertySetter` rows, and the bean step folds those AS IF CONFIGURED — this is how a
+FLUENT setter's pair (`NativeInputConfiguration.setMultiLine(...): this`, refused by the detector)
+gets the reference's own spelling; a configured key still wins; 377 getter rows, 239 setter rows,
+14 refusals counted (`policy` 4 -> 18: static getters, a taken name, no nilary overload, a
+`java.lang.Enum` accessor). `idiom(converted)` 1700 -> 1400 is the same pairs moving from the
+detector to policy. Numbers: `sge-l0` 0 = 0 (JVM, 18 -> 0 over the batch), Native 0, JS 14 = 14,
+suite 216/220, `demo-check` 0, `demo-run` 12/12, `lls` unchanged (the differential's two
+`SelectTest` failures are the baseline's). **`sge-suite-check` 875 -> 722**: android 193 -> 52,
+member-shape 190 -> 178. The android residue is now sge's OWN JVM-row tests: 29 `No given Sge` +
+22 `FileHandle(...)` + 15 `DesktopFileHandle(...)` sites — the context-free file layer (the
+*filetype* card), `Timer.disposeThread`, `FileHandleResolver.Resolution/Prefix`,
+`PoolManager.addPool[T: ClassTag]` (member-shape extras), `XmlElement` (JS residue's type).
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

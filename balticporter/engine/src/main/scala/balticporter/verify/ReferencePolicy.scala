@@ -205,6 +205,15 @@ object ReferencePolicy:
                     if keptName && !twin then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.KeepName, rowKey(ms, overloaded), s"def ${ms.name}")
                   }
+                  // the reference spells the accessor as a PROPERTY (`var x`) and has no def of the java name:
+                  // the pair folds as if configured (the fluent setters a detector refuses included)
+                  propertyName(ms.name).foreach { prop =>
+                    val asProp = lookup(mp, "prop", prop, 0, pkg).isDefined && lookup(mp, "def", ms.name, n, pkg).isEmpty
+                    if asProp && n == 0 && !ms.name.startsWith("set") then
+                      rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), s"var $prop", prop)
+                    else if asProp && n == 1 && ms.name.startsWith("set") then
+                      rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), s"var $prop", prop)
+                  }
                   val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
                   lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match
                     case Some(cands) => agree(ms, cands, methodRows(d, ms, overloaded, _))
