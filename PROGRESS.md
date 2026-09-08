@@ -2436,6 +2436,13 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Tiled JSON DTOs injected (2026-09-08 13:00).** `TmjJson.scala` (184 lines, 12 case classes for the Tiled
+JSON format) and `TiledProjectJson.scala` (49 lines) are SGE-original files with no java counterpart; they
+compile against the port's `sge.utils.{ Json, fieldName }` aliases (the injected `JsonCodecs.scala`). Tried
+`ParticleEffectCodecs.scala` too (2060 lines) — fails with 37 errors: it references `v.active` where the
+port has `v._active` (the underscore field rename); left out. **`sge-suite-check` 230 -> 178** (tiled
+55 -> 3). JVM 0, JS 0, Native 0, lls 0, suite 216/216, demos 12/12.
+
 **JS at zero (2026-09-08 12:45).** Dropped `DataBuffer` (the `FilterOutputStream.out` JS error);
 that exposed 6 latent errors in the JS-specific injected files: `BrowserPreferences.put` took
 `scala.collection.Map` not the port's `mutable.Map`, `AudioControlGraphPool` overrode `protected[utils]`

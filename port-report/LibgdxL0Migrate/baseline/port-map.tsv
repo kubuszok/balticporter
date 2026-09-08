@@ -966,6 +966,8 @@ type		sge.graphics.g2d.Gdx2dDraw	Added	-		0
 type		sge.graphics.g3d.loader.G3dBinaryModelLoader	Added	-		0		
 type		sge.graphics.g3d.loader.G3dModelJson	Added	-		0		
 type		sge.graphics.g3d.particles.AssetTypeRegistry	Added	-		0		
+type		sge.maps.tiled.TiledProjectJson	Added	-		0		
+type		sge.maps.tiled.TmjJson	Added	-		0		
 type		sge.math.Degrees	Added	-		0		
 type		sge.math.Epsilon	Added	-		0		
 type		sge.math.Radians	Added	-		0		
