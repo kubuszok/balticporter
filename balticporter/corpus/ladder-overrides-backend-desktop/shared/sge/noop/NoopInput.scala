@@ -50,19 +50,19 @@ final class NoopInput extends Input {
 
   override def x: Pixels = Pixels.zero
 
-  override def getX(pointer: Int): Pixels = Pixels.zero
+  override def x(pointer: Int): Pixels = Pixels.zero
 
   override def deltaX: Pixels = Pixels.zero
 
-  override def getDeltaX(pointer: Int): Pixels = Pixels.zero
+  override def deltaX(pointer: Int): Pixels = Pixels.zero
 
   override def y: Pixels = Pixels.zero
 
-  override def getY(pointer: Int): Pixels = Pixels.zero
+  override def y(pointer: Int): Pixels = Pixels.zero
 
   override def deltaY: Pixels = Pixels.zero
 
-  override def getDeltaY(pointer: Int): Pixels = Pixels.zero
+  override def deltaY(pointer: Int): Pixels = Pixels.zero
 
   // ---- touch / button / key ----
 
@@ -74,7 +74,7 @@ final class NoopInput extends Input {
 
   override def pressure: Float = 0.0f
 
-  override def getPressure(pointer: Int): Float = 0.0f
+  override def pressure(pointer: Int): Float = 0.0f
 
   override def isButtonPressed(button: Button): Boolean = false
 

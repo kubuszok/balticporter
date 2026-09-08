@@ -18,6 +18,7 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
   /** member -> the JVM name the reference gives it; bound only when `derive` is on. */
   private var derivedTargetNames: Map[SymId, String] = Map.empty
   private var derivedFieldNames: Map[SymId, String]  = Map.empty
+  private var derivedRenames: Map[SymId, String]     = Map.empty
 
   /** exactly two edges needed; see the class note for why no others are declared. */
   override def runsBefore: Set[String] = Set("type-redirect", "package-rename")
@@ -108,6 +109,7 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
     if derive then
       derivedTargetNames = binder.run.derived.targetNames
       derivedFieldNames  = binder.run.derived.fieldNames
+      derivedRenames     = binder.run.derived.renames
 
   /** refusals this run made — reset per run, since a phase instance is reused across translations. */
   private var runFindings: List[PolicyFinding] = Nil
@@ -124,7 +126,9 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
     runFindings = Nil
     val live = boundRenames.filter(_.hits.nonEmpty)
     // a derive-only run (no configured rename) still annotates the reference's target names
-    val fieldMoves = derivedFieldNames.filter((id, _) => program.owned(id) && scope.emitsSymbol(program, id))
+    val configured = live.flatMap(_.hits).toSet
+    val fieldMoves = (derivedFieldNames ++ derivedRenames)
+      .filter((id, _) => program.owned(id) && scope.emitsSymbol(program, id) && !configured(id))
     if live.isEmpty && derivedTargetNames.isEmpty && fieldMoves.isEmpty then program
     else
       // units this run does not emit; RunScope.whole yields the empty set (single-module/spec).
@@ -132,7 +136,10 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
       val graph     = OverrideGraph.build(program, baseUnits = baseUnits)
       val requests  = live.flatMap(e => e.hits.map(h =>
         MemberRenamer.Request(h, e.newName, Reason.Configured(name, e.key), e.key, e.key))) ++
-        fieldMoves.toList.sortBy(_._1.raw).map { (id, to) =>
+        // one request per override component: the derived rows name every declaration of it
+        fieldMoves.toList.sortBy(_._1.raw).filter { (id, to) =>
+          !graph.closureOf(id).members.exists(o => o != id && o.raw < id.raw && fieldMoves.get(o).contains(to))
+        }.map { (id, to) =>
           val key = "derive:" + program.symbolOf(id).map(_.fullName).getOrElse(id.raw)
           MemberRenamer.Request(id, to, Reason.Configured(name, key), key, key)
         }

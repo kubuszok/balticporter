@@ -2294,7 +2294,12 @@ reference declares under an underscore name (`var _fillX` for `fillX`, whose nam
 `FieldName` row keyed `fullName:field` — a field shares its `fullName` with a same-named method, and the
 key keeps the row off the method; the rename step moves the field ahead of the emitter's own `x$field`
 clash repair, and the field's type rows are read at the underscore name. A PRIVATE reference member is
-not surface and derives nothing.
+not surface and derives nothing. (24) A java accessor WITH parameters the reference spells under the
+property name, same parameter types and no def of the java name (`x(pointer)` for `getX(int)`,
+`referenceCount(name)`, `swingTwist(...)`, the acronym-lowered form included) is a `Rename` row: the rename
+step moves the whole override component through `MemberRenamer` (one request per component) or refuses
+with the finding; a configured rename on the same member wins. 60 rows on libGDX core, replacing seven
+hand-listed extras and one manifest rename.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

@@ -32,6 +32,9 @@ final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
   /** member id -> the JVM name the reference gives it */
   def targetNames: Map[SymId, String] =
     rows.filter(_.family == Family.TargetName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
+  /** member id -> the name the reference spells a PARAMETRISED accessor under (`x(pointer)` for `getX(int)`) */
+  def renames: Map[SymId, String] =
+    rows.filter(_.family == Family.Rename).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
   /** field id -> the name the reference declares the field under (`_fillX` for java's `fillX`) */
   def fieldNames: Map[SymId, String] =
     rows.filter(_.family == Family.FieldName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
@@ -91,7 +94,11 @@ object DerivedPolicy:
       /** a java FIELD the reference declares under an underscore name (`var _fillX` for `fillX`,
         * whose name the property took): `target` is that name; the rename step moves the field
         * ahead of the emitter's own `x$field` clash repair */
-      FieldName
+      FieldName,
+      /** a java accessor WITH parameters the reference spells under the property name (`x(pointer)`
+        * for `getX(int pointer)`, `referenceCount(name)` for `getReferenceCount(String)`): `target`
+        * is that name; the rename step moves the whole override component or refuses */
+      Rename
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN

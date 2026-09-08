@@ -376,6 +376,28 @@ class ReferencePolicySpec extends FunSuite:
     assert(fieldRows.exists(_.family == DerivedPolicy.Family.NullableMember))
   }
 
+  test("a getter WITH parameters the reference spells under the property name is a Rename row") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public interface Input {
+        |  int getX();
+        |  int getX(int pointer);
+        |  boolean isButtonPressed(int button);
+        |  int getGLVersion(int slot);
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |trait Input { def x: Int; def x(pointer: Int): Int; def isButtonPressed(button: Int): Boolean; def glVersion(slot: Int): Int }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val renames = r.policy.rows.filter(_.family == DerivedPolicy.Family.Rename)
+    assert(clue(renames).exists(row => row.upstream.startsWith("com.example.gfx.Input#getX(") && row.target == "x"))
+    assert(renames.exists(row => row.upstream == "com.example.gfx.Input#getGLVersion" && row.target == "glVersion"))
+    assert(!renames.exists(_.upstream.contains("isButtonPressed")))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

@@ -577,7 +577,12 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
       "com.kubuszok"           % "pnm-provider-sge-desktop" % "0.1.2-33-gcf10406-SNAPSHOT",
       "com.kubuszok"           % "pnm-provider-sge-angle"   % "0.1.2-33-gcf10406-SNAPSHOT")))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings ++ Seq(
-    libraryDependencies += "org.scala-js" %% "scalajs-dom" % "2.8.1"))
+    libraryDependencies ++= Seq(
+      "org.scala-js"  %% "scalajs-dom"         % "2.8.1",
+      // sge's browser row reads its resources through `multiarch.resources.PlatformResources`, served by
+      // the object the plugin generates (`BrowserApplication` references it once against DCE)
+      "com.kubuszok"  %% "multiarch-resources" % "0.4.0"))
+    ++ _root_.multiarch.sbt.MultiArchResourcesPlugin.embeddedResourcesSettings(objectName = "sge.platform.GeneratedEmbeddedResources"))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings ++ Seq(
     libraryDependencies ++= Seq(
       "com.kubuszok" % "sn-provider-sge"  % "0.1.2-33-gcf10406-SNAPSHOT",

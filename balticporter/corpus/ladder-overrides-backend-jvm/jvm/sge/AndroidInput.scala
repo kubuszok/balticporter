@@ -97,16 +97,16 @@ class AndroidInput(
   override def maxPointers: Int = AndroidInputState.NUM_TOUCHES
 
   override def x:               Pixels = Pixels(inputState.getTouchX(0))
-  override def getX(pointer: Int): Pixels = Pixels(inputState.getTouchX(pointer))
+  override def x(pointer: Int): Pixels = Pixels(inputState.getTouchX(pointer))
 
   override def deltaX:               Pixels = Pixels(inputState.getDeltaX(0))
-  override def getDeltaX(pointer: Int): Pixels = Pixels(inputState.getDeltaX(pointer))
+  override def deltaX(pointer: Int): Pixels = Pixels(inputState.getDeltaX(pointer))
 
   override def y:               Pixels = Pixels(inputState.getTouchY(0))
-  override def getY(pointer: Int): Pixels = Pixels(inputState.getTouchY(pointer))
+  override def y(pointer: Int): Pixels = Pixels(inputState.getTouchY(pointer))
 
   override def deltaY:               Pixels = Pixels(inputState.getDeltaY(0))
-  override def getDeltaY(pointer: Int): Pixels = Pixels(inputState.getDeltaY(pointer))
+  override def deltaY(pointer: Int): Pixels = Pixels(inputState.getDeltaY(pointer))
 
   override def touched: Boolean = inputState.synchronized {
     var i = 0
@@ -122,7 +122,7 @@ class AndroidInput(
   override def justTouched(): Boolean = _justTouched
 
   override def pressure:               Float = inputState.getPressure(0)
-  override def getPressure(pointer: Int): Float = inputState.getPressure(pointer)
+  override def pressure(pointer: Int): Float = inputState.getPressure(pointer)
 
   override def isButtonPressed(button: Button): Boolean = inputState.synchronized {
     val b = button.toInt

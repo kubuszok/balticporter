@@ -12,3 +12,5 @@
 // `sbt-projectmatrix` is NOT here: it is merged into sbt 2.0, so `projectMatrix` is built in.
 addSbtPlugin("org.scala-js"    % "sbt-scalajs"      % "1.22.0")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.12")
+// multiarch-scala's resource embedder: sge's Scala.js row serves its resources from a generated object
+addSbtPlugin("com.kubuszok"     % "sbt-multiarch-scala" % "0.4.0")

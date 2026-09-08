@@ -287,6 +287,15 @@ object ReferencePolicy:
                       (n == 1 && ms.name.startsWith("set") && refDefSetter))
                     if asProp && n == 0 && !ms.name.startsWith("set") then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), s"var $prop", prop)
+                    // a getter WITH parameters the reference spells under the property name, same
+                    // parameter types (`x(pointer)` for `getX(int)`): a rename, not a property
+                    else if javaNameGone && n >= 1 && !ms.name.startsWith("set") then
+                      val acr = propertyRaw(ms.name).map(lowerAcronym).getOrElse(prop)
+                      List(prop, acr).distinct.iterator
+                        .map(nm => nm -> lookup(mp, "def", nm, n, pkg).toList.flatten)
+                        .map((nm, cs) => nm -> bestByParams(cs, d.paramss.flatten, d.tparams.map(_.symbol).toSet))
+                        .find(_._2.nonEmpty)
+                        .foreach((nm, _) => rows += DerivedPolicy.Row(DerivedPolicy.Family.Rename, rowKey(ms, overloaded), s"def $nm", nm))
                     else if asProp && n == 1 && ms.name.startsWith("set") then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), s"var $prop", prop)
                     // the reference spells the property with its acronym LOWERED (`gl30Available`): the

@@ -233,19 +233,19 @@ class DefaultDesktopInput private[sge] (
 
   override def x: Pixels = Pixels(_mouseX)
 
-  override def getX(pointer: Int): Pixels = if (pointer == 0) Pixels(_mouseX) else Pixels.zero
+  override def x(pointer: Int): Pixels = if (pointer == 0) Pixels(_mouseX) else Pixels.zero
 
   override def deltaX: Pixels = Pixels(_deltaX)
 
-  override def getDeltaX(pointer: Int): Pixels = if (pointer == 0) Pixels(_deltaX) else Pixels.zero
+  override def deltaX(pointer: Int): Pixels = if (pointer == 0) Pixels(_deltaX) else Pixels.zero
 
   override def y: Pixels = Pixels(_mouseY)
 
-  override def getY(pointer: Int): Pixels = if (pointer == 0) Pixels(_mouseY) else Pixels.zero
+  override def y(pointer: Int): Pixels = if (pointer == 0) Pixels(_mouseY) else Pixels.zero
 
   override def deltaY: Pixels = Pixels(_deltaY)
 
-  override def getDeltaY(pointer: Int): Pixels = if (pointer == 0) Pixels(_deltaY) else Pixels.zero
+  override def deltaY(pointer: Int): Pixels = if (pointer == 0) Pixels(_deltaY) else Pixels.zero
 
   override def touched: Boolean = {
     val handle = window.windowHandle
@@ -260,9 +260,9 @@ class DefaultDesktopInput private[sge] (
 
   override def isTouched(pointer: Int): Boolean = if (pointer == 0) touched else false
 
-  override def pressure: Float = getPressure(0)
+  override def pressure: Float = pressure(0)
 
-  override def getPressure(pointer: Int): Float = if (isTouched(pointer)) 1f else 0f
+  override def pressure(pointer: Int): Float = if (isTouched(pointer)) 1f else 0f
 
   override def isButtonPressed(button: Button): Boolean =
     windowing.getMouseButton(window.windowHandle, button.toInt) == GLFW_PRESS

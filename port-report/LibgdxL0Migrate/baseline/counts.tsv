@@ -17,7 +17,7 @@ dependency-coverage	37
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
 derived(ambiguous)	23
-derived(rows)	6594
+derived(rows)	6652
 derived(unmatched)	195
 heap-pollution	12
 idiom(converted)	513

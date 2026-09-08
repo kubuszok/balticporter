@@ -2436,6 +2436,17 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Parametrised getters renamed off the reference (2026-09-08 10:00).** sge spells `getX(int pointer)` as
+`x(pointer)`, `getReferenceCount(name)` as `referenceCount(name)`, `getSwingTwist(...)` as `swingTwist(...)`:
+the deriver now emits a `Rename` row for a getter with parameters whose property-named twin has the same
+parameter types and no def of the java name (60 rows), and the rename step moves each override component
+once. Seven hand-listed extras and the `getReferenceCount` manifest rename came off; the injected
+`NoopInput`/`DefaultDesktopInput`/`AndroidInput` copies are back on sge's spellings. The JS row gained
+multiarch-scala's resource embedder (`sbt-multiarch-scala` 0.4.0 + `multiarch-resources`), so
+`sge.platform.GeneratedEmbeddedResources` exists: **JS 3 -> 1** (the last: `DataBuffer` reads
+`FilterOutputStream.out`, which the Scala.js javalib does not expose). `sge-l0` 0 = 0, Native 0, lls 0,
+suite 216/220, demos 12/12. **`sge-suite-check` 272 -> 263** (arity 6 -> 1).
+
 **Underscore field names off the reference (2026-09-08 09:15).** sge moves a java field whose name a
 property took under an underscore (`var _fillX`, `_row`, `_expandX`: 36 fields in `Cell` alone) where the
 emitter minted `fillX$field`; the deriver now reads the underscore twin as a `FieldName` row (keyed apart

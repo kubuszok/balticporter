@@ -442,3 +442,32 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(out.contains("_fillX = 1.0f") || out.contains("this._fillX = 1.0f"), out)
     assert(phase.policyReport.findings.isEmpty, phase.policyReport.findings.mkString("\n"))
   }
+
+  test("a derived Rename row moves a parametrised getter over its whole override component") {
+    val src =
+      """package com.demo;
+        |interface Input { int getX(int pointer); }
+        |class Noop implements Input { public int getX(int pointer) { return 0; } }
+        |class User { int f(Input in) { return in.getX(1); } }
+        |""".stripMargin
+    val reference =
+      """package com.demo
+        |trait Input { def x(pointer: Int): Int }
+        |class Noop extends Input { def x(pointer: Int): Int = 0 }
+        |class User { def f(in: Input): Int = in.x(1) }
+        |""".stripMargin
+    val dir = java.nio.file.Files.createTempDirectory("derivedrename")
+    java.nio.file.Files.writeString(dir.resolve("Input.scala"), reference)
+    val decls   = balticporter.verify.ApiParityCheck.parseSurface(List(dir)).toOption.get
+    val program = SpoonTir.fromSource(src, "Input.java")
+    val derived = balticporter.verify.ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val phase   = new MemberRenameTransform(derive = true)
+    val (after, log) = Pipeline.runTraced(program, List(phase), new PolicyBinder(program, program.members, scope))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("def x(pointer: scala.Int): scala.Int"))
+    assert(out.contains("in.x(1)"), out)
+    assert(!out.contains("def getX") && !out.contains("in.getX"), out)
+    assertEquals(out.linesIterator.count(_.contains("porter: renamed-member")), 2, out)
+    assert(phase.policyReport.findings.isEmpty, phase.policyReport.findings.mkString("\n"))
+  }
