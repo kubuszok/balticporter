@@ -2436,6 +2436,17 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Residue at 263 — blocked on engine mechanisms (2026-09-08 10:30).** Suite 263, all structural:
+tiled 55 + particles 36 (JSON layer — sge's jsoniter codecs, scope decision), member-shape 68 (JSON
+members 18, `disposeThread` 5, `AlignMode` local enum 7, `TextureAtlasData.Region` inner class 4,
+vector operators 11 needing `this.type` I1, `DynamicArray.length` 7 returning `DynamicArray` not
+`Array`, private `_clip`/`_debug` 5, others 11), type-shape 36 (varargs ctors K6.5 — `Animation T*`,
+`InputMultiplexer InputProcessor*`, VBO `VertexAttribute*`, `FloatArray`/`ShortArray`), context 16
+(VBO varargs + `Sge`, `GLProfiler(graphics)` threading), nullable 11, assertion-mismatch 10 (cascades),
+other 5 (`tableAlign` private, `PoolManager.poolOrNull` sge-only), opaque 2, android 1, arity 1. JS 1
+(`DataBuffer.out` on Scala.js javalib). Tried dropping `DataBuffer`/`DataOutput` — cascade (263 -> 290);
+reverted. `Selection.toList` spliced (masked by cascade).
+
 **Parametrised getters renamed off the reference (2026-09-08 10:00).** sge spells `getX(int pointer)` as
 `x(pointer)`, `getReferenceCount(name)` as `referenceCount(name)`, `getSwingTwist(...)` as `swingTwist(...)`:
 the deriver now emits a `Rename` row for a getter with parameters whose property-named twin has the same
