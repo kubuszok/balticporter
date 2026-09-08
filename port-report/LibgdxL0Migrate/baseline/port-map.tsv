@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=a59494a04fd51c06	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=3cc6fbc74106012b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1463,6 +1463,7 @@ member	com.badlogic.gdx.InputEventQueue#touchUp(Pixels,Pixels,int,Button,Nanos)	
 member	com.badlogic.gdx.InputMultiplexer#<init>()	sge.InputMultiplexer#<init>()	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	28	0dc86f3fd7196148	
 member	com.badlogic.gdx.InputMultiplexer#<init>(Array)	sge.InputMultiplexer#<init>(Array<InputProcessor>)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	31	346834777927b84c	
 member	com.badlogic.gdx.InputMultiplexer#<stmt1>	sge.InputMultiplexer#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
+member	com.badlogic.gdx.InputMultiplexer#<stmt2>	sge.InputMultiplexer#<stmt2>	Renamed	-	<synthetic>	0	29c1e6e7dd531099	
 member	com.badlogic.gdx.InputMultiplexer#addProcessor(InputProcessor)	sge.InputMultiplexer#addProcessor(InputProcessor)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	45	bd5e1d410e600ff7	
 member	com.badlogic.gdx.InputMultiplexer#addProcessor(int,InputProcessor)	sge.InputMultiplexer#addProcessor(int,InputProcessor)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	35	2e9e7c4491674749	
 member	com.badlogic.gdx.InputMultiplexer#clear()	sge.InputMultiplexer#clear()	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	61	68bf679fe4471b7a	
@@ -3966,6 +3967,7 @@ member	com.badlogic.gdx.graphics.VertexAttributes$Usage#TextureCoordinates	sge.g
 member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,Array,MkArray)	sge.graphics.g2d.Animation#<init>(float,Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	76	953dd35d61e750b2	
 member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,DynamicArray,MkArray)	sge.graphics.g2d.Animation#<init>(float,DynamicArray<?>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	56	ba11d623d6e86a20	
 member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,DynamicArray,PlayMode,MkArray)	sge.graphics.g2d.Animation#<init>(float,DynamicArray<?>,PlayMode,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	67	8405be45dc3795db	
+member	com.badlogic.gdx.graphics.g2d.Animation#<stmt1>	sge.graphics.g2d.Animation#<stmt1>	Renamed	-	<synthetic>	0	1e6ce6b987e619e6	
 member	com.badlogic.gdx.graphics.g2d.Animation#getAnimationDuration	sge.graphics.g2d.Animation#animationDuration	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	45	6b9572e758d3b288	name=animationDuration$field
 member	com.badlogic.gdx.graphics.g2d.Animation#getAnimationDuration()	sge.graphics.g2d.Animation#animationDuration	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	205	0c2cfc08a27c75eb	form=parenless
 member	com.badlogic.gdx.graphics.g2d.Animation#getFrameDuration	sge.graphics.g2d.Animation#frameDuration	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	44	c4a4d28eb07b0729	name=frameDuration$field
@@ -9334,6 +9336,7 @@ member	com.badlogic.gdx.graphics.glutils.VertexArray#<stmt2>	sge.graphics.glutil
 member	com.badlogic.gdx.graphics.glutils.VertexArray#<stmt3>	sge.graphics.glutils.VertexArray#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexArray.java	60	7366ef7fb97a761a	
 member	com.badlogic.gdx.graphics.glutils.VertexArray#<stmt4>	sge.graphics.glutils.VertexArray#<stmt4>	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexArray.java	61	0a4bf5aca4abb3c9	
 member	com.badlogic.gdx.graphics.glutils.VertexArray#<stmt5>	sge.graphics.glutils.VertexArray#<stmt5>	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexArray.java	62	d43753756f8b776e	
+member	com.badlogic.gdx.graphics.glutils.VertexArray#<stmt6>	sge.graphics.glutils.VertexArray#<stmt6>	Renamed	-	<synthetic>	0	b1cb2cd5a50670f0	
 member	com.badlogic.gdx.graphics.glutils.VertexArray#getAttributes	sge.graphics.glutils.VertexArray#attributes	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexArray.java	40	a99040c9f39a200e	name=attributes$field
 member	com.badlogic.gdx.graphics.glutils.VertexArray#getAttributes()	sge.graphics.glutils.VertexArray#attributes	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexArray.java	178	f00db405ec33592a	form=parenless
 member	com.badlogic.gdx.graphics.glutils.VertexArray#bind(ShaderProgram)	sge.graphics.glutils.VertexArray#bind(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexArray.java	107	29b8773227b9f983	
@@ -9354,6 +9357,7 @@ member	com.badlogic.gdx.graphics.glutils.VertexArray#updateVertices(int,Array,in
 member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#<init>(BufferUsage,ByteBuffer,boolean,VertexAttributes,Sge)	sge.graphics.glutils.VertexBufferObject#<init>(BufferUsage,ByteBuffer,boolean,VertexAttributes,Sge)	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexBufferObject.java	75	10ba86738ac88415	
 member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#<init>(boolean,int,Array,Sge)	sge.graphics.glutils.VertexBufferObject#<init>(boolean,int,Array<VertexAttribute>,Sge)	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexBufferObject.java	57	6e9f6c52c859325e	
 member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#<init>(boolean,int,VertexAttributes,Sge)	sge.graphics.glutils.VertexBufferObject#<init>(boolean,int,VertexAttributes,Sge)	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexBufferObject.java	66	58f416f2e9ea9240	
+member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#<stmt1>	sge.graphics.glutils.VertexBufferObject#<stmt1>	Renamed	-	<synthetic>	0	20d6990b684b8796	
 member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#getAttributes	sge.graphics.glutils.VertexBufferObject#attributes	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexBufferObject.java	43	e92f8a4bb8c1a063	name=attributes$field
 member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#getAttributes()	sge.graphics.glutils.VertexBufferObject#attributes	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexBufferObject.java	83	588b8b20d605c723	form=parenless
 member	com.badlogic.gdx.graphics.glutils.VertexBufferObject#bind(ShaderProgram)	sge.graphics.glutils.VertexBufferObject#bind(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/glutils/VertexBufferObject.java	175	8d9a28eeb8ab90cf	

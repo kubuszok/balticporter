@@ -2436,6 +2436,13 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Varargs constructors spliced from the reference (2026-09-08 11:00).** sge's `Animation(0.1f, "a", "b",
+"c")`, `InputMultiplexer(p1, p2)`, `VertexBufferObject(true, 4, positionAttr())` and `VertexArray(4, attr)`
+all take `T*` where the port had `Array[T]` (K6.5). Spliced as explicit `AddMembersTransform` entries; the
+Animation one builds a `DynamicArray` by iteration (a `Seq[T].toArray` needs `ClassTag[T]` which `MkArray[T]`
+alone does not supply). `sge-l0` 0 = 0, JS 1, Native 0, lls 0, suite 216/220, demos 12/12.
+**`sge-suite-check` 263 -> 245** (type-shape 36 -> 28, context 16 -> 9, assertion-mismatch 10 -> 7).
+
 **Residue at 263 — blocked on engine mechanisms (2026-09-08 10:30).** Suite 263, all structural:
 tiled 55 + particles 36 (JSON layer — sge's jsoniter codecs, scope decision), member-shape 68 (JSON
 members 18, `disposeThread` 5, `AlignMode` local enum 7, `TextureAtlasData.Region` inner class 4,

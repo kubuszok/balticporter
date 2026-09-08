@@ -193,7 +193,30 @@ object LibgdxLadder:
       "com.badlogic.gdx.utils.XmlReader" -> List("Element"),
       // sge keeps java's setters AND spells each as a property setter (`x_=` = `setX(value)`)
       "com.badlogic.gdx.scenes.scene2d.Actor" -> List("x_=", "y_=", "width_=", "height_=", "scaleX_=", "scaleY_=", "rotation_=",
-        )))),
+        ))),
+      // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.graphics.g2d.Animation" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(frameDuration: scala.Float, keyFrames: T*)(using mk: lowlevel.MkArray[T]) = {\n    this(frameDuration, mk.create(0))\n    val da = lowlevel.util.DynamicArray[T](true, keyFrames.size)\n    for (k <- keyFrames) da.add(k)\n    this.setKeyFrames(mk.copyOf(da.items.asInstanceOf[scala.Array[T]], da.size))\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.Animation#<init>(T*)"),
+            Some("sge's varargs ctor: `Animation[String](0.1f, \"a\", \"b\", \"c\")` (K6.5)"), false)),
+        "com.badlogic.gdx.InputMultiplexer" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(processors: sge.InputProcessor*) = {\n    this()\n    for (p <- processors) this.processors.add(p)\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.InputMultiplexer#<init>(InputProcessor*)"),
+            Some("sge's varargs ctor: `InputMultiplexer(p1, p2)` (K6.5)"), false)),
+        "com.badlogic.gdx.graphics.glutils.VertexBufferObject" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: sge.graphics.VertexAttribute*)(using sge.Sge) =\n    this(isStatic, numVertices, new sge.graphics.VertexAttributes(attributes.toArray))",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.VertexBufferObject#<init>(VertexAttribute*)"),
+            Some("sge's varargs ctor: `VertexBufferObject(true, 4, positionAttr())` (K6.5)"), false)),
+        "com.badlogic.gdx.graphics.glutils.VertexArray" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(numVertices: scala.Int, attributes: sge.graphics.VertexAttribute*) =\n    this(numVertices, new sge.graphics.VertexAttributes(attributes.toArray))",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.VertexArray#<init>(VertexAttribute*)"),
+            Some("sge's varargs ctor: `VertexArray(4, positionAttr())` (K6.5)"), false)),
+      ))),
       // (`Actor.top`/`right` collide with the fluent `top()`/`right()` of `Table`/`Container`/`HorizontalGroup`:
       // 6 errors — sge respelled those; 2 suite sites stay)
     // sge's float opaques for tolerances and angles (`Epsilon`, `Degrees`, `Radians`), seeded off sge's tree
