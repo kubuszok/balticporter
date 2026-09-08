@@ -1765,8 +1765,9 @@ final case class PortRun(
     else if !derivationRuns then inheritedDerived.resolved(parsed)
     else
       val m = manifest.get
+      val memberRenames = effectivePhases.collect { case mr: balticporter.transform.MemberRenameTransform => mr.renames }.flatten.toMap
       val r = ReferencePolicy.derive(parsed, referenceSurface, emitted,
-        m.effectiveTypeRenames, m.effectiveFlattenNestedTypes, derivingOpaqueTargets, m.effectivePackageRenames)
+        m.effectiveTypeRenames, m.effectiveFlattenNestedTypes, derivingOpaqueTargets, m.effectivePackageRenames, memberRenames)
       lastDerived = Some(r)
       r.policy.resolved(parsed)
 

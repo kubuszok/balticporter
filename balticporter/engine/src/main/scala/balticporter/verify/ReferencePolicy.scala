@@ -28,7 +28,10 @@ object ReferencePolicy:
     * @param opaqueTargets target type FQNs of the deriving `OpaqueSpec`s (`OpaqueSpec.typeFqn`) */
   def derive(program: Program, reference: List[SurfaceDecl], emitted: Set[SymId],
              typeRenames: Map[String, String], flattenNestedTypes: Set[String],
-             opaqueTargets: Set[String], packageRenames: Map[String, String] = Map.empty): Result =
+             opaqueTargets: Set[String], packageRenames: Map[String, String] = Map.empty,
+             /** the port's configured member renames (`C#m` -> new name): a java `len` the port spells
+               * `length` is read at the reference's `length` */
+             memberRenames: Map[String, String] = Map.empty): Result =
     val refByKey = reference.groupBy(d => key(d.path, kindClass(d.kind), d.name, d.explicitArity))
     val refPaths = reference.map(_.path).toSet
     /** the emitted package of a java class, by the manifest's longest-prefix package rename. */
@@ -202,7 +205,8 @@ object ReferencePolicy:
                     if keptName && !twin then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.KeepName, rowKey(ms, overloaded), s"def ${ms.name}")
                   }
-                  lookupMethod(mp, ms.name, n, pkg) match
+                  val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
+                  lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match
                     case Some(cands) => agree(ms, cands, methodRows(d, ms, overloaded, _))
                     case None        => ()
                 }

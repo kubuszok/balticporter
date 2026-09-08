@@ -162,6 +162,11 @@ object LibgdxLadder:
     // the reference-derived spelling step: no phase of its own — it switches `derive` on in the
     // opaque, nullability and arity phases and declares sge's tree as the manifest's reference.
     "derive" -> Nil,
+    // sge's float opaques for tolerances and angles (`Epsilon`, `Degrees`, `Radians`), seeded off sge's tree
+    "mathunits" -> List("Epsilon", "Degrees", "Radians").map(n => opaque(balticporter.tir.OpaqueSpec(
+      fqn = "com.badlogic.gdx.math." + n,
+      target = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.math." + n, wrapName = "apply", unwrapName = "toFloat"),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Float))),
     // sge's `Input.Key`/`Input.Button` opaques (its Input companion): spliced as the companion's members,
     // then seeded from sge's tree (the derive step) — `isKeyPressed(key: Key)`, `Keys.A: Key`, …
     "keys" -> List(
@@ -703,6 +708,7 @@ object LibgdxLadder:
   def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
     "reflection" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides")),
     "net"        -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-net/shared")),
+    "mathunits"  -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-math")),
     "context"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-context")),
     "seconds"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-seconds")),
     "pool"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
@@ -755,9 +761,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "mathunits", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "mathunits", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
@@ -772,7 +778,10 @@ object LibgdxLadder:
       dropTypes      = StepOrder.filter(steps).flatMap(stepTypeDrops).toSet,
       dropMethods    = StepOrder.filter(steps).flatMap(stepDrops).toSet,
       // sge ships `TextFormatter` public (java: package-private): declared, the split publishes it (K51 xviii).
-      allowPackageSplit = if steps("helpers") then Set("com.badlogic.gdx.utils.TextFormatter") else Set.empty,
+      allowPackageSplit = (if steps("helpers") then Set("com.badlogic.gdx.utils.TextFormatter") else Set.empty) ++
+        // sge's top-level `BitmapFontData`: promoted out of `BitmapFont`, whose package-private
+        // members it reads ship public (K47) — the split declared, as sge's own tree has it
+        Set("com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData"),
       inject         = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
       platformDirs   = StepOrder.filter(steps).flatMap(stepPlatformInjects(repoRoot)(_).toList)
                          .groupMapReduce(_._1)(_._2)(_ ++ _),
@@ -785,7 +794,9 @@ object LibgdxLadder:
       // `LegacyJson`: `Json` is the Kindlings JSON AST sge's Skin and Tiled loaders read (json step).
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", "com.badlogic.gdx.utils.Json" -> "LegacyJson"),
       // sge's `sge.files.FileType`: java's nested `Files.FileType` promoted to top level and nested under `files`
-      flattenNestedTypes = Set("com.badlogic.gdx.Files$FileType"),
+      flattenNestedTypes = Set("com.badlogic.gdx.Files$FileType",
+        // sge's top-level `BitmapFontData` (same package)
+        "com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData"),
       subPackages    = Map("com.badlogic.gdx.Files$FileType" -> "files"),
       resources      = List(ResourceTree(
         root  = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,

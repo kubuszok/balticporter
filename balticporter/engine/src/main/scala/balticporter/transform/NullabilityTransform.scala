@@ -836,6 +836,8 @@ final class NullabilityTransform(
       x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
     // `new T[]{ a, b }`: each element sits at a slot of the ARRAY's element type — a wrapped
     // field handed to a `int[][]` literal is unwrapped like any other slot (`PixmapPacker`)
+    // `for (c : wrappedArray)`: java dereferences the iterable (NPE on null) — `.get` is that read
+    case fe: Tree.ForEach    if isWrapper && isWrapped(fe.iterable) => fe.copy(iterable = unwrap(fe.iterable))
     case n: Tree.NewArray    if isWrapper && n.init.isDefined =>
       val elemWant = n.tpe match
         case TypeRepr.AppliedType(_, List(el)) => el

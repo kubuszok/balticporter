@@ -323,7 +323,9 @@ final class PackageRenameTransform(
       // a module's ownership filter may withhold (the two emissions disagreed on one `export`).
       val widened = widenings.map(_.subject).toSet
       val shipped = widened.foldLeft(table) { (t, id) =>
-        t.get(id).fold(t)(s => t.updated(s.copy(flags = s.flags.copy(isPackagePrivate = false, isProtected = false))))
+        // ALL THREE non-public levels (ENGINE-LIMITS C15's second face): a promoted nested type reads
+        // the enclosure's PRIVATE statics too (`BitmapFont.PAGE_SIZE` from `BitmapFontData`)
+        t.get(id).fold(t)(s => t.updated(s.copy(flags = s.flags.copy(isPrivate = false, isPackagePrivate = false, isProtected = false))))
       }
       // trees and the xref are keyed by SymId and stay valid verbatim.
       hoisted.rebuilt(symbols = shipped)

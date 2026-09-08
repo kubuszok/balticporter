@@ -1390,6 +1390,11 @@ method declarations.
 deriving the qualifier from the upstream FQN (re-creates the two-namespace join); a mixed per-usage
 strategy (unstable under any upstream edit).
 
+A DECLARED split widens ALL THREE of java's non-public levels on the members the moved type reads,
+`private` included: a nested type promoted to top level (`BitmapFontData` out of `BitmapFont`) reads
+the enclosure's private statics (`PAGE_SIZE`), which java allowed and a top-level type cannot; clearing
+package-private and protected alone left those seven reads refused at compile time (ENGINE-LIMITS
+C15's second face, `PROGRESS.md` §13.31).
 ### 8.8 Trivia — a hybrid, and a loss that is not where it was thought to be
 
 **Decision**, three mechanisms, ordered by what each retires: (1) a `trailing: List[Trivia]` slot on

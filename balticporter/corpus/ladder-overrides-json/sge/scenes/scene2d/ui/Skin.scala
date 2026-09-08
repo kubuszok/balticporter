@@ -30,7 +30,7 @@ import sge.files.FileHandle
 import sge.graphics.Color
 import sge.graphics.Texture
 import sge.graphics.g2d.BitmapFont
-import sge.graphics.g2d.BitmapFont.BitmapFontData
+import sge.graphics.g2d.BitmapFontData
 import sge.graphics.g2d.NinePatch
 import sge.graphics.g2d.Sprite
 import sge.graphics.g2d.TextureAtlas

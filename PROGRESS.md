@@ -2264,6 +2264,15 @@ unchanged. **`sge-suite-check` 1,194 -> 893**: net 93 -> 0, key/button 73 -> 0, 
 41, tiled 75, particles 42. The runner scripts now carry a done-marker: launchd relaunched a finished
 job and truncated its log, and two completed runs were lost to it.
 
+**Math opaques and the font data type (2026-09-08 02:45).** sge's `Epsilon`/`Degrees`/`Radians` injected
+and seeded off its tree (the `mathunits` step); `BitmapFont$BitmapFontData` promoted to sge's top-level
+`BitmapFontData` — the split DECLARED, and a declared split now widens `private` too (the promoted
+type reads the enclosure's private statics); the deriver reads a member the port RENAMES
+(`Vector#len` -> `length`) at its target name, so the parenless rows the rename hid arrive; a
+wrapped for-each iterable is dereferenced. `sge-l0` 0 = 0, Native 0, JS 14 = 14, suite 216/220,
+`demo-run` 12/12, **`sge-suite-check` 893 -> 875** (member-shape 217 -> 190; context 41 -> 50, a
+regression to read: nine more sites want a context after the split and the math opaques).
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.
