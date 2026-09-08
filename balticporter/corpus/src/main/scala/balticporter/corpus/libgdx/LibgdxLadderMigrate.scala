@@ -188,11 +188,19 @@ object LibgdxLadder:
       // (sge's thread holder), `FileHandleResolver.Prefix`/`ForResolution` (sge's 2-arg `FileHandle`)
       // lean on sge-only internals: each stays a suite residue until its family lands
       "com.badlogic.gdx.assets.loaders.FileHandleResolver" -> List("Prefix", "Resolution", "ForResolution"),
-      "com.badlogic.gdx.utils.OptimizedByteArrayOutputStream" -> List("buffer"),
+      "com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream" -> List("buffer"),
+      // (`Table.isClip`/`Actor.isDebug` read sge's PRIVATE `_clip`/`_debug`: a private member is not
+      // surface, so the field-name derivation never sees it — 4 suite sites stay)
+      "com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy" -> List("setCamera"),
+      // `getAs[T: ClassTag]` over the port's `get(key): Nullable[Object]`
+      "com.badlogic.gdx.maps.MapProperties"               -> List("getAs"),
       // sge keeps `XmlReader.Element` as an alias of the promoted `XmlElement` (the demos use it)
       "com.badlogic.gdx.utils.XmlReader" -> List("Element"),
       // sge keeps java's setters AND spells each as a property setter (`x_=` = `setX(value)`)
-      "com.badlogic.gdx.scenes.scene2d.Actor" -> List("x_=", "y_=", "width_=", "height_=", "scaleX_=", "scaleY_=", "rotation_=")))),
+      "com.badlogic.gdx.scenes.scene2d.Actor" -> List("x_=", "y_=", "width_=", "height_=", "scaleX_=", "scaleY_=", "rotation_=",
+        )))),
+      // (`Actor.top`/`right` collide with the fluent `top()`/`right()` of `Table`/`Container`/`HorizontalGroup`:
+      // 6 errors — sge respelled those; 2 suite sites stay)
     // sge's float opaques for tolerances and angles (`Epsilon`, `Degrees`, `Radians`), seeded off sge's tree
     "mathunits" -> List("Epsilon", "Degrees", "Radians").map(n => opaque(balticporter.tir.OpaqueSpec(
       fqn = "com.badlogic.gdx.math." + n,
@@ -292,6 +300,7 @@ object LibgdxLadder:
         "com.badlogic.gdx.Application#getType"        -> "getApplicationType",
         "com.badlogic.gdx.input.NativeInputConfiguration#getType" -> "getInputType",
         "com.badlogic.gdx.input.NativeInputConfiguration#setType" -> "setInputType",
+        "com.badlogic.gdx.assets.AssetManager#getReferenceCount"  -> "referenceCount",
         "com.badlogic.gdx.math.Vector#len"  -> "length",   "com.badlogic.gdx.math.Vector#len2" -> "lengthSq",
         "com.badlogic.gdx.math.Vector#dst"  -> "distance", "com.badlogic.gdx.math.Vector#dst2" -> "distanceSq",
         "com.badlogic.gdx.math.Vector#scl"  -> "scale",    "com.badlogic.gdx.math.Vector#nor"  -> "normalize"))),
@@ -845,8 +854,8 @@ object LibgdxLadder:
                            "com.badlogic.gdx.utils.XmlReader$Element" -> "XmlElement"),
       // sge's `sge.files.FileType`: java's nested `Files.FileType` promoted to top level and nested under `files`
       flattenNestedTypes = Set("com.badlogic.gdx.Files$FileType", "com.badlogic.gdx.utils.XmlReader$Element",
-        // sge's top-level `BitmapFontData` (same package)
-        "com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData"),
+        // sge's top-level `BitmapFontData` and `GlyphRun` (same package)
+        "com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData", "com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun"),
       subPackages    = Map("com.badlogic.gdx.Files$FileType" -> "files"),
       resources      = List(ResourceTree(
         root  = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,

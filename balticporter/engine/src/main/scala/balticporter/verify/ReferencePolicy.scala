@@ -337,9 +337,17 @@ object ReferencePolicy:
                 }
               case v: Tree.ValDef =>
                 program.symbolOf(v.symbol).filter(s => !s.name.contains('$')).foreach { fs =>
-                  lookup(memberPaths(paths, fs.flags.isStatic), "prop", fs.name, 0, pkg) match
+                  val fmp = memberPaths(paths, fs.flags.isStatic)
+                  lookup(fmp, "prop", fs.name, 0, pkg) match
                     case Some(cands) => agree(fs, cands, fieldRows(v, fs, _))
-                    case None        => ()
+                    case None        =>
+                      // the reference moved the field under an underscore name (`_fillX`), leaving
+                      // java's name to the property: the field follows, and its type rows read there
+                      lookup(fmp, "prop", "_" + fs.name, 0, pkg).foreach { cands =>
+                        val fieldKey = fs.fullName + ":field"
+                        agree(fs, cands, r => fieldRows(v, fs, r).map(_.copy(upstream = fieldKey)) :+
+                          DerivedPolicy.Row(DerivedPolicy.Family.FieldName, fieldKey, s"${r.kind} _${fs.name}", "_" + fs.name))
+                      }
                 }
               case _ => ()
             }

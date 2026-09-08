@@ -413,3 +413,32 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(!MemberRenamer.isValidMemberName("a b"))
     assert(!MemberRenamer.isValidMemberName("2close"))
   }
+
+  test("a derived FieldName row moves the field, so the emitter's `$field` clash repair has nothing to do") {
+    val src =
+      """package com.demo;
+        |class Cell {
+        |  Float fillX;
+        |  public Cell fillX() { fillX = 1f; return this; }
+        |  public float getFillX() { return fillX; }
+        |}
+        |""".stripMargin
+    val reference =
+      """package com.demo
+        |import lowlevel.Nullable
+        |class Cell { var _fillX: Nullable[Float] = Nullable.empty; def fillX(): Cell = this; def fillX: Float = 0f }
+        |""".stripMargin
+    val dir = java.nio.file.Files.createTempDirectory("fieldname")
+    java.nio.file.Files.writeString(dir.resolve("Cell.scala"), reference)
+    val decls   = balticporter.verify.ApiParityCheck.parseSurface(List(dir)).toOption.get
+    val program = SpoonTir.fromSource(src, "Cell.java")
+    val derived = balticporter.verify.ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val phase   = new MemberRenameTransform(derive = true)
+    val (after, log) = Pipeline.runTraced(program, List(phase), new PolicyBinder(program, program.members, scope))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("var _fillX"))
+    assert(!out.contains("fillX$field"), out)
+    assert(out.contains("_fillX = 1.0f") || out.contains("this._fillX = 1.0f"), out)
+    assert(phase.policyReport.findings.isEmpty, phase.policyReport.findings.mkString("\n"))
+  }

@@ -2287,7 +2287,14 @@ lowlevel.Nullable.empty`): the field's type is the wrapper applied to the value'
 own where the program already references it — so its reads are coerced like any other wrapped value. (21) A member the reference gives a `@targetName` is a `TargetName` row: the rename step
 annotates it (the symbolic-rename path, generalised), and the nullability step's erasure-clash check reads
 the two overloads as distinct — sge's `add[T](actor: Nullable[T])` beside `add(text: Nullable[CharSequence])`
-under `addLabel`.
+under `addLabel`. (22) A twin at the property name must be the SAME slot: a reference `var minWidth:
+Nullable[Value]` beside `def getMinWidth: Float` is a field the reference exposes, not the getter folded,
+so the getter keeps java's name (`KeepName`) unless the twin's result type agrees. (23) A java FIELD the
+reference declares under an underscore name (`var _fillX` for `fillX`, whose name the property took) is a
+`FieldName` row keyed `fullName:field` — a field shares its `fullName` with a same-named method, and the
+key keeps the row off the method; the rename step moves the field ahead of the emitter's own `x$field`
+clash repair, and the field's type rows are read at the underscore name. A PRIVATE reference member is
+not surface and derives nothing.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

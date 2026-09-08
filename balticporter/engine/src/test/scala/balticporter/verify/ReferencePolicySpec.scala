@@ -355,6 +355,27 @@ class ReferencePolicySpec extends FunSuite:
     assert(clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.KeepName && row.upstream == "com.example.gfx.Cell#getMinWidth"))
   }
 
+  test("a field the reference declares under an underscore name derives a FieldName row, its type rows read there") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Cell {
+        |  Float fillX;
+        |  public Cell fillX() { return this; }
+        |  public float getFillX() { return fillX; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import lowlevel.Nullable
+        |class Cell { var _fillX: Nullable[Float] = Nullable.empty; def fillX(): Cell = this; def fillX: Float = 0f }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val fieldRows = r.policy.rows.filter(_.upstream == "com.example.gfx.Cell#fillX:field")
+    assert(clue(fieldRows).exists(row => row.family == DerivedPolicy.Family.FieldName && row.target == "_fillX"))
+    assert(fieldRows.exists(_.family == DerivedPolicy.Family.NullableMember))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

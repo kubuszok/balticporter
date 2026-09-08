@@ -2436,6 +2436,20 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Underscore field names off the reference (2026-09-08 09:15).** sge moves a java field whose name a
+property took under an underscore (`var _fillX`, `_row`, `_expandX`: 36 fields in `Cell` alone) where the
+emitter minted `fillX$field`; the deriver now reads the underscore twin as a `FieldName` row (keyed apart
+from the same-named method) and the rename step moves the field, so `cell._fillX` compiles in the suite.
+Extras gained `MapProperties.getAs`, `CameraGroupStrategy.setCamera`, the mis-keyed
+`StreamUtils$OptimizedByteArrayOutputStream.buffer`; `GlyphRun` is flattened, `getReferenceCount ->
+referenceCount` renamed. `sge-l0` 0 = 0, JS 3, Native 0, lls 0, suite 216/220, demos 12/12.
+**`sge-suite-check` 314 -> 272** (member-shape 92 -> 70, tiled 71 -> 55). Declined with their counts:
+`Table.isClip`/`Actor.isDebug` read sge's PRIVATE `_clip`/`_debug` (private is not surface; 4 sites);
+`Actor.top`/`right` collide with the fluent `top()`/`right()` of three subclasses (2 sites);
+`Vector3.cross: this.type` is the fluent card; `TextureAtlasData.Region` is an INNER class in sge where
+java's is static (`data.Region()`, 4 sites); `points.length` is sge returning `Array` where the port
+returns `DynamicArray` (7 sites); `BillboardParticleBatch.AlignMode` is sge's local enum (7 sites).
+
 **A same-named reference field is not the getter's twin (2026-09-08 08:50).** `Cell` in sge keeps
 `def getMinWidth: Float` beside a public `var minWidth: Nullable[Value]`; the deriver read the `var` as
 the folded getter and the port emitted `minWidth: Float`, so every `cell.getMinWidth` in the suite

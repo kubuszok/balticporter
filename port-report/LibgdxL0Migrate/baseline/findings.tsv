@@ -4,7 +4,7 @@
 659d1f8a1299	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/graphics/Cubemap.java	38	rendering ClassDef — consulted 936, fired 86, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
 2918335c00e9	catalog(consulted)	reached	JS-C04	-	0	phase field-shadowing — consulted 0, fired 0, declarations 19: a subclass field SHADOWS a superclass field — two storage cells, not one
 b4428c9dfce3	catalog(consulted)	reached	JS-C05	com/badlogic/gdx/AbstractGraphics.java	14	lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 51492, fired 10029, declarations 0: a static nested constant reached through a SUBCLASS's name, and `import static`
-5e1f340d0e9a	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 56386, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
+d4f37917d98d	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 56425, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
 148100a1e6e2	catalog(consulted)	reached	JS-C07	com/badlogic/gdx/Input.java	60	rendering ClassDef — consulted 936, fired 269, declarations 0: JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger
 d73e3971590e	catalog(consulted)	reached	JS-C08	com/badlogic/gdx/Application.java	106	rendering ValDef — consulted 16849, fired 1443, declarations 0: a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation
 c8034763c174	catalog(consulted)	reached	JS-C09	com/badlogic/gdx/Application.java	98	rendering ClassDef — consulted 936, fired 136, declarations 0: several `static { }` blocks and static field initialisers run in ONE textual order
@@ -17,10 +17,10 @@ a2ff8bd790d2	catalog(consulted)	reached	JS-C10	com/badlogic/gdx/math/Matrix4.jav
 a56e955b5638	catalog(consulted)	reached	JS-C19	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 325, declarations 0: `this(...)` / `super(...)` in a secondary constructor — Scala's secondary constructors cannot call `super`
 9bc783ac5412	catalog(consulted)	reached	JS-C20	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 133, declarations 0: the implicit `super()` and the default constructor
 badc3f607ac4	catalog(consulted)	reached	JS-C21	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 325, declarations 0: constructor overload resolution, against Scala's textual-anteriority rule
-dc7ac7f289bf	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/InputEventQueue.java	46	rendering Apply — consulted 56386, fired 354, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
-a87aaba74a9e	catalog(consulted)	reached	JS-C23	com/badlogic/gdx/graphics/g3d/ModelBatch.java	251	rendering Apply — consulted 56386, fired 42, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
+0fb00dcf65e3	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/InputEventQueue.java	46	rendering Apply — consulted 56425, fired 354, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
+760ff9a02a31	catalog(consulted)	reached	JS-C23	com/badlogic/gdx/graphics/g3d/ModelBatch.java	251	rendering Apply — consulted 56425, fired 42, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 099539f0a76d	catalog(consulted)	reached	JS-C25	com/badlogic/gdx/AbstractGraphics.java	7	rendering DefDef — consulted 11349, fired 2810, declarations 0: `override` is mandatory in Scala and absent in Java
-14f01c389ad9	catalog(consulted)	reached	JS-C29	com/badlogic/gdx/Application.java	163	rendering-type TypeRef — consulted 69366, fired 5525, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+2d6b8512f08c	catalog(consulted)	reached	JS-C29	com/badlogic/gdx/Application.java	163	rendering-type TypeRef — consulted 69370, fired 5499, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 f2a4bde417fb	catalog(consulted)	reached	JS-C31	com/badlogic/gdx/graphics/Cubemap.java	252	lowering CtNewClass/Expression — consulted 3846, fired 157, declarations 0: anonymous class construction and capture
 2a9fb0509190	catalog(consulted)	reached	JS-C33	com/badlogic/gdx/graphics/VertexAttributes.java	29	rendering ClassDef — consulted 936, fired 71, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 562c06813db7	catalog(consulted)	reached	JS-C34	com/badlogic/gdx/AbstractGraphics.java	4	rendering ClassDef — consulted 936, fired 231, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -32,11 +32,11 @@ ee675fb7686f	catalog(consulted)	reached	JS-C39	com/badlogic/gdx/Application.java
 99229550c079	catalog(consulted)	reached	JS-C43	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: Java `record`
 5a549bccf86f	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 099f56dae00a	catalog(consulted)	reached	JS-C45	com/badlogic/gdx/AbstractInput.java	7	rendering ValDef — consulted 16849, fired 2859, declarations 0: a `final` field's JMM safe-publication guarantee
-8ec03984b115	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 784: Java has TWO name namespaces and Scala has one
-cd43cbf81e02	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 932, declarations 0: package-private becomes `private[pkg]`
-251d96c0bf18	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/AbstractInput.java	7	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 781, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
+725f7e8ea726	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 755: Java has TWO name namespaces and Scala has one
+eb93f9e4466e	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 931, declarations 0: package-private becomes `private[pkg]`
+f900505c52b2	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/AbstractInput.java	7	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 800, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
 bcff0329ebf0	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/Input.java	629	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 98, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
-b0a4145aa406	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 932, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
+09f76724cb61	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 931, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 03fede137b75	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 d1d1d860cbf9	catalog(consulted)	reached	JS-C52	-	0	rendering MethodRef — consulted 126, fired 0, declarations 0: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
 4196aaa18a07	catalog(consulted)	reached	JS-C53	com/badlogic/gdx/AbstractInput.java	9	rendering ValDef — consulted 16849, fired 1049, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
@@ -50,7 +50,7 @@ fa07da83cd0a	catalog(consulted)	reached	JS-E14	com/badlogic/gdx/Graphics.java	79
 311674b0a67b	catalog(consulted)	reached	JS-E15	com/badlogic/gdx/assets/AssetManager.java	668	lowering CtAssignment/Expression — consulted 189, fired 189, declarations 0: an assignment IS an expression, with the assigned value
 0f5e2cd3efac	catalog(consulted)	reached	JS-E17	com/badlogic/gdx/InputEventQueue.java	55	lowering CtOperatorAssignment/Either — consulted 1709, fired 1709, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
 beb292e5cccf	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 3846, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
-e32ee1af6301	catalog(consulted)	reached	JS-E20	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	218	rendering Literal — consulted 37256, fired 34, declarations 0: a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`
+b8f9a8c6a25e	catalog(consulted)	reached	JS-E20	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	218	rendering Literal — consulted 37233, fired 34, declarations 0: a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`
 e3fcac1eabf2	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 2283, fired 699, declarations 0: use-site wildcards, with the matching bound grammar
 4dd6c467d690	catalog(consulted)	reached	JS-G03	-	0	lowering-type CtWildcardReference — consulted 1044, fired 0, declarations 0: `? super Object` has exactly one inhabitant
 1f1177cae218	catalog(consulted)	reached	JS-G04	com/badlogic/gdx/maps/tiled/TiledMap.java	51	rendering ForEach — consulted 362, fired 9, declarations 0: a captured wildcard on ITERATION has no nameable type
@@ -61,7 +61,7 @@ b44adc035c9a	catalog(consulted)	reached	JS-G06	-	0	phase raw-parent-alignment �
 adb812276180	catalog(consulted)	reached	JS-G09	com/badlogic/gdx/InputMultiplexer.java	26	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 69624, fired 1206, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 f02b484912c0	catalog(consulted)	reached	JS-G10	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	67	lowering CtNewClass/Expression — consulted 3846, fired 4, declarations 0: a RAW anonymous class WITH a body
 e76b27c300c1	catalog(consulted)	reached	JS-G11	com/badlogic/gdx/Application.java	102	rendering ClassDef — consulted 936, fired 39, declarations 0: a partially-nameable F-BOUNDED raw fill
-b25dcada2ccf	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 80742, fired 560, declarations 0: a diamond's inference variable has NO NAMEABLE type
+3a41e5a15d6b	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 80746, fired 560, declarations 0: a diamond's inference variable has NO NAMEABLE type
 27d6b939efff	catalog(consulted)	reached	JS-G13	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 69624, fired 192, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 db7a3b127b56	catalog(consulted)	reached	JS-G14	com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java	150	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 69624, fired 112, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 4a049a5e12de	catalog(consulted)	reached	JS-G15	com/badlogic/gdx/utils/IntMap.java	98	lowering CtNewArray/Expression — consulted 462, fired 19, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
@@ -78,7 +78,7 @@ a26ff021f2d5	catalog(consulted)	reached	JS-G32	com/badlogic/gdx/Input.java	635	l
 46155b5d0db8	catalog(consulted)	reached	JS-G35	com/badlogic/gdx/graphics/g3d/environment/BaseLight.java	21	rendering ClassDef + rendering DefDef — consulted 12285, fired 25, declarations 0: Scala CHECKS an F-bound where javac does not
 0269e318e349	catalog(consulted)	reached	JS-G37	com/badlogic/gdx/graphics/g2d/BitmapFont.java	144	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30547, fired 17, declarations 0: `T...` is an `Array[T]`, materialised at the port's OWN call sites
 65652d3ed294	catalog(consulted)	reached	JS-G38	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30547, fired 61, declarations 0: a vararg slot ALREADY holding an array must not be re-packed — and neither a primitive array nor an under-dimensioned one forwards
-1b3f93dbd0af	catalog(consulted)	reached	JS-G39	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 86933, fired 7, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
+35e7e2f221ed	catalog(consulted)	reached	JS-G39	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 86972, fired 7, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
 d650217b295f	catalog(consulted)	reached	JS-G40	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Spread — consulted 30554, fired 14, declarations 0: the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot
 369355158724	catalog(consulted)	reached	JS-G41	com/badlogic/gdx/graphics/g2d/Animation.java	76	rendering DefDef — consulted 11349, fired 12, declarations 0: `@SafeVarargs` and heap pollution
 9cce74283760	catalog(consulted)	reached	JS-G42	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30547, fired 16, declarations 0: a generic vararg's COMPONENT element type has four layered sources
@@ -102,7 +102,7 @@ e5e2e21ddcb9	catalog(consulted)	reached	JS-S11	com/badlogic/gdx/utils/Json.java	
 599e2e5e83c0	catalog(consulted)	reached	JS-S16	com/badlogic/gdx/graphics/g3d/ModelBatch.java	250	rendering ForEach — consulted 362, fired 20, declarations 0: the enhanced-for BINDING may be reassigned in the body, and may be declared at a supertype
 d80fbce700c7	catalog(consulted)	reached	JS-S17	com/badlogic/gdx/Input.java	641	rendering For — consulted 1282, fired 1281, declarations 0: the classic `for`'s UPDATE runs on `continue`, and its `ForInit` scopes to the loop
 faeaffdaa115	catalog(consulted)	reached	JS-S18	com/badlogic/gdx/graphics/g2d/BitmapFont.java	842	lowering CtDo/Statement + rendering DoWhile — consulted 80, fired 80, declarations 0: `do`-`while` — Scala 3 removed it
-8837da6a73c4	catalog(consulted)	reached	JS-S19	com/badlogic/gdx/AbstractInput.java	7	rendering ValDef — consulted 16849, fired 2567, declarations 0: definite assignment for LOCALS — Java rejects a read before assignment
+65e7bf239afe	catalog(consulted)	reached	JS-S19	com/badlogic/gdx/AbstractInput.java	7	rendering ValDef — consulted 16849, fired 2558, declarations 0: definite assignment for LOCALS — Java rejects a read before assignment
 23ad9b7db29a	catalog(consulted)	reached	JS-S21	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	104	rendering Lambda — consulted 28, fired 7, declarations 0: `return` inside a lambda body returns from the LAMBDA, not from the method
 a3a8adac28df	catalog(consulted)	reached	JS-S22	com/badlogic/gdx/InputEventQueue.java	41	lowering CtSynchronized/Statement — consulted 52, fired 52, declarations 0: `synchronized` as a statement
 e931bdb07a62	catalog(consulted)	reached	JS-S25	com/badlogic/gdx/assets/AssetManager.java	436	rendering DefDef — consulted 11349, fired 17, declarations 0: Java REJECTS unreachable code and Scala allows it — composed with `break`
@@ -367,6 +367,42 @@ c374fabaacfa	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.tiled.Ti
 a00ab1b26b32	derived(rows)	ClassTagParam	com.badlogic.gdx.utils.PoolManager#addPool(Class,PoolSupplier)		0	def addPool[$0: ClassTag]
 2cdda667cbab	derived(rows)	ClassTagParam	com.badlogic.gdx.utils.PoolManager#obtain		0	def obtain[$0: ClassTag]
 df81b4ef8617	derived(rows)	ClassTagParam	com.badlogic.gdx.utils.PoolManager#obtainOrNull		0	def obtainOrNull[$0: ClassTag]
+98a3d7c702dc	derived(rows)	FieldName	com.badlogic.gdx.graphics.GLTexture#magFilter:field		0	var _magFilter -> _magFilter
+2321f68da355	derived(rows)	FieldName	com.badlogic.gdx.graphics.GLTexture#minFilter:field		0	var _minFilter -> _minFilter
+85c52e26b08e	derived(rows)	FieldName	com.badlogic.gdx.graphics.GLTexture#uWrap:field		0	var _uWrap -> _uWrap
+f8137777574f	derived(rows)	FieldName	com.badlogic.gdx.graphics.GLTexture#vWrap:field		0	var _vWrap -> _vWrap
+d7795d9b58bd	derived(rows)	FieldName	com.badlogic.gdx.graphics.g2d.Sprite#vertices:field		0	val _vertices -> _vertices
+537a61e3f0cb	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.model.Node#parent:field		0	var _parent -> _parent
+e4851c2befa5	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.ParticleController#boundingBox:field		0	var _boundingBox -> _boundingBox
+3d75c4ea713b	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#blendingAttribute:field		0	var _blendingAttribute -> _blendingAttribute
+a920e21a09bd	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#depthTestAttribute:field		0	var _depthTestAttribute -> _depthTestAttribute
+8aba7454683b	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#mode:field		0	var _mode -> _mode
+4d23560bf19c	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#texture:field		0	var _texture -> _texture
+88046099ad38	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#useGPU:field		0	var _useGPU -> _useGPU
+9bc68c381970	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#camera:field		0	var _camera -> _camera
+5b59692555e6	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#sorter:field		0	var _sorter -> _sorter
+cc12d50aa446	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch#blendingAttribute:field		0	var _blendingAttribute -> _blendingAttribute
+62efe7a963e9	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch#depthTestAttribute:field		0	var _depthTestAttribute -> _depthTestAttribute
+9127e4870a15	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue#active:field		0	var _active -> _active
+58b2f05f30e7	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#attributes:field		0	var _attributes -> _attributes
+717e1431fca9	derived(rows)	FieldName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#primitiveType:field		0	var _primitiveType -> _primitiveType
+0e8929a5b000	derived(rows)	FieldName	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#textureAttachments:field		0	val _textureAttachments -> _textureAttachments
+dee6a7150dc5	derived(rows)	FieldName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#batch:field		0	var _batch -> _batch
+a98d78fe7237	derived(rows)	FieldName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#map:field		0	var _map -> _map
+ea9b7f8ac669	derived(rows)	FieldName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#unitScale:field		0	var _unitScale -> _unitScale
+0819b0a7827a	derived(rows)	FieldName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#viewBounds:field		0	val _viewBounds -> _viewBounds
+63e411d994cb	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandX:field		0	var _expandX -> _expandX
+fe1d56d23ad9	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandY:field		0	var _expandY -> _expandY
+0303c5227f92	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#fillX:field		0	var _fillX -> _fillX
+f5d3a0995910	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#fillY:field		0	var _fillY -> _fillY
+9926433e7325	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#row:field		0	var _row -> _row
+66dcf53f0d8c	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformX:field		0	var _uniformX -> _uniformX
+8d9e316a3515	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformY:field		0	var _uniformY -> _uniformY
+a50aad6a6fb3	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.TextField#selectionStart:field		0	var _selectionStart -> _selectionStart
+1eb958007ec5	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.TextField#style:field		0	var _style -> _style
+25765804f91a	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.ui.TextField#text:field		0	var _text -> _text
+076bd98726c9	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.utils.Selection#isDisabled:field		0	var _isDisabled -> _isDisabled
+28879b998813	derived(rows)	FieldName	com.badlogic.gdx.scenes.scene2d.utils.Selection#lastSelected:field		0	var _lastSelected -> _lastSelected
 0947e8698389	derived(rows)	KeepName	com.badlogic.gdx.Application#getPreferences		0	def getPreferences
 db62693ec3ef	derived(rows)	KeepName	com.badlogic.gdx.Files#getFileHandle		0	def getFileHandle
 83056d6a16e7	derived(rows)	KeepName	com.badlogic.gdx.Files#isExternalStorageAvailable		0	def isExternalStorageAvailable
@@ -1493,6 +1529,7 @@ b1fb0a93f510	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.BitmapFont#t
 21d67871a194	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.BitmapFont$Glyph#toString		0	def toString(): String
 465259cec2af	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#newFontCache		0	def newFontCache(): BitmapFontCache
 221bb9a8fe74	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.GlyphLayout#toString		0	def toString(): String
+2e18cc4cf445	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun#toString		0	def toString(): String
 78580c6329b3	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.ParticleEffect#isComplete		0	def isComplete(): Boolean
 d2781b3a08be	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#newObject		0	def newObject(): ParticleEffectPool.PooledEffect
 a55f2ea4709e	derived(rows)	KeepParens	com.badlogic.gdx.graphics.g2d.ParticleEmitter$RangedNumericValue#newLowValue		0	def newLowValue(): Float
@@ -2037,6 +2074,7 @@ f393be9c24a5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.Me
 46c79f76fab7	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.Node#getChild(String,boolean,boolean)		0	Nullable[Node]
 e9c1b4a86646	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.Node#getNode		0	Nullable[Node]
 c44f27612400	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.Node#getParent		0	Nullable[Node]
+34cca890a760	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.Node#parent:field		0	Nullable[Node]
 e7a8648ec91d	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.NodeAnimation#rotation		0	Nullable[DynamicArray[NodeKeyframe[Quaternion]]]
 c655b5ed9e0f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.NodeAnimation#scaling		0	Nullable[DynamicArray[NodeKeyframe[Vector3]]]
 210692ded99e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.NodeAnimation#translation		0	Nullable[DynamicArray[NodeKeyframe[Vector3]]]
@@ -2045,6 +2083,7 @@ c655b5ed9e0f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.No
 fec42cdcef35	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe#value		0	Nullable[$0]
 7d969ae7db35	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,ChannelInitializer)#initializer		0	Nullable[ChannelInitializer[$0]]
 c3f59691e443	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#getChannel		0	Nullable[$0]
+7aaee8f7c981	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particles.ParticleController#boundingBox:field		0	Nullable[BoundingBox]
 9cc4c6802974	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particles.ParticleEffect#findController		0	Nullable[ParticleController]
 dd71c82aed5f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectLoadParameter#batches		0	Nullable[DynamicArray[ParticleBatch[?]]]
 d8a0ca130794	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectSaveParameter#<init>(FileHandle,AssetManager,Array)#batches		0	Nullable[DynamicArray[ParticleBatch[?]]]
@@ -2133,6 +2172,7 @@ e87e9dbb4f33	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.An
 f7b5c8b24794	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#applyAnimations#anim1		0	Nullable[Animation]
 4fe7356788fb	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#applyAnimations#anim2		0	Nullable[Animation]
 5eb3ed1021fd	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter#sort#camera		0	Nullable[Camera]
+f98cd379855e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#attributes:field		0	Nullable[VertexAttributes]
 4ea0fcc50d35	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#part		0	Nullable[MeshPart]
 c0f540129598	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setColor(Color)#color		0	Nullable[Color]
 420a933dd422	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setUVRange(TextureRegion)#region		0	Nullable[TextureRegion]
@@ -2390,6 +2430,10 @@ c39e5384a4dd	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.But
 9d432fe71559	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#align		0	Nullable[Align]
 c8ee01246fc6	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#colspan		0	Nullable[Int]
 3f05d9e8f260	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#defaults		0	Nullable[Cell[?]]
+ed41c80cc362	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandX:field		0	Nullable[Int]
+56f4ad61e2fe	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandY:field		0	Nullable[Int]
+2ac5ff7c6397	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#fillX:field		0	Nullable[Float]
+bf60f1742340	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#fillY:field		0	Nullable[Float]
 5c34654af24f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#getActor		0	Nullable[$0]
 3e728b3f4494	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#getAlign		0	Nullable[Align]
 9d3313b5059d	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#getColspan		0	Nullable[Int]
@@ -2409,6 +2453,8 @@ a81afe3aa09d	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cel
 d21aa2fd11e9	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceLeft		0	Nullable[Value]
 3992f2c3e048	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceRight		0	Nullable[Value]
 385e0029c5dc	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceTop		0	Nullable[Value]
+2769cfe67f97	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformX:field		0	Nullable[Boolean]
+a84c14e03a1f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformY:field		0	Nullable[Boolean]
 459ca9148612	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.CheckBox#<init>(String,CheckBoxStyle)#text		0	Nullable[String]
 72ea63687428	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.CheckBox#<init>(String,Skin)#text		0	Nullable[String]
 938fa4eb003c	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.CheckBox#<init>(String,Skin,String)#text		0	Nullable[String]
@@ -2712,6 +2758,7 @@ be58190f1e2d	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.utils.
 cf85bfda3464	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.utils.Selection#contains#item		0	Nullable[$0]
 cc808946bfa8	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.utils.Selection#first		0	Nullable[$0]
 7c402e4588f1	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.utils.Selection#getLastSelected		0	Nullable[$0]
+18da8fb70962	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.utils.Selection#lastSelected:field		0	Nullable[$0]
 cd1dff1927ca	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.utils.Selection#setActor#actor		0	Nullable[Actor]
 5a887002da7b	derived(rows)	NullableMember	com.badlogic.gdx.utils.Clipboard#getContents		0	Nullable[String]
 b951277a0048	derived(rows)	NullableMember	com.badlogic.gdx.utils.Clipboard#setContents#content		0	Nullable[String]
@@ -3381,6 +3428,7 @@ f7f1dbb1837f	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.FirstP
 15b5cd5e973b	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#getPrimitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 d7788be2eb49	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#part(String,int)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 78a948e38594	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#part(String,int,MeshPart)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
+ff36e32d821d	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#primitiveType:field		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 1ff7fa7f9a2c	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#getPrimitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 124c997b09c0	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#createArrow(float,float,float,float,float,float,float,float,int,int,Material,long)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 401f7e048ec4	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#createBox(float,float,float,int,Material,long)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
@@ -6857,6 +6905,7 @@ f59e913221fe	derived(rows)	Public	com.badlogic.gdx.files.FileHandle#<init>(File,
 c0bea08b78eb	derived(rows)	Public	com.badlogic.gdx.graphics.Mesh#<init>(VertexData,IndexData,boolean)		0	public <init>
 4cd7ab422f39	derived(rows)	Public	com.badlogic.gdx.graphics.Texture#<init>(int,int,TextureData)		0	public <init>
 6d184cfe2b33	derived(rows)	Public	com.badlogic.gdx.graphics.g2d.BitmapFont#indexOf		0	public indexOf
+5de13594eed7	derived(rows)	Public	com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun#appendRun		0	public appendRun
 fce380c18ed2	derived(rows)	Public	com.badlogic.gdx.graphics.g2d.ParticleEmitter#readBoolean(BufferedReader,String)		0	public readBoolean
 323e06e36f78	derived(rows)	Public	com.badlogic.gdx.graphics.g2d.ParticleEmitter#readBoolean(String)		0	public readBoolean
 ce7884da476e	derived(rows)	Public	com.badlogic.gdx.graphics.g2d.ParticleEmitter#readFloat		0	public readFloat
@@ -6929,7 +6978,6 @@ b64e4c34c658	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.Pixmap
 62fe83df66d0	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.VertexAttributes$ReadonlyIterable	<synthetic>	0	no reference declaration at `/VertexAttributes/ReadonlyIterable`
 de8e170df3b0	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.VertexAttributes$ReadonlyIterator	<synthetic>	0	no reference declaration at `/VertexAttributes/ReadonlyIterator`
 1872f9b6ad15	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache	<synthetic>	0	no reference declaration at `/DistanceFieldFont/DistanceFieldFontCache`
-3fe17c6e8be5	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun	<synthetic>	0	no reference declaration at `/GlyphLayout/GlyphRun`
 1049ebf553fe	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.g2d.PixmapPacker$GuillotineStrategy$GuillotinePage	<synthetic>	0	no reference declaration at `/PixmapPacker/GuillotineStrategy/GuillotinePage`
 1caa6989cca0	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage	<synthetic>	0	no reference declaration at `/PixmapPacker/SkylineStrategy/SkylinePage`
 e6cf6e6b8f15	derived(unmatched)	NoReferenceType	com.badlogic.gdx.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row	<synthetic>	0	no reference declaration at `/PixmapPacker/SkylineStrategy/SkylinePage/Row`
@@ -9595,7 +9643,7 @@ c2983f0ddcdc	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.BitmapFon
 07e1f910116e/18	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.BitmapFontCache$5#newObject	com/badlogic/gdx/graphics/g2d/BitmapFontCache.java	44	kind=NullaryArity guard=ComponentPartial — keep `()` on `newObject`; not every member of the override component qualifies — dropping `()` on some but not all would break the override edge
 d1b30e0dac14	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#newFontCache	com/badlogic/gdx/graphics/g2d/DistanceFieldFont.java	81	kind=NullaryArity guard=ReferenceKeepsParens — keep `()` on `newFontCache`; the reference port spells this member WITH its `()`; the derived policy keeps java's arity
 6ce70128a9e5	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.GlyphLayout#toString	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	510	kind=NullaryArity guard=ReferenceKeepsParens — keep `()` on `toString`; the reference port spells this member WITH its `()`; the derived policy keeps java's arity
-a0f69a3b5474	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun#toString	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	550	kind=NullaryArity guard=AnchoredClosure — keep `()` on `toString`; the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Object#toString
+738a4c339ac0	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.GlyphLayout$GlyphRun#toString	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	550	kind=NullaryArity guard=ReferenceKeepsParens — keep `()` on `toString`; the reference port spells this member WITH its `()`; the derived policy keeps java's arity
 bc39faadf3aa	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEffect#isComplete	com/badlogic/gdx/graphics/g2d/ParticleEffect.java	107	kind=NullaryArity guard=ReferenceKeepsParens — keep `()` on `isComplete`; the reference port spells this member WITH its `()`; the derived policy keeps java's arity
 485d6a3496aa	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#newObject	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	31	kind=NullaryArity guard=ReferenceKeepsParens — keep `()` on `newObject`; the reference port spells this member WITH its `()`; the derived policy keeps java's arity
 a4fe01d1a71a	idiom(refused)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEmitter$RangedNumericValue#newLowValue	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	1318	kind=NullaryArity guard=ReferenceKeepsParens — keep `()` on `newLowValue`; the reference port spells this member WITH its `()`; the derived policy keeps java's arity
@@ -11600,7 +11648,6 @@ f9541adaf679	policy	matched, but unverifiable	bean-properties	BeanPropertyTransf
 87af25a329b3	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.utils.I18NBundle#simpleFormatter`	0	com.badlogic.gdx.utils.I18NBundle#simpleFormatter — `getSimpleFormatter` is STATIC; a companion property is out of scope for this phase (v1), so the accessor is left as it is
 5cb11c6f014f	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream#buffer`	0	com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream#buffer — the component reaches 1 declaration(s) this program does not parse and cannot move: java.io.ByteArrayOutputStream#getBuffer
 f0a83a984bda	policy	matched, but unverifiable	member-rename	MemberRenameTransform(renames)	0	com.badlogic.gdx.scenes.scene2d.ui.List#toString(T) — the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Object#toString — so this rename did NOT happen and the member keeps its upstream name
-16825eb71757	policy	never matched	add-members	AddMembersTransform(fromReference)	0	com.badlogic.gdx.utils.OptimizedByteArrayOutputStream — no symbol of that name occurs in this program and the frontend recorded no such member, so the rule silently did not run
 f854fbb3874f	port-map	Ambiguous	com.badlogic.gdx.utils.Array#<init>	com/badlogic/gdx/assets/loaders/BitmapFontLoader.java	93	2 overload(s) in the base's map disagree (com.badlogic.gdx.utils.Array#<init>(Class)=Dropped, com.badlogic.gdx.utils.Array#<init>(MkArray)=Renamed) and this call site's arity does not separate them (base: lls)
 7fc43b25f7d7	port-map	Ambiguous	com.badlogic.gdx.utils.Array#<init>	com/badlogic/gdx/graphics/Cubemap.java	229	2 overload(s) in the base's map disagree (com.badlogic.gdx.utils.Array#<init>(Class)=Dropped, com.badlogic.gdx.utils.Array#<init>(MkArray)=Renamed) and this call site's arity does not separate them (base: lls)
 f315428e8da5	port-map	Ambiguous	com.badlogic.gdx.utils.Array#<init>	com/badlogic/gdx/graphics/Texture.java	264	2 overload(s) in the base's map disagree (com.badlogic.gdx.utils.Array#<init>(Class)=Dropped, com.badlogic.gdx.utils.Array#<init>(MkArray)=Renamed) and this call site's arity does not separate them (base: lls)
@@ -11948,6 +11995,7 @@ b7f531108e02	trivia(deliberate)	javadoc dropped	com/badlogic/gdx/utils/Queue.jav
 ada4642029ee	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/Cubemap.java	gdx/src/com/badlogic/gdx/graphics/Cubemap.java	57	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success
 ba0068e6bb5f	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/GL32.java	gdx/src/com/badlogic/gdx/graphics/GL32.java	330	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success
 033d7541e9e3	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	433	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success
+1acc70f1faf9	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/g2d/GlyphLayout.java	gdx/src/com/badlogic/gdx/graphics/g2d/GlyphLayout.java	525	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success
 f21cb9589d45	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/g2d/TextureAtlas.java	gdx/src/com/badlogic/gdx/graphics/g2d/TextureAtlas.java	303	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success
 f21cb9589d45/2	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/g2d/TextureAtlas.java	gdx/src/com/badlogic/gdx/graphics/g2d/TextureAtlas.java	323	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success
 0ce4df77639f	trivia(recovered)	recovered by the backstop	gdx/src/com/badlogic/gdx/graphics/glutils/MipMapGenerator.java	gdx/src/com/badlogic/gdx/graphics/glutils/MipMapGenerator.java	30	the attachment channel could not place this comment; it was put back after the member it was written in, with its java coordinates — a counted residue, not a success

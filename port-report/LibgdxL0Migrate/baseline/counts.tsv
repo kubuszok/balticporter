@@ -17,8 +17,8 @@ dependency-coverage	37
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
 derived(ambiguous)	23
-derived(rows)	6545
-derived(unmatched)	196
+derived(rows)	6594
+derived(unmatched)	195
 heap-pollution	12
 idiom(converted)	513
 idiom(refused)	3151
@@ -30,7 +30,7 @@ nullability-boundary	261
 omissions	37
 opaque-boundary	18
 overload-risk	453
-policy	37
+policy	36
 port-map	75
 portability(all)	153
 portability(emitted)	56
@@ -45,7 +45,7 @@ substitution(emitted)	0
 switch-null	7
 trivia	0
 trivia(deliberate)	1
-trivia(recovered)	20
+trivia(recovered)	21
 try-resource	0
 unused-symbol(handled)	116
 unused-symbol(refused)	0

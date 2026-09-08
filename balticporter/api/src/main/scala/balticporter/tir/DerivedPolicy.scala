@@ -32,6 +32,9 @@ final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
   /** member id -> the JVM name the reference gives it */
   def targetNames: Map[SymId, String] =
     rows.filter(_.family == Family.TargetName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
+  /** field id -> the name the reference declares the field under (`_fillX` for java's `fillX`) */
+  def fieldNames: Map[SymId, String] =
+    rows.filter(_.family == Family.FieldName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
   /** (owner upstream FQN, property, getter name, setter name) — the bean step's configured-pair shape */
   def propertyPairs: List[(String, String, String, Option[String])] =
     def split(up: String): (String, String) =
@@ -84,7 +87,11 @@ object DerivedPolicy:
       /** a member the reference gives a `@targetName` (`add` beside `add`, one JVM name `addLabel`):
         * `target` is that JVM name; the rename step annotates, the nullability step's erasure
         * check reads the two as distinct */
-      TargetName
+      TargetName,
+      /** a java FIELD the reference declares under an underscore name (`var _fillX` for `fillX`,
+        * whose name the property took): `target` is that name; the rename step moves the field
+        * ahead of the emitter's own `x$field` clash repair */
+      FieldName
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN
@@ -104,7 +111,10 @@ object DerivedPolicy:
     val asParam =
       if s.flags.isParam then program.symbolOf(s.owner).flatMap(qualified).map(_ + "#" + s.name).toSet
       else Set.empty
-    Set(s.fullName) ++ own ++ asParam
+    // a FIELD shares its `fullName` with a same-named method (java's two namespaces): a field row
+    // is written under `fullName:field` so it never resolves to the method
+    val asField = if s.descriptor.isEmpty && !s.flags.isParam then Set(s.fullName + ":field") else Set.empty
+    Set(s.fullName) ++ own ++ asParam ++ asField
 
   /** the rows a BASE published (`derived-policy.tsv` in its report): a dependent reads its base's
     * derived spellings as facts, never re-derives them (§1.5). Absent file = empty. */
