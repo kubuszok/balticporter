@@ -2436,6 +2436,18 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Residue at 230 — analysis of the emitted-code errors (2026-09-08 12:00).** Of 230, the families.tsv
+summary covers 208 unique file:line pairs in the families it tracks; the remaining 22 are in opaque-key-
+button (the port's own Key/Button constants at `sge.Input.Key(30)` alongside sge's opaque companion),
+filetype, net, logging. The emitted port code itself (src_managed) carries 1293 of the ~23k family
+entries because sge's tests compile the port alongside the test suite: the port's implementations must
+match sge's interfaces (Pixels, Key, Nanos, Button). The opaque retyping reached the DECLARATIONS
+(Input.x returns Pixels, isKeyPressed takes Key) but the BODIES of many emitted methods still use Int/Long
+literals instead of the opaque constructors — a propagation gap in `PrimitiveToOpaqueTransform` that the
+engine's own compile (JVM lane at 0) does not see. The JSON layer (55 tiled + 34 particles = 89) and
+sge-only API differences (PoolManager context bounds, Timer thread holder, DynamicArray.length extension,
+vector operators with this.type) account for most of the test-side errors.
+
 **GL handle opaques injected (2026-09-08 11:30).** sge's `GLHandle.scala` (8 opaque types:
 `TextureHandle`, `BufferHandle`, `ShaderHandle`, `ProgramHandle`, `FramebufferHandle`,
 `RenderbufferHandle`, `UniformLocation`, `AttributeLocation`) injected alongside the GL enum file.
