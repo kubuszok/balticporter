@@ -250,7 +250,16 @@ object ReferencePolicy:
                   // the reference spells the accessor as a PROPERTY (`var x`) and has no def of the java name:
                   // the pair folds as if configured (the fluent setters a detector refuses included)
                   propertyName(ms.name).foreach { prop =>
-                    val asProp = lookup(mp, "prop", prop, 0, pkg).isDefined && lookup(mp, "def", ms.name, n, pkg).isEmpty
+                    // the reference spells the pair as a property: a `var`/`val`, or a parenless `def x`
+                    // with a `def x_=` — either way the pair folds as if configured (a setter with
+                    // behaviour included: the reference made it a property)
+                    val javaNameGone = lookup(mp, "def", ms.name, n, pkg).isEmpty
+                    val refProp = lookup(mp, "prop", prop, 0, pkg).isDefined
+                    val refDefGetter = lookup(mp, "def", prop, 0, pkg).exists(_.exists(_.parenless))
+                    val refDefSetter = lookup(mp, "def", prop + "_=", 1, pkg).isDefined
+                    val asProp = javaNameGone && (refProp ||
+                      (n == 0 && !ms.name.startsWith("set") && refDefGetter) ||
+                      (n == 1 && ms.name.startsWith("set") && refDefSetter))
                     if asProp && n == 0 && !ms.name.startsWith("set") then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), s"var $prop", prop)
                     else if asProp && n == 1 && ms.name.startsWith("set") then

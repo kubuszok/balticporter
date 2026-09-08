@@ -191,16 +191,16 @@ member	com.badlogic.gdx.utils.CharArrayTest#<stmt7>	sge.utils.CharArrayTest#<stm
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt8>	sge.utils.CharArrayTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	317	ced2ea08d835f70f	
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt9>	sge.utils.CharArrayTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	400	88a364603ff95816	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt1>	sge.utils.FlushablePoolTest#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
-member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt2>	sge.utils.FlushablePoolTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	10	7a7069750b32f39f	
-member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt3>	sge.utils.FlushablePoolTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	17	54c771dfa0b45a53	
-member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt4>	sge.utils.FlushablePoolTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	24	92de1c1faeff6523	
+member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt2>	sge.utils.FlushablePoolTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	10	ee661b3b7c5a8eb9	
+member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt3>	sge.utils.FlushablePoolTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	17	7f77460f6cf2fd24	
+member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt4>	sge.utils.FlushablePoolTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	24	192ccf71258ee25a	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt5>	sge.utils.FlushablePoolTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	31	a115cc9374061cf1	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt6>	sge.utils.FlushablePoolTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	42	51823b6f805d2d19	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt7>	sge.utils.FlushablePoolTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	52	9219b1cb3726e68b	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt8>	sge.utils.FlushablePoolTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	73	1984c1c0e66496c2	
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>()	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	101	6d74b7aedc15fb9a	
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	105	7c9654eaa2c0046b	
-member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#newObject()	sge.utils.FlushablePoolTest$FlushablePoolClass#newObject()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	114	35b1f977de13a936	
+member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#newObject()	sge.utils.FlushablePoolTest$FlushablePoolClass#newObject()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	114	b6fead59680a1320	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt10>	sge.utils.JsonMatcherTests#<stmt10>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1180	f866a46be96451de	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt11>	sge.utils.JsonMatcherTests#<stmt11>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1193	018d77992ea6201a	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt12>	sge.utils.JsonMatcherTests#<stmt12>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1209	5745c9f50910007b	
@@ -338,6 +338,8 @@ member	com.badlogic.gdx.utils.SortTest#setUp()	sge.utils.SortTest#setUp()	Rename
 member	com.badlogic.gdx.utils.SortTest#sortInstance	sge.utils.SortTest#sortInstance	Renamed	-	com/badlogic/gdx/utils/SortTest.java	36	2aac7238c4e3b0a6	vis=private
 member	com.badlogic.gdx.utils.SortTest$NullsFirstComparator#compare(Integer,Integer)	sge.utils.SortTest$NullsFirstComparator#compare(Integer,Integer)	Renamed	-	com/badlogic/gdx/utils/SortTest.java	45	e48107ddfc834ce4	
 member	com.badlogic.gdx.utils.SortedIntListTest#<stmt1>	sge.utils.SortedIntListTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/SortedIntListTest.java	10	6fb00fbd1d8a1db4	
+member	com.badlogic.gdx.files.FileHandle#tempDirectory		Dropped	-		0		
+member	com.badlogic.gdx.files.FileHandle#tempFile		Dropped	-		0		
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor#<init>(int,Class,int)		Dropped	-		0		
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)		Dropped	-		0		
 member	com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod		Dropped	-		0		

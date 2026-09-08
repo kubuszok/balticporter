@@ -137,10 +137,21 @@ object MemberRenamer:
         // members of the SAME group+target are overloads of one java member — not colliders.
         val groupKey  = r.group + "=" + r.newName
         val siblings  = sameGroupMembers.getOrElse(groupKey, Set.empty)
+        // a collision is a SHAPE clash: scala overloads `width` (nilary) beside `width(v: Value)`, so a
+        // member of a different arity is no collider; a field clashes with a field or a nilary def
+        def shapeOf(m: SymId): Int = p.symbolOf(m).map(_.info) match
+          case Some(TypeRepr.MethodType(ps, _, _))                       => ps.size
+          case Some(TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _))) => ps.size
+          case Some(_: TypeRepr.PolyType)                                => 0
+          case _                                                         => -1
+        val myShape = c.members.headOption.map(shapeOf).getOrElse(-1)
+        def clashes(m: SymId): Boolean =
+          val s = shapeOf(m)
+          s == myShape || (s == -1 && myShape == 0) || (s == 0 && myShape == -1)
         def collidersOf(nm: String): List[SymId] =
           visible.flatMap(t => graph.membersOf(t)).distinct
             .filterNot(m => c.members.contains(m) || siblings.contains(m))
-            .filter(m => eff(m) == nm)
+            .filter(m => eff(m) == nm && clashes(m))
         onCollision match
           case OnCollision.SuffixUntilFree =>
             var fresh = r.newName

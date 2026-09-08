@@ -2269,7 +2269,11 @@ setter's own parameter type, a field against its own. (15) A wrapper slot has no
 step flags its wrapper type opaque, and the emitter's padded-slot rule (`null.asInstanceOf[T]`) looks
 through an applied type, so a funnel-padded `Nullable[…]` slot compiles. The funnel's `if (null != null) A else B` simplification (C3) WALKS the delegation argument, since a
 phase may have wrapped the `if` (`Nullable(if … )`), and a padded plain reference slot is an ascription
-(`(null: T)`) — scalac 3.7 rejects `null.asInstanceOf[T] != null`.
+(`(null: T)`) — scalac 3.7 rejects `null.asInstanceOf[T] != null`. (16) A reference `def x` (parenless) beside `def x_=` is a PROPERTY too: the pair is a `Property`/
+`PropertySetter` row and folds as if configured, a setter with behaviour included (`Actor.width_=` calls
+`sizeChanged`; the detector alone keeps such a setter under java's name). A rename's collision is a
+SHAPE clash, not a name clash: scala overloads `width` (nilary) beside `Container.width(v: Value)`, so a
+member of another arity is no collider, while a field clashes with a field or a nilary def.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

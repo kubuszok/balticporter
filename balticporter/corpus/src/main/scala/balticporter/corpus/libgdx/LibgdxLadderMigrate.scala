@@ -792,6 +792,10 @@ object LibgdxLadder:
       "com.badlogic.gdx.utils.Queue#<init>(int,Class)",
       "com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)",
     ),
+    // sge's FileHandle has no temp-file statics (Scala.js's `java.io.File` has no `createTempFile`)
+    "backend-jvm" -> Set(
+      "com.badlogic.gdx.files.FileHandle#tempFile",
+      "com.badlogic.gdx.files.FileHandle#tempDirectory"),
     "reflection" -> Set(
       "com.badlogic.gdx.scenes.scene2d.ui.Skin#setEnabledReflection",
       "com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod",
@@ -830,9 +834,11 @@ object LibgdxLadder:
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       // java's reflective `Json` (dropped by the reflection step, a refusing stub injected) keeps the name
       // `LegacyJson`: `Json` is the Kindlings JSON AST sge's Skin and Tiled loaders read (json step).
-      typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", "com.badlogic.gdx.utils.Json" -> "LegacyJson"),
+      typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", "com.badlogic.gdx.utils.Json" -> "LegacyJson",
+                           // sge's `XmlElement`: java's `XmlReader.Element` promoted and renamed
+                           "com.badlogic.gdx.utils.XmlReader$Element" -> "XmlElement"),
       // sge's `sge.files.FileType`: java's nested `Files.FileType` promoted to top level and nested under `files`
-      flattenNestedTypes = Set("com.badlogic.gdx.Files$FileType",
+      flattenNestedTypes = Set("com.badlogic.gdx.Files$FileType", "com.badlogic.gdx.utils.XmlReader$Element",
         // sge's top-level `BitmapFontData` (same package)
         "com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData"),
       subPackages    = Map("com.badlogic.gdx.Files$FileType" -> "files"),

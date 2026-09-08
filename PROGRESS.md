@@ -2385,6 +2385,15 @@ ascription (scalac 3.7 rejects `null.asInstanceOf[T] != null`). `sge-l0` 0 = 0, 
 suite 216/220, demos 12/12. **`sge-suite-check` 456 -> 412** (android 8 -> 2, member-shape 121 -> 108,
 nullable 61 -> 54, context 25 -> 16).
 
+**Def-property pairs, shape-aware renames, the browser row (2026-09-08 07:20).** A reference `def x`
+beside `def x_=` derives a configured pair (a behaviourful setter folds: `Actor.width_=`); a rename
+collision is a shape clash, so `Container.width(v: Value)` no longer blocks the nilary `width`; sge's
+`XmlElement` is a promoted rename of `XmlReader.Element`; the temp-file statics sge lacks are dropped
+(Scala.js has no `createTempFile`); the browser copies gain the frame-hook trait and plain `new` for
+the display types. `sge-l0` 0 = 0, **JS 13 -> 8** (left: the build plugin's embedded resources and
+`multiarch.resources` on the JS row, `DataBuffer`'s `out` on Scala.js's javalib, 2 more), Native 0,
+suite 216/220, demos 12/12. **`sge-suite-check` 412 -> 406.**
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type
