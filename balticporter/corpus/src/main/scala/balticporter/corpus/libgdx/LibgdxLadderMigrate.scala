@@ -281,7 +281,11 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("isClip", 0,
             "def isClip: scala.Boolean = this.clip" + "$field",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#isClip"),
-            Some("sge's boolean reader for the private clip field"), false)),
+            Some("sge's boolean reader for the private clip field"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("tableAlign", 0,
+            "def tableAlign: scala.Int = this.align" + "$field",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#tableAlign"),
+            Some("sge's public tableAlign (renamed from align to avoid Widget collision)"), false)),
         "com.badlogic.gdx.math.Vector2" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector2): sge.math.Vector2 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#+"), None, false),
           balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector2): sge.math.Vector2 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#-"), None, false)),
