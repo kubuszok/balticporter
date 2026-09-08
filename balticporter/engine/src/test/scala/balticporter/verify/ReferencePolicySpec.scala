@@ -259,6 +259,25 @@ class ReferencePolicySpec extends FunSuite:
     assertEquals(fams.get("com.example.gfx.Dist#total"), Some(DerivedPolicy.Family.Parenless))
   }
 
+  test("a `Class<T>` parameter the reference turns into a `[T: ClassTag]` bound derives a ClassTagParam row") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class PM {
+        |  public <T> T get(Class<T> c) { return null; }
+        |  public <T> void add(Class<T> c, T v) { }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import scala.reflect.ClassTag
+        |class PM { def get[T: ClassTag]: T = ???; def add[T: ClassTag](v: T): Unit = () }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val fams = r.policy.rows.filter(_.family == DerivedPolicy.Family.ClassTagParam).map(_.upstream).sorted
+    assertEquals(fams, List("com.example.gfx.PM#add", "com.example.gfx.PM#get"))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

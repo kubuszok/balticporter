@@ -2246,7 +2246,12 @@ reads each declaration verbatim off the reference tree (`ReferenceSources`, path
 class or companion as the reference has it, the reference file's imports it mentions and its OUTER
 packages -- a chained `package sge` / `package math` clause -- emitted ahead of it as class-body imports). A name the reference lacks is a counted finding; whether the body compiles against
 the port is the compiler's verdict, one member at a time -- a member whose body wants a type the port
-lacks comes off the list.
+lacks comes off the list. (9) A `Class<T>` parameter the reference turns into a `[T: ClassTag]` bound
+(`PoolManager.addPool`, `Skin.get`, `Actions.action`, `AssetManager.get`) is a `ClassTagParam` row; the
+class-tag step drops the parameter, adds `(using ClassTag[T])`, binds the class off the tag at the head of
+the body, and rewrites owned calls passing `X.class` to `[X]` -- whole override component or none; a call
+passing a `Class` VALUE cannot supply the clause without an explicit `using` argument the tree cannot yet
+spell, so that component refuses, counted.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

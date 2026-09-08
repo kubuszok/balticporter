@@ -2351,6 +2351,17 @@ Next by size: `Class<T>` parameters sge turns into `[T: ClassTag]` bounds (`Pool
 29 suite errors in `other`/`type-shape`), `Table.add` at a `Nullable` argument (38 in `nullable`), the
 JSON step's tiled/particle parts (116), sge's `DynamicArray.length` (an lls extra, 7).
 
+**`Class<T>` parameters as `ClassTag` bounds (2026-09-08 05:10).** New engine phase
+`ClassTagParamsTransform(members, derive)`: a method's `Class<T>` parameter becomes `(using ClassTag[T])`,
+the body binds the class off the tag at its head, an owned call passing `X.class` becomes `[X]` (the call
+is the type application alone where the value clause went), whole override component or none; a call
+passing a `Class` VALUE refuses the component, counted (an explicit `using` argument is a spelling the
+tree cannot yet carry). Derived: `ClassTagParam` rows where the reference's def sits one parameter short
+with `ClassTag` in its type parameters (7 rows: `PoolManager.addPool/obtain/obtainOrNull`, `Actions.action/
+registerAction`, `AssetManager.getAll`); `addPool` refuses on a value-passing call, the rest convert.
+`sge-l0` 0 = 0, JS 13 = 13, Native 0, suite 216/220, demos 12/12, `lls` unchanged. **`sge-suite-check`
+540 -> 507** (other 25 -> 5, member-shape 135 -> 126).
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

@@ -22,3 +22,4 @@ balticporter.runner.ClassToTraitFactory
 balticporter.runner.RegistryFactory
 balticporter.runner.ElementWitnessFactory
 balticporter.runner.NullaryArityFactory
+balticporter.runner.ClassTagParamsFactory

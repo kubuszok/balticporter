@@ -17,7 +17,7 @@ dependency-coverage	37
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
 derived(ambiguous)	101
-derived(rows)	5269
+derived(rows)	5276
 derived(unmatched)	197
 heap-pollution	12
 idiom(converted)	1380
@@ -30,7 +30,7 @@ nullability-boundary	246
 omissions	37
 opaque-boundary	18
 overload-risk	453
-policy	18
+policy	20
 port-map	75
 portability(all)	153
 portability(emitted)	56
@@ -38,7 +38,7 @@ portability(injected)	5
 porter-notes	0
 remediation	11
 resources	8
-rewrite-callsites	1
+rewrite-callsites	2
 signature	10
 substitution(dangling)	6
 substitution(emitted)	0

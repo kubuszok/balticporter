@@ -50,6 +50,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "enum) so that ONLY calls on a dropped enum are spliced to `toString` — the class-file " +
           "identity is the instrument, as for the annotation lookups above"),
     ),
+    "ClassTagParamsTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`java.lang.Class` is a WELL-KNOWN JDK class the program never declares: the phase asks whether " +
+          "a parameter's type is the class-literal type itself (`Class<T>`), a fact of the language and " +
+          "not a library name — the class-file identity is the instrument, as for `java.lang.Enum` above"),
+    ),
     "SuppressionPhase.scala" -> Map(
       "fullName ==" ->
         ("`scala.annotation.nowarn` is a WELL-KNOWN external annotation type the program never " +

@@ -20,7 +20,7 @@ object BuiltinFactories:
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
     new ClassToTraitFactory, new RegistryFactory, new ElementWitnessFactory,
-    new NullaryArityFactory,
+    new NullaryArityFactory, new ClassTagParamsFactory,
   )
 
 // (a) — no policy; empty config object
@@ -269,6 +269,16 @@ final class AddMembersFactory extends TransformFactory:
     val fromRef = config.stringMap("fromReference").getOrElse(Map.empty)
       .map((o, v) => o -> v.split(',').map(_.trim).filter(_.nonEmpty).toList).filter(_._2.nonEmpty)
     new AddMembersTransform(entries.toMap, fromRef)
+
+/** `{ transform = "class-tag-params", members = ["a.B#m", "a.B#n(Class,int)"], derive = true }`
+  *
+  * A method's `Class<T>` parameter becomes a `ClassTag[T]` context clause; `derive` takes the
+  * reference port's `[T: ClassTag]` members. */
+final class ClassTagParamsFactory extends TransformFactory:
+  def name = "class-tag-params"
+  def fromConfig(config: ConfigView): Phase =
+    new ClassTagParamsTransform(config.strings("members").getOrElse(Nil).toSet,
+                                config.bool("derive").getOrElse(false))
 
 /** `{ transform = "call-site-substitution", calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }`
   *

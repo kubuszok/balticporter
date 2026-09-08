@@ -225,7 +225,20 @@ object ReferencePolicy:
                   val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
                   lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match
                     case Some(cands) => agree(ms, cands, methodRows(d, ms, overloaded, _))
-                    case None        => ()
+                    case None =>
+                      // a `Class<T>` parameter the reference turned into a `[T: ClassTag]` bound: its def
+                      // sits at the java name (or the renamed one) one parameter short, the tag in its
+                      // type parameters or using clause
+                      val classParams = d.paramss.flatten.count(p => p.tpt.tpe match
+                        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), List(TypeRepr.TypeRef(_, t))) =>
+                          program.symbolOf(c).exists(_.fullName == "java.lang.Class") && d.tparams.exists(_.symbol == t)
+                        case _ => false)
+                      if classParams > 0 then
+                        val tagged = (ms.name :: renamedTo.toList).flatMap(nm => lookup(mp, "def", nm, n - classParams, pkg).toList.flatten)
+                          .filter(rd => rd.typeParams.contains("ClassTag"))
+                        if tagged.nonEmpty then
+                          rows += DerivedPolicy.Row(DerivedPolicy.Family.ClassTagParam, rowKey(ms, overloaded),
+                            s"def ${tagged.head.name}${tagged.head.typeParams}")
                 }
                 // a java constructor: the reference's constructors at the class, or its companion's
                 // `apply` (the hand port's factory spelling) — parameter slots only
