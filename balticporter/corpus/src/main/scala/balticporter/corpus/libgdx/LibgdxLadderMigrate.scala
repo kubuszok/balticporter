@@ -263,6 +263,8 @@ object LibgdxLadder:
             "infix def cross(vector: sge.math.Vector3): sge.math.Vector3 = set(y * vector.z - z * vector.y, z * vector.x - x * vector.z, x * vector.y - y * vector.x)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#cross(Vector3)"),
             Some("sge's cross product (returns Vector3 not this.type)"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector3): sge.math.Vector3 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#+"), None, false),
+          balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector3): sge.math.Vector3 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#-"), None, false),
           balticporter.transform.AddMembersTransform.MemberSpec("cross", 0,
             "infix def cross(x: scala.Float, y: scala.Float, z: scala.Float): sge.math.Vector3 = set(this.y * z - this.z * y, this.z * x - this.x * z, this.x * y - this.y * x)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#cross(float,float,float)"),
@@ -274,7 +276,12 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("rotateAroundRad", 0,
             "def rotateAroundRad(axis: sge.math.Vector3, radians: scala.Float): sge.math.Vector3 = { val tmpMat = new sge.math.Matrix4(); tmpMat.setToRotation(axis, radians * lowlevel.math.MathUtils.radiansToDegrees); this.mul(tmpMat) }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#rotateAroundRad"),
-            Some("sge's rotate around axis in radians"), false)))),
+            Some("sge's rotate around axis in radians"), false)),
+        "com.badlogic.gdx.math.Vector2" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector2): sge.math.Vector2 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#+"), None, false),
+          balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector2): sge.math.Vector2 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#-"), None, false)),
+        "com.badlogic.gdx.math.Vector4" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector4): sge.math.Vector4 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector4#+"), None, false)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(

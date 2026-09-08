@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=e28c7d03f6e847f3	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=ffe885d1557186a7	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -12014,10 +12014,12 @@ member	com.badlogic.gdx.math.Vector#sub(T)	sge.math.Vector#sub(T)	Renamed	-	com/
 member	com.badlogic.gdx.math.Vector2#<init>()	sge.math.Vector2#<init>()	Renamed	-	com/badlogic/gdx/math/Vector2.java	40	17b5a626cb9cf298	
 member	com.badlogic.gdx.math.Vector2#<init>(Vector2)	sge.math.Vector2#<init>(Vector2)	Renamed	-	com/badlogic/gdx/math/Vector2.java	53	fc70d7d8465dcb3f	
 member	com.badlogic.gdx.math.Vector2#<init>(float,float)	sge.math.Vector2#<init>(float,float)	Renamed	-	com/badlogic/gdx/math/Vector2.java	46	9ba6e346da71dec1	
-member	com.badlogic.gdx.math.Vector2#<stmt1>	sge.math.Vector2#<stmt1>	Renamed	-	<synthetic>	0	ea19cdefd4e0d1fc	
-member	com.badlogic.gdx.math.Vector2#<stmt2>	sge.math.Vector2#<stmt2>	Renamed	-	<synthetic>	0	cdb907c20625e2f2	
-member	com.badlogic.gdx.math.Vector2#<stmt3>	sge.math.Vector2#<stmt3>	Renamed	-	<synthetic>	0	d5af9c8a04f97f96	
-member	com.badlogic.gdx.math.Vector2#<stmt4>	sge.math.Vector2#<stmt4>	Renamed	-	<synthetic>	0	dc46c1e760af5d40	
+member	com.badlogic.gdx.math.Vector2#<stmt1>	sge.math.Vector2#<stmt1>	Renamed	-	<synthetic>	0	9215e97d308910f1	
+member	com.badlogic.gdx.math.Vector2#<stmt2>	sge.math.Vector2#<stmt2>	Renamed	-	<synthetic>	0	a2efb26940d31b4a	
+member	com.badlogic.gdx.math.Vector2#<stmt3>	sge.math.Vector2#<stmt3>	Renamed	-	<synthetic>	0	ea19cdefd4e0d1fc	
+member	com.badlogic.gdx.math.Vector2#<stmt4>	sge.math.Vector2#<stmt4>	Renamed	-	<synthetic>	0	cdb907c20625e2f2	
+member	com.badlogic.gdx.math.Vector2#<stmt5>	sge.math.Vector2#<stmt5>	Renamed	-	<synthetic>	0	d5af9c8a04f97f96	
+member	com.badlogic.gdx.math.Vector2#<stmt6>	sge.math.Vector2#<stmt6>	Renamed	-	<synthetic>	0	dc46c1e760af5d40	
 member	com.badlogic.gdx.math.Vector2#One	sge.math.Vector2#One	Renamed	-	com/badlogic/gdx/math/Vector2.java	32	114b7a90160a184f	placement=companion
 member	com.badlogic.gdx.math.Vector2#X	sge.math.Vector2#X	Renamed	-	com/badlogic/gdx/math/Vector2.java	29	49c4a45c7d9a2d6a	placement=companion
 member	com.badlogic.gdx.math.Vector2#Y	sge.math.Vector2#Y	Renamed	-	com/badlogic/gdx/math/Vector2.java	30	7f1ab78cce737185	placement=companion
@@ -12110,10 +12112,12 @@ member	com.badlogic.gdx.math.Vector3#<init>(Vector2,float)	sge.math.Vector3#<ini
 member	com.badlogic.gdx.math.Vector3#<init>(Vector3)	sge.math.Vector3#<init>(Vector3)	Renamed	-	com/badlogic/gdx/math/Vector3.java	58	f11da3c9d7635fbc	
 member	com.badlogic.gdx.math.Vector3#<init>(float,float,float)	sge.math.Vector3#<init>(float,float,float)	Renamed	-	com/badlogic/gdx/math/Vector3.java	52	44bda00a9ba0daaa	
 member	com.badlogic.gdx.math.Vector3#<stmt1>	sge.math.Vector3#<stmt1>	Renamed	-	<synthetic>	0	aed81747f27dcdc8	
-member	com.badlogic.gdx.math.Vector3#<stmt2>	sge.math.Vector3#<stmt2>	Renamed	-	<synthetic>	0	f2368b83277f8063	
-member	com.badlogic.gdx.math.Vector3#<stmt3>	sge.math.Vector3#<stmt3>	Renamed	-	<synthetic>	0	c621c454b0e1b48d	
-member	com.badlogic.gdx.math.Vector3#<stmt4>	sge.math.Vector3#<stmt4>	Renamed	-	<synthetic>	0	81955382403598f7	
-member	com.badlogic.gdx.math.Vector3#<stmt5>	sge.math.Vector3#<stmt5>	Renamed	-	<synthetic>	0	f58d393d9b6746db	
+member	com.badlogic.gdx.math.Vector3#<stmt2>	sge.math.Vector3#<stmt2>	Renamed	-	<synthetic>	0	6fc89a32e2360c83	
+member	com.badlogic.gdx.math.Vector3#<stmt3>	sge.math.Vector3#<stmt3>	Renamed	-	<synthetic>	0	01d96b58e6899be8	
+member	com.badlogic.gdx.math.Vector3#<stmt4>	sge.math.Vector3#<stmt4>	Renamed	-	<synthetic>	0	f2368b83277f8063	
+member	com.badlogic.gdx.math.Vector3#<stmt5>	sge.math.Vector3#<stmt5>	Renamed	-	<synthetic>	0	c621c454b0e1b48d	
+member	com.badlogic.gdx.math.Vector3#<stmt6>	sge.math.Vector3#<stmt6>	Renamed	-	<synthetic>	0	81955382403598f7	
+member	com.badlogic.gdx.math.Vector3#<stmt7>	sge.math.Vector3#<stmt7>	Renamed	-	<synthetic>	0	f58d393d9b6746db	
 member	com.badlogic.gdx.math.Vector3#One	sge.math.Vector3#One	Renamed	-	com/badlogic/gdx/math/Vector3.java	40	d392aac3ff36c3ac	placement=companion
 member	com.badlogic.gdx.math.Vector3#X	sge.math.Vector3#X	Renamed	-	com/badlogic/gdx/math/Vector3.java	36	812dc7fed9a0583b	placement=companion
 member	com.badlogic.gdx.math.Vector3#Y	sge.math.Vector3#Y	Renamed	-	com/badlogic/gdx/math/Vector3.java	37	7b2be20384d47650	placement=companion
@@ -12210,7 +12214,8 @@ member	com.badlogic.gdx.math.Vector4#<init>(Vector2,float,float)	sge.math.Vector
 member	com.badlogic.gdx.math.Vector4#<init>(Vector3,float)	sge.math.Vector4#<init>(Vector3,float)	Renamed	-	com/badlogic/gdx/math/Vector4.java	86	adf30235153d51b5	
 member	com.badlogic.gdx.math.Vector4#<init>(Vector4)	sge.math.Vector4#<init>(Vector4)	Renamed	-	com/badlogic/gdx/math/Vector4.java	62	b0e9188d4afd0c32	
 member	com.badlogic.gdx.math.Vector4#<init>(float,float,float,float)	sge.math.Vector4#<init>(float,float,float,float)	Renamed	-	com/badlogic/gdx/math/Vector4.java	56	685a25902251fac2	
-member	com.badlogic.gdx.math.Vector4#<stmt1>	sge.math.Vector4#<stmt1>	Renamed	-	<synthetic>	0	e9c35750275ed5e9	
+member	com.badlogic.gdx.math.Vector4#<stmt1>	sge.math.Vector4#<stmt1>	Renamed	-	<synthetic>	0	b13487d768490bf4	
+member	com.badlogic.gdx.math.Vector4#<stmt2>	sge.math.Vector4#<stmt2>	Renamed	-	<synthetic>	0	e9c35750275ed5e9	
 member	com.badlogic.gdx.math.Vector4#One	sge.math.Vector4#One	Renamed	-	com/badlogic/gdx/math/Vector4.java	45	e56d6791e1338ef4	placement=companion
 member	com.badlogic.gdx.math.Vector4#W	sge.math.Vector4#W	Renamed	-	com/badlogic/gdx/math/Vector4.java	43	9bb51958d4f3c270	placement=companion
 member	com.badlogic.gdx.math.Vector4#X	sge.math.Vector4#X	Renamed	-	com/badlogic/gdx/math/Vector4.java	40	a6cc004665ce99e6	placement=companion
