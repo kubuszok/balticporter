@@ -2411,6 +2411,12 @@ and the symbol's flags are widened — 51 members in the ladder (`Graphics.Displ
 primary takes a third DEFAULTED parameter, and the deriver matches a reference declaration at its exact
 arity only — the next refinement (a defaulted trailing parameter is every arity down to the required ones).
 
+**Defaulted arities (2026-09-08 08:50).** The parity parser records a declaration's trailing defaults and the
+deriver matches it at every arity down to its required ones, so sge's `FileHandle(file, type, externalStorage
+Path = …)` reaches java's two-argument constructor: it ships public (53 `Public` rows), `new FileHandle(file,
+type)` compiles in the suite. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12.
+**`sge-suite-check` 391 -> 382** (filetype 15 -> 7).
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type

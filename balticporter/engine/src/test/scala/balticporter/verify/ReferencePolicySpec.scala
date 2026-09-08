@@ -320,6 +320,23 @@ class ReferencePolicySpec extends FunSuite:
     assert(clue(nullables).exists(_.contains("regions")), r.policy.rows.mkString("\n"))
   }
 
+  test("a reference constructor with a trailing default answers the shorter java arity too") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Font {
+        |  protected Font(String data) { }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import lowlevel.Nullable
+        |class Font(val data: String, regions: Nullable[String] = Nullable.empty)
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    assert(clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.Public && row.upstream == "com.example.gfx.Font#<init>"))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

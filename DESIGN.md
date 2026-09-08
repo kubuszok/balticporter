@@ -2279,7 +2279,9 @@ its renamed top-level name; a key in both `flattenNestedTypes` and `typeRenames`
 promoted type under its new simple name (`XmlReader$Element` -> `XmlElement`), as promotion plus
 `subPackages` already was (§8.7). (18) A member java declares protected or package-private that the reference ships PUBLIC
 (`FileHandle(File, FileType)`) is a `Public` row; the visibility step widens the symbol's flags — a
-signature fact the emitter's plan and every dependent read off the symbol.
+signature fact the emitter's plan and every dependent read off the symbol. (19) A reference declaration with trailing DEFAULTED parameters answers every arity down to its
+required ones (`FileHandle(file, type, externalStoragePath = …)` matches java's two-argument
+constructor), so its rows — `Public` among them — reach the shorter java overloads.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

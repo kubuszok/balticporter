@@ -48,7 +48,9 @@ object ReferencePolicy:
              /** the port's configured member renames (`C#m` -> new name): a java `len` the port spells
                * `length` is read at the reference's `length` */
              memberRenames: Map[String, String] = Map.empty): Result =
-    val refByKey = reference.groupBy(d => key(d.path, kindClass(d.kind), d.name, d.explicitArity))
+    // a declaration with trailing DEFAULTS answers every arity down to its required ones
+    val refByKey = reference.flatMap(d => (0 to d.defaults).map(k => key(d.path, kindClass(d.kind), d.name, d.explicitArity - k) -> d))
+      .groupBy(_._1).map((k, vs) => k -> vs.map(_._2).distinct)
     val refPaths = reference.map(_.path).toSet
     /** the emitted package of a java class, by the manifest's longest-prefix package rename. */
     def emittedPkg(javaFqn: String): String =

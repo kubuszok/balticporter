@@ -115,6 +115,9 @@ object ApiParityCheck:
       /** a `def` written WITHOUT a parameter clause (`def x: T`) — a fact of the spelling, not of
         * the arity. `ReferencePolicy` reads it; `compare` does not. */
       parenless: Boolean = false,
+      /** trailing parameters carrying a DEFAULT: the declaration answers every arity from
+        * `explicitArity - defaults` up to `explicitArity` (a java overload per omitted one). */
+      defaults: Int = 0,
       /** parameters in `using`/`implicit` clauses, counted at the END of `paramTypes`; the explicit
         * arity a JAVA member is matched against is `arity - usingCount`. */
       usingCount: Int = 0,
@@ -339,6 +342,9 @@ object ApiParityCheck:
         }
       }
 
+    def trailingDefaults(clauses: List[Term.ParamClause]): Int =
+      clauses.filterNot(c => c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]))
+        .flatMap(_.values).reverse.takeWhile(_.default.isDefined).size
     def defParamTypes(clauses: List[Term.ParamClause], subst: Map[String, String]): List[String] =
       clauses.flatMap(_.values).map(p => renderType(p.decltpe, subst))
 
@@ -369,6 +375,7 @@ object ApiParityCheck:
           arity = defArity(d.ctor.paramClauses.toList),
           paramTypes = defParamTypes(d.ctor.paramClauses.toList, subst),
           usingCount = usingArity(d.ctor.paramClauses.toList),
+          defaults = trailingDefaults(d.ctor.paramClauses.toList),
         )
         walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Trait if isAccessible(d.mods) =>
@@ -432,6 +439,7 @@ object ApiParityCheck:
           targetName = extractTargetName(d.mods),
           parenless = clauses.isEmpty,
           usingCount = usingArity(clauses),
+          defaults = trailingDefaults(clauses),
         )
       case d: Ctor.Secondary if isAccessible(d.mods) =>
         val subst = substFor(scope, Nil)
@@ -442,6 +450,7 @@ object ApiParityCheck:
           arity = defArity(d.paramClauses.toList),
           paramTypes = defParamTypes(d.paramClauses.toList, subst),
           usingCount = usingArity(d.paramClauses.toList),
+          defaults = trailingDefaults(d.paramClauses.toList),
         )
       case d: Decl.Def if isAccessible(d.mods) =>
         val clauses = d.paramClauseGroups.flatMap(_.paramClauses)
