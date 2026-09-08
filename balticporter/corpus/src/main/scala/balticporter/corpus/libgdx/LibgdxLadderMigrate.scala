@@ -165,6 +165,8 @@ object LibgdxLadder:
     // sge's `[T: ClassTag]` bounds where java takes a `Class<T>` (`PoolManager.addPool`, `Skin.get`,
     // `Actions.action`, `AssetManager.get`): read off sge's tree (DESIGN.md §8.30 (9))
     "classtags" -> List(new balticporter.transform.ClassTagParamsTransform(derive = derive)),
+    // members sge ships public where java declared them protected (`FileHandle(File, FileType)`), off sge's tree
+    "visibility" -> List(new balticporter.transform.VisibilityTransform(derive = derive)),
     // sge's OWN members the suite reaches for, read verbatim off sge's tree by name (DESIGN.md §8.30 (8));
     // a member whose body wants a type the port lacks comes off this list with its finding
     "extras" -> List(new balticporter.transform.AddMembersTransform(fromReference = Map(
@@ -807,9 +809,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "mathunits", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive", "extras", "classtags")
+  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "mathunits", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive", "extras", "classtags", "visibility")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "mathunits", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive", "extras", "classtags")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "mathunits", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive", "extras", "classtags", "visibility")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

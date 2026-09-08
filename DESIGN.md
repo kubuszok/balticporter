@@ -2277,7 +2277,9 @@ member of another arity is no collider, while a field clashes with a field or a 
 PARAMETER when overloads are told apart by their parameter types, and a PROMOTED nested type is read at
 its renamed top-level name; a key in both `flattenNestedTypes` and `typeRenames` is ONE destination — the
 promoted type under its new simple name (`XmlReader$Element` -> `XmlElement`), as promotion plus
-`subPackages` already was (§8.7).
+`subPackages` already was (§8.7). (18) A member java declares protected or package-private that the reference ships PUBLIC
+(`FileHandle(File, FileType)`) is a `Public` row; the visibility step widens the symbol's flags — a
+signature fact the emitter's plan and every dependent read off the symbol.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

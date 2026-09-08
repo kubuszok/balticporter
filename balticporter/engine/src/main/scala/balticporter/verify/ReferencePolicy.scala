@@ -199,6 +199,9 @@ object ReferencePolicy:
           out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, rowKey(ms, overloaded), r.resultType)
       if !isProp && r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
         out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
+      // java declares it narrower than public, the reference ships it public: widened
+      if r.accessLevel == "public" && (ms.flags.isProtected || ms.flags.isPackagePrivate) then
+        out += DerivedPolicy.Row(DerivedPolicy.Family.Public, rowKey(ms, overloaded), s"public ${r.name}")
       // the reference KEEPS the parens (`def size(): Int`): the detector must not drop them
       if !isProp && !r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
         out += DerivedPolicy.Row(DerivedPolicy.Family.KeepParens, rowKey(ms, overloaded), s"def ${r.name}(): ${r.resultType}")
@@ -315,7 +318,11 @@ object ReferencePolicy:
                   val cands  = (ctors ++ applys) match
                     case Nil => Nil
                     case all => val same = all.filter(_.pkg == pkg); if same.nonEmpty then same else all
-                  if cands.nonEmpty then agree(ms, bestByParams(cands, d.paramss.flatten), paramRows(d, ms, nameCounts.getOrElse("<init>", 0) > 1, _))
+                  if cands.nonEmpty then
+                    val best = bestByParams(cands, d.paramss.flatten)
+                    agree(ms, best, paramRows(d, ms, nameCounts.getOrElse("<init>", 0) > 1, _))
+                    if best.forall(_.accessLevel == "public") && (ms.flags.isProtected || ms.flags.isPackagePrivate) then
+                      rows += DerivedPolicy.Row(DerivedPolicy.Family.Public, rowKey(ms, nameCounts.getOrElse("<init>", 0) > 1), "public <init>")
                 }
               case v: Tree.ValDef =>
                 program.symbolOf(v.symbol).filter(s => !s.name.contains('$')).foreach { fs =>

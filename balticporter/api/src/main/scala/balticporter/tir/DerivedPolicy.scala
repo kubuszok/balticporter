@@ -28,6 +28,7 @@ final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
   def keepNameIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.KeepName))
   def keepParensIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.KeepParens))
   def classTagIds: Set[SymId]   = idsOf(rows.iterator.filter(_.family == Family.ClassTagParam))
+  def publicIds: Set[SymId]     = idsOf(rows.iterator.filter(_.family == Family.Public))
   /** (owner upstream FQN, property, getter name, setter name) — the bean step's configured-pair shape */
   def propertyPairs: List[(String, String, String, Option[String])] =
     def split(up: String): (String, String) =
@@ -73,7 +74,10 @@ object DerivedPolicy:
       KeepParens,
       /** a method whose `Class<T>` parameter the reference replaces with a `[T: ClassTag]` bound:
         * the class-tag step drops the parameter and adds the clause */
-      ClassTagParam
+      ClassTagParam,
+      /** a member java declares narrower than public that the reference ships public: the visibility
+        * step widens it */
+      Public
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN

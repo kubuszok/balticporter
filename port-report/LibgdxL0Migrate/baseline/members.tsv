@@ -97,7 +97,7 @@ sge.Game	sge.Game#screen()	def	4a07fe24db312eb4
 sge.Game	sge.Game#screen_=(Nullable<Screen>)	def	2f4addd330193b86
 sge.Gdx	sge.Gdx	class	4ee54226036c9975
 sge.Gdx	sge.Gdx#graphics	val	3a8b39e90d2e598b
-sge.Graphics	sge.Graphics	class	9b9a62a6565fdd51
+sge.Graphics	sge.Graphics	class	017a58b12af108a6
 sge.Graphics	sge.Graphics#<stmt1>	stmt	41d5ab3ed0ee32c9
 sge.Graphics	sge.Graphics#backBufferHeight()	def	72ca3648ecd78eaa
 sge.Graphics	sge.Graphics#backBufferScale()	def	ce5378809993b4a4
@@ -172,7 +172,7 @@ sge.Graphics	sge.Graphics$BufferFormat#r	val	49e4d2d5652549d6
 sge.Graphics	sge.Graphics$BufferFormat#samples	val	8369ca8c8d338ce8
 sge.Graphics	sge.Graphics$BufferFormat#stencil	val	8e87687cc1a86845
 sge.Graphics	sge.Graphics$BufferFormat#toString()	def	244f80acb414f20c
-sge.Graphics	sge.Graphics$DisplayMode	class	e23c453ab579f4c6
+sge.Graphics	sge.Graphics$DisplayMode	class	7581c8aff9ce0f8f
 sge.Graphics	sge.Graphics$DisplayMode#<stmt1>	stmt	a14884eb87a8add3
 sge.Graphics	sge.Graphics$DisplayMode#<stmt2>	stmt	123ce846ee159a30
 sge.Graphics	sge.Graphics$DisplayMode#<stmt3>	stmt	67bfa6c7fe877299
@@ -183,7 +183,7 @@ sge.Graphics	sge.Graphics$DisplayMode#refreshRate	val	2aff43c53ef10467
 sge.Graphics	sge.Graphics$DisplayMode#toString()	def	8a0bf64153d0c1f1
 sge.Graphics	sge.Graphics$DisplayMode#width	val	84810203c2c7abb3
 sge.Graphics	sge.Graphics$GraphicsType	class	b2ea2868b056e21b
-sge.Graphics	sge.Graphics$Monitor	class	f664bff9f817fc7b
+sge.Graphics	sge.Graphics$Monitor	class	50b12933ad5e8308
 sge.Graphics	sge.Graphics$Monitor#<stmt1>	stmt	183cb8cc8da23f8b
 sge.Graphics	sge.Graphics$Monitor#<stmt2>	stmt	8ae3a31d30b15759
 sge.Graphics	sge.Graphics$Monitor#<stmt3>	stmt	58b0d4e82d0403cf
@@ -2600,8 +2600,8 @@ sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData,Sg
 sge.graphics.GLTexture	sge.graphics.GLTexture#vWrap	val	58e33e3df4ea21b8
 sge.graphics.GLTexture	sge.graphics.GLTexture#vWrap()	def	d6818fc6c5191695
 sge.graphics.GLTexture	sge.graphics.GLTexture#width()	def	b722ce9e5c721d3d
-sge.graphics.Mesh	sge.graphics.Mesh	class	0754ff537144f86a
-sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexData,IndexData,boolean,Sge)	ctor	5169f47d837e41b6
+sge.graphics.Mesh	sge.graphics.Mesh	class	7d7d5c0656c5d2e6
+sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexData,IndexData,boolean,Sge)	ctor	8e6c24dcd42dd99d
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,Array<VertexAttribute>,Sge)	ctor	0420de989ce19885
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,VertexAttributes,Sge)	ctor	807f5bd6aa210807
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(boolean,boolean,int,int,VertexAttributes,Sge)	ctor	b4d65094fa785696
@@ -2754,7 +2754,7 @@ sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#<stmt2>	stmt	9f7e8e2
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#buffer	val	bfe899b07ae9a424
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#crc	val	91233da7218735b4
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	def	b48044e43c3e303b
-sge.graphics.Texture	sge.graphics.Texture	class	930f72b8013c73f6
+sge.graphics.Texture	sge.graphics.Texture	class	3e7a917b178a64f1
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Format,boolean,Sge)	ctor	c0e452c5bfe0a0da
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Sge)	ctor	4b714eb826e8bb4f
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,boolean,Sge)	ctor	c5c4c29ac64a7eec
@@ -2764,7 +2764,7 @@ sge.graphics.Texture	sge.graphics.Texture#<init>(Pixmap,boolean,Sge)	ctor	2bcc89
 sge.graphics.Texture	sge.graphics.Texture#<init>(Sge)	ctor	8db7f0b3e2633ba2
 sge.graphics.Texture	sge.graphics.Texture#<init>(String,Sge)	ctor	69aa18dbbd144b2c
 sge.graphics.Texture	sge.graphics.Texture#<init>(TextureData,Sge)	ctor	6ae2515024296931
-sge.graphics.Texture	sge.graphics.Texture#<init>(TextureTarget,int,TextureData,Sge)	ctor	91cc5f3b3977f242
+sge.graphics.Texture	sge.graphics.Texture#<init>(TextureTarget,int,TextureData,Sge)	ctor	26990f3baa86bd04
 sge.graphics.Texture	sge.graphics.Texture#<init>(int,int,Format,Sge)	ctor	0c5235509f0d3646
 sge.graphics.Texture	sge.graphics.Texture#<stmt1>	stmt	abca2bbe56b03719
 sge.graphics.Texture	sge.graphics.Texture#addManagedTexture(Application,Texture)	def	8bafb37dcb522a20
@@ -3046,7 +3046,7 @@ sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#shader()	def	93da7c0299287ed0
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#shader_=(Nullable<ShaderProgram>)	def	12bbae3c0ab20347
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#transformMatrix()	def	234d1e7e6a504f68
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#transformMatrix_=(Matrix4)	def	1d6b4cc0a5c53b6e
-sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont	class	1dcb2f356333ac7c
+sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont	class	124b96f842384cba
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#<init>(BitmapFontData,TextureRegion,boolean,Sge)	ctor	31bb9104fb16174c
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#<init>(FileHandle,FileHandle,boolean,Sge)	ctor	254b20c6b8494d67
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#<init>(FileHandle,FileHandle,boolean,boolean,Sge)	ctor	5a863de00c3722c5
@@ -3084,7 +3084,7 @@ sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#draw(Batch,GlyphLayout,f
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#flipped	val	8b97be447c4568ad
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#flipped()	def	e3034da69207ac32
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#getRegion(int)	def	f036d3cb75d0e051
-sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#indexOf(CharSequence,char,int)	def	206ea2d5ce6a37f3
+sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#indexOf(CharSequence,char,int)	def	a2227c3e82033888
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#integer	val	2b6edd917f0aeb73
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#lineHeight()	def	d72ca0192f161a39
 sge.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont#load(BitmapFontData)	def	df7aec13e9e0551a
@@ -3268,7 +3268,7 @@ sge.graphics.g2d.CpuSpriteBatch	sge.graphics.g2d.CpuSpriteBatch#tmpAffine	val	67
 sge.graphics.g2d.CpuSpriteBatch	sge.graphics.g2d.CpuSpriteBatch#transformMatrix()	def	ad5e613d858dc8a4
 sge.graphics.g2d.CpuSpriteBatch	sge.graphics.g2d.CpuSpriteBatch#transformMatrix_=(Matrix4)	def	99fa99cbed2cc8bf
 sge.graphics.g2d.CpuSpriteBatch	sge.graphics.g2d.CpuSpriteBatch#virtualMatrix	val	30a805fbfa7ed0f7
-sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont	class	1dcd73ab22621635
+sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont	class	e3387747c12e71a0
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont#<init>(BitmapFontData,Nullable<DynamicArray<TextureRegion>>,boolean,Sge)	ctor	1f4dc7e13b7213b3
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont#<init>(BitmapFontData,TextureRegion,boolean,Sge)	ctor	c233cbb640de1fd8
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont#<init>(FileHandle,FileHandle,boolean,Sge)	ctor	4a0e12779ee5dbf8
@@ -3455,7 +3455,7 @@ sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool#max	val	
 sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool#newObject()	def	2bee07369a487933
 sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool$PooledEffect	class	28ed7075ce6f1635
 sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool$PooledEffect#free()	def	f49b9b3297ef4d9e
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter	class	3d19e7d39f53e345
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter	class	cd26e93b80ae3c07
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#<init>()	ctor	727b871db900df81
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#<init>(BufferedReader)	ctor	aeb9f8654d5439f0
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#<init>(ParticleEmitter)	ctor	7b258dd2c49bca87
@@ -3561,12 +3561,12 @@ sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#preAllocatePar
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#premultipliedAlpha	val	5e445c7db8b7a297
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#premultipliedAlpha()	def	ce510c2f73d58a29
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#premultipliedAlpha_=(boolean)	def	ab8aecddcd3f8183
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readBoolean(BufferedReader,String)	def	e8cd64ce8093c7e2
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readBoolean(String)	def	6ecb410826b9562a
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readFloat(BufferedReader,String)	def	376401cd2bc4953d
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readInt(BufferedReader,String)	def	cd7f9d2b85836d38
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readString(BufferedReader,String)	def	ba09f36a6d793c32
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readString(String)	def	9a367b64fa7aeca7
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readBoolean(BufferedReader,String)	def	287bd37790e80578
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readBoolean(String)	def	6264851b4db87d01
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readFloat(BufferedReader,String)	def	ffdac646752976f9
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readInt(BufferedReader,String)	def	b74b25a390f2b922
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readString(BufferedReader,String)	def	0984afe9d4a9bfa4
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#readString(String)	def	841edd1e8cab0fc8
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#reset()	def	f918663885208a4b
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#reset(boolean)	def	33c503c1cfe32fcc
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#restart()	def	35f5b5327d056b51
@@ -3741,7 +3741,7 @@ sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValu
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#side()	def	e8036cd74bfb8fe6
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#side_=(SpawnEllipseSide)	def	799e0c805597cd28
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpriteMode	class	3db09cbda0cb66ff
-sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker	class	6724aab73a86bd5d
+sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker	class	b9a99108e5d959cc
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker#<init>(int,int,Format,int,boolean,PackStrategy,Sge)	ctor	e4efe46e461cb989
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker#<init>(int,int,Format,int,boolean,Sge)	ctor	81cfea241238d7af
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker#<stmt1>	stmt	abca2bbe56b03719
@@ -3806,7 +3806,7 @@ sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Bounds#set(int,int,i
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Bounds#width	val	540a63999b5de356
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Bounds#x	val	0da0a947172a1df8
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Bounds#y	val	aab8a48558645d78
-sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy	class	11cadd34372d63a7
+sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy	class	b3da5db6f9eac01e
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy#comparator	val	9cebe536cbd29a73
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy#insert(Node,Bounds)	def	ab0c14a9ec518b13
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy#pack(PixmapPacker,Nullable<String>,Bounds)	def	42953f221a38f052
@@ -3818,7 +3818,7 @@ sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$G
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$GuillotinePage#<stmt4>	stmt	3c00939d8eb542e9
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$GuillotinePage#<stmt5>	stmt	e0d45848879cd683
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$GuillotinePage#root	val	d9be21e83c6c78d0
-sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$Node	class	497752577f2ffc73
+sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$Node	class	9a4c502799734fe8
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$Node#full	val	369f3615762c15f3
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$Node#leftChild	val	2d3ea3165498634e
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$GuillotineStrategy$Node#rect	val	0a2237791beb9467
@@ -3841,9 +3841,9 @@ sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Page#rects()	def	241
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Page#texture	val	1ebbc869538701ca
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Page#texture()	def	98f4d4e8e089735a
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$Page#updateTexture(TextureFilter,TextureFilter,boolean)	def	3da173fcc5ff9122
-sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle	class	bdbefd169811c780
-sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#<init>(int,int,int,int)	ctor	b66160ad79048b28
-sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#<init>(int,int,int,int,int,int,int,int)	ctor	3b3c84f933313be2
+sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle	class	87d3da670082a813
+sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#<init>(int,int,int,int)	ctor	188cba732010c6e0
+sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#<init>(int,int,int,int,int,int,int,int)	ctor	0ccaa16a2e0b3566
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#bounds	val	653ae95828c0582b
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#height()	def	1a5d0b98d3409c82
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$PixmapPackerRectangle#offsetX	val	ccc404ac1d6b3733
@@ -4223,7 +4223,7 @@ sge.graphics.g2d.SpriteBatch	sge.graphics.g2d.SpriteBatch#transformMatrix()	def	
 sge.graphics.g2d.SpriteBatch	sge.graphics.g2d.SpriteBatch#transformMatrix_=(Matrix4)	def	a6015d8e6ec90614
 sge.graphics.g2d.SpriteBatch	sge.graphics.g2d.SpriteBatch#vertices	val	22776f73824ed0bf
 sge.graphics.g2d.SpriteBatch	vertexDataType	val	698d72b5739f31f9
-sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache	class	505a34c63f2814de
+sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache	class	e6dc28d77aa404af
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#<init>(Sge)	ctor	a27bd24da1eec437
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#<init>(int,boolean,Sge)	ctor	3e5b1454dbf35335
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#<stmt1>	stmt	abca2bbe56b03719
@@ -4255,7 +4255,7 @@ sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#colorPacked	val	7b020a
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#color_=(Color)	def	8a80490f6926bae8
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#combinedMatrix	val	eb33368cb3d05eaa
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#counts	val	e048fa285a8b0342
-sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#createDefaultShader(Sge)	def	6b9561b139e505d8
+sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#createDefaultShader(Sge)	def	c467b124291da6a4
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#currentCache	val	d4f73583fe3604af
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#customShader	val	ba7a1fe37e14f453
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache#customShader()	def	227481b9622adc85
@@ -4449,7 +4449,7 @@ sge.graphics.g2d.TextureRegion	sge.graphics.g2d.TextureRegion#u	val	c4e36c024843
 sge.graphics.g2d.TextureRegion	sge.graphics.g2d.TextureRegion#u2	val	cd93d89753a0169c
 sge.graphics.g2d.TextureRegion	sge.graphics.g2d.TextureRegion#v	val	99cf35d294f79fa8
 sge.graphics.g2d.TextureRegion	sge.graphics.g2d.TextureRegion#v2	val	fce48007659064d0
-sge.graphics.g3d.Attribute	sge.graphics.g3d.Attribute	class	42b7540b30f35288
+sge.graphics.g3d.Attribute	sge.graphics.g3d.Attribute	class	7bf22e660fdd45a4
 sge.graphics.g3d.Attribute	sge.graphics.g3d.Attribute#<stmt1>	stmt	abca2bbe56b03719
 sge.graphics.g3d.Attribute	sge.graphics.g3d.Attribute#<stmt2>	stmt	c3968bc2e16369d2
 sge.graphics.g3d.Attribute	sge.graphics.g3d.Attribute#<stmt3>	stmt	2bdae2a2a55a178a
@@ -4559,7 +4559,7 @@ sge.graphics.g3d.Model	sge.graphics.g3d.Model#meshParts	val	fd868eeb17d7a451
 sge.graphics.g3d.Model	sge.graphics.g3d.Model#meshes	val	c22b526b4e416980
 sge.graphics.g3d.Model	sge.graphics.g3d.Model#nodePartBones	val	3d41dcc8dece9288
 sge.graphics.g3d.Model	sge.graphics.g3d.Model#nodes	val	55f78e5cd57284b2
-sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch	class	22bd2e79acbfaedf
+sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch	class	2e9c9df46564e4f6
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#<init>(FileHandle,FileHandle,Sge)	ctor	370a2f45ffbb82ac
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#<init>(RenderContext,RenderableSorter,Sge)	ctor	3c9ac2c7e99e5e73
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#<init>(RenderContext,Sge)	ctor	0c6f942c0af16c5c
@@ -4601,7 +4601,7 @@ sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#setCamera(Camera)	def	39
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#shaderProvider	val	c1b253081f9f8f4a
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#shaderProvider()	def	bf9236bdf8c2181e
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch#sorter	val	7ccea7e7079292e1
-sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch$RenderablePool	class	11655996b4f1f3e9
+sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch$RenderablePool	class	68399b5771a7c555
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch$RenderablePool#newObject()	def	61741bc7b2b3e139
 sge.graphics.g3d.ModelBatch	sge.graphics.g3d.ModelBatch$RenderablePool#obtain()	def	a73a08a337c6e1e3
 sge.graphics.g3d.ModelCache	sge.graphics.g3d.ModelCache	class	2aca6aa261e3f20a
@@ -6374,9 +6374,9 @@ sge.graphics.g3d.particles.renderers.ParticleControllerControllerRenderer	sge.gr
 sge.graphics.g3d.particles.renderers.ParticleControllerRenderData	sge.graphics.g3d.particles.renderers.ParticleControllerRenderData	class	75eca516c84df2e5
 sge.graphics.g3d.particles.renderers.ParticleControllerRenderData	sge.graphics.g3d.particles.renderers.ParticleControllerRenderData#controller	val	d38c67c957fa02df
 sge.graphics.g3d.particles.renderers.ParticleControllerRenderData	sge.graphics.g3d.particles.renderers.ParticleControllerRenderData#positionChannel	val	a4950f0d9c406c14
-sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	class	6cd73c13d13843de
-sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#<init>()	ctor	c1e5d50ebe510fc3
-sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#<init>(D)	ctor	ad419c556a844e9f
+sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	class	2bbfd801ccee5c57
+sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#<init>()	ctor	d7da95857dd238af
+sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#<init>(D)	ctor	25a50eae037274fd
 sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#batch	val	3b65d46263eb5e8d
 sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#isCompatible(ParticleBatch<?>)	def	7f1eb507e67b995f
 sge.graphics.g3d.particles.renderers.ParticleControllerRenderer	sge.graphics.g3d.particles.renderers.ParticleControllerRenderer#renderData	val	3abaa04ef16dc2d3
@@ -6948,7 +6948,7 @@ sge.graphics.g3d.shaders.DepthShader	sge.graphics.g3d.shaders.DepthShader$Config
 sge.graphics.g3d.shaders.DepthShader	sge.graphics.g3d.shaders.DepthShader$Config#<stmt1>	stmt	dc327eb14ebbbbaf
 sge.graphics.g3d.shaders.DepthShader	sge.graphics.g3d.shaders.DepthShader$Config#defaultAlphaTest	val	4747bc5860f0b46b
 sge.graphics.g3d.shaders.DepthShader	sge.graphics.g3d.shaders.DepthShader$Config#depthBufferOnly	val	05a664f864631ff4
-sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController	class	aef4d02c92db2e0b
+sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController	class	0e564a3fec674061
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController#action(Animation,Seconds,Seconds,int,float,Nullable<AnimationListener>,Seconds)	def	3080f4356216d757
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController#action(Nullable<AnimationDesc>,Seconds)	def	c39aa36a47f9c78f
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController#action(String,Seconds,Seconds,int,float,Nullable<AnimationListener>,Seconds)	def	c669a55b9806617b
@@ -6987,7 +6987,7 @@ sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationContr
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController#transitionCurrentTime	val	ac50cf4b8d955af8
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController#transitionTargetTime	val	0c8d7ae5271b8903
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController#update(Seconds)	def	004c030b22a06f7c
-sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationDesc	class	25d0064d107ea5fc
+sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationDesc	class	976a7b072f7acc21
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationDesc#animation	val	e84c7339f14caca0
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationDesc#duration	val	475ac32a1cb6869f
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationDesc#listener	val	7fdda577aeb7812f
@@ -6999,7 +6999,7 @@ sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationContr
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationListener	class	d5d907e056339fdc
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationListener#onEnd(AnimationDesc)	def	5b31637be37683fc
 sge.graphics.g3d.utils.AnimationController	sge.graphics.g3d.utils.AnimationController$AnimationListener#onLoop(AnimationDesc)	def	119f0658325f46b9
-sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController	class	12cb8c88a80c4f4c
+sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController	class	c42d39ac6a08bcfc
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#<stmt1>	stmt	80f9eb745c02feb8
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#apply(Animation,Seconds,float)	def	e3a5cdd46b867303
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applyAnimation(Animation,Seconds)	def	5a3e917b4c53f882
@@ -7010,7 +7010,7 @@ sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimat
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#applying	val	dd169b5424b8625b
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#begin()	def	37d45cd4cc2f5937
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#end()	def	7e2277db67dd0ad8
-sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#getFirstKeyframeIndexAtTime(DynamicArray<NodeKeyframe<T>>,Seconds)	def	5b0ceb842b1031e9
+sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#getFirstKeyframeIndexAtTime(DynamicArray<NodeKeyframe<T>>,Seconds)	def	81239132fe2d62b4
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#getNodeAnimationTransform(NodeAnimation,float)	def	90413fa68286bbd3
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#getRotationAtTime(NodeAnimation,float,Quaternion)	def	7cb6ac219373935b
 sge.graphics.g3d.utils.BaseAnimationController	sge.graphics.g3d.utils.BaseAnimationController#getScalingAtTime(NodeAnimation,float,Vector3)	def	3ce51a48a2b30523
@@ -7038,7 +7038,7 @@ sge.graphics.g3d.utils.BaseShaderProvider	sge.graphics.g3d.utils.BaseShaderProvi
 sge.graphics.g3d.utils.BaseShaderProvider	sge.graphics.g3d.utils.BaseShaderProvider#createShader(Renderable)	def	a31bbd18c867efe2
 sge.graphics.g3d.utils.BaseShaderProvider	sge.graphics.g3d.utils.BaseShaderProvider#getShader(Renderable)	def	b078ff00a50625cf
 sge.graphics.g3d.utils.BaseShaderProvider	sge.graphics.g3d.utils.BaseShaderProvider#shaders	val	ab8d1b4d9f1bed68
-sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController	class	27e697a0423da4a5
+sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController	class	ffd9be685581005a
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController#<init>(Camera,Sge)	ctor	f28fbe89def68386
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController#<stmt1>	stmt	b0861b17a2125109
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController#<stmt2>	stmt	b7189c9b7cf7482e
@@ -7087,7 +7087,7 @@ sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputC
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController#translateUnits	val	788fb8f6319a15ec
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController#update()	def	ec122e3a9f9d4518
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController#zoom(float)	def	fd204862dc915285
-sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController$CameraGestureListener	class	73bdb2c4f0c79e14
+sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController$CameraGestureListener	class	b12d597be27a7935
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController$CameraGestureListener#controller	val	c78d72f8cba327fe
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController$CameraGestureListener#fling(float,float,Button)	def	f2fd30c71b7dbdf7
 sge.graphics.g3d.utils.CameraInputController	sge.graphics.g3d.utils.CameraInputController$CameraGestureListener#longPress(float,float)	def	27520aad74e61c5a
@@ -7778,8 +7778,8 @@ sge.graphics.glutils.FileTextureData	sge.graphics.glutils.FileTextureData#useMip
 sge.graphics.glutils.FileTextureData	sge.graphics.glutils.FileTextureData#useMipMaps()	def	ed20a1d1f06dcc5a
 sge.graphics.glutils.FileTextureData	sge.graphics.glutils.FileTextureData#width	val	1282e2c061d0407a
 sge.graphics.glutils.FileTextureData	sge.graphics.glutils.FileTextureData#width()	def	a8d8b388bd1caf9e
-sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer	class	51079157e34bf36e
-sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	3068316ceeb39e22
+sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer	class	ce73e28319419385
+sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	17b68b9429bd49e7
 sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer#<init>(int,int,boolean,Sge)	ctor	406b5ed4319319f2
 sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer#<stmt1>	stmt	0a082eb04f7f4326
 sge.graphics.glutils.FloatFrameBuffer	sge.graphics.glutils.FloatFrameBuffer#checkExtensions()	def	3103c6224ab725a2
@@ -7811,18 +7811,18 @@ sge.graphics.glutils.FloatTextureData	sge.graphics.glutils.FloatTextureData#type
 sge.graphics.glutils.FloatTextureData	sge.graphics.glutils.FloatTextureData#useMipMaps()	def	f62fb02982fcd6d3
 sge.graphics.glutils.FloatTextureData	sge.graphics.glutils.FloatTextureData#width	val	1b61753462404745
 sge.graphics.glutils.FloatTextureData	sge.graphics.glutils.FloatTextureData#width()	def	863ba8150810979e
-sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer	class	011f8e4c76d5f9a3
+sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer	class	e9f1577a93d47152
 sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#<init>(Format,Pixels,Pixels,boolean,Sge)	ctor	5eb00b40a92153da
 sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#<init>(Format,Pixels,Pixels,boolean,boolean,Sge)	ctor	5776f98d8a59bf03
-sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	eafd5bebd202cc91
+sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	d1c2019b4c136c25
 sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#attachFrameBufferColorTexture(Texture)	def	17fdc1f9f1046a61
 sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#createTexture(FrameBufferTextureAttachmentSpec)	def	e6e9c16885101e91
 sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#disposeColorTexture(Texture)	def	e78b667423b05f1c
 sge.graphics.glutils.FrameBuffer	sge.graphics.glutils.FrameBuffer#unbind(Sge)	def	76b999e07e74cfea
-sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap	class	f2592886a985b846
+sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap	class	b8ffc4d1eb27bf97
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#<init>(Format,int,int,boolean,Sge)	ctor	01bbf0f1cef11b05
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#<init>(Format,int,int,boolean,boolean,Sge)	ctor	e5d37588004d61cc
-sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	8a11f5eb7265e4fc
+sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#<init>(GLFrameBufferBuilder<?>,Sge)	ctor	d4200e18864ed557
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#attachFrameBufferColorTexture(Cubemap)	def	f984e843e79f16d2
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#bind()	def	c0501973dd15f127
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#bindSide(CubemapSide)	def	d0bb029abb7c1d42
@@ -7832,9 +7832,9 @@ sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#disposeColorTexture(Cubemap)	def	95672009abcc8afb
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#nextSide()	def	15aa9bd836e7fc10
 sge.graphics.glutils.FrameBufferCubemap	sge.graphics.glutils.FrameBufferCubemap#side()	def	d33f7a688f7a77ba
-sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer	class	4be3535e09473493
-sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge,MkArray<T>)	ctor	000d8e2cf82cd36a
-sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#<init>(Sge,MkArray<T>)	ctor	930b12d81b6099ab
+sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer	class	47e3fc9be3dad619
+sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#<init>(GLFrameBufferBuilder<?>,Sge,MkArray<T>)	ctor	63669e4c1a8959cf
+sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#<init>(Sge,MkArray<T>)	ctor	5842082b3d241855
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#GL_DEPTH24_STENCIL8_OES	val	9ee8b57c1e3dceea
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#addManagedFrameBuffer(Application,GLFrameBuffer<?>)	def	6a40fd71dca2d86c
 sge.graphics.glutils.GLFrameBuffer	sge.graphics.glutils.GLFrameBuffer#attachFrameBufferColorTexture(T)	def	993ffb56329414dd
@@ -8558,8 +8558,8 @@ sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray#setVertices(Ar
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray#unbind(ShaderProgram)	def	dd67322ddfd9d4ac
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray#unbind(ShaderProgram,Nullable<Array<int>>)	def	5a087118df9aa068
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray#updateVertices(int,Array<float>,int,int)	def	bb2297c94a0bb8d0
-sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject	class	d89f008ec7004149
-sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject#<init>(BufferUsage,ByteBuffer,boolean,VertexAttributes,Sge)	ctor	5cf129578e6c3cc4
+sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject	class	595c61e5fad9e191
+sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject#<init>(BufferUsage,ByteBuffer,boolean,VertexAttributes,Sge)	ctor	10ba86738ac88415
 sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject#<init>(boolean,int,Array<VertexAttribute>,Sge)	ctor	6e9f6c52c859325e
 sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject#<init>(boolean,int,VertexAttributes,Sge)	ctor	58f416f2e9ea9240
 sge.graphics.glutils.VertexBufferObject	sge.graphics.glutils.VertexBufferObject#attributes	val	e92f8a4bb8c1a063
@@ -8672,7 +8672,7 @@ sge.graphics.glutils.VertexData	sge.graphics.glutils.VertexData#setVertices(Arra
 sge.graphics.glutils.VertexData	sge.graphics.glutils.VertexData#unbind(ShaderProgram)	def	cef7bbdff56c1ef3
 sge.graphics.glutils.VertexData	sge.graphics.glutils.VertexData#unbind(ShaderProgram,Nullable<Array<int>>)	def	68800ca41666036c
 sge.graphics.glutils.VertexData	sge.graphics.glutils.VertexData#updateVertices(int,Array<float>,int,int)	def	c18b77a9cec12c4a
-sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor	class	a84b5ac596a517d6
+sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor	class	732cbd4b826b893a
 sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#<stmt1>	stmt	1b9cfb598a361ab5
 sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#check()	def	116f672a28b40f3f
 sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#gl20	val	8eb56db12fb45d04
@@ -8838,7 +8838,7 @@ sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#gl
 sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#glVertexAttribPointer(int,int,DataType,boolean,int,Buffer)	def	6c3f09912f631efd
 sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#glVertexAttribPointer(int,int,DataType,boolean,int,int)	def	d9786e07f9a11c36
 sge.graphics.profiling.GL20Interceptor	sge.graphics.profiling.GL20Interceptor#glViewport(Pixels,Pixels,Pixels,Pixels)	def	e52392b437e501ec
-sge.graphics.profiling.GL30Interceptor	sge.graphics.profiling.GL30Interceptor	class	57476fc5a40eb071
+sge.graphics.profiling.GL30Interceptor	sge.graphics.profiling.GL30Interceptor	class	4d73f79df79e82c2
 sge.graphics.profiling.GL30Interceptor	sge.graphics.profiling.GL30Interceptor#<stmt1>	stmt	73d3c64d59c307fd
 sge.graphics.profiling.GL30Interceptor	sge.graphics.profiling.GL30Interceptor#check()	def	fcc5be50eb5b399c
 sge.graphics.profiling.GL30Interceptor	sge.graphics.profiling.GL30Interceptor#gl30	val	3a3245c763a31518
@@ -9220,7 +9220,7 @@ sge.graphics.profiling.GLErrorListener	sge.graphics.profiling.GLErrorListener	cl
 sge.graphics.profiling.GLErrorListener	sge.graphics.profiling.GLErrorListener#LOGGING_LISTENER	val	4acb9f88f6b738c3
 sge.graphics.profiling.GLErrorListener	sge.graphics.profiling.GLErrorListener#THROWING_LISTENER	val	634719b00328d572
 sge.graphics.profiling.GLErrorListener	sge.graphics.profiling.GLErrorListener#onError(int)	def	ff6a9e5c3d756482
-sge.graphics.profiling.GLInterceptor	sge.graphics.profiling.GLInterceptor	class	87f7d74ed5f363ef
+sge.graphics.profiling.GLInterceptor	sge.graphics.profiling.GLInterceptor	class	2df3e8ecf5b7d600
 sge.graphics.profiling.GLInterceptor	sge.graphics.profiling.GLInterceptor#<stmt1>	stmt	df9cd70d93b6f3d7
 sge.graphics.profiling.GLInterceptor	sge.graphics.profiling.GLInterceptor#calls	val	b923385a3198c2fd
 sge.graphics.profiling.GLInterceptor	sge.graphics.profiling.GLInterceptor#calls()	def	d0e150beb7af2f8f
@@ -9255,7 +9255,7 @@ sge.graphics.profiling.GLProfiler	sge.graphics.profiling.GLProfiler#reset()	def	
 sge.graphics.profiling.GLProfiler	sge.graphics.profiling.GLProfiler#shaderSwitches()	def	712f27413f565ecd
 sge.graphics.profiling.GLProfiler	sge.graphics.profiling.GLProfiler#textureBindings()	def	3dccbe8fdb5942cc
 sge.graphics.profiling.GLProfiler	sge.graphics.profiling.GLProfiler#vertexCount()	def	941cb385c877605a
-sge.input.GestureDetector	sge.input.GestureDetector	class	a5f75162e875a552
+sge.input.GestureDetector	sge.input.GestureDetector	class	4980bd90e88de35f
 sge.input.GestureDetector	sge.input.GestureDetector#<init>(GestureListener,Sge)	ctor	a15bc229e1d51934
 sge.input.GestureDetector	sge.input.GestureDetector#<init>(float,Seconds,Seconds,Seconds,GestureListener,Sge)	ctor	4396b6775a6bfdfa
 sge.input.GestureDetector	sge.input.GestureDetector#<stmt1>	stmt	61a2c6d70b05e42d
@@ -9329,7 +9329,7 @@ sge.input.GestureDetector	sge.input.GestureDetector$GestureListener#pinchStop()	
 sge.input.GestureDetector	sge.input.GestureDetector$GestureListener#tap(float,float,int,Button)	def	fbe5b7e22062c3c2
 sge.input.GestureDetector	sge.input.GestureDetector$GestureListener#touchDown(float,float,int,Button)	def	70a41f365280b0c0
 sge.input.GestureDetector	sge.input.GestureDetector$GestureListener#zoom(float,float)	def	215e4e680c16750a
-sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker	class	7f9b1e6617bcde43
+sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker	class	f32fe8227c759ac2
 sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#deltaX	val	87f1ef700567faf5
 sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#deltaY	val	fcd85c0d92cbd2cc
 sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#getAverage(Array<float>,int)	def	93271caa7897ff05
@@ -9383,7 +9383,7 @@ sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration#validator	
 sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration#validator()	def	1cbdbdc2770f706c
 sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration$NativeInputCloseCallback	class	ee5877af45f1f991
 sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration$NativeInputCloseCallback#onClose(boolean)	def	b7c7f10f22ef19e1
-sge.input.RemoteInput	sge.input.RemoteInput	class	4112cad8bec06e4d
+sge.input.RemoteInput	sge.input.RemoteInput	class	e61af3c7a87b9c78
 sge.input.RemoteInput	sge.input.RemoteInput#<init>(RemoteInputListener,Sge)	ctor	3b06ab9abe40baf5
 sge.input.RemoteInput	sge.input.RemoteInput#<init>(Sge)	ctor	c79ad94cd63ed735
 sge.input.RemoteInput	sge.input.RemoteInput#<init>(int,Sge)	ctor	574024b2a81c25a5
@@ -9472,7 +9472,7 @@ sge.input.RemoteInput	sge.input.RemoteInput$EventTrigger#<stmt2>	stmt	cff7e376cb
 sge.input.RemoteInput	sge.input.RemoteInput$EventTrigger#keyEvent	val	51b0f4ad22a3c590
 sge.input.RemoteInput	sge.input.RemoteInput$EventTrigger#run()	def	bf9ffbe747f79b1f
 sge.input.RemoteInput	sge.input.RemoteInput$EventTrigger#touchEvent	val	07394921c62c2ec9
-sge.input.RemoteInput	sge.input.RemoteInput$KeyEvent	class	cafe2965dd72098e
+sge.input.RemoteInput	sge.input.RemoteInput$KeyEvent	class	f4ce0af53c725c8b
 sge.input.RemoteInput	sge.input.RemoteInput$KeyEvent#KEY_DOWN	val	51f93e9b092b1900
 sge.input.RemoteInput	sge.input.RemoteInput$KeyEvent#KEY_TYPED	val	efba21ef868d12f0
 sge.input.RemoteInput	sge.input.RemoteInput$KeyEvent#KEY_UP	val	231301809bac8052
@@ -9483,7 +9483,7 @@ sge.input.RemoteInput	sge.input.RemoteInput$KeyEvent#type	val	992a0c950b90b625
 sge.input.RemoteInput	sge.input.RemoteInput$RemoteInputListener	class	210b684dcf3a1755
 sge.input.RemoteInput	sge.input.RemoteInput$RemoteInputListener#onConnected()	def	183f850767cd30d4
 sge.input.RemoteInput	sge.input.RemoteInput$RemoteInputListener#onDisconnected()	def	b06462cb31db98d2
-sge.input.RemoteInput	sge.input.RemoteInput$TouchEvent	class	89fd524dc9330837
+sge.input.RemoteInput	sge.input.RemoteInput$TouchEvent	class	d721a6690f847681
 sge.input.RemoteInput	sge.input.RemoteInput$TouchEvent#TOUCH_DOWN	val	b838e04e55984f67
 sge.input.RemoteInput	sge.input.RemoteInput$TouchEvent#TOUCH_DRAGGED	val	ac155a8364762dc0
 sge.input.RemoteInput	sge.input.RemoteInput$TouchEvent#TOUCH_UP	val	69eb9e118cb5ad78
@@ -9695,7 +9695,7 @@ sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#scaleY	val	7
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#textureRegion	val	808114968a5f9ac1
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#x	val	c6dc2db5c783d440
 sge.maps.objects.TextureMapObject	sge.maps.objects.TextureMapObject#y	val	32b732cc2774e048
-sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader	class	31e7e03208bd798d
+sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader	class	b2079312528b2fed
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#<init>(FileHandleResolver,Sge)	ctor	b9439b79b42289e8
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#<init>(Sge)	ctor	3115fb0d5cc694d9
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#<stmt1>	stmt	abca2bbe56b03719
@@ -9707,7 +9707,7 @@ sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#load(String)	d
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#load(String,Parameters)	def	7c8f4d844418aea7
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#loadAsync(AssetManager,String,FileHandle,Parameters)	def	8840385aa08ae8c8
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#loadSync(AssetManager,String,FileHandle,Parameters)	def	f69240adbc39ddde
-sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#parseRegionName(String)	def	abb0d4cfdca5a49b
+sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#parseRegionName(String)	def	b52841ab84d240dc
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#setTextureFilters(TextureFilter,TextureFilter)	def	b296871f34bb1663
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader#trackedTextures	val	55da23a15cd6746c
 sge.maps.tiled.AtlasTmjMapLoader	sge.maps.tiled.AtlasTmjMapLoader$AtlasResolver	class	7a4d21e053395af5
@@ -9753,7 +9753,7 @@ sge.maps.tiled.AtlasTmxMapLoader	sge.maps.tiled.AtlasTmxMapLoader$AtlasResolver$
 sge.maps.tiled.AtlasTmxMapLoader	sge.maps.tiled.AtlasTmxMapLoader$AtlasResolver$DirectAtlasResolver#atlas	val	320e7a4fc947c5fa
 sge.maps.tiled.AtlasTmxMapLoader	sge.maps.tiled.AtlasTmxMapLoader$AtlasResolver$DirectAtlasResolver#atlas()	def	8085558d1e0ba0cc
 sge.maps.tiled.AtlasTmxMapLoader	sge.maps.tiled.AtlasTmxMapLoader$AtlasResolver$DirectAtlasResolver#getImage(String)	def	c69d8ca9779ad870
-sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader	class	c701cbda2d3eb40d
+sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader	class	355e22c551988e5a
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader#<stmt1>	stmt	abca2bbe56b03719
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader#FLAG_FLIP_DIAGONALLY	val	101621a7c1d159ae
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader#FLAG_FLIP_HORIZONTALLY	val	81fb4141aa3ca338
@@ -9791,7 +9791,7 @@ sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$Parameters#g
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$Parameters#projectFilePath	val	5bdf3e3f9e45e291
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$Parameters#textureMagFilter	val	4d72017e17879476
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$Parameters#textureMinFilter	val	dc5e8a987c30c018
-sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$ProjectClassMember	class	859aa1b552a49b86
+sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$ProjectClassMember	class	dc614eb1ac9c3062
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$ProjectClassMember#defaultValue	val	d582c8eae34b3579
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$ProjectClassMember#name	val	59d45e47d42f6682
 sge.maps.tiled.BaseTiledMapLoader	sge.maps.tiled.BaseTiledMapLoader$ProjectClassMember#propertyType	val	194e694c294a8af5
@@ -10685,7 +10685,7 @@ sge.math.Interpolation	sge.math.Interpolation$SwingOut	class	837b4134fd33bdaf
 sge.math.Interpolation	sge.math.Interpolation$SwingOut#<stmt1>	stmt	7c34838951adef58
 sge.math.Interpolation	sge.math.Interpolation$SwingOut#apply(float)	def	6195fa46c9718b1f
 sge.math.Interpolation	sge.math.Interpolation$SwingOut#scale	val	8e3c04209d8ca3d9
-sge.math.Intersector	sge.math.Intersector	class	40d1a736b8a74b63
+sge.math.Intersector	sge.math.Intersector	class	0e99e00ed109a5e4
 sge.math.Intersector	sge.math.Intersector#best	val	bce0d9d2b28f6133
 sge.math.Intersector	sge.math.Intersector#det(float,float,float,float)	def	8fcd1aea4196d66e
 sge.math.Intersector	sge.math.Intersector#detd(double,double,double,double)	def	43752a101c13b466
@@ -10773,11 +10773,11 @@ sge.math.Intersector	sge.math.Intersector#v2d	val	889d501656c65b14
 sge.math.Intersector	sge.math.Intersector$MinimumTranslationVector	class	bead717b10a61eeb
 sge.math.Intersector	sge.math.Intersector$MinimumTranslationVector#depth	val	9769514564e9348a
 sge.math.Intersector	sge.math.Intersector$MinimumTranslationVector#normal	val	435caa4e21ff92fd
-sge.math.Intersector	sge.math.Intersector$SplitTriangle	class	68ec98c742b523aa
+sge.math.Intersector	sge.math.Intersector$SplitTriangle	class	0b68570e3b0fb617
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#<stmt1>	stmt	df012cd998cd4e27
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#<stmt2>	stmt	e57d96b3bfafd2ab
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#<stmt3>	stmt	4c702c4a8dd40f36
-sge.math.Intersector	sge.math.Intersector$SplitTriangle#add(Array<float>,int,int)	def	f4ab41d4453366da
+sge.math.Intersector	sge.math.Intersector$SplitTriangle#add(Array<float>,int,int)	def	113a0bc1f2dc4f37
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#back	val	b56b8b01e33a99ef
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#backOffset	val	03a8f657e7f7a481
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#edgeSplit	val	ece9736fed53f652
@@ -10786,9 +10786,9 @@ sge.math.Intersector	sge.math.Intersector$SplitTriangle#frontCurrent	val	0d236ff
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#frontOffset	val	5d9ef2da6784a533
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#numBack	val	44ba55f2a18e6820
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#numFront	val	cda23a925c1c75b2
-sge.math.Intersector	sge.math.Intersector$SplitTriangle#reset()	def	981600c5d20b4f22
-sge.math.Intersector	sge.math.Intersector$SplitTriangle#side()	def	53d8a6e6a0c052c8
-sge.math.Intersector	sge.math.Intersector$SplitTriangle#side_=(boolean)	def	9fd8d92f4b29c3e8
+sge.math.Intersector	sge.math.Intersector$SplitTriangle#reset()	def	1dd0b1a446caeca5
+sge.math.Intersector	sge.math.Intersector$SplitTriangle#side()	def	9812dc55ad16353c
+sge.math.Intersector	sge.math.Intersector$SplitTriangle#side_=(boolean)	def	6d4b29c17ff24e40
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#toString()	def	1617ddd4b646a0be
 sge.math.Intersector	sge.math.Intersector$SplitTriangle#total	val	158c706bcb271180
 sge.math.Matrix3	sge.math.Matrix3	class	159f5e05fadbef3d
@@ -10974,13 +10974,13 @@ sge.math.Matrix4	sge.math.Matrix4#val	val	be232872f4c6b5c0
 sge.math.Matrix4	sge.math.Matrix4#values()	def	4ac684204e86ddde
 sge.math.Octree	realMax	val	9f19e711d03e074b
 sge.math.Octree	realMin	val	27e986fe7bda78bc
-sge.math.Octree	sge.math.Octree	class	a01f13ef5e4cf9a3
+sge.math.Octree	sge.math.Octree	class	3368463ae3af5b7f
 sge.math.Octree	sge.math.Octree#<stmt1>	stmt	56dc265103303f17
 sge.math.Octree	sge.math.Octree#<stmt2>	stmt	929c1ea471a01571
 sge.math.Octree	sge.math.Octree#<stmt3>	stmt	bcb47c7321cb1218
 sge.math.Octree	sge.math.Octree#add(T)	def	9b1cd22214288729
 sge.math.Octree	sge.math.Octree#collider	val	118eeb2a0410c22d
-sge.math.Octree	sge.math.Octree#createNode(Vector3,Vector3,int)	def	c14cf06a47f575ae
+sge.math.Octree	sge.math.Octree#createNode(Vector3,Vector3,int)	def	a8d536608cfb8268
 sge.math.Octree	sge.math.Octree#getAll(ObjectSet<T>)	def	4973c1d4f8828bc4
 sge.math.Octree	sge.math.Octree#getNodesBoxes(ObjectSet<BoundingBox>)	def	31cb90d34b91c823
 sge.math.Octree	sge.math.Octree#maxItemsPerNode	val	397403715e9472ea
@@ -13344,7 +13344,7 @@ sge.scenes.scene2d.ui.ProgressBar	sge.scenes.scene2d.ui.ProgressBar$ProgressBarS
 sge.scenes.scene2d.ui.ProgressBar	sge.scenes.scene2d.ui.ProgressBar$ProgressBarStyle#knob	val	67cf05dfe06e394a
 sge.scenes.scene2d.ui.ProgressBar	sge.scenes.scene2d.ui.ProgressBar$ProgressBarStyle#knobAfter	val	ba620bbae678b49d
 sge.scenes.scene2d.ui.ProgressBar	sge.scenes.scene2d.ui.ProgressBar$ProgressBarStyle#knobBefore	val	7fe82519ce7b6547
-sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane	class	3c3f245cd68e1233
+sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane	class	fbece249eaa6c2e4
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#<init>(Nullable<Actor>,Sge)	ctor	c2ab74f07205ebb7
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#<init>(Nullable<Actor>,Skin,Sge)	ctor	2e0b02038c65e91f
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#<init>(Nullable<Actor>,Skin,String,Sge)	ctor	0ee80a57da6c7364
@@ -13371,7 +13371,7 @@ sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#amountY	val	91
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#cancel()	def	1163e23e0cc6ea17
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#cancelTouchFocus	val	31fc0f55b4286c84
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#cancelTouchFocus()	def	aebd9b824c5fa248
-sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#clamp	val	0df7d0b5ffaedf32
+sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#clamp	val	aa15a14294fcb125
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#clamp()	def	bb0ea92655d6984b
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#disableX	val	01d68cf0044b5ea4
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane#disableY	val	117850815b3dafe8
@@ -14021,7 +14021,7 @@ sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyl
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#font	val	31f9258075a11f9b
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#fontColor	val	e644810735d47dca
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#overFontColor	val	eb4efdbdb7023474
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField	class	a399d2c06f859764
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField	class	4189a1447a1e675c
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(Nullable<String>,Skin,Sge)	ctor	636617d91cfff209
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(Nullable<String>,Skin,String,Sge)	ctor	15e238c25f0434c4
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<stmt1>	stmt	5df228fe4ef7aed3
@@ -14157,7 +14157,7 @@ sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#writeEnters	val	
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$DefaultOnscreenKeyboard	class	eaadfce5e90a2ae6
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$DefaultOnscreenKeyboard#close()	def	6b4ec2bfbe1edb9b
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$DefaultOnscreenKeyboard#show(TextField)	def	2d7ff32993184535
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask	class	521befaccf442293
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask	class	5db3387370a09d52
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask#keycode	val	c7de1d7e3c1b2405
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$KeyRepeatTask#run()	def	f77f77f13280b6bf
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard	class	b445f0baedb38d54
@@ -14851,7 +14851,7 @@ sge.scenes.scene2d.utils.DragListener	sge.scenes.scene2d.utils.DragListener#touc
 sge.scenes.scene2d.utils.DragListener	sge.scenes.scene2d.utils.DragListener#touchDownY()	def	0a62ddc7b2d47cea
 sge.scenes.scene2d.utils.DragListener	sge.scenes.scene2d.utils.DragListener#touchDragged(InputEvent,float,float,int)	def	595276f72bb806d4
 sge.scenes.scene2d.utils.DragListener	sge.scenes.scene2d.utils.DragListener#touchUp(InputEvent,float,float,int,Button)	def	a035cbbd0afae1c7
-sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener	class	295622e2de838fd9
+sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener	class	676da957cbc95924
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#<stmt1>	stmt	26a2614a0d38163b
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#<stmt2>	stmt	1e6ae7b794349355
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#<stmt3>	stmt	4226f1cc1b7a48c4
@@ -14868,7 +14868,7 @@ sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollL
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#scroll	val	d78845c2b5fd3660
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#scroll(float)	def	22d712ff49a7ebb9
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#scrollDown	val	8208e0638feb1579
-sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#scrollPixels()	def	96cfee0808d4ce5b
+sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#scrollPixels()	def	4f7a8714c9519cae
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#scrollUp	val	d3d7d41d708ce0bb
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#setPadding(float,float)	def	6f21d852c094ab74
 sge.scenes.scene2d.utils.DragScrollListener	sge.scenes.scene2d.utils.DragScrollListener#setup(float,float,float,float)	def	72079cea43d744d3

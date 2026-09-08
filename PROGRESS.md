@@ -2403,6 +2403,14 @@ parameters (`$0`) match a java type-parameter slot when overloads are told apart
 resources, `multiarch.resources` on the JS row, `DataBuffer`'s `out`), Native 0, suite 216/220, demos
 12/12. **`sge-suite-check` 406 -> 392** (member-shape 106 -> 98, nullable 54 -> 48).
 
+**Visibility off the reference (2026-09-08 08:30).** New engine phase `VisibilityTransform(widen, derive)`:
+a member java declares protected or package-private that the reference ships public is a `Public` row
+and the symbol's flags are widened — 51 members in the ladder (`Graphics.DisplayMode/Monitor` constructors,
+`Mesh`, `Texture`, `ParticleEmitter` readers). `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12.
+**`sge-suite-check` 392 -> 391.** The file handle's protected two-argument constructor did not widen: sge's
+primary takes a third DEFAULTED parameter, and the deriver matches a reference declaration at its exact
+arity only — the next refinement (a defaulted trailing parameter is every arity down to the required ones).
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type

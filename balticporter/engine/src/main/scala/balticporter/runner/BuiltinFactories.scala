@@ -20,7 +20,7 @@ object BuiltinFactories:
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
     new ClassToTraitFactory, new RegistryFactory, new ElementWitnessFactory,
-    new NullaryArityFactory, new ClassTagParamsFactory,
+    new NullaryArityFactory, new ClassTagParamsFactory, new VisibilityFactory,
   )
 
 // (a) — no policy; empty config object
@@ -279,6 +279,13 @@ final class ClassTagParamsFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new ClassTagParamsTransform(config.strings("members").getOrElse(Nil).toSet,
                                 config.bool("derive").getOrElse(false))
+
+/** `{ transform = "visibility", widen = ["a.B#<init>(File,FileType)"], derive = true }` — ships the
+  * listed members public where java declared them narrower; `derive` takes the reference's. */
+final class VisibilityFactory extends TransformFactory:
+  def name = "visibility"
+  def fromConfig(config: ConfigView): Phase =
+    new VisibilityTransform(config.strings("widen").getOrElse(Nil).toSet, config.bool("derive").getOrElse(false))
 
 /** `{ transform = "call-site-substitution", calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }`
   *
