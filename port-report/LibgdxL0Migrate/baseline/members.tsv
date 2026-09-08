@@ -3298,7 +3298,7 @@ sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFi
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#draw(Batch,int,int)	def	70f48c9879984d1e
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#setSmoothingUniform(Batch,float)	def	9ed9416e54a2fd84
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#smoothingFactor()	def	b83d3301f7d46573
-sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout	class	97644259b7865989
+sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout	class	55f36e880535df9a
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#<init>()	ctor	411f634ba982efad
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#<init>(BitmapFont,CharSequence)	ctor	18349282bc86f3a9
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#<init>(BitmapFont,CharSequence,Color,float,int,boolean)	ctor	05b9d0464e03d5ed
@@ -3320,7 +3320,7 @@ sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#runs	val	6446575a840ec
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#setLastGlyphXAdvance(BitmapFontData,GlyphRun)	def	8aa256676ea544fa
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence)	def	515dee4eb56ddd2c
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,Color,float,int,boolean)	def	6cb459dd134b499c
-sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,Nullable<String>)	def	9b8a9281705c180a
+sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,Nullable<String>)	def	8606c503c0058a50
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#toString()	def	a0045d8059e37d1d
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#truncate(BitmapFontData,GlyphRun,float,String)	def	209effe89fe3af52
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#width	val	e3add5f388a29b62
@@ -13552,7 +13552,7 @@ sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane$ScrollPaneStyl
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle#hScrollKnob	val	2543a83a0cc7660d
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle#vScroll	val	882060ff03f0353f
 sge.scenes.scene2d.ui.ScrollPane	sge.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle#vScrollKnob	val	8e284790c5568ab7
-sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox	class	529202ab5c725477
+sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox	class	5e2832bcc3348258
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#<init>(Skin,Sge)	ctor	a781fa313db6247d
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#<init>(Skin,String,Sge)	ctor	55404c7c92c00d5e
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#<stmt1>	stmt	abca2bbe56b03719
@@ -13593,7 +13593,7 @@ sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#prefWidth()	def	
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#scrollPane	val	d24349aeabaa8eff
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#scrollPane()	def	20e1a6859ecee4c5
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#selected()	def	a6bcc0c50c031e18
-sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#selectedIndex()	def	65c9b3c77d25cbff
+sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#selectedIndex()	def	73fc678e2bbd1876
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#selectedPrefWidth	val	b5320e6f55c46ea5
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#selectedPrefWidth()	def	97584355ed999303
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox#selection	val	78bdfd5822211c2a
@@ -13654,7 +13654,7 @@ sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#f
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#listStyle	val	0dcf44153a7b9620
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#overFontColor	val	eb4efdbdb7023474
 sge.scenes.scene2d.ui.SelectBox	sge.scenes.scene2d.ui.SelectBox$SelectBoxStyle#scrollStyle	val	d1595863be9256f9
-sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList	class	7ecacd7b562b36c9
+sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList	class	136a0d8810a89bbf
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#<init>(Skin,Sge)	ctor	290cf64ec2048325
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#<init>(Skin,String,Sge)	ctor	5f298cf8c98e06bc
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#<stmt1>	stmt	abca2bbe56b03719
@@ -13692,7 +13692,7 @@ sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#prefWidth()	def	b89e
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#pressedIndex	val	1edd0dfc089ded9e
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#pressedItem()	def	46259ba87b3a46c7
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#selected()	def	b4970d1179f733a7
-sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#selectedIndex()	def	5f05cb9746119a39
+sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#selectedIndex()	def	ea91e311f949608f
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#selection	val	eae7966a93d8cf2a
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#selection()	def	0c9b0b2d2f482751
 sge.scenes.scene2d.ui.SgeList	sge.scenes.scene2d.ui.SgeList#setAlignment(int)	def	11fd55c870255fcd
@@ -14067,7 +14067,7 @@ sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyl
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#font	val	31f9258075a11f9b
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#fontColor	val	e644810735d47dca
 sge.scenes.scene2d.ui.TextButton	sge.scenes.scene2d.ui.TextButton$TextButtonStyle#overFontColor	val	eb4efdbdb7023474
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField	class	25ebb4f216118462
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField	class	35f703fe7e82f1dd
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(Nullable<String>,Skin,Sge)	ctor	636617d91cfff209
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<init>(Nullable<String>,Skin,String,Sge)	ctor	15e238c25f0434c4
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#<stmt1>	stmt	5df228fe4ef7aed3
@@ -14193,7 +14193,7 @@ sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#tmp1	val	6f40120
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#tmp2	val	e78dd0d5fef518ab
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#tmp3	val	17e0a8c9d841b734
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#undoText	val	7161325581460455
-sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#updateDisplayText()	def	dd89f8e639445de3
+sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#updateDisplayText()	def	1ed9f2f3646c24d4
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#visibleTextEnd	val	fa135a268ce92f2f
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#visibleTextStart	val	9640e7ad1359d65c
 sge.scenes.scene2d.ui.TextField	sge.scenes.scene2d.ui.TextField#withinMaxLength(int)	def	1f228d1d2e72322a
@@ -14990,7 +14990,7 @@ sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#push
 sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#scissors	val	62bea5172191741f
 sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#tmp	val	cec18df5f46204a9
 sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#viewport	val	782b365032d25f98
-sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection	class	209b1f3a2a94a794
+sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection	class	0e1b55696e3d9ebe
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#_isDisabled	val	2a2de189a6c221bf
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#_lastSelected	val	9dd095a3b0a5269a
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#actor	val	aeb22dc2a00b1564
@@ -15004,12 +15004,12 @@ sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#contains(N
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#disabled()	def	49d7d75e4dffed58
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#disabled_=(boolean)	def	8336478f17ce4434
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#fireChangeEvent()	def	459712c8f8aa24cd
-sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#first()	def	7794b6f30c0dfffc
+sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#first()	def	caafd6f7b0f08566
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#hasItems()	def	537cdf4b98aeee3b
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#isEmpty()	def	3157f9db51071b4d
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#items()	def	d1e144b9d19af03d
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#iterator()	def	41524f33cc58f579
-sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#lastSelected()	def	2848ae0806aa3e1f
+sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#lastSelected()	def	73054802c64833eb
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#multiple	val	fb8dd86bea0a1079
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#notEmpty()	def	772941adc6678ced
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#old	val	1e74904fe8674a89
@@ -15019,7 +15019,7 @@ sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#removeAll(
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#required	val	ca8ddbbe512b6e9b
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#revert()	def	602eef8b6d25a83a
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#selected	val	f8bfc6f5955426ec
-sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#set(T)	def	61532fd7d1adfb37
+sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#set(T)	def	c5989531159b1435
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#setActor(Nullable<Actor>)	def	8d464f181183d919
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#setAll(DynamicArray<T>)	def	276530b4d062c72e
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#size()	def	915e839517ca7819
@@ -17024,7 +17024,7 @@ sge.utils.PropertiesUtils	sge.utils.PropertiesUtils#load(ObjectMap<String,String
 sge.utils.PropertiesUtils	sge.utils.PropertiesUtils#store(ObjectMap<String,String>,Writer,String)	def	24b3e84a59992455
 sge.utils.PropertiesUtils	sge.utils.PropertiesUtils#storeImpl(ObjectMap<String,String>,Writer,String,boolean)	def	62b9feb00dcd1ac4
 sge.utils.PropertiesUtils	sge.utils.PropertiesUtils#writeComment(Writer,String)	def	be13d7fad02fcec5
-sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat	class	f9503457c2245cce
+sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat	class	c16f9e18fb5ed1fc
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#<init>()	ctor	68bda8b8d5d18e97
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#<stmt1>	stmt	8c039f96a2488e47
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#<stmt2>	stmt	537a8dc37c900c4b
@@ -17037,13 +17037,13 @@ sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#add(float,float,float)	def	c3fac
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#addToChild(float,float,float)	def	29b2bf7cc28101ed
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#count	val	9a9d5a1e476a40eb
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#depth	val	3b0fcfd91df2db2b
-sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#findNearestInternal(float,float,DynamicArray<float>)	def	4b4381099ce0d08d
+sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#findNearestInternal(float,float,DynamicArray<float>)	def	88aec35274743e0a
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#growValues()	def	7ea8713769c6ab6f
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#height	val	9dd5f4dc313f31bc
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#maxDepth	val	e5c442f6e27b48ce
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#maxValues	val	6d07dda5b8cf5a27
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#ne	val	28485928fd428659
-sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#nearest(float,float,DynamicArray<float>)	def	9d47f65862b09328
+sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#nearest(float,float,DynamicArray<float>)	def	5a0239d1dc54b801
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#nw	val	dae9493757747999
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#obtainChild(float,float,float,float,int)	def	af4907629c950f93
 sge.utils.QuadTreeFloat	sge.utils.QuadTreeFloat#pool	val	d1b4ad7de559c999

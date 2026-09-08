@@ -442,7 +442,7 @@ lowlevel.util.ObjectMap	lowlevel.util.ObjectMap$Values#next()	def	a6e7757aa61903
 lowlevel.util.ObjectMap	lowlevel.util.ObjectMap$Values#toArray()	def	3a56fa3cc6afacd7
 lowlevel.util.ObjectMap	lowlevel.util.ObjectMap$Values#toArray(DynamicArray<V>)	def	098bb3b1c2ee16b8
 lowlevel.util.ObjectMap	tableSize	val	4c3af14c1593c8dc
-lowlevel.util.ObjectSet	lowlevel.util.ObjectSet	class	2726a5a6a445f5a5
+lowlevel.util.ObjectSet	lowlevel.util.ObjectSet	class	6124dfe939ae51a5
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#<init>(ObjectSet<?>)	ctor	4f2631330cec63ea
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#<init>(int)	ctor	d996eaabfd608d5e
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#<init>(int,float)	ctor	20efee55877aaadf
@@ -474,9 +474,9 @@ lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#clear(int)	def	393c153e4f4021b0
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#contains(T)	def	5a1a7c5799ee2836
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#ensureCapacity(int)	def	080ff6d878296b45
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#equals(Any)	def	f21509bed4418f80
-lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#first()	def	a9d56a517745bc2b
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#get(T)	def	94e899ced7ba3347
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#hashCode()	def	13f00597c4957132
+lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#head()	def	e46d6abcc0295b61
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#isEmpty()	def	9cf6229434147477
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#iterator()	def	39f6fc6c9288b1e9
 lowlevel.util.ObjectSet	lowlevel.util.ObjectSet#iterator1	val	4b58630136c1f435
@@ -566,7 +566,7 @@ lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#remove()	def	
 lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#reset()	def	8d30ee1fad7b2ed4
 lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#toArray()	def	b464e04b2f897e2b
 lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#toArray(DynamicArray<V>)	def	e3ef56088c7c3170
-lowlevel.util.OrderedSet	lowlevel.util.OrderedSet	class	816f317f67a800f3
+lowlevel.util.OrderedSet	lowlevel.util.OrderedSet	class	192d6dc6bf4e8b9e
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#<init>(OrderedSet<?>)	ctor	7c31e59b4835ea56
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#<init>(int)	ctor	b48e58cc144aaea6
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#<init>(int,float)	ctor	298bf91b088c745b
@@ -585,8 +585,8 @@ lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#clear()	def	637ec89359783082
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#clear(int)	def	eed11fc3be7225eb
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#ensureCapacity(int)	def	645dceb5a872876d
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#equals(Any)	def	e1d938f3b301e2ce
-lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#first()	def	8bc8cc90e7f77d4a
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#hashCode()	def	7b22ca4a5977673d
+lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#head()	def	80c58d5706c67853
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#items	val	af600b45d1c1db54
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#iterator()	def	3241a8a361e6d274
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#iterator1	val	ea4fe51ee7a547ac

@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=4f3a3d0293b6c1df	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=e1077c71089eb8f6	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -4378,7 +4378,7 @@ member	com.badlogic.gdx.graphics.g2d.GlyphLayout#runs	sge.graphics.g2d.GlyphLayo
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#setLastGlyphXAdvance(BitmapFontData,GlyphRun)	sge.graphics.g2d.GlyphLayout#setLastGlyphXAdvance(BitmapFontData,GlyphRun)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	442	8aa256676ea544fa	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence)	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	94	515dee4eb56ddd2c	
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,Color,float,int,boolean)	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,Color,float,int,boolean)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	100	6cb459dd134b499c	
-member	com.badlogic.gdx.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,Nullable)	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,Nullable<String>)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	112	9b8a9281705c180a	
+member	com.badlogic.gdx.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,Nullable)	sge.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,Nullable<String>)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	112	8606c503c0058a50	
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#toString()	sge.graphics.g2d.GlyphLayout#toString()	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	510	a0045d8059e37d1d	
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#truncate(BitmapFontData,GlyphRun,float,String)	sge.graphics.g2d.GlyphLayout#truncate(BitmapFontData,GlyphRun,float,String)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	309	209effe89fe3af52	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#width	sge.graphics.g2d.GlyphLayout#width	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	70	e3add5f388a29b62	
@@ -14394,7 +14394,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getPrefWidth()	sge.scenes.sc
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getScrollPane	sge.scenes.scene2d.ui.SelectBox#scrollPane	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	60	d24349aeabaa8eff	name=scrollPane$field
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getScrollPane()	sge.scenes.scene2d.ui.SelectBox#scrollPane	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	398	20e1a6859ecee4c5	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelected()	sge.scenes.scene2d.ui.SelectBox#selected	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	292	a6bcc0c50c031e18	form=parenless
-member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex()	sge.scenes.scene2d.ui.SelectBox#selectedIndex	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	307	65c9b3c77d25cbff	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex()	sge.scenes.scene2d.ui.SelectBox#selectedIndex	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	307	73fc678e2bbd1876	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedPrefWidth	sge.scenes.scene2d.ui.SelectBox#selectedPrefWidth	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	65	b5320e6f55c46ea5	name=selectedPrefWidth$field
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedPrefWidth()	sge.scenes.scene2d.ui.SelectBox#selectedPrefWidth	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	322	97584355ed999303	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelection	sge.scenes.scene2d.ui.SelectBox#selection	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	67	78bdfd5822211c2a	name=selection$field
@@ -14490,7 +14490,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.List#getPrefWidth()	sge.scenes.scene2d
 member	com.badlogic.gdx.scenes.scene2d.ui.List#pressedIndex	sge.scenes.scene2d.ui.SgeList#pressedIndex	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	54	1edd0dfc089ded9e	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getPressedItem()	sge.scenes.scene2d.ui.SgeList#pressedItem	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	317	46259ba87b3a46c7	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelected()	sge.scenes.scene2d.ui.SgeList#selected	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	278	b4970d1179f733a7	form=parenless
-member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex()	sge.scenes.scene2d.ui.SgeList#selectedIndex	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	294	5f05cb9746119a39	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex()	sge.scenes.scene2d.ui.SgeList#selectedIndex	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	294	ea91e311f949608f	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelection	sge.scenes.scene2d.ui.SgeList#selection	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	49	eae7966a93d8cf2a	name=selection$field
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getSelection()	sge.scenes.scene2d.ui.SgeList#selection	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	269	0c9b0b2d2f482751	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.List#setAlignment(int)	sge.scenes.scene2d.ui.SgeList#setAlignment(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	418	11fd55c870255fcd	
@@ -15021,7 +15021,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.TextField#tmp1	sge.scenes.scene2d.ui.T
 member	com.badlogic.gdx.scenes.scene2d.ui.TextField#tmp2	sge.scenes.scene2d.ui.TextField#tmp2	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	77	e78dd0d5fef518ab	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.TextField#tmp3	sge.scenes.scene2d.ui.TextField#tmp3	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	78	17e0a8c9d841b734	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.TextField#undoText	sge.scenes.scene2d.ui.TextField#undoText	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	102	7161325581460455	
-member	com.badlogic.gdx.scenes.scene2d.ui.TextField#updateDisplayText()	sge.scenes.scene2d.ui.TextField#updateDisplayText()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	427	dd89f8e639445de3	
+member	com.badlogic.gdx.scenes.scene2d.ui.TextField#updateDisplayText()	sge.scenes.scene2d.ui.TextField#updateDisplayText()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	427	1ed9f2f3646c24d4	
 member	com.badlogic.gdx.scenes.scene2d.ui.TextField#visibleTextEnd	sge.scenes.scene2d.ui.TextField#visibleTextEnd	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	111	fa135a268ce92f2f	
 member	com.badlogic.gdx.scenes.scene2d.ui.TextField#visibleTextStart	sge.scenes.scene2d.ui.TextField#visibleTextStart	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	111	9640e7ad1359d65c	
 member	com.badlogic.gdx.scenes.scene2d.ui.TextField#withinMaxLength(int)	sge.scenes.scene2d.ui.TextField#withinMaxLength(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	204	1f228d1d2e72322a	
@@ -15785,12 +15785,12 @@ member	com.badlogic.gdx.scenes.scene2d.utils.Selection#contains(Nullable)	sge.sc
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#isDisabled()	sge.scenes.scene2d.utils.Selection#disabled	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	266	49d7d75e4dffed58	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#setDisabled(boolean)	sge.scenes.scene2d.utils.Selection#disabled_=(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	262	8336478f17ce4434	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#fireChangeEvent()	sge.scenes.scene2d.utils.Selection#fireChangeEvent()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	223	459712c8f8aa24cd	
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#first()	sge.scenes.scene2d.utils.Selection#first	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	84	7794b6f30c0dfffc	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#first()	sge.scenes.scene2d.utils.Selection#first	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	84	caafd6f7b0f08566	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#hasItems()	sge.scenes.scene2d.utils.Selection#hasItems()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	63	537cdf4b98aeee3b	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#isEmpty()	sge.scenes.scene2d.utils.Selection#isEmpty	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	71	3157f9db51071b4d	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#items()	sge.scenes.scene2d.utils.Selection#items	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	79	d1e144b9d19af03d	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#iterator()	sge.scenes.scene2d.utils.Selection#iterator()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	249	41524f33cc58f579	
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getLastSelected()	sge.scenes.scene2d.utils.Selection#lastSelected	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	240	2848ae0806aa3e1f	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getLastSelected()	sge.scenes.scene2d.utils.Selection#lastSelected	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	240	73054802c64833eb	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getMultiple	sge.scenes.scene2d.utils.Selection#multiple	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	21	fb8dd86bea0a1079	form=var
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#notEmpty()	sge.scenes.scene2d.utils.Selection#notEmpty	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	67	772941adc6678ced	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#old	sge.scenes.scene2d.utils.Selection#old	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	18	1e74904fe8674a89	vis=private
@@ -15800,7 +15800,7 @@ member	com.badlogic.gdx.scenes.scene2d.utils.Selection#removeAll(DynamicArray)	s
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#getRequired	sge.scenes.scene2d.utils.Selection#required	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	22	ca8ddbbe512b6e9b	form=var
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#revert()	sge.scenes.scene2d.utils.Selection#revert()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	93	602eef8b6d25a83a	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#selected	sge.scenes.scene2d.utils.Selection#selected	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	17	f8bfc6f5955426ec	
-member	com.badlogic.gdx.scenes.scene2d.utils.Selection#set(T)	sge.scenes.scene2d.utils.Selection#set(T)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	103	61532fd7d1adfb37	
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#set(T)	sge.scenes.scene2d.utils.Selection#set(T)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	103	c5989531159b1435	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#setActor(Nullable)	sge.scenes.scene2d.utils.Selection#setActor(Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	27	8d464f181183d919	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#setAll(DynamicArray)	sge.scenes.scene2d.utils.Selection#setAll(DynamicArray<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	118	276530b4d062c72e	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#size()	sge.scenes.scene2d.utils.Selection#size	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	75	915e839517ca7819	form=parenless
@@ -18265,13 +18265,13 @@ member	com.badlogic.gdx.utils.QuadTreeFloat#add(float,float,float)	sge.utils.Qua
 member	com.badlogic.gdx.utils.QuadTreeFloat#addToChild(float,float,float)	sge.utils.QuadTreeFloat#addToChild(float,float,float)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	96	29b2bf7cc28101ed	vis=private
 member	com.badlogic.gdx.utils.QuadTreeFloat#count	sge.utils.QuadTreeFloat#count	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	44	9a9d5a1e476a40eb	
 member	com.badlogic.gdx.utils.QuadTreeFloat#depth	sge.utils.QuadTreeFloat#depth	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	37	3b0fcfd91df2db2b	
-member	com.badlogic.gdx.utils.QuadTreeFloat#findNearestInternal(float,float,DynamicArray)	sge.utils.QuadTreeFloat#findNearestInternal(float,float,DynamicArray<float>)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	223	4b4381099ce0d08d	vis=private
+member	com.badlogic.gdx.utils.QuadTreeFloat#findNearestInternal(float,float,DynamicArray)	sge.utils.QuadTreeFloat#findNearestInternal(float,float,DynamicArray<float>)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	223	88aec35274743e0a	vis=private
 member	com.badlogic.gdx.utils.QuadTreeFloat#growValues()	sge.utils.QuadTreeFloat#growValues()	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	125	7ea8713769c6ab6f	
 member	com.badlogic.gdx.utils.QuadTreeFloat#height	sge.utils.QuadTreeFloat#height	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	36	9dd5f4dc313f31bc	
 member	com.badlogic.gdx.utils.QuadTreeFloat#maxDepth	sge.utils.QuadTreeFloat#maxDepth	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	35	e5c442f6e27b48ce	
 member	com.badlogic.gdx.utils.QuadTreeFloat#maxValues	sge.utils.QuadTreeFloat#maxValues	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	35	6d07dda5b8cf5a27	
 member	com.badlogic.gdx.utils.QuadTreeFloat#ne	sge.utils.QuadTreeFloat#ne	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	38	28485928fd428659	
-member	com.badlogic.gdx.utils.QuadTreeFloat#nearest(float,float,DynamicArray)	sge.utils.QuadTreeFloat#nearest(float,float,DynamicArray<float>)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	187	9d47f65862b09328	
+member	com.badlogic.gdx.utils.QuadTreeFloat#nearest(float,float,DynamicArray)	sge.utils.QuadTreeFloat#nearest(float,float,DynamicArray<float>)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	187	5a0239d1dc54b801	
 member	com.badlogic.gdx.utils.QuadTreeFloat#nw	sge.utils.QuadTreeFloat#nw	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	38	dae9493757747999	
 member	com.badlogic.gdx.utils.QuadTreeFloat#obtainChild(float,float,float,float,int)	sge.utils.QuadTreeFloat#obtainChild(float,float,float,float,int)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	113	af4907629c950f93	vis=private
 member	com.badlogic.gdx.utils.QuadTreeFloat#pool	sge.utils.QuadTreeFloat#pool	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	29	d1b4ad7de559c999	placement=companion vis=private

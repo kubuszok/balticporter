@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=lls	engine=balticporter/0.1.0-SNAPSHOT	sources=779e213f6ebe9185	files=12	policy=022ff634419668a3	jdk=22
+# balticporter port map	schema=4	module=lls	engine=balticporter/0.1.0-SNAPSHOT	sources=779e213f6ebe9185	files=12	policy=4cf64224a327b9f5	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.math.MathUtils	lowlevel.math.MathUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.math.MathUtils$Sin	lowlevel.math.MathUtils$Sin	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=private[MathUtils]
@@ -499,9 +499,9 @@ member	com.badlogic.gdx.utils.ObjectSet#clear(int)	lowlevel.util.ObjectSet#clear
 member	com.badlogic.gdx.utils.ObjectSet#contains(T)	lowlevel.util.ObjectSet#contains(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	242	5a1a7c5799ee2836	
 member	com.badlogic.gdx.utils.ObjectSet#ensureCapacity(int)	lowlevel.util.ObjectSet#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	260	080ff6d878296b45	
 member	com.badlogic.gdx.utils.ObjectSet#equals(Any)	lowlevel.util.ObjectSet#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	292	f21509bed4418f80	
-member	com.badlogic.gdx.utils.ObjectSet#first()	lowlevel.util.ObjectSet#first	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	251	a9d56a517745bc2b	form=parenless
 member	com.badlogic.gdx.utils.ObjectSet#get(T)	lowlevel.util.ObjectSet#get(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	246	94e899ced7ba3347	
 member	com.badlogic.gdx.utils.ObjectSet#hashCode()	lowlevel.util.ObjectSet#hashCode()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	282	13f00597c4957132	
+member	com.badlogic.gdx.utils.ObjectSet#first()	lowlevel.util.ObjectSet#head	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	251	e46d6abcc0295b61	form=parenless
 member	com.badlogic.gdx.utils.ObjectSet#isEmpty()	lowlevel.util.ObjectSet#isEmpty()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	208	9cf6229434147477	
 member	com.badlogic.gdx.utils.ObjectSet#iterator()	lowlevel.util.ObjectSet#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	330	39f6fc6c9288b1e9	
 member	com.badlogic.gdx.utils.ObjectSet#iterator1	lowlevel.util.ObjectSet#iterator1	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	64	4b58630136c1f435	vis=private
@@ -604,8 +604,8 @@ member	com.badlogic.gdx.utils.OrderedSet#clear()	lowlevel.util.OrderedSet#clear(
 member	com.badlogic.gdx.utils.OrderedSet#clear(int)	lowlevel.util.OrderedSet#clear(int)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	137	eed11fc3be7225eb	
 member	com.badlogic.gdx.utils.OrderedSet#ensureCapacity(int)	lowlevel.util.OrderedSet#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	91	645dceb5a872876d	
 member	com.badlogic.gdx.utils.OrderedSet#equals(Any)	lowlevel.util.OrderedSet#equals(Any)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	165	e1d938f3b301e2ce	
-member	com.badlogic.gdx.utils.OrderedSet#first()	lowlevel.util.OrderedSet#first	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	151	8bc8cc90e7f77d4a	form=parenless
 member	com.badlogic.gdx.utils.OrderedSet#hashCode()	lowlevel.util.OrderedSet#hashCode()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	155	7b22ca4a5977673d	
+member	com.badlogic.gdx.utils.OrderedSet#first()	lowlevel.util.OrderedSet#head	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	151	80c58d5706c67853	form=parenless
 member	com.badlogic.gdx.utils.OrderedSet#items	lowlevel.util.OrderedSet#items	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	44	af600b45d1c1db54	
 member	com.badlogic.gdx.utils.OrderedSet#iterator()	lowlevel.util.OrderedSet#iterator()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	175	3241a8a361e6d274	
 member	com.badlogic.gdx.utils.OrderedSet#iterator1	lowlevel.util.OrderedSet#iterator1	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	45	ea4fe51ee7a547ac	name=iterator1$shadow

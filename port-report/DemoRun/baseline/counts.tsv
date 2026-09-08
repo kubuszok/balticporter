@@ -1,13 +1,13 @@
 demo	frames	exit	first-exception
-pong	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-space-shooter	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-hex-tactics	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-tile-world	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-viewer-3d	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-particle-show	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-shader-lab	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-net-chat	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-game-screens	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-curve-playground	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-asset-showcase	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
-viewport-gallery	0	1	-- [E008] Not Found Error: /Users/dev/Workspaces/kubuszok/balticporter/ported/sge-l0/src_managed/main/scala/sge/graphics/g2d/GlyphLayout.scala:231:56 
+pong	120	0	-
+space-shooter	120	0	-
+hex-tactics	120	0	-
+tile-world	120	0	-
+viewer-3d	120	0	-
+particle-show	120	0	-
+shader-lab	120	0	-
+net-chat	120	0	-
+game-screens	120	0	-
+curve-playground	120	0	-
+asset-showcase	120	0	-
+viewport-gallery	120	0	-

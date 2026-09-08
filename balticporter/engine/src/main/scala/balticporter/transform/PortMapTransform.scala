@@ -214,7 +214,6 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       // symbol is in the emitted namespace after `repoint`, an unowned base member is not.
       val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
       val sym = lookup(inEmitNs, e).orElse(lookup(upBare, e))
-      if upBare.contains("Array#first") then
       sym.filter(_.name != newName).map { s =>
         FollowEntry(s, newName, e)
       }
@@ -282,8 +281,9 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
         // a renamed member still sits in the UPSTREAM package here (package-rename runs last):
         // the emitted simple name under the upstream OWNER — found through the owner symbol, never
         // a rebuilt `owner#name` string; the entry's arity picks among overloads (`ofKind`)
+        val emitOwner = PortMapTransform.ownerOf(emitBare)
         val renamedInUpNs = renamedByName.getOrElse(newName, Nil)
-          .filter(s => renamed.symbolOf(s.owner).exists(_.fullName == ownerFqn))
+          .filter(s => renamed.symbolOf(s.owner).exists(o => o.fullName == ownerFqn || o.fullName == emitOwner))
         val byKey = List(inEmitNs, emitBare, upBare).flatMap(k => renamed.symbols.all.filter(_.fullName == k))
         ofKind(e, (byKey ++ renamedInUpNs).distinctBy(_.id).filter(s => PolicyBinder.isExecutable(s.info))).map(_.id)
       }.toSet

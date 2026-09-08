@@ -410,8 +410,9 @@ object LibgdxLadder:
           "com.badlogic.gdx.utils.LongArray"    -> List(balticporter.transform.CollectionsTransform.RetargetArg.FixedType("scala.Long"))),
         retargetRewrites = {
           val RT = balticporter.transform.CollectionsTransform.RetargetRewrite
-          val common = Map(
+          val common: Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite] = Map(
             ("empty", 0)  -> RT.Rename("isEmpty"),
+            ("first", 0)  -> RT.Template("$recv.head"),
             ("incr", 2)   -> RT.Template("{ val $i = $0; $recv($i) = ($recv($i) + $1).asInstanceOf[$T0] }"),
             ("incr", 1)   -> RT.Template("{ var $i = 0; while ($i < $recv.size) { $recv($i) = ($recv($i).asInstanceOf[Int] + $0).asInstanceOf[$T0]; $i += 1 } }"))
           Map(

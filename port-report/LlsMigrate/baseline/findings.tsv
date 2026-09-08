@@ -39,8 +39,9 @@ d8113eea9b08	api-parity(hand-port-extra)	hand-port-extra	DynamicArray$#wrapRefUn
 d4075ee153d0	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#findKey	/ObjectMap	0	def findKey/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, locateKey, place, putAll, remove, resize, shrink, toString]
 57113ab71ce7	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#size	/ObjectMap	0	def size/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, nonEmpty, notEmpty, toString, values]
 18c59a99f147	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#toStringImpl	/ObjectMap	0	def toStringImpl/2 in reference port only [rename candidates: containsValue, findKey, get, put, toString, update]
-bd003748a346	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#size	/ObjectSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, nonEmpty, notEmpty, toString]
-b2bf091d0cac	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#toArray	/ObjectSet	0	def toArray/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, nonEmpty, notEmpty, toString]
+0d7e6b89a2d1	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#first	/ObjectSet	0	def first/0 in reference port only [rename candidates: clear, hashCode, head, isEmpty, iterator, nonEmpty, notEmpty, toString]
+0d0a0cd7afdd	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#size	/ObjectSet	0	def size/0 in reference port only [rename candidates: clear, hashCode, head, isEmpty, iterator, nonEmpty, notEmpty, toString]
+b818cdc962e9	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#toArray	/ObjectSet	0	def toArray/0 in reference port only [rename candidates: clear, hashCode, head, isEmpty, iterator, nonEmpty, notEmpty, toString]
 35dede83ee07	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsKey	/OrderedMap	0	def containsKey/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
 b86f0376a984	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsValue	/OrderedMap	0	def containsValue/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
 82c8cf8f678d	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsValue	/OrderedMap	0	def containsValue/2 in reference port only [rename candidates: alter, alterIndex, put, toString]
@@ -63,14 +64,15 @@ b7983c631349	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#shrink	/Orde
 396c4a8dece1	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#toString	/OrderedMap	0	def toString/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
 6a365f3d3607	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#toString	/OrderedMap	0	def toString/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
 6271c4fdd9e1	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#contains	/OrderedSet	0	def contains/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
+be89dc12545d	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#first	/OrderedSet	0	def first/0 in reference port only [rename candidates: clear, hashCode, head, iterator, orderedItems, toString]
 5b62cee0a20c	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#foreach	/OrderedSet	0	def foreach/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
 c78fda591c2c	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#get	/OrderedSet	0	def get/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
-367a384794d3	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#isEmpty	/OrderedSet	0	def isEmpty/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
-0951d90d66f9	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#loadFactor	/OrderedSet	0	def loadFactor/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
-85eb4bfe88e4	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#nonEmpty	/OrderedSet	0	def nonEmpty/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+4e913eb52f5e	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#isEmpty	/OrderedSet	0	def isEmpty/0 in reference port only [rename candidates: clear, hashCode, head, iterator, orderedItems, toString]
+d694b6c59889	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#loadFactor	/OrderedSet	0	def loadFactor/0 in reference port only [rename candidates: clear, hashCode, head, iterator, orderedItems, toString]
+3507adcc6e4c	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#nonEmpty	/OrderedSet	0	def nonEmpty/0 in reference port only [rename candidates: clear, hashCode, head, iterator, orderedItems, toString]
 4321ff9ef1f8	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#shrink	/OrderedSet	0	def shrink/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
-981fe3bc275a	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#size	/OrderedSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
-1a55cf017aef	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#toArray	/OrderedSet	0	def toArray/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+4212765fd0c8	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#size	/OrderedSet	0	def size/0 in reference port only [rename candidates: clear, hashCode, head, iterator, orderedItems, toString]
+ce5f43bb9f1f	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#toArray	/OrderedSet	0	def toArray/0 in reference port only [rename candidates: clear, hashCode, head, iterator, orderedItems, toString]
 fd4c611b249e	api-parity(hand-port-extra)	hand-port-extra	QuickSelect#select	/QuickSelect	0	def select/5 in reference port only
 c7db2c0c5c4b	api-parity(hand-port-extra)	hand-port-extra	Select$#select	/Select$	0	def select/5 in reference port only
 b878f75d4790	api-parity(hand-port-extra)	hand-port-extra	Select$#selectIndex	/Select$	0	def selectIndex/5 in reference port only
@@ -387,6 +389,7 @@ b48910e3f38e	api-parity(port-extra)	port-extra	ObjectSet#-=	/ObjectSet	0	def -=/
 2ea25d807f6b	api-parity(port-extra)	port-extra	ObjectSet#count	/ObjectSet	0	def count/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
 ef8dcab56cbc	api-parity(port-extra)	port-extra	ObjectSet#exists	/ObjectSet	0	def exists/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
 5726b5280a59	api-parity(port-extra)	port-extra	ObjectSet#forall	/ObjectSet	0	def forall/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
+d2a113aa43a6	api-parity(port-extra)	port-extra	ObjectSet#head	/ObjectSet	0	def head/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
 44a27f673c0c	api-parity(port-extra)	port-extra	ObjectSet#iterator	/ObjectSet	0	def iterator/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
 7f132a9c8665	api-parity(port-extra)	port-extra	ObjectSet#keyTable	/ObjectSet	0	var keyTable/0 in emitted port only
 cbb4e850b082	api-parity(port-extra)	port-extra	ObjectSet#locateKey	/ObjectSet	0	def locateKey/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
@@ -434,6 +437,7 @@ d210e5dbf839	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#remo
 1f05ad240022	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#reset	/OrderedMap$/OrderedMapValues	0	def reset/0 in emitted port only
 ad424c400a88	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#toArray	/OrderedMap$/OrderedMapValues	0	def toArray/0 in emitted port only
 4b9098130200	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#toArray	/OrderedMap$/OrderedMapValues	0	def toArray/1 in emitted port only
+06741476ca6b	api-parity(port-extra)	port-extra	OrderedSet#head	/OrderedSet	0	def head/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, loadFactor, nonEmpty, orderedItems, size, toArray, toString]
 a1f4982208dc	api-parity(port-extra)	port-extra	OrderedSet#items	/OrderedSet	0	var items/0 in emitted port only
 381ec9c27519	api-parity(port-extra)	port-extra	OrderedSet#iterator	/OrderedSet	0	def iterator/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, loadFactor, nonEmpty, orderedItems, size, toArray, toString]
 3d78a7f302f1	api-parity(port-extra)	port-extra	OrderedSet$#OrderedSetIterator	/OrderedSet$	0	class OrderedSetIterator/0 in emitted port only
@@ -553,7 +557,6 @@ a6a0ee38c2a5	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	modifi
 041bd3325d0f	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
 041bd3325d0f/2	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
 873b0a9501ce	api-parity(signature)	signature	OrderedSet#ensureCapacity	/OrderedSet	0	modifiers differ: emitted override, reference
-75082c1f8189	api-parity(signature)	signature	OrderedSet#first	/OrderedSet	0	modifiers differ: emitted override, reference
 e7b3f0095fb6	api-parity(signature)	signature	OrderedSet#remove	/OrderedSet	0	modifiers differ: emitted override, reference
 4fe32f639005	api-parity(signature)	signature	OrderedSet#toString	/OrderedSet	0	modifiers differ: emitted override, reference
 e1bbc8bb1b9d	api-parity(signature)	signature	OrderedSet$#apply	/OrderedSet$	0	modifiers differ: emitted , reference inline
@@ -828,9 +831,9 @@ e8c8a1106615	heap-pollution	Unacknowledged	lowlevel.util.OrderedSet#with	com/bad
 0d2c9816b9bd	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.Array#head	com/badlogic/gdx/utils/Array.java	438	kind=NullaryArity — drop `()` from `head`
 6b794c042f62	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.ArrayMap#firstKey	com/badlogic/gdx/utils/ArrayMap.java	191	kind=NullaryArity — drop `()` from `firstKey`
 6eef5974795e	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.ArrayMap#firstValue	com/badlogic/gdx/utils/ArrayMap.java	196	kind=NullaryArity — drop `()` from `firstValue`
-af4b37eb8bb4	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.ObjectSet#first	com/badlogic/gdx/utils/ObjectSet.java	251	kind=NullaryArity — drop `()` from `first`
+085fbff80bc1	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.ObjectSet#head	com/badlogic/gdx/utils/ObjectSet.java	251	kind=NullaryArity — drop `()` from `head`
 fb80fd61d02a	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.OrderedMap#orderedKeys	com/badlogic/gdx/utils/OrderedMap.java	144	kind=NullaryArity — drop `()` from `orderedKeys`
-c63dd37fa6eb	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.OrderedSet#first	com/badlogic/gdx/utils/OrderedSet.java	151	kind=NullaryArity — drop `()` from `first`
+dfe239f4495b	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.OrderedSet#head	com/badlogic/gdx/utils/OrderedSet.java	151	kind=NullaryArity — drop `()` from `head`
 f226f8780f53	idiom(converted)	NullaryArity	com.badlogic.gdx.utils.OrderedSet#orderedItems	com/badlogic/gdx/utils/OrderedSet.java	147	kind=NullaryArity — drop `()` from `orderedItems`
 1cf311025cef	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.Array$ArrayIterator#iterator	com/badlogic/gdx/utils/Array.java	752	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn
 a32b403c9e6d	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.ObjectMap$Entries#iterator	com/badlogic/gdx/utils/ObjectMap.java	562	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn

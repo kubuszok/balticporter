@@ -127,7 +127,9 @@ object LlsPolicy:
     // L1 candidates (PROGRESS.md §13.29): getter-like nullary methods lose `()`; java-convention
     // accessor pairs become properties (empty explicit tables: derivation only).
     "renames"  -> List(new balticporter.transform.MemberRenameTransform(renames = Map(
-      "com.badlogic.gdx.utils.Array#first" -> "head"))),
+      "com.badlogic.gdx.utils.Array#first"      -> "head",
+      "com.badlogic.gdx.utils.ObjectSet#first"  -> "head",
+      "com.badlogic.gdx.utils.OrderedSet#first" -> "head"))),
     "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = Twelve,
       force = Set("com.badlogic.gdx.utils.Array#head", "com.badlogic.gdx.utils.ArrayMap#firstKey",
         "com.badlogic.gdx.utils.ArrayMap#firstValue"))),
