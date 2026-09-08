@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=257f0135941863d6	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=62e081f20e02b75b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -4365,7 +4365,7 @@ member	com.badlogic.gdx.graphics.g2d.GlyphLayout#epsilon	sge.graphics.g2d.GlyphL
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#getGlyphWidth(Glyph,BitmapFontData)	sge.graphics.g2d.GlyphLayout#getGlyphWidth(Glyph,BitmapFontData)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	448	b7f2f9081bbd2de5	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#getLineOffset(DynamicArray,BitmapFontData)	sge.graphics.g2d.GlyphLayout#getLineOffset(DynamicArray<Glyph>,BitmapFontData)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	453	6c793c22dd9c616d	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphCount	sge.graphics.g2d.GlyphLayout#glyphCount	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	68	d6d912ab205e0acb	
-member	com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool	sge.graphics.g2d.GlyphLayout#glyphRunPool	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	48	c53eafd9a968b5ff	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool	sge.graphics.g2d.GlyphLayout#glyphRunPool	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	48	080cd801a0b576a7	placement=companion
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#height	sge.graphics.g2d.GlyphLayout#height	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	70	9dd5f4dc313f31bc	
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#parseColorMarkup(CharSequence,int,int)	sge.graphics.g2d.GlyphLayout#parseColorMarkup(CharSequence,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	458	71094c3e6c2ae949	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#reset()	sge.graphics.g2d.GlyphLayout#reset()	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	501	13b42595e0da2033	

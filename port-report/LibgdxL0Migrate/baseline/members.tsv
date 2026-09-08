@@ -3294,7 +3294,7 @@ sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFi
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#draw(Batch,int,int)	def	70f48c9879984d1e
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#setSmoothingUniform(Batch,float)	def	9ed9416e54a2fd84
 sge.graphics.g2d.DistanceFieldFont	sge.graphics.g2d.DistanceFieldFont$DistanceFieldFontCache#smoothingFactor()	def	b83d3301f7d46573
-sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout	class	b515c4924ef7a7bc
+sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout	class	c8174f00f59f736d
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#<init>()	ctor	411f634ba982efad
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#<init>(BitmapFont,CharSequence)	ctor	18349282bc86f3a9
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#<init>(BitmapFont,CharSequence,Color,float,int,boolean)	ctor	05b9d0464e03d5ed
@@ -3308,7 +3308,7 @@ sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#epsilon	val	8eef62fe94
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#getGlyphWidth(Glyph,BitmapFontData)	def	b7f2f9081bbd2de5
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#getLineOffset(DynamicArray<Glyph>,BitmapFontData)	def	6c793c22dd9c616d
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#glyphCount	val	d6d912ab205e0acb
-sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#glyphRunPool	val	c53eafd9a968b5ff
+sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#glyphRunPool	val	080cd801a0b576a7
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#height	val	9dd5f4dc313f31bc
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#parseColorMarkup(CharSequence,int,int)	def	71094c3e6c2ae949
 sge.graphics.g2d.GlyphLayout	sge.graphics.g2d.GlyphLayout#reset()	def	13b42595e0da2033

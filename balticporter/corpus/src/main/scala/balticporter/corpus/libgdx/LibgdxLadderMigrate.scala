@@ -167,7 +167,8 @@ object LibgdxLadder:
     "classtags" -> List(new balticporter.transform.ClassTagParamsTransform(derive = derive)),
     // members sge ships public where java declared them protected (`FileHandle(File, FileType)`), off sge's tree
     "visibility" -> List(new balticporter.transform.VisibilityTransform(
-      widen = Set("com.badlogic.gdx.scenes.scene2d.InputEvent#type"),
+      widen = Set("com.badlogic.gdx.scenes.scene2d.InputEvent#type",
+        "com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool"),
       derive = derive)),
     // sge's OWN members the suite reaches for, read verbatim off sge's tree by name (DESIGN.md §8.30 (8));
     // a member whose body wants a type the port lacks comes off this list with its finding
