@@ -260,8 +260,19 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     val (owned, unowned) = followEntriesWithFallback.partition(fe => program.owns(fe.sym.id))
 
     val allDirect = (unowned ++ owned).distinctBy(_.sym.id)
-    val directTable = allDirect.foldLeft(program.symbols) { (t, fe) =>
-      t.updated(fe.sym.copy(name = fe.newName))
+    // rename ALL symbols with the same fullName, not just the one the lookup found — external
+    // symbols are lazily interned and each call site may hold its own SymId for the same method
+    // Build the rename map keyed by BOTH the emitted-namespace fullName AND the upstream fullName —
+    // lazily-interned external symbols may keep the upstream name even after repoint
+    val byFqnToRename: Map[String, String] = allDirect.flatMap { fe =>
+      val emitFqn = fe.sym.fullName
+      val upBare  = PortMapTransform.bareKey(fe.entry.upstream)
+      List(emitFqn -> fe.newName, upBare -> fe.newName)
+    }.toMap
+    val directTable = program.symbols.all.foldLeft(program.symbols) { (t, s) =>
+      byFqnToRename.get(s.fullName) match
+        case Some(nn) if s.name != nn => t.updated(s.copy(name = nn))
+        case _ => t
     }
     val program1 = if allDirect.isEmpty then program else program.rebuilt(symbols = directTable)
 
