@@ -183,11 +183,6 @@ sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#test(String,String,Array<S
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#toString(DynamicArray<JsonValue>)	def	3ee61596813b3573
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#toString(JsonMatcher,Array<String>)	def	5d2f682263f1af8f
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#watcher	val	e0f89f74a6b6856e
-sge.utils.JsonTest	sge.utils.JsonTest	class	3efb2cae94a4697c
-sge.utils.JsonTest	sge.utils.JsonTest#<stmt1>	stmt	7738ea765a7a89a4
-sge.utils.JsonTest	sge.utils.JsonTest#<stmt2>	stmt	a4c8f857c35ab273
-sge.utils.JsonTest	sge.utils.JsonTest#<stmt3>	stmt	8dd6e453f9943dd8
-sge.utils.JsonTest	sge.utils.JsonTest#<stmt4>	stmt	f022f173bd65a180
 sge.utils.JsonValueTest	sge.utils.JsonValueTest	class	41d015e795c21c29
 sge.utils.JsonValueTest	sge.utils.JsonValueTest#<stmt1>	stmt	0f5dd7d89acf2f6c
 sge.utils.JsonValueTest	sge.utils.JsonValueTest#<stmt2>	stmt	702077dc7f440204

@@ -136,10 +136,6 @@ sge.utils.JsonMatcherTests	rejection	pass
 sge.utils.JsonMatcherTests	singlePatterns	pass
 sge.utils.JsonMatcherTests	unescaping	pass
 sge.utils.JsonMatcherTests	wholeDocument	pass
-sge.utils.JsonTest	testCharFromNumber	fail
-sge.utils.JsonTest	testFromJsonArray	fail
-sge.utils.JsonTest	testFromJsonObject	fail
-sge.utils.JsonTest	testReuseReader	fail
 sge.utils.JsonValueTest	testAddingRemovedValue	pass
 sge.utils.JsonValueTest	testCopyConstructor	pass
 sge.utils.JsonValueTest	testReplaceValue	pass

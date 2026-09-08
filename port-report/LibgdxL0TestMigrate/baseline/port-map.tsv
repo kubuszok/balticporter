@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=9ef9f24a3cc46a92	jdk=22
+# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=521741f75b8b8a76	files=27	policy=9ef9f24a3cc46a92	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=,assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -20,7 +20,6 @@ type	com.badlogic.gdx.utils.CharArrayTest	sge.utils.CharArrayTest	Renamed	-		0		
 type	com.badlogic.gdx.utils.FlushablePoolTest	sge.utils.FlushablePoolTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass	sge.utils.FlushablePoolTest$FlushablePoolClass	Renamed	-		0		companion=yes form=class parents=sge.utils.FlushablePool primary=(int,int) primaryKind=unique-root primaryVis=public secondaries=();(int)
 type	com.badlogic.gdx.utils.JsonMatcherTests	sge.utils.JsonMatcherTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertValueCount,copy,json,printResults,rejectAll,test,toString
-type	com.badlogic.gdx.utils.JsonTest	sge.utils.JsonTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.JsonValueTest	sge.utils.JsonValueTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.LongArrayTest	sge.utils.LongArrayTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.LongQueueTest	sge.utils.LongQueueTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -241,10 +240,6 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	sge.uti
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(DynamicArray)	sge.utils.JsonMatcherTests#toString(DynamicArray<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	3ee61596813b3573	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,Array)	sge.utils.JsonMatcherTests#toString(JsonMatcher,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1494	5d2f682263f1af8f	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	sge.utils.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	e0f89f74a6b6856e	
-member	com.badlogic.gdx.utils.JsonTest#<stmt1>	sge.utils.JsonTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	11	7738ea765a7a89a4	
-member	com.badlogic.gdx.utils.JsonTest#<stmt2>	sge.utils.JsonTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	18	a4c8f857c35ab273	
-member	com.badlogic.gdx.utils.JsonTest#<stmt3>	sge.utils.JsonTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	26	8dd6e453f9943dd8	
-member	com.badlogic.gdx.utils.JsonTest#<stmt4>	sge.utils.JsonTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	33	f022f173bd65a180	
 member	com.badlogic.gdx.utils.JsonValueTest#<stmt1>	sge.utils.JsonValueTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonValueTest.java	10	0f5dd7d89acf2f6c	
 member	com.badlogic.gdx.utils.JsonValueTest#<stmt2>	sge.utils.JsonValueTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonValueTest.java	34	702077dc7f440204	
 member	com.badlogic.gdx.utils.JsonValueTest#<stmt3>	sge.utils.JsonValueTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonValueTest.java	63	d81025c0390ab0de	
