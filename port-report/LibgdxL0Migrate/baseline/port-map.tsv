@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=b5d4537d11da4ebd	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=e28c7d03f6e847f3	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -12109,7 +12109,11 @@ member	com.badlogic.gdx.math.Vector3#<init>(Array)	sge.math.Vector3#<init>(Array
 member	com.badlogic.gdx.math.Vector3#<init>(Vector2,float)	sge.math.Vector3#<init>(Vector2,float)	Renamed	-	com/badlogic/gdx/math/Vector3.java	73	a509de2a2e42e6f3	
 member	com.badlogic.gdx.math.Vector3#<init>(Vector3)	sge.math.Vector3#<init>(Vector3)	Renamed	-	com/badlogic/gdx/math/Vector3.java	58	f11da3c9d7635fbc	
 member	com.badlogic.gdx.math.Vector3#<init>(float,float,float)	sge.math.Vector3#<init>(float,float,float)	Renamed	-	com/badlogic/gdx/math/Vector3.java	52	44bda00a9ba0daaa	
-member	com.badlogic.gdx.math.Vector3#<stmt1>	sge.math.Vector3#<stmt1>	Renamed	-	<synthetic>	0	f58d393d9b6746db	
+member	com.badlogic.gdx.math.Vector3#<stmt1>	sge.math.Vector3#<stmt1>	Renamed	-	<synthetic>	0	aed81747f27dcdc8	
+member	com.badlogic.gdx.math.Vector3#<stmt2>	sge.math.Vector3#<stmt2>	Renamed	-	<synthetic>	0	f2368b83277f8063	
+member	com.badlogic.gdx.math.Vector3#<stmt3>	sge.math.Vector3#<stmt3>	Renamed	-	<synthetic>	0	c621c454b0e1b48d	
+member	com.badlogic.gdx.math.Vector3#<stmt4>	sge.math.Vector3#<stmt4>	Renamed	-	<synthetic>	0	81955382403598f7	
+member	com.badlogic.gdx.math.Vector3#<stmt5>	sge.math.Vector3#<stmt5>	Renamed	-	<synthetic>	0	f58d393d9b6746db	
 member	com.badlogic.gdx.math.Vector3#One	sge.math.Vector3#One	Renamed	-	com/badlogic/gdx/math/Vector3.java	40	d392aac3ff36c3ac	placement=companion
 member	com.badlogic.gdx.math.Vector3#X	sge.math.Vector3#X	Renamed	-	com/badlogic/gdx/math/Vector3.java	36	812dc7fed9a0583b	placement=companion
 member	com.badlogic.gdx.math.Vector3#Y	sge.math.Vector3#Y	Renamed	-	com/badlogic/gdx/math/Vector3.java	37	7b2be20384d47650	placement=companion

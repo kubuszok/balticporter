@@ -257,7 +257,24 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("disposeThread", 0,
             "private[sge] def disposeThread(): scala.Unit = { this.threadLock.synchronized { if (this.thread" + "$field != null) { this.thread" + "$field.dispose(); this.thread" + "$field = null } } }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.Timer#disposeThread"),
-            Some("sge's timer thread cleanup for test teardown"), true)))),
+            Some("sge's timer thread cleanup for test teardown"), true)),
+        "com.badlogic.gdx.math.Vector3" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("cross", 0,
+            "infix def cross(vector: sge.math.Vector3): sge.math.Vector3 = set(y * vector.z - z * vector.y, z * vector.x - x * vector.z, x * vector.y - y * vector.x)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#cross(Vector3)"),
+            Some("sge's cross product (returns Vector3 not this.type)"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("cross", 0,
+            "infix def cross(x: scala.Float, y: scala.Float, z: scala.Float): sge.math.Vector3 = set(this.y * z - this.z * y, this.z * x - this.x * z, this.x * y - this.y * x)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#cross(float,float,float)"),
+            Some("sge's cross product 3-arg (returns Vector3 not this.type)"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("rotateAroundDeg", 0,
+            "def rotateAroundDeg(axis: sge.math.Vector3, degrees: scala.Float): sge.math.Vector3 = rotateRad(axis, degrees * lowlevel.math.MathUtils.degreesToRadians)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#rotateAroundDeg"),
+            Some("sge's rotate around axis in degrees"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("rotateAroundRad", 0,
+            "def rotateAroundRad(axis: sge.math.Vector3, radians: scala.Float): sge.math.Vector3 = { val tmpMat = new sge.math.Matrix4(); tmpMat.setToRotation(axis, radians * lowlevel.math.MathUtils.radiansToDegrees); this.mul(tmpMat) }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#rotateAroundRad"),
+            Some("sge's rotate around axis in radians"), false)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(
