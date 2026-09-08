@@ -2273,7 +2273,7 @@ wrapped for-each iterable is dereferenced. `sge-l0` 0 = 0, Native 0, JS 14 = 14,
 `demo-run` 12/12, **`sge-suite-check` 893 -> 875** (member-shape 217 -> 190; context 41 -> 50, a
 regression to read: nine more sites want a context after the split and the math opaques).
 
-**Cards from the residue at 875 (2026-09-08 03:00).** *member-shape 190* is a list of hand-port extras
+**Cards from the residue at 875 (2026-09-08 03:00, superseded by the 507 cards below).** *member-shape 190* is a list of hand-port extras
 and renames, each a few members (step 5's list): lls's `DynamicArray.length` (a BASE extra),
 `Animation.PlayMode.isLooping/isReversed`, `PoolManager.addPool[T: ClassTag]`, `FileHandleResolver.
 Resolution/Prefix`, `TextureAtlasData.Region`, `AudioUtils` (sge-only), `Polygon.vertex`, the vector
@@ -2361,6 +2361,23 @@ with `ClassTag` in its type parameters (7 rows: `PoolManager.addPool/obtain/obta
 registerAction`, `AssetManager.getAll`); `addPool` refuses on a value-passing call, the rest convert.
 `sge-l0` 0 = 0, JS 13 = 13, Native 0, suite 216/220, demos 12/12, `lls` unchanged. **`sge-suite-check`
 540 -> 507** (other 25 -> 5, member-shape 135 -> 126).
+
+**Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
+`TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
+`ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type
+replacing libGDX's `Json`), which the port still emits as java's `Json` class: the JSON step's parts 3–4,
+a sub-project (drop java's `Json`/`JsonValue`/`JsonReader` for sge's, then inject the DTOs and sge's
+`Tmj`/`Tmx` loaders) — a maintainer decision on scope. *member-shape 126*: the long tail of sge extras;
+the next names go on the `extras` list one lane at a time, except the FLUENT ones (`Vector.+`/`-`,
+`rotateAround*`, `cross`, `Ray.endPoint`, `Matrix4.rotation`), which need `this.type` returns on the
+port's own setters first (ENGINE-LIMITS I1, refused so far — re-opening it is a design decision).
+*nullable 63*: `Table.add[T <: Actor](actor: Nullable[T])` (38) — a `Nullable` at a TYPE-PARAMETER
+slot, which the nullability step refuses (K13) though the derived row is there; the rest are `Nullable`
+at overloads (`Intersector.intersectSegmentCircle`, `SkinParameter`). *type-shape 67*: sge's
+`FloatArray`/`ShortArray` where java takes `float[]` (13), varargs constructors (`InputMultiplexer`, 6),
+`Animation`'s constructor. *assertion-mismatch 36*, *filetype 29*, *context 23*, *android 9*, *arity 6*,
+*other 5*, *opaque 3*: each a few sites of the families above. JS 13: `XmlElement`, `createTempFile`/
+`mkdir` in java's `FileHandle`, the browser plugin's embedded resources, one `DisplayMode` factory.
 
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
