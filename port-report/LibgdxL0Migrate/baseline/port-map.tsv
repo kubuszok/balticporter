@@ -961,6 +961,7 @@ type		sge.audio.SoundId	Added	-		0
 type		sge.audio.Volume	Added	-		0		
 type		sge.audio.WavInputStream	Added	-		0		
 type		sge.graphics.GLEnum	Added	-		0		
+type		sge.graphics.GLHandle	Added	-		0		
 type		sge.graphics.g2d.Gdx2dDraw	Added	-		0		
 type		sge.graphics.g3d.loader.G3dBinaryModelLoader	Added	-		0		
 type		sge.graphics.g3d.loader.G3dModelJson	Added	-		0		

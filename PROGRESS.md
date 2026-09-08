@@ -2436,6 +2436,13 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**GL handle opaques injected (2026-09-08 11:30).** sge's `GLHandle.scala` (8 opaque types:
+`TextureHandle`, `BufferHandle`, `ShaderHandle`, `ProgramHandle`, `FramebufferHandle`,
+`RenderbufferHandle`, `UniformLocation`, `AttributeLocation`) injected alongside the GL enum file.
+The VBO suite and two particles tests now find the types they reference. `sge-l0` 0 = 0, JS 1,
+Native 0, lls 0, suite 216/220, demos 12/12. **`sge-suite-check` 245 -> 231** (member-shape 68 -> 56,
+particles 36 -> 34).
+
 **Varargs constructors spliced from the reference (2026-09-08 11:00).** sge's `Animation(0.1f, "a", "b",
 "c")`, `InputMultiplexer(p1, p2)`, `VertexBufferObject(true, 4, positionAttr())` and `VertexArray(4, attr)`
 all take `T*` where the port had `Array[T]` (K6.5). Spliced as explicit `AddMembersTransform` entries; the
