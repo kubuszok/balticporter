@@ -212,6 +212,15 @@ object LibgdxLadder:
             "def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: sge.graphics.VertexAttribute*)(using sge.Sge) =\n    this(isStatic, numVertices, new sge.graphics.VertexAttributes(attributes.toArray))",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.VertexBufferObject#<init>(VertexAttribute*)"),
             Some("sge's varargs ctor: `VertexBufferObject(true, 4, positionAttr())` (K6.5)"), false)),
+        "com.badlogic.gdx.scenes.scene2d.actions.Actions" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("sequence", 1,
+            "def sequence(actions: sge.scenes.scene2d.Action*): sge.scenes.scene2d.actions.SequenceAction = {\n    val action = new sge.scenes.scene2d.actions.SequenceAction()\n    for (a <- actions) action.addAction(a)\n    action\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.actions.Actions#sequence(Action*)"),
+            Some("sge's varargs sequence: `Actions.sequence(moves*)` (K6.5)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("parallel", 1,
+            "def parallel(actions: sge.scenes.scene2d.Action*): sge.scenes.scene2d.actions.ParallelAction = {\n    val action = new sge.scenes.scene2d.actions.ParallelAction()\n    for (a <- actions) action.addAction(a)\n    action\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.actions.Actions#parallel(Action*)"),
+            Some("sge's varargs parallel: `Actions.parallel(actions*)` (K6.5)"), true)),
         "com.badlogic.gdx.graphics.glutils.VertexArray" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
             "def this(numVertices: scala.Int, attributes: sge.graphics.VertexAttribute*) =\n    this(numVertices, new sge.graphics.VertexAttributes(attributes.toArray))",

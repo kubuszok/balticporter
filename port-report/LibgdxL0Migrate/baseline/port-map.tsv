@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=bfe171975137bc0c	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=699810c83884e783	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -12983,6 +12983,8 @@ member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#pointer	sge.scenes.scene
 member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#reset()	sge.scenes.scene2d.Stage$TouchFocus#reset()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	890	c7e9e268ddc28df9	
 member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#target	sge.scenes.scene2d.Stage$TouchFocus#target	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	887	29fce8522c4d4efe	
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#<clinit>	sge.scenes.scene2d.actions.Actions#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	37	70d755d1715d1297	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.actions.Actions#<stmt1>	sge.scenes.scene2d.actions.Actions#<stmt1>	Renamed	-	<synthetic>	0	e32651a00780c9d8	
+member	com.badlogic.gdx.scenes.scene2d.actions.Actions#<stmt2>	sge.scenes.scene2d.actions.Actions#<stmt2>	Renamed	-	<synthetic>	0	c3496750e0bd6de3	
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#ACTION_POOLS	sge.scenes.scene2d.actions.Actions#ACTION_POOLS	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	35	51f0910ebffae635	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#action(ClassTag)	sge.scenes.scene2d.actions.Actions#action(ClassTag<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	72	797e1563eb3a209f	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#addAction(Action)	sge.scenes.scene2d.actions.Actions#addAction(Action)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	83	7c0c284d2a563070	placement=companion

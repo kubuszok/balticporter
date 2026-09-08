@@ -2436,6 +2436,12 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**More extras and extensions (2026-09-08 13:30).** Actions.sequence/parallel varargs overloads (K6.5),
+DynamicArray.length + OrderedSet.head extensions (visible within lowlevel.util but not importable from
+sge.* test packages without explicit import — stays as internal utility), CubemapParameter.genMipMaps
+from reference. **`sge-suite-check` 178 -> 176** (type-shape 28 -> 26). JVM 0, JS 0, Native 0, lls 0,
+suite 216/216, demos 12/12.
+
 **Tiled JSON DTOs injected (2026-09-08 13:00).** `TmjJson.scala` (184 lines, 12 case classes for the Tiled
 JSON format) and `TiledProjectJson.scala` (49 lines) are SGE-original files with no java counterpart; they
 compile against the port's `sge.utils.{ Json, fieldName }` aliases (the injected `JsonCodecs.scala`). Tried
