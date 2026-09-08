@@ -208,16 +208,16 @@ object ApiParityCheck:
           case _                               => "protected"
     }.getOrElse("public")
 
+  /** `@targetName("x")` bare or qualified (`@scala.annotation.targetName`), among any other annotations. */
   private def extractTargetName(mods: List[Mod]): String =
-    mods.collectFirst {
-      case annot: Mod.Annot =>
-        annot.init.tpe match
-          case n: Type.Name if n.value == "targetName" =>
-            annot.init.argClauses.flatMap(_.values).collectFirst {
-              case lit: Lit.String => lit.value
-            }
-          case _ => None
-    }.flatten.getOrElse("")
+    def isTargetName(t: Type): Boolean = t match
+      case n: Type.Name         => n.value == "targetName"
+      case Type.Select(_, name) => name.value == "targetName"
+      case _                    => false
+    mods.collect {
+      case annot: Mod.Annot if isTargetName(annot.init.tpe) =>
+        annot.init.argClauses.flatMap(_.values).collectFirst { case lit: Lit.String => lit.value }
+    }.flatten.headOption.getOrElse("")
 
   private def extractParents(templ: Template, subst: Map[String, String]): List[String] =
     templ.inits.map(i => renderType(i.tpe, subst))

@@ -2284,7 +2284,10 @@ required ones (`FileHandle(file, type, externalStoragePath = …)` matches java'
 constructor), so its rows — `Public` among them — reach the shorter java overloads. (20) A captured value may be carried WRAPPED (`… as externalStoragePath: lowlevel.Nullable =
 lowlevel.Nullable.empty`): the field's type is the wrapper applied to the value's, generated callers pass
 `Wrapper.apply(read)`, the default is the wrapper's empty, and the wrapper symbol is the nullability step's
-own where the program already references it — so its reads are coerced like any other wrapped value.
+own where the program already references it — so its reads are coerced like any other wrapped value. (21) A member the reference gives a `@targetName` is a `TargetName` row: the rename step
+annotates it (the symbolic-rename path, generalised), and the nullability step's erasure-clash check reads
+the two overloads as distinct — sge's `add[T](actor: Nullable[T])` beside `add(text: Nullable[CharSequence])`
+under `addLabel`.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

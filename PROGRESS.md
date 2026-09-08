@@ -2425,6 +2425,17 @@ symbol printed bare at value positions, 2,266 errors in one run). The desktop an
 the value they assign. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12.
 **`sge-suite-check` 382 -> 375** (filetype 7 -> 0: the file layer's shape is closed).
 
+**Target names off the reference (2026-09-08 09:50).** sge tells `add[T](actor: Nullable[T])` from
+`add(text: Nullable[CharSequence])` with `@targetName("addLabel")`; the parity parser now reads the
+qualified annotation, the deriver emits `TargetName` rows, the rename step annotates them (its
+symbolic-rename path generalised, a derive-only run included) and the nullability step's erasure-clash
+check reads the two as distinct — so `Table.add(Nullable(actor))` compiles in the suite. A typed null
+(`(Actor) null`) keeps its type on the empty (`Nullable.empty[Actor]`) so java's overload choice
+survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-suite-check` 375 -> 368**
+(nullable 48 -> 12; member-shape 98 -> 145 as the tests behind the `add` calls now reach their next
+sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
+(sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type

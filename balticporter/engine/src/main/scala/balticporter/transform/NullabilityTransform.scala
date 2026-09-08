@@ -77,6 +77,7 @@ final class NullabilityTransform(
     if deriveMembers then
       derivedMembers = binder.run.derived.nullableMembers
       derivedIdSet   = binder.run.derived.nullableIds
+      derivedTargetNames = binder.run.derived.targetNames
 
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings ++ deadMemberFindings)
@@ -138,6 +139,9 @@ final class NullabilityTransform(
   /** the NEW type of an annotated occurrence: a value's or parameter's declared type, or a
     * METHOD's RESULT. One map, because a method symbol never also denotes a value. */
   private var newTypes: Map[SymId, TypeRepr] = Map.empty
+  /** members the reference gives a `@targetName`: their erasure carries that JVM name, so two
+    * wrapped overloads told apart by it are no clash (`add` beside `add` -> `addLabel`). */
+  private var derivedTargetNames: Map[SymId, String] = Map.empty
   /** symbols whose type is now `W[...]` — wrapper mode's own record of what it moved, which is the
     * only thing it is allowed to conclude anything from (§4.56). */
   private var wrapped: Map[SymId, TypeRepr] = Map.empty
@@ -441,7 +445,7 @@ final class NullabilityTransform(
       }
 
     val refused = collection.mutable.Set[SymId]()
-    methods.groupBy((m, ps) => (m.owner, m.name, ps.size)).valuesIterator.foreach { group =>
+    methods.groupBy((m, ps) => (m.owner, m.name + derivedTargetNames.getOrElse(m.id, ""), ps.size)).valuesIterator.foreach { group =>
       val members = group.sortBy((m, _) => m.id.raw)
       for
         i <- members.indices; j <- (i + 1) until members.size
@@ -889,9 +893,14 @@ final class NullabilityTransform(
     case Tree.Literal(Constant.NullC, _, o) =>
       if target == Target.OptionTarget then Tree.Ident(emptySym, want, o)
       else Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
-    case Tree.Typed(Tree.Literal(Constant.NullC, _, _), _, _, o) =>
+    // a TYPED null (`(Actor) null`) keeps its type on the empty — `Nullable.empty[Actor]` — so an
+    // overload java resolved by the cast stays resolved (`add((Actor) null)` beside `add(CharSequence)`)
+    case Tree.Typed(Tree.Literal(Constant.NullC, _, _), tpt, _, o) =>
       if target == Target.OptionTarget then Tree.Ident(emptySym, want, o)
-      else Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
+      else
+        val bare = Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
+        val elem = if isWrapperType(tpt.tpe) then elementOf(tpt.tpe) else tpt.tpe
+        if elem == TypeRepr.NoType then bare else Tree.TypeApply(bare, List(TypeTree(elem, o)), want, o)
     case x: Tree.If =>
       val elem = elementOf(want)
       val coerced = x.copy(thenp = coerceTo(elem, x.thenp), elsep = coerceTo(elem, x.elsep))

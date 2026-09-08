@@ -17,7 +17,7 @@ dependency-coverage	37
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
 derived(ambiguous)	23
-derived(rows)	6499
+derived(rows)	6501
 derived(unmatched)	196
 heap-pollution	12
 idiom(converted)	519
@@ -26,7 +26,7 @@ idiom(residue)	0
 jdk-surface	18
 manifest	0
 markers	0
-nullability-boundary	277
+nullability-boundary	275
 omissions	37
 opaque-boundary	18
 overload-risk	453

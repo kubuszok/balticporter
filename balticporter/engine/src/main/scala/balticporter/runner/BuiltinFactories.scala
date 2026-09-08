@@ -237,7 +237,7 @@ final class BeanPropertyFactory extends TransformFactory:
 final class MemberRenameFactory extends TransformFactory:
   def name = MemberRenameTransform.Name
   def fromConfig(config: ConfigView): Phase =
-    new MemberRenameTransform(config.stringMap("renames").getOrElse(Map.empty))
+    new MemberRenameTransform(config.stringMap("renames").getOrElse(Map.empty), config.bool("derive").getOrElse(false))
 
 /** `{ transform = "method-body", bodies { "a.B#m()" = "{ … }" } }` */
 final class MethodBodyFactory extends TransformFactory:

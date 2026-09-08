@@ -2,7 +2,7 @@ package balticporter.transform
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, PolicyBinder, RuleScope, RunScope}
+import balticporter.tir.{DerivedPolicy, Pipeline, PolicyBinder, RuleScope, RunScope}
 import balticporter.verify.{ApiParityCheck, ReferencePolicy}
 
 /** `(T) null` at a slot the retyping WRAPPED is the empty wrapper, in a constructor delegation as
@@ -83,4 +83,40 @@ class NullabilityNullCastSpec extends munit.FunSuite:
     val out = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("def gl30: demo.Nullable[com.demo.GL]"))
     assert(out.contains("def gl30_=(gl: com.demo.GL): scala.Unit"), out)
+  }
+
+  test("two overloads the reference tells apart by a @targetName both derive their wrapped slots") {
+    val src =
+      """package com.demo;
+        |class Actor {}
+        |class Table {
+        |  public <T extends Actor> T add (T actor) { return actor; }
+        |  public String add (CharSequence text) { return null; }
+        |}
+        |""".stripMargin
+    val reference =
+      """package com.demo
+        |import lowlevel.Nullable
+        |class Actor
+        |class Table {
+        |  def add[T <: Actor](actor: Nullable[T]): T = ???
+        |  @scala.annotation.targetName("addLabel")
+        |  def add(text: Nullable[CharSequence]): String = ???
+        |}
+        |""".stripMargin
+    val dir = java.nio.file.Files.createTempDirectory("targetname")
+    java.nio.file.Files.writeString(dir.resolve("Table.scala"), reference)
+    val decls   = ApiParityCheck.parseSurface(List(dir)).toOption.get
+    val program = SpoonTir.fromSource(src, "Demo.java")
+    val derived = ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    assert(clue(derived.policy.rows.filter(_.family == DerivedPolicy.Family.TargetName)).nonEmpty)
+    val scope = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val renames = new MemberRenameTransform(derive = true)
+    val nulls = new NullabilityTransform(annotations = Set.empty,
+      target = NullabilityTransform.Target.Named("demo.Nullable"), scope = RuleScope.Everywhere(Set.empty), deriveMembers = true)
+    val (after, log) = Pipeline.runTraced(program, List(renames, nulls), new PolicyBinder(program, program.members, scope))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("(actor: demo.Nullable[T])"))
+    assert(out.contains("(text: demo.Nullable[java.lang.CharSequence])"), out)
+    assert(out.contains("targetName(\"addLabel\")"), out)
   }

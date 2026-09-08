@@ -282,7 +282,7 @@ object LibgdxLadder:
       new balticporter.transform.TypeRedirectTransform(
         redirects     = Map("com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable"),
         memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"))),
-      new balticporter.transform.MemberRenameTransform(renames = Map(
+      new balticporter.transform.MemberRenameTransform(derive = derive, renames = Map(
         "com.badlogic.gdx.scenes.scene2d.InputEvent#type"       -> "eventType",
         "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)"   -> "itemToString",
         // sge's vector spellings (`Vectors.scala`): the whole override component moves with `Vector`.

@@ -204,6 +204,9 @@ object ReferencePolicy:
       // java declares it narrower than public, the reference ships it public: widened
       if r.accessLevel == "public" && (ms.flags.isProtected || ms.flags.isPackagePrivate) then
         out += DerivedPolicy.Row(DerivedPolicy.Family.Public, rowKey(ms, overloaded), s"public ${r.name}")
+      // the reference gives the member a JVM name of its own (`@targetName("addLabel")`)
+      if r.targetName.nonEmpty then
+        out += DerivedPolicy.Row(DerivedPolicy.Family.TargetName, rowKey(ms, overloaded), s"@targetName ${r.targetName}", r.targetName)
       // the reference KEEPS the parens (`def size(): Int`): the detector must not drop them
       if !isProp && !r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
         out += DerivedPolicy.Row(DerivedPolicy.Family.KeepParens, rowKey(ms, overloaded), s"def ${r.name}(): ${r.resultType}")

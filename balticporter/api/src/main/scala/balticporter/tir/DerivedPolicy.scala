@@ -29,6 +29,9 @@ final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
   def keepParensIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.KeepParens))
   def classTagIds: Set[SymId]   = idsOf(rows.iterator.filter(_.family == Family.ClassTagParam))
   def publicIds: Set[SymId]     = idsOf(rows.iterator.filter(_.family == Family.Public))
+  /** member id -> the JVM name the reference gives it */
+  def targetNames: Map[SymId, String] =
+    rows.filter(_.family == Family.TargetName).flatMap(r => ids.get(r.upstream).map(_ -> r.target)).toMap
   /** (owner upstream FQN, property, getter name, setter name) — the bean step's configured-pair shape */
   def propertyPairs: List[(String, String, String, Option[String])] =
     def split(up: String): (String, String) =
@@ -77,7 +80,11 @@ object DerivedPolicy:
       ClassTagParam,
       /** a member java declares narrower than public that the reference ships public: the visibility
         * step widens it */
-      Public
+      Public,
+      /** a member the reference gives a `@targetName` (`add` beside `add`, one JVM name `addLabel`):
+        * `target` is that JVM name; the rename step annotates, the nullability step's erasure
+        * check reads the two as distinct */
+      TargetName
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN
