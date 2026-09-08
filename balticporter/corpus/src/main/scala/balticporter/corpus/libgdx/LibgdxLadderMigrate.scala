@@ -238,6 +238,11 @@ object LibgdxLadder:
             "def apply[T <: java.lang.Object](assetDescriptor: sge.assets.AssetDescriptor[T]): T = get[T](assetDescriptor).getOrElse(throw new java.lang.IllegalArgumentException(\"Asset not loaded: \" + assetDescriptor.fileName))",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#apply(AssetDescriptor)"),
             Some("sge's throwing apply — delegates to the port's Nullable-returning get"), false)),
+        "com.badlogic.gdx.assets.loaders.SkinLoader$SkinParameter" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
+            "def apply(textureAtlasPath: lowlevel.Nullable[java.lang.String] = lowlevel.Nullable.empty, resources: lowlevel.Nullable[lowlevel.util.ObjectMap[java.lang.String, java.lang.Object]] = lowlevel.Nullable.empty): sge.assets.loaders.SkinLoader.SkinParameter = new sge.assets.loaders.SkinLoader.SkinParameter(textureAtlasPath, resources)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.SkinLoader$SkinParameter#apply"),
+            Some("factory with named params (the funnel renamed them to $p)"), true)),
         "com.badlogic.gdx.utils.PerformanceCounter" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
             "def apply(name: java.lang.String, windowSize: scala.Int = 5): sge.utils.PerformanceCounter = new sge.utils.PerformanceCounter(name, windowSize)",
