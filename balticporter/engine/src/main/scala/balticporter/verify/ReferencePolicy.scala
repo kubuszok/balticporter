@@ -26,6 +26,21 @@ object ReferencePolicy:
     * @param typeRenames upstream dotted FQN -> emitted simple name (`PortManifest.effectiveTypeRenames`)
     * @param flattenNestedTypes upstream nested FQNs emitted top-level
     * @param opaqueTargets target type FQNs of the deriving `OpaqueSpec`s (`OpaqueSpec.typeFqn`) */
+  /** every reference path a java class may sit at: a static nested type lands in the hand port's
+    * class OR its companion (`/Outer/Inner`, `/Outer$/Inner`), so each enclosing segment is tried
+    * both ways; a java STATIC member is read under the innermost companion (`/Outer$`). */
+  def classPaths(cls: Symbol, typeRenames: Map[String, String], flattenNestedTypes: Set[String]): List[String] =
+    val fqn = cls.fullName
+    val top = fqn.takeWhile(_ != '$')
+    val nested = if fqn.length > top.length then fqn.drop(top.length + 1).split('$').toList.filter(_.nonEmpty) else Nil
+    val topName = typeRenames.getOrElse(top, top.split('.').last)
+    val segs = if nested.nonEmpty && flattenNestedTypes.contains(fqn) then List(nested.last) else topName :: nested
+    val enclosing = segs.dropRight(1)
+    val variants = enclosing.foldLeft(List(List.empty[String])) { (acc, seg) =>
+      acc.flatMap(pre => List(pre :+ seg, pre :+ (seg + "$")))
+    }
+    variants.map(pre => (pre :+ segs.last).map("/" + _).mkString)
+
   def derive(program: Program, reference: List[SurfaceDecl], emitted: Set[SymId],
              typeRenames: Map[String, String], flattenNestedTypes: Set[String],
              opaqueTargets: Set[String], packageRenames: Map[String, String] = Map.empty,
@@ -79,17 +94,7 @@ object ReferencePolicy:
     /** every reference path a java class may sit at: a static nested type lands in the hand port's
       * class OR its companion (`/Outer/Inner`, `/Outer$/Inner`), so each enclosing segment is tried
       * both ways; a java STATIC member is read under the innermost companion (`/Outer$`). */
-    def classPaths(cls: Symbol): List[String] =
-      val fqn = cls.fullName
-      val top = fqn.takeWhile(_ != '$')
-      val nested = if fqn.length > top.length then fqn.drop(top.length + 1).split('$').toList.filter(_.nonEmpty) else Nil
-      val topName = typeRenames.getOrElse(top, top.split('.').last)
-      val segs = if nested.nonEmpty && flattenNestedTypes.contains(fqn) then List(nested.last) else topName :: nested
-      val enclosing = segs.dropRight(1)
-      val variants = enclosing.foldLeft(List(List.empty[String])) { (acc, seg) =>
-        acc.flatMap(pre => List(pre :+ seg, pre :+ (seg + "$")))
-      }
-      variants.map(pre => (pre :+ segs.last).map("/" + _).mkString)
+    def classPaths(cls: Symbol): List[String] = ReferencePolicy.classPaths(cls, typeRenames, flattenNestedTypes)
     def memberPaths(paths: List[String], static: Boolean): List[String] =
       if static then paths.map(_ + "$") else paths
 

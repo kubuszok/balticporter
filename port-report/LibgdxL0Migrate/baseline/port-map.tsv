@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=8f0ea43780a6b6f0	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=63d14925932ab064	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -53,7 +53,7 @@ type	com.badlogic.gdx.assets.loaders.BitmapFontLoader$BitmapFontParameter	sge.as
 type	com.badlogic.gdx.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader	Renamed	-		0		companion=yes form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(FileHandleResolver) primaryKind=unique-root primaryVis=public statics=CubemapLoaderInfo,CubemapParameter
 type	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapLoaderInfo	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter	sge.assets.loaders.CubemapLoader$CubemapParameter	Renamed	-		0		companion=yes form=class parents=sge.assets.AssetLoaderParameters primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.assets.loaders.FileHandleResolver	sge.assets.loaders.FileHandleResolver	Renamed	-		0		companion=yes form=trait statics=Absolute,Classpath,External,Internal,Local
+type	com.badlogic.gdx.assets.loaders.FileHandleResolver	sge.assets.loaders.FileHandleResolver	Renamed	-		0		companion=yes form=trait statics=Absolute,Classpath,External,Internal,Local,Resolution
 type	com.badlogic.gdx.assets.loaders.I18NBundleLoader	sge.assets.loaders.I18NBundleLoader	Renamed	-		0		companion=yes form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(FileHandleResolver) primaryKind=unique-root primaryVis=public statics=I18NBundleParameter
 type	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter	Renamed	-		0		companion=yes form=class parents=sge.assets.AssetLoaderParameters primary=(Nullable,Nullable) primaryKind=unique-root primaryVis=public secondaries=();(Locale)
 type	com.badlogic.gdx.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(Nullable) primaryKind=unique-root primaryVis=public statics=ModelParameters tparams="[P <: sge.assets.loaders.ModelLoader.ModelParameters]"
@@ -953,6 +953,7 @@ type		sge.Pixels	Added	-		0
 type		sge.Sge	Added	-		0		
 type		sge.SgeExtension	Added	-		0		
 type		sge.WorldUnits	Added	-		0		
+type		sge.audio.AudioUtils	Added	-		0		
 type		sge.audio.Pan	Added	-		0		
 type		sge.audio.Pitch	Added	-		0		
 type		sge.audio.Position	Added	-		0		
@@ -1737,6 +1738,7 @@ member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt2>	sge.assets.loa
 member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt3>	sge.assets.loaders.FileHandleResolver#<stmt3>	Renamed	-	<synthetic>	0	423cb867404d2f26	
 member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt4>	sge.assets.loaders.FileHandleResolver#<stmt4>	Renamed	-	<synthetic>	0	46060ee624e4d6e9	
 member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt5>	sge.assets.loaders.FileHandleResolver#<stmt5>	Renamed	-	<synthetic>	0	8c092c23c3f126cf	
+member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt6>	sge.assets.loaders.FileHandleResolver#<stmt6>	Renamed	-	<synthetic>	0	ebbc598e9ced25b9	
 member	com.badlogic.gdx.assets.loaders.FileHandleResolver#resolve(String)	sge.assets.loaders.FileHandleResolver#resolve(String)	Renamed	-	com/badlogic/gdx/assets/loaders/FileHandleResolver.java	26	153a447876c27b91	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader#bundle	sge.assets.loaders.I18NBundleLoader#bundle	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	51	fce02c156404c68c	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader#getDependencies(String,FileHandle,I18NBundleParameter)	sge.assets.loaders.I18NBundleLoader#getDependencies(String,FileHandle,I18NBundleParameter)	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	80	8d2b3716db9ed7ee	
@@ -3975,6 +3977,8 @@ member	com.badlogic.gdx.graphics.g2d.Animation#getPlayMode()	sge.graphics.g2d.An
 member	com.badlogic.gdx.graphics.g2d.Animation#setPlayMode(PlayMode)	sge.graphics.g2d.Animation#playMode_=(PlayMode)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	180	64f1574f87097935	
 member	com.badlogic.gdx.graphics.g2d.Animation#setFrameDuration(float)	sge.graphics.g2d.Animation#setFrameDuration(float)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	194	ceaada790de8e58f	
 member	com.badlogic.gdx.graphics.g2d.Animation#setKeyFrames(Array)	sge.graphics.g2d.Animation#setKeyFrames(Array<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	167	c7c4acf881f0eb6a	
+member	com.badlogic.gdx.graphics.g2d.Animation$PlayMode#<stmt1>	sge.graphics.g2d.Animation$PlayMode#<stmt1>	Renamed	-	<synthetic>	0	32246859eba058a2	
+member	com.badlogic.gdx.graphics.g2d.Animation$PlayMode#<stmt2>	sge.graphics.g2d.Animation$PlayMode#<stmt2>	Renamed	-	<synthetic>	0	0d1f6f7806b5ddff	
 member	com.badlogic.gdx.graphics.g2d.Batch#<stmt1>	sge.graphics.g2d.Batch#<stmt1>	Renamed	-	<synthetic>	0	967b960347899d90	
 member	com.badlogic.gdx.graphics.g2d.Batch#C1	sge.graphics.g2d.Batch#C1	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	244	a68fa8455ff530f7	placement=companion
 member	com.badlogic.gdx.graphics.g2d.Batch#C2	sge.graphics.g2d.Batch#C2	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	249	f2c0f9a6f3874e3a	placement=companion
@@ -10898,6 +10902,7 @@ member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#getTextureRegion()	s
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#setTextureRegion(TextureRegion)	sge.maps.tiled.tiles.StaticTiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	83	011b116fe84b1d7b	
 member	com.badlogic.gdx.math.Affine2#<init>()	sge.math.Affine2#<init>()	Renamed	-	com/badlogic/gdx/math/Affine2.java	38	fd76350324955190	
 member	com.badlogic.gdx.math.Affine2#<init>(Affine2)	sge.math.Affine2#<init>(Affine2)	Renamed	-	com/badlogic/gdx/math/Affine2.java	44	2b75cb6d87894492	
+member	com.badlogic.gdx.math.Affine2#<stmt1>	sge.math.Affine2#<stmt1>	Renamed	-	<synthetic>	0	b0e00edca4a9e7e7	
 member	com.badlogic.gdx.math.Affine2#applyTo(Vector2)	sge.math.Affine2#applyTo(Vector2)	Renamed	-	com/badlogic/gdx/math/Affine2.java	658	5ea5eef7a144de63	
 member	com.badlogic.gdx.math.Affine2#det()	sge.math.Affine2#det()	Renamed	-	com/badlogic/gdx/math/Affine2.java	632	d4607ad67cc200cb	
 member	com.badlogic.gdx.math.Affine2#getTranslation(Vector2)	sge.math.Affine2#getTranslation(Vector2)	Renamed	-	com/badlogic/gdx/math/Affine2.java	639	d9c51e04578bf642	
@@ -11460,6 +11465,7 @@ member	com.badlogic.gdx.math.Matrix3#<init>()	sge.math.Matrix3#<init>()	Renamed	
 member	com.badlogic.gdx.math.Matrix3#<init>(Array)	sge.math.Matrix3#<init>(Array<float>)	Renamed	-	com/badlogic/gdx/math/Matrix3.java	56	4f988e23ba60f656	
 member	com.badlogic.gdx.math.Matrix3#<init>(Matrix3)	sge.math.Matrix3#<init>(Matrix3)	Renamed	-	com/badlogic/gdx/math/Matrix3.java	48	3a87dcc2728b4539	
 member	com.badlogic.gdx.math.Matrix3#<initblock>	sge.math.Matrix3#<initblock>	Renamed	-	com/badlogic/gdx/math/Matrix3.java	40	d24a0f5f6a3888a2	
+member	com.badlogic.gdx.math.Matrix3#<stmt1>	sge.math.Matrix3#<stmt1>	Renamed	-	<synthetic>	0	294f1e411cb70f50	
 member	com.badlogic.gdx.math.Matrix3#M00	sge.math.Matrix3#M00	Renamed	-	com/badlogic/gdx/math/Matrix3.java	29	be5a4ebe5112a642	placement=companion
 member	com.badlogic.gdx.math.Matrix3#M01	sge.math.Matrix3#M01	Renamed	-	com/badlogic/gdx/math/Matrix3.java	30	52d71239b88055f8	placement=companion
 member	com.badlogic.gdx.math.Matrix3#M02	sge.math.Matrix3#M02	Renamed	-	com/badlogic/gdx/math/Matrix3.java	31	53f860beaaf215ba	placement=companion
@@ -11514,6 +11520,9 @@ member	com.badlogic.gdx.math.Matrix4#<init>(Array)	sge.math.Matrix4#<init>(Array
 member	com.badlogic.gdx.math.Matrix4#<init>(Matrix4)	sge.math.Matrix4#<init>(Matrix4)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	99	0e1c33fa17773723	
 member	com.badlogic.gdx.math.Matrix4#<init>(Quaternion)	sge.math.Matrix4#<init>(Quaternion)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	113	2b22c09f0118a898	
 member	com.badlogic.gdx.math.Matrix4#<init>(Vector3,Quaternion,Vector3)	sge.math.Matrix4#<init>(Vector3,Quaternion,Vector3)	Renamed	-	com/badlogic/gdx/math/Matrix4.java	121	f24d234752658cdd	
+member	com.badlogic.gdx.math.Matrix4#<stmt1>	sge.math.Matrix4#<stmt1>	Renamed	-	<synthetic>	0	f512d0b99b42619f	
+member	com.badlogic.gdx.math.Matrix4#<stmt2>	sge.math.Matrix4#<stmt2>	Renamed	-	<synthetic>	0	c29f06f18720a27e	
+member	com.badlogic.gdx.math.Matrix4#<stmt3>	sge.math.Matrix4#<stmt3>	Renamed	-	<synthetic>	0	93eb52834302297f	
 member	com.badlogic.gdx.math.Matrix4#M00	sge.math.Matrix4#M00	Renamed	-	com/badlogic/gdx/math/Matrix4.java	33	9fb631820525aa27	placement=companion
 member	com.badlogic.gdx.math.Matrix4#M01	sge.math.Matrix4#M01	Renamed	-	com/badlogic/gdx/math/Matrix4.java	36	333f6ff6fb2c3c05	placement=companion
 member	com.badlogic.gdx.math.Matrix4#M02	sge.math.Matrix4#M02	Renamed	-	com/badlogic/gdx/math/Matrix4.java	39	f262488c52537bd6	placement=companion
@@ -11654,6 +11663,7 @@ member	com.badlogic.gdx.math.Octree$Collider#intersects(BoundingBox,T)	sge.math.
 member	com.badlogic.gdx.math.Octree$Collider#intersects(Frustum,T)	sge.math.Octree$Collider#intersects(Frustum,T)	Renamed	-	com/badlogic/gdx/math/Octree.java	368	9fcf94b0dd454746	
 member	com.badlogic.gdx.math.Octree$Collider#intersects(Ray,T)	sge.math.Octree$Collider#intersects(Ray,T)	Renamed	-	com/badlogic/gdx/math/Octree.java	374	f8bc4ec5f7a8fdc6	
 member	com.badlogic.gdx.math.Octree$OctreeNode#<stmt1>	sge.math.Octree$OctreeNode#<stmt1>	Renamed	-	<synthetic>	0	26599792662dac02	
+member	com.badlogic.gdx.math.Octree$OctreeNode#<stmt2>	sge.math.Octree$OctreeNode#<stmt2>	Renamed	-	<synthetic>	0	9f9afe2cbbb982a8	
 member	com.badlogic.gdx.math.Octree$OctreeNode#add(T)	sge.math.Octree$OctreeNode#add(T)	Renamed	-	com/badlogic/gdx/math/Octree.java	214	0d1bd95edec54410	
 member	com.badlogic.gdx.math.Octree$OctreeNode#bounds	sge.math.Octree$OctreeNode#bounds	Renamed	-	com/badlogic/gdx/math/Octree.java	156	9ef403fb0e91e032	
 member	com.badlogic.gdx.math.Octree$OctreeNode#children	sge.math.Octree$OctreeNode#children	Renamed	-	com/badlogic/gdx/math/Octree.java	158	e3ef2af1bc51ae79	vis=private[Octree]
@@ -11700,6 +11710,7 @@ member	com.badlogic.gdx.math.Plane#testPoint(float,float,float)	sge.math.Plane#t
 member	com.badlogic.gdx.math.Plane#toString()	sge.math.Plane#toString()	Renamed	-	com/badlogic/gdx/math/Plane.java	177	898985acd32e8648	
 member	com.badlogic.gdx.math.Polygon#<init>()	sge.math.Polygon#<init>()	Renamed	-	com/badlogic/gdx/math/Polygon.java	31	8bb8815ff37bdb95	
 member	com.badlogic.gdx.math.Polygon#<init>(Array)	sge.math.Polygon#<init>(Array<float>)	Renamed	-	com/badlogic/gdx/math/Polygon.java	41	afb762ac1f33c59d	
+member	com.badlogic.gdx.math.Polygon#<stmt1>	sge.math.Polygon#<stmt1>	Renamed	-	<synthetic>	0	c17267ec0c213790	
 member	com.badlogic.gdx.math.Polygon#area()	sge.math.Polygon#area()	Renamed	-	com/badlogic/gdx/math/Polygon.java	174	7a9a26deb5228e32	
 member	com.badlogic.gdx.math.Polygon#getBoundingRectangle()	sge.math.Polygon#boundingRectangle	Renamed	-	com/badlogic/gdx/math/Polygon.java	201	ad1e90ae2fd33b76	form=parenless
 member	com.badlogic.gdx.math.Polygon#bounds	sge.math.Polygon#bounds	Renamed	-	com/badlogic/gdx/math/Polygon.java	28	c22fbe457a4fb954	vis=private
@@ -11784,6 +11795,8 @@ member	com.badlogic.gdx.math.Quaternion#<init>()	sge.math.Quaternion#<init>()	Re
 member	com.badlogic.gdx.math.Quaternion#<init>(Quaternion)	sge.math.Quaternion#<init>(Quaternion)	Renamed	-	com/badlogic/gdx/math/Quaternion.java	54	0ba52cf9bf9a3415	
 member	com.badlogic.gdx.math.Quaternion#<init>(Vector3,float)	sge.math.Quaternion#<init>(Vector3,float)	Renamed	-	com/badlogic/gdx/math/Quaternion.java	62	a2487fc13716be0c	
 member	com.badlogic.gdx.math.Quaternion#<init>(float,float,float,float)	sge.math.Quaternion#<init>(float,float,float,float)	Renamed	-	com/badlogic/gdx/math/Quaternion.java	43	cd9ba36d9b1cd3ea	
+member	com.badlogic.gdx.math.Quaternion#<stmt1>	sge.math.Quaternion#<stmt1>	Renamed	-	<synthetic>	0	c043fe842d241b76	
+member	com.badlogic.gdx.math.Quaternion#<stmt2>	sge.math.Quaternion#<stmt2>	Renamed	-	<synthetic>	0	1461ba72987b083b	
 member	com.badlogic.gdx.math.Quaternion#add(Quaternion)	sge.math.Quaternion#add(Quaternion)	Renamed	-	com/badlogic/gdx/math/Quaternion.java	318	d9ea5208bc83469e	
 member	com.badlogic.gdx.math.Quaternion#add(float,float,float,float)	sge.math.Quaternion#add(float,float,float,float)	Renamed	-	com/badlogic/gdx/math/Quaternion.java	327	4cee05ca2e8aaf66	
 member	com.badlogic.gdx.math.Quaternion#getAngle()	sge.math.Quaternion#angle	Renamed	-	com/badlogic/gdx/math/Quaternion.java	807	6975831886daf33b	form=parenless
@@ -11877,6 +11890,7 @@ member	com.badlogic.gdx.math.RandomXS128#setState(long,long)	sge.math.RandomXS12
 member	com.badlogic.gdx.math.Rectangle#<init>()	sge.math.Rectangle#<init>()	Renamed	-	com/badlogic/gdx/math/Rectangle.java	36	e8c8dff3d86a7a8a	
 member	com.badlogic.gdx.math.Rectangle#<init>(Rectangle)	sge.math.Rectangle#<init>(Rectangle)	Renamed	-	com/badlogic/gdx/math/Rectangle.java	54	55a8952310de2aba	
 member	com.badlogic.gdx.math.Rectangle#<init>(float,float,float,float)	sge.math.Rectangle#<init>(float,float,float,float)	Renamed	-	com/badlogic/gdx/math/Rectangle.java	45	9bb4445a53b6d410	
+member	com.badlogic.gdx.math.Rectangle#<stmt1>	sge.math.Rectangle#<stmt1>	Renamed	-	<synthetic>	0	2b5964b4c5dc38f3	
 member	com.badlogic.gdx.math.Rectangle#area()	sge.math.Rectangle#area()	Renamed	-	com/badlogic/gdx/math/Rectangle.java	400	c18e83a093dbc298	
 member	com.badlogic.gdx.math.Rectangle#getAspectRatio()	sge.math.Rectangle#aspectRatio	Renamed	-	com/badlogic/gdx/math/Rectangle.java	302	cf1b3590b13cdf31	form=parenless
 member	com.badlogic.gdx.math.Rectangle#contains(Circle)	sge.math.Rectangle#contains(Circle)	Renamed	-	com/badlogic/gdx/math/Rectangle.java	200	e27ecec8d5d537ea	
@@ -11923,6 +11937,7 @@ member	com.badlogic.gdx.math.Rectangle#getY()	sge.math.Rectangle#y	Renamed	-	com
 member	com.badlogic.gdx.math.Rectangle#setY(float)	sge.math.Rectangle#y_=(float)	Renamed	-	com/badlogic/gdx/math/Rectangle.java	97	99c83621ec08ffde	
 member	com.badlogic.gdx.math.Shape2D#contains(Vector2)	sge.math.Shape2D#contains(Vector2)	Renamed	-	com/badlogic/gdx/math/Shape2D.java	22	947015795e6e650f	
 member	com.badlogic.gdx.math.Shape2D#contains(float,float)	sge.math.Shape2D#contains(float,float)	Renamed	-	com/badlogic/gdx/math/Shape2D.java	25	f39aba06705617d3	
+member	com.badlogic.gdx.math.Vector#<stmt1>	sge.math.Vector#<stmt1>	Renamed	-	<synthetic>	0	426575ac626e6e5e	
 member	com.badlogic.gdx.math.Vector#add(T)	sge.math.Vector#add(T)	Renamed	-	com/badlogic/gdx/math/Vector.java	83	cacdec5be1554579	
 member	com.badlogic.gdx.math.Vector#clamp(float,float)	sge.math.Vector#clamp(float,float)	Renamed	-	com/badlogic/gdx/math/Vector.java	64	1600f82f3b3e3656	
 member	com.badlogic.gdx.math.Vector#cpy()	sge.math.Vector#cpy()	Renamed	-	com/badlogic/gdx/math/Vector.java	24	adb268b29dbb1bcb	
@@ -11964,6 +11979,10 @@ member	com.badlogic.gdx.math.Vector#isUnit()	sge.math.Vector#unit	Renamed	-	com/
 member	com.badlogic.gdx.math.Vector2#<init>()	sge.math.Vector2#<init>()	Renamed	-	com/badlogic/gdx/math/Vector2.java	40	17b5a626cb9cf298	
 member	com.badlogic.gdx.math.Vector2#<init>(Vector2)	sge.math.Vector2#<init>(Vector2)	Renamed	-	com/badlogic/gdx/math/Vector2.java	53	fc70d7d8465dcb3f	
 member	com.badlogic.gdx.math.Vector2#<init>(float,float)	sge.math.Vector2#<init>(float,float)	Renamed	-	com/badlogic/gdx/math/Vector2.java	46	9ba6e346da71dec1	
+member	com.badlogic.gdx.math.Vector2#<stmt1>	sge.math.Vector2#<stmt1>	Renamed	-	<synthetic>	0	ea19cdefd4e0d1fc	
+member	com.badlogic.gdx.math.Vector2#<stmt2>	sge.math.Vector2#<stmt2>	Renamed	-	<synthetic>	0	cdb907c20625e2f2	
+member	com.badlogic.gdx.math.Vector2#<stmt3>	sge.math.Vector2#<stmt3>	Renamed	-	<synthetic>	0	d5af9c8a04f97f96	
+member	com.badlogic.gdx.math.Vector2#<stmt4>	sge.math.Vector2#<stmt4>	Renamed	-	<synthetic>	0	dc46c1e760af5d40	
 member	com.badlogic.gdx.math.Vector2#One	sge.math.Vector2#One	Renamed	-	com/badlogic/gdx/math/Vector2.java	32	114b7a90160a184f	placement=companion
 member	com.badlogic.gdx.math.Vector2#X	sge.math.Vector2#X	Renamed	-	com/badlogic/gdx/math/Vector2.java	29	49c4a45c7d9a2d6a	placement=companion
 member	com.badlogic.gdx.math.Vector2#Y	sge.math.Vector2#Y	Renamed	-	com/badlogic/gdx/math/Vector2.java	30	7f1ab78cce737185	placement=companion
@@ -12055,6 +12074,7 @@ member	com.badlogic.gdx.math.Vector3#<init>(Array)	sge.math.Vector3#<init>(Array
 member	com.badlogic.gdx.math.Vector3#<init>(Vector2,float)	sge.math.Vector3#<init>(Vector2,float)	Renamed	-	com/badlogic/gdx/math/Vector3.java	73	a509de2a2e42e6f3	
 member	com.badlogic.gdx.math.Vector3#<init>(Vector3)	sge.math.Vector3#<init>(Vector3)	Renamed	-	com/badlogic/gdx/math/Vector3.java	58	f11da3c9d7635fbc	
 member	com.badlogic.gdx.math.Vector3#<init>(float,float,float)	sge.math.Vector3#<init>(float,float,float)	Renamed	-	com/badlogic/gdx/math/Vector3.java	52	44bda00a9ba0daaa	
+member	com.badlogic.gdx.math.Vector3#<stmt1>	sge.math.Vector3#<stmt1>	Renamed	-	<synthetic>	0	f58d393d9b6746db	
 member	com.badlogic.gdx.math.Vector3#One	sge.math.Vector3#One	Renamed	-	com/badlogic/gdx/math/Vector3.java	40	d392aac3ff36c3ac	placement=companion
 member	com.badlogic.gdx.math.Vector3#X	sge.math.Vector3#X	Renamed	-	com/badlogic/gdx/math/Vector3.java	36	812dc7fed9a0583b	placement=companion
 member	com.badlogic.gdx.math.Vector3#Y	sge.math.Vector3#Y	Renamed	-	com/badlogic/gdx/math/Vector3.java	37	7b2be20384d47650	placement=companion
@@ -12151,6 +12171,7 @@ member	com.badlogic.gdx.math.Vector4#<init>(Vector2,float,float)	sge.math.Vector
 member	com.badlogic.gdx.math.Vector4#<init>(Vector3,float)	sge.math.Vector4#<init>(Vector3,float)	Renamed	-	com/badlogic/gdx/math/Vector4.java	86	adf30235153d51b5	
 member	com.badlogic.gdx.math.Vector4#<init>(Vector4)	sge.math.Vector4#<init>(Vector4)	Renamed	-	com/badlogic/gdx/math/Vector4.java	62	b0e9188d4afd0c32	
 member	com.badlogic.gdx.math.Vector4#<init>(float,float,float,float)	sge.math.Vector4#<init>(float,float,float,float)	Renamed	-	com/badlogic/gdx/math/Vector4.java	56	685a25902251fac2	
+member	com.badlogic.gdx.math.Vector4#<stmt1>	sge.math.Vector4#<stmt1>	Renamed	-	<synthetic>	0	e9c35750275ed5e9	
 member	com.badlogic.gdx.math.Vector4#One	sge.math.Vector4#One	Renamed	-	com/badlogic/gdx/math/Vector4.java	45	e56d6791e1338ef4	placement=companion
 member	com.badlogic.gdx.math.Vector4#W	sge.math.Vector4#W	Renamed	-	com/badlogic/gdx/math/Vector4.java	43	9bb51958d4f3c270	placement=companion
 member	com.badlogic.gdx.math.Vector4#X	sge.math.Vector4#X	Renamed	-	com/badlogic/gdx/math/Vector4.java	40	a6cc004665ce99e6	placement=companion

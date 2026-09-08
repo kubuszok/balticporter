@@ -2240,7 +2240,13 @@ folds it AS IF CONFIGURED — so the detector's refusal of a fluent setter (K51 
 reference's own spelling, under the same guards a configured pair takes; a configured key still wins. (7) A nullary method the reference keeps WITH its `()` (`def size(): Int`) is a `KeepParens` row
 the arity step refuses on; a `Parenless` row is the spelling of the member's whole override COMPONENT,
 over the detector's body and overload guards (`Vector#len` -> `length` parenless on every vector, `isZero`
-beside `isZero(margin)` as the reference compiles it) -- anchors and unrewritable call sites still refuse.
+beside `isZero(margin)` as the reference compiles it) -- anchors and unrewritable call sites still refuse. (8) The hand port's OWN members (`Animation.PlayMode.isLooping`, `Polygon.vertex`) are not derived
+spellings but source: `AddMembersTransform.fromReference` lists their NAMES per java type, and the run
+reads each declaration verbatim off the reference tree (`ReferenceSources`, paths as the parity parser's,
+class or companion as the reference has it, the reference file's imports it mentions and its OUTER
+packages -- a chained `package sge` / `package math` clause -- emitted ahead of it as class-body imports). A name the reference lacks is a counted finding; whether the body compiles against
+the port is the compiler's verdict, one member at a time -- a member whose body wants a type the port
+lacks comes off the list.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

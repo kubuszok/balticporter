@@ -2335,6 +2335,22 @@ over the body/overload guards (`length`, `lengthSq`, `isZero` beside `isZero(mar
 68, nullable 65 (`Table.add` overloads 38), particles 42, filetype 29, other 25 (`PoolManager.addPool`
 20), context 23.
 
+**Hand-port extras read off the reference tree (2026-09-08 04:50).** `AddMembersTransform.fromReference`
+lists NAMES per java type; the run reads each declaration verbatim from sge's tree (`ReferenceSources`:
+class or companion as sge has it, sge's imports it mentions and its outer packages ahead of it as
+class-body imports; abstract declarations included). The `extras` step lists 21 members on 13 types
+(`PlayMode.isLooping/isReversed`, `Polygon.vertex`, `Vector*.copy`, `Vector2.*`/`cross`, `Matrix4/3/Affine2
+.translation`, `Rectangle.center`, `Quaternion.swingTwist`, `OctreeNode.isLeaf`, `FileHandleResolver.Resolution`)
+and sge's `AudioUtils` is injected whole. Off the list, each measured: the vector operators, `Vector3.
+rotateAround*`/`cross`, `Ray.endPoint` (all `this.type` off sge's own float overloads: the fluent card,
+ENGINE-LIMITS I1), `Table.isClip`/`tableAlign` (sge's private field, its `Align` opaque), `Timer.disposeThread`,
+`FileHandleResolver.Prefix`/`ForResolution` (sge's 2-arg `FileHandle`). `sge-l0` 0 = 0, JS 13 = 13, Native 0,
+suite 216/220, demos 12/12, `lls` unchanged. **`sge-suite-check` 585 -> 540** (member-shape 180 -> 135).
+Next by size: `Class<T>` parameters sge turns into `[T: ClassTag]` bounds (`PoolManager.addPool/pool/obtain`,
+`Skin.get/has/optional`, `Actions.action`, `AssetManager.get`, `AssetDescriptor.apply` — 24 sge declarations;
+29 suite errors in `other`/`type-shape`), `Table.add` at a `Nullable` argument (38 in `nullable`), the
+JSON step's tiled/particle parts (116), sge's `DynamicArray.length` (an lls extra, 7).
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

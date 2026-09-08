@@ -162,6 +162,27 @@ object LibgdxLadder:
     // the reference-derived spelling step: no phase of its own — it switches `derive` on in the
     // opaque, nullability and arity phases and declares sge's tree as the manifest's reference.
     "derive" -> Nil,
+    // sge's OWN members the suite reaches for, read verbatim off sge's tree by name (DESIGN.md §8.30 (8));
+    // a member whose body wants a type the port lacks comes off this list with its finding
+    "extras" -> List(new balticporter.transform.AddMembersTransform(fromReference = Map(
+      "com.badlogic.gdx.graphics.g2d.Animation$PlayMode" -> List("isLooping", "isReversed"),
+      "com.badlogic.gdx.math.Polygon"                     -> List("vertex"),
+      // the vector OPERATORS (`+`, `-`), `Vector3.rotateAround*`/`cross` and `Ray.endPoint` return `this.type` off
+      // sge's own float overloads: the fluent shape (ENGINE-LIMITS I1), not a splice — left to that card
+      "com.badlogic.gdx.math.Vector"                      -> List("copy"),
+      "com.badlogic.gdx.math.Vector2"                     -> List("*", "copy", "cross"),
+      "com.badlogic.gdx.math.Vector3"                     -> List("copy"),
+      "com.badlogic.gdx.math.Vector4"                     -> List("copy"),
+      "com.badlogic.gdx.math.Matrix4"                     -> List("translation", "rotation"),
+      "com.badlogic.gdx.math.Matrix3"                     -> List("translation"),
+      "com.badlogic.gdx.math.Affine2"                     -> List("translation"),
+      "com.badlogic.gdx.math.Rectangle"                   -> List("center"),
+      "com.badlogic.gdx.math.Quaternion"                  -> List("swingTwist"),
+      "com.badlogic.gdx.math.Octree$OctreeNode"           -> List("isLeaf"),
+      // `Table.isClip`/`tableAlign` (sge's private `_clip`, its `Align` opaque), `Timer.disposeThread`
+      // (sge's thread holder), `FileHandleResolver.Prefix`/`ForResolution` (sge's 2-arg `FileHandle`)
+      // lean on sge-only internals: each stays a suite residue until its family lands
+      "com.badlogic.gdx.assets.loaders.FileHandleResolver" -> List("Resolution")))),
     // sge's float opaques for tolerances and angles (`Epsilon`, `Degrees`, `Radians`), seeded off sge's tree
     "mathunits" -> List("Epsilon", "Degrees", "Radians").map(n => opaque(balticporter.tir.OpaqueSpec(
       fqn = "com.badlogic.gdx.math." + n,
@@ -768,9 +789,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "mathunits", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "mathunits", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive", "extras")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "mathunits", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "mathunits", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive", "extras")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

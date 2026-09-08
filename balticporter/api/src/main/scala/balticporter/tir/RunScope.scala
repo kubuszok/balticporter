@@ -44,6 +44,8 @@ trait RunScope:
   /** spelling policy derived from the manifest's reference port (`PortManifest.parity`); empty when
     * no reference is declared or no phase derives. [[DerivedPolicy]], `PROGRESS.md` §13.31 step 1. */
   def derived: DerivedPolicy = DerivedPolicy.empty
+  /** the reference tree's members by java type, for verbatim splicing; `None` without a reference. */
+  def referenceSource: Option[RunScope.ReferenceSourceLookup] = scala.None
 
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds. [[emits]] takes a
     * top-level unit (the run's classification granularity); every caller climbs the owner chain to
@@ -80,6 +82,16 @@ object RunScope:
     val everyPlatform: PlatformPolicy =
       PlatformPolicy(balticporter.catalog.Platform.values.toSet, Map.empty)
 
+  /** a member of the REFERENCE port read VERBATIM for splicing (`AddMembersTransform.fromReference`):
+    * its name, declaration kind, whether it sits in the companion, its source, and the reference
+    * file's imports it mentions (emitted as class-body imports ahead of it). */
+  final case class ReferenceMember(name: String, kind: String, static: Boolean, source: String, imports: List[String])
+  /** the reference tree's declarations, by the java type they stand for — built by the run from the
+    * manifest's `parity` roots (DESIGN.md §8.30); absent when no reference is declared. */
+  trait ReferenceSourceLookup:
+    /** the reference's declarations named `names` on the type standing for `owner`; a name the
+      * reference does not declare is simply absent. */
+    def membersOf(owner: Symbol, names: List[String]): List[ReferenceMember]
   /** the whole program is this run's, and no phase's policy is scoped — the default everywhere. */
   val whole: RunScope = new RunScope:
     def emits(unit: SymId): Boolean                     = true
@@ -95,14 +107,17 @@ object RunScope:
          substituted: Set[String] = Set.empty,
          memberUpstream: Set[String] = Set.empty,
          ownSubstituted: Set[String] = Set.empty,
-         derivedPolicy: DerivedPolicy = DerivedPolicy.empty): RunScope =
+         derivedPolicy: DerivedPolicy = DerivedPolicy.empty,
+         referenceSource: Option[ReferenceSourceLookup] = scala.None): RunScope =
     val p = platform
     val s = substituted
     val mu = memberUpstream
     val os = ownSubstituted
     val dp = derivedPolicy
+    val rs = referenceSource
     new RunScope:
       override def derived: DerivedPolicy                 = dp
+      override def referenceSource: Option[ReferenceSourceLookup] = rs
       def emits(unit: SymId): Boolean                     = emitted(unit)
       def contributed(phase: String): Option[Set[String]] = own.get(phase)
       override def platform: PlatformPolicy               = p

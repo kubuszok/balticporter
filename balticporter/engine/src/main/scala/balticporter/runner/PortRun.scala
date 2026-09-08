@@ -6,7 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, DerivedPolicy, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, ElementWitnessCheck, ElementWitnessTransform, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, NullaryArityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
-import balticporter.verify.{ApiParityCheck, ReferencePolicy}
+import balticporter.verify.{ApiParityCheck, ReferencePolicy, ReferenceSources}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -1718,7 +1718,8 @@ final case class PortRun(
                 memberUp,
                 // types this run drops+injects -- retarget must not resolve through the parent (item 2).
                 policySubs.dropTypes,
-                derivedPolicy(parsed, emittedUnits))
+                derivedPolicy(parsed, emittedUnits),
+                referenceSources)
 
   // ---- reference-derived spelling policy (PROGRESS.md §13.31 step 1) ----------------------------
   /** the opaque targets of the deriving specs; empty when no phase derives. */
@@ -1741,6 +1742,14 @@ final case class PortRun(
         ApiParityCheck.parseSurface(ref.roots, ref.upstreamMarkers) match
           case Right((decls, _)) => decls
           case Left(err)         => sys.error(s"[$label] reference port unparseable: $err")
+  /** the reference tree's members by java type, for `AddMembersTransform.fromReference`; built only
+    * when a phase lists names and the manifest declares a `parity` reference. */
+  private lazy val referenceSources: Option[RunScope.ReferenceSourceLookup] =
+    val wanted = effectivePhases.exists { case a: balticporter.transform.AddMembersTransform => a.fromReference.nonEmpty; case _ => false }
+    if !wanted then scala.None
+    else manifest.flatMap(m => m.parity.map(ref => (m, ref))).map { (m, ref) =>
+      new ReferenceSources(ref.roots, m.effectiveTypeRenames, m.effectiveFlattenNestedTypes)
+    }
   /** the last derivation, for the report (`derived(*)` lanes, `derived-policy.tsv`). */
   private var lastDerived: Option[ReferencePolicy.Result] = scala.None
   /** a DEPENDENT inherits the base's deriving phases without a reference of its own: the base's

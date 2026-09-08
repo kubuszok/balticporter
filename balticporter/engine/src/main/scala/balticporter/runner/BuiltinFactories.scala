@@ -265,7 +265,10 @@ final class AddMembersFactory extends TransformFactory:
       }
       if specs.nonEmpty then List(owner -> specs) else Nil
     }
-    new AddMembersTransform(entries.toMap)
+    // `fromReference { "owner.Fqn" = "name, name" }`: names read verbatim from the reference port
+    val fromRef = config.stringMap("fromReference").getOrElse(Map.empty)
+      .map((o, v) => o -> v.split(',').map(_.trim).filter(_.nonEmpty).toList).filter(_._2.nonEmpty)
+    new AddMembersTransform(entries.toMap, fromRef)
 
 /** `{ transform = "call-site-substitution", calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }`
   *
