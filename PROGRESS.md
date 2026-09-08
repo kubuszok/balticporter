@@ -2436,6 +2436,17 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Session floor at 74 (2026-09-08 17:30).** Session total: sge-suite-check 368 -> 74 (294 resolved, 80%).
+Key wins this batch: `DynamicArray.length` + `OrderedSet.head` in `package sge` (visible to all test
+packages, 9 errors), `Table.isClip` + `tableAlign` readers (3 errors), `Vector2/3/4 +/-` operators and
+`Vector3.cross`/`rotateAroundDeg`/`Rad` (15 errors), `Actor.isDebug` (3), `Timer.disposeThread` stub (5),
+`AssetManager.apply` instance + companion + `SkinParameter.apply` + `PerformanceCounter.apply` factories
+(24 errors from funnel `$p` naming), `ParticleEffectCodecs` adapted + `ResourceData` JSON methods (24),
+`BillboardParticleBatch.AlignMode` alias (7), tiled DTOs injected (52), `GLHandle.scala` opaques (14),
+varargs ctors (18), JS fixes (3). Remaining 74: type-shape 26 (FloatArray/ShortArray retarget), member-
+shape 15 (Region inner class 5, FileHandle.internalFile 2, others), nullable 11 (GameScreenTest dropin),
+particles 5, other 4, assertion-mismatch 3, tiled 3, opaque 2, android 1, arity 1, context 1.
+
 **Session floor at 109 (2026-09-08 16:00).** Session total: sge-suite-check 368 -> 109 (259 resolved,
 70%). Added `AssetManager.apply` instance methods (throwing delegates to `get`), companion factories with
 original parameter names for AssetManager/PerformanceCounter/SkinParameter (the funnel's `$p` naming
