@@ -52,6 +52,7 @@ type	com.badlogic.gdx.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin	Dropped	
 type	com.badlogic.gdx.scenes.scene2d.utils.UIUtils	sge.scenes.scene2d.utils.UIUtils	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.BufferUtils	sge.utils.BufferUtils	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.DataBuffer	sge.utils.DataBuffer	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.GdxNativesLoader	sge.utils.GdxNativesLoader	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Json	sge.utils.LegacyJson	Dropped	-		0		form=class

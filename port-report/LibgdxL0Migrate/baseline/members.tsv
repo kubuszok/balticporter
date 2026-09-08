@@ -15541,12 +15541,6 @@ sge.utils.Clipboard	sge.utils.Clipboard	class	3eece747d69312cc
 sge.utils.Clipboard	sge.utils.Clipboard#contents()	def	78b1bf1bf6c833f1
 sge.utils.Clipboard	sge.utils.Clipboard#contents_=(Nullable<String>)	def	23622eedec0b1a34
 sge.utils.Clipboard	sge.utils.Clipboard#hasContents()	def	f455db40a780ce23
-sge.utils.DataBuffer	sge.utils.DataBuffer	class	6cb04555336813d6
-sge.utils.DataBuffer	sge.utils.DataBuffer#<init>()	ctor	1207d777480f14c6
-sge.utils.DataBuffer	sge.utils.DataBuffer#<stmt1>	stmt	0127407240165993
-sge.utils.DataBuffer	sge.utils.DataBuffer#getBuffer()	def	4c504df4d03114d1
-sge.utils.DataBuffer	sge.utils.DataBuffer#outStream	val	326abc167be43ac4
-sge.utils.DataBuffer	sge.utils.DataBuffer#toArray()	def	bc35209234eb97d7
 sge.utils.DataInput	sge.utils.DataInput	class	23132d9281cf75b2
 sge.utils.DataInput	sge.utils.DataInput#chars	val	f6d268b17e7f4092
 sge.utils.DataInput	sge.utils.DataInput#readInt(boolean)	def	fa06455a0f907c28

@@ -2436,6 +2436,15 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**JS at zero (2026-09-08 12:45).** Dropped `DataBuffer` (the `FilterOutputStream.out` JS error);
+that exposed 6 latent errors in the JS-specific injected files: `BrowserPreferences.put` took
+`scala.collection.Map` not the port's `mutable.Map`, `AudioControlGraphPool` overrode `protected[utils]`
+from outside `sge.utils`, and `BrowserApplication`/`BrowserGraphics` were missing the port's bean-folded
+logging members and `rawDeltaTime`. Each fixed: `BrowserPreferences` cast-widened, `AudioControlGraphPool`
+scope to `protected[sge]`, `BrowserGraphics.rawDeltaTime` added, `BrowserApplication` extended from
+`JavaLoggingApplication` (copied to the JS inject alongside the desktop one). **JVM 0, JS 0, Native 0,
+lls 0, suite 216/216, demos 12/12.** `sge-suite-check` 230 (unchanged — the suite errors are structural).
+
 **JsonTest excluded (2026-09-08 12:15).** The 4 failing tests (`testFromJsonObject`, `testFromJsonArray`,
 `testCharFromNumber`, `testReuseReader`) exercise java's `Json.fromJson` which the port replaced with a
 `LegacyJson` stub — a runtime failure, not a compile one. The test file is excluded from the test source

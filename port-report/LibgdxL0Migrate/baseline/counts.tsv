@@ -21,7 +21,7 @@ derived(rows)	6652
 derived(unmatched)	195
 heap-pollution	12
 idiom(converted)	513
-idiom(refused)	3151
+idiom(refused)	3149
 idiom(residue)	0
 jdk-surface	18
 manifest	0

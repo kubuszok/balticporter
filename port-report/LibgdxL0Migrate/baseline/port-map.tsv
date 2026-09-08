@@ -746,7 +746,6 @@ type	com.badlogic.gdx.utils.CharArray	sge.utils.CharArray	Renamed	-		0		companio
 type	com.badlogic.gdx.utils.CharArray$CharArrayReader	sge.utils.CharArray$CharArrayReader	Renamed	-		0		form=class parents=java.io.Reader primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.CharArray$CharArrayWriter	sge.utils.CharArray$CharArrayWriter	Renamed	-		0		form=class parents=java.io.Writer primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.Clipboard	sge.utils.Clipboard	Renamed	-		0		form=trait
-type	com.badlogic.gdx.utils.DataBuffer	sge.utils.DataBuffer	Renamed	-		0		form=class parents=sge.utils.DataOutput primary=(int) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.badlogic.gdx.utils.DataInput	sge.utils.DataInput	Renamed	-		0		form=class parents=java.io.DataInputStream primary=(InputStream) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.DataOutput	sge.utils.DataOutput	Renamed	-		0		form=class parents=java.io.DataOutputStream primary=(OutputStream) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.DefaultPool$PoolSupplier	sge.utils.DefaultPool$PoolSupplier	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
@@ -923,6 +922,7 @@ type	com.badlogic.gdx.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin	Substitu
 type	com.badlogic.gdx.scenes.scene2d.utils.UIUtils	sge.scenes.scene2d.utils.UIUtils	Substituted	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.utils.BufferUtils	sge.utils.BufferUtils	Substituted	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.utils.DataBuffer	sge.utils.DataBuffer	Dropped	-		0		form=class parents=sge.utils.DataOutput primary=(int) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		companion=yes form=class parents=sge.utils.Pool primary=(Function0,int,int) primaryKind=unique-root primaryVis=public secondaries=(Function0);(Function0,int) statics=PoolSupplier tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.GdxNativesLoader	sge.utils.GdxNativesLoader	Dropped	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.Json	sge.utils.LegacyJson	Substituted	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(OutputType) statics=FieldMetadata,ReadOnlySerializer,Serializable,Serializer,debug

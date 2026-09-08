@@ -745,6 +745,9 @@ object LibgdxLadder:
                      // written against sge's Gdx2DPixmap/ETC1 (getters spelled sge's way): sge's own files
                      "com.badlogic.gdx.graphics.Pixmap"),
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
+    // DataBuffer reads FilterOutputStream.out which Scala.js javalib doesn't expose; nobody
+    // references it; sge rewrote it entirely
+    "extras" -> Set("com.badlogic.gdx.utils.DataBuffer"),
     // sge's `Music` (position/duration as `Position`, `onComplete(Music => Unit)`) replaces java's
     "audio" -> Set("com.badlogic.gdx.audio.Music"),
     // sge's `InputProcessor` (every callback defaulted to `false`, so `new InputProcessor {}` stands)
