@@ -11966,14 +11966,14 @@ sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#transform	val	94c3e39beae5541e
 sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#transform()	def	a190f3676302ac03
 sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#transform_=(boolean)	def	d8bad62a26403beb
 sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#worldTransform	val	bb23ab697df721c2
-sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent	class	87a63d3ca8d2ebd1
+sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent	class	dee8f8a21c074253
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#button	val	a3145bf7668f2bd8
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#button()	def	59ba179a55e760c1
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#button_=(Button)	def	9ec3d0545c2c8be5
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#character	val	54819d23e5379476
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#character()	def	d09206c9a8e9def0
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#character_=(char)	def	abee88e5b5ce70a9
-sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#eventType	val	0e011f7d6bb2d543
+sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#eventType	val	d6912359e3c7674a
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#isTouchFocusCancel()	def	a2d0f6de32efaf7d
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#keyCode	val	567f6f62693e6729
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#keyCode()	def	07fa39e279a7e2dd

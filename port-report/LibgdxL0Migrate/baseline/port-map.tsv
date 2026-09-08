@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=699810c83884e783	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=257f0135941863d6	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -12834,7 +12834,7 @@ member	com.badlogic.gdx.scenes.scene2d.InputEvent#setButton(Button)	sge.scenes.s
 member	com.badlogic.gdx.scenes.scene2d.InputEvent#getCharacter	sge.scenes.scene2d.InputEvent#character	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	29	54819d23e5379476	name=character$field
 member	com.badlogic.gdx.scenes.scene2d.InputEvent#getCharacter()	sge.scenes.scene2d.InputEvent#character	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	98	d09206c9a8e9def0	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.InputEvent#setCharacter(char)	sge.scenes.scene2d.InputEvent#character_=(char)	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	102	abee88e5b5ce70a9	
-member	com.badlogic.gdx.scenes.scene2d.InputEvent#type	sge.scenes.scene2d.InputEvent#eventType	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	26	0e011f7d6bb2d543	vis=private
+member	com.badlogic.gdx.scenes.scene2d.InputEvent#type	sge.scenes.scene2d.InputEvent#eventType	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	26	d6912359e3c7674a	
 member	com.badlogic.gdx.scenes.scene2d.InputEvent#isTouchFocusCancel()	sge.scenes.scene2d.InputEvent#isTouchFocusCancel	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	144	a2d0f6de32efaf7d	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.InputEvent#getKeyCode	sge.scenes.scene2d.InputEvent#keyCode	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	28	567f6f62693e6729	name=keyCode$field
 member	com.badlogic.gdx.scenes.scene2d.InputEvent#getKeyCode()	sge.scenes.scene2d.InputEvent#keyCode	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputEvent.java	89	07fa39e279a7e2dd	form=parenless
