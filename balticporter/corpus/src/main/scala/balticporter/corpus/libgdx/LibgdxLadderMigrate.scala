@@ -224,7 +224,17 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("AlignMode", 0,
             "type AlignMode = sge.graphics.g3d.particles.ParticleShader.AlignMode\nval AlignMode = sge.graphics.g3d.particles.ParticleShader.AlignMode",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#AlignMode"),
-            Some("sge moved AlignMode from ParticleShader to BillboardParticleBatch"), true)))),
+            Some("sge moved AlignMode from ParticleShader to BillboardParticleBatch"), true)),
+        "com.badlogic.gdx.assets.AssetManager" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
+            "def apply(resolver: sge.assets.loaders.FileHandleResolver, defaultLoaders: scala.Boolean = true)(using sge.Sge): sge.assets.AssetManager = new sge.assets.AssetManager(resolver, defaultLoaders)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#apply"),
+            Some("factory with original param names — the funnel renamed them to $p"), true)),
+        "com.badlogic.gdx.utils.PerformanceCounter" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
+            "def apply(name: java.lang.String, windowSize: scala.Int = 5): sge.utils.PerformanceCounter = new sge.utils.PerformanceCounter(name, windowSize)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.PerformanceCounter#apply"),
+            Some("factory with original param names — the funnel renamed them to $p"), true)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(

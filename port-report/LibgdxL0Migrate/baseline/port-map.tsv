@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=9fa659cd78735959	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=3f71f63b687cae19	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -44,7 +44,7 @@ type	com.badlogic.gdx.assets.AssetErrorListener	sge.assets.AssetErrorListener	Re
 type	com.badlogic.gdx.assets.AssetLoaderParameters	sge.assets.AssetLoaderParameters	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=LoadedCallback tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.assets.AssetLoaderParameters$LoadedCallback	sge.assets.AssetLoaderParameters$LoadedCallback	Renamed	-		0		form=trait
 type	com.badlogic.gdx.assets.AssetLoadingTask	sge.assets.AssetLoadingTask	Renamed	-		0		form=class parents=sge.utils.async.AsyncTask primary=(AssetManager,AssetDescriptor,AssetLoader,AsyncExecutor) primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.assets.AssetManager	sge.assets.AssetManager	Renamed	-		0		companion=yes form=class parents=java.lang.AutoCloseable primary=(FileHandleResolver,boolean) primaryKind=unique-root primaryVis=public secondaries=();(FileHandleResolver) statics=RefCountedContainer
+type	com.badlogic.gdx.assets.AssetManager	sge.assets.AssetManager	Renamed	-		0		companion=yes form=class parents=java.lang.AutoCloseable primary=(FileHandleResolver,boolean) primaryKind=unique-root primaryVis=public secondaries=();(FileHandleResolver) statics=RefCountedContainer,apply
 type	com.badlogic.gdx.assets.AssetManager$RefCountedContainer	sge.assets.AssetManager$RefCountedContainer	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.assets.loaders.AssetLoader	sge.assets.loaders.AssetLoader	Renamed	-		0		flags=abstract form=class primary=(Nullable) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]"
 type	com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader	sge.assets.loaders.AsynchronousAssetLoader	Renamed	-		0		flags=abstract form=class parents=sge.assets.loaders.AssetLoader primary=(Nullable) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]"
@@ -830,7 +830,7 @@ type	com.badlogic.gdx.utils.ObjectLongMap$MapIterator	sge.utils.ObjectLongMap$Ma
 type	com.badlogic.gdx.utils.ObjectLongMap$Values	sge.utils.ObjectLongMap$Values	Renamed	-		0		form=class parents=sge.utils.ObjectLongMap$MapIterator primary=(ObjectLongMap) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.PatternParser	sge.utils.PatternParser	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.PauseableThread	sge.utils.PauseableThread	Renamed	-		0		form=class parents=java.lang.Thread primary=(Runnable) primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.PerformanceCounter	sge.utils.PerformanceCounter	Renamed	-		0		companion=yes form=class primary=(String,int) primaryKind=unique-root primaryVis=public secondaries=(String) statics=nano2seconds
+type	com.badlogic.gdx.utils.PerformanceCounter	sge.utils.PerformanceCounter	Renamed	-		0		companion=yes form=class primary=(String,int) primaryKind=unique-root primaryVis=public secondaries=(String) statics=apply,nano2seconds
 type	com.badlogic.gdx.utils.PerformanceCounters	sge.utils.PerformanceCounters	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=nano2seconds
 type	com.badlogic.gdx.utils.Pool$Poolable	sge.utils.Pool$Poolable	Renamed	-		0		form=trait
 type	com.badlogic.gdx.utils.PoolManager	sge.utils.PoolManager	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
@@ -1640,6 +1640,7 @@ member	com.badlogic.gdx.assets.AssetManager#<stmt3>	sge.assets.AssetManager#<stm
 member	com.badlogic.gdx.assets.AssetManager#<stmt4>	sge.assets.AssetManager#<stmt4>	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	123	00f741f590ca8645	
 member	com.badlogic.gdx.assets.AssetManager#<stmt5>	sge.assets.AssetManager#<stmt5>	Renamed	-	<synthetic>	0	c637af1df264213c	
 member	com.badlogic.gdx.assets.AssetManager#<stmt6>	sge.assets.AssetManager#<stmt6>	Renamed	-	<synthetic>	0	c988db98c570fc34	
+member	com.badlogic.gdx.assets.AssetManager#<stmt7>	sge.assets.AssetManager#<stmt7>	Renamed	-	<synthetic>	0	01488e3be8bdeb6e	
 member	com.badlogic.gdx.assets.AssetManager#addAsset(String,Class,T)	sge.assets.AssetManager#addAsset(String,Class<T>,T)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	553	0b49588acbf340ec	
 member	com.badlogic.gdx.assets.AssetManager#addTask(AssetDescriptor)	sge.assets.AssetManager#addTask(AssetDescriptor<?>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	545	6880a9a2c4374e84	vis=private
 member	com.badlogic.gdx.assets.AssetManager#assetDependencies	sge.assets.AssetManager#assetDependencies	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	72	df123e2230e6eb35	
@@ -18120,6 +18121,7 @@ member	com.badlogic.gdx.utils.PerformanceCounter#<init>(String)	sge.utils.Perfor
 member	com.badlogic.gdx.utils.PerformanceCounter#<stmt1>	sge.utils.PerformanceCounter#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PerformanceCounter.java	51	a9dd9a65c276c9de	
 member	com.badlogic.gdx.utils.PerformanceCounter#<stmt2>	sge.utils.PerformanceCounter#<stmt2>	Renamed	-	com/badlogic/gdx/utils/PerformanceCounter.java	52	0ecf547f98fde63a	
 member	com.badlogic.gdx.utils.PerformanceCounter#<stmt3>	sge.utils.PerformanceCounter#<stmt3>	Renamed	-	com/badlogic/gdx/utils/PerformanceCounter.java	53	2fd8e3c865cea310	
+member	com.badlogic.gdx.utils.PerformanceCounter#<stmt4>	sge.utils.PerformanceCounter#<stmt4>	Renamed	-	<synthetic>	0	969825293034fc64	
 member	com.badlogic.gdx.utils.PerformanceCounter#current	sge.utils.PerformanceCounter#current	Renamed	-	com/badlogic/gdx/utils/PerformanceCounter.java	42	0e6a1e51bc00e0da	
 member	com.badlogic.gdx.utils.PerformanceCounter#lastTick	sge.utils.PerformanceCounter#lastTick	Renamed	-	com/badlogic/gdx/utils/PerformanceCounter.java	32	fc882a1e730929da	vis=private
 member	com.badlogic.gdx.utils.PerformanceCounter#load	sge.utils.PerformanceCounter#load	Renamed	-	com/badlogic/gdx/utils/PerformanceCounter.java	37	6f106b534d059605	
