@@ -1,29 +1,29 @@
 /*
- * Port-written after sge's DesktopFiles (sge/src/main/scaladesktop/sge/files/DesktopFiles.scala):
- * every handle takes the Sge context, which exists only after the application built it, so the
- * context is read at each call, never captured (PROGRESS.md §13.30 step 3, ADJUSTMENTS.tsv).
+ * sge's DesktopFiles (sge/src/main/scaladesktop/sge/files/DesktopFiles.scala), verbatim: the port's
+ * FileHandle takes the external storage path as a value (ADJUSTMENTS.tsv).
  */
 package sge
 package files
 
-import sge.files.FileType
 import java.io.File
 
-final class DesktopFiles(context: () => Sge) extends sge.Files {
-  private def handle(path: String, fileType: FileType): FileHandle = {
-    given Sge = context()
-    new DesktopFileHandle(path, fileType)
-  }
-  override def getFileHandle(path: String, fileType: FileType): FileHandle = handle(path, fileType)
-  override def classpath(path: String): FileHandle = handle(path, FileType.Classpath)
-  override def internal(path: String): FileHandle  = handle(path, FileType.Internal)
-  override def external(path: String): FileHandle  = handle(path, FileType.External)
-  override def absolute(path: String): FileHandle  = handle(path, FileType.Absolute)
-  override def local(path: String): FileHandle     = handle(path, FileType.Local)
-  override def externalStoragePath: String         = DesktopFiles.externalPath
-  override def isExternalStorageAvailable: Boolean   = true
-  override def localStoragePath: String            = DesktopFileHandle.localPath
-  override def isLocalStorageAvailable: Boolean      = true
+final class DesktopFiles extends sge.Files {
+  override def getFileHandle(path: String, fileType: FileType): FileHandle =
+    DesktopFileHandle(path, fileType, DesktopFiles.externalPath)
+  override def classpath(path: String): FileHandle =
+    DesktopFileHandle(path, FileType.Classpath, DesktopFiles.externalPath)
+  override def internal(path: String): FileHandle =
+    DesktopFileHandle(path, FileType.Internal, DesktopFiles.externalPath)
+  override def external(path: String): FileHandle =
+    DesktopFileHandle(path, FileType.External, DesktopFiles.externalPath)
+  override def absolute(path: String): FileHandle =
+    DesktopFileHandle(path, FileType.Absolute, DesktopFiles.externalPath)
+  override def local(path: String): FileHandle =
+    DesktopFileHandle(path, FileType.Local, DesktopFiles.externalPath)
+  override def externalStoragePath: String = DesktopFiles.externalPath
+  override def isExternalStorageAvailable: Boolean = true
+  override def localStoragePath: String = DesktopFileHandle.localPath
+  override def isLocalStorageAvailable: Boolean = true
 }
 
 object DesktopFiles {

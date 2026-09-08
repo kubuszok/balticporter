@@ -26,6 +26,7 @@ final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
   def nullableIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.NullableMember))
   def parenlessIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.Parenless))
   def keepNameIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.KeepName))
+  def keepParensIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.KeepParens))
   /** (owner upstream FQN, property, getter name, setter name) — the bean step's configured-pair shape */
   def propertyPairs: List[(String, String, String, Option[String])] =
     def split(up: String): (String, String) =
@@ -65,7 +66,10 @@ object DerivedPolicy:
       KeepName,
       /** a java getter / setter the reference spells as a `var`/`val` PROPERTY (`target` is its name):
         * the bean step folds the pair as if configured — fluent setters included, under its own guards */
-      Property, PropertySetter
+      Property, PropertySetter,
+      /** a nullary java method the reference keeps WITH its `()` (`def size(): Int`): the arity step
+        * leaves it alone even where its detector would drop the parens */
+      KeepParens
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN

@@ -47,7 +47,7 @@ class AndroidLiveWallpaper(
   private val _audioOps:  AudioEngineOps = provider.createAudioEngine(context, config)
   private val _net:       AndroidNet     = AndroidNet(provider, context)
 
-  private val _files: AndroidFiles = AndroidFiles(_filesOps, () => sgeContext)
+  private val _files: AndroidFiles = AndroidFiles(_filesOps)
   private val _audio: AndroidAudio = AndroidAudio(_audioOps)
 
   /** The [[Sge]] context for this application. Set after all subsystems are initialized. */

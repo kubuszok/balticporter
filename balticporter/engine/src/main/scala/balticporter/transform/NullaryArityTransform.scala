@@ -10,7 +10,8 @@ import balticporter.tir.*
   * Scope default `Only(Set.empty)` (§1(b) — this ADDS arity). After `bean-properties`. */
 final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
                                   /** members whose `()` goes although the body has behaviour — the reference
-                                    * port's decision, by exact FQN; every other guard still applies (K51 xvii). */
+                                    * port's decision, by exact FQN; the whole override COMPONENT follows it over the body and
+                                    * overload guards (a spelling is the component's); anchors and call sites still apply (K51 xvii). */
                                   val force: Set[String] = Set.empty,
                                   /** also drop `()` where the REFERENCE port declares the accessor
                                     * parenless (`RunScope.derived`, `PROGRESS.md` §13.31 step 1). */
@@ -19,6 +20,12 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
 
   private var derivedForce: Set[String] = Set.empty
   private var derivedIdSet: Set[SymId] = Set.empty
+  /** members the reference keeps WITH `()` (`KeepParens` rows): never converted (derive only). */
+  private var derivedKeep: Set[SymId] = Set.empty
+  /** the override COMPONENTS a forced member belongs to: the reference's parenless spelling on one
+    * member is the spelling of the whole component, over the detector's own guards. */
+  private var forcedComp: Set[SymId] = Set.empty
+  private def forcedAll(id: SymId, fqn: String): Boolean = forcedId(id, fqn) || forcedComp(id)
   private def forced(fqn: String): Boolean = force(fqn) || derivedForce(fqn)
   private def forcedId(id: SymId, fqn: String): Boolean = forced(fqn) || derivedIdSet(id)
 
@@ -77,6 +84,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     if derive then
       derivedForce  = binder.run.derived.parenless
       derivedIdSet  = binder.run.derived.parenlessIds
+      derivedKeep   = binder.run.derived.keepParensIds
 
   // ---- the run --------------------------------------------------------------------------
 
@@ -85,9 +93,12 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
 
   override def run(program: Program): Program =
     converted = Set.empty
-    if scope == RuleScope.Only(Set.empty) then return program
+    if scope == RuleScope.Only(Set.empty) && !derive then return program
 
     val graph = OverrideGraph.build(program)
+    forcedComp = program.symbols.all.toList
+      .filter(s => program.owned(s.id) && forcedId(s.id, s.fullName))
+      .flatMap(s => graph.closureOf(s.id).members).toSet
 
     // ---- 1. find candidates — EVERY member of the population takes a lane row (§3) ----
     // The population is every OWNED method declaration java wrote `m()` with a value result: that
@@ -118,7 +129,10 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
             refuse(program, s.id, "NotExecutable",
               "the symbol's `info` is not a `MethodType`/`PolyType`, so this phase cannot read the " +
               "parameter clause it would drop")
-          else if !scope.includes(program, s) && !derivedForce(s.fullName) && !derivedIdSet(s.id) then
+          else if derive && derivedKeep(s.id) then
+            refuse(program, s.id, "ReferenceKeepsParens",
+              "the reference port spells this member WITH its `()`; the derived policy keeps java's arity")
+          else if !scope.includes(program, s) && !forcedAll(s.id, s.fullName) then
             refuse(program, s.id, "OutOfScope",
               s"the phase's `RuleScope` excludes it (entry `${scope.entryFor(program, s).getOrElse("?")}`)")
           else
@@ -127,7 +141,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
               refuse(program, s.id, "AnchoredClosure",
                 closure.anchorReason(program).getOrElse(
                   "the override component reaches a declaration this program cannot move"))
-            else if !isGetterLike(program, d) && !forcedId(s.id, s.fullName) then
+            else if !isGetterLike(program, d) && !forcedAll(s.id, s.fullName) then
               refuse(program, s.id, "SideEffectingBody",
                 "the body contains assignments or calls to non-getter members — dropping `()` " +
                 "would change the call's meaning from 'do something and return' to 'read a value'")
@@ -135,7 +149,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
               refuse(program, s.id, "UnrewritableCallSite",
                 "a call site uses a shape this phase cannot rewrite (a method reference, " +
                 "a value-position usage, or an unowned call)")
-            else if hasOverloadedSibling(program, s) then
+            else if hasOverloadedSibling(program, s) && !forcedAll(s.id, s.fullName) then
               refuse(program, s.id, "Overloaded",
                 "the owner type declares another method with the same name that takes parameters — " +
                 "dropping `()` would make `o.m(arg)` resolve to the parenless `m` applied to `arg` " +

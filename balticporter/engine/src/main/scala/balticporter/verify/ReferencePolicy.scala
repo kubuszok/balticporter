@@ -149,6 +149,9 @@ object ReferencePolicy:
           out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, rowKey(ms, overloaded), r.resultType)
       if !isProp && r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
         out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
+      // the reference KEEPS the parens (`def size(): Int`): the detector must not drop them
+      if !isProp && !r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
+        out += DerivedPolicy.Row(DerivedPolicy.Family.KeepParens, rowKey(ms, overloaded), s"def ${r.name}(): ${r.resultType}")
       out.result()
 
     /** the parameter slots only — a constructor has no result and no arity to drop. */

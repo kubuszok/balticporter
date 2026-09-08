@@ -58,7 +58,7 @@ final class GlobalsToImplicitsTransform(
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
       (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
-       h.cache.keySet ++ h.through.keySet ++ h.promoteToClass ++ h.scope.entries))
+       h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.scope.entries))
     val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
@@ -114,12 +114,18 @@ final class GlobalsToImplicitsTransform(
         v2       <- mine(k).through.get(key)
         if v2 != v
       yield s"""both modules read the holder THROUGH a member on "$key", "$v2" and "$v""""
+      val captureClash = for
+        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v) <- theirs(k).capture.toList.sorted
+        v2       <- mine(k).capture.get(key)
+        if v2 != v
+      yield s"""both modules CAPTURE a value on "$key", "$v2" and "$v""""
       val givenClash = for
         (k, v) <- o.requiredGivens.toList.sorted
         v2     <- requiredGivens.get(k)
         if v2 != v
       yield s"""both modules require a given on "$k", "$v2" and "$v""""
-      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash ++ throughClash ++ givenClash) match
+      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash ++ throughClash ++ captureClash ++ givenClash) match
         case Nil =>
           val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
             (mine.get(k), theirs.get(k)) match
@@ -127,7 +133,8 @@ final class GlobalsToImplicitsTransform(
                                                 selfSupplied = a.selfSupplied ++ b.selfSupplied,
                                                 retain = a.retain ++ b.retain,
                                                 cache = a.cache ++ b.cache,
-                                                through = a.through ++ b.through)
+                                                through = a.through ++ b.through,
+                                                capture = a.capture ++ b.capture)
               case (Some(a), None)    => a
               case (None, Some(b))    => b
               case (None, None)       => sys.error("unreachable: a key from the union of two maps")
@@ -159,6 +166,8 @@ final class GlobalsToImplicitsTransform(
   private var boundCache: Map[String, Map[SymId, String]]         = Map.empty
   /** `through` entries resolved per holder: TYPE symbol -> the policy key that named it. */
   private var boundThrough: Map[String, Map[SymId, String]]       = Map.empty
+  /** `capture` entries resolved per holder: TYPE symbol -> the policy key that named it. */
+  private var boundCapture: Map[String, Map[SymId, String]]       = Map.empty
   /** `requiredGivens` entries resolved to the class symbol — class SymId -> given type FQN. */
   private var boundGivens: Map[SymId, String]                     = Map.empty
 
@@ -259,6 +268,26 @@ final class GlobalsToImplicitsTransform(
       boundThrough = boundThrough.updated(h.holder, h.through.toList.sorted.flatMap((t, nm) =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through", t)
           .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
+      // …and `capture`'s: `<static>.<method>() as <param> = <default>`; the static is a mapped
+      // field of the holder, the default is spliced as the field's initialiser.
+      h.capture.toList.sorted.foreach { (t, v) =>
+        CaptureSpec.parse(v) match
+          case scala.None =>
+            malformedEntry(h, "capture", t, s"`$v` is not `<static>.<method>() as <param> = <default>` — " +
+              "the holder's mapped static field, the nullary method on it whose VALUE is captured, the " +
+              "name of the field and companion-apply parameter that carry it, and the field's default")
+          case Some(spec) if !h.members.contains(spec.static) =>
+            malformedEntry(h, "capture", t, s"`${spec.static}` is not a mapped static of this holder " +
+              s"(`members` maps ${h.members.keys.toList.sorted.mkString(", ")})")
+          case Some(spec) if !isPlainIdentifier(spec.param) =>
+            malformedEntry(h, "capture", t, s"`${spec.param}` is not a plain identifier, and it is spliced " +
+              "into a `var` header and a parameter list")
+          case Some(_) => ()
+      }
+      boundCapture = boundCapture.updated(h.holder, h.capture.toList.sorted.flatMap((t, v) =>
+        CaptureSpec.parse(v).filter(sp => h.members.contains(sp.static) && isPlainIdentifier(sp.param))
+          .flatMap(_ => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", t)
+            .toOption).map(_ -> t)).toMap)
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
           .toOption))
@@ -540,12 +569,110 @@ final class GlobalsToImplicitsTransform(
                 "member is the one this field stands for; the type threads as before")
             scala.None
       }
+    // ---- `capture`: a static's VALUE as a field + companion applies (ContextHolder.capture) ----
+    def fqnOf(s: SymId): String = program0.symbolOf(s).map(_.fullName).getOrElse("?")
+    def headOf(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(t2, _) => headOf(t2)
+      case _                           => scala.None
+    @annotation.tailrec
+    def instanceOwner(s: SymId, fuel: Int): Option[SymId] =
+      if s == SymId.None || fuel <= 0 then scala.None
+      else program0.symbolOf(s) match
+        case scala.None => scala.None
+        case Some(sym) =>
+          if graph.types.contains(s) then Some(s)
+          else if sym.flags.isStatic then scala.None
+          else instanceOwner(sym.owner, fuel - 1)
+    val allDefs = program0.units.flatMap(u => StandardTraversal.allClassDefs(u))
+    def captureFinding(key: String, why: String): Unit =
+      deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", key,
+        PolicyIssue.Unverifiable, why)
+    val captureOf: Map[SymId, CaptureRun] =
+      boundCapture.getOrElse(h.holder, Map.empty).toList.sortBy(_._1.raw).flatMap { (c, key) =>
+        val spec = CaptureSpec.parse(h.capture(key)).get
+        val st   = boundStatics.getOrElse(h.holder, Map.empty).getOrElse(spec.static, Nil).find(statics.contains)
+        val meth = st.flatMap(program0.symbolOf).flatMap(s => headOf(s.info)).flatMap(t =>
+          program0.symbols.all.find(m => m.owner == t && m.name == spec.method &&
+            (m.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _ => false })))
+        val res   = meth.map(_.info).collect { case TypeRepr.MethodType(_, r, _) => r }
+        val ctors = program0.symbols.all.filter(s => s.owner == c && s.name == ContextNeed.CtorName).map(_.id).toList.sortBy(_.raw)
+        val cd    = allDefs.find(_.symbol == c)
+        (st, meth, res) match
+          case _ if cd.isEmpty || ctors.isEmpty =>
+            captureFinding(key, "the type declares no constructor this program emits; nothing to capture at"); Nil
+          case _ if cd.exists(_.tparams.nonEmpty) =>
+            captureFinding(key, "the type is generic and a companion `apply` would need its type parameters (not in v1)"); Nil
+          case (scala.None, _, _) =>
+            captureFinding(key, s"`${spec.static}` binds to no static this program reads"); Nil
+          case (_, scala.None, _) | (_, _, scala.None) =>
+            captureFinding(key, s"`${spec.method}()` is not a nullary method this program parses on `${spec.static}`'s type — an " +
+              "unreadable class file has no value type to capture"); Nil
+          case (Some(s), Some(m), Some(r)) =>
+            val field = mint.member(spec.param, MemberKey(fqnOf(c), spec.param).render, c, r,
+                                    Flags(isMutable = true, isProtected = true))
+            List(c -> CaptureRun(key, field, r, s, statics(s), m.id, ctors, spec.default))
+      }.toMap
+    val captureCtor: Map[SymId, (SymId, CaptureRun)] =
+      captureOf.toList.flatMap((c, run) => run.ctors.map(_ -> (c, run))).toMap
+    /** the reads the field answers: `<static>.<method>()` inside an instance member of the type. */
+    val capturedPlans: Map[(SymId, Origin), ReadPlan.Captured] =
+      captureOf.toList.flatMap { (c, cr) =>
+        program0.usages(cr.static).collect {
+          case Usage(UsageKind.TermRef, site, enc) if instanceOwner(enc, 64).contains(c) => (site.origin, enc)
+        }.flatMap { (o, _) =>
+          // the read is the METHOD's receiver, checked on the tree: a bare `Gdx.files` is not it
+          val under = allDefs.find(_.symbol == c).toList.flatMap { cd =>
+            val acc = collection.mutable.Set.empty[Origin]
+            val scan = new Phase:
+              def name = "globals->implicits/capture-scan"
+              override def transformApply(t: Tree.Apply)(using Program): Term =
+                t match
+                  case Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _) if m == cr.method =>
+                    q match
+                      case Tree.Ident(s, _, qo) if s == cr.static     => acc += qo
+                      case Tree.Select(_, s, _, qo) if s == cr.static => acc += qo
+                      case _ => ()
+                  case _ => ()
+                t
+            StandardTraversal.mapClassDef(scan, cd)(using program0)
+            acc.toList
+          }.toSet
+          Option.when(under(o))((cr.static, o) -> (ReadPlan.Captured(c, cr.field, cr.fieldTpe): ReadPlan.Captured))
+        }
+      }.toMap
+    /** construction sites of a captured type: forwarded from the field inside its own instance
+      * members, otherwise a synthetic read the closure seeds and plans; anonymous subclasses keep
+      * the default and are counted. Declared subclasses assign the field at their own construction. */
+    val forwardSites = collection.mutable.Set.empty[Origin]
+    val extraReads   = collection.mutable.ListBuffer.empty[(SymId, Origin, SymId)]
+    captureOf.foreach { (c, run) =>
+      run.ctors.flatMap(program0.usages).foreach { u =>
+        val newNode = u.site match
+          case n: Tree.New                     => Some(n)
+          case Tree.Apply(n: Tree.New, _, _, _, _) => Some(n)
+          case _                               => scala.None
+        newNode.foreach { n =>
+          if n.anon.isDefined then
+            captureFinding(run.key, s"an anonymous subclass at ${u.site.origin.javaPath}:${u.site.origin.line} keeps " +
+              s"`${h.through.getOrElse("", "")}${program0.symbolOf(run.field).map(_.name).getOrElse("?")}`'s default — " +
+              "its super call cannot become the companion `apply`")
+          else if instanceOwner(u.enclosing, 64).contains(c) then forwardSites += n.origin
+          else extraReads += ((run.static, n.origin, u.enclosing))
+        }
+      }
+      graph.descendantsOf(c).filter(d => program0.owns(d) && allDefs.exists(_.symbol == d)).foreach { d =>
+        extraReads += ((run.static, Decision.originOf(program0, d), d))
+      }
+    }
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
                                 boundSites.getOrElse(h.holder, Map.empty),
                                 selfSupplied,
-                                throughOf)
+                                throughOf,
+                                capturedPlans,
+                                extraReads.toList.distinct)
     need.grow()
 
     // CT11: remove stale UnsuppliableUse seams for fields that became holders — the growth
@@ -626,6 +753,16 @@ final class GlobalsToImplicitsTransform(
 
     // ---- what each READ SITE becomes -----------------------------------------------------------
     val plan = need.readPlan
+    /** the captured VALUE at a construction site or a subclass: the field itself inside the type,
+      * else the context's read where the plan says one is in scope. */
+    def captureValue(c: SymId, run: CaptureRun, at: Origin, forward: Boolean): Option[Term] =
+      def call(base: Term): Term =
+        Tree.Apply(Tree.Select(base, run.method, TypeRepr.NoType, at), Nil, run.method, run.fieldTpe, at)
+      if forward then Some(Tree.Select(Tree.This(c, TypeRepr.TypeRef(TypeRepr.NoPrefix, c), at), run.field, run.fieldTpe, at))
+      else plan.get(run.static -> at) match
+        case Some(ReadPlan.Threaded) => Some(call(pathOn(contextExpr, run.hop, TypeRepr.NoType, at)))
+        case Some(ReadPlan.Global)   => Some(call(pathOn(Tree.Ident(globalSym, ctxRef, o), run.hop, TypeRepr.NoType, at)))
+        case _                       => scala.None
     val rewrite = new Phase:
       def name = "globals->implicits/read"
       override def transformIdent(t: Tree.Ident)(using Program): Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
@@ -637,6 +774,22 @@ final class GlobalsToImplicitsTransform(
           val setter = setterFor(methodHops(m), rhs.tpe)
           Tree.Apply(Tree.Select(q, setter, TypeRepr.NoType, at), List(rhs), setter, TypeRepr.NoType, at)
         case other => other
+      private def capturedReadOf(q: Term): Option[ReadPlan.Captured] = q match
+        case Tree.Ident(s, _, qo)     => capturedPlans.get(s -> qo)
+        case Tree.Select(_, s, _, qo) => capturedPlans.get(s -> qo)
+        case _                        => scala.None
+      override def transformApply(t: Tree.Apply)(using Program): Term = t match
+        case Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, at) if capturedReadOf(q).exists(_ => true) =>
+          val cp = capturedReadOf(q).get
+          Tree.Select(Tree.This(cp.cls, TypeRepr.TypeRef(TypeRepr.NoPrefix, cp.cls), at), cp.field, cp.fieldTpe, at)
+        case Tree.Apply(n: Tree.New, args, ctor, tpe, at) if n.anon.isEmpty && captureCtor.contains(ctor) =>
+          val (c, run) = captureCtor(ctor)
+          captureValue(c, run, n.origin, forwardSites(n.origin)) match
+            case Some(v) =>
+              val ap = mint.captureApply(c, ctor, run.ctors.indexOf(ctor), fqnOf(c))
+              Tree.Apply(Tree.Ident(ap, TypeRepr.NoType, at), args :+ v, ap, tpe, at)
+            case scala.None => t
+        case _ => t
       private def read(s: SymId, tpe: TypeRepr, at: Origin): Option[Term] =
         statics.get(s).flatMap(path => plan.get(s -> at) match
           case Some(ReadPlan.Threaded) => Some(pathOn(contextExpr, path, tpe, at))
@@ -751,8 +904,46 @@ final class GlobalsToImplicitsTransform(
           t.body.exists { case d: Definition => p.symbolOf(d.symbol).exists(_.flags.isStatic)
                           case _             => false }
 
+      /** `capture`: the field at the head, one companion `apply` per constructor at the end; a
+        * declared subclass assigns the field at its own construction where a context is in scope. */
+      private def captureEdit(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+        captureOf.get(t.symbol) match
+          case Some(run) =>
+            val at   = t.origin
+            val cRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol)
+            val fieldDef = Tree.ValDef(run.field, TypeTree(run.fieldTpe, at), Some(Tree.Opaque(run.default, run.fieldTpe, at)), at)
+            val applies = t.body.collect { case d: Tree.DefDef if run.ctors.contains(d.symbol) => d }.map { d =>
+              val ap     = mint.captureApply(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
+              val apFull = p.symbolOf(ap).map(_.fullName).getOrElse("?")
+              val params = d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven)).map { v =>
+                val nm = p.symbolOf(v.symbol).map(_.name).getOrElse("p")
+                Tree.ValDef(mint.member(nm, MemberKey(apFull, nm).render, ap, v.tpt.tpe, Flags(isParam = true)), v.tpt, scala.None, v.origin)
+              }
+              val vNm  = p.symbolOf(run.field).map(_.name).getOrElse("value")
+              val vPar = Tree.ValDef(mint.member(vNm, MemberKey(apFull, vNm).render, ap, run.fieldTpe, Flags(isParam = true)),
+                                     TypeTree(run.fieldTpe, at), scala.None, at)
+              val hSym = mint.member("built", MemberKey(apFull, "built").render, ap, cRef, Flags())
+              val make = Tree.Apply(Tree.New(TypeTree(cRef, at), cRef, at), params.map(v => Tree.Ident(v.symbol, v.tpt.tpe, at)), d.symbol, cRef, at)
+              val body = Tree.Block(
+                List(Tree.ValDef(hSym, TypeTree(cRef, at), Some(make), at),
+                     Tree.Assign(Tree.Select(Tree.Ident(hSym, cRef, at), run.field, run.fieldTpe, at),
+                                 Tree.Ident(vPar.symbol, run.fieldTpe, at), TypeRepr.NoType, at)),
+                Tree.Ident(hSym, cRef, at), cRef, at)
+              Tree.DefDef(ap, List(params :+ vPar), TypeTree(cRef, at), Some(body), at)
+            }
+            t.copy(body = fieldDef :: (t.body ++ applies))
+          case scala.None =>
+            captureOf.toList.collectFirst { case (c, run) if graph.descendantsOf(c).contains(t.symbol) => (c, run) } match
+              case Some((c, run)) =>
+                captureValue(c, run, Decision.originOf(p, t.symbol), forward = false) match
+                  case Some(v) =>
+                    val at = t.origin
+                    t.copy(body = Tree.Assign(Tree.Select(Tree.This(t.symbol, TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol), at),
+                      run.field, run.fieldTpe, at), v, TypeRepr.NoType, at) :: t.body)
+                  case scala.None => t
+              case scala.None => t
       override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
-        val t = fieldHeld(cached(t0))
+        val t = fieldHeld(cached(captureEdit(t0)))
         // ENGINE-LIMITS CT7: no clause anywhere; a `given` member at the HEAD of the body instead
         // (a class body is a constructor, so a use ahead of it would read `null`).
         if need.selfSuppliedClasses(t.symbol) then
@@ -810,6 +1001,7 @@ final class GlobalsToImplicitsTransform(
     recordDeadSelf(h, need)
     recordDeadRetain(h, need)
     recordThrough(out, h, need, throughOf)
+    recordCaptured(out, h, captureOf)
     recordDeadCache(h, cacheFired.toSet)
     // LAST: `readPlan` above consults residual-global/refuse `sites` entries.
     recordDeadSites(h, need.firedSites)
@@ -957,6 +1149,24 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
+  /** ONE ROW PER TYPE WHOSE STATIC VALUE WAS CAPTURED — `ContextHolder.capture`. */
+  private def recordCaptured(p: Program, h: ContextHolder, captureOf: Map[SymId, CaptureRun]): Unit =
+    captureOf.toList.sortBy(_._1.raw).foreach { (c, run) =>
+      p.symbolOf(c).foreach(sym => record(Decision(
+        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
+        detail = Map(
+          "field"   -> p.symbolOf(run.field).map(_.name).getOrElse("?"),
+          "applies" -> run.ctors.size.toString,
+          "from"    -> s"`${h.holder}.${run.hop}.${p.symbolOf(run.method).map(_.name).getOrElse("?")}()` read at every use",
+          "to"      -> "a field this type carries, given at construction (companion `apply`, generated callers pass the context's value)",
+          "why"     -> ("the value is read once at construction instead of at each use — the reference port's " +
+            "shape for a type built by hand-written code with no context in scope; identical while the " +
+            "value does not change after construction"),
+        ),
+        reason = Reason.Configured(name, run.key),
+        origin = Decision.originOf(p, c),
+      )))
+    }
   /** ONE ROW PER TYPE THAT READ THE HOLDER THROUGH ITS OWN MEMBER — `ContextHolder.through`; a
     * bound entry no read went through is reported, since removing it changes no emitted byte. */
   private def recordThrough(p: Program, h: ContextHolder, need: ContextNeed,
@@ -1092,6 +1302,20 @@ object GlobalsToImplicitsTransform:
     case Leave
     /** through the enclosing type's OWN member (`ContextHolder.through`): `this.<member>.<rest>`. */
     case Through(cls: SymId, member: SymId, memberTpe: TypeRepr, hop: String)
+    /** a captured VALUE (`ContextHolder.capture`): the enclosing `<static>.<method>()` becomes `this.<field>`. */
+    case Captured(cls: SymId, field: SymId, fieldTpe: TypeRepr)
+
+  /** one `capture` entry as parsed: `"<static>.<method>() as <param> = <default>"`. */
+  final case class CaptureSpec(static: String, method: String, param: String, default: String)
+  object CaptureSpec:
+    private val Grammar = """^\s*(\w+)\.(\w+)\(\)\s+as\s+(\w+)\s*=\s*(.+?)\s*$""".r
+    def parse(v: String): Option[CaptureSpec] = v match
+      case Grammar(s, m, p, d) => Some(CaptureSpec(s, m, p, d))
+      case _                   => scala.None
+  /** one captured type's run: the minted field, the static and method it answers, the type's
+    * constructors (each gets a companion `apply`), and the field's default source. */
+  final case class CaptureRun(key: String, field: SymId, fieldTpe: TypeRepr, static: SymId, hop: String,
+                              method: SymId, ctors: List[SymId], default: String)
 
   def isCtor(p: Program, s: SymId): Boolean = p.symbolOf(s).exists(_.name == "<init>")
 
@@ -1124,6 +1348,12 @@ object GlobalsToImplicitsTransform:
 
     /** the clause — anonymous, since a named parameter would shadow a fully-qualified reference and
       * nothing reads the name (`using`/`summon` never do). One per owner. */
+    private val applies = collection.mutable.Map.empty[SymId, SymId]
+    /** the companion `apply` standing for one constructor of a captured type (`ContextHolder.capture`):
+      * `static`, so the emitter places it in the companion; one per constructor, minted once. */
+    def captureApply(owner: SymId, ctor: SymId, index: Int, ownerFqn: String): SymId =
+      applies.getOrElseUpdate(ctor,
+        member("apply", MemberKey(ownerFqn, "apply").render + "/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
     def usingParam(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, at: Origin): Tree.ValDef =
       val id = usings.getOrElseUpdate(owner,
         member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))

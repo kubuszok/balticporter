@@ -63,7 +63,7 @@ class DesktopApplication(
   private[sge] val windows:             ArrayBuffer[DesktopWindow]                        = ArrayBuffer.empty
   @volatile private var _currentWindow: Nullable[DesktopWindow]                           = Nullable.empty
   private var _audio:                   DesktopAudio                                      = scala.compiletime.uninitialized
-  private val _files:                   sge.files.DesktopFiles                            = sge.files.DesktopFiles(() => _sge)
+  private val _files:                   sge.files.DesktopFiles                            = sge.files.DesktopFiles()
   private val _net:                     DesktopNet                                        = DesktopNet(this)
   private val _preferences:             scala.collection.mutable.Map[String, Preferences] =
     scala.collection.mutable.Map.empty
@@ -524,7 +524,7 @@ class DesktopApplication(
       name, {
         val file = java.io.File(_config.preferencesDirectory, name)
         sge.files.DesktopPreferences(
-          sge.files.DesktopFileHandle(file, _config.preferencesFileType)(using _sge)
+          sge.files.DesktopFileHandle(file, _config.preferencesFileType, sge.files.DesktopFiles.externalPath)
         )
       }
     )

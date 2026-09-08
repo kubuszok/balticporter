@@ -56,7 +56,7 @@ class AndroidApplication(
   private val _net:       AndroidNet     = AndroidNet(provider, context)
 
   // Subsystem facades
-  private val _files: AndroidFiles = AndroidFiles(_filesOps, () => sgeContext)
+  private val _files: AndroidFiles = AndroidFiles(_filesOps)
   private val _audio: AndroidAudio = AndroidAudio(_audioOps)
 
   // Graphics and Input — initialized via initializeGraphicsAndInput() after GL surface is created
@@ -261,13 +261,11 @@ class AndroidApplication(
 // ── Minimal adapters ──────────────────────────────────────────────────
 
 /** Adapts [[FilesOps]] to [[Files]] trait. */
-private[sge] class AndroidFiles(ops: FilesOps, context: () => Sge) extends Files {
+private[sge] class AndroidFiles(ops: FilesOps) extends Files {
   import sge.files._
 
-  override def getFileHandle(path: String, fileType: FileType): FileHandle = {
-    given Sge = context()
+  override def getFileHandle(path: String, fileType: FileType): FileHandle =
     AndroidFileHandle(new java.io.File(path), fileType, ops)
-  }
 
   override def classpath(path: String): FileHandle = getFileHandle(path, FileType.Classpath)
   override def internal(path:  String): FileHandle = getFileHandle(path, FileType.Internal)

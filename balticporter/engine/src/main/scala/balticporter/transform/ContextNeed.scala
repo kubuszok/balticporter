@@ -26,6 +26,11 @@ final class ContextNeed(
     /** the `through` entries that BOUND: TYPE -> (own member, its type, the context hop it stands
       * for). A read under that hop inside an instance member of the type is no seed. */
     through: Map[SymId, (SymId, TypeRepr, String)] = Map.empty,
+    /** captured VALUE reads (`ContextHolder.capture`): (static, origin) -> the field. No seed. */
+    captured: Map[(SymId, Origin), GlobalsToImplicitsTransform.ReadPlan.Captured] = Map.empty,
+    /** synthetic reads a capture adds — a construction site or a declared subclass that must supply
+      * the value — seeded and planned exactly like a read of the static at that site. */
+    extraReads: List[(SymId, Origin, SymId)] = Nil,
 ):
   import ContextNeed.*
   import GlobalsToImplicitsTransform.ReadPlan
@@ -46,9 +51,9 @@ final class ContextNeed(
     * every node on the way down (`copy(tpe = …)`) and identity does not survive it. Two reads of one
     * static at one file/line/column are the same read. */
   val reads: List[(SymId, Origin, SymId)] =
-    statics.keys.toList.flatMap(s => program.usages(s).collect {
+    (statics.keys.toList.flatMap(s => program.usages(s).collect {
       case Usage(UsageKind.TermRef, site, enc) => (s, site.origin, enc)
-    }).distinct.sortBy((s, o, _) => (o.javaPath, o.line, o.col, s.raw))
+    }) ++ extraReads).distinct.sortBy((s, o, _) => (o.javaPath, o.line, o.col, s.raw))
 
   private val siteCache = collection.mutable.Map.empty[SymId, Site]
   /** the `through` types a read actually went through. */
@@ -348,7 +353,7 @@ final class ContextNeed(
     * and cycle-safe (a node is expanded once). */
   def grow(): Unit =
     reads.foreach { (st, at, enc) =>
-      if throughRead(st, enc).isDefined then ()
+      if captured.contains(st -> at) || throughRead(st, enc).isDefined then ()
       else if !inScope(enc) then scopedS += enc
       else siteOf(enc) match
         case Site.Method(m, _)   => enqueue(Node.M(m), Edge(Edge.Kind.Seed, st, m, at))
@@ -652,7 +657,8 @@ final class ContextNeed(
     reads.map { (st, at, enc) =>
       val key = st -> at
       val viaMember = throughRead(st, enc)
-      if viaMember.isDefined then
+      if captured.contains(key) then key -> captured(key)
+      else if viaMember.isDefined then
         throughS += viaMember.get.cls
         key -> viaMember.get
       else if deferredReads.contains(key) then key -> ReadPlan.Threaded

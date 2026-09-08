@@ -39,7 +39,7 @@ class HeadlessApplication(
   config:          HeadlessApplicationConfig = HeadlessApplicationConfig()
 ) extends JavaLoggingApplication {
 
-  private val _files:    DesktopFiles = DesktopFiles(() => sgeContext)
+  private val _files:    DesktopFiles = DesktopFiles()
   private val _graphics: NoopGraphics = NoopGraphics()
   private val _audio:    NoopAudio    = NoopAudio()
   private val _input:    NoopInput    = NoopInput()
@@ -191,7 +191,7 @@ class HeadlessApplication(
     preferences
       .get(name)
       .fold {
-        val prefs = DesktopPreferences(name, preferencesDir)(using sgeContext)
+        val prefs = DesktopPreferences(name, preferencesDir, DesktopFiles.externalPath)
         preferences.put(name, prefs)
         prefs
       }(identity)

@@ -28,10 +28,11 @@ import lowlevel.Nullable
   * @param filesOps
   *   the Android files operations (AssetManager + storage paths)
   */
-class AndroidFileHandle(internalFile: File, fileType: FileType, private val filesOps: FilesOps)(using Sge)
+class AndroidFileHandle(internalFile: File, fileType: FileType, private val filesOps: FilesOps)
     extends FileHandle(internalFile, fileType) {
+  this.externalStoragePath = filesOps.externalStoragePath
 
-  def this(fileName: String, fileType: FileType, filesOps: FilesOps)(using Sge) =
+  def this(fileName: String, fileType: FileType, filesOps: FilesOps) =
     this(new File(fileName.replace('\\', '/')), fileType, filesOps)
 
   override def child(name: String): FileHandle = {
@@ -136,7 +137,7 @@ class AndroidFileHandle(internalFile: File, fileType: FileType, private val file
       super.isDirectory()
     }
 
-  override def exists: Boolean =
+  override def exists(): Boolean =
     if (fileType == FileType.Internal) {
       try {
         filesOps.openInternal(internalFile.getPath()).close()
@@ -151,7 +152,7 @@ class AndroidFileHandle(internalFile: File, fileType: FileType, private val file
           }
       }
     } else {
-      super.exists
+      super.exists()
     }
 
   override def length(): Long =

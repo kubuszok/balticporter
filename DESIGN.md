@@ -1191,6 +1191,19 @@ type threads as before; a bound entry no read went through is reported dead. Ide
 form exactly while the member is the context's own service — which is the same assumption the java
 made when it stored the parameter and read the global in one body.
 
+**`capture` -- a static's VALUE given at construction.** `FileHandle.file()` reads
+`Gdx.files.getExternalStoragePath()`; sge's `FileHandle(file, type, externalStoragePath = Nullable.empty)`
+takes it as a constructor value, because hand-written code builds file handles with no context in
+scope. `capture = Map(type -> "<static>.<method>() as <param> = <default>")` mints a `protected var
+<param>` (the default spliced), one companion `apply(javaCtorArgs, <param>)` per constructor, and
+rewrites: the read inside an instance member becomes the field; a construction inside an instance
+member forwards the field; every other construction becomes the `apply` with the CONTEXT'S value and
+is a seed, so the constructing declaration threads as before; a declared subclass assigns the field at
+its own construction (seeded the same way). The type itself takes no clause when nothing else in it
+reads the holder. The delta -- the value is read once at construction, not at each use -- is the hand
+port's own decision and is recorded per type; an anonymous subclass keeps the default and is counted;
+a generic type, a type with no constructor, or a method the program cannot parse refuse with a finding.
+
 ## 8.5 `OverrideGraph`, `MemberRenamer`, and the property transform
 **Decision.** Two layers, both in `api`. **`OverrideGraph`**: member-level correspondence across a
 hierarchy — `parentsOf`, `childrenOf`, `overridden`, `closureOf` (owned members + `externalAnchors` +
@@ -2224,7 +2237,10 @@ opaque type (`Keys.A: Key`) is a derived seed: the constant rule (K51 xv) is abo
 a constant by propagation. (6) A java accessor pair the reference spells as a `var`/`val` of the
 property's name, with no def of the java name, is a `Property`/`PropertySetter` row: the bean step
 folds it AS IF CONFIGURED — so the detector's refusal of a fluent setter (K51 xix) is answered by the
-reference's own spelling, under the same guards a configured pair takes; a configured key still wins.
+reference's own spelling, under the same guards a configured pair takes; a configured key still wins. (7) A nullary method the reference keeps WITH its `()` (`def size(): Int`) is a `KeepParens` row
+the arity step refuses on; a `Parenless` row is the spelling of the member's whole override COMPONENT,
+over the detector's body and overload guards (`Vector#len` -> `length` parenless on every vector, `isZero`
+beside `isZero(margin)` as the reference compiles it) -- anchors and unrewritable call sites still refuse.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

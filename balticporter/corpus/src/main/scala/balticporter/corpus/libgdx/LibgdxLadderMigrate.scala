@@ -285,6 +285,10 @@ object LibgdxLadder:
         // sge's `GLProfiler(graphics)` takes no context: the GL statics it swaps are read off the
         // `graphics` it was handed (DESIGN.md §8.4 `through`).
         through  = Map("com.badlogic.gdx.graphics.profiling.GLProfiler" -> "graphics"),
+        // sge's `FileHandle(file, type, externalStoragePath)` is context-free: java's one read of
+        // `Gdx.files.getExternalStoragePath()` (in `file()`) is a value given at construction.
+        capture  = Map("com.badlogic.gdx.files.FileHandle" ->
+          "files.getExternalStoragePath() as externalStoragePath = null"),
         sites    = Map(
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
           "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),

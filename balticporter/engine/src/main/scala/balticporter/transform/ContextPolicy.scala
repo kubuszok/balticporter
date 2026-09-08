@@ -23,12 +23,18 @@ final case class ContextHolder(
       * and seed no clause — the shape a hand port gives a class already handed the service
       * (`GLProfiler(graphics)`). Per-declaration; a dependent may add entries (DESIGN.md §8.4). */
     through: Map[String, String] = Map.empty,
+    /** TYPE -> `"<static>.<method>() as <param> = <default>"`: the VALUE a mapped static's nullary
+      * method yields becomes a `protected var <param>` of the type plus a companion `apply` per
+      * constructor taking it last; reads inside the type go to the field, generated callers pass the
+      * context's value at construction (the read moves from use to construction — the hand port's
+      * shape, `FileHandle(file, type, externalStoragePath)`). Per-declaration (DESIGN.md §8.4). */
+    capture: Map[String, String] = Map.empty,
     promoteToClass: Set[String] = Set.empty,
     scope: RuleScope = RuleScope.everywhere,
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
   def fingerprint: String =
-    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through)}"
+    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture)}"
 
   /** THE HALF A DEPENDENT MAY NOT RESTATE — `ENGINE-LIMITS.md` CT8. These fields are facts about
     * the EMITTED SIGNATURES of the types this policy threads, so a base and dependent must AGREE
@@ -43,7 +49,8 @@ final case class ContextHolder(
     * been refused by the caller, so this only composes. */
   def extendedBy(e: ContextHolderExtension): ContextHolder =
     copy(sites = sites ++ e.sites, selfSupplied = selfSupplied ++ e.selfSupplied,
-         retain = retain ++ e.retain, cache = cache ++ e.cache, through = through ++ e.through)
+         retain = retain ++ e.retain, cache = cache ++ e.cache, through = through ++ e.through,
+         capture = capture ++ e.capture)
 
 object ContextHolder:
 
@@ -54,7 +61,8 @@ object ContextHolder:
                                         selfSupplied: Map[String, String],
                                         retain: Map[String, String],
                                         cache: Map[String, String],
-                                        through: Map[String, String] = Map.empty): String =
+                                        through: Map[String, String] = Map.empty,
+                                        capture: Map[String, String] = Map.empty): String =
     val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
     val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
     val rs = retain.toList.map((k, v) => s"$k~$v").sorted.mkString(",")
@@ -63,7 +71,9 @@ object ContextHolder:
     // no-op rule read at the fingerprint) so an unused key taxes no baseline.
     val cs = cache.toList.map((k, v) => s"$k^$v").sorted.mkString(",")
     val ts = through.toList.map((k, v) => s"$k@$v").sorted.mkString(",")
-    s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs") + (if ts.isEmpty then "" else s"|$ts")
+    val ps = capture.toList.map((k, v) => s"$k!$v").sorted.mkString(",")
+    s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs") + (if ts.isEmpty then "" else s"|$ts") +
+      (if ps.isEmpty then "" else s"|$ps")
 
 /** WHAT A DEPENDENT MAY ADD to a base's holder — `ENGINE-LIMITS.md` CT8. [[ContextHolder]] is
   * SHARED SURFACE (§1.5); `sites`/`selfSupplied` key on DECLARATIONS a dependent may itself own,
@@ -77,13 +87,14 @@ final case class ContextHolderExtension(
     retain: Map[String, String] = Map.empty,
     cache: Map[String, String] = Map.empty,
     through: Map[String, String] = Map.empty,
+    capture: Map[String, String] = Map.empty,
 ):
   /** `+` marks it as an EXTENSION, so it can never fingerprint-collide with the holder it names. */
   def fingerprint: String =
-    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through)}"
+    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture)}"
 
   /** every per-declaration key, for the never-fired report and for the `governs` screen. */
-  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet ++ through.keySet
+  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet ++ through.keySet ++ capture.keySet
 
 /** WHERE the context type comes from: `Injected` (the port wrote the Scala by hand — member paths
   * are unvalidated, so a bad path is a compile error at that line) or `Minted` (the engine

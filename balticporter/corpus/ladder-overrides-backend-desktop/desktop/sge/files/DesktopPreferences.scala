@@ -25,13 +25,13 @@ import sge.utils.StreamUtils
   */
 class DesktopPreferences(fileHandle: FileHandle) extends sge.Preferences {
 
-  def this(name: String, directory: String)(using Sge) =
-    this(DesktopFileHandle(new File(directory, name), FileType.External))
+  def this(name: String, directory: String, externalStoragePath: String) =
+    this(DesktopFileHandle(new File(directory, name), FileType.External, externalStoragePath))
 
   private val properties: Properties = new Properties()
 
   // Load existing preferences if the file exists
-  if (fileHandle.exists) {
+  if (fileHandle.exists()) {
     try {
       val in = new BufferedInputStream(fileHandle.read())
       try properties.loadFromXML(in)

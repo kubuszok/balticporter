@@ -85,7 +85,7 @@ class Skin()(using Sge) extends AutoCloseable {
   def this(skinFile: FileHandle)(using Sge) = {
     this()
     val atlasFile = skinFile.sibling(skinFile.nameWithoutExtension + ".atlas")
-    if (atlasFile.exists) {
+    if (atlasFile.exists()) {
       _atlas = Nullable(TextureAtlas(atlasFile))
       _atlas.foreach(addRegions)
     }
@@ -198,8 +198,8 @@ class Skin()(using Sge) extends AutoCloseable {
     val useIntPositions = Skin.getBoolField(json, "useIntegerPositions", true)
 
     var fontFile = skinFile.parent().child(path)
-    if (!fontFile.exists) fontFile = Sge().files.internal(path)
-    if (!fontFile.exists) throw SgeError.InvalidInput("Font file not found: " + fontFile)
+    if (!fontFile.exists()) fontFile = Sge().files.internal(path)
+    if (!fontFile.exists()) throw SgeError.InvalidInput("Font file not found: " + fontFile)
 
     // Use a region with the same name as the font, else use a PNG file in the same directory as the FNT file.
     val regionName = fontFile.nameWithoutExtension
@@ -214,7 +214,7 @@ class Skin()(using Sge) extends AutoCloseable {
             BitmapFont(fontFile, region.get, flip)
           else {
             val imageFile = fontFile.parent().child(regionName + ".png")
-            if (imageFile.exists)
+            if (imageFile.exists())
               BitmapFont(fontFile, imageFile, flip)
             else
               BitmapFont(fontFile, flip)

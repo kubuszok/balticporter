@@ -240,6 +240,25 @@ class ReferencePolicySpec extends FunSuite:
     assertEquals(r.policy.propertyPairs, List(("com.example.gfx.Conf", "maxLength", "getMaxLength", Some("setMaxLength"))))
   }
 
+  test("a nullary method the reference keeps WITH its parens derives a KeepParens row, a parenless one a Parenless row") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Dist {
+        |  public int size() { return 1; }
+        |  public float total() { return 1f; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |class Dist { def size(): Int = 1; def total: Float = 1f }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val fams = r.policy.rows.map(row => row.upstream -> row.family).toMap
+    assertEquals(fams.get("com.example.gfx.Dist#size"), Some(DerivedPolicy.Family.KeepParens))
+    assertEquals(fams.get("com.example.gfx.Dist#total"), Some(DerivedPolicy.Family.Parenless))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

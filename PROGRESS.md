@@ -2318,6 +2318,23 @@ mechanism: a captured static VALUE becomes a field plus companion `apply(javaCto
 overloads, generated callers pass the context's value at construction (the read moves from use to
 construction: the hand port's own decision, recorded per class), reads inside the class go to the field.
 
+**`capture` (the file layer's shape) and the arity derivation (2026-09-08 04:15).** The context step
+gains `capture = Map(type -> "<static>.<method>() as <param> = <default>")`: `FileHandle` carries
+`protected var externalStoragePath` given at construction (one companion `apply` per constructor),
+`file()` reads the field, in-class constructions forward it, every other construction passes the
+context's value and threads as before, `FileHandleStream` assigns it at its own construction. The
+class takes no clause: sge's `FileHandle(file, type, externalStoragePath)` up to the field-vs-parameter
+difference (sge's tests that pass it positionally compile). The desktop/android/browser file copies
+went back to sge's own text (`DesktopFiles` verbatim, `DesktopFileHandle` assigning the field, the
+context thunks gone). Arity: the deriver emits `KeepParens` rows where the reference keeps `def x()`
+(`exists()`, `size()`, `isPanning()`) and a `Parenless` row now forces its whole override component
+over the body/overload guards (`length`, `lengthSq`, `isZero` beside `isZero(margin)`). `sge-l0`
+0 = 0, JS 14 -> 13, Native 0, suite 216/220, demos 12/12, `lls` unchanged.
+**`sge-suite-check` 693 -> 585**: android 52 -> 9, arity 47 -> 6, filetype 39 -> 29, assertion-mismatch
+50 -> 36, context 23 = 23. Residue: member-shape 180 (hand-port extras — step 5), tiled 74, type-shape
+68, nullable 65 (`Table.add` overloads 38), particles 42, filetype 29, other 25 (`PoolManager.addPool`
+20), context 23.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.
