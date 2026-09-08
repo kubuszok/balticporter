@@ -2436,6 +2436,16 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Parameterised retarget attempted (2026-09-08 18:30).** `retargetTypeArgs` with `FixedType("scala.Float")`
+works: bare `FloatArray` becomes `DynamicArray[Float]` (the `allFixed` arm in `transformType`). Dropping
+the source classes + adding the retarget brings the JVM port compile to 7 errors (without CharArray) or 26
+(with CharArray — `append`/`CharSequence` incompatible). Remaining 7: `incr` not a member (1, needs a
+retarget rewrite because `package sge` extensions aren't visible from FQN-packaged emitted code),
+`Int → Short` at `DynamicArray[Short].add` (6, needs a coercion or a retarget rewrite on `add` that
+casts). Ready to implement: add `retargetRewrites` for `incr` (inline body) and `add` (`.toShort` cast),
+plus `empty → isEmpty`. The 26 type-shape errors would reduce to ~7 then ~0 with these rewrites. Not
+committed — the port must stay at 0.
+
 **Session floor at 74 (2026-09-08 17:30).** Session total: sge-suite-check 368 -> 74 (294 resolved, 80%).
 Key wins this batch: `DynamicArray.length` + `OrderedSet.head` in `package sge` (visible to all test
 packages, 9 errors), `Table.isClip` + `tableAlign` readers (3 errors), `Vector2/3/4 +/-` operators and
