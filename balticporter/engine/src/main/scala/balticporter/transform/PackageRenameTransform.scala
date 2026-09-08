@@ -105,10 +105,14 @@ final class PackageRenameTransform(
     // nested under the sub-package (`Files$FileType` -> `files.FileType`, the hand port's
     // `sge.files.FileType`) — carried as a flatten with a value, not a doubled key
     val flatAndSub = flattenNestedTypes.intersect(subPackages.keySet)
+    // …and a key in BOTH `flattenNestedTypes` and `typeRenames` is one destination too: the promoted
+    // type under its NEW simple name (`XmlReader$Element` -> `XmlElement`, the hand port's spelling)
+    val flatAndType = flattenNestedTypes.intersect(typeRenames.keySet)
     val requested: List[Request] =
-      typeRenames.toList.sorted.map((k, v) => Request(k, TypeSetting, Some(v))) ++
+      typeRenames.toList.sorted.filterNot((k, _) => flatAndType(k)).map((k, v) => Request(k, TypeSetting, Some(v))) ++
         subPackages.toList.sorted.filterNot((k, _) => flatAndSub(k)).map((k, v) => Request(k, SubSetting, Some(v))) ++
-        flattenNestedTypes.toList.sorted.map(k => Request(k, FlatSetting, subPackages.get(k).filter(_ => flatAndSub(k))))
+        flattenNestedTypes.toList.sorted.map(k => Request(k, FlatSetting, subPackages.get(k).filter(_ => flatAndSub(k)),
+                                                          typeRenames.get(k).filter(_ => flatAndType(k))))
     val doubled = requested.groupBy(_.key).collect { case (k, rs) if rs.size > 1 => k }.toSet
 
     // stage 1: the key names a type this program declares.
@@ -208,12 +212,14 @@ final class PackageRenameTransform(
           if !sym.exists(_.flags.isStatic) then
             Left("only a STATIC nested type can be promoted: a Java inner class carries an " +
               "implicit reference to its enclosing instance, and a top-level type has nowhere to keep it")
-          else r.value match
-            // flatten AND sub-package: the promoted top-level name, nested under the sub-package
-            case Some(sub) if sub.nonEmpty =>
-              val simple = TypeMove.simpleNameOf(r.key)
-              Right(t.dropRight(simple.length) + sub + "." + simple)
-            case _ => Right(t)
+          else
+            val simple  = TypeMove.simpleNameOf(r.key)
+            val newName = r.rename.filter(_.nonEmpty).getOrElse(simple)
+            r.value match
+              // flatten AND sub-package: the promoted top-level name, nested under the sub-package
+              case Some(sub) if sub.nonEmpty => Right(t.dropRight(simple.length) + sub + "." + newName)
+              // flatten AND rename: the promoted type under its new simple name
+              case _                         => Right(t.dropRight(simple.length) + newName)
         }
 
   // -------------------------------------------------------------------------
@@ -438,7 +444,7 @@ object PackageRenameTransform:
       origin: Origin,
   )
 
-  private final case class Request(key: String, setting: String, value: Option[String])
+  private final case class Request(key: String, setting: String, value: Option[String], rename: Option[String] = scala.None)
   /** an accepted request, with both namespaces of its destination: `upstreamTarget` is what the
     * policy author wrote, `emitted` is that name after the package renames. */
   private final case class Move(request: Request, sid: SymId, upstreamTarget: String, emitted: String):

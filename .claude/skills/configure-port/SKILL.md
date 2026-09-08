@@ -378,3 +378,6 @@ sbt -client "corpus/runMain balticporter.runner.PortConfigMain <path/to/your.con
 ```
 
 Then go to **`port-first-attempt`**.
+
+
+> A key in both `flattenNestedTypes` and `typeRenames` is one destination: the promoted type under its new simple name (`com.badlogic.gdx.utils.XmlReader$Element` promoted and renamed `XmlElement`), as promotion plus `subPackages` already composes.

@@ -34,7 +34,8 @@ object ReferencePolicy:
     val top = fqn.takeWhile(_ != '$')
     val nested = if fqn.length > top.length then fqn.drop(top.length + 1).split('$').toList.filter(_.nonEmpty) else Nil
     val topName = typeRenames.getOrElse(top, top.split('.').last)
-    val segs = if nested.nonEmpty && flattenNestedTypes.contains(fqn) then List(nested.last) else topName :: nested
+    // a PROMOTED nested type is read at its own (possibly renamed) top-level name
+    val segs = if nested.nonEmpty && flattenNestedTypes.contains(fqn) then List(typeRenames.getOrElse(fqn, nested.last)) else topName :: nested
     val enclosing = segs.dropRight(1)
     val variants = enclosing.foldLeft(List(List.empty[String])) { (acc, seg) =>
       acc.flatMap(pre => List(pre :+ seg, pre :+ (seg + "$")))
@@ -135,13 +136,23 @@ object ReferencePolicy:
     /** among several reference candidates at one key, those whose parameter types match java's best
       * (`BitmapFont(data, Array<TextureRegion>, boolean)` against the primary taking a `DynamicArray`
       * and a secondary taking a `TextureRegion`); a tie keeps them all and agreement decides. */
-    def bestByParams(cands: List[SurfaceDecl], params: List[Tree.ValDef]): List[SurfaceDecl] =
+    /** is this java parameter typed by a TYPE PARAMETER (of the method or its class)? The parity
+      * parser canonicalises those to `$0`, `$1`… on the reference side. */
+    def isTypeParamTyped(p: Tree.ValDef, tparams: Set[SymId]): Boolean = p.tpt.tpe match
+      case TypeRepr.TypeRef(_, s) => tparams(s)
+      case _                      => false
+    def bestByParams(cands: List[SurfaceDecl], params: List[Tree.ValDef], tparams: Set[SymId] = Set.empty): List[SurfaceDecl] =
       if cands.size <= 1 then cands
       else
         val js = params.map(p => javaSimple(p.tpt.tpe))
+        val tp = params.map(isTypeParamTyped(_, tparams))
         val scored = cands.map { c =>
           val rs = c.explicitParamTypes.map(refSimple)
-          c -> js.zip(rs).count { case (Some(j), r) => j == r; case _ => false }
+          c -> js.zip(rs).zip(tp).count {
+            case ((_, r), true) if r.startsWith("$") => true   // a type parameter matches the canonical `$N`
+            case ((Some(j), r), _)                   => j == r
+            case _                                   => false
+          }
         }
         val top = scored.map(_._2).max
         scored.filter(_._2 == top).map(_._1)
@@ -277,7 +288,9 @@ object ReferencePolicy:
                   }
                   val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
                   lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match
-                    case Some(cands) => agree(ms, bestByParams(cands, d.paramss.flatten), methodRows(d, ms, overloaded, _))
+                    case Some(cands) =>
+                      val tps = d.tparams.map(_.symbol).toSet ++ cd.tparams.map(_.symbol).toSet
+                      agree(ms, bestByParams(cands, d.paramss.flatten, tps), methodRows(d, ms, overloaded, _))
                     case None =>
                       // a `Class<T>` parameter the reference turned into a `[T: ClassTag]` bound: its def
                       // sits at the java name (or the renamed one) one parameter short, the tag in its

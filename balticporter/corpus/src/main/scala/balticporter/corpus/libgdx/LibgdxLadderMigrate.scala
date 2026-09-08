@@ -186,7 +186,11 @@ object LibgdxLadder:
       // (sge's thread holder), `FileHandleResolver.Prefix`/`ForResolution` (sge's 2-arg `FileHandle`)
       // lean on sge-only internals: each stays a suite residue until its family lands
       "com.badlogic.gdx.assets.loaders.FileHandleResolver" -> List("Prefix", "Resolution", "ForResolution"),
-      "com.badlogic.gdx.utils.OptimizedByteArrayOutputStream" -> List("buffer")))),
+      "com.badlogic.gdx.utils.OptimizedByteArrayOutputStream" -> List("buffer"),
+      // sge keeps `getActor` beside the `actor` property (its tests read `cell.getActor`)
+      "com.badlogic.gdx.scenes.scene2d.ui.Cell" -> List("getActor"),
+      // sge keeps `XmlReader.Element` as an alias of the promoted `XmlElement` (the demos use it)
+      "com.badlogic.gdx.utils.XmlReader" -> List("Element")))),
     // sge's float opaques for tolerances and angles (`Epsilon`, `Degrees`, `Radians`), seeded off sge's tree
     "mathunits" -> List("Epsilon", "Degrees", "Radians").map(n => opaque(balticporter.tir.OpaqueSpec(
       fqn = "com.badlogic.gdx.math." + n,

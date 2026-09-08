@@ -2273,7 +2273,11 @@ phase may have wrapped the `if` (`Nullable(if … )`), and a padded plain refere
 `PropertySetter` row and folds as if configured, a setter with behaviour included (`Actor.width_=` calls
 `sizeChanged`; the detector alone keeps such a setter under java's name). A rename's collision is a
 SHAPE clash, not a name clash: scala overloads `width` (nilary) beside `Container.width(v: Value)`, so a
-member of another arity is no collider, while a field clashes with a field or a nilary def.
+member of another arity is no collider, while a field clashes with a field or a nilary def. (17) The reference's canonical type parameters (`$0`) match a java parameter typed by a TYPE
+PARAMETER when overloads are told apart by their parameter types, and a PROMOTED nested type is read at
+its renamed top-level name; a key in both `flattenNestedTypes` and `typeRenames` is ONE destination — the
+promoted type under its new simple name (`XmlReader$Element` -> `XmlElement`), as promotion plus
+`subPackages` already was (§8.7).
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

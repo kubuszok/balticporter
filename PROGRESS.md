@@ -2394,6 +2394,15 @@ the display types. `sge-l0` 0 = 0, **JS 13 -> 8** (left: the build plugin's embe
 `multiarch.resources` on the JS row, `DataBuffer`'s `out` on Scala.js's javalib, 2 more), Native 0,
 suite 216/220, demos 12/12. **`sge-suite-check` 412 -> 406.**
 
+**XmlElement promoted and renamed, generic overloads told apart, the cell accessor (2026-09-08 08:00).**
+A key in both `flattenNestedTypes` and `typeRenames` is one destination (the promoted type under its new
+simple name), and the deriver reads a promoted type at its renamed name; the reference's canonical type
+parameters (`$0`) match a java type-parameter slot when overloads are told apart, so `Table.add[T](Nullable
+[T])` derives; sge's `Cell.getActor` (beside its `actor` property) and `XmlReader.Element` (an alias of
+`XmlElement` the demos use) are extras. `sge-l0` 0 = 0, **JS 8 -> 3** (the JS build plugin's embedded
+resources, `multiarch.resources` on the JS row, `DataBuffer`'s `out`), Native 0, suite 216/220, demos
+12/12. **`sge-suite-check` 406 -> 392** (member-shape 106 -> 98, nullable 54 -> 48).
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type
