@@ -269,6 +269,11 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       val upBare  = PortMapTransform.bareKey(fe.entry.upstream)
       List(emitFqn -> fe.newName, upBare -> fe.newName)
     }.toMap
+    // dump the rename map and how many symbols it catches
+    if byFqnToRename.values.exists(_ == "head") then
+      val caught = program.symbols.all.filter(s => byFqnToRename.get(s.fullName).exists(_ != s.name))
+      System.err.println(s"[RENAME-MAP] entries=${byFqnToRename.size} caught=${caught.size} keys=${byFqnToRename.keys.filter(_.contains("first")).mkString("; ")}")
+      caught.foreach(s => System.err.println(s"  [RENAMED] id=${s.id} ${s.fullName} -> ${byFqnToRename(s.fullName)}"))
     val directTable = program.symbols.all.foldLeft(program.symbols) { (t, s) =>
       byFqnToRename.get(s.fullName) match
         case Some(nn) if s.name != nn => t.updated(s.copy(name = nn))
