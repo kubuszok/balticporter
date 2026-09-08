@@ -204,7 +204,7 @@ class AndroidGraphics(
 
   // ─── Type / version ──────────────────────────────────────────────────
 
-  override def `type`: Graphics.GraphicsType = Graphics.GraphicsType.AndroidGL
+  override def graphicsType: Graphics.GraphicsType = Graphics.GraphicsType.AndroidGL
   override def GLVersion:    sge.graphics.glutils.GLVersion    = _glVersion
 
   // ─── DPI / density ───────────────────────────────────────────────────

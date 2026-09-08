@@ -998,8 +998,12 @@ private[emit] trait TirEmitterMembers:
     // DIFFERENT signature than java's (K35 CLOSED).
     val t = injectedOverrideTypes.getOrElse(v.symbol,
               overrideAlign.getOrElse(v.symbol, v.tpt.tpe))
-    if t == TypeRepr.NoType then esc(sym(v.symbol).name)
-    else s"${esc(sym(v.symbol).name)}: ${tpe(t)}"
+    // a DEFAULT a phase minted rides as verbatim source (a captured value's `= null`, DESIGN.md §8.4)
+    val df = v.rhs match
+      case Some(o: Tree.Opaque) => s" = ${o.raw}"
+      case _                    => ""
+    if t == TypeRepr.NoType then esc(sym(v.symbol).name) + df
+    else s"${esc(sym(v.symbol).name)}: ${tpe(t)}$df"
 
   private[emit] def valDef(v: Tree.ValDef, i: Int)(using Obligations): String =
     // JS-S19 — java's definite assignment (JLS 16) rejects a read before assignment; scala

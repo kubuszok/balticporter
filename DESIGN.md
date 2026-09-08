@@ -2251,7 +2251,14 @@ lacks comes off the list. (9) A `Class<T>` parameter the reference turns into a 
 class-tag step drops the parameter, adds `(using ClassTag[T])`, binds the class off the tag at the head of
 the body, and rewrites owned calls passing `X.class` to `[X]` -- whole override component or none; a call
 passing a `Class` VALUE cannot supply the clause without an explicit `using` argument the tree cannot yet
-spell, so that component refuses, counted.
+spell, so that component refuses, counted. (10) A property the reference spells with its acronym LOWERED
+(`gl30Available`, `gl30` for java's `isGL30Available`/`getGL30`) is matched at that spelling too, and a
+`Property` row carries the target name, since the detector's own spelling keeps the acronym. (11) The
+keep-name veto is the override COMPONENT's: the reference declares `isUnit` on the trait only, and the
+detector must not fold the implementors' `isUnit()` into `unit`. (12) A captured value's companion
+`apply` comes in two overloads per constructor — the value one and java's arity delegating with the
+default — since a default argument on more than one overload is illegal; a plain overload whose
+signature would collide with another's is dropped and counted.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

@@ -83,7 +83,7 @@ class AndroidLiveWallpaper(
 
   override def net: Net = _net
 
-  override def `type`: Application.ApplicationType = Application.ApplicationType.Android
+  override def applicationType: Application.ApplicationType = Application.ApplicationType.Android
 
   override def version: Int = 0 // overridden by lifecycle when available
 

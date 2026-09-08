@@ -279,6 +279,12 @@ object LibgdxLadder:
         "com.badlogic.gdx.scenes.scene2d.InputEvent#type"       -> "eventType",
         "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)"   -> "itemToString",
         // sge's vector spellings (`Vectors.scala`): the whole override component moves with `Vector`.
+        // sge's names for java's `type` accessors: `fileType`, `graphicsType`, `applicationType`, `inputType`
+        "com.badlogic.gdx.files.FileHandle#type"      -> "fileType",
+        "com.badlogic.gdx.Graphics#getType"           -> "getGraphicsType",
+        "com.badlogic.gdx.Application#getType"        -> "getApplicationType",
+        "com.badlogic.gdx.input.NativeInputConfiguration#getType" -> "getInputType",
+        "com.badlogic.gdx.input.NativeInputConfiguration#setType" -> "setInputType",
         "com.badlogic.gdx.math.Vector#len"  -> "length",   "com.badlogic.gdx.math.Vector#len2" -> "lengthSq",
         "com.badlogic.gdx.math.Vector#dst"  -> "distance", "com.badlogic.gdx.math.Vector#dst2" -> "distanceSq",
         "com.badlogic.gdx.math.Vector#scl"  -> "scale",    "com.badlogic.gdx.math.Vector#nor"  -> "normalize"))),

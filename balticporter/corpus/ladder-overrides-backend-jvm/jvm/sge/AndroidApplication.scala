@@ -95,7 +95,7 @@ class AndroidApplication(
 
   override def net: Net = _net
 
-  override def `type`: Application.ApplicationType = Application.ApplicationType.Android
+  override def applicationType: Application.ApplicationType = Application.ApplicationType.Android
 
   override def version: Int = lifecycle.getAndroidVersion()
 
@@ -299,7 +299,7 @@ private[sge] class AndroidAudio(ops: AudioEngineOps) extends Audio {
   override def newSound(fileHandle: files.FileHandle): audio.Sound = {
     // Mirrors libgdx DefaultAndroidAudio.newSound (lines 163-183): cast to AndroidFileHandle.
     val aHandle = fileHandle.asInstanceOf[AndroidFileHandle]
-    aHandle.`type` match {
+    aHandle.fileType match {
       case files.FileType.Internal =>
         // Internal files are APK assets with no filesystem path — load via the asset
         // file descriptor (libgdx: getAssetFileDescriptor() -> soundPool.load(descriptor, 1)).
@@ -321,7 +321,7 @@ private[sge] class AndroidAudio(ops: AudioEngineOps) extends Audio {
   override def newMusic(file: files.FileHandle): audio.Music = {
     // Mirrors libgdx DefaultAndroidAudio.newMusic (lines 92-126): cast to AndroidFileHandle.
     val aHandle = file.asInstanceOf[AndroidFileHandle]
-    aHandle.`type` match {
+    aHandle.fileType match {
       case files.FileType.Internal =>
         // Internal files are APK assets with no filesystem path — load via the asset
         // file descriptor (libgdx: getAssetFileDescriptor() -> setDataSource(fd, startOffset, length)).

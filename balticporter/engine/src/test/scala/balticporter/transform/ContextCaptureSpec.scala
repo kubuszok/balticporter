@@ -62,6 +62,8 @@ class ContextCaptureSpec extends munit.FunSuite:
     // one apply per constructor, the value last
     assert(handle.contains("def apply(n: java.lang.String, externalStoragePath: java.lang.String): Handle"), handle)
     assert(handle.contains("def apply(f: java.io.File, t: scala.Int, externalStoragePath: java.lang.String): Handle"), handle)
+    // the plain overload beside each, delegating with the default
+    assert(handle.contains("def apply(n: java.lang.String): Handle = {") && handle.contains("built.externalStoragePath = null"), handle)
     // a declared subclass assigns the field at construction and is threaded for it
     val sub = section(out, "class Sub", "class User")
     assert(clue(sub).contains("this.externalStoragePath = scala.Predef.summon[com.demo.Ctx].files.getExternalStoragePath()"))

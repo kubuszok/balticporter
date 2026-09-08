@@ -178,7 +178,7 @@ class HeadlessApplication(
 
   override def net: Net = _net
 
-  override def `type`: Application.ApplicationType = Application.ApplicationType.HeadlessDesktop
+  override def applicationType: Application.ApplicationType = Application.ApplicationType.HeadlessDesktop
 
   override def version: Int = 0
 

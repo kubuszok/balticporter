@@ -915,7 +915,8 @@ final class GlobalsToImplicitsTransform(
             val applies = t.body.collect { case d: Tree.DefDef if run.ctors.contains(d.symbol) => d }.map { d =>
               val ap     = mint.captureApply(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
               val apFull = p.symbolOf(ap).map(_.fullName).getOrElse("?")
-              val params = d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven)).map { v =>
+              val origParams = d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven))
+              val params = origParams.map { v =>
                 val nm = p.symbolOf(v.symbol).map(_.name).getOrElse("p")
                 Tree.ValDef(mint.member(nm, MemberKey(apFull, nm).render, ap, v.tpt.tpe, Flags(isParam = true)), v.tpt, scala.None, v.origin)
               }
@@ -929,9 +930,37 @@ final class GlobalsToImplicitsTransform(
                      Tree.Assign(Tree.Select(Tree.Ident(hSym, cRef, at), run.field, run.fieldTpe, at),
                                  Tree.Ident(vPar.symbol, run.fieldTpe, at), TypeRepr.NoType, at)),
                 Tree.Ident(hSym, cRef, at), cRef, at)
-              Tree.DefDef(ap, List(params :+ vPar), TypeTree(cRef, at), Some(body), at)
+              // the PLAIN overload (java's own arity) delegates with the default — a default ARGUMENT on
+              // more than one overload is illegal, so it is a second method, dropped where its signature
+              // would collide with another apply's (counted)
+              val plain = mint.captureApplyPlain(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
+              val plainFull = p.symbolOf(plain).map(_.fullName).getOrElse("?")
+              val pParams = origParams.map { v =>
+                val nm = p.symbolOf(v.symbol).map(_.name).getOrElse("p")
+                Tree.ValDef(mint.member(nm, MemberKey(plainFull, nm).render, plain, v.tpt.tpe, Flags(isParam = true)), v.tpt, scala.None, v.origin)
+              }
+              // built directly, not by delegation: a bare `null` argument would be ambiguous between overloads
+              val pSym  = mint.member("built", MemberKey(plainFull, "built").render, plain, cRef, Flags())
+              val pMake = Tree.Apply(Tree.New(TypeTree(cRef, at), cRef, at), pParams.map(v => Tree.Ident(v.symbol, v.tpt.tpe, at)), d.symbol, cRef, at)
+              val pBody = Tree.Block(
+                List(Tree.ValDef(pSym, TypeTree(cRef, at), Some(pMake), at),
+                     Tree.Assign(Tree.Select(Tree.Ident(pSym, cRef, at), run.field, run.fieldTpe, at),
+                                 Tree.Opaque(run.default, run.fieldTpe, at), TypeRepr.NoType, at)),
+                Tree.Ident(pSym, cRef, at), cRef, at)
+              (Tree.DefDef(ap, List(params :+ vPar), TypeTree(cRef, at), Some(body), at),
+               Tree.DefDef(plain, List(pParams), TypeTree(cRef, at), Some(pBody), at))
             }
-            t.copy(body = fieldDef :: (t.body ++ applies))
+            val valueApplies = applies.map(_._1)
+            val valueSigs    = valueApplies.map(_.paramss.flatten.map(_.tpt.tpe)).toSet
+            val plainApplies = applies.map(_._2).filter { d =>
+              val sig = d.paramss.flatten.map(_.tpt.tpe)
+              val ok  = !valueSigs.contains(sig)
+              if !ok then deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", run.key,
+                PolicyIssue.Unverifiable, s"the plain `apply(${sig.size} args)` overload would collide with another constructor's value overload; " +
+                  "callers of that constructor pass the value explicitly")
+              ok
+            }
+            t.copy(body = fieldDef :: (t.body ++ valueApplies ++ plainApplies))
           case scala.None =>
             captureOf.toList.collectFirst { case (c, run) if graph.descendantsOf(c).contains(t.symbol) => (c, run) } match
               case Some((c, run)) =>
@@ -1354,6 +1383,11 @@ object GlobalsToImplicitsTransform:
     def captureApply(owner: SymId, ctor: SymId, index: Int, ownerFqn: String): SymId =
       applies.getOrElseUpdate(ctor,
         member("apply", MemberKey(ownerFqn, "apply").render + "/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
+    private val plainApplies = collection.mutable.Map.empty[SymId, SymId]
+    /** the java-arity `apply` beside [[captureApply]]'s, delegating with the default. */
+    def captureApplyPlain(owner: SymId, ctor: SymId, index: Int, ownerFqn: String): SymId =
+      plainApplies.getOrElseUpdate(ctor,
+        member("apply", MemberKey(ownerFqn, "apply").render + "/plain/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
     def usingParam(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, at: Origin): Tree.ValDef =
       val id = usings.getOrElseUpdate(owner,
         member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))

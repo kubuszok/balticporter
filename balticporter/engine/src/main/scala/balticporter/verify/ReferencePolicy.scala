@@ -71,8 +71,18 @@ object ReferencePolicy:
       else if name.length > 2 && name.startsWith("is") && name(2).isUpper then Some(decap(name.drop(2)))
       else if name.length > 3 && name.startsWith("set") && name(3).isUpper then Some(decap(name.drop(3)))
       else scala.None
+    /** `GL30Available` -> `gl30Available`, `URLPath` -> `urlPath`: a leading acronym lowered whole,
+      * keeping its last letter where the next word begins with one (the hand port's casing). */
+    def lowerAcronym(s: String): String =
+      val run = s.takeWhile(_.isUpper).length
+      if run < 2 then s
+      else if s.length > run && s(run).isLower then s.take(run - 1).toLowerCase + s.drop(run - 1)
+      else s.take(run).toLowerCase + s.drop(run)
     def lookupMethod(paths: List[String], name: String, arity: Int, pkg: String): Option[List[SurfaceDecl]] =
-      lookup(paths, "def", name, arity, pkg).orElse(propertyName(name).flatMap { prop =>
+      lookup(paths, "def", name, arity, pkg).orElse(propertyName(name).flatMap(p0 =>
+        List(p0, lowerAcronym(p0)).distinct.iterator.map(prop => lookupProp(paths, name, arity, pkg, prop)).collectFirst { case Some(x) => x }))
+    def lookupProp(paths: List[String], name: String, arity: Int, pkg: String, prop: String): Option[List[SurfaceDecl]] =
+      Some(prop).flatMap { prop =>
         if arity == 0 && !name.startsWith("set") then
           lookup(paths, "def", prop, 0, pkg).orElse(lookup(paths, "prop", prop, 0, pkg))
         else if arity == 1 && name.startsWith("set") then
@@ -81,7 +91,7 @@ object ReferencePolicy:
         // an indexed getter keeps the property name with its index: `getX(pointer)` is `x(pointer)`
         else if !name.startsWith("set") then lookup(paths, "def", prop, arity, pkg)
         else scala.None
-      })
+      }
     // a target's simple name is what the reference WRITES; two targets sharing one are unreadable
     val targetBySimple: Map[String, String] =
       opaqueTargets.groupBy(_.split('.').last).collect { case (k, vs) if vs.size == 1 => k -> vs.head }
@@ -221,6 +231,16 @@ object ReferencePolicy:
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), s"var $prop", prop)
                     else if asProp && n == 1 && ms.name.startsWith("set") then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), s"var $prop", prop)
+                    // the reference spells the property with its acronym LOWERED (`gl30Available`): the
+                    // pair folds to that name — a row carrying the target, since the detector's own
+                    // spelling keeps the acronym
+                    val acr = lowerAcronym(prop)
+                    if acr != prop && lookup(mp, "def", ms.name, n, pkg).isEmpty then
+                      val refHas = (kind: String, nm: String, a: Int) => lookup(mp, kind, nm, a, pkg).isDefined
+                      if n == 0 && !ms.name.startsWith("set") && (refHas("def", acr, 0) || refHas("prop", acr, 0)) then
+                        rows += DerivedPolicy.Row(DerivedPolicy.Family.Property, rowKey(ms, overloaded), s"def $acr", acr)
+                      else if n == 1 && ms.name.startsWith("set") && (refHas("def", acr + "_=", 1) || refHas("prop", acr, 0)) then
+                        rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), s"def $acr", acr)
                   }
                   val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
                   lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match

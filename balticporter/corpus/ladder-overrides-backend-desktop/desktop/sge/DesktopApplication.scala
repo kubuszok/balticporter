@@ -510,7 +510,7 @@ class DesktopApplication(
 
   override def net: Net = _net
 
-  override def `type`: Application.ApplicationType = Application.ApplicationType.Desktop
+  override def applicationType: Application.ApplicationType = Application.ApplicationType.Desktop
 
   override def version: Int = 0
 

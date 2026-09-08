@@ -226,7 +226,7 @@ class AndroidInput(
     val text      = wrapper.text
     val selStart  = wrapper.selectionStart
     val selEnd    = wrapper.selectionEnd
-    val inputType = onscreenKeyboardTypeToAndroidInputType(configuration.`type`)
+    val inputType = onscreenKeyboardTypeToAndroidInputType(configuration.inputType)
     val maxLen    = if (configuration.maxLength < 0) 0 else configuration.maxLength
     val hint      = configuration.placeholder
     val mask      = configuration.maskInput

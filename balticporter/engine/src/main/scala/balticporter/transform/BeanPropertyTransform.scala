@@ -792,7 +792,8 @@ object BeanPropertyTransform:
           val key = MemberKey(ownerFqn, propName).render
           // configured pair may use a different property name, so check the accessor name too
           val getterKey = MemberKey(ownerFqn, getterSym.name).render
-          if !configuredAccessors.contains(getterKey) && !configuredPropertyKeys.contains(key) && !phase.keepIds(getterSym.id) &&
+          if !configuredAccessors.contains(getterKey) && !configuredPropertyKeys.contains(key) &&
+             !graph.closureOf(getterSym.id).members.exists(phase.keepIds) &&
              !ambiguousProps.contains(propName) then
             val getterHead = headOf(getterDef.returnTpt.tpe)
             val getterReturnVoid = isVoid(program, getterDef.returnTpt.tpe)
@@ -820,7 +821,7 @@ object BeanPropertyTransform:
               // a refused setter skips the whole pair — no getter-only fallback
               val setterName = "set" + propName.updated(0, propName.charAt(0).toUpper)
               val setterCands = members.filter { s =>
-                s.name == setterName && !s.flags.isStatic && !phase.keepIds(s.id) &&
+                s.name == setterName && !s.flags.isStatic && !graph.closureOf(s.id).members.exists(phase.keepIds) &&
                   defOf(s.id).exists(d => d.paramss.map(_.size).sum == 1 &&
                     paramHead(s.id) == getterHead)
               }

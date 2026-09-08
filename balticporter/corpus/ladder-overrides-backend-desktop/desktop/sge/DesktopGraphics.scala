@@ -193,7 +193,7 @@ class DesktopGraphics private[sge] (
 
   // ─── Type / version ──────────────────────────────────────────────────
 
-  override def `type`: Graphics.GraphicsType = Graphics.GraphicsType.LWJGL3
+  override def graphicsType: Graphics.GraphicsType = Graphics.GraphicsType.LWJGL3
   override def GLVersion:    sge.graphics.glutils.GLVersion    = _glVersion
 
   // ─── DPI / density ───────────────────────────────────────────────────

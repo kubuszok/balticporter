@@ -123,7 +123,7 @@ class NoopGraphics(
 
   // ---- type and version ----
 
-  override def `type`: Graphics.GraphicsType = Graphics.GraphicsType.Mock
+  override def graphicsType: Graphics.GraphicsType = Graphics.GraphicsType.Mock
 
   // the port's GLVersion reads the context only to log a malformed version string; a no-op graphics
   // has no context and "0.0.0" parses, so none is handed in (ADJUSTMENTS.tsv)

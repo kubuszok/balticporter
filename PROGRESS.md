@@ -2362,6 +2362,17 @@ registerAction`, `AssetManager.getAll`); `addPool` refuses on a value-passing ca
 `sge-l0` 0 = 0, JS 13 = 13, Native 0, suite 216/220, demos 12/12, `lls` unchanged. **`sge-suite-check`
 540 -> 507** (other 25 -> 5, member-shape 135 -> 126).
 
+**Five refinements (2026-09-08 05:45).** A converted method's own `Class<T>` parameter passed on to
+another converted method counts as determined (the tag is in scope), decided to a fixpoint — `addPool`
+converts (type-shape 67 -> 36); a captured value's companion `apply` comes in two overloads per
+constructor, the plain one building directly with the default (a default ARGUMENT on several overloads
+is illegal, a delegating `null` ambiguous) — `FileHandle(file, type)` resolves (filetype 29 -> 15); the
+keep-name veto is the override COMPONENT's (`isUnit` stays); a property the reference spells with its
+acronym lowered is matched at that spelling; sge's names for java's `type` accessors (`fileType`,
+`graphicsType`, `applicationType`, `inputType`) are rename rows and the injected copies went back to
+sge's text for them. `sge-l0` 0 = 0, JS 13 = 13, Native 0, suite 216/220, demos 12/12.
+**`sge-suite-check` 507 -> 456.**
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type
