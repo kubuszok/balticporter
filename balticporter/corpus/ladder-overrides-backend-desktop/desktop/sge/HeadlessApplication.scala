@@ -223,7 +223,7 @@ object HeadlessApplication {
 
   private object NoopClipboard extends utils.Clipboard {
     def hasContents:                           Boolean          = false
-    def contents:                              String           = null
+    def contents:                              Nullable[String] = Nullable.empty
     def contents_=(content: Nullable[String]): Unit             = ()
   }
 }

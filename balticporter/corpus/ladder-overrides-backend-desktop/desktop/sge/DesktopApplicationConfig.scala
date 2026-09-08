@@ -26,7 +26,7 @@
  */
 package sge
 
-import sge.Files.FileType
+import sge.files.FileType
 import sge.graphics.glutils.HdpiMode
 import sge.platform.WindowingOps
 import lowlevel.Nullable

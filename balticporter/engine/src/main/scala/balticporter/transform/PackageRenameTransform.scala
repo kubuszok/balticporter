@@ -101,10 +101,14 @@ final class PackageRenameTransform(
 
     val program = binder.program
     // every key, with the map it came from; a key named by two maps is refused on both.
+    // a key in BOTH `flattenNestedTypes` and `subPackages` is ONE destination — the promoted type
+    // nested under the sub-package (`Files$FileType` -> `files.FileType`, the hand port's
+    // `sge.files.FileType`) — carried as a flatten with a value, not a doubled key
+    val flatAndSub = flattenNestedTypes.intersect(subPackages.keySet)
     val requested: List[Request] =
       typeRenames.toList.sorted.map((k, v) => Request(k, TypeSetting, Some(v))) ++
-        subPackages.toList.sorted.map((k, v) => Request(k, SubSetting, Some(v))) ++
-        flattenNestedTypes.toList.sorted.map(k => Request(k, FlatSetting, scala.None))
+        subPackages.toList.sorted.filterNot((k, _) => flatAndSub(k)).map((k, v) => Request(k, SubSetting, Some(v))) ++
+        flattenNestedTypes.toList.sorted.map(k => Request(k, FlatSetting, subPackages.get(k).filter(_ => flatAndSub(k))))
     val doubled = requested.groupBy(_.key).collect { case (k, rs) if rs.size > 1 => k }.toSet
 
     // stage 1: the key names a type this program declares.
@@ -201,9 +205,15 @@ final class PackageRenameTransform(
       case SubSetting  => TypeMove.subPackage(r.key, r.value.getOrElse(""))
       case _ =>
         TypeMove.flatten(r.key).flatMap { t =>
-          if sym.exists(_.flags.isStatic) then Right(t)
-          else Left("only a STATIC nested type can be promoted: a Java inner class carries an " +
-            "implicit reference to its enclosing instance, and a top-level type has nowhere to keep it")
+          if !sym.exists(_.flags.isStatic) then
+            Left("only a STATIC nested type can be promoted: a Java inner class carries an " +
+              "implicit reference to its enclosing instance, and a top-level type has nowhere to keep it")
+          else r.value match
+            // flatten AND sub-package: the promoted top-level name, nested under the sub-package
+            case Some(sub) if sub.nonEmpty =>
+              val simple = TypeMove.simpleNameOf(r.key)
+              Right(t.dropRight(simple.length) + sub + "." + simple)
+            case _ => Right(t)
         }
 
   // -------------------------------------------------------------------------

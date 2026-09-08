@@ -34,7 +34,7 @@ parameter. **An empty/default parameter must make the phase a no-op.** Current p
 | `ApiParityCheck(ParityRef)` — parse both sides with scalameta, classify divergences by family | WHICH hand-port tree(s) (`PortManifest.parity`); `upstreamMarkers` decides which files are parties; empty = no-op `ParityRef.compare = false` keeps the tree as the DERIVATION source only (`RunScope.derived`, `derived-policy.tsv`, `derived(*)` lanes) |
 | `MemberRenameTransform(renames)` — rename over the whole override component or refuse | which members, what name (symbolic emits `@targetName`) |
 | `NullabilityTransform(annotations, target, scope, nullableMembers)` — move nullability into the type, strip annotation, coerce at seams, rewrite `== null` | which annotations, target shape (`Union`/`Named`/`OptionTarget`), `RuleScope`, `nullableMembers` exact FQNs (K13.6); `MergeablePolicy` union `deriveMembers`: also the members the reference returns wrapped |
-| `BeanPropertyTransform(pairs, targets, scope)` — accessor pair → scala property over the override component, derive java-convention pairs in scope | explicit pairs, derivation scope; `Only(Set.empty)` = no-op; configured key wins |
+| `BeanPropertyTransform(pairs, targets, scope)` — accessor pair → scala property over the override component, derive java-convention pairs in scope | explicit pairs, derivation scope; `Only(Set.empty)` = no-op; configured key wins; `derive`: a pair the reference keeps under its java accessor name is left alone (`KeepName` rows) |
 | `NullaryArityTransform(scope)` — drop `()` from getter-like nullary methods, whole-or-none per component | `RuleScope`; `Only(Set.empty)` default (it MINTS an arity) `force` exact FQNs; `derive`: parenless where the reference is |
 | `ClassToTraitTransform(specs)` — abstract class → trait, ctor params → abstract vals, direct subclasses gain `override val` | `Map[fqn, List[ParamMapping]]`; `SurfacePolicy`; differing mappings refuse |
 | `AddMembersTransform(members)` — splice hand-written members at the end of a class body, or of its COMPANION (`MemberSpec.static` — a spliced member has no symbol, so its home rides on the node) | which owners, which members, which home; `Only(Set.empty)` default; same owner+name+home refuses |
@@ -365,6 +365,9 @@ baseline only from a CURRENT run. The test lane is the only one that sees §4.4:
 TERMINAL MARKER and gate on each; run engine specs with `testOnly *` AFTER `measure-all`.
 `decisions.tsv` records WHY per DECLARATION, scoped to this module (D2). **An artifact write is
 gated on the artifact LAYER**, never a flag. Deliberate failures are DERIVED (`dropped-types.tsv`).
+**A red step is iterated on ONE lane**: `errors.tsv` by member, the phase's decision count and
+`members-changed.tsv` are read BEFORE a second compile; the full chain and the demos are for
+LANDING (skill `iterate-lane`).
 details: `.claude/rules/measurement.md`
 
 ## 5.4 Compare paths through `toRealPath`, on BOTH sides — always

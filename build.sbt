@@ -555,6 +555,8 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
       "com.kubuszok"          %% "kindlings-ubjson-derivation"   % "0.3.2",
       // sge's logger (`sge.utils.LogPlatform`, injected verbatim; PROGRESS.md §13.31 step 2)
       "com.outr"              %% "scribe"                        % "3.19.0",
+      // sge's HTTP stack (`Net.httpClient`; net step) — sttp core on every row
+      "com.softwaremill.sttp.client4" %% "core"                  % "4.0.26",
       "org.scalameta"         %% "munit"             % "1.2.0" % Test,
       "junit"                  % "junit"             % "4.13.2" % Test,
       "org.junit.jupiter"      % "junit-jupiter"     % "5.10.2" % Test,

@@ -137,10 +137,13 @@ object ReferencePolicy:
         }
       }
       val res = d.returnTpt.tpe
-      targetBySimple.get(simpleOf(r.resultType)).filter(_ => prim(res))
-        .foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, rowKey(ms, overloaded), r.resultType, t))
-      if nullWrapped(r.resultType) && reference_(res) then
-        out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, rowKey(ms, overloaded), r.resultType)
+      // a setter read at the reference's `var`: its type is the PARAMETER's, not the setter's result
+      val setterAtProp = isProp && params.size == 1
+      if !setterAtProp then
+        targetBySimple.get(simpleOf(r.resultType)).filter(_ => prim(res))
+          .foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, rowKey(ms, overloaded), r.resultType, t))
+        if nullWrapped(r.resultType) && reference_(res) then
+          out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, rowKey(ms, overloaded), r.resultType)
       if !isProp && r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
         out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
       out.result()
@@ -182,7 +185,24 @@ object ReferencePolicy:
               case d: Tree.DefDef =>
                 program.symbolOf(d.symbol).filter(s => !s.name.contains('$') && s.name != "<init>").foreach { ms =>
                   val overloaded = nameCounts.getOrElse(ms.name, 0) > 1
-                  lookupMethod(memberPaths(paths, ms.flags.isStatic), ms.name, d.paramss.flatten.size, pkg) match
+                  val n = d.paramss.flatten.size
+                  val mp = memberPaths(paths, ms.flags.isStatic)
+                  // the reference keeps the java accessor NAME as a def AND spells no property for it:
+                  // the bean step must not fold it (a hand port keeping BOTH — `continuousRendering_=`
+                  // beside a `setContinuousRendering` forwarder — still folds; the forwarder is an extra)
+                  // PER ACCESSOR: a setter is kept when the reference spells `setX` and no `x_=`; a
+                  // getter when it spells `getX`/`isX` and no `x` (a hand port keeps `setContinuousRendering`
+                  // beside a parenless `continuousRendering` getter — the pair folds on the getter side only)
+                  propertyName(ms.name).foreach { prop =>
+                    val keptName = lookup(mp, "def", ms.name, n, pkg).isDefined
+                    val isSetter = ms.name.startsWith("set") && n == 1
+                    val twin =
+                      if isSetter then lookup(mp, "def", prop + "_=", 1, pkg).isDefined || lookup(mp, "prop", prop, 0, pkg).isDefined
+                      else lookup(mp, "def", prop, n, pkg).isDefined || (n == 0 && lookup(mp, "prop", prop, 0, pkg).isDefined)
+                    if keptName && !twin then
+                      rows += DerivedPolicy.Row(DerivedPolicy.Family.KeepName, rowKey(ms, overloaded), s"def ${ms.name}")
+                  }
+                  lookupMethod(mp, ms.name, n, pkg) match
                     case Some(cands) => agree(ms, cands, methodRows(d, ms, overloaded, _))
                     case None        => ()
                 }

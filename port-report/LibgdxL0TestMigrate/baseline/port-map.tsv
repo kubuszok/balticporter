@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=8f49f7e43d93a816	jdk=22
+# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=a13d82f0e0236c09	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=,assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -30,11 +30,31 @@ type	com.badlogic.gdx.utils.QueueTest	sge.utils.QueueTest	Renamed	-		0		form=cla
 type	com.badlogic.gdx.utils.SortTest	sge.utils.SortTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	sge.utils.SortTest$NullsFirstComparator	Renamed	-		0		form=class parents=scala.math.Ordering primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortedIntListTest	sge.utils.SortedIntListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.InputProcessor	sge.InputProcessor	Dropped	-		0		form=class
+type	com.badlogic.gdx.Net	sge.Net	Dropped	-		0		form=class
+type	com.badlogic.gdx.audio.Music	sge.audio.Music	Dropped	-		0		form=class
+type	com.badlogic.gdx.graphics.Pixmap	sge.graphics.Pixmap	Dropped	-		0		form=class
+type	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap	sge.graphics.g2d.Gdx2DPixmap	Dropped	-		0		form=class
 type	com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader	sge.graphics.g3d.loader.G3dModelLoader	Dropped	-		0		form=class
+type	com.badlogic.gdx.graphics.glutils.ETC1	sge.graphics.glutils.ETC1	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.HttpParametersUtils	sge.net.HttpParametersUtils	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.HttpRequestBuilder	sge.net.HttpRequestBuilder	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.HttpRequestHeader	sge.net.HttpRequestHeader	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.HttpResponseHeader	sge.net.HttpResponseHeader	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.HttpStatus	sge.net.HttpStatus	Dropped	-		0		form=class
 type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.NetJavaServerSocketImpl	sge.net.NetJavaServerSocketImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.NetJavaSocketImpl	sge.net.NetJavaSocketImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.ServerSocket	sge.net.ServerSocket	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.ServerSocketHints	sge.net.ServerSocketHints	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.Socket	sge.net.Socket	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.SocketHints	sge.net.SocketHints	Dropped	-		0		form=class
 type	com.badlogic.gdx.scenes.scene2d.ui.Skin	sge.scenes.scene2d.ui.Skin	Dropped	-		0		form=class
+type	com.badlogic.gdx.scenes.scene2d.utils.UIUtils	sge.scenes.scene2d.utils.UIUtils	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.BufferUtils	sge.utils.BufferUtils	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.GdxNativesLoader	sge.utils.GdxNativesLoader	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Json	sge.utils.LegacyJson	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class

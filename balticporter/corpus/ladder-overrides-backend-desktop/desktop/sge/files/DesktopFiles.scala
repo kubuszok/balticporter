@@ -6,7 +6,7 @@
 package sge
 package files
 
-import sge.Files.FileType
+import sge.files.FileType
 import java.io.File
 
 final class DesktopFiles(context: () => Sge) extends sge.Files {
@@ -21,9 +21,9 @@ final class DesktopFiles(context: () => Sge) extends sge.Files {
   override def absolute(path: String): FileHandle  = handle(path, FileType.Absolute)
   override def local(path: String): FileHandle     = handle(path, FileType.Local)
   override def externalStoragePath: String         = DesktopFiles.externalPath
-  override def externalStorageAvailable: Boolean   = true
+  override def isExternalStorageAvailable: Boolean   = true
   override def localStoragePath: String            = DesktopFileHandle.localPath
-  override def localStorageAvailable: Boolean      = true
+  override def isLocalStorageAvailable: Boolean      = true
 }
 
 object DesktopFiles {

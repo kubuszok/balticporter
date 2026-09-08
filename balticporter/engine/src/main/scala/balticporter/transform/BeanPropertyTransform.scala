@@ -11,7 +11,10 @@ import balticporter.tir.*
 final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                                   targets: Map[String, BeanPropertyTransform.Target] = Map.empty,
                                   exposedFields: RuleScope = RuleScope.Only(Set.empty),
-                                  scope: RuleScope = RuleScope.Only(Set.empty))
+                                  scope: RuleScope = RuleScope.Only(Set.empty),
+                                  /** leave a pair alone where the REFERENCE port keeps the java accessor
+                                    * name (`RunScope.derived` `KeepName` rows, `PROGRESS.md` §13.31). */
+                                  val derive: Boolean = false)
     extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound, IdiomPhase, Rewrite:
 
   def name: String = "bean-properties"
@@ -31,7 +34,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   /** Threads `PublicFieldAccessorTransform`'s scope in, so a field it exposed reflectively is not
     * also collapsed away by this phase (K21 face 2). Returns a copy. */
   def withExposed(exposed: RuleScope): BeanPropertyTransform =
-    new BeanPropertyTransform(pairs, targets, exposed, scope)
+    new BeanPropertyTransform(pairs, targets, exposed, scope, derive)
 
   /** The shape an entry asked for; `DefPair` where it said nothing (DESIGN.md §8.5). */
   def targetOf(key: String): BeanPropertyTransform.Target =
@@ -45,9 +48,10 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     // §1(b): omit the scope segment at the default (`Only(Set.empty)`) — an empty parameter
     // contributes no segment to the fingerprint, so the mechanism's arrival is flat.
     val isDefault = scope == RuleScope.Only(Set.empty)
-    if isDefault then pairsFp
+    val der = if derive then ";derive=reference" else ""
+    if isDefault then pairsFp + der
     else
-      val scopeFp = scope.fingerprint
+      val scopeFp = scope.fingerprint + der
       if pairsFp.isEmpty then s"detect=$scopeFp"
       else s"$pairsFp;detect=$scopeFp"
 
@@ -114,7 +118,8 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                 pairs   = myPairs ++ theirPairs,
                 targets = mergedTargets,
                 exposedFields = exposedFields,
-                scope   = composedScope)
+                scope   = composedScope,
+                derive  = derive || b.derive)
               val added = b.subjects -- subjects
               Right(MergeablePolicy.Merged(merged, added))
     case _ =>
@@ -131,9 +136,13 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   /** which units this run emits: a base's declaration is read literally, never derived on (K51). */
   private var runScope: RunScope                         = RunScope.whole
 
+  /** accessors the reference keeps under their java name: never folded into a property. */
+  private[transform] var keepIds: Set[SymId] = Set.empty
+
   def bindPolicy(binder: PolicyBinder): Unit =
     runScope          = binder.run
     substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
+    if derive then keepIds = binder.run.derived.keepNameIds
     val (entries, malformed) = BeanPropertyTransform.parse(pairs)
     parsed      = entries
     ownFindings = malformed
@@ -774,7 +783,7 @@ object BeanPropertyTransform:
           val key = MemberKey(ownerFqn, propName).render
           // configured pair may use a different property name, so check the accessor name too
           val getterKey = MemberKey(ownerFqn, getterSym.name).render
-          if !configuredAccessors.contains(getterKey) && !configuredPropertyKeys.contains(key) &&
+          if !configuredAccessors.contains(getterKey) && !configuredPropertyKeys.contains(key) && !phase.keepIds(getterSym.id) &&
              !ambiguousProps.contains(propName) then
             val getterHead = headOf(getterDef.returnTpt.tpe)
             val getterReturnVoid = isVoid(program, getterDef.returnTpt.tpe)
@@ -802,7 +811,7 @@ object BeanPropertyTransform:
               // a refused setter skips the whole pair — no getter-only fallback
               val setterName = "set" + propName.updated(0, propName.charAt(0).toUpper)
               val setterCands = members.filter { s =>
-                s.name == setterName && !s.flags.isStatic &&
+                s.name == setterName && !s.flags.isStatic && !phase.keepIds(s.id) &&
                   defOf(s.id).exists(d => d.paramss.map(_.size).sum == 1 &&
                     paramHead(s.id) == getterHead)
               }

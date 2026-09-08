@@ -192,7 +192,7 @@ class NoopGraphics(
 
   // ---- continuous rendering ----
 
-  override def continuousRendering_=(isContinuous: Boolean): Unit =
+  override def setContinuousRendering(isContinuous: Boolean): Unit =
     _continuous = isContinuous
 
   override def continuousRendering: Boolean = _continuous

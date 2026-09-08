@@ -14,7 +14,7 @@
  */
 package sge
 
-import sge.Files.FileType
+import sge.files.FileType
 import sge.graphics.Color
 import lowlevel.Nullable
 

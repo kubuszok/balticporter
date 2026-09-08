@@ -143,6 +143,8 @@ manifest {
   dropTypes      = []
   dropMethods    = []
   packageRenames { "space.earlygrey.simplegraphs" = "sge.graphs" }
+  # a nested type promoted to top level AND placed under a sub-package is ONE destination:
+  # name it in both `flattenNestedTypes` and `subPackages` (`Files$FileType` -> `files.FileType`)
   inject         = ["../../mylib-overrides"]
   platformDirs   = { jvm = ["../../mylib-overrides-jvm"] }   # a hand port's scalajvm/scaladesktop layer; js/native rows likewise
   surface = [

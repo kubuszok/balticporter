@@ -1715,3 +1715,22 @@ classify_errors() {
   [ -f "$out/families.tsv.unsorted" ] && sort -t"$(printf '\t')" -k2,2nr "$out/families.tsv.unsorted" > "$out/families.tsv" || : > "$out/families.tsv"
   rm -f "$out/families.tsv.unsorted"
 }
+
+
+# iteration_summary <report-dir> [phase-name…]
+# The three tables an ITERATION reads before any second compile (CLAUDE.md §5.1): errors by MEMBER
+# and by message family from errors.tsv, each named phase's decision count from decisions.tsv (a
+# phase with 0 rows is a bug before it is a compile error), and the members-changed count.
+iteration_summary() {
+  local dir="$1"; shift
+  local rl="$dir/run-latest"
+  echo "-- errors by member (errors.tsv) --"
+  [ -f "$rl/errors.tsv" ] && awk -F'\t' 'NR>1{print $6}' "$rl/errors.tsv" | sort | uniq -c | sort -rn | head -10
+  echo "-- errors by message family --"
+  [ -f "$rl/errors.tsv" ] && awk -F'\t' 'NR>1{print $9}' "$rl/errors.tsv" | sed -E 's/[0-9]+/N/g' | cut -c1-90 | sort | uniq -c | sort -rn | head -10
+  if [ $# -gt 0 ] && [ -f "$rl/decisions.tsv" ]; then
+    echo "-- decisions per phase --"
+    for ph in "$@"; do printf '%6d  %s\n' "$(grep -c -- "$ph" "$rl/decisions.tsv")" "$ph"; done
+  fi
+  [ -f "$rl/members-changed.tsv" ] && echo "-- members changed: $(($(wc -l < "$rl/members-changed.tsv")-1)) --"
+}

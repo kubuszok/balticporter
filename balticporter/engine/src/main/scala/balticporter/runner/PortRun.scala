@@ -1143,7 +1143,7 @@ final case class PortRun(
       case Determinism.Off => ()
       case Determinism.Emission =>
         // Second emitter: same Surface and decisions, but NOT the catalog log (would double counts).
-        val injSurf = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject)
+        val injSurf = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
         val extP = manifest.map(_.externalParenless).getOrElse(Set.empty)
         val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
                                    preview, bestEffort, Some(once.surface), injectedSurface = injSurf,
@@ -1519,7 +1519,20 @@ final case class PortRun(
 
   /** Phases that actually run: idiom phases, declared surface, then rename LAST. // §4.56 */
   private def effectivePhases: List[Phase] =
-    idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ PortRun.derivedPhases ++ renamePhase
+    idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ PortRun.derivedPhases ++ injectedFollowPhase ++ renamePhase
+
+  /** the platform rows' injection roots (`PortManifest.platformDirs`), main source set. */
+  private def injectedRowRoots: List[Path] =
+    manifest.map(_.platformDirs.values.flatten.toList).getOrElse(Nil)
+  /** dropped upstream FQN -> the emitted FQN the injected replacement declares. */
+  private lazy val droppedEmittedNames: Map[String, String] =
+    policySubs.dropTypes.toList.map(fqn => fqn -> emittedName(fqn)).toMap
+  /** calls into a dropped+injected type follow the injected file's spelling (§13.31 step 3). */
+  private lazy val injectedFollowPhase: List[Phase] =
+    val roots = ownSubs.inject ++ injectedRowRoots
+    if roots.isEmpty || droppedEmittedNames.isEmpty then Nil
+    else List(new balticporter.transform.InjectedSurfaceFollowTransform(
+      balticporter.emit.InjectedSurface.fromRoots(roots), droppedEmittedNames))
 
   /** Remedies derived from what this run holds (phases + checks), never listed. */
   private def activeRemedies: RemedyVocabulary =
@@ -1667,7 +1680,7 @@ final case class PortRun(
     val surface = new balticporter.core.PublishedSurface(
       program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
     // Emitter reads decisions, catalog, injected surface, and external parenless members.
-    val injSurface = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject)
+    val injSurface = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
     val extParenless = manifest.map(_.externalParenless).getOrElse(Set.empty)
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
                                  Some(surface), catalog = catalog, injectedSurface = injSurface,
@@ -1715,6 +1728,7 @@ final case class PortRun(
     derivingOpaqueTargets.nonEmpty || effectivePhases.exists {
       case n: NullabilityTransform  => n.deriveMembers
       case a: NullaryArityTransform => a.derive
+      case b: balticporter.transform.BeanPropertyTransform => b.derive
       case _                        => false
     }
   /** the reference surface, parsed ONCE per run (a determinism run translates twice). A deriving
@@ -1748,13 +1762,13 @@ final case class PortRun(
       DerivedPolicy(rows.distinct)
   private def derivedPolicy(parsed: Program, emitted: Set[SymId]): DerivedPolicy =
     if !anyPhaseDerives then DerivedPolicy.empty
-    else if !derivationRuns then inheritedDerived
+    else if !derivationRuns then inheritedDerived.resolved(parsed)
     else
       val m = manifest.get
       val r = ReferencePolicy.derive(parsed, referenceSurface, emitted,
         m.effectiveTypeRenames, m.effectiveFlattenNestedTypes, derivingOpaqueTargets, m.effectivePackageRenames)
       lastDerived = Some(r)
-      r.policy
+      r.policy.resolved(parsed)
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)

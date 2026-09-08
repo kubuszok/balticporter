@@ -6,7 +6,7 @@
 package sge
 package files
 
-import sge.Files.FileType
+import sge.files.FileType
 import java.io.File
 
 class DesktopFileHandle(internalFile: File, fileType: FileType)(using ctx: Sge) extends FileHandle(internalFile, fileType) {

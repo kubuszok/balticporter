@@ -2150,6 +2150,14 @@ Rejected: constraining every injection to match java exactly (ruled out sge's ow
 child's `extends` clause) and `calleeHasParens` (a call to an injected member follows the injected
 arity, not java's). §1(a) universal. `ENGINE-LIMITS.md` K35 CLOSED.
 
+Calls into a DROPPED type follow the injected replacement's SPELLING too (`InjectedSurfaceFollowTransform`,
+derived, no key): a java accessor absent from the injected surface but present as the property
+(`getWidth()` against `def width: Pixels`; `getGLType` against `glType` — a leading acronym lowered
+whole, or `gLFormat`, decap's spelling) is renamed on the SYMBOL — never emitted as a declaration,
+rendered at every use — and the call loses its `()` where the injected member has none. The reader
+of injected files takes CHAINED package clauses (`package sge` then `package graphics`) as one
+package: read as the first clause alone, every member of such a file sat under the wrong owner and
+no lookup by full name could hit. `PROGRESS.md` §13.31 step 3.
 ### 8.29 Hand-port-added members as an ADD-scoped phase (`AddMembersTransform`)
 
 A hand port may add members java never declared (sge-ecs's `Engine.registerComponentFactory`,
@@ -2192,7 +2200,12 @@ the report (`derived-policy.tsv`, `derived(rows)` findings), like the java sourc
 does not re-derive: it reads the rows its bases PUBLISHED (`derived-policy.tsv` beside the port map)
 and applies them as facts — the opaque phase retypes a base slot's symbol without emitting it, so
 this module's calls into it are coerced; the nullability phase retypes a base member it does not
-own the same way (O8 read as a value).
+own the same way (O8 read as a value). (4) Rows are RESOLVED to symbol ids before any phase runs
+(`DerivedPolicy.resolved`): a phase that renames the member first (bean properties turning
+`getCurrentEventTime` into `currentEventTime`) would otherwise leave a later deriving phase with a
+key nothing answers to — a `SymId` survives every rename. (5) A constant the reference spells at the
+opaque type (`Keys.A: Key`) is a derived seed: the constant rule (K51 xv) is about a hand hint reaching
+a constant by propagation.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

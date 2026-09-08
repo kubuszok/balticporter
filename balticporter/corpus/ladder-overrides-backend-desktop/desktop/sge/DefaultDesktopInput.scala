@@ -17,10 +17,10 @@
 package sge
 
 import sge.graphics.glutils.HdpiMode
-import sge.utils.Nanos
 import sge.input.NativeInputConfiguration
 import sge.platform.WindowingOps
 import lowlevel.Nullable
+import sge.utils.Nanos
 import scala.collection.mutable
 
 /** Default desktop input implementation using GLFW/SDL3 callbacks via [[WindowingOps]].
@@ -48,7 +48,7 @@ class DefaultDesktopInput private[sge] (
   // ─── AbstractInput fields (merged) ──────────────────────────────────
   private val pressedKeys:     Array[Boolean]   = new Array[Boolean](Keys.MAX_KEYCODE.toInt + 1)
   private val justPressedKeys: Array[Boolean]   = new Array[Boolean](Keys.MAX_KEYCODE.toInt + 1)
-  private val keysToCatch:     mutable.Set[Int] = mutable.Set.empty
+  private val keysToCatch:     mutable.Set[Key] = mutable.Set.empty
   private var pressedKeyCount: Int              = 0
   private var keyJustPressed:  Boolean          = false
 
@@ -139,7 +139,7 @@ class DefaultDesktopInput private[sge] (
 
   private val onMouseButton: (Long, Int, Int, Int) => Unit = { (_, button, action, _) =>
     val gdxButton = toGdxButton(button)
-    if (button == -1 || gdxButton != -1) {
+    if (button == -1 || gdxButton != Button(-1)) {
       val time = Nanos(System.nanoTime())
       if (action == GLFW_PRESS) {
         _mousePressed += 1
@@ -155,13 +155,13 @@ class DefaultDesktopInput private[sge] (
     }
   }
 
-  private def toGdxButton(button: Int): Int = button match {
+  private def toGdxButton(button: Int): Button = button match {
     case 0 => Buttons.LEFT
     case 1 => Buttons.RIGHT
     case 2 => Buttons.MIDDLE
     case 3 => Buttons.BACK
     case 4 => Buttons.FORWARD
-    case _ => -1
+    case _ => Button(-1)
   }
 
   // ─── Construction ───────────────────────────────────────────────────
@@ -264,30 +264,30 @@ class DefaultDesktopInput private[sge] (
 
   override def getPressure(pointer: Int): Float = if (isTouched(pointer)) 1f else 0f
 
-  override def isButtonPressed(button: Int): Boolean =
+  override def isButtonPressed(button: Button): Boolean =
     windowing.getMouseButton(window.windowHandle, button.toInt) == GLFW_PRESS
 
-  override def isButtonJustPressed(button: Int): Boolean =
+  override def isButtonJustPressed(button: Button): Boolean =
     if (button.toInt < 0 || button.toInt >= _justPressedButtons.length) false
     else _justPressedButtons(button.toInt)
 
   // ─── Input: keyboard (merged from AbstractInput) ────────────────────
 
-  override def isKeyPressed(key: Int): Boolean =
+  override def isKeyPressed(key: Key): Boolean =
     if (key == Keys.ANY_KEY) pressedKeyCount > 0
     else if (key.toInt < 0 || key.toInt > Keys.MAX_KEYCODE.toInt) false
     else pressedKeys(key.toInt)
 
-  override def isKeyJustPressed(key: Int): Boolean =
+  override def isKeyJustPressed(key: Key): Boolean =
     if (key == Keys.ANY_KEY) keyJustPressed
     else if (key.toInt < 0 || key.toInt > Keys.MAX_KEYCODE.toInt) false
     else justPressedKeys(key.toInt)
 
-  override def setCatchKey(keycode: Int, catchKey: Boolean): Unit =
+  override def setCatchKey(keycode: Key, catchKey: Boolean): Unit =
     if (!catchKey) keysToCatch.remove(keycode)
     else keysToCatch.add(keycode)
 
-  override def isCatchKey(keycode: Int): Boolean = keysToCatch.contains(keycode)
+  override def isCatchKey(keycode: Key): Boolean = keysToCatch.contains(keycode)
 
   // ─── Input: text input ──────────────────────────────────────────────
 
@@ -313,9 +313,9 @@ class DefaultDesktopInput private[sge] (
       hint
     )
 
-  override def currentEventTime: Long = eventQueue.currentEventTime
+  override def currentEventTime: Nanos = eventQueue.currentEventTime
 
-  override def inputProcessor_=(processor: InputProcessor): Unit =
+  override def setInputProcessor(processor: InputProcessor): Unit =
     _inputProcessor = Nullable(processor)
 
   @scala.annotation.nowarn("msg=deprecated") // orNull at trait boundary — Input.inputProcessor returns InputProcessor
@@ -349,7 +349,7 @@ class DefaultDesktopInput private[sge] (
 
   // ─── Input: key code mapping ────────────────────────────────────────
 
-  protected def characterForKeyCode(key: Int): Char = key match {
+  protected def characterForKeyCode(key: Key): Char = key match {
     case Keys.BACKSPACE    => 8
     case Keys.TAB          => '\t'
     case Keys.FORWARD_DEL  => 127
@@ -358,7 +358,7 @@ class DefaultDesktopInput private[sge] (
     case _                 => 0
   }
 
-  def getGdxKeyCode(lwjglKeyCode: Int): Int = lwjglKeyCode match {
+  def getGdxKeyCode(lwjglKeyCode: Int): Key = lwjglKeyCode match {
     case GLFW_KEY_SPACE         => Keys.SPACE
     case GLFW_KEY_APOSTROPHE    => Keys.APOSTROPHE
     case GLFW_KEY_COMMA         => Keys.COMMA

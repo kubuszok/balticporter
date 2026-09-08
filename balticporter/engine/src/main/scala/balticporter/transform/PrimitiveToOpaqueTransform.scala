@@ -120,12 +120,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   private var runScope: RunScope = RunScope.whole
   /** seeds the run's [[DerivedPolicy]] spells at this spec's target; empty unless `spec.derive`. */
   private var derivedHints: Set[String] = Set.empty
+  private var derivedIdSet: Set[SymId] = Set.empty
 
   /** nothing to bind — this phase's policy is a predicate and an FQN set. Used only for [[runScope]]. */
   def bindPolicy(binder: PolicyBinder): Unit =
     runScope = binder.run
     if spec.derive then
       derivedHints  = binder.run.derived.opaqueSeeds(spec.typeFqn)
+      derivedIdSet  = binder.run.derived.opaqueSeedIds(spec.typeFqn)
     // method fullNames whose base port-map upstream descriptor mentions this spec's opaque FQN —
     // such a callee had its parameter retyped by the base, so coerceArgs must not unwrap.
     // the simple-name check is intentional: the port map descriptor uses the simple name.
@@ -163,7 +165,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // a hint may also name something a SIBLING spec already claimed — admitted here on purpose so
     // refuseOverlap can see it, rather than silently finding nothing.
     val named = program.symbols.all.filter(s => spec.hints(s.fullName) || spec.extraHints(s.fullName) ||
-      DerivedPolicy.keysOf(program, s).exists(derivedHints))
+      derivedIdSet(s.id) || DerivedPolicy.keysOf(program, s).exists(derivedHints))
     val hints = named
       .filter(s => fenced(s) && (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined))
       .map(_.id).toSet
@@ -187,10 +189,13 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
         && runScope.emits(unitOf(program, id)) && !isConstant(id))
     // a DERIVED slot in a unit this run does not emit is the BASE's published fact (O8 read as a
     // value): retyping its symbol here coerces this module's calls into it, and emits nothing
+    // …and a CONSTANT the reference spells at the opaque type IS one (`Keys.A: Key`) — the constant
+    // rule (K51 xv) is about a hand hint reaching a constant by propagation; a derived row is the
+    // reference's own word, and the emitter drops `inline` where the initialiser is no literal
     def admissibleDerived(id: SymId): Boolean = program.symbolOf(id).exists(s =>
-      (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s) && !isConstant(id))
+      (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s))
     val (derivedIds, grownFrom) = hints.partition(id => program.symbolOf(id).exists(s =>
-      DerivedPolicy.keysOf(program, s).exists(derivedHints) && !spec.hints(s.fullName) && !spec.extraHints(s.fullName)))
+      (derivedIdSet(id) || DerivedPolicy.keysOf(program, s).exists(derivedHints)) && !spec.hints(s.fullName) && !spec.extraHints(s.fullName)))
     // …except under the OVERRIDE edge: an override keeps its parent's signature, and a java-only
     // intermediate (`InputAdapter`, absent from the reference) has no row of its own to say so
     seeds = FlowPropagation.grow(program, grownFrom, admissible) ++
@@ -522,7 +527,13 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // a `switch` on a seed: java compares the selector to int CONSTANTS, which stay int (K51 xv),
     // so the selector is read at the primitive; the emitter's null arm (§4.4) then sees an `Int`
     // selector and writes none — an opaque over a primitive is never null.
-    case m: Tree.Match if carriesOpaque(m.scrutinee) => m.copy(scrutinee = unwrapIfOpaque(m.scrutinee))
+    // …unless the CASE LABELS carry the opaque (the reference spells the constants at it, `Keys.A`):
+    // then the comparison is opaque-to-opaque and a plain selector is wrapped instead
+    case m: Tree.Match =>
+      val labelsOpaque = m.cases.exists(_.labels.exists(carriesOpaque))
+      if labelsOpaque && !carriesOpaque(m.scrutinee) && isPrim(m.scrutinee.tpe) then m.copy(scrutinee = wrap(m.scrutinee))
+      else if !labelsOpaque && carriesOpaque(m.scrutinee) then m.copy(scrutinee = unwrapIfOpaque(m.scrutinee))
+      else m
     case other => other
 
   private def isSeedMethod(m: SymId)(using p: Program): Boolean =
@@ -635,7 +646,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       else l)
 
   private def wrapReturns(body: Term)(using Program): Term =
-    ReturnSites.map(body)(e => if isPrim(e.tpe) then wrap(e) else e, e => if isPrim(e.tpe) then wrap(e) else e)
+    ReturnSites.map(body)(e => if isPrim(e.tpe) || widensToPrim(e.tpe) then wrap(e) else e,
+                          e => if isPrim(e.tpe) || widensToPrim(e.tpe) then wrap(e) else e)
 
   /** the dual, for a method that kept the primitive and returns a value carrying a seed. Only a
     * `return` and the body's tail are coerced — an ordinary statement is not a value the method

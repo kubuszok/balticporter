@@ -2238,6 +2238,32 @@ injected (4 per row, step 4); on JS only, the browser layer's `Key`/`Button`/`Po
 `XmlElement` spellings (the same convention cards as the suite's); on Native only, `AngleGL32Native`'s
 `DebugProc` (2). No sge test row runs yet.
 
+**Steps 3–4, landed together (2026-09-08 02:20): sge's own files on every row, and the conventions the
+rows exposed.** The natives step drops java's JNI classes (`BufferUtils`, `Gdx2DPixmap`, `ETC1`,
+`UIUtils`, `GdxNativesLoader`, `Pixmap`) for sge's shared files over the platform ops traits — one
+implementation per row, already injected — so the 56-per-row handle-table residue is gone and the
+JVM tables are deleted. The net step drops java's `Net` and its `net` helpers for sge's HTTP stack
+(`Net.httpClient`, an sttp client; sttp core on every row; `DesktopNet` verbatim again). The audio
+step takes sge's `Music` (`Position` opaque, `duration`, `onComplete`); the keys step splices sge's
+`Input.Key`/`Input.Button` opaques into `Input`'s companion and seeds them off sge's tree
+(`Keys.A: Key` — a derived constant IS a seed); `Files$FileType` is promoted AND nested under `files`
+(the two placement keys now compose: one type, one destination); sge's `InputProcessor` (defaulted
+callbacks) replaces java's. Engine, all universal: `InjectedSurfaceFollowTransform` — calls into a
+DROPPED type follow the injected file's spelling (getter → property with the parens gone, setter →
+`x_=` against a `var`, a leading acronym lowered whole, `new X(args)` → the companion `apply`,
+a java enum's `name()` → `toString` spliced over the receiver, since `java.lang.Enum#name` is ONE
+interned symbol); the injected-file reader takes CHAINED package clauses as one package (every
+member of sge's split-package files sat under the wrong owner); derived rows are resolved to symbol
+ids before any phase runs; a derived `KeepName` row (the hand port keeps `setContinuousRendering`
+beside a parenless `continuousRendering`) vetoes the bean fold per accessor; a setter matched to a
+`var` derives its parameter only. Numbers: `sge-l0` 0 = 0 (JVM), **Native 0**, JS 14 (sge's XML
+reader type, `createTempFile`/`mkdir` in java's `FileHandle`, the browser build plugin's embedded
+resources, one `DisplayMode` factory); suite 216/220; `demo-check` 0; `demo-run` 12/12; `lls`
+unchanged. **`sge-suite-check` 1,194 -> 893**: net 93 -> 0, key/button 73 -> 0, logging 0, filetype
+93 -> 39, android 216 -> 193, arity 42 -> 47, member-shape 271 -> 217, nullable 66 -> 65, context
+41, tiled 75, particles 42. The runner scripts now carry a done-marker: launchd relaunched a finished
+job and truncated its log, and two completed runs were lost to it.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.

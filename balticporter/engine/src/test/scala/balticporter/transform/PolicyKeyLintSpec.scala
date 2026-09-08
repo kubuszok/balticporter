@@ -43,6 +43,13 @@ class PolicyKeyLintSpec extends munit.FunSuite:
 
   /** file → the shapes it is allowed to use, and WHY. One line each, or it is a site to fix. */
   private val AllowList: Map[String, Map[String, String]] = Map(
+    "InjectedSurfaceFollowTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`java.lang.Enum` is a WELL-KNOWN JDK class the program never declares: the test asks whether " +
+          "a `name()` call resolved to Enum's own member (one interned symbol shared by every java " +
+          "enum) so that ONLY calls on a dropped enum are spliced to `toString` — the class-file " +
+          "identity is the instrument, as for the annotation lookups above"),
+    ),
     "SuppressionPhase.scala" -> Map(
       "fullName ==" ->
         ("`scala.annotation.nowarn` is a WELL-KNOWN external annotation type the program never " +

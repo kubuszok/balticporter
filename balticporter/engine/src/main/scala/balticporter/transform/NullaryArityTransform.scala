@@ -18,7 +18,9 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
 
   private var derivedForce: Set[String] = Set.empty
+  private var derivedIdSet: Set[SymId] = Set.empty
   private def forced(fqn: String): Boolean = force(fqn) || derivedForce(fqn)
+  private def forcedId(id: SymId, fqn: String): Boolean = forced(fqn) || derivedIdSet(id)
 
   def name: String = "nullary-arity"
 
@@ -74,6 +76,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
     if derive then
       derivedForce  = binder.run.derived.parenless
+      derivedIdSet  = binder.run.derived.parenlessIds
 
   // ---- the run --------------------------------------------------------------------------
 
@@ -115,7 +118,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
             refuse(program, s.id, "NotExecutable",
               "the symbol's `info` is not a `MethodType`/`PolyType`, so this phase cannot read the " +
               "parameter clause it would drop")
-          else if !scope.includes(program, s) && !derivedForce(s.fullName) then
+          else if !scope.includes(program, s) && !derivedForce(s.fullName) && !derivedIdSet(s.id) then
             refuse(program, s.id, "OutOfScope",
               s"the phase's `RuleScope` excludes it (entry `${scope.entryFor(program, s).getOrElse("?")}`)")
           else
@@ -124,7 +127,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
               refuse(program, s.id, "AnchoredClosure",
                 closure.anchorReason(program).getOrElse(
                   "the override component reaches a declaration this program cannot move"))
-            else if !isGetterLike(program, d) && !forced(s.fullName) then
+            else if !isGetterLike(program, d) && !forcedId(s.id, s.fullName) then
               refuse(program, s.id, "SideEffectingBody",
                 "the body contains assignments or calls to non-getter members — dropping `()` " +
                 "would change the call's meaning from 'do something and return' to 'read a value'")

@@ -648,6 +648,9 @@ gdx-l0-measure:
     error_baseline_guard "$ERRORS" "$REPORT"
     # the JS and Native rows (PROGRESS.md §13.31 step 3): BP_FULL=1 compiles them, baselined as expected-errors.{js,native}
     full_compiles "port-sge-l0JS/compile" "port-sge-l0Native/compile" "" "$REPORT"
+    # the residue as one table (the suite lane's families, PROGRESS.md §13.31 step 0): read this, not the raw blocks
+    classify_errors "$MEASURE_TMP"/gdxl0measure.txt "$ROOT/ported/sge-suite-check/families.tsv" "$REPORT/run-latest"
+    echo "-- by family --"; cat "$REPORT/run-latest/families.tsv"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0measure.txt | sort | uniq -c | sort -rn | head
     echo
     echo "-- correlation: every error located to its member and its Java origin --"

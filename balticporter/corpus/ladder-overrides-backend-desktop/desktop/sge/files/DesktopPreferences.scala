@@ -15,7 +15,7 @@
 package sge
 package files
 
-import sge.Files.FileType
+import sge.files.FileType
 
 import java.io.{ BufferedInputStream, BufferedOutputStream, File }
 import java.util.Properties

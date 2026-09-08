@@ -24,6 +24,7 @@ final class NullabilityTransform(
 
   /** `nullableMembers` plus the derived ones once bound. */
   private var derivedMembers: Set[String] = Set.empty
+  private var derivedIdSet: Set[SymId] = Set.empty
   private def effectiveMembers: Set[String] = nullableMembers ++ derivedMembers
 
   import NullabilityTransform.*
@@ -75,6 +76,7 @@ final class NullabilityTransform(
     ownSubjects = binder.run.contributed(name)
     if deriveMembers then
       derivedMembers = binder.run.derived.nullableMembers
+      derivedIdSet   = binder.run.derived.nullableIds
 
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings ++ deadMemberFindings)
@@ -239,10 +241,11 @@ final class NullabilityTransform(
       val hits = s.annotations.filter(a => headSym(a.tpe).exists(boundAnnots.contains))
       // annotation wins over nullableMembers (the fallback for an unannotated hand-wrapped member).
       val memberHit = if hits.nonEmpty then scala.None
+                      else if derivedIdSet(s.id) then Some(s.fullName)
                       else { val keys = DerivedPolicy.keysOf(program, s); effectiveMembers.find(keys) }
       // a DERIVED member this module does not own is the base's published fact: its symbol is
       // retyped so this module's reads of it are coerced; the base's declaration is never emitted here
-      val derivedFact = memberHit.exists(derivedMembers.contains) && !program.owns(s.id)
+      val derivedFact = (derivedIdSet(s.id) || memberHit.exists(derivedMembers.contains)) && !program.owns(s.id)
       if (hits.nonEmpty || memberHit.isDefined) && (retypable(program, s.id) || derivedFact) then
         val key = if hits.nonEmpty
                   then hits.flatMap(a => headSym(a.tpe)).flatMap(boundAnnots.get).sorted.head

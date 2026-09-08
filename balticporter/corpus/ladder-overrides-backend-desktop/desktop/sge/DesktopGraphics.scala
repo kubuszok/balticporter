@@ -494,7 +494,7 @@ class DesktopGraphics private[sge] (
 
   // ─── Continuous rendering ─────────────────────────────────────────────
 
-  override def continuousRendering_=(isContinuous: Boolean): Unit =
+  override def setContinuousRendering(isContinuous: Boolean): Unit =
     _isContinuous = isContinuous
 
   override def continuousRendering: Boolean = _isContinuous

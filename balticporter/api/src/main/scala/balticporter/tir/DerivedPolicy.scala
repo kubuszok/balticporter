@@ -5,10 +5,27 @@ package balticporter.tir
   * (§1b) a phase consumes only when its own `derive` switch is on; empty is the no-op. Rows are
   * keyed by the UPSTREAM symbol `fullName` and carry the reference's own spelling for the report
   * (`derived-policy.tsv`). `PROGRESS.md` §13.31 step 1. */
-final case class DerivedPolicy(rows: List[DerivedPolicy.Row]):
+final case class DerivedPolicy(rows: List[DerivedPolicy.Row],
+                               /** upstream key -> the symbol it named when the rows were RESOLVED, before any
+                                 * phase ran: a phase that renames the member (bean properties) cannot lose the
+                                 * row, since a `SymId` survives every rename. Empty until [[resolved]]. */
+                               ids: Map[String, SymId] = Map.empty):
   import DerivedPolicy.*
 
   def isEmpty: Boolean = rows.isEmpty
+
+  /** the rows bound to the program's symbols by every key a symbol answers to ([[DerivedPolicy.keysOf]]). */
+  def resolved(program: Program): DerivedPolicy =
+    val wanted = rows.map(_.upstream).toSet
+    val found = program.symbols.all.iterator.flatMap(s => keysOf(program, s).filter(wanted).map(_ -> s.id)).toMap
+    copy(ids = found)
+  /** the symbols the rows of a family name, where resolved. */
+  private def idsOf(rs: Iterator[Row]): Set[SymId] = rs.flatMap(r => ids.get(r.upstream)).toSet
+  def opaqueSeedIds(targetFqn: String): Set[SymId] =
+    idsOf(rows.iterator.filter(r => r.family == Family.OpaqueSlot && r.target == targetFqn))
+  def nullableIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.NullableMember))
+  def parenlessIds: Set[SymId] = idsOf(rows.iterator.filter(_.family == Family.Parenless))
+  def keepNameIds: Set[SymId]  = idsOf(rows.iterator.filter(_.family == Family.KeepName))
 
   /** upstream symbol fullNames (parameters `C#m#p`, methods and fields `C#m`) the reference spells
     * at the opaque type `targetFqn` (an `OpaqueSpec.Target.Existing` FQN, or a Mint's `fqn`). */
@@ -32,7 +49,10 @@ object DerivedPolicy:
   val empty: DerivedPolicy = DerivedPolicy(Nil)
 
   enum Family:
-    case OpaqueSlot, NullableMember, Parenless
+    case OpaqueSlot, NullableMember, Parenless,
+      /** a java accessor the reference keeps under its OWN name (`setInputProcessor` beside
+        * `inputProcessor`): the bean step leaves the pair alone */
+      KeepName
 
   /** @param upstream the java symbol's `fullName` @param reference the hand port's spelling at
     * that slot (`Seconds`, `Nullable[Texture]`, `def x: T`) @param target the opaque target FQN

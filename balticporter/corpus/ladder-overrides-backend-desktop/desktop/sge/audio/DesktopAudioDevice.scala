@@ -40,7 +40,7 @@ class DesktopAudioDevice private[sge] (
 
   private var bytes: Array[Byte] = Array.emptyByteArray
 
-  override def mono: Boolean = _isMono
+  override def isMono: Boolean = _isMono
 
   override def writeSamples(samples: Array[Short], offset: Int, numSamples: Int): Unit = {
     if (bytes.length < numSamples * 2) bytes = new Array[Byte](numSamples * 2)

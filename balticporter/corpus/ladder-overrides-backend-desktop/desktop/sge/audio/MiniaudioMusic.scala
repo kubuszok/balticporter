@@ -76,8 +76,8 @@ class MiniaudioMusic private[sge] (
   override def looping_=(isLooping: Boolean): Unit =
     audioOps.setMusicLooping(musicHandle, isLooping)
 
-  override def volume: Float =
-    (Volume.unsafeMake(audioOps.getMusicVolume(musicHandle))).toFloat
+  override def volume: Volume =
+    Volume.unsafeMake(audioOps.getMusicVolume(musicHandle))
 
   override def volume_=(volume: Volume): Unit =
     audioOps.setMusicVolume(musicHandle, volume.toFloat)
@@ -85,18 +85,17 @@ class MiniaudioMusic private[sge] (
   override def setPan(pan: Pan, volume: Volume): Unit =
     audioOps.setMusicPan(musicHandle, pan.toFloat, volume.toFloat)
 
-  override def position: Float =
-    (audioOps.getMusicPosition(musicHandle))
+  override def position: Position =
+    Position.unsafeMake(audioOps.getMusicPosition(musicHandle))
 
-  override def position_=(position: Float): Unit =
-    audioOps.setMusicPosition(musicHandle, position)
+  override def position_=(position: Position): Unit =
+    audioOps.setMusicPosition(musicHandle, position.toFloatSeconds)
 
   /** Returns the total duration of the music in seconds. */
-  def duration: Float =
-    (audioOps.getMusicDuration(musicHandle))
+  override def duration: Position =
+    Position.unsafeMake(audioOps.getMusicDuration(musicHandle))
 
-  override def setOnCompletionListener(listener: Music.OnCompletionListener): Unit = onComplete(m => listener.onCompletion(m))
-  def onComplete(listener: Music => Unit): Unit =
+  override def onComplete(listener: Music => Unit): Unit =
     _onComplete = Nullable(listener)
 
   /** Called by the engine during update to fire completion callbacks. */

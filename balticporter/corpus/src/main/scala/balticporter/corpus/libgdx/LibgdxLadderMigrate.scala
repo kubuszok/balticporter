@@ -162,6 +162,27 @@ object LibgdxLadder:
     // the reference-derived spelling step: no phase of its own — it switches `derive` on in the
     // opaque, nullability and arity phases and declares sge's tree as the manifest's reference.
     "derive" -> Nil,
+    // sge's `Input.Key`/`Input.Button` opaques (its Input companion): spliced as the companion's members,
+    // then seeded from sge's tree (the derive step) — `isKeyPressed(key: Key)`, `Keys.A: Key`, …
+    "keys" -> List(
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.Input" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("Key", 0,
+            "opaque type Key = Int\n  object Key {\n    inline def apply(value: Int): Key = value\n    given lowlevel.MkArray.OfInts[Key] = lowlevel.MkArray.ofIntAs[Key]\n    extension (k: Key) { inline def toInt: Int = k }\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Input#Key"),
+            Some("sge's opaque key code (`Input.Key`) over java's int constants (PROGRESS.md §13.31)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("Button", 0,
+            "opaque type Button = Int\n  object Button {\n    inline def apply(value: Int): Button = value\n    given lowlevel.MkArray.OfInts[Button] = lowlevel.MkArray.ofIntAs[Button]\n    extension (b: Button) { inline def toInt: Int = b }\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Input#Button"),
+            Some("sge's opaque button code (`Input.Button`) over java's int constants (PROGRESS.md §13.31)"), true)))),
+      opaque(balticporter.tir.OpaqueSpec(
+        fqn = "com.badlogic.gdx.Input.Key",
+        target = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.Input.Key", wrapName = "apply", unwrapName = "toInt"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Int)),
+      opaque(balticporter.tir.OpaqueSpec(
+        fqn = "com.badlogic.gdx.Input.Button",
+        target = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.Input.Button", wrapName = "apply", unwrapName = "toInt"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Int))),
     // java's `Gdx.app.log/error/debug(tag, msg[, t])` become sge's context-free `Log` (PROGRESS.md
     // §13.31 step 2): a class that only LOGS then takes no context (sge commented the particle
     // values' call out — a skip; the port keeps java's call). Placed BEFORE the context step.
@@ -176,7 +197,10 @@ object LibgdxLadder:
     "backend-jvm" -> Nil,
     // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
     // `LibgdxNativeBodies`, the objects they call injected (`Gdx2DNative`, `BufferUtilsNative`, `ETC1Native`).
-    "natives" -> List(new balticporter.transform.MethodBodyTransform(LibgdxNativeBodies.all)),
+    // sge's shared `BufferUtils`/`Gdx2DPixmap`/`ETC1`/`UIUtils` over the platform ops traits (one
+    // implementation per row, already injected) replace java's JNI classes on EVERY row; only
+    // `Matrix4`'s three native loops keep a substituted body (PROGRESS.md §13.31 step 3).
+    "natives" -> List(new balticporter.transform.MethodBodyTransform(LibgdxNativeBodies.matrix4)),
     // sge's desktop backend (GLFW window, input, files, preferences, net, miniaudio), copied (PROGRESS.md §13.30 step 3): injections only.
     "backend-desktop" -> Nil,
     // sge's typed JSON/UBJSON documents with Kindlings-derived codecs replace java's reflective JSON stack, one
@@ -490,7 +514,12 @@ object LibgdxLadder:
         "com.badlogic.gdx.audio.Sound#setPan#soundId"),
         underlying = balticporter.tir.OpaqueSpec.Primitive.Long,
         scope      = balticporter.tir.RuleScope.Only(Set(
-        "com.badlogic.gdx.audio.Sound"))))),
+        "com.badlogic.gdx.audio.Sound")))),
+      // sge's opaque playback position (seconds into the track): `Music.position`/`setPosition`, read off sge
+      opaque(balticporter.tir.OpaqueSpec(
+        fqn = "com.badlogic.gdx.audio.Position",
+        target = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Position", wrapName = "apply", unwrapName = "toFloat"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Float))),
     // sge's time opaques (`Millis`, `Nanos`) over `TimeUtils`, fenced to sge's files.
     "time" -> List(
       opaque(balticporter.tir.OpaqueSpec(
@@ -590,7 +619,8 @@ object LibgdxLadder:
           "com.badlogic.gdx.graphics.g2d.Batch#projectionMatrix"    -> "getProjectionMatrix/setProjectionMatrix",
           "com.badlogic.gdx.maps.tiled.TiledMapTileLayer$Cell#tile" -> "getTile/setTile"),
         LibgdxPolicy.beanPropertyTargets,
-        scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))),
+        scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
+        derive = sel("derive")),
       new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
         // sge's `clip.hasContents` — parenless although the body reads the platform clipboard
         force = Set("com.badlogic.gdx.utils.Clipboard#hasContents"),
@@ -631,10 +661,27 @@ object LibgdxLadder:
   /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
   val stepTypeDrops: Map[String, Set[String]] = Map(
     "json" -> Set("com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader", "com.badlogic.gdx.scenes.scene2d.ui.Skin"),
+    // java's JNI-backed classes: sge's shared files (natives step) stand at the same names;
+    // `GdxNativesLoader` has no reader and no sge counterpart
+    "natives" -> Set("com.badlogic.gdx.utils.BufferUtils", "com.badlogic.gdx.graphics.g2d.Gdx2DPixmap",
+                     "com.badlogic.gdx.graphics.glutils.ETC1", "com.badlogic.gdx.scenes.scene2d.utils.UIUtils",
+                     "com.badlogic.gdx.utils.GdxNativesLoader",
+                     // written against sge's Gdx2DPixmap/ETC1 (getters spelled sge's way): sge's own files
+                     "com.badlogic.gdx.graphics.Pixmap"),
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
+    // sge's `Music` (position/duration as `Position`, `onComplete(Music => Unit)`) replaces java's
+    "audio" -> Set("com.badlogic.gdx.audio.Music"),
+    // sge's `InputProcessor` (every callback defaulted to `false`, so `new InputProcessor {}` stands)
+    "backend-desktop" -> Set("com.badlogic.gdx.InputProcessor"),
     // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
     // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
-    "net" -> Set("com.badlogic.gdx.net.NetJavaImpl"),
+    "net" -> Set("com.badlogic.gdx.net.NetJavaImpl",
+      // sge's HTTP stack (`Net.httpClient`, an sttp client) replaces java's Net and its net helpers;
+      // `HttpRequestBuilder` built java's HttpRequest and has no sge counterpart
+      "com.badlogic.gdx.Net", "com.badlogic.gdx.net.HttpParametersUtils", "com.badlogic.gdx.net.HttpRequestBuilder",
+      "com.badlogic.gdx.net.HttpRequestHeader", "com.badlogic.gdx.net.HttpResponseHeader", "com.badlogic.gdx.net.HttpStatus",
+      "com.badlogic.gdx.net.NetJavaServerSocketImpl", "com.badlogic.gdx.net.NetJavaSocketImpl", "com.badlogic.gdx.net.ServerSocket",
+      "com.badlogic.gdx.net.ServerSocketHints", "com.badlogic.gdx.net.Socket", "com.badlogic.gdx.net.SocketHints"),
     "reflection" -> Set(
       "com.badlogic.gdx.utils.Json",
       // the `Class`-keyed static pool registry minted `ReflectionPool`s and registers, at class
@@ -655,6 +702,7 @@ object LibgdxLadder:
     * reflection-free `Json`, `ReflectionException` and the asset-type registry. */
   def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
     "reflection" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides")),
+    "net"        -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-net/shared")),
     "context"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-context")),
     "seconds"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-seconds")),
     "pool"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
@@ -683,7 +731,6 @@ object LibgdxLadder:
       "js"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/js")),
       "native" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/native"),
                        repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-jvm/desktop"))),
-    "natives"         -> Map("jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-natives/jvm"))),
     "backend-desktop" -> Map(
       "jvm"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/jvm"),
                        repoRoot.resolve("balticporter/corpus/ladder-overrides-backend-desktop/desktop")),
@@ -708,9 +755,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val StepOrder: List[String] = List("logging", "witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "keys", "worldunits", "properties", "graphics", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "logging", "context", "seconds", "pool", "pixels", "keys", "graphics", "properties", "worldunits", "helpers", "audio", "time", "glenum", "backend-jvm", "natives", "backend-desktop", "json", "derive")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
@@ -737,6 +784,9 @@ object LibgdxLadder:
       // java's reflective `Json` (dropped by the reflection step, a refusing stub injected) keeps the name
       // `LegacyJson`: `Json` is the Kindlings JSON AST sge's Skin and Tiled loaders read (json step).
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", "com.badlogic.gdx.utils.Json" -> "LegacyJson"),
+      // sge's `sge.files.FileType`: java's nested `Files.FileType` promoted to top level and nested under `files`
+      flattenNestedTypes = Set("com.badlogic.gdx.Files$FileType"),
+      subPackages    = Map("com.badlogic.gdx.Files$FileType" -> "files"),
       resources      = List(ResourceTree(
         root  = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,
         files = List(

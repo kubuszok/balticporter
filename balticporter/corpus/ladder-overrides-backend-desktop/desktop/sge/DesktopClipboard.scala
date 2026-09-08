@@ -36,10 +36,10 @@ class DesktopClipboard(
 ) extends Clipboard {
 
   override def hasContents: Boolean =
-    { val c = contents; c != null && c.nonEmpty }
+    contents.exists(_.nonEmpty)
 
-  override def contents: String =
-    (clipboardString()).orNull
+  override def contents: Nullable[String] =
+    clipboardString()
 
   override def contents_=(content: Nullable[String]): Unit =
     content.foreach(setClipboardString)

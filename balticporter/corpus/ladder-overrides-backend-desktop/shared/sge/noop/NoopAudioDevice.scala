@@ -24,7 +24,7 @@ import sge.audio.Volume
 
 /** A no-op [[sge.audio.AudioDevice]] implementation for headless/testing use. All write and control methods are no-ops.
   */
-final class NoopAudioDevice(override val mono: Boolean) extends audio.AudioDevice {
+final class NoopAudioDevice(override val isMono: Boolean) extends audio.AudioDevice {
 
   override def writeSamples(samples: Array[Short], offset: Int, numSamples: Int): Unit = {}
 

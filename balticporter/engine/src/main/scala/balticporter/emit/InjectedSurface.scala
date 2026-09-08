@@ -33,8 +33,13 @@ object InjectedSurface:
       typeParams: Map[String, List[String]] = Map.empty,
       /** Declaration kind per injected type, so a dependent's port map gets `Published`. */
       typeForms: Map[String, TypeForm] = Map.empty,
+      /** upstream FQN -> emitted FQN of a dropped+injected type: the emitter asks by the SYMBOL's
+        * (java) name, the file declares the emitted one (`PROGRESS.md` §13.31 step 3). */
+      aliases: Map[String, String] = Map.empty,
   ):
     def isEmpty: Boolean = members.isEmpty
+    def withAliases(a: Map[String, String]): Surface = copy(aliases = aliases ++ a)
+    private def owners(fqn: String): List[String] = fqn :: aliases.get(fqn).toList
 
     /** Renders a minimal `form=` payload per injected type for port-map type-shape rows. */
     def renderedTypeShapes: Map[String, String] =
@@ -47,8 +52,9 @@ object InjectedSurface:
       }
 
     /** Look up the injected member, substituting the child's actual type args. */
-    def lookup(ownerFqn: String, memberName: String, arity: Int,
+    def lookup(ownerFqn0: String, memberName: String, arity: Int,
                actualTypeArgs: List[String] = Nil): Option[MemberSig] =
+      val ownerFqn = owners(ownerFqn0).find(o => members.contains((o, memberName, arity))).getOrElse(ownerFqn0)
       members.get((ownerFqn, memberName, arity)).flatMap(_.headOption).map { sig =>
         val tparams = typeParams.getOrElse(ownerFqn, Nil)
         if tparams.isEmpty || actualTypeArgs.isEmpty then sig
@@ -59,9 +65,10 @@ object InjectedSurface:
       }
 
     /** Whether this member has parens in the injected file. */
-    def memberHasParens(ownerFqn: String, memberName: String): Option[Boolean] =
+    def memberHasParens(ownerFqn0: String, memberName: String): Option[Boolean] =
+      val os = owners(ownerFqn0).toSet
       members.iterator
-        .filter { case ((fqn, n, _), _) => fqn == ownerFqn && n == memberName }
+        .filter { case ((fqn, n, _), _) => os(fqn) && n == memberName }
         .flatMap(_._2)
         .map(_.hasParens)
         .nextOption()
@@ -106,10 +113,14 @@ object InjectedSurface:
         .toList
 
   /** Package name from a parsed Scala source tree. */
+  /** the dotted package of a source file, CHAINED clauses included (`package sge` then
+    * `package graphics` is `sge.graphics` — a hand port's usual spelling; reading the first clause
+    * alone keyed every member of such a file under the wrong owner). */
   private def extractPackage(tree: Source): String =
-    tree.stats.collectFirst {
-      case Pkg(ref, _) => ref.syntax
-    }.getOrElse("")
+    def go(stats: List[Stat], acc: List[String]): List[String] = stats.collectFirst {
+      case Pkg(ref, inner) => go(inner, acc :+ ref.syntax)
+    }.getOrElse(acc)
+    go(tree.stats, Nil).mkString(".")
 
   private def collectMembers(
       tree: Tree, pkg: String,

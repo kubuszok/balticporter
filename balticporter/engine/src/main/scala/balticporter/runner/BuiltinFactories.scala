@@ -226,7 +226,8 @@ final class BeanPropertyFactory extends TransformFactory:
     new BeanPropertyTransform(
       pairs   = entries.map((k, v, _) => k -> v).toMap,
       targets = entries.collect { case (k, _, t) if t != Target.DefPair => k -> t }.toMap,
-      scope   = TransformFactory.scopeOf(config, default = RuleScope.Only(Set.empty)))
+      scope   = TransformFactory.scopeOf(config, default = RuleScope.Only(Set.empty)),
+      derive  = config.bool("derive").getOrElse(false))
 
 /** ```
   * { transform = "member-rename"

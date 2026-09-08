@@ -27,7 +27,7 @@ import sge.Input.*
   */
 final class NoopInput extends Input {
 
-  private var _inputProcessor: InputProcessor = new InputAdapter()
+  private var _inputProcessor: InputProcessor = new InputProcessor {}
   private var _cursorCatched:  Boolean        = false
 
   // ---- accelerometer / gyroscope ----
@@ -76,13 +76,13 @@ final class NoopInput extends Input {
 
   override def getPressure(pointer: Int): Float = 0.0f
 
-  override def isButtonPressed(button: Int): Boolean = false
+  override def isButtonPressed(button: Button): Boolean = false
 
-  override def isButtonJustPressed(button: Int): Boolean = false
+  override def isButtonJustPressed(button: Button): Boolean = false
 
-  override def isKeyPressed(key: Int): Boolean = false
+  override def isKeyPressed(key: Key): Boolean = false
 
-  override def isKeyJustPressed(key: Int): Boolean = false
+  override def isKeyJustPressed(key: Key): Boolean = false
 
   // ---- text input / keyboard ----
 
@@ -126,17 +126,17 @@ final class NoopInput extends Input {
 
   override def getRotationMatrix(matrix: Array[Float]): Unit = {}
 
-  override def currentEventTime: Long = 0L
+  override def currentEventTime: sge.utils.Nanos = sge.utils.Nanos.zero
 
   // ---- catch keys ----
 
-  override def setCatchKey(keycode: Int, catchKey: Boolean): Unit = {}
+  override def setCatchKey(keycode: Key, catchKey: Boolean): Unit = {}
 
-  override def isCatchKey(keycode: Int): Boolean = false
+  override def isCatchKey(keycode: Key): Boolean = false
 
   // ---- input processor ----
 
-  override def inputProcessor_=(processor: InputProcessor): Unit =
+  override def setInputProcessor(processor: InputProcessor): Unit =
     _inputProcessor = processor
 
   override def inputProcessor: InputProcessor = _inputProcessor

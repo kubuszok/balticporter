@@ -974,7 +974,9 @@ private[emit] trait TirEmitterExprs:
     * from the emitted type's head against scala's value classes), and no case label is already
     * `null` (SE21's pattern switch may deliberately handle it, JLS 14.11.1). */
   private[emit] def selectorCanBeNull(scr: Term, cases: List[Tree.CaseDef]): Boolean =
-    val isValueClass = headSymOf(scr.tpe).map(s => sym(s).fullName).exists(TirEmitter.ScalaValueClasses.contains)
+    // an OPAQUE type over a primitive (a phase's `Seconds`, `Input.Key`) is a value too: java's
+    // selector was the primitive, and a `case null` arm against it is a type error, not a guard
+    val isValueClass = headSymOf(scr.tpe).exists(s => TirEmitter.ScalaValueClasses.contains(sym(s).fullName) || sym(s).flags.isOpaque)
     val writesNull = cases.exists(_.labels.exists {
       case Tree.Literal(Constant.NullC, _, _) => true
       case _                                  => false
