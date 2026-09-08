@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=f0fa768c672871ed	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=fcb8e1bc6e26a639	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -14680,6 +14680,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt4>	sge.scenes.scene2d.ui.Ta
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt5>	sge.scenes.scene2d.ui.Table#<stmt5>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	98	a3af24e221599634	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt6>	sge.scenes.scene2d.ui.Table#<stmt6>	Renamed	-	<synthetic>	0	da85a6fb14448258	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt7>	sge.scenes.scene2d.ui.Table#<stmt7>	Renamed	-	<synthetic>	0	969c6c2015279abc	
+member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt8>	sge.scenes.scene2d.ui.Table#<stmt8>	Renamed	-	<synthetic>	0	bc766277d20b66b9	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#add()	sge.scenes.scene2d.ui.Table#add()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	298	8b7b4f474b4c1255	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#add(Array)	sge.scenes.scene2d.ui.Table#add(Array<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	263	6ec1d5e310ffa6dc	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#add(Nullable)	sge.scenes.scene2d.ui.Table#add(Nullable<CharSequence>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	271	efe1901bd8bc31b2	

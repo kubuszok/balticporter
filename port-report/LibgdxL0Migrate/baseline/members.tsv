@@ -13836,7 +13836,7 @@ sge.scenes.scene2d.ui.Stack	sge.scenes.scene2d.ui.Stack#sizeInvalid	val	55eb84a4
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable	class	8ddaebfc0ca54616
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#setStyle(T)	def	10e1ccf8bff76426
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#style()	def	fc3e687f857c3b61
-sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	0b91fce2c418657f
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	3bf2bbd54293eb12
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<init>(Nullable<Skin>,Sge)	ctor	220ed06d33d7dee9
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt1>	stmt	abca2bbe56b03719
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt2>	stmt	6af89f041e3a7e12
@@ -13845,6 +13845,7 @@ sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt4>	stmt	a77e68f2e7e
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt5>	stmt	a3af24e221599634
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt6>	stmt	da85a6fb14448258
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt7>	stmt	969c6c2015279abc
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt8>	stmt	bc766277d20b66b9
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#add()	def	8b7b4f474b4c1255
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#add(Array<Actor>)	def	6ec1d5e310ffa6dc
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#add(Nullable<CharSequence>)	def	efe1901bd8bc31b2

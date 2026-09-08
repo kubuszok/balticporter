@@ -291,6 +291,13 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector2): sge.math.Vector2 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#-"), None, false)),
         "com.badlogic.gdx.math.Vector4" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector4): sge.math.Vector4 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector4#+"), None, false)))),
+      // Table.add varargs
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.scenes.scene2d.ui.Table" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("add", 1,
+            "def add(actors: sge.scenes.scene2d.Actor*): sge.scenes.scene2d.ui.Table = { for (a <- actors) add(lowlevel.Nullable(a)); this }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#add(Actor*)"),
+            Some("sge's varargs add: `table.add(a1, a2, a3)` (K6.5)"), false)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(
