@@ -2436,6 +2436,16 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**A same-named reference field is not the getter's twin (2026-09-08 08:50).** `Cell` in sge keeps
+`def getMinWidth: Float` beside a public `var minWidth: Nullable[Value]`; the deriver read the `var` as
+the folded getter and the port emitted `minWidth: Float`, so every `cell.getMinWidth` in the suite
+missed. A twin at the property name now has to be the SAME slot — its result type agrees with java's —
+or the getter keeps java's name (`KeepName`); the `Cell.getActor` extra went with it (the port now emits
+it itself). sge's `Actor` setter aliases (`x_=`, `y_=`, `width_=`, `height_=`, `scaleX_=`, `scaleY_=`,
+`rotation_=`) joined the `extras` list. `sge-l0` 0 = 0, JS 3, Native 0, lls 0, suite 216/220, demos
+12/12. **`sge-suite-check` 368 -> 314** (member-shape 145 -> 92); lls's api-parity(operator) rows for
+`DynamicArray`'s symbolic members closed as the derived target names now reach it too.
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type

@@ -260,9 +260,15 @@ object ReferencePolicy:
                   propertyName(ms.name).foreach { prop =>
                     val keptName = lookup(mp, "def", ms.name, n, pkg).isDefined
                     val isSetter = ms.name.startsWith("set") && n == 1
+                    // a twin at the property name must be the SAME slot: `var minWidth: Nullable[Value]`
+                    // beside `def getMinWidth: Float` is a field the reference exposes, not the getter
+                    // folded — its type disagrees, so java's name is kept
+                    val javaRes = javaSimple(d.returnTpt.tpe).getOrElse("")
+                    def sameSlot(cands: Option[List[SurfaceDecl]]): Boolean =
+                      cands.exists(_.exists(rd => n == 1 || javaRes.isEmpty || refSimple(rd.resultType) == javaRes))
                     val twin =
                       if isSetter then lookup(mp, "def", prop + "_=", 1, pkg).isDefined || lookup(mp, "prop", prop, 0, pkg).isDefined
-                      else lookup(mp, "def", prop, n, pkg).isDefined || (n == 0 && lookup(mp, "prop", prop, 0, pkg).isDefined)
+                      else sameSlot(lookup(mp, "def", prop, n, pkg)) || (n == 0 && sameSlot(lookup(mp, "prop", prop, 0, pkg)))
                     if keptName && !twin then
                       rows += DerivedPolicy.Row(DerivedPolicy.Family.KeepName, rowKey(ms, overloaded), s"def ${ms.name}")
                   }

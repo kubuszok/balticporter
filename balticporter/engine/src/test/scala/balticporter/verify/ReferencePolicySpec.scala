@@ -337,6 +337,24 @@ class ReferencePolicySpec extends FunSuite:
     assert(clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.Public && row.upstream == "com.example.gfx.Font#<init>"))
   }
 
+  test("a same-named field of ANOTHER type is no twin: the getter keeps java's name") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Cell {
+        |  Object minWidth;
+        |  public float getMinWidth() { return 0f; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import lowlevel.Nullable
+        |class Cell { var minWidth: Nullable[String] = Nullable.empty; def getMinWidth: Float = 0f }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    assert(clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.KeepName && row.upstream == "com.example.gfx.Cell#getMinWidth"))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

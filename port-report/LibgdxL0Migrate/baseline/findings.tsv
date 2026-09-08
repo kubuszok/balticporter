@@ -4,7 +4,7 @@
 659d1f8a1299	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/graphics/Cubemap.java	38	rendering ClassDef — consulted 936, fired 86, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
 2918335c00e9	catalog(consulted)	reached	JS-C04	-	0	phase field-shadowing — consulted 0, fired 0, declarations 19: a subclass field SHADOWS a superclass field — two storage cells, not one
 b4428c9dfce3	catalog(consulted)	reached	JS-C05	com/badlogic/gdx/AbstractGraphics.java	14	lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 51492, fired 10029, declarations 0: a static nested constant reached through a SUBCLASS's name, and `import static`
-84e5b9c226b4	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 56385, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
+5e1f340d0e9a	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 56386, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
 148100a1e6e2	catalog(consulted)	reached	JS-C07	com/badlogic/gdx/Input.java	60	rendering ClassDef — consulted 936, fired 269, declarations 0: JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger
 d73e3971590e	catalog(consulted)	reached	JS-C08	com/badlogic/gdx/Application.java	106	rendering ValDef — consulted 16849, fired 1443, declarations 0: a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation
 c8034763c174	catalog(consulted)	reached	JS-C09	com/badlogic/gdx/Application.java	98	rendering ClassDef — consulted 936, fired 136, declarations 0: several `static { }` blocks and static field initialisers run in ONE textual order
@@ -17,8 +17,8 @@ a2ff8bd790d2	catalog(consulted)	reached	JS-C10	com/badlogic/gdx/math/Matrix4.jav
 a56e955b5638	catalog(consulted)	reached	JS-C19	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 325, declarations 0: `this(...)` / `super(...)` in a secondary constructor — Scala's secondary constructors cannot call `super`
 9bc783ac5412	catalog(consulted)	reached	JS-C20	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 133, declarations 0: the implicit `super()` and the default constructor
 badc3f607ac4	catalog(consulted)	reached	JS-C21	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 325, declarations 0: constructor overload resolution, against Scala's textual-anteriority rule
-945b08365858	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/InputEventQueue.java	46	rendering Apply — consulted 56385, fired 354, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
-6a1d1d7500c9	catalog(consulted)	reached	JS-C23	com/badlogic/gdx/graphics/g3d/ModelBatch.java	251	rendering Apply — consulted 56385, fired 42, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
+dc7ac7f289bf	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/InputEventQueue.java	46	rendering Apply — consulted 56386, fired 354, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
+a87aaba74a9e	catalog(consulted)	reached	JS-C23	com/badlogic/gdx/graphics/g3d/ModelBatch.java	251	rendering Apply — consulted 56386, fired 42, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 099539f0a76d	catalog(consulted)	reached	JS-C25	com/badlogic/gdx/AbstractGraphics.java	7	rendering DefDef — consulted 11349, fired 2810, declarations 0: `override` is mandatory in Scala and absent in Java
 14f01c389ad9	catalog(consulted)	reached	JS-C29	com/badlogic/gdx/Application.java	163	rendering-type TypeRef — consulted 69366, fired 5525, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 f2a4bde417fb	catalog(consulted)	reached	JS-C31	com/badlogic/gdx/graphics/Cubemap.java	252	lowering CtNewClass/Expression — consulted 3846, fired 157, declarations 0: anonymous class construction and capture
@@ -32,9 +32,9 @@ ee675fb7686f	catalog(consulted)	reached	JS-C39	com/badlogic/gdx/Application.java
 99229550c079	catalog(consulted)	reached	JS-C43	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: Java `record`
 5a549bccf86f	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 099f56dae00a	catalog(consulted)	reached	JS-C45	com/badlogic/gdx/AbstractInput.java	7	rendering ValDef — consulted 16849, fired 2859, declarations 0: a `final` field's JMM safe-publication guarantee
-d982bd36d5be	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 797: Java has TWO name namespaces and Scala has one
+8ec03984b115	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 784: Java has TWO name namespaces and Scala has one
 cd43cbf81e02	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 932, declarations 0: package-private becomes `private[pkg]`
-3d1367604334	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/AbstractInput.java	7	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 774, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
+251d96c0bf18	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/AbstractInput.java	7	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 781, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
 bcff0329ebf0	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/Input.java	629	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 98, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
 b0a4145aa406	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29134, fired 932, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 03fede137b75	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
@@ -78,7 +78,7 @@ a26ff021f2d5	catalog(consulted)	reached	JS-G32	com/badlogic/gdx/Input.java	635	l
 46155b5d0db8	catalog(consulted)	reached	JS-G35	com/badlogic/gdx/graphics/g3d/environment/BaseLight.java	21	rendering ClassDef + rendering DefDef — consulted 12285, fired 25, declarations 0: Scala CHECKS an F-bound where javac does not
 0269e318e349	catalog(consulted)	reached	JS-G37	com/badlogic/gdx/graphics/g2d/BitmapFont.java	144	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30547, fired 17, declarations 0: `T...` is an `Array[T]`, materialised at the port's OWN call sites
 65652d3ed294	catalog(consulted)	reached	JS-G38	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30547, fired 61, declarations 0: a vararg slot ALREADY holding an array must not be re-packed — and neither a primitive array nor an under-dimensioned one forwards
-a6388bc29794	catalog(consulted)	reached	JS-G39	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 86932, fired 7, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
+1b3f93dbd0af	catalog(consulted)	reached	JS-G39	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 86933, fired 7, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
 d650217b295f	catalog(consulted)	reached	JS-G40	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Spread — consulted 30554, fired 14, declarations 0: the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot
 369355158724	catalog(consulted)	reached	JS-G41	com/badlogic/gdx/graphics/g2d/Animation.java	76	rendering DefDef — consulted 11349, fired 12, declarations 0: `@SafeVarargs` and heap pollution
 9cce74283760	catalog(consulted)	reached	JS-G42	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30547, fired 16, declarations 0: a generic vararg's COMPONENT element type has four layered sources
@@ -419,6 +419,7 @@ a31bf7970f0c	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#isFinis
 99a86bbd55d1	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#isLoaded(AssetDescriptor)		0	def isLoaded
 78c9fe98bd63	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#isLoaded(String)		0	def isLoaded
 a05fc50f2993	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#isLoaded(String,Class)		0	def isLoaded
+c3764e306a11	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#setLoader(Class,AssetLoader)		0	def setLoader
 6cb0cd1c6b07	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#setLoader(Class,String,AssetLoader)		0	def setLoader
 397620c885f4	derived(rows)	KeepName	com.badlogic.gdx.assets.AssetManager#setReferenceCount		0	def setReferenceCount
 1432fcb76e23	derived(rows)	KeepName	com.badlogic.gdx.assets.loaders.AssetLoader#getDependencies		0	def getDependencies
@@ -542,6 +543,7 @@ ea82a4454ce0	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitte
 7380b55d4e74	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter#setPosition		0	def setPosition
 c548d405e0a8	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter#setSprites		0	def setSprites
 03fd958dbd75	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter$GradientColorValue#getColor		0	def getColor
+11741d903c62	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter$ParticleValue#isActive		0	def isActive
 60fc6303c244	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter$RangedNumericValue#setLow(float)		0	def setLow
 c5fe3c0255d1	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter$RangedNumericValue#setLow(float,float)		0	def setLow
 2b67e3c78729	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.ParticleEmitter$ScaledNumericValue#setHigh(float)		0	def setHigh
@@ -594,6 +596,7 @@ e82c9fe2a1c7	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.TextureRegion#
 87f33d33da47	derived(rows)	KeepName	com.badlogic.gdx.graphics.g2d.TextureRegion#setRegion(int,int,int,int)		0	def setRegion
 c98dd238bdea	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.Attribute#getAttributeAlias		0	def getAttributeAlias
 0c85aa8e0c1b	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.Attribute#getAttributeType		0	def getAttributeType
+0b1ef6a7dfb0	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.Attributes#getMask		0	def getMask
 005367a382f9	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.Model#getAnimation(String)		0	def getAnimation
 d560147c4747	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.Model#getAnimation(String,boolean)		0	def getAnimation
 d64c9836f172	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.Model#getMaterial(String)		0	def getMaterial
@@ -673,6 +676,9 @@ b2d1fa5efd84	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.rend
 18217c8fcda8	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue#getColor(float)		0	def getColor
 5448ddd0063b	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue#getColor(float,float[],int)		0	def getColor
 e03974cd3b8b	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#setMesh(Mesh,Model)		0	def setMesh
+02632e82ea16	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#getSpawnDepth		0	def getSpawnDepth
+78185742123f	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#getSpawnHeight		0	def getSpawnHeight
+0c661220f8f3	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#getSpawnWidth		0	def getSpawnWidth
 7160e2447b85	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#isEdges		0	def isEdges
 526d0e7eb7bb	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#setDimensions		0	def setDimensions
 eca81f6bffaa	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#setEdges		0	def setEdges
@@ -703,6 +709,7 @@ dcbba630f5dd	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.DefaultT
 b5df7dce6ebd	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#getIndices(short[],int)		0	def getIndices
 23cdcc3e96f3	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#getVertexTransform		0	def getVertexTransform
 523a55df95c2	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#getVertices(float[],int)		0	def getVertices
+e20071cdb19b	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#isVertexTransformationEnabled		0	def isVertexTransformationEnabled
 6f25217c036c	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setColor(float,float,float,float)		0	def setColor
 7a193e18b55d	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setUVRange(TextureRegion)		0	def setUVRange
 77a1fa4425ec	derived(rows)	KeepName	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setUVRange(float,float,float,float)		0	def setUVRange
@@ -751,12 +758,15 @@ ff558447f95b	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.ETC1Textur
 3f1c85ed1112	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.FileTextureData#getFormat		0	def getFormat
 75f2e2e62666	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.FileTextureData#isManaged		0	def isManaged
 d60fbc80af46	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.FileTextureData#isPrepared		0	def isPrepared
+35935c2b2651	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.FloatTextureData#getFormat		0	def getFormat
 f7c9404e68d2	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.FloatTextureData#isManaged		0	def isManaged
 74590ba2c60f	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.FloatTextureData#isPrepared		0	def isPrepared
 a516785b49e0	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getColorBufferHandle		0	def getColorBufferHandle
+8196b96191ae	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getFramebufferHandle		0	def getFramebufferHandle
 ed944866d818	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getManagedStatus(StringBuilder)		0	def getManagedStatus
 5abc82c1efb3	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#setFrameBufferViewport		0	def setFrameBufferViewport
 0d49fc75f133	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLFrameBuffer$FrameBufferTextureAttachmentSpec#isColorTexture		0	def isColorTexture
+52a60e701163	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLOnlyTextureData#getFormat		0	def getFormat
 4d2bb2879d3d	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLOnlyTextureData#isManaged		0	def isManaged
 c071a3da22b8	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLOnlyTextureData#isPrepared		0	def isPrepared
 332e31684ad8	derived(rows)	KeepName	com.badlogic.gdx.graphics.glutils.GLVersion#isVersionEqualToOrHigher		0	def isVersionEqualToOrHigher
@@ -920,6 +930,7 @@ c4fe84f5ea97	derived(rows)	KeepName	com.badlogic.gdx.maps.MapObjects#getByType(C
 f34430eaf6b0	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader#getDependencyAssetDescriptors		0	def getDependencyAssetDescriptors
 fef93cdd32c7	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader#setTextureFilters		0	def setTextureFilters
 c734a58da00d	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#getDependencyAssetDescriptors		0	def getDependencyAssetDescriptors
+57f844a6c846	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#getIdToObject		0	def getIdToObject
 4c34677ddec8	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#getRelativeFileHandle		0	def getRelativeFileHandle
 1f4e1c1b3667	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.BaseTmjMapLoader#getDependencies		0	def getDependencies
 975aad8c1bbc	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.BaseTmxMapLoader#getDependencies		0	def getDependencies
@@ -946,9 +957,11 @@ c5a33b55c5ae	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.TmxMapLoader#get
 dfbd6acb4288	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#getTileLayerColor		0	def getTileLayerColor
 9582597ca45a	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#setView(Matrix4,float,float,float,float)		0	def setView
 10db30563ffd	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#setView(OrthographicCamera)		0	def setView
+5d60b9f5b361	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer#isCached		0	def isCached
 2a7444d0e883	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer#setMaxTileSize		0	def setMaxTileSize
 d1c45516e6b4	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer#setView(Matrix4,float,float,float,float)		0	def setView
 691695f645a2	derived(rows)	KeepName	com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer#setView(OrthographicCamera)		0	def setView
+8a7ea090c313	derived(rows)	KeepName	com.badlogic.gdx.math.Affine2#isIdt		0	def isIdt
 342e1f4067b2	derived(rows)	KeepName	com.badlogic.gdx.math.Affine2#isTranslation		0	def isTranslation
 dbe8f8e0589d	derived(rows)	KeepName	com.badlogic.gdx.math.Affine2#setToProduct		0	def setToProduct
 13b0210f76dd	derived(rows)	KeepName	com.badlogic.gdx.math.Affine2#setToRotation(float)		0	def setToRotation
@@ -1096,6 +1109,7 @@ a60dc8b53ec5	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#isAsce
 ecbec83d5d45	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#isDescendantOf		0	def isDescendantOf
 509cc7190dba	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusListener		0	def isTouchFocusListener
 3199349729f4	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusTarget		0	def isTouchFocusTarget
+711edfec389b	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#isTouchable		0	def isTouchable
 f54fb3b0c57f	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#setBounds		0	def setBounds
 6e59cae64141	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#setDebug		0	def setDebug
 16d41b22f0df	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.Actor#setOrigin(float,float)		0	def setOrigin
@@ -1153,11 +1167,28 @@ dda4546ff8ec	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Button#is
 3754f9ce871a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Button#setChecked(boolean)		0	def setChecked
 e43a4bfd386c	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Button#setStyle		0	def setStyle
 79ad6b100a81	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup#setChecked		0	def setChecked
+e32a1781280a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getActor		0	def getActor
+57047030ddb4	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMaxHeight		0	def getMaxHeight
+11c41f65c9b7	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMaxWidth		0	def getMaxWidth
+b0a0da7dfea9	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMinHeight		0	def getMinHeight
+e83b96500549	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMinWidth		0	def getMinWidth
+18fad67aff2c	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadBottom		0	def getPadBottom
+56cb2dd09c41	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadLeft		0	def getPadLeft
+92d16f1c15a0	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadRight		0	def getPadRight
+25958bddcdbe	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadTop		0	def getPadTop
 f810f83fef0c	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadX		0	def getPadX
 7214ff087239	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadY		0	def getPadY
+d24d33656498	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPrefHeight		0	def getPrefHeight
+35916515c341	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPrefWidth		0	def getPrefWidth
+c6cddeb024ac	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceBottom		0	def getSpaceBottom
+638509e30ffa	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceLeft		0	def getSpaceLeft
+29277989ac16	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceRight		0	def getSpaceRight
+291a1fc27a20	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceTop		0	def getSpaceTop
 b58102f40999	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#setActorBounds		0	def setActorBounds
 f4a215424194	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Cell#setTable		0	def setTable
 4bfdb667036a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.CheckBox#setStyle		0	def setStyle
+996529ffad95	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container#getFillX		0	def getFillX
+3cf057ef5b0f	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container#getFillY		0	def getFillY
 6e11c6a341fe	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container#getPadBottom		0	def getPadBottom
 555ede98b99d	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container#getPadLeft		0	def getPadLeft
 dd4381c7cbe8	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container#getPadRight		0	def getPadRight
@@ -1170,6 +1201,7 @@ ea5bad5ccfab	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container
 ca506dbe9afb	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Container#setRound		0	def setRound
 ed0f15468c78	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Dialog#setObject		0	def setObject
 cb165a2a025c	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Dialog#setStage		0	def setStage
+9521b4a37d94	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#getFill		0	def getFill
 827ff94c56d6	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#getPadBottom		0	def getPadBottom
 db59d9cabd66	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#getPadLeft		0	def getPadLeft
 71f273e5d939	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#getPadRight		0	def getPadRight
@@ -1215,6 +1247,8 @@ b6d1fb64ac44	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPan
 c2e53b70234a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isLeftEdge		0	def isLeftEdge
 67ddda70a9b5	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isPanning		0	def isPanning
 bceaaf538275	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isRightEdge		0	def isRightEdge
+a2532c3fdbe9	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isScrollX		0	def isScrollX
+5a1d5c7cb20f	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isScrollY		0	def isScrollY
 f6056637720a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isScrollingDisabledX		0	def isScrollingDisabledX
 469d8c55d955	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isScrollingDisabledY		0	def isScrollingDisabledY
 86c31703a1a9	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isTopEdge		0	def isTopEdge
@@ -1259,6 +1293,7 @@ a36bebbe7fc9	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Skin#setS
 5891662bb7b6	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Slider#setSnapToValues(float[],float)		0	def setSnapToValues
 4f22afedc77a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Slider#setVisualInterpolationInverse		0	def setVisualInterpolationInverse
 e5bb5878e306	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Slider#setVisualPercent		0	def setVisualPercent
+00dcd10fdd33	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#isCursorOverHandle		0	def isCursorOverHandle
 4db379a9d9e3	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#setFirstWidget		0	def setFirstWidget
 9b02288ddb4d	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#setMaxSplitAmount		0	def setMaxSplitAmount
 7ea8450ee3ab	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#setMinSplitAmount		0	def setMinSplitAmount
@@ -1271,6 +1306,10 @@ e08c7537375a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.SplitPane
 a8d783c37a75	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getColumnPrefWidth		0	def getColumnPrefWidth
 58b0017efd4e	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getColumnWidth		0	def getColumnWidth
 3f1d19b8cdc0	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getColumns		0	def getColumns
+e3951692e62a	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadBottom		0	def getPadBottom
+67375ef7fa96	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadLeft		0	def getPadLeft
+e049deead7ef	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadRight		0	def getPadRight
+0209df5edb78	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadTop		0	def getPadTop
 985598d679ab	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadX		0	def getPadX
 85d98f6bf92e	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadY		0	def getPadY
 8cb2e38aabe5	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Table#getRow		0	def getRow
@@ -1295,6 +1334,7 @@ b7fe84a32421	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField
 bc7884f42bcf	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#getProgrammaticChangeEvents		0	def getProgrammaticChangeEvents
 2f1028d337fe	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#getSelectionStart		0	def getSelectionStart
 39a104ff0ff6	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#getTextY		0	def getTextY
+e4126d7cc55f	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#isPasswordMode		0	def isPasswordMode
 fc52b29cf324	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#isWordCharacter		0	def isWordCharacter
 ce5b08814cc4	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#setAlignment		0	def setAlignment
 249f41858951	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.TextField#setAutocompleteOptions		0	def setAutocompleteOptions
@@ -1322,13 +1362,17 @@ cc31a6f7b1a3	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Touchpad#
 e0e479f923b8	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree#setPadding(float)		0	def setPadding
 6d5651308038	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree#setPadding(float,float)		0	def setPadding
 4d44aa002085	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree#setStyle		0	def setStyle
+826a1c992676	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getHeight		0	def getHeight
 7331369d7778	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#isAscendantOf		0	def isAscendantOf
 fccec8f2b6e4	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#isDescendantOf		0	def isDescendantOf
+5d57e720fce3	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#isSelectable		0	def isSelectable
+79c9abe866b7	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getFill		0	def getFill
 db8d540f26db	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadBottom		0	def getPadBottom
 8a5d9db38b16	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadLeft		0	def getPadLeft
 5d289b56ead1	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadRight		0	def getPadRight
 a624c4320a49	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadTop		0	def getPadTop
 b7663c502970	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#setRound		0	def setRound
+6ec2a3297042	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Window#isDragging		0	def isDragging
 7471aa12e3df	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.ui.Window#setStyle		0	def setStyle
 2e5f744ec828	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#setRangeSelect		0	def setRangeSelect
 2e7e69757b03	derived(rows)	KeepName	com.badlogic.gdx.scenes.scene2d.utils.ClickListener#isOver(Actor,float,float)		0	def isOver
@@ -7153,18 +7197,12 @@ a230c6a90d29	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g2d.ParticleE
 d32ec4751a2a	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g2d.ParticleEmitter#lifeOffset	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	802	kind=BeanDetect — auto-detected pair `lifeOffset` via `getLifeOffset`
 09bec23cc827	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g2d.ParticleEmitter#spawnHeight	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	818	kind=BeanDetect — auto-detected pair `spawnHeight` via `getSpawnHeight`
 f2d991601ae8	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g2d.ParticleEmitter#spawnWidth	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	814	kind=BeanDetect — auto-detected pair `spawnWidth` via `getSpawnWidth`
-c12c7ca7a432	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g2d.ParticleEmitter$ParticleValue#active	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	1258	kind=BeanDetect — auto-detected pair `active` via `isActive/setActive`
 80e72086f96e	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g2d.PixmapPacker$Page#pixmap	com/badlogic/gdx/graphics/g2d/PixmapPacker.java	480	kind=BeanDetect — auto-detected pair `pixmap` via `getPixmap`
-9122dd94a5c4	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.Attributes#mask	com/badlogic/gdx/graphics/g3d/Attributes.java	39	kind=BeanDetect — auto-detected pair `mask` via `getMask`
 9db58a77e5ad	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.ModelBatch#camera	com/badlogic/gdx/graphics/g3d/ModelBatch.java	171	kind=BeanDetect — auto-detected pair `camera` via `getCamera`
 c45ce1bb9bb0	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.ModelBatch#shaderProvider	com/badlogic/gdx/graphics/g3d/ModelBatch.java	189	kind=BeanDetect — auto-detected pair `shaderProvider` via `getShaderProvider`
 cb94636b57ec	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#camera	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	123	kind=BeanDetect — auto-detected pair `camera` via `getCamera/setCamera`
-ba7c4fda36e3	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#spawnDepth	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	75	kind=BeanDetect — auto-detected pair `spawnDepth` via `getSpawnDepth`
-eeb9a7727927	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#spawnHeight	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	71	kind=BeanDetect — auto-detected pair `spawnHeight` via `getSpawnHeight`
-fb0e128ccdfd	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#spawnWidth	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	67	kind=BeanDetect — auto-detected pair `spawnWidth` via `getSpawnWidth`
 be12c64b8cd4	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.ETC1TextureData#type	com/badlogic/gdx/graphics/glutils/ETC1TextureData.java	51	kind=BeanDetect — auto-detected pair `type` via `getType`
 4a8fd4391175	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FileTextureData#type	com/badlogic/gdx/graphics/glutils/FileTextureData.java	112	kind=BeanDetect — auto-detected pair `type` via `getType`
-6691beadf41c	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#framebufferHandle	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	507	kind=BeanDetect — auto-detected pair `framebufferHandle` via `getFramebufferHandle`
 d8f7d2075211	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.GLVersion#type	com/badlogic/gdx/graphics/glutils/GLVersion.java	104	kind=BeanDetect — auto-detected pair `type` via `getType`
 594646884e56	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.IndexArray#buffer	com/badlogic/gdx/graphics/glutils/IndexArray.java	101	kind=BeanDetect — auto-detected pair `buffer` via `getBuffer`
 9627c9bcebfb	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.IndexBufferObject#buffer	com/badlogic/gdx/graphics/glutils/IndexBufferObject.java	174	kind=BeanDetect — auto-detected pair `buffer` via `getBuffer`
@@ -7190,9 +7228,6 @@ cdb8f378a1b6	idiom(converted)	BeanDetect	com.badlogic.gdx.maps.objects.TextMapOb
 6cb26d93aec8	idiom(converted)	BeanDetect	com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader$AtlasResolver$DirectAtlasResolver#atlas	com/badlogic/gdx/maps/tiled/AtlasTmjMapLoader.java	57	kind=BeanDetect — auto-detected pair `atlas` via `getAtlas`
 eebcea9e380f	idiom(converted)	BeanDetect	com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader$AtlasResolver$AssetManagerAtlasResolver#atlas	com/badlogic/gdx/maps/tiled/AtlasTmxMapLoader.java	79	kind=BeanDetect — auto-detected pair `atlas` via `getAtlas`
 a75fcd61368f	idiom(converted)	BeanDetect	com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader$AtlasResolver$DirectAtlasResolver#atlas	com/badlogic/gdx/maps/tiled/AtlasTmxMapLoader.java	57	kind=BeanDetect — auto-detected pair `atlas` via `getAtlas`
-cfc12515a9b4	idiom(converted)	BeanDetect	com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#idToObject	com/badlogic/gdx/maps/tiled/BaseTiledMapLoader.java	128	kind=BeanDetect — auto-detected pair `idToObject` via `getIdToObject`
-5f9b30111b1b	idiom(converted)	BeanDetect	com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer#cached	com/badlogic/gdx/maps/tiled/renderers/OrthoCachedTiledMapRenderer.java	502	kind=BeanDetect — auto-detected pair `cached` via `isCached`
-828aa173845f	idiom(converted)	BeanDetect	com.badlogic.gdx.math.Affine2#idt	com/badlogic/gdx/math/Affine2.java	653	kind=BeanDetect — auto-detected pair `idt` via `isIdt`
 d077ff1e0c08	idiom(converted)	BeanDetect	com.badlogic.gdx.math.Octree$OctreeNode#leaf	com/badlogic/gdx/math/Octree.java	261	kind=BeanDetect — auto-detected pair `leaf` via `isLeaf`
 cd64800e2e58	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.Action#actor	com/badlogic/gdx/scenes/scene2d/Action.java	68	kind=BeanDetect — auto-detected pair `actor` via `getActor`
 9818a7907e47	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.Action#target	com/badlogic/gdx/scenes/scene2d/Action.java	79	kind=BeanDetect — auto-detected pair `target` via `getTarget`
@@ -7208,47 +7243,29 @@ aed87cf04129	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.actions
 a4f4c900bd11	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.actions.SizeToAction#width	com/badlogic/gdx/scenes/scene2d/actions/SizeToAction.java	50	kind=BeanDetect — auto-detected pair `width` via `getWidth/setWidth`
 f85d5240847e	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Button#buttonGroup	com/badlogic/gdx/scenes/scene2d/ui/Button.java	184	kind=BeanDetect — auto-detected pair `buttonGroup` via `getButtonGroup`
 e13033d30a25	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Button#clickListener	com/badlogic/gdx/scenes/scene2d/ui/Button.java	147	kind=BeanDetect — auto-detected pair `clickListener` via `getClickListener`
-f566e8004078	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#actor	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	71	kind=BeanDetect — auto-detected pair `actor` via `getActor`
 b65babcff50a	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandX	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	846	kind=BeanDetect — auto-detected pair `expandX` via `getExpandX`
 f6f7c186425f	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandY	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	850	kind=BeanDetect — auto-detected pair `expandY` via `getExpandY`
 f0d1d17b2a44	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#fillX	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	834	kind=BeanDetect — auto-detected pair `fillX` via `getFillX`
 7204f39674f2	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#fillY	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	838	kind=BeanDetect — auto-detected pair `fillY` via `getFillY`
-c470b67799cd	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#maxHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	748	kind=BeanDetect — auto-detected pair `maxHeight` via `getMaxHeight`
 c969e14fe9e6	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#maxHeightValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	744	kind=BeanDetect — auto-detected pair `maxHeightValue` via `getMaxHeightValue`
-4b45c422d342	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#maxWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	739	kind=BeanDetect — auto-detected pair `maxWidth` via `getMaxWidth`
 e6e362aec1db	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#maxWidthValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	735	kind=BeanDetect — auto-detected pair `maxWidthValue` via `getMaxWidthValue`
-6ac8855dcc29	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#minHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	712	kind=BeanDetect — auto-detected pair `minHeight` via `getMinHeight`
 d8ec4963adb0	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#minHeightValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	708	kind=BeanDetect — auto-detected pair `minHeightValue` via `getMinHeightValue`
-7dbb70b77c67	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#minWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	703	kind=BeanDetect — auto-detected pair `minWidth` via `getMinWidth`
 7946a6c95884	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#minWidthValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	699	kind=BeanDetect — auto-detected pair `minWidthValue` via `getMinWidthValue`
-38a5444f4a49	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padBottom	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	811	kind=BeanDetect — auto-detected pair `padBottom` via `getPadBottom`
 ff20d8462305	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padBottomValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	807	kind=BeanDetect — auto-detected pair `padBottomValue` via `getPadBottomValue`
-73d247af3c89	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padLeft	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	802	kind=BeanDetect — auto-detected pair `padLeft` via `getPadLeft`
 253f64722ebd	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padLeftValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	798	kind=BeanDetect — auto-detected pair `padLeftValue` via `getPadLeftValue`
-9772d6baaa4b	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padRight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	820	kind=BeanDetect — auto-detected pair `padRight` via `getPadRight`
 7fcac07e3057	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padRightValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	816	kind=BeanDetect — auto-detected pair `padRightValue` via `getPadRightValue`
-94ca0c4f78ae	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padTop	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	793	kind=BeanDetect — auto-detected pair `padTop` via `getPadTop`
 52d2c513926f	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#padTopValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	789	kind=BeanDetect — auto-detected pair `padTopValue` via `getPadTopValue`
-4a2f212bfcd9	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#prefHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	730	kind=BeanDetect — auto-detected pair `prefHeight` via `getPrefHeight`
 1dcdae459639	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#prefHeightValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	726	kind=BeanDetect — auto-detected pair `prefHeightValue` via `getPrefHeightValue`
-88d95e5298c0	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#prefWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	721	kind=BeanDetect — auto-detected pair `prefWidth` via `getPrefWidth`
 219e4a7913ca	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#prefWidthValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	717	kind=BeanDetect — auto-detected pair `prefWidthValue` via `getPrefWidthValue`
 3f64ef066689	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#row	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	694	kind=BeanDetect — auto-detected pair `row` via `getRow`
-19124e35ab72	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceBottom	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	775	kind=BeanDetect — auto-detected pair `spaceBottom` via `getSpaceBottom`
 ab12710fb265	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceBottomValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	771	kind=BeanDetect — auto-detected pair `spaceBottomValue` via `getSpaceBottomValue`
-e725eb50be4c	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceLeft	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	766	kind=BeanDetect — auto-detected pair `spaceLeft` via `getSpaceLeft`
 48c1a9c0b5fb	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceLeftValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	762	kind=BeanDetect — auto-detected pair `spaceLeftValue` via `getSpaceLeftValue`
-5864b8988b3f	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceRight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	784	kind=BeanDetect — auto-detected pair `spaceRight` via `getSpaceRight`
 61a49ea2c6bd	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceRightValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	780	kind=BeanDetect — auto-detected pair `spaceRightValue` via `getSpaceRightValue`
-997eb04cc71f	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceTop	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	757	kind=BeanDetect — auto-detected pair `spaceTop` via `getSpaceTop`
 8197e555f6a5	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceTopValue	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	753	kind=BeanDetect — auto-detected pair `spaceTopValue` via `getSpaceTopValue`
 0b0a3ae3b313	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformX	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	858	kind=BeanDetect — auto-detected pair `uniformX` via `getUniformX`
 5230e1f0a9ab	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformY	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	862	kind=BeanDetect — auto-detected pair `uniformY` via `getUniformY`
 047258fdd92f	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Container#clip	com/badlogic/gdx/scenes/scene2d/ui/Container.java	747	kind=BeanDetect — auto-detected pair `clip` via `getClip`
-98f5f52223f3	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Container#fillX	com/badlogic/gdx/scenes/scene2d/ui/Container.java	711	kind=BeanDetect — auto-detected pair `fillX` via `getFillX`
-298a70e4f903	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Container#fillY	com/badlogic/gdx/scenes/scene2d/ui/Container.java	715	kind=BeanDetect — auto-detected pair `fillY` via `getFillY`
 35bf5b2d3ee5	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#expand	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	493	kind=BeanDetect — auto-detected pair `expand` via `getExpand`
-6f7bd320898b	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#fill	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	478	kind=BeanDetect — auto-detected pair `fill` via `getFill`
 3cee91af46aa	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#reverse	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	329	kind=BeanDetect — auto-detected pair `reverse` via `getReverse`
 b697d8644346	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#wrap	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	524	kind=BeanDetect — auto-detected pair `wrap` via `getWrap`
 8ca6184b9b2d	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#wrapReverse	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	345	kind=BeanDetect — auto-detected pair `wrapReverse` via `getWrapReverse`
@@ -7260,30 +7277,20 @@ de049732e9bc	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Prog
 9c471775edeb	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#flickScrollListener	com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java	186	kind=BeanDetect — auto-detected pair `flickScrollListener` via `getFlickScrollListener`
 faa6fcd5227e	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#widget	com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java	660	kind=BeanDetect — auto-detected pair `widget` via `getWidget`
 852577504040	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Slider#style	com/badlogic/gdx/scenes/scene2d/ui/Slider.java	106	kind=BeanDetect — auto-detected pair `style` via `getStyle`
-fd1ed1be2170	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#cursorOverHandle	com/badlogic/gdx/scenes/scene2d/ui/SplitPane.java	402	kind=BeanDetect — auto-detected pair `cursorOverHandle` via `isCursorOverHandle`
 652a3e6e9e9b	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#maxSplitAmount	com/badlogic/gdx/scenes/scene2d/ui/SplitPane.java	321	kind=BeanDetect — auto-detected pair `maxSplitAmount` via `getMaxSplitAmount`
 c004e1499ed2	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#minSplitAmount	com/badlogic/gdx/scenes/scene2d/ui/SplitPane.java	312	kind=BeanDetect — auto-detected pair `minSplitAmount` via `getMinSplitAmount`
 7a1ed18a5a2a	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Table#clip	com/badlogic/gdx/scenes/scene2d/ui/Table.java	202	kind=BeanDetect — auto-detected pair `clip` via `getClip`
-3f926dacc2d5	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Table#padBottom	com/badlogic/gdx/scenes/scene2d/ui/Table.java	681	kind=BeanDetect — auto-detected pair `padBottom` via `getPadBottom`
-2b437e7261e0	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Table#padLeft	com/badlogic/gdx/scenes/scene2d/ui/Table.java	673	kind=BeanDetect — auto-detected pair `padLeft` via `getPadLeft`
-2ec51c5d42d9	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Table#padRight	com/badlogic/gdx/scenes/scene2d/ui/Table.java	689	kind=BeanDetect — auto-detected pair `padRight` via `getPadRight`
-c67a429d7c1d	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Table#padTop	com/badlogic/gdx/scenes/scene2d/ui/Table.java	665	kind=BeanDetect — auto-detected pair `padTop` via `getPadTop`
 0bea692a6131	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextArea#cursorLine	com/badlogic/gdx/scenes/scene2d/ui/TextArea.java	357	kind=BeanDetect — auto-detected pair `cursorLine` via `getCursorLine`
 276a458191c5	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextArea#firstLineShowing	com/badlogic/gdx/scenes/scene2d/ui/TextArea.java	361	kind=BeanDetect — auto-detected pair `firstLineShowing` via `getFirstLineShowing`
 c4df56590819	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextArea#linesShowing	com/badlogic/gdx/scenes/scene2d/ui/TextArea.java	365	kind=BeanDetect — auto-detected pair `linesShowing` via `getLinesShowing`
-e8af76ad5da5	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextField#passwordMode	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	788	kind=BeanDetect — auto-detected pair `passwordMode` via `isPasswordMode`
 3aa46538e008	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard$120#selectionEnd	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	943	kind=BeanDetect — auto-detected pair `selectionEnd` via `getSelectionEnd`
 5d2a4f2cdd2e	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard$120#selectionStart	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	938	kind=BeanDetect — auto-detected pair `selectionStart` via `getSelectionStart`
 31e30ecdad68	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextField$NativeOnscreenKeyboard$120#text	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	933	kind=BeanDetect — auto-detected pair `text` via `getText`
 c0ef277fc333	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Tooltip#actor	com/badlogic/gdx/scenes/scene2d/ui/Tooltip.java	68	kind=BeanDetect — auto-detected pair `actor` via `getActor`
 9e5ac43ea7ce	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Tree#nodes	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	433	kind=BeanDetect — auto-detected pair `nodes` via `getNodes`
-b4c0b8c2796d	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#height	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	854	kind=BeanDetect — auto-detected pair `height` via `getHeight`
-046329b0120b	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#selectable	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	830	kind=BeanDetect — auto-detected pair `selectable` via `isSelectable/setSelectable`
 677168334afc	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#expand	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	476	kind=BeanDetect — auto-detected pair `expand` via `getExpand`
-9830c03ee78c	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#fill	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	461	kind=BeanDetect — auto-detected pair `fill` via `getFill`
 e927b28d30be	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#reverse	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	328	kind=BeanDetect — auto-detected pair `reverse` via `getReverse`
 9dda819c99fb	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#wrap	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	507	kind=BeanDetect — auto-detected pair `wrap` via `getWrap`
-f16126fe0387	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Window#dragging	com/badlogic/gdx/scenes/scene2d/ui/Window.java	327	kind=BeanDetect — auto-detected pair `dragging` via `isDragging`
 26a45adfedc0	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Window#modal	com/badlogic/gdx/scenes/scene2d/ui/Window.java	303	kind=BeanDetect — auto-detected pair `modal` via `isModal/setModal`
 fe31e12b22be	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Window#movable	com/badlogic/gdx/scenes/scene2d/ui/Window.java	295	kind=BeanDetect — auto-detected pair `movable` via `isMovable/setMovable`
 f5439563c737	idiom(converted)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Window#resizable	com/badlogic/gdx/scenes/scene2d/ui/Window.java	315	kind=BeanDetect — auto-detected pair `resizable` via `isResizable/setResizable`
@@ -7358,6 +7365,7 @@ e73ce1abe40e	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.BitmapF
 0a9cab23d735	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEmitter#cleansUpBlendFunction	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	860	kind=NullaryArity — drop `()` from `cleansUpBlendFunction`
 a8d2e65b21db	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEmitter#getAllowCompletion	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	730	kind=NullaryArity — drop `()` from `getAllowCompletion`
 acf5ce47885c	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEmitter#isComplete	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	904	kind=NullaryArity — drop `()` from `isComplete`
+a44c148ae2be	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.ParticleEmitter$ParticleValue#isActive	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	1258	kind=NullaryArity — drop `()` from `isActive`
 70ba20e92707	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.TextureRegion#getU	com/badlogic/gdx/graphics/g2d/TextureRegion.java	131	kind=NullaryArity — drop `()` from `getU`
 2dbbc905b1f0	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.TextureRegion#getU2	com/badlogic/gdx/graphics/g2d/TextureRegion.java	149	kind=NullaryArity — drop `()` from `getU2`
 ecd85feca6d5	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g2d.TextureRegion#getV	com/badlogic/gdx/graphics/g2d/TextureRegion.java	140	kind=NullaryArity — drop `()` from `getV`
@@ -7372,6 +7380,9 @@ bbaaa9c4727d	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particl
 476bdd3810f6	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter#isComplete	com/badlogic/gdx/graphics/g3d/particles/emitters/Emitter.java	52	kind=NullaryArity — drop `()` from `isComplete`
 18586559ce4b	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter#isComplete	com/badlogic/gdx/graphics/g3d/particles/emitters/RegularEmitter.java	226	kind=NullaryArity — drop `()` from `isComplete`
 66a240f417b9	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue#isActive	com/badlogic/gdx/graphics/g3d/particles/values/ParticleValue.java	35	kind=NullaryArity — drop `()` from `isActive`
+567d99aa6328	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#getSpawnDepth	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	75	kind=NullaryArity — drop `()` from `getSpawnDepth`
+55bceddf188f	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#getSpawnHeight	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	71	kind=NullaryArity — drop `()` from `getSpawnHeight`
+fcdd1fb5e3ba	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#getSpawnWidth	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	67	kind=NullaryArity — drop `()` from `getSpawnWidth`
 3379965d7cb3	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#isEdges	com/badlogic/gdx/graphics/g3d/particles/values/PrimitiveSpawnShapeValue.java	59	kind=NullaryArity — drop `()` from `isEdges`
 ac7335a84228	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.shaders.DefaultShader#getDefaultCullFace	com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java	943	kind=NullaryArity — drop `()` from `getDefaultCullFace`
 1d017e59bb35	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.g3d.shaders.DefaultShader#getDefaultDepthFunc	com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java	951	kind=NullaryArity — drop `()` from `getDefaultDepthFunc`
@@ -7403,6 +7414,7 @@ e08264ca3f60	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.Fil
 e3e9ca64b885	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.FloatTextureData#isManaged	com/badlogic/gdx/graphics/glutils/FloatTextureData.java	135	kind=NullaryArity — drop `()` from `isManaged`
 39b0379d9f91	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.FloatTextureData#isPrepared	com/badlogic/gdx/graphics/glutils/FloatTextureData.java	61	kind=NullaryArity — drop `()` from `isPrepared`
 bc6f63cb10c3	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.FloatTextureData#useMipMaps	com/badlogic/gdx/graphics/glutils/FloatTextureData.java	130	kind=NullaryArity — drop `()` from `useMipMaps`
+f7844f735f8f	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.GLFrameBuffer#getFramebufferHandle	com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java	507	kind=NullaryArity — drop `()` from `getFramebufferHandle`
 3047182fc44a	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.GLOnlyTextureData#disposePixmap	com/badlogic/gdx/graphics/glutils/GLOnlyTextureData.java	87	kind=NullaryArity — drop `()` from `disposePixmap`
 7074d9bb2999	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.GLOnlyTextureData#getFormat	com/badlogic/gdx/graphics/glutils/GLOnlyTextureData.java	102	kind=NullaryArity — drop `()` from `getFormat`
 921c5d40249e	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.GLOnlyTextureData#isManaged	com/badlogic/gdx/graphics/glutils/GLOnlyTextureData.java	112	kind=NullaryArity — drop `()` from `isManaged`
@@ -7425,8 +7437,10 @@ d18ec2c304a3	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.Pix
 6aa63aed9964	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.PixmapTextureData#useMipMaps	com/badlogic/gdx/graphics/glutils/PixmapTextureData.java	69	kind=NullaryArity — drop `()` from `useMipMaps`
 f8a2681458e3	idiom(converted)	NullaryArity	com.badlogic.gdx.graphics.glutils.ShapeRenderer#isDrawing	com/badlogic/gdx/graphics/glutils/ShapeRenderer.java	1229	kind=NullaryArity — drop `()` from `isDrawing`
 0836b5b6917d	idiom(converted)	NullaryArity	com.badlogic.gdx.maps.MapLayers#size	com/badlogic/gdx/maps/MapLayers.java	77	kind=NullaryArity — drop `()` from `size`
+37c0c9628296	idiom(converted)	NullaryArity	com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#getIdToObject	com/badlogic/gdx/maps/tiled/BaseTiledMapLoader.java	128	kind=NullaryArity — drop `()` from `getIdToObject`
 92d8741979b8	idiom(converted)	NullaryArity	com.badlogic.gdx.maps.tiled.TiledMapImageLayer#supportsTransparency	com/badlogic/gdx/maps/tiled/TiledMapImageLayer.java	65	kind=NullaryArity — drop `()` from `supportsTransparency`
 b03bb44cc9bd	idiom(converted)	NullaryArity	com.badlogic.gdx.maps.tiled.TiledMapTileSet#size	com/badlogic/gdx/maps/tiled/TiledMapTileSet.java	81	kind=NullaryArity — drop `()` from `size`
+afb8b3e2b532	idiom(converted)	NullaryArity	com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer#isCached	com/badlogic/gdx/maps/tiled/renderers/OrthoCachedTiledMapRenderer.java	502	kind=NullaryArity — drop `()` from `isCached`
 933bbb8156d4	idiom(converted)	NullaryArity	com.badlogic.gdx.math.EarClippingTriangulator#findEarTip	com/badlogic/gdx/math/EarClippingTriangulator.java	133	kind=NullaryArity — drop `()` from `findEarTip`
 121007d6d6b7	idiom(converted)	NullaryArity	com.badlogic.gdx.math.Vector#isUnit	com/badlogic/gdx/math/Vector.java	128	kind=NullaryArity — drop `()` from `isUnit`
 0acba0bf0546	idiom(converted)	NullaryArity	com.badlogic.gdx.math.Vector#isZero	com/badlogic/gdx/math/Vector.java	134	kind=NullaryArity — drop `()` from `isZero`
@@ -7463,8 +7477,23 @@ df0fc8e6d84b	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.actio
 544577d539ad	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.actions.IntAction#getEnd	com/badlogic/gdx/scenes/scene2d/actions/IntAction.java	86	kind=NullaryArity — drop `()` from `getEnd`
 3342f0331109	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Button#isOver	com/badlogic/gdx/scenes/scene2d/ui/Button.java	143	kind=NullaryArity — drop `()` from `isOver`
 393cf8d55ce6	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Button#isPressed	com/badlogic/gdx/scenes/scene2d/ui/Button.java	139	kind=NullaryArity — drop `()` from `isPressed`
+531cc7e7c9c9	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getActor	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	71	kind=NullaryArity — drop `()` from `getActor`
+3a27439c89f9	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMaxHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	748	kind=NullaryArity — drop `()` from `getMaxHeight`
+46417a3c67c2	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMaxWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	739	kind=NullaryArity — drop `()` from `getMaxWidth`
+99717fca02fd	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMinHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	712	kind=NullaryArity — drop `()` from `getMinHeight`
+b4624e56aa11	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getMinWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	703	kind=NullaryArity — drop `()` from `getMinWidth`
+2edd5cc9ea51	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadBottom	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	811	kind=NullaryArity — drop `()` from `getPadBottom`
+d51d1ea2ceb0	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadLeft	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	802	kind=NullaryArity — drop `()` from `getPadLeft`
+69c1892c0476	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadRight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	820	kind=NullaryArity — drop `()` from `getPadRight`
+ad45c09dc18c	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadTop	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	793	kind=NullaryArity — drop `()` from `getPadTop`
 a097a79b5a63	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadX	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	825	kind=NullaryArity — drop `()` from `getPadX`
 a1c64c241f00	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPadY	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	830	kind=NullaryArity — drop `()` from `getPadY`
+711ee34fdb78	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPrefHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	730	kind=NullaryArity — drop `()` from `getPrefHeight`
+c697ccf7e567	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getPrefWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	721	kind=NullaryArity — drop `()` from `getPrefWidth`
+ba4f847c3d0d	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceBottom	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	775	kind=NullaryArity — drop `()` from `getSpaceBottom`
+e8d5e2f87a15	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceLeft	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	766	kind=NullaryArity — drop `()` from `getSpaceLeft`
+b701dfc32cd2	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceRight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	784	kind=NullaryArity — drop `()` from `getSpaceRight`
+5c1afd677642	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#getSpaceTop	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	757	kind=NullaryArity — drop `()` from `getSpaceTop`
 623b2b75c59b	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Cell#hasActor	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	76	kind=NullaryArity — drop `()` from `hasActor`
 09f4d0da5cae	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Container#getFillX	com/badlogic/gdx/scenes/scene2d/ui/Container.java	711	kind=NullaryArity — drop `()` from `getFillX`
 edc689c34208	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Container#getFillY	com/badlogic/gdx/scenes/scene2d/ui/Container.java	715	kind=NullaryArity — drop `()` from `getFillY`
@@ -7494,8 +7523,13 @@ efffeb63a6b3	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Sc
 15479f5b0905	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#isTopEdge	com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java	923	kind=NullaryArity — drop `()` from `isTopEdge`
 84c3d0d491e7	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.SelectBox#isOver	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	402	kind=NullaryArity — drop `()` from `isOver`
 7a61dda6f9f7	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Slider#isDragging	com/badlogic/gdx/scenes/scene2d/ui/Slider.java	223	kind=NullaryArity — drop `()` from `isDragging`
+fe57daf05d95	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#isCursorOverHandle	com/badlogic/gdx/scenes/scene2d/ui/SplitPane.java	402	kind=NullaryArity — drop `()` from `isCursorOverHandle`
 2138c9a0b1d2	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getCells	com/badlogic/gdx/scenes/scene2d/ui/Table.java	427	kind=NullaryArity — drop `()` from `getCells`
 274d040cb691	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getColumns	com/badlogic/gdx/scenes/scene2d/ui/Table.java	735	kind=NullaryArity — drop `()` from `getColumns`
+d4b413e4cbfe	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadBottom	com/badlogic/gdx/scenes/scene2d/ui/Table.java	681	kind=NullaryArity — drop `()` from `getPadBottom`
+e4dc1eaa2f2d	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadLeft	com/badlogic/gdx/scenes/scene2d/ui/Table.java	673	kind=NullaryArity — drop `()` from `getPadLeft`
+2eabc6362360	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadRight	com/badlogic/gdx/scenes/scene2d/ui/Table.java	689	kind=NullaryArity — drop `()` from `getPadRight`
+0fe114685a73	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadTop	com/badlogic/gdx/scenes/scene2d/ui/Table.java	665	kind=NullaryArity — drop `()` from `getPadTop`
 0cdf680b5f32	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadX	com/badlogic/gdx/scenes/scene2d/ui/Table.java	694	kind=NullaryArity — drop `()` from `getPadX`
 3f3ad8392268	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getPadY	com/badlogic/gdx/scenes/scene2d/ui/Table.java	699	kind=NullaryArity — drop `()` from `getPadY`
 9f6a22a90016	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Table#getRows	com/badlogic/gdx/scenes/scene2d/ui/Table.java	731	kind=NullaryArity — drop `()` from `getRows`
@@ -7504,8 +7538,11 @@ a859bb823045	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Ta
 13d75014de81	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.TextField#getMaxLength	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	212	kind=NullaryArity — drop `()` from `getMaxLength`
 3830141b5e28	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.TextField#getProgrammaticChangeEvents	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	683	kind=NullaryArity — drop `()` from `getProgrammaticChangeEvents`
 30c2f5a8856d	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.TextField#getSelectionStart	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	687	kind=NullaryArity — drop `()` from `getSelectionStart`
+91d949402d41	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.TextField#isPasswordMode	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	788	kind=NullaryArity — drop `()` from `isPasswordMode`
 14fd68a44963	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#countActors	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	674	kind=NullaryArity — drop `()` from `countActors`
+74a166ae540d	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#getHeight	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	854	kind=NullaryArity — drop `()` from `getHeight`
 0836b62427e8	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#hasChildren	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	749	kind=NullaryArity — drop `()` from `hasChildren`
+3ea287ab1de4	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Tree$Node#isSelectable	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	830	kind=NullaryArity — drop `()` from `isSelectable`
 017d67c7c8ce	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getFill	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	461	kind=NullaryArity — drop `()` from `getFill`
 86c2e5db9830	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadBottom	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	397	kind=NullaryArity — drop `()` from `getPadBottom`
 3ce4ba0c1bbd	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadLeft	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	393	kind=NullaryArity — drop `()` from `getPadLeft`
@@ -7513,6 +7550,7 @@ a859bb823045	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Ta
 3aaab32e6be1	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#getPadTop	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	389	kind=NullaryArity — drop `()` from `getPadTop`
 16633b419d12	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Widget#needsLayout	com/badlogic/gdx/scenes/scene2d/ui/Widget.java	92	kind=NullaryArity — drop `()` from `needsLayout`
 4311d005626b	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup#needsLayout	com/badlogic/gdx/scenes/scene2d/ui/WidgetGroup.java	119	kind=NullaryArity — drop `()` from `needsLayout`
+b8c94844183f	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.ui.Window#isDragging	com/badlogic/gdx/scenes/scene2d/ui/Window.java	327	kind=NullaryArity — drop `()` from `isDragging`
 8f65bd258063	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.utils.ClickListener#isVisualPressed	com/badlogic/gdx/scenes/scene2d/utils/ClickListener.java	146	kind=NullaryArity — drop `()` from `isVisualPressed`
 21c0bcb9651e	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#isDragValid	com/badlogic/gdx/scenes/scene2d/utils/DragAndDrop.java	257	kind=NullaryArity — drop `()` from `isDragValid`
 abf6b6f0a87e	idiom(converted)	NullaryArity	com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop$Payload#getObject	com/badlogic/gdx/scenes/scene2d/utils/DragAndDrop.java	363	kind=NullaryArity — drop `()` from `getObject`
@@ -8733,9 +8771,7 @@ b6c2d40eb621	idiom(refused)	BeanCollapse	com.badlogic.gdx.utils.viewport.Viewpor
 430bc1c45719	idiom(refused)	BeanCollapse	com.badlogic.gdx.utils.viewport.Viewport#topGutterY	com/badlogic/gdx/utils/viewport/Viewport.java	238	kind=BeanCollapse guard=ComputedBody — property `topGutterY` via `getTopGutterY`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 e7e0e7e416e2	idiom(refused)	BeanCollapse	com.badlogic.gdx.utils.viewport.Viewport#worldHeight	com/badlogic/gdx/utils/viewport/Viewport.java	145	kind=BeanCollapse guard=NotRequested — property `worldHeight` via `getWorldHeight/setWorldHeight`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 c78ccd3ed418	idiom(refused)	BeanCollapse	com.badlogic.gdx.utils.viewport.Viewport#worldWidth	com/badlogic/gdx/utils/viewport/Viewport.java	136	kind=BeanCollapse guard=NotRequested — property `worldWidth` via `getWorldWidth/setWorldWidth`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
-707022c1a797	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.g3d.Attributes#mask	com/badlogic/gdx/graphics/g3d/Attributes.java	39	kind=BeanDetect guard=RenameRefused — auto-detected pair `mask`; the component reaches 1 declaration(s) this program does not parse and cannot move: java.util.Comparator#getMask
 0dc22eb75db7	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.g3d.ModelBatch#camera	com/badlogic/gdx/graphics/g3d/ModelBatch.java	171	kind=BeanDetect guard=SetterHasBehaviour — auto-detected `camera`; `setCamera` does more than assign its parameter to a field: it keeps java's name, the getter alone becomes the property
-2e1627f96205	idiom(refused)	BeanDetect	com.badlogic.gdx.math.Affine2#idt	com/badlogic/gdx/math/Affine2.java	653	kind=BeanDetect guard=RenameRefused — auto-detected pair `idt`; `idt` is already taken in the component's classes by com.badlogic.gdx.math.Affine2#idt — and at least one of them is not a member the emitter's §4.55 passes will move
 1b140e2f5b3e	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.Actor#debug	com/badlogic/gdx/scenes/scene2d/Actor.java	986	kind=BeanDetect guard=RenameRefused — auto-detected pair `debug`; `debug` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.Actor#debug, com.badlogic.gdx.scenes.scene2d.ui.Table#debug — and at least one of them is not a member the emitter's §4.55 passes will move
 9ea7cd911eaf	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandX	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	846	kind=BeanDetect guard=RenameRefused — auto-detected pair `expandX`; `expandX` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Cell#expandX — and at least one of them is not a member the emitter's §4.55 passes will move
 7a1eaa99eca0	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#expandY	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	850	kind=BeanDetect guard=RenameRefused — auto-detected pair `expandY`; `expandY` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Cell#expandY — and at least one of them is not a member the emitter's §4.55 passes will move
@@ -8745,20 +8781,15 @@ f35f4f7018f4	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#r
 b0cea9fd4d5e	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformX	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	858	kind=BeanDetect guard=RenameRefused — auto-detected pair `uniformX`; `uniformX` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformX — and at least one of them is not a member the emitter's §4.55 passes will move
 c77cb833f2b0	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformY	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	862	kind=BeanDetect guard=RenameRefused — auto-detected pair `uniformY`; `uniformY` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Cell#uniformY — and at least one of them is not a member the emitter's §4.55 passes will move
 865717788da6	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Container#clip	com/badlogic/gdx/scenes/scene2d/ui/Container.java	747	kind=BeanDetect guard=RenameRefused — auto-detected pair `clip`; `clip` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Container#clip — and at least one of them is not a member the emitter's §4.55 passes will move
-28214a5bbdea	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Container#fillX	com/badlogic/gdx/scenes/scene2d/ui/Container.java	711	kind=BeanDetect guard=RenameRefused — auto-detected pair `fillX`; `fillX` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Container#fillX — and at least one of them is not a member the emitter's §4.55 passes will move
-2b665361f20a	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Container#fillY	com/badlogic/gdx/scenes/scene2d/ui/Container.java	715	kind=BeanDetect guard=RenameRefused — auto-detected pair `fillY`; `fillY` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Container#fillY — and at least one of them is not a member the emitter's §4.55 passes will move
 92da9324188f	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#expand	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	493	kind=BeanDetect guard=RenameRefused — auto-detected pair `expand`; `expand` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#expand — and at least one of them is not a member the emitter's §4.55 passes will move
-209d504e995c	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#fill	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	478	kind=BeanDetect guard=RenameRefused — auto-detected pair `fill`; `fill` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#fill — and at least one of them is not a member the emitter's §4.55 passes will move
 21cd7abf57df	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#reverse	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	329	kind=BeanDetect guard=RenameRefused — auto-detected pair `reverse`; `reverse` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#reverse — and at least one of them is not a member the emitter's §4.55 passes will move
 b9d62b99ad6d	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#wrap	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	524	kind=BeanDetect guard=RenameRefused — auto-detected pair `wrap`; `wrap` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#wrap — and at least one of them is not a member the emitter's §4.55 passes will move
 bb9a0607b3c2	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#wrapReverse	com/badlogic/gdx/scenes/scene2d/ui/HorizontalGroup.java	345	kind=BeanDetect guard=RenameRefused — auto-detected pair `wrapReverse`; `wrapReverse` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#wrapReverse — and at least one of them is not a member the emitter's §4.55 passes will move
 43862359d9a2	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Image#align	com/badlogic/gdx/scenes/scene2d/ui/Image.java	170	kind=BeanDetect guard=SetterHasBehaviour — auto-detected `align`; `setAlign` does more than assign its parameter to a field: it keeps java's name, the getter alone becomes the property
 939b432d91c5	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#widget	com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java	660	kind=BeanDetect guard=SetterHasBehaviour — auto-detected `widget`; `setWidget` does more than assign its parameter to a field: it keeps java's name, the getter alone becomes the property
 651dedb7077b	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Table#clip	com/badlogic/gdx/scenes/scene2d/ui/Table.java	202	kind=BeanDetect guard=RenameRefused — auto-detected pair `clip`; `clip` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.Table#clip — and at least one of them is not a member the emitter's §4.55 passes will move
-9678076b67aa	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.TextField#passwordMode	com/badlogic/gdx/scenes/scene2d/ui/TextField.java	788	kind=BeanDetect guard=SetterHasBehaviour — auto-detected `passwordMode`; `setPasswordMode` does more than assign its parameter to a field: it keeps java's name, the getter alone becomes the property
 f657b2d38043	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.Tooltip#actor	com/badlogic/gdx/scenes/scene2d/ui/Tooltip.java	68	kind=BeanDetect guard=SetterHasBehaviour — auto-detected `actor`; `setActor` does more than assign its parameter to a field: it keeps java's name, the getter alone becomes the property
 d4bf95ea2919	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#expand	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	476	kind=BeanDetect guard=RenameRefused — auto-detected pair `expand`; `expand` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#expand — and at least one of them is not a member the emitter's §4.55 passes will move
-088e224ac7d8	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#fill	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	461	kind=BeanDetect guard=RenameRefused — auto-detected pair `fill`; `fill` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#fill — and at least one of them is not a member the emitter's §4.55 passes will move
 4a76e21cb464	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#reverse	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	328	kind=BeanDetect guard=RenameRefused — auto-detected pair `reverse`; `reverse` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#reverse — and at least one of them is not a member the emitter's §4.55 passes will move
 370ad9f305a0	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#wrap	com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java	507	kind=BeanDetect guard=RenameRefused — auto-detected pair `wrap`; `wrap` is already taken in the component's classes by com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#wrap — and at least one of them is not a member the emitter's §4.55 passes will move
 3906ea305339	idiom(refused)	BeanDetect	com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop$Payload#object	com/badlogic/gdx/scenes/scene2d/utils/DragAndDrop.java	363	kind=BeanDetect guard=ReservedName — auto-detected `object`; `object` is a Scala keyword: a backticked property is no API, java's accessor is kept
@@ -10911,20 +10942,6 @@ f5d70b91e8c8	nullability-boundary	OverrideCrossing	com.badlogic.gdx.utils.JsonMa
 131159e355e2	nullability-boundary	OverrideCrossing	com.badlogic.gdx.utils.SnapshotArray#replaceAll#replacement	com/badlogic/gdx/utils/SnapshotArray.java	146	`com.badlogic.gdx.utils.Null` on parameter `replacement` of com.badlogic.gdx.utils.SnapshotArray#replaceAll
 28e434abd70c	nullability-boundary	OverrideCrossing	com.badlogic.gdx.utils.SnapshotArray#replaceAll#value	com/badlogic/gdx/utils/SnapshotArray.java	146	`com.badlogic.gdx.utils.Null` on parameter `value` of com.badlogic.gdx.utils.SnapshotArray#replaceAll
 0e2585994ea8	nullability-boundary	OverrideCrossing	com.badlogic.gdx.utils.SnapshotArray#replaceFirst#value	com/badlogic/gdx/utils/SnapshotArray.java	141	`com.badlogic.gdx.utils.Null` on parameter `value` of com.badlogic.gdx.utils.SnapshotArray#replaceFirst
-07c38094f701	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#maxHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	748	`com.badlogic.gdx.scenes.scene2d.ui.Cell#maxHeight` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#maxHeight`
-6fb485e9247f	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#maxWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	739	`com.badlogic.gdx.scenes.scene2d.ui.Cell#maxWidth` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#maxWidth`
-6c34d7b600fe	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#minHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	712	`com.badlogic.gdx.scenes.scene2d.ui.Cell#minHeight` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#minHeight`
-e2cf667fbe85	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#minWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	703	`com.badlogic.gdx.scenes.scene2d.ui.Cell#minWidth` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#minWidth`
-cb19f7048a51	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#padBottom	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	811	`com.badlogic.gdx.scenes.scene2d.ui.Cell#padBottom` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#padBottom`
-29a4ca95b73c	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#padLeft	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	802	`com.badlogic.gdx.scenes.scene2d.ui.Cell#padLeft` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#padLeft`
-e19bba644332	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#padRight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	820	`com.badlogic.gdx.scenes.scene2d.ui.Cell#padRight` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#padRight`
-f2a938e61925	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#padTop	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	793	`com.badlogic.gdx.scenes.scene2d.ui.Cell#padTop` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#padTop`
-d616c57b1b04	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#prefHeight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	730	`com.badlogic.gdx.scenes.scene2d.ui.Cell#prefHeight` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#prefHeight`
-0c892f10196f	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#prefWidth	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	721	`com.badlogic.gdx.scenes.scene2d.ui.Cell#prefWidth` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#prefWidth`
-0ef7351b7545	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceBottom	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	775	`com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceBottom` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceBottom`
-8965078bfb37	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceLeft	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	766	`com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceLeft` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceLeft`
-f7df8807afac	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceRight	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	784	`com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceRight` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceRight`
-869f5ce50f5b	nullability-boundary	PrimitiveType	com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceTop	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	757	`com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceTop` on `com.badlogic.gdx.scenes.scene2d.ui.Cell#spaceTop`
 208a59bb6e8f	nullability-boundary	UncoercibleSeam	@1197#append(java.lang.String)	com/badlogic/gdx/utils/XmlReader.java	585	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
 208a59bb6e8f/2	nullability-boundary	UncoercibleSeam	@1197#append(java.lang.String)	com/badlogic/gdx/utils/XmlReader.java	596	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
 8f73cbfe5c65	nullability-boundary	UncoercibleSeam	@17#parseFloat(java.lang.String)	com/badlogic/gdx/maps/tiled/BaseTmxMapLoader.java	285	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
