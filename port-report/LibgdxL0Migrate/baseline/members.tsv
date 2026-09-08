@@ -5860,14 +5860,15 @@ sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$SaveData#save(String,Object)	def	bd0714c1be962985
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$SaveData#saveAsset(String,Class<K>)	def	ab763bf640bde902
 sge.graphics.g3d.particles.ResourceData	sge.graphics.g3d.particles.ResourceData$SaveData#write(LegacyJson)	def	e68ca1b5fe8c3c85
-sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch	class	c15c4c3685439d0c
+sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch	class	c1176d467f4260bc
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<init>(AlignMode,boolean,int,Sge)	ctor	e0272d0ca72560e5
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<init>(Sge)	ctor	fee6fb902232bde6
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<init>(int,Sge)	ctor	a5fcbc5f280011f5
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt10>	stmt	83aad5323b501902
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt11>	stmt	71d2354ae16e0c7c
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt12>	stmt	c70fdc92a3f7191b
-sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt13>	stmt	b5446e2b23c435ec
+sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt13>	stmt	08595d8be8adfd20
+sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt14>	stmt	b5446e2b23c435ec
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt1>	stmt	abca2bbe56b03719
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt2>	stmt	1640144fbffa3914
 sge.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch#<stmt3>	stmt	33050879fffbd80d

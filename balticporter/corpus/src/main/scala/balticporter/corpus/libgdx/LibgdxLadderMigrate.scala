@@ -219,7 +219,12 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("fromJson", 1,
             "private[particles] def fromJson[T <: java.lang.Object](json: sge.utils.Json): sge.graphics.g3d.particles.ResourceData[T] = {\n    val rd = new sge.graphics.g3d.particles.ResourceData[T]()\n    json match {\n      case sge.utils.Json.Obj(fields) =>\n        fields.fields.foreach { case (k, v) =>\n          if (k == \"assets\") v match {\n            case sge.utils.Json.Arr(elems) => for (elem <- elems) rd.sharedAssets.add(assetDataFromJson(elem).asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[T]])\n            case _ => ()\n          }\n        }\n        fields.fields.foreach { case (k, v) => k match {\n          case \"data\" => v match {\n            case sge.utils.Json.Arr(elems) => for (elem <- elems) rd.data.add(saveDataFromJson(elem, rd))\n            case _ => ()\n          }\n          case \"unique\" => v match {\n            case sge.utils.Json.Obj(uf) => uf.fields.foreach { case (uk, uv) => rd.uniqueData.put(uk, saveDataFromJson(uv, rd)) }\n            case _ => ()\n          }\n          case \"resource\" => v match {\n            case sge.utils.Json.Null => ()\n            case other => rd.resourceJson = lowlevel.Nullable(other)\n          }\n          case _ => ()\n        }}\n      case _ => throw new java.lang.IllegalArgumentException(\"Expected JSON object for ResourceData\")\n    }\n    rd\n  }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ResourceData#fromJson"),
-            Some("sge's ResourceData.fromJson with T <: Object bound"), true)))),
+            Some("sge's ResourceData.fromJson with T <: Object bound"), true)),
+        "com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("AlignMode", 0,
+            "type AlignMode = sge.graphics.g3d.particles.ParticleShader.AlignMode\nval AlignMode = sge.graphics.g3d.particles.ParticleShader.AlignMode",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#AlignMode"),
+            Some("sge moved AlignMode from ParticleShader to BillboardParticleBatch"), true)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(
