@@ -247,7 +247,17 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
             "def apply(name: java.lang.String, windowSize: scala.Int = 5): sge.utils.PerformanceCounter = new sge.utils.PerformanceCounter(name, windowSize)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.PerformanceCounter#apply"),
-            Some("factory with original param names — the funnel renamed them to $p"), true)))),
+            Some("factory with original param names — the funnel renamed them to $p"), true)),
+        "com.badlogic.gdx.scenes.scene2d.Actor" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("isDebug", 0,
+            "def isDebug: scala.Boolean = this.debug" + "$field",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.Actor#isDebug"),
+            Some("sge's boolean reader beside the fluent debug()"), false)),
+        "com.badlogic.gdx.utils.Timer" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("disposeThread", 0,
+            "private[sge] def disposeThread(): scala.Unit = { this.threadLock.synchronized { if (this.thread" + "$field != null) { this.thread" + "$field.dispose(); this.thread" + "$field = null } } }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.Timer#disposeThread"),
+            Some("sge's timer thread cleanup for test teardown"), true)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(

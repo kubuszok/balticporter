@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=ee2443994694bd5c	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=b5d4537d11da4ebd	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -857,7 +857,7 @@ type	com.badlogic.gdx.utils.StreamUtils	sge.utils.StreamUtils	Renamed	-		0		flag
 type	com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream	sge.utils.StreamUtils$OptimizedByteArrayOutputStream	Renamed	-		0		form=class parents=java.io.ByteArrayOutputStream primary=(int) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.TextFormatter	sge.utils.TextFormatter	Renamed	-		0		form=class primary=(Locale,boolean) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.TimeUtils	sge.utils.TimeUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.Timer	sge.utils.Timer	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=Task,TimerThread,instance,post,schedule,thread,thread$field,threadLock
+type	com.badlogic.gdx.utils.Timer	sge.utils.Timer	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=Task,TimerThread,disposeThread,instance,post,schedule,thread,thread$field,threadLock
 type	com.badlogic.gdx.utils.Timer$Task	sge.utils.Timer$Task	Renamed	-		0		flags=abstract form=class parents=java.lang.Runnable primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.Timer$TimerThread	sge.utils.Timer$TimerThread	Renamed	-		0		form=class parents=java.lang.Runnable,sge.LifecycleListener primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.UBJsonReader	sge.utils.UBJsonReader	Renamed	-		0		form=class parents=sge.utils.BaseJsonReader primary=() primaryKind=unique-root primaryVis=public
@@ -12645,13 +12645,14 @@ member	com.badlogic.gdx.scenes.scene2d.Action#getTarget()	sge.scenes.scene2d.Act
 member	com.badlogic.gdx.scenes.scene2d.Action#toString()	sge.scenes.scene2d.Action#toString()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	107	bf0999284c19077b	
 member	com.badlogic.gdx.scenes.scene2d.Actor#<clinit>	sge.scenes.scene2d.Actor#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	63	3683116269f46e7a	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt1>	sge.scenes.scene2d.Actor#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt2>	sge.scenes.scene2d.Actor#<stmt2>	Renamed	-	<synthetic>	0	a0dfd7be39c4fff6	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt3>	sge.scenes.scene2d.Actor#<stmt3>	Renamed	-	<synthetic>	0	ce93686e2e58e160	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt4>	sge.scenes.scene2d.Actor#<stmt4>	Renamed	-	<synthetic>	0	9bf76b49142dbda0	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt5>	sge.scenes.scene2d.Actor#<stmt5>	Renamed	-	<synthetic>	0	2272e096814eb656	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt6>	sge.scenes.scene2d.Actor#<stmt6>	Renamed	-	<synthetic>	0	df0bd78c247b3a14	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt7>	sge.scenes.scene2d.Actor#<stmt7>	Renamed	-	<synthetic>	0	b99547f7bdb75c3c	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt8>	sge.scenes.scene2d.Actor#<stmt8>	Renamed	-	<synthetic>	0	db7429e33dd8f319	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt2>	sge.scenes.scene2d.Actor#<stmt2>	Renamed	-	<synthetic>	0	8e700e1726d916f4	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt3>	sge.scenes.scene2d.Actor#<stmt3>	Renamed	-	<synthetic>	0	a0dfd7be39c4fff6	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt4>	sge.scenes.scene2d.Actor#<stmt4>	Renamed	-	<synthetic>	0	ce93686e2e58e160	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt5>	sge.scenes.scene2d.Actor#<stmt5>	Renamed	-	<synthetic>	0	9bf76b49142dbda0	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt6>	sge.scenes.scene2d.Actor#<stmt6>	Renamed	-	<synthetic>	0	2272e096814eb656	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt7>	sge.scenes.scene2d.Actor#<stmt7>	Renamed	-	<synthetic>	0	df0bd78c247b3a14	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt8>	sge.scenes.scene2d.Actor#<stmt8>	Renamed	-	<synthetic>	0	b99547f7bdb75c3c	
+member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt9>	sge.scenes.scene2d.Actor#<stmt9>	Renamed	-	<synthetic>	0	db7429e33dd8f319	
 member	com.badlogic.gdx.scenes.scene2d.Actor#POOLS	sge.scenes.scene2d.Actor#POOLS	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	61	812711f18d77a316	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.Actor#act(Seconds)	sge.scenes.scene2d.Actor#act(Seconds)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	103	12d38876beaf46b1	
 member	com.badlogic.gdx.scenes.scene2d.Actor#getActions	sge.scenes.scene2d.Actor#actions	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	74	1565e86d7fce2dae	name=actions$field
@@ -18531,6 +18532,7 @@ member	com.badlogic.gdx.utils.TimeUtils#timeSinceMillis(Millis)	sge.utils.TimeUt
 member	com.badlogic.gdx.utils.TimeUtils#timeSinceNanos(Nanos)	sge.utils.TimeUtils#timeSinceNanos(Nanos)	Renamed	-	com/badlogic/gdx/utils/TimeUtils.java	51	63df445253dd47de	placement=companion
 member	com.badlogic.gdx.utils.Timer#<stmt1>	sge.utils.Timer#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.utils.Timer#<stmt2>	sge.utils.Timer#<stmt2>	Renamed	-	com/badlogic/gdx/utils/Timer.java	59	774d7a4acbf77bef	
+member	com.badlogic.gdx.utils.Timer#<stmt3>	sge.utils.Timer#<stmt3>	Renamed	-	<synthetic>	0	bb08e35c9094b9f2	
 member	com.badlogic.gdx.utils.Timer#clear()	sge.utils.Timer#clear()	Renamed	-	com/badlogic/gdx/utils/Timer.java	122	57937699fad1c50d	
 member	com.badlogic.gdx.utils.Timer#delay(long)	sge.utils.Timer#delay(long)	Renamed	-	com/badlogic/gdx/utils/Timer.java	169	8040af19212d3247	
 member	com.badlogic.gdx.utils.Timer#instance(Sge)	sge.utils.Timer#instance(Sge)	Renamed	-	com/badlogic/gdx/utils/Timer.java	37	3e413d96b8cad987	placement=companion
