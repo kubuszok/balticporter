@@ -4,12 +4,12 @@ api-parity(collection-retarget)	0
 api-parity(factory)	17
 api-parity(file-merge)	0
 api-parity(hand-original)	6
-api-parity(hand-port-extra)	55
+api-parity(hand-port-extra)	56
 api-parity(mutability)	2
 api-parity(null-model)	6
 api-parity(opaque)	5
 api-parity(operator)	0
-api-parity(port-extra)	365
+api-parity(port-extra)	366
 api-parity(rename)	0
 api-parity(rule)	10
 api-parity(signature)	92
@@ -34,8 +34,8 @@ dependency-coverage	0
 dependency-coverage(all)	0
 dependency-coverage(declared)	0
 heap-pollution	5
-idiom(converted)	4
-idiom(refused)	92
+idiom(converted)	7
+idiom(refused)	89
 idiom(residue)	0
 jdk-surface	2
 manifest	0

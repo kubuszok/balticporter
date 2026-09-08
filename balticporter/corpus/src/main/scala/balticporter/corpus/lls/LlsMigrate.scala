@@ -126,7 +126,11 @@ object LlsPolicy:
     "ordering" -> List(collections(rungs)),
     // L1 candidates (PROGRESS.md §13.29): getter-like nullary methods lose `()`; java-convention
     // accessor pairs become properties (empty explicit tables: derivation only).
-    "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = Twelve)),
+    "renames"  -> List(new balticporter.transform.MemberRenameTransform(renames = Map(
+      "com.badlogic.gdx.utils.Array#first" -> "head"))),
+    "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = Twelve,
+      force = Set("com.badlogic.gdx.utils.Array#head", "com.badlogic.gdx.utils.ArrayMap#firstKey",
+        "com.badlogic.gdx.utils.ArrayMap#firstValue"))),
     "bean"     -> List(new balticporter.transform.BeanPropertyTransform(Map.empty, Map.empty, scope = Twelve)),
     "enrich"   -> List(LlsEnrich.transform(rungs("witness"))),
     "witness"  -> List(
@@ -150,10 +154,10 @@ object LlsPolicy:
   val Rungs: Set[String] = rungPhases(Set.empty).keySet
 
   /** the order the rungs occupy in `surface` — a pipeline position, not the alphabet. */
-  val RungOrder: List[String] = List("bean", "arity", "nullable", "ordering", "enrich", "witness")
+  val RungOrder: List[String] = List("renames", "bean", "arity", "nullable", "ordering", "enrich", "witness")
 
   /** the rungs lls carries by default (the lane's `LLS_RUNGS` default spells the same set). */
-  val DefaultRungs: Set[String] = Set("arity", "nullable", "ordering", "enrich", "witness")
+  val DefaultRungs: Set[String] = Set("renames", "arity", "nullable", "ordering", "enrich", "witness")
 
   /** every lls rung stops at lls's own declarations (D12): the inherited surface must not decide
     * core's, which takes each decision as a rung of its own (PROGRESS.md §13.29). */

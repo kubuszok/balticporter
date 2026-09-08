@@ -80,7 +80,7 @@ lowlevel.math.MathUtils	lowlevel.math.MathUtils#tanDeg(float)	def	4dc556406210a4
 lowlevel.math.MathUtils	lowlevel.math.MathUtils$Sin	class	9fdd9aaa0bfa80c2
 lowlevel.math.MathUtils	lowlevel.math.MathUtils$Sin#<clinit>	init	d2c75abec9f23b69
 lowlevel.math.MathUtils	lowlevel.math.MathUtils$Sin#table	val	dba18cc18fb59eb7
-lowlevel.util.ArrayMap	lowlevel.util.ArrayMap	class	0b9cdfaddb314a9b
+lowlevel.util.ArrayMap	lowlevel.util.ArrayMap	class	22353f6c0fcc24d4
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#<init>(ArrayMap<K,V>,MkArray<K>,MkArray$1<V>)	ctor	7ceb1220aa93941f
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#<init>(Function1<int,Array<K>>,Function1<int,Array<V>>,MkArray<K>,MkArray$1<V>)	ctor	a9cbed59dd968df2
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#<init>(MkArray<K>,MkArray$1<V>)	ctor	3e37e21b46eaa53f
@@ -110,8 +110,8 @@ lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#entries1	val	d9cc8a20b7d765af
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#entries2	val	bdde15a61a484f9d
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#equals(Any)	def	98d7698be8ead5b4
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#equalsIdentity(Object)	def	fa684d1f15269886
-lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#firstKey()	def	47667543706ee4a8
-lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#firstValue()	def	48d500accceed492
+lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#firstKey()	def	a55ef068e95883d3
+lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#firstValue()	def	d6af13d5a691d226
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#get(K)	def	dfe060879250d720
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#get(K,Nullable<V>)	def	43add13940c8db1a
 lowlevel.util.ArrayMap	lowlevel.util.ArrayMap#getKey(V,boolean)	def	9666c6613fe6ccf7
@@ -217,7 +217,7 @@ lowlevel.util.ComparableTimSort	lowlevel.util.ComparableTimSort#sort(Array<Objec
 lowlevel.util.ComparableTimSort	lowlevel.util.ComparableTimSort#stackSize	val	ee740514ff371c3b
 lowlevel.util.ComparableTimSort	lowlevel.util.ComparableTimSort#tmp	val	8dfca1e1c9ef8790
 lowlevel.util.ComparableTimSort	lowlevel.util.ComparableTimSort#tmpCount	val	e1ea500fa82a3e88
-lowlevel.util.DynamicArray	lowlevel.util.DynamicArray	class	33575dd7002a5da7
+lowlevel.util.DynamicArray	lowlevel.util.DynamicArray	class	b6a7a500d3c241d6
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#<init>(Array<T>,MkArray<T>)	ctor	0ea647083bda6f1d
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#<init>(DynamicArray<?>,MkArray<T>)	ctor	6d455c3dad32058c
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#<init>(Function1<int,Array<T>>,MkArray<T>)	ctor	523a5a6c6bb44be4
@@ -277,9 +277,9 @@ lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#containsAny(DynamicArray<?
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#ensureCapacity(int)	def	5df22d3873477533
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#equals(Any)	def	991143449e4bfeed
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#equalsIdentity(Object)	def	0ca860de62ad601a
-lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#first()	def	f422c829c1e657d0
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#get(int)	def	fada1a247bd5eb6c
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#hashCode()	def	aa60d66715d43bbe
+lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#head()	def	094029fa0d976f7a
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#indexOf(Nullable<T>,boolean)	def	8300ec75bd1812d5
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#insert(int,T)	def	5fd273305a855523
 lowlevel.util.DynamicArray	lowlevel.util.DynamicArray#insertRange(int,int)	def	0130360b62250e70
@@ -566,7 +566,7 @@ lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#remove()	def	
 lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#reset()	def	8d30ee1fad7b2ed4
 lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#toArray()	def	b464e04b2f897e2b
 lowlevel.util.OrderedMap	lowlevel.util.OrderedMap$OrderedMapValues#toArray(DynamicArray<V>)	def	e3ef56088c7c3170
-lowlevel.util.OrderedSet	lowlevel.util.OrderedSet	class	d22d6de96ae0c1a2
+lowlevel.util.OrderedSet	lowlevel.util.OrderedSet	class	816f317f67a800f3
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#<init>(OrderedSet<?>)	ctor	7c31e59b4835ea56
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#<init>(int)	ctor	b48e58cc144aaea6
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#<init>(int,float)	ctor	298bf91b088c745b
@@ -585,7 +585,7 @@ lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#clear()	def	637ec89359783082
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#clear(int)	def	eed11fc3be7225eb
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#ensureCapacity(int)	def	645dceb5a872876d
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#equals(Any)	def	e1d938f3b301e2ce
-lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#first()	def	55550605d489e4ed
+lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#first()	def	8bc8cc90e7f77d4a
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#hashCode()	def	7b22ca4a5977673d
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#items	val	af600b45d1c1db54
 lowlevel.util.OrderedSet	lowlevel.util.OrderedSet#iterator()	def	3241a8a361e6d274

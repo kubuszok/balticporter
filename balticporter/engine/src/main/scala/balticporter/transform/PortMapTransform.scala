@@ -214,6 +214,7 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       // symbol is in the emitted namespace after `repoint`, an unowned base member is not.
       val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
       val sym = lookup(inEmitNs, e).orElse(lookup(upBare, e))
+      if upBare.contains("Array#first") then
       sym.filter(_.name != newName).map { s =>
         FollowEntry(s, newName, e)
       }
@@ -250,32 +251,22 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     // no early return here: a FORM-only entry (`first()` -> `first`) has no name to follow and is
     // handled by the parenless pass below, which was unreachable behind one (K51).
 
-    // owned symbols go through MemberRenamer (full override-component handling); unowned base
-    // members are renamed directly, since MemberRenamer refuses symbols this program declares.
+    // A follow-rename is a BASE'S DECISION the dependent must honour — it is not a NEW rename
+    // decision. The symbol table IS the identity: renaming a SymId's entry in the table changes
+    // every call site that references that SymId, because the emitter resolves names via
+    // `nm(id) = symbolOf(id).name`. Owned symbols whose component reaches a resolution root
+    // (the base's own class files) are REFUSED by MemberRenamer, but the follow-rename is not
+    // the dependent's to refuse — the base already decided. So ALL follow entries go through
+    // the direct path: update the symbol table entry, the emitter picks up the new name.
     val (owned, unowned) = followEntriesWithFallback.partition(fe => program.owns(fe.sym.id))
 
-    val direct = unowned.distinctBy(_.sym.id)
-    val directTable = direct.foldLeft(program.symbols) { (t, fe) =>
+    val allDirect = (unowned ++ owned).distinctBy(_.sym.id)
+    val directTable = allDirect.foldLeft(program.symbols) { (t, fe) =>
       t.updated(fe.sym.copy(name = fe.newName))
     }
-    val program1 = if direct.isEmpty then program else program.rebuilt(symbols = directTable)
+    val program1 = if allDirect.isEmpty then program else program.rebuilt(symbols = directTable)
 
-    val requests = owned.map { fe =>
-      MemberRenamer.Request(fe.sym.id, fe.newName,
-        Reason.Configured(name, s"${fe.entry.upstream} -> ${fe.entry.emitted}"),
-        fe.entry.upstream, fe.entry.upstream)
-    }
-
-    val program2 = if requests.isEmpty then program1
-    else
-      val graph1 = if direct.isEmpty then graph else OverrideGraph.build(program1)
-      // a getter/setter pair may point to the same symbol
-      val deduped = requests.distinctBy(_.member)
-      val (r, _) = MemberRenamer.rename(program1, graph1, deduped,
-        MemberRenamer.OnCollision.DeferToEmitter, decisions)
-      r
-
-    val renamed = program2
+    val renamed = program1
 
     // strip `()` for parenless members (MemberRenamer renames the name but not the arity),
     // expanded to the whole override component so a dependent's own override follows too.
