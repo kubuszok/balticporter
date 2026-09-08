@@ -18,12 +18,17 @@ final case class ContextHolder(
     selfSupplied: Map[String, String] = Map.empty,
     retain: Map[String, String] = Map.empty,
     cache: Map[String, String] = Map.empty,
+    /** TYPE -> the name of its OWN member (a field or stored constructor parameter) whose type is a
+      * mapped static's: reads of that static, and of paths under it, go through `this.<member>`
+      * and seed no clause — the shape a hand port gives a class already handed the service
+      * (`GLProfiler(graphics)`). Per-declaration; a dependent may add entries (DESIGN.md §8.4). */
+    through: Map[String, String] = Map.empty,
     promoteToClass: Set[String] = Set.empty,
     scope: RuleScope = RuleScope.everywhere,
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
   def fingerprint: String =
-    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache)}"
+    s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through)}"
 
   /** THE HALF A DEPENDENT MAY NOT RESTATE — `ENGINE-LIMITS.md` CT8. These fields are facts about
     * the EMITTED SIGNATURES of the types this policy threads, so a base and dependent must AGREE
@@ -38,7 +43,7 @@ final case class ContextHolder(
     * been refused by the caller, so this only composes. */
   def extendedBy(e: ContextHolderExtension): ContextHolder =
     copy(sites = sites ++ e.sites, selfSupplied = selfSupplied ++ e.selfSupplied,
-         retain = retain ++ e.retain, cache = cache ++ e.cache)
+         retain = retain ++ e.retain, cache = cache ++ e.cache, through = through ++ e.through)
 
 object ContextHolder:
 
@@ -48,7 +53,8 @@ object ContextHolder:
   private[transform] def perDeclaration(sites: Map[String, ContextSite],
                                         selfSupplied: Map[String, String],
                                         retain: Map[String, String],
-                                        cache: Map[String, String]): String =
+                                        cache: Map[String, String],
+                                        through: Map[String, String] = Map.empty): String =
     val ss = sites.toList.map((k, v) => s"$k->${v.token}").sorted.mkString(",")
     val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
     val rs = retain.toList.map((k, v) => s"$k~$v").sorted.mkString(",")
@@ -56,7 +62,8 @@ object ContextHolder:
     // both is two members, not a contradiction. Segment omitted when empty (CLAUDE.md §1(b)'s
     // no-op rule read at the fingerprint) so an unused key taxes no baseline.
     val cs = cache.toList.map((k, v) => s"$k^$v").sorted.mkString(",")
-    s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs")
+    val ts = through.toList.map((k, v) => s"$k@$v").sorted.mkString(",")
+    s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs") + (if ts.isEmpty then "" else s"|$ts")
 
 /** WHAT A DEPENDENT MAY ADD to a base's holder — `ENGINE-LIMITS.md` CT8. [[ContextHolder]] is
   * SHARED SURFACE (§1.5); `sites`/`selfSupplied` key on DECLARATIONS a dependent may itself own,
@@ -69,13 +76,14 @@ final case class ContextHolderExtension(
     selfSupplied: Map[String, String] = Map.empty,
     retain: Map[String, String] = Map.empty,
     cache: Map[String, String] = Map.empty,
+    through: Map[String, String] = Map.empty,
 ):
   /** `+` marks it as an EXTENSION, so it can never fingerprint-collide with the holder it names. */
   def fingerprint: String =
-    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache)}"
+    s"$holder|+${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through)}"
 
   /** every per-declaration key, for the never-fired report and for the `governs` screen. */
-  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet
+  def keys: Set[String] = sites.keySet ++ selfSupplied.keySet ++ retain.keySet ++ cache.keySet ++ through.keySet
 
 /** WHERE the context type comes from: `Injected` (the port wrote the Scala by hand — member paths
   * are unvalidated, so a bad path is a compile error at that line) or `Minted` (the engine

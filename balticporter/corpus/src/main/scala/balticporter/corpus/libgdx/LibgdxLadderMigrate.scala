@@ -282,6 +282,9 @@ object LibgdxLadder:
         // context-free, `Pixmap(w, h, format)` in the demos; its statics still take one); the
         // `Gdx.app.error` inside stays a counted residual global read.
         scope    = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap#dispose")),
+        // sge's `GLProfiler(graphics)` takes no context: the GL statics it swaps are read off the
+        // `graphics` it was handed (DESIGN.md §8.4 `through`).
+        through  = Map("com.badlogic.gdx.graphics.profiling.GLProfiler" -> "graphics"),
         sites    = Map(
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
           "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),

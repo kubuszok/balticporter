@@ -372,6 +372,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
       retain       = c.stringMap("retain").getOrElse(Map.empty),
       cache        = c.stringMap("cache").getOrElse(Map.empty),
+      through      = c.stringMap("through").getOrElse(Map.empty),
     )
 
   private def sites(c: ConfigView): Map[String, ContextSite] =
@@ -404,6 +405,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       selfSupplied = c.stringMap("selfSupplied").getOrElse(Map.empty),
       retain = c.stringMap("retain").getOrElse(Map.empty),
       cache = c.stringMap("cache").getOrElse(Map.empty),
+      through = c.stringMap("through").getOrElse(Map.empty),
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
       scope = TransformFactory.scopeOf(c),
     )

@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=db60580507aa0f67	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=5aa46002b5438ceb	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -10007,9 +10007,9 @@ member	com.badlogic.gdx.graphics.profiling.GLProfiler#<stmt1>	sge.graphics.profi
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#<stmt2>	sge.graphics.profiling.GLProfiler#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	49	82bb1296c98d0add	
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#<stmt3>	sge.graphics.profiling.GLProfiler#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	58	7afd62bd00ffbbd1	
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#getCalls()	sge.graphics.profiling.GLProfiler#calls	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	127	7cb2f42489059a6b	form=parenless
-member	com.badlogic.gdx.graphics.profiling.GLProfiler#disable()	sge.graphics.profiling.GLProfiler#disable()	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	86	ca8dacb7910c422d	
+member	com.badlogic.gdx.graphics.profiling.GLProfiler#disable()	sge.graphics.profiling.GLProfiler#disable()	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	86	2f10971f513e34f9	
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#getDrawCalls()	sge.graphics.profiling.GLProfiler#drawCalls	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	137	86cf3bbc6b0c1d19	form=parenless
-member	com.badlogic.gdx.graphics.profiling.GLProfiler#enable()	sge.graphics.profiling.GLProfiler#enable()	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	62	ac9542d4e80605ca	
+member	com.badlogic.gdx.graphics.profiling.GLProfiler#enable()	sge.graphics.profiling.GLProfiler#enable()	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	62	5bb11aafa4e35cfa	
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#isEnabled	sge.graphics.profiling.GLProfiler#enabled	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	39	ba87fd8290ff03af	name=enabled$field
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#isEnabled()	sge.graphics.profiling.GLProfiler#enabled	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	122	ee616997738c15c5	form=parenless
 member	com.badlogic.gdx.graphics.profiling.GLProfiler#glInterceptor	sge.graphics.profiling.GLProfiler#glInterceptor	Renamed	-	com/badlogic/gdx/graphics/profiling/GLProfiler.java	37	afecb3e8f75099eb	

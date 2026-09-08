@@ -58,7 +58,7 @@ final class GlobalsToImplicitsTransform(
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
       (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
-       h.cache.keySet ++ h.promoteToClass ++ h.scope.entries))
+       h.cache.keySet ++ h.through.keySet ++ h.promoteToClass ++ h.scope.entries))
     val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
@@ -107,19 +107,27 @@ final class GlobalsToImplicitsTransform(
         v2       <- mine(k).cache.get(key)
         if v2 != v
       yield s"""both modules CACHE the context on "$key", as "$v2" and as "$v""""
+      // and for the member a type reads the holder THROUGH: two members is two emitted bodies.
+      val throughClash = for
+        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v) <- theirs(k).through.toList.sorted
+        v2       <- mine(k).through.get(key)
+        if v2 != v
+      yield s"""both modules read the holder THROUGH a member on "$key", "$v2" and "$v""""
       val givenClash = for
         (k, v) <- o.requiredGivens.toList.sorted
         v2     <- requiredGivens.get(k)
         if v2 != v
       yield s"""both modules require a given on "$k", "$v2" and "$v""""
-      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash ++ givenClash) match
+      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash ++ throughClash ++ givenClash) match
         case Nil =>
           val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
             (mine.get(k), theirs.get(k)) match
               case (Some(a), Some(b)) => a.copy(sites = a.sites ++ b.sites,
                                                 selfSupplied = a.selfSupplied ++ b.selfSupplied,
                                                 retain = a.retain ++ b.retain,
-                                                cache = a.cache ++ b.cache)
+                                                cache = a.cache ++ b.cache,
+                                                through = a.through ++ b.through)
               case (Some(a), None)    => a
               case (None, Some(b))    => b
               case (None, None)       => sys.error("unreachable: a key from the union of two maps")
@@ -149,6 +157,8 @@ final class GlobalsToImplicitsTransform(
   private var boundRetain: Map[String, Map[SymId, String]]        = Map.empty
   /** `cache` entries resolved per holder: TYPE symbol -> the policy key that named it. */
   private var boundCache: Map[String, Map[SymId, String]]         = Map.empty
+  /** `through` entries resolved per holder: TYPE symbol -> the policy key that named it. */
+  private var boundThrough: Map[String, Map[SymId, String]]       = Map.empty
   /** `requiredGivens` entries resolved to the class symbol — class SymId -> given type FQN. */
   private var boundGivens: Map[SymId, String]                     = Map.empty
 
@@ -238,6 +248,17 @@ final class GlobalsToImplicitsTransform(
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache", t)
           .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
 
+      // …and `through`'s: the value is a MEMBER NAME of the keyed type, looked up at run time; it is
+      // never spliced, so only its shape is screened here.
+      h.through.toList.sorted.foreach { (t, nm) =>
+        if !isPlainIdentifier(nm) then
+          malformedEntry(h, "through", t, s"`$nm` is not a plain identifier. Give the NAME of the member " +
+            "(a field, or a constructor parameter the class stores) whose type is a mapped static's " +
+            "— the one this type reads the holder through instead of taking a clause")
+      }
+      boundThrough = boundThrough.updated(h.holder, h.through.toList.sorted.flatMap((t, nm) =>
+        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through", t)
+          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
           .toOption))
@@ -490,11 +511,41 @@ final class GlobalsToImplicitsTransform(
     /** the types a `cache` entry actually minted on — complements the dead-binding report, since a
       * `cache` key binds against a real class whether or not the closure threaded it. ENGINE-LIMITS CT6 */
     val cacheFired = collection.mutable.Set.empty[SymId]
+    /** the type -> (its own member the holder is read through, that member's type, the context hop
+      * the member stands for). An entry naming no such member, or a member whose type no single-hop
+      * static has, is a counted finding and threads as before. */
+    val throughOf: Map[SymId, (SymId, TypeRepr, String)] =
+      boundThrough.getOrElse(h.holder, Map.empty).flatMap { (c, key) =>
+        val nm = h.through(key)
+        def head(t: TypeRepr): Option[SymId] = t match
+          case TypeRepr.TypeRef(_, s)        => Some(s)
+          case TypeRepr.AppliedType(t2, _)   => head(t2)
+          case _                             => scala.None
+        val member = program0.symbols.all.find(s =>
+          s.owner == c && s.name == nm && !s.flags.isStatic && !PolicyBinder.isExecutable(s.info))
+        val hop = member.flatMap(m => head(m.info)).flatMap(t =>
+          statics.toList.sortBy(_._2).collectFirst {
+            case (st, path) if !path.contains('.') && program0.symbolOf(st).flatMap(s => head(s.info)).contains(t) => path
+          })
+        (member, hop) match
+          case (Some(m), Some(p)) => Some(c -> (m.id, m.info, p))
+          case (scala.None, _) =>
+            deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
+              key, PolicyIssue.Unverifiable, s"`$nm` is not a non-static field of this type, so there is " +
+                "nothing to read the holder through; the type threads as before")
+            scala.None
+          case (Some(_), scala.None) =>
+            deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
+              key, PolicyIssue.Unverifiable, s"no single-hop mapped static has `$nm`'s type, so no context " +
+                "member is the one this field stands for; the type threads as before")
+            scala.None
+      }
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
                                 boundSites.getOrElse(h.holder, Map.empty),
-                                selfSupplied)
+                                selfSupplied,
+                                throughOf)
     need.grow()
 
     // CT11: remove stale UnsuppliableUse seams for fields that became holders — the growth
@@ -590,6 +641,10 @@ final class GlobalsToImplicitsTransform(
         statics.get(s).flatMap(path => plan.get(s -> at) match
           case Some(ReadPlan.Threaded) => Some(pathOn(contextExpr, path, tpe, at))
           case Some(ReadPlan.Global)   => Some(pathOn(Tree.Ident(globalSym, ctxRef, o), path, tpe, at))
+          case Some(ReadPlan.Through(c, m, mTpe, hop)) =>
+            val clsRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, c)
+            val base   = Tree.Select(Tree.This(c, clsRef, at), m, mTpe, at)
+            Some(pathOn(base, path.stripPrefix(hop).stripPrefix("."), tpe, at))
           case _                       => scala.None)
 
     // ---- the signature edits --------------------------------------------------------------------
@@ -754,6 +809,7 @@ final class GlobalsToImplicitsTransform(
     recordFieldHolders(out, h, need, ctxFqn)
     recordDeadSelf(h, need)
     recordDeadRetain(h, need)
+    recordThrough(out, h, need, throughOf)
     recordDeadCache(h, cacheFired.toSet)
     // LAST: `readPlan` above consults residual-global/refuse `sites` entries.
     recordDeadSites(h, need.firedSites)
@@ -901,6 +957,34 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
+  /** ONE ROW PER TYPE THAT READ THE HOLDER THROUGH ITS OWN MEMBER — `ContextHolder.through`; a
+    * bound entry no read went through is reported, since removing it changes no emitted byte. */
+  private def recordThrough(p: Program, h: ContextHolder, need: ContextNeed,
+                            throughOf: Map[SymId, (SymId, TypeRepr, String)]): Unit =
+    val keyOf = boundThrough.getOrElse(h.holder, Map.empty)
+    val fired = need.throughFired
+    throughOf.toList.sortBy(_._1.raw).foreach { case (c, (m, _, hop)) =>
+      if fired(c) then
+        p.symbolOf(c).foreach(sym => record(Decision(
+          kind = Decision.Kind.RedirectedCall, subject = c, subjectFqn = sym.fullName,
+          detail = Map(
+            "member" -> p.symbolOf(m).map(_.name).getOrElse("?"),
+            "hop"    -> hop,
+            "from"   -> s"`${h.holder}` statics under `$hop`, read through the context",
+            "to"     -> "the same paths on this type's own member",
+            "why"    -> ("this type is handed the service the statics live on, so the port reads " +
+              "them off what it was given instead of taking a constructor clause — the reference " +
+              "port's shape; identical while the member is the context's own service"),
+          ),
+          reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
+          origin = Decision.originOf(p, c),
+        )))
+      else
+        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
+          keyOf.getOrElse(c, "?"), PolicyIssue.NeverMatched, "the entry bound, but no read of the " +
+            "holder inside an instance member of this type is under the member's context hop; nothing " +
+            "was redirected and removing the entry would change no emitted byte")
+    }
   /** ONE ROW PER TYPE THAT CACHED ITS CONTEXT — `ContextHolder.cache`. An `InjectedMember`: no
     * signature moved, the port gained two companion members, one PUBLIC. Subject is the TYPE. */
   private def recordCached(p: Program, h: ContextHolder, ctxFqn: String,
@@ -1006,6 +1090,8 @@ object GlobalsToImplicitsTransform:
     case Global
     /** left exactly as it is — the `refuse` boundary, and a scoped-out declaration. Also counted. */
     case Leave
+    /** through the enclosing type's OWN member (`ContextHolder.through`): `this.<member>.<rest>`. */
+    case Through(cls: SymId, member: SymId, memberTpe: TypeRepr, hop: String)
 
   def isCtor(p: Program, s: SymId): Boolean = p.symbolOf(s).exists(_.name == "<init>")
 

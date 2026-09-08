@@ -23,6 +23,9 @@ final class ContextNeed(
     /** the `selfSupplied` entries that BOUND: the TYPE a framework instantiates → the policy key
       * that said so. Empty is the pre-CT7 code path. // ENGINE-LIMITS CT7 */
     selfSupplied: Map[SymId, String] = Map.empty,
+    /** the `through` entries that BOUND: TYPE -> (own member, its type, the context hop it stands
+      * for). A read under that hop inside an instance member of the type is no seed. */
+    through: Map[SymId, (SymId, TypeRepr, String)] = Map.empty,
 ):
   import ContextNeed.*
   import GlobalsToImplicitsTransform.ReadPlan
@@ -48,6 +51,29 @@ final class ContextNeed(
     }).distinct.sortBy((s, o, _) => (o.javaPath, o.line, o.col, s.raw))
 
   private val siteCache = collection.mutable.Map.empty[SymId, Site]
+  /** the `through` types a read actually went through. */
+  private val throughS = collection.mutable.Set.empty[SymId]
+  def throughFired: Set[SymId] = throughS.toSet
+  /** a read of `st` at `enc` that goes THROUGH the enclosing type's own member: the enclosing
+    * declared class is a `through` type, no static member lies between, and the static's path is
+    * the member's hop or under it. */
+  private def throughRead(st: SymId, enc: SymId): Option[ReadPlan.Through] =
+    if through.isEmpty then return scala.None
+    @annotation.tailrec
+    def owningClass(s: SymId, fuel: Int): Option[SymId] =
+      if s == SymId.None || fuel <= 0 then scala.None
+      else program.symbolOf(s) match
+        case scala.None => scala.None
+        case Some(sym) =>
+          if isType(s) then (if isDeclaredClass(s) then Some(s) else scala.None)
+          else if sym.flags.isStatic then scala.None
+          else owningClass(sym.owner, fuel - 1)
+    for
+      c              <- owningClass(enc, 64)
+      (m, mTpe, hop) <- through.get(c)
+      path            = statics.getOrElse(st, "")
+      if path == hop || path.startsWith(hop + ".")
+    yield ReadPlan.Through(c, m, mTpe, hop)
 
   /** The climb: from the declaration a read is IN, to the declaration that can carry a clause.
     *
@@ -322,7 +348,8 @@ final class ContextNeed(
     * and cycle-safe (a node is expanded once). */
   def grow(): Unit =
     reads.foreach { (st, at, enc) =>
-      if !inScope(enc) then scopedS += enc
+      if throughRead(st, enc).isDefined then ()
+      else if !inScope(enc) then scopedS += enc
       else siteOf(enc) match
         case Site.Method(m, _)   => enqueue(Node.M(m), Edge(Edge.Kind.Seed, st, m, at))
         case Site.Cls(c, _)      => enqueue(Node.C(c), Edge(Edge.Kind.Seed, st, c, at))
@@ -624,7 +651,11 @@ final class ContextNeed(
   lazy val readPlan: Map[(SymId, Origin), ReadPlan] =
     reads.map { (st, at, enc) =>
       val key = st -> at
-      if deferredReads.contains(key) then key -> ReadPlan.Threaded
+      val viaMember = throughRead(st, enc)
+      if viaMember.isDefined then
+        throughS += viaMember.get.cls
+        key -> viaMember.get
+      else if deferredReads.contains(key) then key -> ReadPlan.Threaded
       else if scopedS.contains(enc) then key -> ReadPlan.Leave
       else
         siteOf(enc) match

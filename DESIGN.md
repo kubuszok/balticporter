@@ -1180,7 +1180,18 @@ context parameter; a hand-maintained threaded-method list (§5.1); context funct
 emission shape (no java analogue, right only at hand-written consumer bootstrap); de-statifying the
 holder in place as the only mode (subsumed by `mint` at the holder's own FQN).
 
-### 8.5 `OverrideGraph`, `MemberRenamer`, and the property transform
+#**`through` — a class handed the service reads the statics off it.** `GLProfiler(Graphics graphics)`
+swaps `Gdx.gl*`, whose mapped paths are `graphics.getGL20()…`: the class already holds the very object
+the context member is. `through = Map(type -> member)` makes every read under that member's hop,
+inside an instance member of the type, `this.<member>.<rest>` (a write through a getter hop is still the
+setter's call), and such a read seeds no clause — so a class whose only reads are through the member
+takes none, the hand port's shape. The hop is derived from the MEMBER'S TYPE against the single-hop
+statics; an entry naming no such member, or one whose type no static has, is a counted finding and the
+type threads as before; a bound entry no read went through is reported dead. Identical to the threaded
+form exactly while the member is the context's own service — which is the same assumption the java
+made when it stored the parameter and read the global in one body.
+
+## 8.5 `OverrideGraph`, `MemberRenamer`, and the property transform
 **Decision.** Two layers, both in `api`. **`OverrideGraph`**: member-level correspondence across a
 hierarchy — `parentsOf`, `childrenOf`, `overridden`, `closureOf` (owned members + `externalAnchors` +
 `baseAnchors`). **`MemberRenamer`**: expands rename requests through those closures, refuses anchored

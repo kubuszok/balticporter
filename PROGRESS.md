@@ -2304,6 +2304,20 @@ member-shape 190 -> 178. The android residue is now sge's OWN JVM-row tests: 29 
 *filetype* card), `Timer.disposeThread`, `FileHandleResolver.Resolution/Prefix`,
 `PoolManager.addPool[T: ClassTag]` (member-shape extras), `XmlElement` (JS residue's type).
 
+**`through` — the profiler's shape (2026-09-08 03:45).** The context step gains a per-declaration
+`through = Map(type -> member)`: a class already handed the service a mapped static lives on
+(`GLProfiler(Graphics graphics)` swapping `Gdx.gl*`) reads the statics off `this.<member>` and such
+reads seed no clause, so the class takes none — sge's `GLProfiler(graphics)`. The hop is derived from
+the member's TYPE against the single-hop statics; a bad entry is a counted finding and the type threads
+as before; a dead entry is reported. Engine (universal mechanism, one manifest row). `sge-l0` 0 = 0,
+JS 14 = 14, Native 0, suite 216/220, demos 12/12, 3 members moved (all `GLProfiler`).
+**`sge-suite-check` 722 -> 693**: context 50 -> 23. The remaining `No given Sge` sites are the file
+layer: `FileHandle` (java reads `Gdx.files.getExternalStoragePath()` in `file()`; sge takes the path as
+a constructor VALUE, `FileHandle(file, type, externalStoragePath = Nullable.empty)`) — the next
+mechanism: a captured static VALUE becomes a field plus companion `apply(javaCtorArgs, value)`
+overloads, generated callers pass the context's value at construction (the read moves from use to
+construction: the hand port's own decision, recorded per class), reads inside the class go to the field.
+
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.
