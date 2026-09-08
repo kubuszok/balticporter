@@ -168,7 +168,10 @@ object LibgdxLadder:
     // members sge ships public where java declared them protected (`FileHandle(File, FileType)`), off sge's tree
     "visibility" -> List(new balticporter.transform.VisibilityTransform(
       widen = Set("com.badlogic.gdx.scenes.scene2d.InputEvent#type",
-        "com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool"),
+        "com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool",
+        "com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#edges",
+        "com.badlogic.gdx.graphics.g3d.particles.ResourceData#data",
+        "com.badlogic.gdx.graphics.g3d.particles.ResourceData#uniqueData"),
       derive = derive)),
     // sge's OWN members the suite reaches for, read verbatim off sge's tree by name (DESIGN.md §8.30 (8));
     // a member whose body wants a type the port lacks comes off this list with its finding
@@ -189,8 +192,16 @@ object LibgdxLadder:
       // (`Table.isClip`/`Actor.isDebug` read sge's PRIVATE `_clip`/`_debug`: a private member is not
       // surface, so the field-name derivation never sees it — 4 suite sites stay)
       "com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy" -> List("setCamera"),
-      "com.badlogic.gdx.scenes.scene2d.utils.Selection"           -> List("toList"),
       "com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter" -> List("genMipMaps"),
+      "com.badlogic.gdx.graphics.g3d.particles.ResourceData" -> List(
+        "toJson", "resourceJson",
+        "SaveValueCodec", "saveValueToJson", "saveValueFromJson",
+        "resolveClassName", "taggedValue", "normalizeSaveValueTag", "classNameMap",
+        "valueCodecs", "registerValueCodec",
+        "assetDataFromJson", "saveDataFromJson", "saveDataToJson"),
+      "com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch" -> List("ensureCodecRegistered"),
+      "com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer" -> List("_modelFilenames"),
+      "com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer" -> List("_effectReferences"),
       // `getAs[T: ClassTag]` over the port's `get(key): Nullable[Object]`
       "com.badlogic.gdx.maps.MapProperties"               -> List("getAs"),
       // sge keeps `XmlReader.Element` as an alias of the promoted `XmlElement` (the demos use it)
@@ -198,6 +209,17 @@ object LibgdxLadder:
       // sge keeps java's setters AND spells each as a property setter (`x_=` = `setX(value)`)
       "com.badlogic.gdx.scenes.scene2d.Actor" -> List("x_=", "y_=", "width_=", "height_=", "scaleX_=", "scaleY_=", "rotation_=",
         ))),
+      // encodeResourceJson stub (the full body needs ParticleEffectCodecs injected)
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.graphics.g3d.particles.ResourceData" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("encodeResourceJson", 1,
+            "private[particles] def encodeResourceJson(resource: Any): sge.utils.Json =\n    throw new UnsupportedOperationException(\"particle resource serialization requires ParticleEffectCodecs\")",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ResourceData#encodeResourceJson"),
+            Some("stub — the full body needs the codecs injected"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("fromJson", 1,
+            "private[particles] def fromJson[T <: java.lang.Object](json: sge.utils.Json): sge.graphics.g3d.particles.ResourceData[T] = {\n    val rd = new sge.graphics.g3d.particles.ResourceData[T]()\n    json match {\n      case sge.utils.Json.Obj(fields) =>\n        fields.fields.foreach { case (k, v) =>\n          if (k == \"assets\") v match {\n            case sge.utils.Json.Arr(elems) => for (elem <- elems) rd.sharedAssets.add(assetDataFromJson(elem).asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[T]])\n            case _ => ()\n          }\n        }\n        fields.fields.foreach { case (k, v) => k match {\n          case \"data\" => v match {\n            case sge.utils.Json.Arr(elems) => for (elem <- elems) rd.data.add(saveDataFromJson(elem, rd))\n            case _ => ()\n          }\n          case \"unique\" => v match {\n            case sge.utils.Json.Obj(uf) => uf.fields.foreach { case (uk, uv) => rd.uniqueData.put(uk, saveDataFromJson(uv, rd)) }\n            case _ => ()\n          }\n          case \"resource\" => v match {\n            case sge.utils.Json.Null => ()\n            case other => rd.resourceJson = lowlevel.Nullable(other)\n          }\n          case _ => ()\n        }}\n      case _ => throw new java.lang.IllegalArgumentException(\"Expected JSON object for ResourceData\")\n    }\n    rd\n  }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ResourceData#fromJson"),
+            Some("sge's ResourceData.fromJson with T <: Object bound"), true)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(

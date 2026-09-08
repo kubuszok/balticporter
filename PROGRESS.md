@@ -2436,6 +2436,16 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Particles/JSON infrastructure injected (2026-09-08 15:00).** `ParticleEffectCodecs.scala` (2060
+lines) adapted to the port's field names (`_active` for `active`, `AnyRef` for `Any` at the `T <: Object`
+bound, `toArray()` with parens on `IntArray`). `ResourceData` gained 15 companion methods from the
+reference (SaveValueCodec trait, toJson, fromJson with the bound fix, saveValueToJson, saveValueFromJson,
+resolveClassName, classNameMap, taggedValue, normalizeSaveValueTag, valueCodecs, registerValueCodec,
+saveDataToJson, saveDataFromJson, assetDataFromJson, encodeResourceJson stub) plus the instance-level
+`toJson` and `resourceJson`. `ModelInfluencer._modelFilenames`, `ParticleControllerInfluencer._effectReferences`,
+and `BillboardParticleBatch.ensureCodecRegistered` spliced. `edges`/`data`/`uniqueData` visibility widened.
+**`sge-suite-check` 170 -> 146** (particles 34 -> 10). JVM 0, JS 0, Native 0, suite 216/216, demos 12/12.
+
 **Structural floor at 170 (2026-09-08 14:00).** Session total: sge-suite-check 368 -> 170 (198 resolved,
 54%%). Port compiles clean on all platforms (JVM 0, JS 0, Native 0), port tests all pass (216/216), demos
 12/12. The remaining 170 are structural gaps between sge's hand-rewritten API and the port's faithful
