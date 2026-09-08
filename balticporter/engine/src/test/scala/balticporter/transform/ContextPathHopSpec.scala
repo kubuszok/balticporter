@@ -37,3 +37,31 @@ class ContextPathHopSpec extends munit.FunSuite:
     assert(out.contains(".graphics.setGL20(x)"),
       out.linesIterator.filter(l => l.contains("setGL20") || l.contains("getGL20 =")).mkString("\n"))
   }
+
+  test("a read whose member an earlier phase WRAPPED is unwrapped at the hop") {
+    val wrapped =
+      """package com.demo;
+        |class Box<T> { T orNull() { return null; } }
+        |interface GL30 { void glClear (int mask); }
+        |interface Graphics { Box<GL30> getGL30 (); }
+        |class Gdx {
+        |  public static Graphics graphics;
+        |  public static GL30 gl30;
+        |}
+        |class User {
+        |  boolean has () { return Gdx.gl30 != null; }
+        |  void clear () { Gdx.gl30.glClear(1); }
+        |}
+        |""".stripMargin
+    val phase = new GlobalsToImplicitsTransform(holders = List(ContextHolder(
+      holder   = "com.demo.Gdx",
+      context  = ContextType.Injected("com.demo.Ctx"),
+      members  = Map("graphics" -> "graphics", "gl30" -> "graphics.gl30"),
+      attach   = ContextAttach.Class,
+      reader   = ContextReader.Summon,
+      boundary = ContextBoundary.Refuse)))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(wrapped, "Demo.java"), List(phase))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains(".graphics.getGL30().orNull != null"))
+    assert(out.contains(".graphics.getGL30().orNull.glClear(1)"))
+  }

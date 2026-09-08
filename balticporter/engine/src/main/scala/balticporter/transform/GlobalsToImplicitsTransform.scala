@@ -719,14 +719,52 @@ final class GlobalsToImplicitsTransform(
       segCache.getOrElseUpdate(nm + "(v)",
         mint.member(nm, MemberKey(ctxFqn, nm + "(v)").render, ctxSym,
           TypeRepr.MethodType(List(("value", valueTpe)), TypeRepr.NoType), Flags()))
+    /** the program type a mapped static's PATH SEGMENT reaches (`graphics` -> the `Graphics` type): the
+      * first hop off an injected context is typed by the static that maps to it. */
+    def staticTypeOf(seg: String): Option[SymId] =
+      statics.collectFirst { case (st, pth) if pth == seg => st }.flatMap(program0.symbolOf).map(_.info).flatMap {
+        case TypeRepr.TypeRef(_, t) => Some(t); case TypeRepr.AppliedType(TypeRepr.TypeRef(_, t), _) => Some(t); case _ => scala.None }
+    def headSymOf(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(t2, _) => headSymOf(t2); case _ => scala.None
+    def resultOf(m: Symbol): TypeRepr = m.info match
+      case TypeRepr.MethodType(_, r, _) => r
+      case other                        => other
+    /** the REAL member a path segment names on a program type — by its own name or java's getter
+      * spelling of it (`gl30` for `getGL30()`), a field or a nilary method — so every later phase
+      * (a derived `Nullable`, the bean fold, a rename) sees an ordinary reference and not a minted name. */
+    def realMember(owner: SymId, seg: String): Option[Symbol] =
+      val nilary = (m: Symbol) => m.info match
+        case TypeRepr.MethodType(Nil, _, _)               => true
+        case _: TypeRepr.MethodType | _: TypeRepr.PolyType => false
+        case _                                             => true
+      val all = program0.symbols.all.filter(m => m.owner == owner && !m.flags.isStatic && nilary(m)).toList
+      all.find(_.name == seg).orElse(all.find(m => m.name.equalsIgnoreCase("get" + seg) || m.name.equalsIgnoreCase("is" + seg)))
+    /** the real setter beside a real getter hop, for a WRITE through it. */
+    val realSetterOf = collection.mutable.Map.empty[SymId, Option[SymId]]
     def pathOn(base: Term, path: String, tpe: TypeRepr, at: Origin): Term =
       val segs = path.split('.').toList.filter(_.nonEmpty)
-      segs.zipWithIndex.foldLeft(base) { case (q, (seg, i)) =>
+      var hopType: Option[SymId] = scala.None
+      segs.zipWithIndex.foldLeft(base) { case (q, (seg0, i)) =>
+        val seg    = seg0.stripSuffix("()")
         val hopTpe = if i == segs.size - 1 then tpe else TypeRepr.NoType
-        if seg.endsWith("()") then
-          val m = segMethodSym(seg.stripSuffix("()"), hopTpe)
-          Tree.Apply(Tree.Select(q, m, TypeRepr.NoType, at), Nil, m, hopTpe, at)
-        else Tree.Select(q, segSym(seg), hopTpe, at)
+        hopType.flatMap(t => realMember(t, seg)) match
+          case Some(m) =>
+            hopType = headSymOf(resultOf(m))
+            val setterName =
+              if m.name.startsWith("get") then "set" + m.name.drop(3)
+              else if m.name.startsWith("is") then "set" + m.name.drop(2)
+              else "set" + m.name.capitalize
+            realSetterOf.getOrElseUpdate(m.id, program0.symbols.all.find(s => s.owner == m.owner && !s.flags.isStatic &&
+              s.name == setterName && (s.info match { case TypeRepr.MethodType(List(_), _, _) => true; case _ => false })).map(_.id))
+            m.info match
+              case TypeRepr.MethodType(Nil, r, _) => Tree.Apply(Tree.Select(q, m.id, TypeRepr.NoType, at), Nil, m.id, r, at)
+              case other                          => Tree.Select(q, m.id, other, at)
+          case scala.None =>
+            hopType = staticTypeOf(seg)
+            if seg0.endsWith("()") then
+              val m = segMethodSym(seg, hopTpe)
+              Tree.Apply(Tree.Select(q, m, TypeRepr.NoType, at), Nil, m, hopTpe, at)
+            else Tree.Select(q, segSym(seg), hopTpe, at)
       }
 
     // ---- the DEFERRED-INIT rewrite, first: it MINTS a threaded method the read pass then visits --
@@ -773,6 +811,10 @@ final class GlobalsToImplicitsTransform(
         case Tree.Assign(Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _), rhs, _, at, None) if methodHops.contains(m) =>
           val setter = setterFor(methodHops(m), rhs.tpe)
           Tree.Apply(Tree.Select(q, setter, TypeRepr.NoType, at), List(rhs), setter, TypeRepr.NoType, at)
+        // a write through a REAL getter hop is the real setter's call
+        case Tree.Assign(Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _), rhs, _, at, None) if realSetterOf.get(m).exists(_.isDefined) =>
+          val setter = realSetterOf(m).get
+          Tree.Apply(Tree.Select(q, setter, TypeRepr.NoType, at), List(rhs), setter, TypeRepr.NoType, at)
         case other => other
       private def capturedReadOf(q: Term): Option[ReadPlan.Captured] = q match
         case Tree.Ident(s, _, qo)     => capturedPlans.get(s -> qo)
@@ -790,10 +832,37 @@ final class GlobalsToImplicitsTransform(
               Tree.Apply(Tree.Ident(ap, TypeRepr.NoType, at), args :+ v, ap, tpe, at)
             case scala.None => t
         case _ => t
-      private def read(s: SymId, tpe: TypeRepr, at: Origin): Option[Term] =
+      /** the java static's type against the type of the member its path ends on: where an earlier
+        * phase WRAPPED that member (`getGL30(): Nullable[GL30]` under a static `GL30 gl30`), the
+        * read is unwrapped null-preservingly (`.orNull`) — the seam this rewrite creates, closed
+        * where the shapes differ by exactly one wrapper (CLAUDE.md §1(b): every seam is counted). */
+      private val orNullSym = mint.member("orNull", MemberKey(ctxFqn, "<orNull>").render, ctxSym, TypeRepr.NoType, Flags())
+      private def unwrapIfWrapped(term: Term, path: String, staticTpe: TypeRepr, at: Origin)(using p: Program): Term =
+        val segs = path.split('.').toList.filter(_.nonEmpty)
+        if segs.size != 2 then term
+        else
+          // the path may already spell the PROPERTY (`gl30`) the bean step makes of java's getter
+          // (`getGL30()`): the member is found under either spelling
+          val seg = segs(1).stripSuffix("()")
+          val forms = Set(seg, "get" + seg, "is" + seg).map(_.toLowerCase)
+          val hopStatic = statics.collectFirst { case (st, pth) if pth == segs.head => st }
+          val hopType   = hopStatic.flatMap(p.symbolOf).map(_.info).flatMap {
+            case TypeRepr.TypeRef(_, t) => Some(t); case TypeRepr.AppliedType(TypeRepr.TypeRef(_, t), _) => Some(t); case _ => scala.None }
+          val method    = hopType.flatMap(t => p.symbols.all.find(m => m.owner == t && forms(m.name.toLowerCase) &&
+            (m.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _: TypeRepr.MethodType | _: TypeRepr.PolyType => false; case _ => true })))
+          val result    = method.map(_.info).map { case TypeRepr.MethodType(_, r, _) => r; case other => other }
+          def headOf(t: TypeRepr): Option[SymId] = t match
+            case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(t2, _) => headOf(t2); case _ => scala.None
+          (result, staticTpe) match
+            case (Some(TypeRepr.AppliedType(_, List(arg))), st) if headOf(arg).isDefined && headOf(arg) == headOf(st) && result.get != st =>
+              Tree.Select(term, orNullSym, st, at)
+            case _ => term
+      private def read(s: SymId, tpe: TypeRepr, at: Origin)(using p: Program): Option[Term] =
+        // the static's DECLARED type, not the node's (a node may carry none)
+        val declared = p.symbolOf(s).map(_.info).filter(_ != TypeRepr.NoType).getOrElse(tpe)
         statics.get(s).flatMap(path => plan.get(s -> at) match
-          case Some(ReadPlan.Threaded) => Some(pathOn(contextExpr, path, tpe, at))
-          case Some(ReadPlan.Global)   => Some(pathOn(Tree.Ident(globalSym, ctxRef, o), path, tpe, at))
+          case Some(ReadPlan.Threaded) => Some(unwrapIfWrapped(pathOn(contextExpr, path, tpe, at), path, declared, at))
+          case Some(ReadPlan.Global)   => Some(unwrapIfWrapped(pathOn(Tree.Ident(globalSym, ctxRef, o), path, tpe, at), path, declared, at))
           case Some(ReadPlan.Through(c, m, mTpe, hop)) =>
             val clsRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, c)
             val base   = Tree.Select(Tree.This(c, clsRef, at), m, mTpe, at)

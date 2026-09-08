@@ -65,12 +65,14 @@ object ReferencePolicy:
     /** a java accessor pair is ONE property in the hand port (the bean step's own convention): a
       * getter `getX()`/`isX()` is also read at `x` (a `def` or a `val`/`var`), a setter `setX(v)` at
       * `x_=` or the `var x` — the property's type is the slot's. */
-    def propertyName(name: String): Option[String] =
-      def decap(s: String) = if s.nonEmpty && s.head.isUpper then s.head.toLower + s.tail else s
-      if name.length > 3 && name.startsWith("get") && name(3).isUpper then Some(decap(name.drop(3)))
-      else if name.length > 2 && name.startsWith("is") && name(2).isUpper then Some(decap(name.drop(2)))
-      else if name.length > 3 && name.startsWith("set") && name(3).isUpper then Some(decap(name.drop(3)))
+    /** the accessor's remainder as java wrote it (`GL30Available` for `isGL30Available`). */
+    def propertyRaw(name: String): Option[String] =
+      if name.length > 3 && name.startsWith("get") && name(3).isUpper then Some(name.drop(3))
+      else if name.length > 2 && name.startsWith("is") && name(2).isUpper then Some(name.drop(2))
+      else if name.length > 3 && name.startsWith("set") && name(3).isUpper then Some(name.drop(3))
       else scala.None
+    def decap(s: String) = if s.nonEmpty && s.head.isUpper then s.head.toLower + s.tail else s
+    def propertyName(name: String): Option[String] = propertyRaw(name).map(decap)
     /** `GL30Available` -> `gl30Available`, `URLPath` -> `urlPath`: a leading acronym lowered whole,
       * keeping its last letter where the next word begins with one (the hand port's casing). */
     def lowerAcronym(s: String): String =
@@ -79,8 +81,8 @@ object ReferencePolicy:
       else if s.length > run && s(run).isLower then s.take(run - 1).toLowerCase + s.drop(run - 1)
       else s.take(run).toLowerCase + s.drop(run)
     def lookupMethod(paths: List[String], name: String, arity: Int, pkg: String): Option[List[SurfaceDecl]] =
-      lookup(paths, "def", name, arity, pkg).orElse(propertyName(name).flatMap(p0 =>
-        List(p0, lowerAcronym(p0)).distinct.iterator.map(prop => lookupProp(paths, name, arity, pkg, prop)).collectFirst { case Some(x) => x }))
+      lookup(paths, "def", name, arity, pkg).orElse(propertyRaw(name).flatMap(raw =>
+        List(decap(raw), lowerAcronym(raw)).distinct.iterator.map(prop => lookupProp(paths, name, arity, pkg, prop)).collectFirst { case Some(x) => x }))
     def lookupProp(paths: List[String], name: String, arity: Int, pkg: String, prop: String): Option[List[SurfaceDecl]] =
       Some(prop).flatMap { prop =>
         if arity == 0 && !name.startsWith("set") then
@@ -121,6 +123,28 @@ object ReferencePolicy:
       case _                        => false
     def simpleOf(refType: String): String =
       refType.takeWhile(c => c != '[' && c != ' ' && c != '|').split('.').last
+    /** the emitted simple name of a java type, through the manifest's renames (retargets included). */
+    def javaSimple(t: TypeRepr): Option[String] = t match
+      case TypeRepr.TypeRef(_, s)      => program.symbolOf(s).map(sym => typeRenames.getOrElse(sym.fullName, sym.name))
+      case TypeRepr.AppliedType(t2, _) => javaSimple(t2)
+      case _                           => scala.None
+    def refSimple(refType: String): String =
+      val stripped = NullWrappers.foldLeft(refType.trim)((acc, w) =>
+        if acc.startsWith(w + "[") && acc.endsWith("]") then acc.drop(w.length + 1).dropRight(1) else acc)
+      simpleOf(stripped)
+    /** among several reference candidates at one key, those whose parameter types match java's best
+      * (`BitmapFont(data, Array<TextureRegion>, boolean)` against the primary taking a `DynamicArray`
+      * and a secondary taking a `TextureRegion`); a tie keeps them all and agreement decides. */
+    def bestByParams(cands: List[SurfaceDecl], params: List[Tree.ValDef]): List[SurfaceDecl] =
+      if cands.size <= 1 then cands
+      else
+        val js = params.map(p => javaSimple(p.tpt.tpe))
+        val scored = cands.map { c =>
+          val rs = c.explicitParamTypes.map(refSimple)
+          c -> js.zip(rs).count { case (Some(j), r) => j == r; case _ => false }
+        }
+        val top = scored.map(_._2).max
+        scored.filter(_._2 == top).map(_._1)
     def nullWrapped(refType: String): Boolean =
       NullWrappers.exists(w => refType.startsWith(w + "[")) || refType.endsWith("| Null") || refType.endsWith("|Null")
 
@@ -234,7 +258,7 @@ object ReferencePolicy:
                     // the reference spells the property with its acronym LOWERED (`gl30Available`): the
                     // pair folds to that name — a row carrying the target, since the detector's own
                     // spelling keeps the acronym
-                    val acr = lowerAcronym(prop)
+                    val acr = propertyRaw(ms.name).map(lowerAcronym).getOrElse(prop)
                     if acr != prop && lookup(mp, "def", ms.name, n, pkg).isEmpty then
                       val refHas = (kind: String, nm: String, a: Int) => lookup(mp, kind, nm, a, pkg).isDefined
                       if n == 0 && !ms.name.startsWith("set") && (refHas("def", acr, 0) || refHas("prop", acr, 0)) then
@@ -244,7 +268,7 @@ object ReferencePolicy:
                   }
                   val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
                   lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match
-                    case Some(cands) => agree(ms, cands, methodRows(d, ms, overloaded, _))
+                    case Some(cands) => agree(ms, bestByParams(cands, d.paramss.flatten), methodRows(d, ms, overloaded, _))
                     case None =>
                       // a `Class<T>` parameter the reference turned into a `[T: ClassTag]` bound: its def
                       // sits at the java name (or the renamed one) one parameter short, the tag in its
@@ -269,7 +293,7 @@ object ReferencePolicy:
                   val cands  = (ctors ++ applys) match
                     case Nil => Nil
                     case all => val same = all.filter(_.pkg == pkg); if same.nonEmpty then same else all
-                  if cands.nonEmpty then agree(ms, cands, paramRows(d, ms, nameCounts.getOrElse("<init>", 0) > 1, _))
+                  if cands.nonEmpty then agree(ms, bestByParams(cands, d.paramss.flatten), paramRows(d, ms, nameCounts.getOrElse("<init>", 0) > 1, _))
                 }
               case v: Tree.ValDef =>
                 program.symbolOf(v.symbol).filter(s => !s.name.contains('$')).foreach { fs =>

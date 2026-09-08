@@ -948,7 +948,8 @@ private[emit] trait TirEmitterMembers:
 
   /** does this slot's type name an `opaque type` a phase minted or retargeted onto? */
   private[emit] def opaqueSlot(t: TypeRepr): Boolean = t match
-    case TypeRepr.TypeRef(_, s) => program.symbolOf(s).exists(_.flags.isOpaque)
+    case TypeRepr.TypeRef(_, s)      => program.symbolOf(s).exists(_.flags.isOpaque)
+    case TypeRepr.AppliedType(t2, _) => opaqueSlot(t2)
     case _                      => false
 
   private[emit] def superDelegation(args: List[Term], i: Int): String =
@@ -963,7 +964,9 @@ private[emit] trait TirEmitterMembers:
       case CtorFunnel.SuperCall.Matched(slots) =>
         val rendered = slots.map {
           case CtorFunnel.Slot.Arg(a)    => term(a, i)
-          case CtorFunnel.Slot.NullAt(t) => s"null.asInstanceOf[${tpe(t)}]"
+          // an ascription where `Null` conforms: scalac 3.7 rejects `null.asInstanceOf[T] != null`
+          // in a replayed post-body; the cast stays for an OPAQUE slot, which has no `null`
+          case CtorFunnel.Slot.NullAt(t) => if opaqueSlot(t) then s"null.asInstanceOf[${tpe(t)}]" else s"(null: ${tpe(t)})"
           // `Throwable(Throwable cause)` sets message = `cause == null ? null : cause.toString()`.
           // `Objects.toString(o, nullDefault)` IS that expression and evaluates `o` once, so the
           // argument needs no purity condition — a hand-written `if` would have read it twice.

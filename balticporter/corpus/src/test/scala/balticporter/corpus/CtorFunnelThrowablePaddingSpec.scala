@@ -54,7 +54,7 @@ class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
     // the padded slot is the Throwable, not the String: `Throwable(String)` really does leave the
     // cause unset, so this position is exactly what it always was.
     assert(clue(out).contains(
-      "def this(m: java.lang.String) = {\n    this(m, null.asInstanceOf[java.lang.Throwable])"))
+      "def this(m: java.lang.String) = {\n    this(m, (null: java.lang.Throwable))"))
   }
 
   test("a re-readable cause need not be an ident — a field read is named in both slots") {
@@ -65,7 +65,7 @@ class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
   test("an EFFECTFUL cause is REFUSED, not evaluated twice — and it is reported") {
     // `h.next()` in both slots would call it twice and pass two DIFFERENT throwables. Refusing
     // leaves the old null message, which is wrong — so it is counted rather than left silent.
-    assert(clue(out).contains("this(null.asInstanceOf[java.lang.String], h.next())"))
+    assert(clue(out).contains("this((null: java.lang.String), h.next())"))
     assertEquals(out.sliding("h.next()".length).count(_ == "h.next()"), 1)
     assertEquals(OmissionCheck.droppedCauseMessages(program).map(_.owner), List("demo.Call"))
   }

@@ -2258,7 +2258,18 @@ keep-name veto is the override COMPONENT's: the reference declares `isUnit` on t
 detector must not fold the implementors' `isUnit()` into `unit`. (12) A captured value's companion
 `apply` comes in two overloads per constructor — the value one and java's arity delegating with the
 default — since a default argument on more than one overload is illegal; a plain overload whose
-signature would collide with another's is dropped and counted.
+signature would collide with another's is dropped and counted. (13) A context read whose member an EARLIER phase wrapped (`getGL30(): Nullable[GL30]` under java's
+`GL30 gl30` static) is unwrapped null-preservingly (`.orNull`) at the hop: the shapes differ by exactly one
+wrapper around the static's own type, read structurally, and the seam is the context rewrite's own. Rather than minted names, a context path binds the REAL member where the hop's type is a program
+type (`graphics.gl30` is `Graphics#getGL30()` until the bean fold renames it), so every later phase — a
+derived `Nullable`, the fold, a rename — sees an ordinary reference. (14) A DERIVED getter's setter is the
+reference's to decide: `gl30: Nullable[GL30]` beside `gl30_=(GL30)` stays asymmetric, the widening rule
+declining where no row names the setter's parameter; an assignment to a PROPERTY is coerced against the
+setter's own parameter type, a field against its own. (15) A wrapper slot has no `null`: the nullability
+step flags its wrapper type opaque, and the emitter's padded-slot rule (`null.asInstanceOf[T]`) looks
+through an applied type, so a funnel-padded `Nullable[…]` slot compiles. The funnel's `if (null != null) A else B` simplification (C3) WALKS the delegation argument, since a
+phase may have wrapped the `if` (`Nullable(if … )`), and a padded plain reference slot is an ascription
+(`(null: T)`) — scalac 3.7 rejects `null.asInstanceOf[T] != null`.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

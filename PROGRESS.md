@@ -2373,6 +2373,18 @@ acronym lowered is matched at that spelling; sge's names for java's `type` acces
 sge's text for them. `sge-l0` 0 = 0, JS 13 = 13, Native 0, suite 216/220, demos 12/12.
 **`sge-suite-check` 507 -> 456.**
 
+**Real members along context paths, and what followed (2026-09-08 06:40).** A context path now binds the
+REAL member where the hop's type is a program type (`graphics.gl30` is `Graphics#getGL30()` until the
+fold renames it), so a derived `Nullable` on it is coerced like any other read (40 errors the minted
+names had hidden); the acronym-cased derivations fire (`gl30`, `gl30Available`, `glVersion` — the
+copies went back to sge's text for them); a derived getter's setter keeps the reference's plain
+parameter and an assignment to a property is coerced against the setter's own type; a wrapper slot has
+no `null` (the wrapper type is flagged opaque, the padded-slot rule looks through an applied type); the
+funnel's `if (null != null)` simplification walks a wrapped argument and pads a plain slot with an
+ascription (scalac 3.7 rejects `null.asInstanceOf[T] != null`). `sge-l0` 0 = 0, JS 13 = 13, Native 0,
+suite 216/220, demos 12/12. **`sge-suite-check` 456 -> 412** (android 8 -> 2, member-shape 121 -> 108,
+nullable 61 -> 54, context 25 -> 16).
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type

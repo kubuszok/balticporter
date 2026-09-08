@@ -1775,8 +1775,11 @@ final case class PortRun(
     else
       val m = manifest.get
       val memberRenames = effectivePhases.collect { case mr: balticporter.transform.MemberRenameTransform => mr.renames }.flatten.toMap
+      // a collections RETARGET is a type rename to the deriver's eye (java's `Array` is read as `DynamicArray`)
+      val retargetSimple = effectivePhases.collect { case c: balticporter.transform.CollectionsTransform => c.retarget }
+        .flatten.map((j, s) => j -> s.split('.').last).toMap
       val r = ReferencePolicy.derive(parsed, referenceSurface, emitted,
-        m.effectiveTypeRenames, m.effectiveFlattenNestedTypes, derivingOpaqueTargets, m.effectivePackageRenames, memberRenames)
+        retargetSimple ++ m.effectiveTypeRenames, m.effectiveFlattenNestedTypes, derivingOpaqueTargets, m.effectivePackageRenames, memberRenames)
       lastDerived = Some(r)
       r.policy.resolved(parsed)
 

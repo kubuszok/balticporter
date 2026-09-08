@@ -9,10 +9,12 @@ import balticporter.tir.*
   * the literals do not determine, or an unowned component member refuses, counted (DESIGN.md §8.30).
   * @param members method keys (`C#m`, `C#m(desc)`) @param derive `ClassTagParam` rows off the reference. */
 final class ClassTagParamsTransform(val members: Set[String] = Set.empty, val derive: Boolean = false)
-    extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
+    extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound, Rewrite:
   import ClassTagParamsTransform.*
 
   def name: String = "class-tag-params"
+  /** every refusal is a `policy` finding; the retyping itself opens no seam a call cannot see. */
+  def accountedBy: Set[String] = Set(balticporter.runner.PortRun.Policy)
 
   def surfaceFingerprint: String =
     val ms = if members.isEmpty then "" else s"members=${members.toList.sorted.mkString(",")}"

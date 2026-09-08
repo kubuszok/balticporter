@@ -67,21 +67,21 @@ class NoopGraphics(
 
   // ---- GL availability ----
 
-  override def GL30Available: Boolean = false
+  override def gl30Available: Boolean = false
 
-  override def GL31Available: Boolean = false
+  override def gl31Available: Boolean = false
 
-  override def GL32Available: Boolean = false
+  override def gl32Available: Boolean = false
 
   private var _gl20: GL20 = NoopGL20
 
   override def gl20: GL20 = _gl20
 
-  override def gl30: GL30 = null
+  override def gl30: Nullable[GL30] = Nullable.empty
 
-  override def gl31: GL31 = null
+  override def gl31: Nullable[GL31] = Nullable.empty
 
-  override def gl32: GL32 = null
+  override def gl32: Nullable[GL32] = Nullable.empty
 
   override def gl20_=(value: GL20): Unit =
     _gl20 = value
@@ -131,7 +131,7 @@ class NoopGraphics(
     given Sge = null.asInstanceOf[Sge]
     new sge.graphics.glutils.GLVersion(Application.ApplicationType.HeadlessDesktop, "0.0.0", "Noop", "Noop")
   }
-  override def GLVersion: sge.graphics.glutils.GLVersion = noopGlVersion
+  override def glVersion: sge.graphics.glutils.GLVersion = noopGlVersion
 
   // ---- density / PPI ----
 

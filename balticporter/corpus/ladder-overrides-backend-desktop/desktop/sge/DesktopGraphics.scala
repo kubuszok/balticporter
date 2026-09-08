@@ -152,14 +152,14 @@ class DesktopGraphics private[sge] (
 
   // ─── GL availability ──────────────────────────────────────────────────
 
-  override def GL30Available: Boolean = _gl30.isDefined
-  override def GL31Available: Boolean = _gl31.isDefined
-  override def GL32Available: Boolean = _gl32.isDefined
+  override def gl30Available: Boolean = _gl30.isDefined
+  override def gl31Available: Boolean = _gl31.isDefined
+  override def gl32Available: Boolean = _gl32.isDefined
 
   override def gl20: GL20           = _gl20
-  override def gl30: GL30 = _gl30.orNull
-  override def gl31: GL31 = _gl31.orNull
-  override def gl32: GL32 = _gl32.orNull
+  override def gl30: Nullable[GL30] = _gl30
+  override def gl31: Nullable[GL31] = _gl31
+  override def gl32: Nullable[GL32] = _gl32
 
   override def gl20_=(value: GL20): Unit = _gl20 = value
   override def gl30_=(value: GL30): Unit = _gl30 = Nullable(value)
@@ -194,7 +194,7 @@ class DesktopGraphics private[sge] (
   // ─── Type / version ──────────────────────────────────────────────────
 
   override def graphicsType: Graphics.GraphicsType = Graphics.GraphicsType.LWJGL3
-  override def GLVersion:    sge.graphics.glutils.GLVersion    = _glVersion
+  override def glVersion:    sge.graphics.glutils.GLVersion    = _glVersion
 
   // ─── DPI / density ───────────────────────────────────────────────────
 

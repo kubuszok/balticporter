@@ -4,7 +4,7 @@ f2bd545c39ee	catalog(consulted)	reached	JS-C01	com/badlogic/gdx/Input.java	634	l
 659d1f8a1299	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/graphics/Cubemap.java	38	rendering ClassDef — consulted 936, fired 86, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
 2918335c00e9	catalog(consulted)	reached	JS-C04	-	0	phase field-shadowing — consulted 0, fired 0, declarations 19: a subclass field SHADOWS a superclass field — two storage cells, not one
 b4428c9dfce3	catalog(consulted)	reached	JS-C05	com/badlogic/gdx/AbstractGraphics.java	14	lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 51492, fired 10029, declarations 0: a static nested constant reached through a SUBCLASS's name, and `import static`
-974c3e9310dc	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 56401, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
+c3db28c6918d	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 56438, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
 148100a1e6e2	catalog(consulted)	reached	JS-C07	com/badlogic/gdx/Input.java	60	rendering ClassDef — consulted 936, fired 269, declarations 0: JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger
 d73e3971590e	catalog(consulted)	reached	JS-C08	com/badlogic/gdx/Application.java	106	rendering ValDef — consulted 16849, fired 1443, declarations 0: a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation
 c8034763c174	catalog(consulted)	reached	JS-C09	com/badlogic/gdx/Application.java	98	rendering ClassDef — consulted 936, fired 136, declarations 0: several `static { }` blocks and static field initialisers run in ONE textual order
@@ -17,10 +17,10 @@ a8a789777153	catalog(consulted)	reached	JS-C17	-	0	lowering CtNewClass/Expressio
 a56e955b5638	catalog(consulted)	reached	JS-C19	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 325, declarations 0: `this(...)` / `super(...)` in a secondary constructor — Scala's secondary constructors cannot call `super`
 9bc783ac5412	catalog(consulted)	reached	JS-C20	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 133, declarations 0: the implicit `super()` and the default constructor
 badc3f607ac4	catalog(consulted)	reached	JS-C21	com/badlogic/gdx/InputMultiplexer.java	25	rendering ClassDef — consulted 936, fired 325, declarations 0: constructor overload resolution, against Scala's textual-anteriority rule
-bc2d5c0ceebd	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/InputEventQueue.java	46	rendering Apply — consulted 56401, fired 354, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
-da62e5b8ce05	catalog(consulted)	reached	JS-C23	com/badlogic/gdx/graphics/g3d/ModelBatch.java	251	rendering Apply — consulted 56401, fired 42, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
+9f8973f53f39	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/InputEventQueue.java	46	rendering Apply — consulted 56438, fired 354, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
+9e086871fde9	catalog(consulted)	reached	JS-C23	com/badlogic/gdx/graphics/g3d/ModelBatch.java	251	rendering Apply — consulted 56438, fired 42, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 738d8989a0cd	catalog(consulted)	reached	JS-C25	com/badlogic/gdx/AbstractGraphics.java	7	rendering DefDef — consulted 11350, fired 2810, declarations 0: `override` is mandatory in Scala and absent in Java
-269e5c66dafc	catalog(consulted)	reached	JS-C29	com/badlogic/gdx/Application.java	163	rendering-type TypeRef — consulted 69233, fired 5639, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+2c18743b7257	catalog(consulted)	reached	JS-C29	com/badlogic/gdx/Application.java	163	rendering-type TypeRef — consulted 69285, fired 5639, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 34907c1c250a	catalog(consulted)	reached	JS-C31	com/badlogic/gdx/graphics/Cubemap.java	252	lowering CtNewClass/Expression — consulted 3852, fired 157, declarations 0: anonymous class construction and capture
 2a9fb0509190	catalog(consulted)	reached	JS-C33	com/badlogic/gdx/graphics/VertexAttributes.java	29	rendering ClassDef — consulted 936, fired 71, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 562c06813db7	catalog(consulted)	reached	JS-C34	com/badlogic/gdx/AbstractGraphics.java	4	rendering ClassDef — consulted 936, fired 231, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -32,7 +32,7 @@ ee675fb7686f	catalog(consulted)	reached	JS-C39	com/badlogic/gdx/Application.java
 99229550c079	catalog(consulted)	reached	JS-C43	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: Java `record`
 5a549bccf86f	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 936, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 099f56dae00a	catalog(consulted)	reached	JS-C45	com/badlogic/gdx/AbstractInput.java	7	rendering ValDef — consulted 16849, fired 2859, declarations 0: a `final` field's JMM safe-publication guarantee
-198005da81e1	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 779: Java has TWO name namespaces and Scala has one
+5a26c8f4db51	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 781: Java has TWO name namespaces and Scala has one
 57f609603fd9	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/Version.java	37	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29135, fired 954, declarations 0: package-private becomes `private[pkg]`
 d6e1f5851b89	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/AbstractInput.java	7	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29135, fired 786, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
 e0b82b6eed4a	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/Input.java	629	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 29135, fired 99, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
@@ -50,7 +50,7 @@ e15682a122a1	catalog(consulted)	reached	JS-E04	-	0	lowering CtOperatorAssignment
 311674b0a67b	catalog(consulted)	reached	JS-E15	com/badlogic/gdx/assets/AssetManager.java	668	lowering CtAssignment/Expression — consulted 189, fired 189, declarations 0: an assignment IS an expression, with the assigned value
 0f5e2cd3efac	catalog(consulted)	reached	JS-E17	com/badlogic/gdx/InputEventQueue.java	55	lowering CtOperatorAssignment/Either — consulted 1709, fired 1709, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
 f8b3387ae733	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 3852, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
-fb1d84abbacf	catalog(consulted)	reached	JS-E20	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	218	rendering Literal — consulted 37328, fired 34, declarations 0: a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`
+f2479dd8fb4b	catalog(consulted)	reached	JS-E20	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	218	rendering Literal — consulted 37311, fired 34, declarations 0: a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`
 e3fcac1eabf2	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 2283, fired 699, declarations 0: use-site wildcards, with the matching bound grammar
 4dd6c467d690	catalog(consulted)	reached	JS-G03	-	0	lowering-type CtWildcardReference — consulted 1044, fired 0, declarations 0: `? super Object` has exactly one inhabitant
 1f1177cae218	catalog(consulted)	reached	JS-G04	com/badlogic/gdx/maps/tiled/TiledMap.java	51	rendering ForEach — consulted 362, fired 9, declarations 0: a captured wildcard on ITERATION has no nameable type
@@ -61,7 +61,7 @@ b44adc035c9a	catalog(consulted)	reached	JS-G06	-	0	phase raw-parent-alignment �
 c9fbd5234cc5	catalog(consulted)	reached	JS-G09	com/badlogic/gdx/InputMultiplexer.java	26	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 69637, fired 1206, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 a187628ef329	catalog(consulted)	reached	JS-G10	com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	67	lowering CtNewClass/Expression — consulted 3852, fired 4, declarations 0: a RAW anonymous class WITH a body
 e76b27c300c1	catalog(consulted)	reached	JS-G11	com/badlogic/gdx/Application.java	102	rendering ClassDef — consulted 936, fired 39, declarations 0: a partially-nameable F-BOUNDED raw fill
-7924fac53e10	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 80609, fired 560, declarations 0: a diamond's inference variable has NO NAMEABLE type
+f949ccf43a05	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 80661, fired 560, declarations 0: a diamond's inference variable has NO NAMEABLE type
 0a2e2b2aae14	catalog(consulted)	reached	JS-G13	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 69637, fired 192, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 5e9b4c251dfb	catalog(consulted)	reached	JS-G14	com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java	150	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 69637, fired 112, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 4a049a5e12de	catalog(consulted)	reached	JS-G15	com/badlogic/gdx/utils/IntMap.java	98	lowering CtNewArray/Expression — consulted 462, fired 19, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
@@ -78,7 +78,7 @@ b958a0b23957	catalog(consulted)	reached	JS-G21	com/badlogic/gdx/assets/AssetLoad
 da4aca1df259	catalog(consulted)	reached	JS-G35	com/badlogic/gdx/graphics/g3d/environment/BaseLight.java	21	rendering ClassDef + rendering DefDef — consulted 12286, fired 25, declarations 0: Scala CHECKS an F-bound where javac does not
 d461193db47c	catalog(consulted)	reached	JS-G37	com/badlogic/gdx/graphics/g2d/BitmapFont.java	144	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30557, fired 17, declarations 0: `T...` is an `Array[T]`, materialised at the port's OWN call sites
 cf01209dffc5	catalog(consulted)	reached	JS-G38	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30557, fired 61, declarations 0: a vararg slot ALREADY holding an array must not be re-packed — and neither a primitive array nor an under-dimensioned one forwards
-cc5d00cacb44	catalog(consulted)	reached	JS-G39	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 86958, fired 7, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
+7e03f48977a4	catalog(consulted)	reached	JS-G39	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 86995, fired 7, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
 9cf18451e6f3	catalog(consulted)	reached	JS-G40	com/badlogic/gdx/utils/Json.java	201	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Spread — consulted 30564, fired 14, declarations 0: the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot
 b4344b97c1f5	catalog(consulted)	reached	JS-G41	com/badlogic/gdx/graphics/g2d/Animation.java	76	rendering DefDef — consulted 11350, fired 12, declarations 0: `@SafeVarargs` and heap pollution
 6ea4119a2822	catalog(consulted)	reached	JS-G42	com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 30557, fired 16, declarations 0: a generic vararg's COMPONENT element type has four layered sources
@@ -338,59 +338,16 @@ ed050c440a2f	dependency-coverage(all)	java.util.Locale	targetLocale	com/badlogic
 ed050c440a2f/2	dependency-coverage(all)	java.util.Locale	targetLocale	com/badlogic/gdx/utils/I18NBundle.java	296	MemberType — ScalaJs needs io.github.cquiroz:::scala-java-locales:1.5.4; ScalaNative needs io.github.cquiroz:::scala-java-locales:1.5.4. This port declares 1 dependency/ies and no `verdictOverrides` entry for JS-L65: the same unpublished-stub story on Scala.js (its default is ROOT) and absent on Native. The replacement is CLDR-backed at a NEWER CLDR than the JDK's, so locale-derived STRINGS can differ from the JVM's even where the API matches
 6a562da5c36e	dependency-coverage(declared)	unused	com.badlogicgames.gdx:gdx-jnigen-loader:2.5.2	PortManifest.dependencies	0	original: no reference this run can see | emitted: no reference this run can see — no API this module emits needs this artifact on any platform it targets, and none of its original code did either — a coordinate copied from another module, or one whose last call an upstream change removed. Remove the entry, unless the usage is in a hand-written source this run does not walk
 9ab5e170093a	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.assets.loaders.ModelLoader#loadModel	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-9ab5e170093a/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.assets.loaders.ModelLoader#loadModel	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-37f562116177	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.Texture#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-37f562116177/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.Texture#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
 5b4741aa6462	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-b875d70f7365	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-b875d70f7365/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-b875d70f7365/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-b875d70f7365/4	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
 ecda35363d82	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-6fa152c9af55	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-6fa152c9af55/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-6fa152c9af55/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-6fa152c9af55/4	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-b5c907f96cfb	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-b5c907f96cfb/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-126563acedb2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-126563acedb2/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-126563acedb2/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-126563acedb2/4	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-126563acedb2/5	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
+03037f0beb5a	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
+03037f0beb5a/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
 ef5f27bf0bbc	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-8cc136e963ff	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.environment.DirectionalLight#set	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-8cc136e963ff/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.environment.DirectionalLight#set	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-7ff64c9fa439	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.environment.PointLight#set	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-7ff64c9fa439/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.environment.PointLight#set	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-5f30967a272c	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 d8193aeb8dfe	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectLoadParameter#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 fe3426d61acc	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.particles.ResourceData$SaveData#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-16b868d942a3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#register	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-16b868d942a3/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#register	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-16b868d942a3/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#register	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-ca2e6c027428	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-ca2e6c027428/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-a76f13d5951c	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-a76f13d5951c/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-a76f13d5951c/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 b31e23ef985f	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#part	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-b31e23ef985f/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#part	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-b31e23ef985f/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#part	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-eb767781a2b9	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.ETC1TextureData#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-eb767781a2b9/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.ETC1TextureData#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-cd9ad96f96a1	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-cd9ad96f96a1/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-918428315a91	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-918428315a91/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-918428315a91/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-91e6ef1f6a91	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#load	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-91e6ef1f6a91/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.FacedCubemapData#load	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-82417eae7590	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.glutils.PixmapTextureData#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 5478647c91bf	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-5478647c91bf/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 5980cbefc1cf	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-5980cbefc1cf/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 3dc7f01dd28b	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.input.GestureDetector#touchDown	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 3dc7f01dd28b/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.input.GestureDetector#touchDown	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 d9080ee1d69d	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.input.GestureDetector#touchDragged	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
@@ -398,46 +355,10 @@ d9080ee1d69d/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.input.Gestu
 6927e5688ed5	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.input.GestureDetector#touchUp	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 6927e5688ed5/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.input.GestureDetector#touchUp	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 0b30e1e49d87	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.MapLayers#get	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-0b30e1e49d87/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.MapLayers#get	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 2966cd8f050b	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.MapObjects#get	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-2966cd8f050b/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.MapObjects#get	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 c374fabaacfa	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.tiled.TiledMapTileSets#getTileSet	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-c374fabaacfa/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.maps.tiled.TiledMapTileSets#getTileSet	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-e91b6f53ce37	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.math.Intersector#intersectSegmentCircle	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-4fb1b33af6a1	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.Stage#setDebugTableUnderMouse	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-55402f711030	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-55402f711030/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-d08a8a7f0422	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-d08a8a7f0422/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-d08a8a7f0422/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-06418866cf80	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-06418866cf80/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-06418866cf80/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-06418866cf80/4	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>	<synthetic>	0	4 reference declarations at one key derive different spellings; only the agreed rows kept
-4b895becf7aa	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-4b895becf7aa/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-4b895becf7aa/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-4b895becf7aa/4	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-c065de375ae7	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Dialog#text	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-c065de375ae7/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Dialog#text	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-2376d9682a97	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-2376d9682a97/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-05b3230f1dc3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-05b3230f1dc3/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-05b3230f1dc3/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-1acda4acd801	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Label#setEllipsis	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-33d363dae84d	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Label#setText	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-8597bf4be715	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#add	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-8597bf4be715/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#add	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 6ea9b1554a7f	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#add	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
 6ea9b1554a7f/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#add	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-6ea9b1554a7f/3	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#add	<synthetic>	0	3 reference declarations at one key derive different spellings; only the agreed rows kept
-d691eb2516e0	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#background	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-d691eb2516e0/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#background	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-afd1274bede9	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#setBackground	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-afd1274bede9/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.Table#setBackground	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-0d64aaf0515c	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.TextArea#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
-0d64aaf0515c/2	derived(ambiguous)	OverloadDisagrees	com.badlogic.gdx.scenes.scene2d.ui.TextArea#<init>	<synthetic>	0	2 reference declarations at one key derive different spellings; only the agreed rows kept
 5e68341a1767	derived(rows)	ClassTagParam	com.badlogic.gdx.assets.AssetManager#getAll		0	def getAll[$0: ClassTag]
 0b73c1d83264	derived(rows)	ClassTagParam	com.badlogic.gdx.scenes.scene2d.actions.Actions#action		0	def action[$0 <: Action: ClassTag]
 99c0b5d39325	derived(rows)	ClassTagParam	com.badlogic.gdx.scenes.scene2d.actions.Actions#registerAction		0	def registerAction[$0 <: Action: ClassTag]
@@ -1826,6 +1747,9 @@ e8611e05006d	derived(rows)	KeepParens	com.badlogic.gdx.utils.Pool#obtain		0	def 
 e5b34dcf5052	derived(rows)	NullableMember	com.badlogic.gdx.Audio#switchOutputDevice#deviceIdentifier		0	Nullable[String]
 e18a269c39d8	derived(rows)	NullableMember	com.badlogic.gdx.Game#getScreen		0	Nullable[Screen]
 eaed029eba2c	derived(rows)	NullableMember	com.badlogic.gdx.Game#setScreen#screen		0	Nullable[Screen]
+3f72d4df039f	derived(rows)	NullableMember	com.badlogic.gdx.Graphics#getGL30		0	Nullable[GL30]
+dd24b8b93d43	derived(rows)	NullableMember	com.badlogic.gdx.Graphics#getGL31		0	Nullable[GL31]
+2cc49900fcac	derived(rows)	NullableMember	com.badlogic.gdx.Graphics#getGL32		0	Nullable[GL32]
 ef2dd4ce809a	derived(rows)	NullableMember	com.badlogic.gdx.Graphics#newCursor		0	Nullable[Cursor]
 2fdb54605998	derived(rows)	NullableMember	com.badlogic.gdx.Input#closeTextInputField(boolean,NativeInputCloseCallback)#callback		0	Nullable[input.NativeInputConfiguration.NativeInputCloseCallback]
 89d56fdfd0a0	derived(rows)	NullableMember	com.badlogic.gdx.Input$Keys#toString		0	Nullable[String]
@@ -1910,6 +1834,9 @@ f46af55d1aab	derived(rows)	NullableMember	com.badlogic.gdx.graphics.Mesh#unbind(
 fc5e32c7ab04	derived(rows)	NullableMember	com.badlogic.gdx.graphics.TextureData$Factory#loadFromFile(FileHandle,Format,boolean)#format		0	Nullable[Format]
 f8c4e3d9582b	derived(rows)	NullableMember	com.badlogic.gdx.graphics.VertexAttributes#findByUsage		0	Nullable[VertexAttribute]
 802e1b26d60f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.Batch#setShader#shader		0	Nullable[ShaderProgram]
+76a715ce8fee	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>(BitmapFontData,Array,boolean)#pageRegions		0	Nullable[DynamicArray[TextureRegion]]
+c436bb819219	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>(FileHandle,TextureRegion)#region		0	Nullable[TextureRegion]
+75a3a6901ea1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFont#<init>(FileHandle,TextureRegion,boolean)#region		0	Nullable[TextureRegion]
 497323979620	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFont#draw(Batch,CharSequence,float,float,int,int,float,int,boolean,String)#truncate		0	Nullable[String]
 078ee1235956	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#<init>(FileHandle,boolean)#fontFile		0	Nullable[FileHandle]
 7f2e7d77796c	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#breakChars		0	Nullable[Array[Char]]
@@ -1926,6 +1853,9 @@ f8c4e3d9582b	derived(rows)	NullableMember	com.badlogic.gdx.graphics.VertexAttrib
 fd08f060346a	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFontCache#addText(CharSequence,float,float,int,int,float,int,boolean,String)#truncate		0	Nullable[String]
 ffa5d0973de0	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.BitmapFontCache#setText(CharSequence,float,float,int,int,float,int,boolean,String)#truncate		0	Nullable[String]
 46299c8f06e0	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.CpuSpriteBatch#<init>(int,ShaderProgram)#defaultShader		0	Nullable[ShaderProgram]
+e1711608ce74	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>(BitmapFontData,Array,boolean)#pageRegions		0	Nullable[DynamicArray[TextureRegion]]
+976c8661bd9e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>(FileHandle,TextureRegion)#region		0	Nullable[TextureRegion]
+589681cf3644	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#<init>(FileHandle,TextureRegion,boolean)#region		0	Nullable[TextureRegion]
 7f1e14041074	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.GlyphLayout#<init>(BitmapFont,CharSequence,int,int,Color,float,int,boolean,String)#truncate		0	Nullable[String]
 a7ba6e623760	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.GlyphLayout#setText(BitmapFont,CharSequence,int,int,Color,float,int,boolean,String)#truncate		0	Nullable[String]
 d815b8ed2b54	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g2d.ParticleEffect#findEmitter		0	Nullable[ParticleEmitter]
@@ -1981,8 +1911,10 @@ c65ff5ef551a	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelBat
 b31d6c93fd92	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelBatch#camera		0	Nullable[Camera]
 9655a8fb08a3	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelBatch#getCamera		0	Nullable[Camera]
 e38b43d1b7fb	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelCache$Sorter#sort#camera		0	Nullable[Camera]
+23d88eff2b3e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(Model,Matrix4,Array)#rootNodeIds		0	Nullable[Seq[String]]
 ca0accdbfdd8	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(Model,Matrix4,Array)#transform		0	Nullable[Matrix4]
 58683108cfc1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(Model,Matrix4,String,boolean,boolean,boolean,boolean)#transform		0	Nullable[Matrix4]
+cb551edc4e91	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(Model,Matrix4,String[])#rootNodeIds		0	Nullable[Seq[String]]
 053b21fd945b	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(Model,Matrix4,String[])#transform		0	Nullable[Matrix4]
 4aadb21275ce	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(Model,String,boolean)#nodeId		0	Nullable[Matrix4]
 3e3a18fc6cd2	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(ModelInstance,Matrix4,boolean)#transform		0	Nullable[Matrix4]
@@ -2007,10 +1939,14 @@ d6ab7815eae1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.decals.G
 939cd0044d44	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.decals.SimpleOrthoGroupStrategy#getGroupShader		0	Nullable[ShaderProgram]
 eb9124ebde80	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.DirectionalLight#set(Color,Vector3)#color		0	Nullable[Color]
 57e0263e6ff8	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.DirectionalLight#set(Color,Vector3)#direction		0	Nullable[Vector3]
+92545eaed1c8	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.DirectionalLight#set(Color,float,float,float)#color		0	Nullable[Color]
+6a92c3bc127d	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.DirectionalLight#set(float,float,float,Vector3)#direction		0	Nullable[Vector3]
 8add27516991	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight#fbo		0	Nullable[FrameBuffer]
 ef56593fc60d	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight#getFrameBuffer		0	Nullable[FrameBuffer]
 41b6802e5b87	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.PointLight#set(Color,Vector3,float)#color		0	Nullable[Color]
 c77f2b4508c6	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.PointLight#set(Color,Vector3,float)#position		0	Nullable[Vector3]
+0a15782e5ca1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.PointLight#set(Color,float,float,float,float)#color		0	Nullable[Color]
+07415d32a000	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.PointLight#set(float,float,float,Vector3,float)#position		0	Nullable[Vector3]
 4c7289c85ef3	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.SpotLight#set(Color,Vector3,Vector3,float,float,float)#color		0	Nullable[Color]
 3d7c47945b5a	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.SpotLight#set(Color,Vector3,Vector3,float,float,float)#direction		0	Nullable[Vector3]
 a7048e8ca64f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.environment.SpotLight#set(Color,Vector3,Vector3,float,float,float)#position		0	Nullable[Vector3]
@@ -2022,6 +1958,7 @@ e2eecf12e13e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.loader.G
 c8a781f6dedc	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#<init>(FileHandleResolver)#resolver		0	Nullable[FileHandleResolver]
 ae58f2c43f12	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModel		0	Nullable[Model]
 be5f30c91d6e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData(FileHandle,ObjLoaderParameters)		0	Nullable[ModelData]
+e6feea45bcb8	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData(FileHandle,ObjLoaderParameters)#parameters		0	Nullable[ObjLoader.ObjLoaderParameters]
 6bf4bcdef9db	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData(FileHandle,boolean)		0	Nullable[ModelData]
 f393be9c24a5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.MeshPart#<init>(String,Mesh,int,int,int)#id		0	Nullable[String]
 97a28cfdae93	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.model.MeshPart#id		0	Nullable[String]
@@ -2068,6 +2005,7 @@ f4c4539f4fe4	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.particle
 e8955b3fecdb	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#program		0	Nullable[ShaderProgram]
 1568646a1666	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#register(String,Validator,Setter)#setter		0	Nullable[BaseShader.Setter]
 b75262a4d995	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#register(String,Validator,Setter)#validator		0	Nullable[BaseShader.Validator]
+95acec075512	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.shaders.BaseShader#register(Uniform,Setter)#setter		0	Nullable[BaseShader.Setter]
 bf8a5476c786	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.shaders.DefaultShader$Config#fragmentShader		0	Nullable[String]
 f824e05b3dee	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.shaders.DefaultShader$Config#vertexShader		0	Nullable[String]
 45432ce1d1d5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#action(Animation,float,float,int,float,AnimationListener,float)		0	Nullable[AnimationDesc]
@@ -2081,6 +2019,7 @@ e8e9654938d1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.An
 3ff7c6253787	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(Animation,float,float,int,float,AnimationListener,float)		0	Nullable[AnimationDesc]
 e01b222cf797	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(Animation,float,float,int,float,AnimationListener,float)#listener		0	Nullable[AnimationListener]
 b395a434273f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(AnimationDesc,float)		0	Nullable[AnimationDesc]
+8a6c217c760c	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(AnimationDesc,float)#anim		0	Nullable[AnimationDesc]
 dfd596f0e17d	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,AnimationListener,float)		0	Nullable[AnimationDesc]
 eed0b2689066	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,AnimationListener,float)#listener		0	Nullable[AnimationListener]
 ac8a15c1d2ba	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,float)		0	Nullable[AnimationDesc]
@@ -2104,8 +2043,10 @@ e4ee08ef9f8a	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.An
 2b909b93cbfc	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(Animation,float,float,int,float,AnimationListener)		0	Nullable[AnimationDesc]
 cde62e16ba3b	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(Animation,float,float,int,float,AnimationListener)#listener		0	Nullable[AnimationListener]
 cab306fa3518	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(AnimationDesc)		0	Nullable[AnimationDesc]
+422492cea214	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(AnimationDesc)#anim		0	Nullable[AnimationDesc]
 0e24ccdb5053	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String)		0	Nullable[AnimationDesc]
 ba2fc70cc182	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,AnimationListener)		0	Nullable[AnimationDesc]
+157687c551d1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,AnimationListener)#listener		0	Nullable[AnimationListener]
 479fd3ac91c4	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,float,float,int,float,AnimationListener)		0	Nullable[AnimationDesc]
 ad2e7193f593	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,float,float,int,float,AnimationListener)#listener		0	Nullable[AnimationListener]
 d3acdeb645a5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,int)		0	Nullable[AnimationDesc]
@@ -2157,8 +2098,22 @@ ca5c51e8d854	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.Mo
 270050866286	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#texture		0	Nullable[$0]
 1e3f2e37f3f5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#uWrap		0	Nullable[TextureWrap]
 3eba9293fd6d	derived(rows)	NullableMember	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#vWrap		0	Nullable[TextureWrap]
+76f7f46e1cdc	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.ETC1TextureData#<init>(FileHandle,boolean)#file		0	Nullable[FileHandle]
 9eea3dc8800f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.ETC1TextureData#file		0	Nullable[FileHandle]
+5dc7eb6373b9	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)#negativeX		0	Nullable[Pixmap]
+f1df065a56b1	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)#negativeY		0	Nullable[Pixmap]
+f3c7ec81d52d	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)#negativeZ		0	Nullable[Pixmap]
+cdf707e4139f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)#positiveX		0	Nullable[Pixmap]
+7a77a53176a0	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)#positiveY		0	Nullable[Pixmap]
+14e7974ddda6	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)#positiveZ		0	Nullable[Pixmap]
+8f318c30351e	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,boolean)#negativeX		0	Nullable[Pixmap]
+4180a26d5524	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,boolean)#negativeY		0	Nullable[Pixmap]
+d80610b40f42	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,boolean)#negativeZ		0	Nullable[Pixmap]
+65bef061451a	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,boolean)#positiveX		0	Nullable[Pixmap]
+bc0b40cadfc5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,boolean)#positiveY		0	Nullable[Pixmap]
+aed6d11f3e50	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,boolean)#positiveZ		0	Nullable[Pixmap]
 8eb9ddc3b1e5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#getTextureData		0	Nullable[TextureData]
+3475620f1e68	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FacedCubemapData#load(CubemapSide,Pixmap)#pixmap		0	Nullable[Pixmap]
 cc1454ff2988	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FileTextureData#<init>#format		0	Nullable[Format]
 8e1e96b48eb0	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FileTextureData#<init>#preloadedPixmap		0	Nullable[Pixmap]
 871ade02b49c	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.FloatTextureData#getBuffer		0	Nullable[FloatBuffer]
@@ -2170,6 +2125,7 @@ d02e85fabd6f	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.Inst
 b372ed8b71a5	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.InstanceData#bind(ShaderProgram,int[])#locations		0	Nullable[Array[AttributeLocation]]
 c35916d085b3	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.InstanceData#unbind(ShaderProgram,int[])#locations		0	Nullable[Array[AttributeLocation]]
 03c295ad9782	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.KTXTextureData#getData		0	Nullable[ByteBuffer]
+aba4fcf635bb	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.PixmapTextureData#<init>(Pixmap,Format,boolean,boolean,boolean)#format		0	Nullable[Format]
 d00b42556947	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.ShapeRenderer#<init>(int,ShaderProgram)#defaultShader		0	Nullable[ShaderProgram]
 ee8476bb2728	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.ShapeRenderer#getCurrentType		0	Nullable[ShapeType]
 2c3322adf0ed	derived(rows)	NullableMember	com.badlogic.gdx.graphics.glutils.VertexArray#bind(ShaderProgram,int[])#locations		0	Nullable[Array[AttributeLocation]]
@@ -2195,6 +2151,8 @@ e32ad7d8e351	derived(rows)	NullableMember	com.badlogic.gdx.input.RemoteInput#pro
 f2fd302f0414	derived(rows)	NullableMember	com.badlogic.gdx.maps.ImageResolver$TextureAtlasImageResolver#getImage		0	Nullable[TextureRegion]
 dc916be7983e	derived(rows)	NullableMember	com.badlogic.gdx.maps.MapLayer#getParent		0	Nullable[MapLayer]
 d957de89d879	derived(rows)	NullableMember	com.badlogic.gdx.maps.MapLayer#setParent#parent		0	Nullable[MapLayer]
+e02a8806ca5a	derived(rows)	NullableMember	com.badlogic.gdx.maps.MapLayers#get(String)		0	Nullable[MapLayer]
+142ea3bffc27	derived(rows)	NullableMember	com.badlogic.gdx.maps.MapObjects#get(String)		0	Nullable[MapObject]
 91712d49db4f	derived(rows)	NullableMember	com.badlogic.gdx.maps.MapProperties#get(String)		0	Nullable[Any]
 90223382ed2b	derived(rows)	NullableMember	com.badlogic.gdx.maps.objects.TextureMapObject#<init>(TextureRegion)#textureRegion		0	Nullable[TextureRegion]
 f0158492dd79	derived(rows)	NullableMember	com.badlogic.gdx.maps.objects.TextureMapObject#getTextureRegion		0	Nullable[TextureRegion]
@@ -2224,6 +2182,7 @@ ee13b03b3563	derived(rows)	NullableMember	com.badlogic.gdx.maps.tiled.TiledMapTi
 b64865c0566c	derived(rows)	NullableMember	com.badlogic.gdx.maps.tiled.TiledMapTileLayer$Cell#tile		0	Nullable[TiledMapTile]
 340cb2751f8f	derived(rows)	NullableMember	com.badlogic.gdx.maps.tiled.TiledMapTileSet#getTile		0	Nullable[TiledMapTile]
 2dd19e572868	derived(rows)	NullableMember	com.badlogic.gdx.maps.tiled.TiledMapTileSets#getTile		0	Nullable[TiledMapTile]
+defeeba93fdd	derived(rows)	NullableMember	com.badlogic.gdx.maps.tiled.TiledMapTileSets#getTileSet(String)		0	Nullable[TiledMapTileSet]
 79304dd82931	derived(rows)	NullableMember	com.badlogic.gdx.math.FloatCounter#mean		0	Option[WindowedMean]
 b2dfdaa62706	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectLinePlane#intersection		0	Nullable[Vector3]
 7e52fc465e4a	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectLines(Vector2,Vector2,Vector2,Vector2,Vector2)#intersection		0	Nullable[Vector2]
@@ -2238,6 +2197,7 @@ b81532eceeeb	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#inte
 50059cbd7774	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectRayTriangles(Ray,List,Vector3)#intersection		0	Nullable[Vector3]
 8fbc7696b54b	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectRayTriangles(Ray,float[],Vector3)#intersection		0	Nullable[Vector3]
 99b234ccf36a	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectRayTriangles(Ray,float[],short[],int,Vector3)#intersection		0	Nullable[Vector3]
+cd939f86a9b4	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectSegmentCircle(Vector2,Vector2,Circle,MinimumTranslationVector)#mtv		0	Nullable[MinimumTranslationVector]
 671628c6035a	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectSegments(Vector2,Vector2,Vector2,Vector2,Vector2)#intersection		0	Nullable[Vector2]
 81719893f3de	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#intersectSegments(float,float,float,float,float,float,float,float,Vector2)#intersection		0	Nullable[Vector2]
 b3cb8834a3a4	derived(rows)	NullableMember	com.badlogic.gdx.math.Intersector#overlapConvexPolygons(Polygon,Polygon,MinimumTranslationVector)#mtv		0	Nullable[MinimumTranslationVector]
@@ -2285,6 +2245,7 @@ e85d9f59cb67	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.InputL
 2dcaccb789bc	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage#getKeyboardFocus		0	Nullable[Actor]
 9f26085a41e7	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage#getScrollFocus		0	Nullable[Actor]
 9593bcb17285	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage#hit		0	Nullable[Actor]
+35f93c0e7158	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage#setDebugTableUnderMouse(Debug)#debugTableUnderMouse		0	Nullable[Table.Debug]
 d8ebd594c60b	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage#setKeyboardFocus#actor		0	Nullable[Actor]
 26cbb40ee7ce	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage#setScrollFocus#actor		0	Nullable[Actor]
 421152bf8d0e	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#listener		0	Nullable[EventListener]
@@ -2333,6 +2294,12 @@ d4cbb088a804	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.action
 9798b1d356c9	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.actions.TemporalAction#getInterpolation		0	Nullable[Interpolation]
 0e96ec003aec	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.actions.TemporalAction#interpolation		0	Nullable[Interpolation]
 43bc3f5198a9	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.actions.TemporalAction#setInterpolation#interpolation		0	Nullable[Interpolation]
+153368ae0909	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>(Drawable)#up		0	Nullable[Drawable]
+45109984c19b	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>(Drawable,Drawable)#down		0	Nullable[Drawable]
+ca24ac9850ce	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>(Drawable,Drawable)#up		0	Nullable[Drawable]
+3b3b93171f67	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>(Drawable,Drawable,Drawable)#checked		0	Nullable[Drawable]
+8e3af00e9ab8	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>(Drawable,Drawable,Drawable)#down		0	Nullable[Drawable]
+da976770ace4	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#<init>(Drawable,Drawable,Drawable)#up		0	Nullable[Drawable]
 d04e5c6221bb	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button#getBackgroundDrawable		0	Nullable[Drawable]
 6d369024f8a8	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle#<init>(Drawable,Drawable,Drawable)#checked		0	Nullable[Drawable]
 c1cd50821716	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle#<init>(Drawable,Drawable,Drawable)#down		0	Nullable[Drawable]
@@ -2391,7 +2358,9 @@ d808f4e14f1c	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Con
 ab96db353aee	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Container#setBackground(Drawable,boolean)#background		0	Nullable[Drawable]
 cd2444e5535c	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Container#setCullingArea#cullingArea		0	Nullable[Rectangle]
 64deffe9a629	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(Button,Object)#object		0	Nullable[AnyRef]
+3b8855138d69	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(String)#text		0	Nullable[String]
 33056beca607	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(String,Object)#object		0	Nullable[AnyRef]
+d659cdf3211a	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(String,Object)#text		0	Nullable[String]
 55d9bd37c7d6	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(String,Object,TextButtonStyle)#object		0	Nullable[AnyRef]
 8f2f5255db28	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#button(String,Object,TextButtonStyle)#text		0	Nullable[String]
 1fb21ddeda04	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#hide(Action)#action		0	Nullable[Action]
@@ -2402,10 +2371,14 @@ ef17c98079ec	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dia
 ad1d1392267d	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#setObject#object		0	Nullable[AnyRef]
 048ecd9a223f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#setStage#stage		0	Nullable[Stage]
 abab15bc1750	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#show(Stage,Action)#action		0	Nullable[Action]
+608696789645	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#text(String)#text		0	Nullable[String]
 74b4e4e2106e	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Dialog#text(String,LabelStyle)#text		0	Nullable[String]
 9b5f50e182aa	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Image#<init>(Drawable,Scaling,int)#drawable		0	Nullable[Drawable]
 75b41ef65dae	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Image#getDrawable		0	Nullable[Drawable]
 f8c9eefd8c81	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Image#setDrawable(Drawable)#drawable		0	Nullable[Drawable]
+307b5896a73e	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>(Drawable)#imageUp		0	Nullable[Drawable]
+0bc7e56b13ed	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>(Drawable,Drawable)#imageDown		0	Nullable[Drawable]
+017088bf0276	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>(Drawable,Drawable)#imageUp		0	Nullable[Drawable]
 88611505523f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>(Drawable,Drawable,Drawable)#imageChecked		0	Nullable[Drawable]
 f76c78db1040	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>(Drawable,Drawable,Drawable)#imageDown		0	Nullable[Drawable]
 93a57f7ee870	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.ImageButton#<init>(Drawable,Drawable,Drawable)#imageUp		0	Nullable[Drawable]
@@ -2448,6 +2421,8 @@ d92274b83f12	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Ima
 a0a64501c703	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label#<init>(CharSequence,Skin,String)#text		0	Nullable[CharSequence]
 69132c6c20e6	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label#<init>(CharSequence,Skin,String,Color)#text		0	Nullable[CharSequence]
 7177f4fa0866	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label#<init>(CharSequence,Skin,String,String)#text		0	Nullable[CharSequence]
+b03fc7fb46fd	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label#setEllipsis(String)#ellipsis		0	Nullable[String]
+26e4f926c9c8	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label#setText(CharSequence)#newText		0	Nullable[CharSequence]
 e5d703214549	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle#<init>(BitmapFont,Color)#fontColor		0	Nullable[Color]
 885949e15e20	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle#background		0	Nullable[Drawable]
 b8018abafc75	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle#fontColor		0	Nullable[Color]
@@ -2531,16 +2506,21 @@ a30e21f65404	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Spl
 f72df11f0c60	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#setFirstWidget#widget		0	Nullable[Actor]
 4ccb1e7e4a2e	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.SplitPane#setSecondWidget#widget		0	Nullable[Actor]
 920465ee0c3d	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#<init>(Skin)#skin		0	Nullable[Skin]
+97fe4c2ce507	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#add(CharSequence)#text		0	Nullable[CharSequence]
 d06e3c773ee0	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#add(CharSequence,String)#text		0	Nullable[CharSequence]
+b7d77b71f6a4	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#add(CharSequence,String,Color)#color		0	Nullable[Color]
 bde30ee59804	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#add(CharSequence,String,Color)#text		0	Nullable[CharSequence]
 e879b8e7aefe	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#add(CharSequence,String,String)#text		0	Nullable[CharSequence]
 fdb80ca5afd2	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#background		0	Nullable[Drawable]
+88bc070a019f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#background(Drawable)#background		0	Nullable[Drawable]
 4066c906c17b	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#debugRects		0	Nullable[DynamicArray[DebugRect]]
 e05106c0ae62	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#getBackground		0	Nullable[Drawable]
 dce9aae65137	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#getCell		0	Nullable[Cell[$0]]
 9276681f4fca	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#getSkin		0	Nullable[Skin]
 015d3d85077f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#hit		0	Nullable[Actor]
+28ef08f4f322	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#setBackground(Drawable)#background		0	Nullable[Drawable]
 356920874a62	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.Table#setSkin#skin		0	Nullable[Skin]
+ecb351713a63	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.TextArea#<init>(String,TextFieldStyle)#text		0	Nullable[String]
 bb501fe88f42	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.TextArea#getTextY#background		0	Nullable[Drawable]
 7500cde5090f	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.TextButton#<init>(String,Skin)#text		0	Nullable[String]
 62e314c3b252	derived(rows)	NullableMember	com.badlogic.gdx.scenes.scene2d.ui.TextButton#<init>(String,Skin,String)#text		0	Nullable[String]
@@ -2980,6 +2960,7 @@ d6ec542828d0	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Camera#viewportH
 143c6679d5ee	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Camera#viewportWidth		0	WorldUnits -> sge.WorldUnits
 f2c067b68568	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Cubemap#getHeight		0	Pixels -> sge.Pixels
 72a968b97c24	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Cubemap#getWidth		0	Pixels -> sge.Pixels
+8589b6af196d	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Cubemap$CubemapSide#getGLEnum		0	TextureTarget -> sge.graphics.TextureTarget
 1bf59be2cdfe	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Cubemap$CubemapSide#glEnum		0	TextureTarget -> sge.graphics.TextureTarget
 d08c7ccc2d2e	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.GL20#glBindBuffer#target		0	BufferTarget -> sge.graphics.BufferTarget
 a8c30caa473e	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.GL20#glBindTexture#target		0	TextureTarget -> sge.graphics.TextureTarget
@@ -3196,6 +3177,7 @@ ae1b45227935	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Pixmap#getHeight
 6af20af3e3f8	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Pixmap#getPixel#x		0	Pixels -> sge.Pixels
 e54b2f8af6ee	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Pixmap#getPixel#y		0	Pixels -> sge.Pixels
 b0af74f92c0c	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Pixmap#getWidth		0	Pixels -> sge.Pixels
+9433ad57250e	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Texture#<init>(int,int,TextureData)#glTarget		0	TextureTarget -> sge.graphics.TextureTarget
 091f45899788	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Texture#draw#x		0	Pixels -> sge.Pixels
 3da6f056651c	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Texture#draw#y		0	Pixels -> sge.Pixels
 d87ed289ac46	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.Texture#getHeight		0	Pixels -> sge.Pixels
@@ -3320,7 +3302,9 @@ b84877f1335a	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelB
 b3baa828353e	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#createSphere(float,float,float,int,int,int,Material,long)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 866e058869ce	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#createSphere(float,float,float,int,int,int,Material,long,float,float,float,float)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 bf99af0c6422	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#createXYZCoordinates(float,float,float,int,int,Material,long)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
+9ae42a5a7483	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#part(String,Mesh,int,Material)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 5e4a1922803d	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#part(String,Mesh,int,int,int,Material)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
+67c81e6c877f	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ModelBuilder#part(String,int,VertexAttributes,Material)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 32747da578a8	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.g3d.utils.ShapeCache#<init>(int,int,VertexAttributes,int)#primitiveType		0	PrimitiveMode -> sge.graphics.PrimitiveMode
 43f4cf4607f9	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.glutils.ETC1TextureData#consumeCustomData#target		0	TextureTarget -> sge.graphics.TextureTarget
 4674ee5e6325	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.glutils.FileTextureData#consumeCustomData#target		0	TextureTarget -> sge.graphics.TextureTarget
@@ -3598,8 +3582,10 @@ e556e17b28d2	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30In
 52a529256a82	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glStencilOpSeparate#zfail		0	StencilOp -> sge.graphics.StencilOp
 1a07d47ebcc4	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glStencilOpSeparate#zpass		0	StencilOp -> sge.graphics.StencilOp
 f993993c2587	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,Buffer)#format		0	PixelFormat -> sge.graphics.PixelFormat
+3cad593e33f7	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,Buffer)#height		0	Pixels -> sge.Pixels
 255c4ea2e956	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,Buffer)#target		0	TextureTarget -> sge.graphics.TextureTarget
 ebd31e9fdb82	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,Buffer)#type		0	DataType -> sge.graphics.DataType
+7bfb5d61c669	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,Buffer)#width		0	Pixels -> sge.Pixels
 5dadc6ff47d3	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,int)#format		0	PixelFormat -> sge.graphics.PixelFormat
 a2aef2c7ea04	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,int)#target		0	TextureTarget -> sge.graphics.TextureTarget
 68443b76a82e	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexImage2D(int,int,int,int,int,int,int,int,int)#type		0	DataType -> sge.graphics.DataType
@@ -3614,8 +3600,12 @@ c1011626aace	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30In
 0ed5905c27e6	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexParameteri#target		0	TextureTarget -> sge.graphics.TextureTarget
 8bed0e22567b	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexParameteriv#target		0	TextureTarget -> sge.graphics.TextureTarget
 49153e3c3eb9	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#format		0	PixelFormat -> sge.graphics.PixelFormat
+fddc8adcd465	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#height		0	Pixels -> sge.Pixels
 8d224a53864b	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#target		0	TextureTarget -> sge.graphics.TextureTarget
 75ffc7e5b8d9	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#type		0	DataType -> sge.graphics.DataType
+2fcfdb97b7a5	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#width		0	Pixels -> sge.Pixels
+173ef80c1513	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#xoffset		0	Pixels -> sge.Pixels
+5e528d6dc407	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,Buffer)#yoffset		0	Pixels -> sge.Pixels
 282f4ca04d28	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,int)#format		0	PixelFormat -> sge.graphics.PixelFormat
 9c608232fc49	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,int)#target		0	TextureTarget -> sge.graphics.TextureTarget
 0c8d68dad22c	derived(rows)	OpaqueSlot	com.badlogic.gdx.graphics.profiling.GL30Interceptor#glTexSubImage2D(int,int,int,int,int,int,int,int,int)#type		0	DataType -> sge.graphics.DataType
@@ -4013,6 +4003,11 @@ aa7ea2fa4824	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getDisplayMode()	
 1f2a814b0457	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getDisplayModes()		0	def displayModes: Array[Graphics.DisplayMode]
 8483f7084cb9	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getFrameId		0	def frameId: Long
 e257bbffd3fb	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getFramesPerSecond		0	def framesPerSecond: Int
+c8355370f201	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getGL20		0	def gl20: GL20
+723150ac4aad	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getGL30		0	def gl30: Nullable[GL30]
+bbc7243a7bb5	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getGL31		0	def gl31: Nullable[GL31]
+0c2b0e1ebd2c	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getGL32		0	def gl32: Nullable[GL32]
+24b81b4578c1	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getGLVersion		0	def glVersion: Graphics.GLVersion
 9827de512bb1	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getHeight		0	def height: Pixels
 309118f93621	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getMonitor		0	def monitor: Graphics.Monitor
 50c20f7d2e08	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getMonitors		0	def monitors: Array[Graphics.Monitor]
@@ -4029,6 +4024,9 @@ d6f31f105825	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getSafeInsetLeft	
 f2865cae27b2	derived(rows)	Parenless	com.badlogic.gdx.Graphics#getWidth		0	def width: Pixels
 790f7cf7d77b	derived(rows)	Parenless	com.badlogic.gdx.Graphics#isContinuousRendering		0	def continuousRendering: Boolean
 0665e234779f	derived(rows)	Parenless	com.badlogic.gdx.Graphics#isFullscreen		0	def fullscreen: Boolean
+77bd7719ee3f	derived(rows)	Parenless	com.badlogic.gdx.Graphics#isGL30Available		0	def gl30Available: Boolean
+e40c9baac9be	derived(rows)	Parenless	com.badlogic.gdx.Graphics#isGL31Available		0	def gl31Available: Boolean
+eb309d33808c	derived(rows)	Parenless	com.badlogic.gdx.Graphics#isGL32Available		0	def gl32Available: Boolean
 0aca9815cc54	derived(rows)	Parenless	com.badlogic.gdx.Input#getAccelerometerX		0	def accelerometerX: Float
 2d1a605df706	derived(rows)	Parenless	com.badlogic.gdx.Input#getAccelerometerY		0	def accelerometerY: Float
 7af5174618e0	derived(rows)	Parenless	com.badlogic.gdx.Input#getAccelerometerZ		0	def accelerometerZ: Float
@@ -4111,6 +4109,7 @@ f1fd37977e79	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getBlendin
 c78ddb1d760b	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getFormat		0	def format: Format
 495bc067099f	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getGLFormat		0	def gLFormat: Int
 e5af6ac17d63	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getGLInternalFormat		0	def gLInternalFormat: Int
+0e1b36af59f1	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getGLType		0	def glType: Int
 0843d91df7ad	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getHeight		0	def height: Pixels
 813eaa2250b5	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getPixels		0	def pixels: ByteBuffer
 e3447a5b335c	derived(rows)	Parenless	com.badlogic.gdx.graphics.Pixmap#getWidth		0	def width: Pixels
@@ -4125,6 +4124,7 @@ ec398aa84343	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3D#getDept
 9cca6719adce	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3D#getWidth		0	def width: Pixels
 38322f5f8e08	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3D#isManaged		0	def managed: Boolean
 0b57a38ffd4a	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3DData#getDepth		0	def depth: Int
+8c9cec22535f	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3DData#getGLType		0	def glType: Int
 48898e5c6c00	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3DData#getHeight		0	def height: Int
 1ca6af0b08bf	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3DData#getInternalFormat		0	def internalFormat: Int
 5770905bfd35	derived(rows)	Parenless	com.badlogic.gdx.graphics.Texture3DData#getWidth		0	def width: Int
@@ -4136,6 +4136,7 @@ bb42605be784	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArray#getH
 1f4e1ebcf17d	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArray#getWidth		0	def width: Pixels
 b25ee622abe9	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArray#isManaged		0	def managed: Boolean
 a942715174c5	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArrayData#getDepth		0	def depth: Int
+234a8d481f0b	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArrayData#getGLType		0	def glType: Int
 80f93038d3bf	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArrayData#getHeight		0	def height: Int
 daf9f8ba2aa2	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArrayData#getInternalFormat		0	def internalFormat: Int
 2d50afce96df	derived(rows)	Parenless	com.badlogic.gdx.graphics.TextureArrayData#getWidth		0	def width: Int
@@ -4189,6 +4190,9 @@ de32b29e4e06	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.BitmapFontCac
 80dfcc060e6f	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.CpuSpriteBatch#getTransformMatrix		0	def transformMatrix: Matrix4
 69972aa68549	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFormat		0	def format: Int
 eed1916a7437	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getFormatString()		0	def formatString: String
+798419154cb5	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLFormat		0	def glFormat: Int
+c5a9b679459f	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLInternalFormat		0	def glInternalFormat: Int
+4833a2f524b2	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLType		0	def glType: Int
 0c7538a56ac6	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getHeight		0	def height: Int
 c334f3e6d4e4	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getPixels		0	def pixels: ByteBuffer
 0374a208f166	derived(rows)	Parenless	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getWidth		0	def width: Int
@@ -4405,6 +4409,7 @@ b3b7391c9d64	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.ETC1Textu
 248e4f3ecdae	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FacedCubemapData#isManaged		0	def isManaged: Boolean
 bab7352087a0	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FacedCubemapData#isPrepared		0	def isPrepared: Boolean
 b34c0655e60b	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#getDepth		0	def depth: Int
+45be8d5f37c1	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#getGLType		0	def glType: Int
 ae7a6f329f56	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#getHeight		0	def height: Int
 0f575a21a675	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#getInternalFormat		0	def internalFormat: Int
 ecc5f0881e1e	derived(rows)	Parenless	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#getWidth		0	def width: Int
@@ -5100,9 +5105,23 @@ c8027fbd5bf6	derived(rows)	Parenless	com.badlogic.gdx.utils.StreamUtils$Optimize
 b6403df730fa	derived(rows)	Parenless	com.badlogic.gdx.utils.viewport.Viewport#getRightGutterX		0	def rightGutterX: Pixels
 92cf58d1734e	derived(rows)	Parenless	com.badlogic.gdx.utils.viewport.Viewport#getTopGutterHeight		0	def topGutterHeight: Pixels
 74749860f7c3	derived(rows)	Parenless	com.badlogic.gdx.utils.viewport.Viewport#getTopGutterY		0	def topGutterY: Pixels
+96d0a95e54e3	derived(rows)	Property	com.badlogic.gdx.Graphics#getGL20		0	def gl20 -> gl20
+e24833064f90	derived(rows)	Property	com.badlogic.gdx.Graphics#getGL30		0	def gl30 -> gl30
+b97689b727d0	derived(rows)	Property	com.badlogic.gdx.Graphics#getGL31		0	def gl31 -> gl31
+fcd06f7cf7dd	derived(rows)	Property	com.badlogic.gdx.Graphics#getGL32		0	def gl32 -> gl32
+a35b65ce7b02	derived(rows)	Property	com.badlogic.gdx.Graphics#getGLVersion		0	def glVersion -> glVersion
+0e83f1f9e380	derived(rows)	Property	com.badlogic.gdx.Graphics#isGL30Available		0	def gl30Available -> gl30Available
+d86ae5cfb3ba	derived(rows)	Property	com.badlogic.gdx.Graphics#isGL31Available		0	def gl31Available -> gl31Available
+90b59071fa67	derived(rows)	Property	com.badlogic.gdx.Graphics#isGL32Available		0	def gl32Available -> gl32Available
 b4a3e2afd2bf	derived(rows)	Property	com.badlogic.gdx.InputMultiplexer#getProcessors		0	var processors -> processors
 26cdfa5744c6	derived(rows)	Property	com.badlogic.gdx.assets.AssetManager#getLogger		0	var logger -> logger
+2c4f28e74931	derived(rows)	Property	com.badlogic.gdx.graphics.Cubemap$CubemapSide#getGLEnum		0	def glEnum -> glEnum
+c4709919cb0b	derived(rows)	Property	com.badlogic.gdx.graphics.Pixmap#getGLType		0	def glType -> glType
 a6671e1f10a9	derived(rows)	Property	com.badlogic.gdx.graphics.Texture#getTextureData		0	var textureData -> textureData
+504f56a068ab	derived(rows)	Property	com.badlogic.gdx.graphics.Texture$TextureFilter#getGLEnum		0	def glEnum -> glEnum
+8282585c864c	derived(rows)	Property	com.badlogic.gdx.graphics.Texture$TextureWrap#getGLEnum		0	def glEnum -> glEnum
+9f5480298833	derived(rows)	Property	com.badlogic.gdx.graphics.Texture3DData#getGLType		0	def glType -> glType
+44f82b94036f	derived(rows)	Property	com.badlogic.gdx.graphics.TextureArrayData#getGLType		0	def glType -> glType
 f824aeeaf6a6	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.Animation#getPlayMode		0	var playMode -> playMode
 93cb25a48f15	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.BitmapFont#getCache		0	var cache -> cache
 9a4f1d2fafa0	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.BitmapFont#getData		0	var data -> data
@@ -5112,6 +5131,9 @@ e577de1c320a	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.BitmapFont$Bit
 d0624d6bdfcc	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#getImagePaths		0	var imagePaths -> imagePaths
 78cccf643108	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.BitmapFontCache#getFont		0	var font -> font
 aa95804c92b1	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.DistanceFieldFont#getDistanceFieldSmoothing		0	var distanceFieldSmoothing -> distanceFieldSmoothing
+f3f0dac7a3a1	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLFormat		0	def glFormat -> glFormat
+d59d8547e867	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLInternalFormat		0	def glInternalFormat -> glInternalFormat
+c65e19b6ccfa	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.Gdx2DPixmap#getGLType		0	def glType -> glType
 33a336038b77	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.NinePatch#getBottomHeight		0	var bottomHeight -> bottomHeight
 0724a934a823	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.NinePatch#getLeftWidth		0	var leftWidth -> leftWidth
 05979c449599	derived(rows)	Property	com.badlogic.gdx.graphics.g2d.NinePatch#getMiddleHeight		0	var middleHeight -> middleHeight
@@ -5199,10 +5221,13 @@ dac5257639be	derived(rows)	Property	com.badlogic.gdx.graphics.g3d.shaders.DepthS
 b9e976ebe061	derived(rows)	Property	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#getIndices()		0	var indices -> indices
 ff5e17774173	derived(rows)	Property	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#getVertices()		0	var vertices -> vertices
 85a077a6a7c8	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getDepth		0	var depth -> depth
+e49db0ce2afd	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getGLFormat		0	def glFormat -> glFormat
+f780e45d79d2	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getGLType		0	def glType -> glType
 a859d19de1de	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getHeight		0	var height -> height
 bcc909c5c374	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getMipMapLevel		0	var mipMapLevel -> mipMapLevel
 377825efa1ce	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getPixels		0	var pixels -> pixels
 65f7a7fa5dce	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getWidth		0	var width -> width
+78ec4bad7867	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#getGLType		0	def glType -> glType
 5562ed820187	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.FloatTextureData#getHeight		0	var height -> height
 a76db76c2d8d	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.FloatTextureData#getType		0	var type -> type
 b412ab16d45a	derived(rows)	Property	com.badlogic.gdx.graphics.glutils.FloatTextureData#getWidth		0	var width -> width
@@ -5477,6 +5502,10 @@ f7c3576f03fa	derived(rows)	Property	com.badlogic.gdx.utils.viewport.Viewport#get
 5593f60c63ec	derived(rows)	Property	com.badlogic.gdx.utils.viewport.Viewport#getScreenY		0	var screenY -> screenY
 be102e6be7c5	derived(rows)	Property	com.badlogic.gdx.utils.viewport.Viewport#getWorldHeight		0	var worldHeight -> worldHeight
 00a29bb5d461	derived(rows)	Property	com.badlogic.gdx.utils.viewport.Viewport#getWorldWidth		0	var worldWidth -> worldWidth
+660583eaafdf	derived(rows)	PropertySetter	com.badlogic.gdx.Graphics#setGL20		0	def gl20 -> gl20
+cd0a7a14a6ab	derived(rows)	PropertySetter	com.badlogic.gdx.Graphics#setGL30		0	def gl30 -> gl30
+6f3405b31ba2	derived(rows)	PropertySetter	com.badlogic.gdx.Graphics#setGL31		0	def gl31 -> gl31
+0ffa0eff448e	derived(rows)	PropertySetter	com.badlogic.gdx.Graphics#setGL32		0	def gl32 -> gl32
 08c463f1c063	derived(rows)	PropertySetter	com.badlogic.gdx.assets.AssetManager#setLogger		0	var logger -> logger
 8db310d928db	derived(rows)	PropertySetter	com.badlogic.gdx.graphics.g2d.Animation#setPlayMode		0	var playMode -> playMode
 6d529b62e13f	derived(rows)	PropertySetter	com.badlogic.gdx.graphics.g2d.BitmapFont#setOwnsTexture		0	var ownsTexture -> ownsTexture
@@ -5763,7 +5792,7 @@ a09b5a83a2d5	derived(unmatched)	NoReferenceType	com.badlogic.gdx.maps.tiled.Atla
 190344cc4ed4	derived(unmatched)	NoReferenceType	com.badlogic.gdx.net.HttpRequestBuilder	<synthetic>	0	no reference declaration at `/HttpRequestBuilder`
 6e447cb73b7a	derived(unmatched)	NoReferenceType	com.badlogic.gdx.net.NetJavaImpl	<synthetic>	0	no reference declaration at `/NetJavaImpl`
 dc31152e8db7	derived(unmatched)	NoReferenceType	com.badlogic.gdx.net.NetJavaImpl$HttpClientResponse	<synthetic>	0	no reference declaration at `/NetJavaImpl/HttpClientResponse`
-a20fc9201a24	derived(unmatched)	NoReferenceType	com.badlogic.gdx.utils.ArraySupplier	<synthetic>	0	no reference declaration at `/ArraySupplier`
+e8cb1d79fc4e	derived(unmatched)	NoReferenceType	com.badlogic.gdx.utils.ArraySupplier	<synthetic>	0	no reference declaration at `/Function1`
 94dd4c69be45	derived(unmatched)	NoReferenceType	com.badlogic.gdx.utils.AtomicQueue	<synthetic>	0	no reference declaration at `/AtomicQueue`
 6f24f20309ed	derived(unmatched)	NoReferenceType	com.badlogic.gdx.utils.Base64Coder	<synthetic>	0	no reference declaration at `/Base64Coder`
 2edf90c529f6	derived(unmatched)	NoReferenceType	com.badlogic.gdx.utils.Base64Coder$CharMap	<synthetic>	0	no reference declaration at `/Base64Coder/CharMap`
@@ -6004,10 +6033,6 @@ dd098445ec4c	idiom(converted)	BeanDetect	com.badlogic.gdx.Application#net	com/ba
 22f95edc1a6e	idiom(converted)	BeanDetect	com.badlogic.gdx.Audio#availableOutputDevices	com/badlogic/gdx/Audio.java	103	kind=BeanDetect — auto-detected pair `availableOutputDevices` via `getAvailableOutputDevices`
 77633441af79	idiom(converted)	BeanDetect	com.badlogic.gdx.Files#externalStoragePath	com/badlogic/gdx/Files.java	76	kind=BeanDetect — auto-detected pair `externalStoragePath` via `getExternalStoragePath`
 33f82443eede	idiom(converted)	BeanDetect	com.badlogic.gdx.Files#localStoragePath	com/badlogic/gdx/Files.java	83	kind=BeanDetect — auto-detected pair `localStoragePath` via `getLocalStoragePath`
-e364218ed412	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#GL30Available	com/badlogic/gdx/Graphics.java	131	kind=BeanDetect — auto-detected pair `GL30Available` via `isGL30Available`
-647ee4e3dec3	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#GL31Available	com/badlogic/gdx/Graphics.java	138	kind=BeanDetect — auto-detected pair `GL31Available` via `isGL31Available`
-b44a4059fe31	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#GL32Available	com/badlogic/gdx/Graphics.java	145	kind=BeanDetect — auto-detected pair `GL32Available` via `isGL32Available`
-3d56087b6344	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#GLVersion	com/badlogic/gdx/Graphics.java	220	kind=BeanDetect — auto-detected pair `GLVersion` via `getGLVersion`
 24687fb1520b	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#backBufferHeight	com/badlogic/gdx/Graphics.java	181	kind=BeanDetect — auto-detected pair `backBufferHeight` via `getBackBufferHeight`
 2fa633849633	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#backBufferScale	com/badlogic/gdx/Graphics.java	184	kind=BeanDetect — auto-detected pair `backBufferScale` via `getBackBufferScale`
 9329c71712c9	idiom(converted)	BeanDetect	com.badlogic.gdx.Graphics#backBufferWidth	com/badlogic/gdx/Graphics.java	178	kind=BeanDetect — auto-detected pair `backBufferWidth` via `getBackBufferWidth`
@@ -6072,7 +6097,6 @@ b3a1de56ad9d	idiom(converted)	BeanDetect	com.badlogic.gdx.assets.AssetManager#qu
 fde581acf0c3	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Cubemap#height	com/badlogic/gdx/graphics/Cubemap.java	178	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 dd47f0bbd3d7	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Cubemap#managed	com/badlogic/gdx/graphics/Cubemap.java	161	kind=BeanDetect — auto-detected pair `managed` via `isManaged`
 65bff84b1120	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Cubemap#width	com/badlogic/gdx/graphics/Cubemap.java	173	kind=BeanDetect — auto-detected pair `width` via `getWidth`
-34f9009f160f	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Cubemap$CubemapSide#GLEnum	com/badlogic/gdx/graphics/Cubemap.java	74	kind=BeanDetect — auto-detected pair `GLEnum` via `getGLEnum`
 9f45abc1f086	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.CubemapData#height	com/badlogic/gdx/graphics/CubemapData.java	35	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 e9c110fc5c52	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.CubemapData#width	com/badlogic/gdx/graphics/CubemapData.java	32	kind=BeanDetect — auto-detected pair `width` via `getWidth`
 3c10ae2e037a	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.GLTexture#UWrap	com/badlogic/gdx/graphics/GLTexture.java	94	kind=BeanDetect — auto-detected pair `UWrap` via `getUWrap`
@@ -6098,14 +6122,11 @@ c3c1f5195505	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Mesh#vertices
 b238364c6098	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture#height	com/badlogic/gdx/graphics/Texture.java	200	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 f4e8d32c8fc0	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture#managed	com/badlogic/gdx/graphics/Texture.java	214	kind=BeanDetect — auto-detected pair `managed` via `isManaged`
 8cbe221f1c45	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture#width	com/badlogic/gdx/graphics/Texture.java	195	kind=BeanDetect — auto-detected pair `width` via `getWidth`
-6fdeb0f531cd	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture$TextureFilter#GLEnum	com/badlogic/gdx/graphics/Texture.java	88	kind=BeanDetect — auto-detected pair `GLEnum` via `getGLEnum`
-b2f0417dcc64	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture$TextureWrap#GLEnum	com/badlogic/gdx/graphics/Texture.java	102	kind=BeanDetect — auto-detected pair `GLEnum` via `getGLEnum`
 45b2636bdcd0	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3D#data	com/badlogic/gdx/graphics/Texture3D.java	72	kind=BeanDetect — auto-detected pair `data` via `getData`
 47607c9beed8	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3D#depth	com/badlogic/gdx/graphics/Texture3D.java	92	kind=BeanDetect — auto-detected pair `depth` via `getDepth`
 6cd18f0b5c14	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3D#height	com/badlogic/gdx/graphics/Texture3D.java	87	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 11b6702ddf8d	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3D#managed	com/badlogic/gdx/graphics/Texture3D.java	97	kind=BeanDetect — auto-detected pair `managed` via `isManaged`
 2ad928163a70	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3D#width	com/badlogic/gdx/graphics/Texture3D.java	82	kind=BeanDetect — auto-detected pair `width` via `getWidth`
-7a6a584db7eb	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3DData#GLType	com/badlogic/gdx/graphics/Texture3DData.java	51	kind=BeanDetect — auto-detected pair `GLType` via `getGLType`
 f17322ff2a73	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3DData#depth	com/badlogic/gdx/graphics/Texture3DData.java	45	kind=BeanDetect — auto-detected pair `depth` via `getDepth`
 42d563878be5	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3DData#height	com/badlogic/gdx/graphics/Texture3DData.java	42	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 62293c1b14bb	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3DData#internalFormat	com/badlogic/gdx/graphics/Texture3DData.java	48	kind=BeanDetect — auto-detected pair `internalFormat` via `getInternalFormat`
@@ -6114,7 +6135,6 @@ f17322ff2a73	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.Texture3DData
 130ef44b661f	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArray#height	com/badlogic/gdx/graphics/TextureArray.java	96	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 5578fb4e39f6	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArray#managed	com/badlogic/gdx/graphics/TextureArray.java	106	kind=BeanDetect — auto-detected pair `managed` via `isManaged`
 31c9f65c3f3f	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArray#width	com/badlogic/gdx/graphics/TextureArray.java	91	kind=BeanDetect — auto-detected pair `width` via `getWidth`
-2f18cd4cec3d	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArrayData#GLType	com/badlogic/gdx/graphics/TextureArrayData.java	63	kind=BeanDetect — auto-detected pair `GLType` via `getGLType`
 e5f0f3734b30	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArrayData#depth	com/badlogic/gdx/graphics/TextureArrayData.java	54	kind=BeanDetect — auto-detected pair `depth` via `getDepth`
 1af8b0626b68	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArrayData#height	com/badlogic/gdx/graphics/TextureArrayData.java	51	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 60ac3976545c	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.TextureArrayData#internalFormat	com/badlogic/gdx/graphics/TextureArrayData.java	60	kind=BeanDetect — auto-detected pair `internalFormat` via `getInternalFormat`
@@ -6339,15 +6359,12 @@ bab8a0dae291	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.utils.Mes
 992a3680fff3	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#primitiveType	com/badlogic/gdx/graphics/g3d/utils/MeshPartBuilder.java	36	kind=BeanDetect — auto-detected pair `primitiveType` via `getPrimitiveType`
 ccf2816de993	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.utils.ShapeCache#material	com/badlogic/gdx/graphics/g3d/utils/ShapeCache.java	124	kind=BeanDetect — auto-detected pair `material` via `getMaterial`
 b3365160d928	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.g3d.utils.ShapeCache#worldTransform	com/badlogic/gdx/graphics/g3d/utils/ShapeCache.java	130	kind=BeanDetect — auto-detected pair `worldTransform` via `getWorldTransform`
-f5e1f7f4f576	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#GLFormat	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	98	kind=BeanDetect — auto-detected pair `GLFormat` via `getGLFormat`
-dec35da71f5e	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#GLType	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	94	kind=BeanDetect — auto-detected pair `GLType` via `getGLType`
 d4d4fa955bc5	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#internalFormat	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	90	kind=BeanDetect — auto-detected pair `internalFormat` via `getInternalFormat`
 5ebd7dcdb7ad	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.ETC1TextureData#height	com/badlogic/gdx/graphics/glutils/ETC1TextureData.java	109	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 be12c64b8cd4	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.ETC1TextureData#type	com/badlogic/gdx/graphics/glutils/ETC1TextureData.java	51	kind=BeanDetect — auto-detected pair `type` via `getType`
 e0668ed06427	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.ETC1TextureData#width	com/badlogic/gdx/graphics/glutils/ETC1TextureData.java	104	kind=BeanDetect — auto-detected pair `width` via `getWidth`
 8fea07fbfad0	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FacedCubemapData#height	com/badlogic/gdx/graphics/glutils/FacedCubemapData.java	131	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 310ed88551d9	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FacedCubemapData#width	com/badlogic/gdx/graphics/glutils/FacedCubemapData.java	121	kind=BeanDetect — auto-detected pair `width` via `getWidth`
-7809b833b6f7	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#GLType	com/badlogic/gdx/graphics/glutils/FileTextureArrayData.java	129	kind=BeanDetect — auto-detected pair `GLType` via `getGLType`
 22b216876faf	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#depth	com/badlogic/gdx/graphics/glutils/FileTextureArrayData.java	119	kind=BeanDetect — auto-detected pair `depth` via `getDepth`
 d395eb146e83	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#height	com/badlogic/gdx/graphics/glutils/FileTextureArrayData.java	114	kind=BeanDetect — auto-detected pair `height` via `getHeight`
 20df88543547	idiom(converted)	BeanDetect	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#internalFormat	com/badlogic/gdx/graphics/glutils/FileTextureArrayData.java	124	kind=BeanDetect — auto-detected pair `internalFormat` via `getInternalFormat`
@@ -7333,14 +7350,20 @@ e9c7ad991ff6	idiom(converted)	SamLambda	com.badlogic.gdx.maps.tiled.BaseTiledMap
 e0d46f5006d3	idiom(refused)	BeanCollapse	com.badlogic.gdx.Game#screen	com/badlogic/gdx/Game.java	69	kind=BeanCollapse guard=ComputedBody — property `screen` via `getScreen/setScreen`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 db44579822c8	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl20	com/badlogic/gdx/Graphics.java	148	kind=BeanCollapse guard=ComputedBody — property `gl20` via `getGL20/setGL20`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 035a944f78ef	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl30	com/badlogic/gdx/Graphics.java	151	kind=BeanCollapse guard=ComputedBody — property `gl30` via `getGL30/setGL30`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
+298db859a389	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl30Available	com/badlogic/gdx/Graphics.java	131	kind=BeanCollapse guard=ComputedBody — property `gl30Available` via `isGL30Available`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 38675fd64a37	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl31	com/badlogic/gdx/Graphics.java	154	kind=BeanCollapse guard=ComputedBody — property `gl31` via `getGL31/setGL31`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
+b251d376b67e	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl31Available	com/badlogic/gdx/Graphics.java	138	kind=BeanCollapse guard=ComputedBody — property `gl31Available` via `isGL31Available`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 a34d59e0e975	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl32	com/badlogic/gdx/Graphics.java	157	kind=BeanCollapse guard=ComputedBody — property `gl32` via `getGL32/setGL32`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
+e521c6cc4b24	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#gl32Available	com/badlogic/gdx/Graphics.java	145	kind=BeanCollapse guard=ComputedBody — property `gl32Available` via `isGL32Available`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
+270ea48e338a	idiom(refused)	BeanCollapse	com.badlogic.gdx.Graphics#glVersion	com/badlogic/gdx/Graphics.java	220	kind=BeanCollapse guard=ComputedBody — property `glVersion` via `getGLVersion`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 1605d1055abd	idiom(refused)	BeanCollapse	com.badlogic.gdx.InputMultiplexer#processors	com/badlogic/gdx/InputMultiplexer.java	75	kind=BeanCollapse guard=NotRequested — property `processors` via `getProcessors`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 10a328643204	idiom(refused)	BeanCollapse	com.badlogic.gdx.assets.AssetManager#logger	com/badlogic/gdx/assets/AssetManager.java	747	kind=BeanCollapse guard=NotRequested — property `logger` via `getLogger/setLogger`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 1049e338f07e	idiom(refused)	BeanCollapse	com.badlogic.gdx.audio.AudioDevice#latency	com/badlogic/gdx/audio/AudioDevice.java	46	kind=BeanCollapse guard=ComputedBody — property `latency` via `getLatency`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 21c6afa9f68d	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.Cubemap#cubemapData	com/badlogic/gdx/graphics/Cubemap.java	156	kind=BeanCollapse guard=MutableStorage — property `cubemapData` via `getCubemapData`; `target = "val"` needs storage java wrote HERE and never wrote again — a field with its own declaration initialiser that NOTHING in this program assigns. A field the constructor fills has its `val`/`var` keyword decided by the constructor funnel, which this phase cannot see, and a field something assigns cannot be a `val` at all: the honest answer is to refuse rather than to guess, because an over-refusal is a counted skip and an under-refusal is `E052 Reassignment to val` at best
 e92653cc485f	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.GLTexture#managed	com/badlogic/gdx/graphics/GLTexture.java	66	kind=BeanCollapse guard=OverriddenBelow — property `managed` via `isManaged`; PERMANENT: a subclass overrides the accessor and a scala `var` cannot be overridden. An interface ABOVE would be fine — a `var` implements an abstract `def x`/`def x_=` — but a declaration BELOW is not
 2134ab3c434e	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.Texture#textureData	com/badlogic/gdx/graphics/Texture.java	209	kind=BeanCollapse guard=MutableStorage — property `textureData` via `getTextureData`; `target = "val"` needs storage java wrote HERE and never wrote again — a field with its own declaration initialiser that NOTHING in this program assigns. A field the constructor fills has its `val`/`var` keyword decided by the constructor funnel, which this phase cannot see, and a field something assigns cannot be a `val` at all: the honest answer is to refuse rather than to guess, because an over-refusal is a counted skip and an under-refusal is `E052 Reassignment to val` at best
+992cc1b743a3	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.Texture3DData#glType	com/badlogic/gdx/graphics/Texture3DData.java	51	kind=BeanCollapse guard=OverriddenBelow — property `glType` via `getGLType`; PERMANENT: a subclass overrides the accessor and a scala `var` cannot be overridden. An interface ABOVE would be fine — a `var` implements an abstract `def x`/`def x_=` — but a declaration BELOW is not
+c7badc726afe	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.TextureArrayData#glType	com/badlogic/gdx/graphics/TextureArrayData.java	63	kind=BeanCollapse guard=OverriddenBelow — property `glType` via `getGLType`; PERMANENT: a subclass overrides the accessor and a scala `var` cannot be overridden. An interface ABOVE would be fine — a `var` implements an abstract `def x`/`def x_=` — but a declaration BELOW is not
 e82153e3c870	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.VertexAttribute#key	com/badlogic/gdx/graphics/VertexAttribute.java	151	kind=BeanCollapse guard=ComputedBody — property `key` via `getKey`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 653a0c03948c	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.VertexAttributes#mask	com/badlogic/gdx/graphics/VertexAttributes.java	161	kind=BeanCollapse guard=ComputedBody — property `mask` via `getMask`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 ef3920ad1d52	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.VertexAttributes#maskWithSizePacked	com/badlogic/gdx/graphics/VertexAttributes.java	174	kind=BeanCollapse guard=ComputedBody — property `maskWithSizePacked` via `getMaskWithSizePacked`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
@@ -7434,10 +7457,13 @@ a9eca10ca01b	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.g3d.particles
 89d7d277e30f	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#indices	com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java	326	kind=BeanCollapse guard=ComputedBody — property `indices` via `getIndices`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 a24143c05e86	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#vertices	com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java	303	kind=BeanCollapse guard=ComputedBody — property `vertices` via `getVertices`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 0b1c9ebe4c69	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#depth	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	76	kind=BeanCollapse guard=NotRequested — property `depth` via `getDepth`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
+766f02192f4c	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#glFormat	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	98	kind=BeanCollapse guard=NotRequested — property `glFormat` via `getGLFormat`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
+6a462c33159c	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#glType	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	94	kind=BeanCollapse guard=NotRequested — property `glType` via `getGLType`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 def830574c8f	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#height	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	72	kind=BeanCollapse guard=NotRequested — property `height` via `getHeight`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 8fc7fd14daef	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#mipMapLevel	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	102	kind=BeanCollapse guard=NotRequested — property `mipMapLevel` via `getMipMapLevel`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 a99f0102be87	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#pixels	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	106	kind=BeanCollapse guard=ComputedBody — property `pixels` via `getPixels`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 2051a598a43a	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#width	com/badlogic/gdx/graphics/glutils/CustomTexture3DData.java	67	kind=BeanCollapse guard=NotRequested — property `width` via `getWidth`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
+4baa2901c4ae	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.FileTextureArrayData#glType	com/badlogic/gdx/graphics/glutils/FileTextureArrayData.java	129	kind=BeanCollapse guard=ComputedBody — property `glType` via `getGLType`; PERMANENT: an accessor's body is not exactly `return this.f` / `this.f = v`, so the field and the property are not the same value and collapsing them would change what a read computes or drop what a write does. This is why the def-pair keeps bodies verbatim
 f3cac44f9b1b	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.FloatTextureData#height	com/badlogic/gdx/graphics/glutils/FloatTextureData.java	120	kind=BeanCollapse guard=ConcreteRelative — property `height` via `getHeight`; PERMANENT: another declaration in the accessor's override component has a BODY, and a scala `var` can IMPLEMENT an abstract `def x`/`def x_=` but cannot OVERRIDE a concrete one. An abstract member above — an interface's, or an abstract class's — is fine, which is the case this guard is careful to admit
 1d0593171cbc	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.FloatTextureData#type	com/badlogic/gdx/graphics/glutils/FloatTextureData.java	56	kind=BeanCollapse guard=ConcreteRelative — property `type` via `getType`; PERMANENT: another declaration in the accessor's override component has a BODY, and a scala `var` can IMPLEMENT an abstract `def x`/`def x_=` but cannot OVERRIDE a concrete one. An abstract member above — an interface's, or an abstract class's — is fine, which is the case this guard is careful to admit
 01b0976a85b4	idiom(refused)	BeanCollapse	com.badlogic.gdx.graphics.glutils.FloatTextureData#width	com/badlogic/gdx/graphics/glutils/FloatTextureData.java	115	kind=BeanCollapse guard=ConcreteRelative — property `width` via `getWidth`; PERMANENT: another declaration in the accessor's override component has a BODY, and a scala `var` can IMPLEMENT an abstract `def x`/`def x_=` but cannot OVERRIDE a concrete one. An abstract member above — an interface's, or an abstract class's — is fine, which is the case this guard is careful to admit
@@ -7700,11 +7726,8 @@ e7e0e7e416e2	idiom(refused)	BeanCollapse	com.badlogic.gdx.utils.viewport.Viewpor
 c78ccd3ed418	idiom(refused)	BeanCollapse	com.badlogic.gdx.utils.viewport.Viewport#worldWidth	com/badlogic/gdx/utils/viewport/Viewport.java	136	kind=BeanCollapse guard=NotRequested — property `worldWidth` via `getWorldWidth/setWorldWidth`; NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not asked for it. Write `target = "var"` (or `"val"`) on this entry to convert it; read this row as the DENOMINATOR the converted lane is drawn from
 5a055ec30c95	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Colors#colors	com/badlogic/gdx/graphics/Colors.java	34	kind=BeanDetect guard=Static — auto-detected `colors`; the getter is static; a companion property is out of scope
 8595d69b077a	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Cubemap#managedStatus	com/badlogic/gdx/graphics/Cubemap.java	278	kind=BeanDetect guard=Static — auto-detected `managedStatus`; the getter is static; a companion property is out of scope
-c82a882ac54a	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Cubemap$CubemapSide#GLEnum	com/badlogic/gdx/graphics/Cubemap.java	74	kind=BeanDetect guard=RenameRefused — auto-detected pair `GLEnum`; the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getGLEnum
 a74bc7c72b10	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Mesh#managedStatus	com/badlogic/gdx/graphics/Mesh.java	1001	kind=BeanDetect guard=Static — auto-detected `managedStatus`; the getter is static; a companion property is out of scope
 9bad87a87c1b	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Texture#managedStatus	com/badlogic/gdx/graphics/Texture.java	314	kind=BeanDetect guard=Static — auto-detected `managedStatus`; the getter is static; a companion property is out of scope
-a3d659a1f50e	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Texture$TextureFilter#GLEnum	com/badlogic/gdx/graphics/Texture.java	88	kind=BeanDetect guard=RenameRefused — auto-detected pair `GLEnum`; the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getGLEnum
-e0993686779f	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Texture$TextureWrap#GLEnum	com/badlogic/gdx/graphics/Texture.java	102	kind=BeanDetect guard=RenameRefused — auto-detected pair `GLEnum`; the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getGLEnum
 e9acbba2b4c5	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.Texture3D#managedStatus	com/badlogic/gdx/graphics/Texture3D.java	131	kind=BeanDetect guard=Static — auto-detected `managedStatus`; the getter is static; a companion property is out of scope
 ea8a6926175b	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.TextureArray#managedStatus	com/badlogic/gdx/graphics/TextureArray.java	140	kind=BeanDetect guard=Static — auto-detected `managedStatus`; the getter is static; a companion property is out of scope
 655118335297	idiom(refused)	BeanDetect	com.badlogic.gdx.graphics.g2d.Animation#frameDuration	com/badlogic/gdx/graphics/g2d/Animation.java	200	kind=BeanDetect guard=SetterHasBehaviour — auto-detected `frameDuration`; `setFrameDuration` does more than assign its parameter to a field: it keeps java's name, the getter alone becomes the property
@@ -9995,6 +10018,7 @@ a493759c24a3	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g2d
 7b1af1885d67	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#getGroupShader	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	214	`com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#getGroupShader` on `com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#getGroupShader`
 74bcaff2c0c7	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.decals.SimpleOrthoGroupStrategy#getGroupShader	com/badlogic/gdx/graphics/g3d/decals/SimpleOrthoGroupStrategy.java	121	`com.badlogic.gdx.graphics.g3d.decals.SimpleOrthoGroupStrategy#getGroupShader` on `com.badlogic.gdx.graphics.g3d.decals.SimpleOrthoGroupStrategy#getGroupShader`
 6e10ae4b6abb	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData	com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java	103	`com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData` on `com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData`
+8c58d141e61b	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData#parameters	com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java	103	`com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData#parameters` on parameter `parameters` of com.badlogic.gdx.graphics.g3d.loader.ObjLoader#loadModelData
 65a0dfce4cfb	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.particles.values.UnweightedMeshSpawnShapeValue#setMesh#model	com/badlogic/gdx/graphics/g3d/particles/values/UnweightedMeshSpawnShapeValue.java	41	`com.badlogic.gdx.graphics.g3d.particles.values.UnweightedMeshSpawnShapeValue#setMesh#model` on parameter `model` of com.badlogic.gdx.graphics.g3d.particles.values.UnweightedMeshSpawnShapeValue#setMesh
 217b5ad4f04d	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter#sort#camera	com/badlogic/gdx/graphics/g3d/utils/DefaultRenderableSorter.java	34	`com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter#sort#camera` on parameter `camera` of com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter#sort
 bc10509d46f5	nullability-boundary	OverrideCrossing	com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setColor#color	com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java	352	`com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setColor#color` on parameter `color` of com.badlogic.gdx.graphics.g3d.utils.MeshBuilder#setColor
@@ -10174,6 +10198,7 @@ a8d06b622452	nullability-boundary	UnwritableFormal	T	com/badlogic/gdx/utils/Snap
 a8d06b622452/2	nullability-boundary	UnwritableFormal	T	com/badlogic/gdx/utils/SnapshotArray.java	148	the formal this argument would be ascribed to names a type variable that is not in scope where the call stands, so no ascription can be written — the argument is left as it is
 a8d06b622452/3	nullability-boundary	UnwritableFormal	T	com/badlogic/gdx/utils/SnapshotArray.java	148	the formal this argument would be ascribed to names a type variable that is not in scope where the call stands, so no ascription can be written — the argument is left as it is
 a8d06b622452/4	nullability-boundary	UnwritableFormal	T	com/badlogic/gdx/utils/SnapshotArray.java	153	the formal this argument would be ascribed to names a type variable that is not in scope where the call stands, so no ascription can be written — the argument is left as it is
+12c46b9d430f	nullability-boundary	VarargParameter	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>#rootNodeIds	com/badlogic/gdx/graphics/g3d/ModelInstance.java	150	`com.badlogic.gdx.graphics.g3d.ModelInstance#<init>#rootNodeIds` on parameter `rootNodeIds` of com.badlogic.gdx.graphics.g3d.ModelInstance#<init>
 b2748047e2a7	nullability-boundary	VarargParameter	com.badlogic.gdx.scenes.scene2d.ui.Slider#setSnapToValues#values	com/badlogic/gdx/scenes/scene2d/ui/Slider.java	200	`com.badlogic.gdx.utils.Null` on parameter `values` of com.badlogic.gdx.scenes.scene2d.ui.Slider#setSnapToValues
 a117cd38d934	nullability-boundary	VarargParameter	com.badlogic.gdx.scenes.scene2d.ui.Table#stack#actors	com/badlogic/gdx/scenes/scene2d/ui/Table.java	304	`com.badlogic.gdx.utils.Null` on parameter `actors` of com.badlogic.gdx.scenes.scene2d.ui.Table#stack
 74abf1ffd83a	omissions	annotation dropped	sge.graphics.g3d.particles.ParallelArray$ObjectChannel	<synthetic>	0	java.lang.SuppressWarnings
@@ -10530,17 +10555,17 @@ f62d51d62a31	overload-risk	VarargPhaseSpan	sge.graphics.g3d.Material	com/badlogi
 4a0f57ecc80e/4	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	97	call to `<init>/6` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.Model, sge.math.Matrix4, java.lang.String, scala.Boolean, scala.Boolean, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 4a0f57ecc80e/5	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	107	call to `<init>/6` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.Model, sge.math.Matrix4, java.lang.String, scala.Boolean, scala.Boolean, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 9057f045e090	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	118	call to `<init>/7` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, java.lang.String, scala.Boolean, scala.Boolean, scala.Boolean, scala.Boolean), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
-cd3ead1cb23a	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	146	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.util.DynamicArray), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+daddbb3576e7	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	146	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.Nullable), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 7bc01ef9eb9f	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	154	call to `copyNodes/1` has 2 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray), (lowlevel.util.DynamicArray, scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 15bd1fb550ec	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	156	call to `copyNodes/2` has 2 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, lowlevel.util.DynamicArray), (lowlevel.util.DynamicArray, scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
-cd3ead1cb23a/2	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	163	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.util.DynamicArray), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+daddbb3576e7/2	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	163	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.Nullable), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 dab227c56f70	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	168	call to `<init>/4` has 6 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, java.lang.String, scala.Boolean, scala.Boolean), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.Model, scala.Float, scala.Float, scala.Float), (sge.graphics.g3d.Model, sge.math.Matrix4, java.lang.String, scala.Boolean), (sge.graphics.g3d.Model, sge.math.Matrix4, lowlevel.util.DynamicArray, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 15bd1fb550ec/2	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	175	call to `copyNodes/2` has 2 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, lowlevel.util.DynamicArray), (lowlevel.util.DynamicArray, scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 0c49a2d085fb	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	182	call to `<init>/1` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 0c49a2d085fb/2	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	188	call to `<init>/1` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
-cd3ead1cb23a/3	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	194	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.util.DynamicArray), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+daddbb3576e7/3	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	194	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.Nullable), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 97850a56e1af/2	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	199	call to `<init>/2` has 6 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.util.DynamicArray), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.Model, sge.math.Matrix4), (sge.graphics.g3d.Model, sge.math.Vector3), (sge.graphics.g3d.ModelInstance, sge.math.Matrix4) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
-cd3ead1cb23a/4	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	204	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.util.DynamicArray), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+daddbb3576e7/4	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	204	call to `<init>/3` has 5 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model, lowlevel.Nullable, lowlevel.Nullable), (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Array)…, (sge.graphics.g3d.Model, lowlevel.Nullable, scala.Boolean), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance, lowlevel.Nullable, scala.Boolean) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 7bc01ef9eb9f/2	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	211	call to `copyNodes/1` has 2 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray), (lowlevel.util.DynamicArray, scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 0c49a2d085fb/3	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/ModelInstance.java	218	call to `<init>/1` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 f0c9850e8805	overload-risk	VarargPhaseSpan	sge.graphics.g3d.ModelInstance	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	53	call to `<init>/1` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (sge.graphics.g3d.Model), (sge.graphics.g3d.Model, scala.Array)…, (sge.graphics.g3d.ModelInstance) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
@@ -10685,6 +10710,9 @@ c72cc3c58bb1	overload-risk	VarargPhaseSpan	sge.utils.IntSet	com/badlogic/gdx/uti
 7afe9d81f3b7/2	overload-risk	VarargPhaseSpan	sge.utils.SnapshotArray	com/badlogic/gdx/InputMultiplexer.java	67	call to `addAll/1` has 2 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray), (scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 7afe9d81f3b7/3	overload-risk	VarargPhaseSpan	sge.utils.SnapshotArray	com/badlogic/gdx/InputMultiplexer.java	72	call to `addAll/1` has 2 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray), (scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
 824f31609e2d	policy	bound, and never applied	dependencies	PortManifest.dependencies	0	com.badlogicgames.gdx:gdx-jnigen-loader:2.5.2 — unused — no API this module emits needs this artifact on any platform it targets, and none of its original code did either — a coordinate copied from another module, or one whose last call an upstream change removed. Remove the entry, unless the usage is in a hand-written source this run does not walk  [original: no reference this run can see; emitted: no reference this run can see]
+648ef4dddce8	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.graphics.Cubemap$CubemapSide#glEnum`	0	com.badlogic.gdx.graphics.Cubemap$CubemapSide#glEnum — the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getGLEnum
+7bb9119f8d2e	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.graphics.Texture$TextureFilter#glEnum`	0	com.badlogic.gdx.graphics.Texture$TextureFilter#glEnum — the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getGLEnum
+67d1262612ee	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.graphics.Texture$TextureWrap#glEnum`	0	com.badlogic.gdx.graphics.Texture$TextureWrap#glEnum — the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getGLEnum
 671d046134cf	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.graphics.g2d.ParticleEmitter#allowCompletion`	0	com.badlogic.gdx.graphics.g2d.ParticleEmitter#allowCompletion — `allowCompletion` is already taken in the component's classes by com.badlogic.gdx.graphics.g2d.ParticleEmitter#allowCompletion — and at least one of them is not a member the emitter's §4.55 passes will move
 679ecd376f07	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.graphics.g2d.PixmapPackerIO$ImageFormat#extension`	0	com.badlogic.gdx.graphics.g2d.PixmapPackerIO$ImageFormat#extension — the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Enum#getExtension
 3cb53866b06b	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.graphics.g3d.particles.ParticleShader#defaultFragmentShader`	0	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#defaultFragmentShader — `getDefaultFragmentShader` has no NILARY overload, so there is no getter to convert (an overload with parameters is left exactly as it is)
@@ -10702,6 +10730,7 @@ d55a82649836	policy	matched, but unverifiable	bean-properties	BeanPropertyTransf
 6c090500116d	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.utils.I18NBundle#exceptionOnMissingKey`	0	com.badlogic.gdx.utils.I18NBundle#exceptionOnMissingKey — `getExceptionOnMissingKey` is STATIC; a companion property is out of scope for this phase (v1), so the accessor is left as it is
 87af25a329b3	policy	matched, but unverifiable	bean-properties	BeanPropertyTransform(pairs) `com.badlogic.gdx.utils.I18NBundle#simpleFormatter`	0	com.badlogic.gdx.utils.I18NBundle#simpleFormatter — `getSimpleFormatter` is STATIC; a companion property is out of scope for this phase (v1), so the accessor is left as it is
 f0a83a984bda	policy	matched, but unverifiable	member-rename	MemberRenameTransform(renames)	0	com.badlogic.gdx.scenes.scene2d.ui.List#toString(T) — the component reaches 1 declaration(s) this program does not parse and cannot move: java.lang.Object#toString — so this rename did NOT happen and the member keeps its upstream name
+16825eb71757	policy	never matched	add-members	AddMembersTransform(fromReference)	0	com.badlogic.gdx.utils.OptimizedByteArrayOutputStream — no symbol of that name occurs in this program and the frontend recorded no such member, so the rule silently did not run
 f854fbb3874f	port-map	Ambiguous	com.badlogic.gdx.utils.Array#<init>	com/badlogic/gdx/assets/loaders/BitmapFontLoader.java	93	2 overload(s) in the base's map disagree (com.badlogic.gdx.utils.Array#<init>(Class)=Dropped, com.badlogic.gdx.utils.Array#<init>(MkArray)=Renamed) and this call site's arity does not separate them (base: lls)
 7fc43b25f7d7	port-map	Ambiguous	com.badlogic.gdx.utils.Array#<init>	com/badlogic/gdx/graphics/Cubemap.java	229	2 overload(s) in the base's map disagree (com.badlogic.gdx.utils.Array#<init>(Class)=Dropped, com.badlogic.gdx.utils.Array#<init>(MkArray)=Renamed) and this call site's arity does not separate them (base: lls)
 f315428e8da5	port-map	Ambiguous	com.badlogic.gdx.utils.Array#<init>	com/badlogic/gdx/graphics/Texture.java	264	2 overload(s) in the base's map disagree (com.badlogic.gdx.utils.Array#<init>(Class)=Dropped, com.badlogic.gdx.utils.Array#<init>(MkArray)=Renamed) and this call site's arity does not separate them (base: lls)
@@ -11010,7 +11039,6 @@ dafebc3c095f	resources	shipped	com/badlogic/gdx/graphics/g3d/shaders/default.ver
 5ec1c3e79523	resources	shipped	com/badlogic/gdx/graphics/g3d/shaders/depth.vertex.glsl	../res/com/badlogic/gdx/graphics/g3d/shaders/depth.vertex.glsl	0	shipped verbatim as `com/badlogic/gdx/graphics/g3d/shaders/depth.vertex.glsl`, which the emitted code names
 8a90dd10cec1	resources	shipped	com/badlogic/gdx/utils/lsans-15.fnt	../res/com/badlogic/gdx/utils/lsans-15.fnt	0	shipped verbatim as `com/badlogic/gdx/utils/lsans-15.fnt`, which the emitted code names
 821086b58d36	resources	shipped	com/badlogic/gdx/utils/lsans-15.png	../res/com/badlogic/gdx/utils/lsans-15.png	0	shipped verbatim as `com/badlogic/gdx/utils/lsans-15.png`, which the emitted code names
-58a4ff8ceb94	rewrite-callsites	Unaccounted	class-tag-params	<pipeline>	0	retyped 7 owned declaration(s) and names no check lane
 3f9d2ac4ba33	rewrite-callsites	Unaccounted	class-to-trait	<pipeline>	0	retyped 1 owned declaration(s) and names no check lane
 7e3822584235	signature	call to a member with no declaration	sge.utils.Pool#<init>	<synthetic>	0	expects 0, found 0
 7e3822584235/2	signature	call to a member with no declaration	sge.utils.Pool#<init>	<synthetic>	0	expects 0, found 0

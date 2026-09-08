@@ -204,6 +204,8 @@ final class NullabilityTransform(
       case Target.Union => ()
       case Target.Named(fqn) =>
         wrapperSym = mintOrReuse(fqn, fqn.split('.').last)
+        // a wrapper slot has no `null` (the emitter's opaque-slot rule pads it with a cast instead)
+        table = table.updated(table(wrapperSym).copy(flags = table(wrapperSym).flags.copy(isOpaque = true)))
         applySym   = mintOrReuse(fqn + ".apply", "apply", wrapperSym)
         emptySym   = mintOrReuse(fqn + ".empty", "empty", wrapperSym)
         getSym     = mintOrReuse(fqn + ".get", "get", wrapperSym)
@@ -300,7 +302,10 @@ final class NullabilityTransform(
             case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == setterName) =>
               d.paramss.flatten.headOption.foreach { param =>
                 program.symbolOf(param.symbol).foreach { paramSym =>
-                  if !claimed.contains(paramSym.id) && retypable(program, paramSym.id) then
+                  // a DERIVED getter's setter is the reference's to decide: no row on the setter's
+                  // parameter means the reference keeps it plain (`gl30: Nullable[GL30]`, `gl30_=(GL30)`)
+                  val referenceKeepsPlain = deriveMembers && derivedIdSet(x.sym.id) && !derivedIdSet(paramSym.id)
+                  if !claimed.contains(paramSym.id) && retypable(program, paramSym.id) && !referenceKeepsPlain then
                     slotOf(program, paramSym) match
                       case Some((Slot.Param, was)) if !alreadyNullable(was) &&
                         !isPrimitive(program, was) &&
@@ -828,12 +833,25 @@ final class NullabilityTransform(
     case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
     case other             => other
 
+  /** the slot an assignment writes: a PROPERTY's setter parameter where one exists (a getter may
+    * return the wrapper while its setter takes the plain value, `gl30`/`gl30_=`), else the lhs type. */
+  private def assignedSlot(lhs: Term)(using p: Program): TypeRepr = lhs match
+    case Tree.Select(_, m, tpe, _) =>
+      // a PROPERTY (a nilary def) writes through its setter; a FIELD is its own slot
+      p.symbolOf(m).filter(_.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _ => false })
+        .flatMap(ms => p.symbols.all.find(s => s.owner == ms.owner && s.name == ms.name + "_=").map(_.info).collect {
+          case TypeRepr.MethodType(List((_, pt)), _, _) => pt }).getOrElse(tpe)
+    case other => other.tpe
   override def transformTerm(t: Term)(using Program): Term = t match
-    case a: Tree.Assign      if isWrapper => a.copy(rhs = coerceTo(a.lhs.tpe, a.rhs))
+    case a: Tree.Assign      if isWrapper => a.copy(rhs = coerceTo(assignedSlot(a.lhs), a.rhs))
     // `(T) wrapped` — java casts the VALUE; the wrapper is not it (`Attributes.get`: a
     // `ClassCastException` at run time, 2 of 12 demos). Unwrapped at the cast, by the cast's target.
     case x: Tree.Typed       if isWrapper && isWrapped(x.expr) && !isWrapperType(x.tpt.tpe) =>
       x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
+    // `(T) null` whose cast target the retyping made the wrapper: a null literal cannot inhabit it,
+    // the empty wrapper is what java's null meant there (`super(data, (Array<TextureRegion>) null, …)`)
+    case Tree.Typed(lit @ Tree.Literal(Constant.NullC, _, _), tpt, _, _) if isWrapper && isWrapperType(tpt.tpe) =>
+      wrap(tpt.tpe, lit)
     // `new T[]{ a, b }`: each element sits at a slot of the ARRAY's element type — a wrapped
     // field handed to a `int[][]` literal is unwrapped like any other slot (`PixmapPacker`)
     // `for (c : wrappedArray)`: java dereferences the iterable (NPE on null) — `.get` is that read

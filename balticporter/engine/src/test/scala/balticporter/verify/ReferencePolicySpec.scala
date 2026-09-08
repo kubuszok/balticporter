@@ -278,6 +278,48 @@ class ReferencePolicySpec extends FunSuite:
     assertEquals(fams, List("com.example.gfx.PM#add", "com.example.gfx.PM#get"))
   }
 
+  test("an acronym-cased accessor is matched at the reference's lowered spelling and folds to it") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Gfx {
+        |  public boolean isGL30Available() { return false; }
+        |  public String getGL30() { return null; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import lowlevel.Nullable
+        |class Gfx { def gl30Available: Boolean = false; def gl30: Nullable[String] = Nullable.empty }
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val props = r.policy.rows.filter(_.family == DerivedPolicy.Family.Property).map(row => row.upstream -> row.target).toMap
+    assertEquals(props.get("com.example.gfx.Gfx#isGL30Available"), Some("gl30Available"))
+    assertEquals(props.get("com.example.gfx.Gfx#getGL30"), Some("gl30"))
+    assert(r.policy.rows.exists(row => row.family == DerivedPolicy.Family.NullableMember && row.upstream == "com.example.gfx.Gfx#getGL30"))
+  }
+
+  test("several reference constructors at one arity: the one whose parameter types match java's decides") {
+    val javaSrc2 =
+      """package com.example.gfx;
+        |public class Font {
+        |  public Font(String data, int[] regions, boolean integer) { }
+        |  public Font(String data, String region, boolean integer) { }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import lowlevel.Nullable
+        |class Font(val data: String, regions: Nullable[Array[Int]], val integer: Boolean) {
+        |  def this(data: String, region: String, integer: Boolean) = this(data, Nullable.empty, integer)
+        |}
+        |""".stripMargin
+    val p = SpoonTir.fromSource(javaSrc2)
+    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val nullables = r.policy.rows.filter(_.family == DerivedPolicy.Family.NullableMember).map(_.upstream)
+    assert(clue(nullables).exists(_.contains("regions")), r.policy.rows.mkString("\n"))
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

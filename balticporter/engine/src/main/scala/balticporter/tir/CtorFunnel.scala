@@ -849,15 +849,19 @@ object CtorFunnel:
   /** Simplify `if (nullExpr != null)` to the else branch when the condition is always false.
     * Avoids a Scala 3 parser issue with `null.asInstanceOf[T] != null` in `this(...)` arguments
     * where the true branch contains a block. // ENGINE-LIMITS C3 */
-  private def simplifyNullIf(t: Term): Term =
+  private def simplifyNullIf(t: Term)(using Program): Term =
     def isNull(t: Term): Boolean = t match
       case Tree.Literal(Constant.NullC, _, _)  => true
       case Tree.Typed(e, _, _, _)              => isNull(e)
       case Tree.Commented(_, e)                => isNull(e)
       case _                                   => false
-    t match
-      case Tree.If(cond, _, el, _, _) if isNullCompare(cond) => simplifyNullIf(el)
-      case _                                                 => t
+    // a WALK, not a top-level match: a phase may have wrapped the `if` (`Nullable(if (…) A else B)`)
+    val ph = new Phase:
+      def name: String = "ctor-funnel/simplify-null-if"
+      override def transformTerm(x: Term)(using Program): Term = x match
+        case Tree.If(cond, _, el, _, _) if isNullCompare(cond) => el
+        case other                                             => other
+    StandardTraversal.mapTerm(ph, t)
   private def isNullCompare(cond: Term): Boolean = cond match
     case Tree.Apply(Tree.Select(lhs, _, _, _), List(rhs), _, _, _) => isNull(lhs) && isNull(rhs)
     case _ => false
@@ -1715,7 +1719,7 @@ object CtorFunnel:
       // C3: simplify `if (null != null) A else B` to `B` in effective args — the substitution
       // of a null callerArg into a null-check produces a tautologically false condition whose
       // rendering (`null.asInstanceOf[T] != null`) triggers a Scala 3 parser issue in `this(...)`.
-      val argsMap = flat.map((sym, r) => sym -> r.effectiveArgs.map(simplifyNullIf)).toMap
+      val argsMap = flat.map((sym, r) => sym -> r.effectiveArgs.map(a => simplifyNullIf(a)(using program))).toMap
       // verify all roots now target the same parent constructor and same arity
       val effectiveArities = argsMap.values.map(_.size).toList.distinct
       if effectiveArities.sizeIs != 1 then scala.None
