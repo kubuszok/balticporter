@@ -2436,6 +2436,16 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Session floor at 109 (2026-09-08 16:00).** Session total: sge-suite-check 368 -> 109 (259 resolved,
+70%). Added `AssetManager.apply` instance methods (throwing delegates to `get`), companion factories with
+original parameter names for AssetManager/PerformanceCounter/SkinParameter (the funnel's `$p` naming
+workaround), AlignMode type+val alias in BillboardParticleBatch. Tried `AssetManager.errorListener` setter
+from reference — fails because the port's field is plain `AssetErrorListener` where sge wraps in `Nullable`.
+Remaining 109: vector operators 12 (this.type I1), TableCellTest 11 (private _fillX/_expandX/tableAlign),
+ConvexHullTest 8 (FloatArray), Bresenham2Test 7 (DynamicArray.length), Timer 5 (disposeThread),
+particles 5 (ParticleEffectIo ctors), TextureAtlasData 5 (inner class), math tests 12 (type mismatches
+from DynArray/FloatArray), scene2d 10 (isDebug/top/right/isDefined), other 34 (cascades + structural).
+
 **Particles/JSON infrastructure injected (2026-09-08 15:00).** `ParticleEffectCodecs.scala` (2060
 lines) adapted to the port's field names (`_active` for `active`, `AnyRef` for `Any` at the `T <: Object`
 bound, `toArray()` with parens on `IntArray`). `ResourceData` gained 15 companion methods from the
