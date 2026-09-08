@@ -389,7 +389,31 @@ object LibgdxLadder:
     "collections" -> List(
       new balticporter.transform.CollectionsTransform(
         scope    = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
-        retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+        retarget = Map("java.util.Comparator" -> "scala.math.Ordering",
+          "com.badlogic.gdx.utils.FloatArray"   -> "lowlevel.util.DynamicArray",
+          "com.badlogic.gdx.utils.ShortArray"   -> "lowlevel.util.DynamicArray",
+          "com.badlogic.gdx.utils.IntArray"     -> "lowlevel.util.DynamicArray",
+          "com.badlogic.gdx.utils.BooleanArray" -> "lowlevel.util.DynamicArray",
+          "com.badlogic.gdx.utils.LongArray"    -> "lowlevel.util.DynamicArray"),
+        retargetTypeArgs = Map(
+          "com.badlogic.gdx.utils.FloatArray"   -> List(balticporter.transform.CollectionsTransform.RetargetArg.FixedType("scala.Float")),
+          "com.badlogic.gdx.utils.ShortArray"   -> List(balticporter.transform.CollectionsTransform.RetargetArg.FixedType("scala.Short")),
+          "com.badlogic.gdx.utils.IntArray"     -> List(balticporter.transform.CollectionsTransform.RetargetArg.FixedType("scala.Int")),
+          "com.badlogic.gdx.utils.BooleanArray" -> List(balticporter.transform.CollectionsTransform.RetargetArg.FixedType("scala.Boolean")),
+          "com.badlogic.gdx.utils.LongArray"    -> List(balticporter.transform.CollectionsTransform.RetargetArg.FixedType("scala.Long"))),
+        retargetRewrites = {
+          val RT = balticporter.transform.CollectionsTransform.RetargetRewrite
+          val common = Map(
+            ("empty", 0)  -> RT.Rename("isEmpty"),
+            ("incr", 2)   -> RT.Template("{ val $i = $0; $recv($i) = ($recv($i) + $1).asInstanceOf[$T0] }"),
+            ("incr", 1)   -> RT.Template("{ var $i = 0; while ($i < $recv.size) { $recv($i) = ($recv($i).asInstanceOf[Int] + $0).asInstanceOf[$T0]; $i += 1 } }"))
+          Map(
+            "com.badlogic.gdx.utils.FloatArray"   -> common,
+            "com.badlogic.gdx.utils.ShortArray"   -> (common ++ Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite](("add", 1) -> RT.Template("$recv.add($0.toShort)"))),
+            "com.badlogic.gdx.utils.IntArray"     -> common,
+            "com.badlogic.gdx.utils.BooleanArray" -> common,
+            "com.badlogic.gdx.utils.LongArray"    -> common)
+        })),
     // `@Null -> lowlevel.Nullable` on core's entry: merges with lls's instance (`Only` union), so an
     // override of a base member the base retyped (`SnapshotArray.replaceFirst`, 2 `E120` name
     // clashes after erasure) moves with its component; ahead of `enrich`, whose value-map templates
@@ -852,7 +876,10 @@ object LibgdxLadder:
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
     // DataBuffer reads FilterOutputStream.out which Scala.js javalib doesn't expose; nobody
     // references it; sge rewrote it entirely
-    "extras" -> Set("com.badlogic.gdx.utils.DataBuffer"),
+    "extras" -> Set("com.badlogic.gdx.utils.DataBuffer",
+      "com.badlogic.gdx.utils.FloatArray", "com.badlogic.gdx.utils.ShortArray",
+      "com.badlogic.gdx.utils.IntArray", "com.badlogic.gdx.utils.BooleanArray",
+      "com.badlogic.gdx.utils.LongArray"),
     // sge's `Music` (position/duration as `Position`, `onComplete(Music => Unit)`) replaces java's
     "audio" -> Set("com.badlogic.gdx.audio.Music"),
     // sge's `InputProcessor` (every callback defaulted to `false`, so `new InputProcessor {}` stands)
@@ -1018,7 +1045,10 @@ object LibgdxL0TestMigrate:
     val excludedFiles = Set("com/badlogic/gdx/math/BezierTest.java",
       // json step dropped java's `Json` and replaced it with `LegacyJson` (a stub for particle/Skin
       // references); the tests exercise `fromJson` which the stub does not implement — runtime failures
-      "com/badlogic/gdx/utils/JsonTest.java")
+      "com/badlogic/gdx/utils/JsonTest.java",
+      // primitive array classes dropped (retargeted to DynamicArray[Prim]); their test exercises
+      // members like `mul`/`incr` that DynamicArray doesn't have
+      "com/badlogic/gdx/utils/LongArrayTest.java")
 
     val files = Files.walk(testRoot).iterator().asScala
       .filter(p => p.toString.endsWith(".java"))
