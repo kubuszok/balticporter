@@ -2417,6 +2417,14 @@ Path = …)` reaches java's two-argument constructor: it ships public (53 `Publi
 type)` compiles in the suite. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12.
 **`sge-suite-check` 391 -> 382** (filetype 15 -> 7).
 
+**The captured value carried wrapped (2026-09-08 09:15).** `capture` takes an optional wrapper
+(`… as externalStoragePath: lowlevel.Nullable = lowlevel.Nullable.empty`): the field is `Nullable[String]`
+as sge's, callers pass `lowlevel.Nullable.apply(read)`, the in-class read is coerced (`.orNull`) by the
+nullability step, whose wrapper symbol the capture reuses (or mints in the same shape — a self-typed
+symbol printed bare at value positions, 2,266 errors in one run). The desktop and android copies wrap
+the value they assign. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12.
+**`sge-suite-check` 382 -> 375** (filetype 7 -> 0: the file layer's shape is closed).
+
 **Cards from the residue at 507 (2026-09-08 05:20).** *tiled 74 + particles 42*: sge's JSON layer —
 `TmjJson.scala`/`TiledProjectJson.scala` (SGE-original jsoniter DTOs), `ParticleEffectCodecs.scala`,
 `ResourceData.toJson/fromJson`, all written against sge's OWN `sge.utils.Json` (a jsoniter value type

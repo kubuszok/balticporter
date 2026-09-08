@@ -50,6 +50,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "enum) so that ONLY calls on a dropped enum are spliced to `toString` — the class-file " +
           "identity is the instrument, as for the annotation lookups above"),
     ),
+    "GlobalsToImplicitsTransform.scala" -> Map(
+      "fullName ==" ->
+        ("the WRAPPER a `capture` key names (`lowlevel.Nullable`) is an external type the program already " +
+          "references through the nullability step's own wrapper symbol: the capture reuses THAT symbol " +
+          "by its class-file identity so both phases hold one, as the lookups above do"),
+    ),
     "ClassTagParamsTransform.scala" -> Map(
       "fullName ==" ->
         ("`java.lang.Class` is a WELL-KNOWN JDK class the program never declares: the phase asks whether " +

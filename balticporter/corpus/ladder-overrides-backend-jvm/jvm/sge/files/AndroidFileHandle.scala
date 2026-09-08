@@ -30,7 +30,7 @@ import lowlevel.Nullable
   */
 class AndroidFileHandle(internalFile: File, fileType: FileType, private val filesOps: FilesOps)
     extends FileHandle(internalFile, fileType) {
-  this.externalStoragePath = filesOps.externalStoragePath
+  this.externalStoragePath = Nullable(filesOps.externalStoragePath)
 
   def this(fileName: String, fileType: FileType, filesOps: FilesOps) =
     this(new File(fileName.replace('\\', '/')), fileType, filesOps)

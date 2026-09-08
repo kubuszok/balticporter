@@ -2281,7 +2281,10 @@ promoted type under its new simple name (`XmlReader$Element` -> `XmlElement`), a
 (`FileHandle(File, FileType)`) is a `Public` row; the visibility step widens the symbol's flags — a
 signature fact the emitter's plan and every dependent read off the symbol. (19) A reference declaration with trailing DEFAULTED parameters answers every arity down to its
 required ones (`FileHandle(file, type, externalStoragePath = …)` matches java's two-argument
-constructor), so its rows — `Public` among them — reach the shorter java overloads.
+constructor), so its rows — `Public` among them — reach the shorter java overloads. (20) A captured value may be carried WRAPPED (`… as externalStoragePath: lowlevel.Nullable =
+lowlevel.Nullable.empty`): the field's type is the wrapper applied to the value's, generated callers pass
+`Wrapper.apply(read)`, the default is the wrapper's empty, and the wrapper symbol is the nullability step's
+own where the program already references it — so its reads are coerced like any other wrapped value.
 
 ### 8.31 A hand port's per-platform layer has a per-row home (`PortManifest.platformDirs`)
 

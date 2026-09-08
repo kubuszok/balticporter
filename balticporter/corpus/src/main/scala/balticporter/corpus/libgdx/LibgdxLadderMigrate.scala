@@ -325,7 +325,7 @@ object LibgdxLadder:
         // sge's `FileHandle(file, type, externalStoragePath)` is context-free: java's one read of
         // `Gdx.files.getExternalStoragePath()` (in `file()`) is a value given at construction.
         capture  = Map("com.badlogic.gdx.files.FileHandle" ->
-          "files.getExternalStoragePath() as externalStoragePath = null"),
+          "files.getExternalStoragePath() as externalStoragePath: lowlevel.Nullable = lowlevel.Nullable.empty"),
         sites    = Map(
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
           "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),

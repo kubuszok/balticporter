@@ -82,3 +82,15 @@ class ContextCaptureSpec extends munit.FunSuite:
     assert(clue(out).linesIterator.exists(l => l.contains("class Handle") && l.contains("using com.demo.Ctx")))
     assert(phase.policyReport.findings.exists(_.detail.contains("as <param>")), phase.policyReport.findings.mkString("\n"))
   }
+
+  test("a WRAPPED capture: the field is the wrapper applied, callers wrap, the default is the wrapper's") {
+    val src = java.replace("class Gdx { public static Files files; }", "class Opt<T> { }\nclass Gdx { public static Files files; }")
+    val phase = new GlobalsToImplicitsTransform(holders = List(holder(
+      Map("com.demo.Handle" -> "files.getExternalStoragePath() as externalStoragePath: com.demo.Opt = com.demo.Opt.empty"))))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(src, "Demo.java"), List(phase))
+    val out = new TirEmitter(after, notes = log).emit
+    println("CAP-WRAP: " + out.linesIterator.filter(l => l.contains("externalStoragePath") || l.contains("Opt")).mkString(" || "))
+    val handle = section(out, "class Handle", "class Sub")
+    assert(clue(handle).contains("var externalStoragePath: com.demo.Opt[java.lang.String] = com.demo.Opt.empty"))
+    assert(handle.contains("com.demo.Opt.apply(scala.Predef.summon[com.demo.Ctx].files.getExternalStoragePath())"), handle)
+  }

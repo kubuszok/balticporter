@@ -609,9 +609,18 @@ final class GlobalsToImplicitsTransform(
             captureFinding(key, s"`${spec.method}()` is not a nullary method this program parses on `${spec.static}`'s type — an " +
               "unreadable class file has no value type to capture"); Nil
           case (Some(s), Some(m), Some(r)) =>
-            val field = mint.member(spec.param, MemberKey(fqnOf(c), spec.param).render, c, r,
+            // a wrapper named by the key is an external type this program may already reference
+            // (the nullability step's own wrapper): reuse its symbol so both phases hold ONE
+            val wrapperSym = spec.wrapper.map(w =>
+              program0.symbols.all.find(_.fullName == w).map(_.id)
+                // minted as the nullability step mints its own (no info): a self-typed symbol prints bare at a value position
+                .getOrElse(mint.member(w.split('.').last, w, SymId.None, TypeRepr.NoType, Flags())))
+            val fieldTpe = wrapperSym.fold(r)(ws => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, ws), List(r)))
+            val wrapApply = wrapperSym.zip(spec.wrapper).map((ws, w) =>
+              ws -> mint.member("apply", MemberKey(w, "apply").render + "/capture", ws, TypeRepr.NoType, Flags(isStatic = true)))
+            val field = mint.member(spec.param, MemberKey(fqnOf(c), spec.param).render, c, fieldTpe,
                                     Flags(isMutable = true, isProtected = true))
-            List(c -> CaptureRun(key, field, r, s, statics(s), m.id, ctors, spec.default))
+            List(c -> CaptureRun(key, field, fieldTpe, s, statics(s), m.id, ctors, spec.default, wrapApply))
       }.toMap
     val captureCtor: Map[SymId, (SymId, CaptureRun)] =
       captureOf.toList.flatMap((c, run) => run.ctors.map(_ -> (c, run))).toMap
@@ -795,7 +804,10 @@ final class GlobalsToImplicitsTransform(
       * else the context's read where the plan says one is in scope. */
     def captureValue(c: SymId, run: CaptureRun, at: Origin, forward: Boolean): Option[Term] =
       def call(base: Term): Term =
-        Tree.Apply(Tree.Select(base, run.method, TypeRepr.NoType, at), Nil, run.method, run.fieldTpe, at)
+        val read = Tree.Apply(Tree.Select(base, run.method, TypeRepr.NoType, at), Nil, run.method, TypeRepr.NoType, at)
+        // through the wrapper, as the nullability step writes its `empty`: `Wrapper.apply(read)`
+        run.wrapApply.fold(read) { (ws, ap) =>
+          Tree.Apply(Tree.Select(Tree.Ident(ws, TypeRepr.NoType, at), ap, TypeRepr.NoType, at), List(read), ap, run.fieldTpe, at) }
       if forward then Some(Tree.Select(Tree.This(c, TypeRepr.TypeRef(TypeRepr.NoPrefix, c), at), run.field, run.fieldTpe, at))
       else plan.get(run.static -> at) match
         case Some(ReadPlan.Threaded) => Some(call(pathOn(contextExpr, run.hop, TypeRepr.NoType, at)))
@@ -1404,16 +1416,20 @@ object GlobalsToImplicitsTransform:
     case Captured(cls: SymId, field: SymId, fieldTpe: TypeRepr)
 
   /** one `capture` entry as parsed: `"<static>.<method>() as <param> = <default>"`. */
-  final case class CaptureSpec(static: String, method: String, param: String, default: String)
+  /** `wrapper`: the value is carried WRAPPED (`: lowlevel.Nullable`) — the field's type is the wrapper
+    * applied to the value's, callers pass `Wrapper.apply(value)`, the default is the wrapper's empty. */
+  final case class CaptureSpec(static: String, method: String, param: String, default: String, wrapper: Option[String] = scala.None)
   object CaptureSpec:
-    private val Grammar = """^\s*(\w+)\.(\w+)\(\)\s+as\s+(\w+)\s*=\s*(.+?)\s*$""".r
+    private val Grammar = """^\s*(\w+)\.(\w+)\(\)\s+as\s+(\w+)(?:\s*:\s*([\w.]+))?\s*=\s*(.+?)\s*$""".r
     def parse(v: String): Option[CaptureSpec] = v match
-      case Grammar(s, m, p, d) => Some(CaptureSpec(s, m, p, d))
-      case _                   => scala.None
+      case Grammar(s, m, p, w, d) => Some(CaptureSpec(s, m, p, d, Option(w).filter(_.nonEmpty)))
+      case _                      => scala.None
   /** one captured type's run: the minted field, the static and method it answers, the type's
     * constructors (each gets a companion `apply`), and the field's default source. */
   final case class CaptureRun(key: String, field: SymId, fieldTpe: TypeRepr, static: SymId, hop: String,
-                              method: SymId, ctors: List[SymId], default: String)
+                              method: SymId, ctors: List[SymId], default: String,
+                              /** the wrapper and its `apply`, where the value is carried wrapped */
+                              wrapApply: Option[(SymId, SymId)] = scala.None)
 
   def isCtor(p: Program, s: SymId): Boolean = p.symbolOf(s).exists(_.name == "<init>")
 
