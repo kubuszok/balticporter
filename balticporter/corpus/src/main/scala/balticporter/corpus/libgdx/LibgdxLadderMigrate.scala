@@ -277,6 +277,11 @@ object LibgdxLadder:
             "def rotateAroundRad(axis: sge.math.Vector3, radians: scala.Float): sge.math.Vector3 = { val tmpMat = new sge.math.Matrix4(); tmpMat.setToRotation(axis, radians * lowlevel.math.MathUtils.radiansToDegrees); this.mul(tmpMat) }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector3#rotateAroundRad"),
             Some("sge's rotate around axis in radians"), false)),
+        "com.badlogic.gdx.scenes.scene2d.ui.Table" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("isClip", 0,
+            "def isClip: scala.Boolean = this.clip" + "$field",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#isClip"),
+            Some("sge's boolean reader for the private clip field"), false)),
         "com.badlogic.gdx.math.Vector2" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector2): sge.math.Vector2 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#+"), None, false),
           balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector2): sge.math.Vector2 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#-"), None, false)),
