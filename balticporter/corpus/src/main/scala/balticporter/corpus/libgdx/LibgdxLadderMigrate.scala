@@ -187,6 +187,7 @@ object LibgdxLadder:
       // surface, so the field-name derivation never sees it — 4 suite sites stay)
       "com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy" -> List("setCamera"),
       "com.badlogic.gdx.scenes.scene2d.utils.Selection"           -> List("toList"),
+      "com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter" -> List("genMipMaps"),
       // `getAs[T: ClassTag]` over the port's `get(key): Nullable[Object]`
       "com.badlogic.gdx.maps.MapProperties"               -> List("getAs"),
       // sge keeps `XmlReader.Element` as an alias of the promoted `XmlElement` (the demos use it)

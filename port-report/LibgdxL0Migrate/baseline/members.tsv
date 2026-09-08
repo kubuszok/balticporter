@@ -706,7 +706,7 @@ sge.assets.loaders.BitmapFontLoader	sge.assets.loaders.BitmapFontLoader$BitmapFo
 sge.assets.loaders.BitmapFontLoader	sge.assets.loaders.BitmapFontLoader$BitmapFontParameter#genMipMaps	val	7694700590cb1347
 sge.assets.loaders.BitmapFontLoader	sge.assets.loaders.BitmapFontLoader$BitmapFontParameter#magFilter	val	10bf05ae3f963ea1
 sge.assets.loaders.BitmapFontLoader	sge.assets.loaders.BitmapFontLoader$BitmapFontParameter#minFilter	val	b4db6ddc980e81b1
-sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader	class	4b4d5f622bf1269c
+sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader	class	d6c22520b63bd041
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader#getDependencies(String,FileHandle,CubemapParameter)	def	bb927f139db37663
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader#info	val	e28997677aa21b09
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader#loadAsync(AssetManager,String,FileHandle,CubemapParameter)	def	7f4922b12793615a
@@ -715,7 +715,8 @@ sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapLoaderI
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo#cubemap	val	53d7f3c2aaaf03ea
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo#data	val	1cb54625b44844af
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo#filename	val	5ccff3a6d23c73f3
-sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapParameter	class	cd5662de6c865ba4
+sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapParameter	class	d936dfdd9ee48946
+sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapParameter#<stmt1>	stmt	2c6f6543cfba3faf
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapParameter#cubemap	val	a469b2110ae1f4ca
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapParameter#cubemapData	val	b69a27d17f6ba7ab
 sge.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader$CubemapParameter#format	val	1ae8bb38e4bacf5a

@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=3cc6fbc74106012b	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=bfe171975137bc0c	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1728,6 +1728,7 @@ member	com.badlogic.gdx.assets.loaders.CubemapLoader#loadSync(AssetManager,Strin
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapLoaderInfo#cubemap	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo#cubemap	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	41	53d7f3c2aaaf03ea	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapLoaderInfo#data	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo#data	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	40	1cb54625b44844af	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapLoaderInfo#filename	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo#filename	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	39	5ccff3a6d23c73f3	
+member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#<stmt1>	sge.assets.loaders.CubemapLoader$CubemapParameter#<stmt1>	Renamed	-	<synthetic>	0	2c6f6543cfba3faf	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#cubemap	sge.assets.loaders.CubemapLoader$CubemapParameter#cubemap	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	98	a469b2110ae1f4ca	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#cubemapData	sge.assets.loaders.CubemapLoader$CubemapParameter#cubemapData	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	100	b69a27d17f6ba7ab	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#format	sge.assets.loaders.CubemapLoader$CubemapParameter#format	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	96	1ae8bb38e4bacf5a	
