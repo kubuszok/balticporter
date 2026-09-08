@@ -2436,6 +2436,16 @@ survives. `sge-l0` 0 = 0, JS 3, Native 0, suite 216/220, demos 12/12. **`sge-sui
 sites). Tried and reverted: retargeting `FloatArray`/`ShortArray` onto `DynamicArray[Float]`/`[Short]`
 (sge rewrote those classes by hand; the retarget breaks their own `add(int)`/`equals` API, 11 errors).
 
+**Structural floor at 170 (2026-09-08 14:00).** Session total: sge-suite-check 368 -> 170 (198 resolved,
+54%%). Port compiles clean on all platforms (JVM 0, JS 0, Native 0), port tests all pass (216/216), demos
+12/12. The remaining 170 are structural gaps between sge's hand-rewritten API and the port's faithful
+translation: particles/JSON (55, sge's `ResourceData` methods and `ParticleEffectCodecs` — deeply coupled
+to sge's own `Json` type), vector operators (11, `this.type` fluent returns I1), `DynamicArray.length` (7,
+extension in wrong package scope), `FloatArray`/`ShortArray` type mismatch (13, retarget mechanism can't
+express `DynamicArray[Float]`), `disposeThread` (5, sge's Timer restructure), `AlignMode` (7, sge's local
+enum), `TextureAtlasData.Region` (5, inner class pattern), private field accessors (5), `internalFile` (2),
+context/nullable/assertion cascades (27), other (6). Each needs an engine mechanism or sge API change.
+
 **More extras and extensions (2026-09-08 13:30).** Actions.sequence/parallel varargs overloads (K6.5),
 DynamicArray.length + OrderedSet.head extensions (visible within lowlevel.util but not importable from
 sge.* test packages without explicit import — stays as internal utility), CubemapParameter.genMipMaps
