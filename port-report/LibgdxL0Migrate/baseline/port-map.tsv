@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=9201c30cec7a690e	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=09ef6966fa374cdb	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1599,6 +1599,8 @@ member	com.badlogic.gdx.assets.AssetDescriptor#<init>(FileHandle,Class)	sge.asse
 member	com.badlogic.gdx.assets.AssetDescriptor#<init>(FileHandle,Class,AssetLoaderParameters)	sge.assets.AssetDescriptor#<init>(FileHandle,Class<T>,AssetLoaderParameters<T>)	Renamed	-	com/badlogic/gdx/assets/AssetDescriptor.java	47	e7986aed37e9b01d	
 member	com.badlogic.gdx.assets.AssetDescriptor#<init>(String,Class)	sge.assets.AssetDescriptor#<init>(String,Class<T>)	Renamed	-	com/badlogic/gdx/assets/AssetDescriptor.java	31	33bb9d6d26b0886c	
 member	com.badlogic.gdx.assets.AssetDescriptor#<init>(String,Class,AssetLoaderParameters)	sge.assets.AssetDescriptor#<init>(String,Class<T>,AssetLoaderParameters<T>)	Renamed	-	com/badlogic/gdx/assets/AssetDescriptor.java	40	39e8bbc717a6645f	
+member	com.badlogic.gdx.assets.AssetDescriptor#<stmt1>	sge.assets.AssetDescriptor#<stmt1>	Renamed	-	<synthetic>	0	94a62000a9fb1c26	
+member	com.badlogic.gdx.assets.AssetDescriptor#<stmt2>	sge.assets.AssetDescriptor#<stmt2>	Renamed	-	<synthetic>	0	cbba27d356280fc7	
 member	com.badlogic.gdx.assets.AssetDescriptor#file	sge.assets.AssetDescriptor#file	Renamed	-	com/badlogic/gdx/assets/AssetDescriptor.java	29	3cb5ba8ef3570ac3	
 member	com.badlogic.gdx.assets.AssetDescriptor#fileName	sge.assets.AssetDescriptor#fileName	Renamed	-	com/badlogic/gdx/assets/AssetDescriptor.java	25	eb074b5385649b33	
 member	com.badlogic.gdx.assets.AssetDescriptor#params	sge.assets.AssetDescriptor#params	Renamed	-	com/badlogic/gdx/assets/AssetDescriptor.java	27	e02b45e8cf3db50f	
@@ -1923,6 +1925,7 @@ member	com.badlogic.gdx.files.FileHandle#<init>(File)	sge.files.FileHandle#<init
 member	com.badlogic.gdx.files.FileHandle#<init>(File,FileType)	sge.files.FileHandle#<init>(File,FileType)	Renamed	-	com/badlogic/gdx/files/FileHandle.java	84	ca33c18e7b2622c9	
 member	com.badlogic.gdx.files.FileHandle#<init>(String)	sge.files.FileHandle#<init>(String)	Renamed	-	com/badlogic/gdx/files/FileHandle.java	66	236a4477e655f047	
 member	com.badlogic.gdx.files.FileHandle#<init>(String,FileType)	sge.files.FileHandle#<init>(String,FileType)	Renamed	-	com/badlogic/gdx/files/FileHandle.java	79	ae2b66af1b93f7ed	
+member	com.badlogic.gdx.files.FileHandle#<stmt1>	sge.files.FileHandle#<stmt1>	Renamed	-	<synthetic>	0	2cae51b541516445	
 member	com.badlogic.gdx.files.FileHandle#apply/0(String,Nullable)	sge.files.FileHandle#apply/0(String,Nullable<String>)	Renamed	-	com/badlogic/gdx/files/FileHandle.java	56	9e40e64deeaa80e5	placement=companion
 member	com.badlogic.gdx.files.FileHandle#apply/1(Nullable)	sge.files.FileHandle#apply/1(Nullable<String>)	Renamed	-	com/badlogic/gdx/files/FileHandle.java	56	5b188fb86c944409	placement=companion
 member	com.badlogic.gdx.files.FileHandle#apply/2(File,Nullable)	sge.files.FileHandle#apply/2(File,Nullable<String>)	Renamed	-	com/badlogic/gdx/files/FileHandle.java	56	2553fadbd6c045a8	placement=companion

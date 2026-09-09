@@ -324,7 +324,23 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("poolOrNull", 0,
             "def poolOrNull[T <: java.lang.Object](using ct: scala.reflect.ClassTag[T]): lowlevel.Nullable[sge.utils.Pool[T]] = { val p = this.typePools.get(ct.runtimeClass.asInstanceOf[java.lang.Class[T]]); if (p.isEmpty) lowlevel.Nullable.empty else lowlevel.Nullable(p.get.asInstanceOf[sge.utils.Pool[T]]) }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.PoolManager#poolOrNull"),
-            Some("sge's ClassTag-based Nullable pool lookup"), false)))),
+            Some("sge's ClassTag-based Nullable pool lookup"), false)),
+        // sge renamed FileHandle.file to internalFile
+        "com.badlogic.gdx.files.FileHandle" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("internalFile", 0,
+            "def internalFile: java.io.File = this.file",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.files.FileHandle#internalFile"),
+            Some("sge renamed file -> internalFile"), false)),
+        // sge wraps AssetDescriptor.params in Nullable; add constructor overload that takes Nullable
+        "com.badlogic.gdx.assets.AssetDescriptor" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(file: sge.files.FileHandle, assetType: java.lang.Class[T], params: lowlevel.Nullable[sge.assets.AssetLoaderParameters[T]]) = { this(); this.fileName = file.path; this.file = lowlevel.Nullable(file); this.`type` = assetType; this.params = params.asInstanceOf[lowlevel.Nullable[sge.assets.AssetLoaderParameters[?]]] }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetDescriptor#this(FileHandle,Class,Nullable)"),
+            Some("sge wraps params in Nullable; tests pass Nullable.empty"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(fileName: java.lang.String, assetType: java.lang.Class[T], params: lowlevel.Nullable[sge.assets.AssetLoaderParameters[T]]) = { this(); this.fileName = fileName; this.`type` = assetType; this.params = params.asInstanceOf[lowlevel.Nullable[sge.assets.AssetLoaderParameters[?]]] }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetDescriptor#this(String,Class,Nullable)"),
+            Some("sge wraps params in Nullable; tests pass Nullable.empty"), false)))),
       // Table.add varargs
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.scenes.scene2d.ui.Table" -> List(
