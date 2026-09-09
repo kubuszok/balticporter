@@ -1,0 +1,27 @@
+file	origin	adjustment	why
+sge/textra/LayoutLineSuite.scala	sge-extension/textra/src/test/scala	lines -> lines$field; lineCount -> lines; glyphs += x -> glyphs.add(x); Nullable -> direct; isDefined/isEmpty -> != null/== null; StringBuilder -> java.lang.StringBuilder; getWidth/getHeight -> width/height; .last -> .peek; offsets/sizing/rotations/advances += -> .add	port retains java field/method names; sge hand port renamed accessors and added Scala collection extensions
+sge/textra/TypingConfigSuite.scala	sge-extension/textra/src/test/scala	contains -> containsKey	port's ObjectObjectMap keeps java method name containsKey
+sge/textra/utils/CaseInsensitiveIntMapSuite.scala	sge-extension/textra/src/test/scala	isEmpty -> empty; notEmpty -> notEmpty(); hasNext -> hasNext(); JVM-only	port retains java isEmpty->empty rename; regexodus dependency prevents JS/Native linking
+sge/textra/utils/ColorUtilsSuite.scala	sge-extension/textra/src/test/scala	JVM-only	regexodus dependency in CaseInsensitiveIntMap (transitive) prevents JS/Native linking
+sge/textra/utils/PaletteSuite.scala	sge-extension/textra/src/test/scala	contains -> containsKey; NAMES.toSeq -> NAMES.toArray.toSeq	port's ObjectObjectMap keeps java method name containsKey
+sge/textra/utils/StringUtilsSuite.scala	sge-extension/textra/src/test/scala	join varargs -> Array[CharSequence]; StringBuilder -> java.lang.StringBuilder; JVM-only	port emits varargs as Array parameters; regexodus dependency prevents JS/Native linking
+sge/textra/TextraLzmaFontRedSuite.scala	sge-extension/textra/src/test/scalajvm	JVM-only; uses HeadlessSge fixture	Font constructor requires files service and GL; ShaderProgram uses java.lang.foreign.ValueLayout (JVM-only)
+sge/textra/HeadlessSge.scala	ported/sge-textra/src/test/scala	JVM-only fixture	provides Sge with absent services; FileHandleStream needs JVM classpath
+sge/textra/FontFamilyNullGapIss817RedSuite.scala	sge-extension/textra/src/test/scala	excluded	new Font() calls BitmapFont which requires files service; cannot construct headlessly
+sge/textra/FontSuite.scala	sge-extension/textra/src/test/scala	excluded	GlyphRegion(float,float,float) constructor only in sge hand port; new Font() requires files service; mapping subscript access differs
+sge/textra/TextraButtonScene2dRedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput and HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraLabelInvalidateIss715RedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput and HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraLabelWidgetRedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput and HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraSelectionIss708RedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput and HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraTooltipScene2dRedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput and HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraWindowScene2dRedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput and HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraWiringRedSuite.scala	sge-extension/textra/src/test/scala	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput, SgeHttpClient.noop(), FileType (top-level) not present in machine port
+sge/textra/FontDrawGlyphWaveDRedSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge with NoopGraphics/RecordingBatch/DummyTextureData not present in machine port
+sge/textra/FontFamilyIntegerPositionBindingIss835RedSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge fixture not present in machine port
+sge/textra/FontJostleExactIss823Suite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge fixture not present in machine port
+sge/textra/FontOutlineIntegerPositionIss723RedSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge fixture not present in machine port
+sge/textra/FontUnderStrikeXPxIss723RedSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraFieldWiringRedSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge with NoopGraphics/NoopAudio/NoopInput not present in machine port
+sge/textra/TextraLabelReplacementFontSizeIss825RedSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraLabelSkinStyleNameIss824Suite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses HeadlessTextraSge fixture not present in machine port
+sge/textra/TextraMarkupLinkSuite.scala	sge-extension/textra/src/test/scalajvm	excluded	uses sge.noop.NoopGraphics/NoopAudio/NoopInput, SgeHttpClient.noop(), FileType (top-level), lowlevel.Nullable not present in machine port

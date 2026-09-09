@@ -1638,3 +1638,25 @@ lazy val `sge-ai-suite-check` = (projectMatrix in file("ported/sge-ai-suite-chec
   .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+// sge-textra-suite-check — sge's textra test tree compiled against the machine-ported textra.
+lazy val `sge-textra-suite-check` = (projectMatrix in file("ported/sge-textra-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-textra`)
+  .settings(
+    name := "balticporter-sge-textra-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-textra-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-textra-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Test / fork := true,
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-textra-suite-check" / "jvm-only",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-textra-suite-check" / "jvm-only",
+  ))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
