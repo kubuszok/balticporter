@@ -5253,7 +5253,7 @@ member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setColor(float,float,float,floa
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setupMatrices()	sge.graphics.g2d.SpriteBatch#setupMatrices()	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1078	99d6d5d787db46af	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getShader	sge.graphics.g2d.SpriteBatch#shader	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	69	704ecf7ddbe23b93	name=shader$field
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getShader()	sge.graphics.g2d.SpriteBatch#shader	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1114	ab4f2e83a9247a4a	form=parenless
-member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setShader(Nullable)	sge.graphics.g2d.SpriteBatch#shader_=(Nullable<ShaderProgram>)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1097	91d8163edaaa0d71	
+member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setShader(Nullable)	sge.graphics.g2d.SpriteBatch#shader_=(Nullable<ShaderProgram>)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1097	a41612321a8849c9	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#switchTexture(Texture)	sge.graphics.g2d.SpriteBatch#switchTexture(Texture)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1089	59b8473ca520db7f	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#totalRenderCalls	sge.graphics.g2d.SpriteBatch#totalRenderCalls	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	80	fe6dd03d778733cd	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getTransformMatrix	sge.graphics.g2d.SpriteBatch#transformMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	59	666418bc1d6fc7f6	name=transformMatrix$field
@@ -6674,7 +6674,7 @@ member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#<stmt8>	sge.graphi
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#<stmt9>	sge.graphics.g3d.particles.ParticleShader#<stmt9>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	227	a08c54f14d5890cc	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#TMP_VECTOR3	sge.graphics.g3d.particles.ParticleShader#TMP_VECTOR3	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	105	b7cd7edac86e5561	placement=companion
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#begin(Camera,RenderContext)	sge.graphics.g3d.particles.ParticleShader#begin(Camera,RenderContext)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	286	13e5e896f941dae6	
-member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#bindMaterial(Renderable)	sge.graphics.g3d.particles.ParticleShader#bindMaterial(Renderable)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	306	c5e56f8481eacc11	
+member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#bindMaterial(Renderable)	sge.graphics.g3d.particles.ParticleShader#bindMaterial(Renderable)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	306	b7854acc10eae70d	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#canRender(Renderable)	sge.graphics.g3d.particles.ParticleShader#canRender(Renderable)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	264	15e4845a25c3d2d1	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#dispose()	sge.graphics.g3d.particles.ParticleShader#close()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	335	ffcf25f5b0447163	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleShader#compareTo(Shader)	sge.graphics.g3d.particles.ParticleShader#compareTo(Shader)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleShader.java	270	fcccf0c0c3c659db	
@@ -7850,7 +7850,7 @@ member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#action(String,Sec
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#action(String,int,float,Nullable,Seconds)	sge.graphics.g3d.utils.AnimationController#action(String,int,float,Nullable<AnimationListener>,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	450	999f32ab4a38a469	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#allowSameAnimation	sge.graphics.g3d.utils.AnimationController#allowSameAnimation	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	133	0b465cbc2ce76a48	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(Animation,Seconds,Seconds,int,float,Nullable,Seconds)	sge.graphics.g3d.utils.AnimationController#animate(Animation,Seconds,Seconds,int,float,Nullable<AnimationListener>,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	356	d5b3b53ce528768d	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(Nullable,Seconds)	sge.graphics.g3d.utils.AnimationController#animate(Nullable<AnimationDesc>,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	362	3e3189875bccca55	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(Nullable,Seconds)	sge.graphics.g3d.utils.AnimationController#animate(Nullable<AnimationDesc>,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	362	50a69117cabd7797	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,Nullable,Seconds)	sge.graphics.g3d.utils.AnimationController#animate(String,Nullable<AnimationListener>,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	305	2ff4a7ff8f8e5dd2	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,Seconds)	sge.graphics.g3d.utils.AnimationController#animate(String,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	295	c1fd5202cd2e8fab	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,Seconds,Seconds,int,float,Nullable,Seconds)	sge.graphics.g3d.utils.AnimationController#animate(String,Seconds,Seconds,int,float,Nullable<AnimationListener>,Seconds)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	350	cabbb7e837b30386	
@@ -7872,7 +7872,7 @@ member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#queue(String,int,
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#queued	sge.graphics.g3d.utils.AnimationController#queued	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	119	9989e48ce240d810	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#queuedTransitionTime	sge.graphics.g3d.utils.AnimationController#queuedTransitionTime	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	121	a956f6174379627a	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(Animation,Seconds,Seconds,int,float,Nullable)	sge.graphics.g3d.utils.AnimationController#setAnimation(Animation,Seconds,Seconds,int,float,Nullable<AnimationListener>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	269	58b97119e8ce825f	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(Nullable)	sge.graphics.g3d.utils.AnimationController#setAnimation(Nullable<AnimationDesc>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	275	261d5a0014cab17d	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(Nullable)	sge.graphics.g3d.utils.AnimationController#setAnimation(Nullable<AnimationDesc>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	275	a4c6e6934eab1682	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String)	sge.graphics.g3d.utils.AnimationController#setAnimation(String)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	203	3a6ada8b335a8ba2	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,Nullable)	sge.graphics.g3d.utils.AnimationController#setAnimation(String,Nullable<AnimationListener>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	222	8fb7a2aa96e85152	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#setAnimation(String,Seconds,Seconds,int,float,Nullable)	sge.graphics.g3d.utils.AnimationController#setAnimation(String,Seconds,Seconds,int,float,Nullable<AnimationListener>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	263	49196285419d1f4b	
@@ -8406,8 +8406,8 @@ member	com.badlogic.gdx.graphics.g3d.utils.TextureBinder#resetCounts()	sge.graph
 member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#<init>()	sge.graphics.g3d.utils.TextureDescriptor#<init>()	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	40	1ca755d0adf3f982	
 member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#<init>(T)	sge.graphics.g3d.utils.TextureDescriptor#<init>(T)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	36	022fe89066ce87e6	
 member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#<init>(T,Nullable,Nullable,Nullable,Nullable)	sge.graphics.g3d.utils.TextureDescriptor#<init>(T,Nullable<TextureFilter>,Nullable<TextureFilter>,Nullable<TextureWrap>,Nullable<TextureWrap>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	31	a1b6214673cfb325	
-member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#compareTo(TextureDescriptor)	sge.graphics.g3d.utils.TextureDescriptor#compareTo(TextureDescriptor<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	82	08b187ed04dd9fab	
-member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#equals(Any)	sge.graphics.g3d.utils.TextureDescriptor#equals(Any)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	61	bedc484beeb43401	
+member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#compareTo(TextureDescriptor)	sge.graphics.g3d.utils.TextureDescriptor#compareTo(TextureDescriptor<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	82	cffce637fa7b2666	
+member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#equals(Any)	sge.graphics.g3d.utils.TextureDescriptor#equals(Any)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	61	3a60c5137b66f240	
 member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#hashCode()	sge.graphics.g3d.utils.TextureDescriptor#hashCode()	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	71	eb03f23a42bb0380	
 member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#magFilter	sge.graphics.g3d.utils.TextureDescriptor#magFilter	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	25	4dc1bd147fa9ae9f	
 member	com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#minFilter	sge.graphics.g3d.utils.TextureDescriptor#minFilter	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/TextureDescriptor.java	24	a58b092c74925323	
@@ -10380,7 +10380,7 @@ member	com.badlogic.gdx.maps.MapLayer#getParallaxX	sge.maps.MapLayer#parallaxX	R
 member	com.badlogic.gdx.maps.MapLayer#getParallaxY	sge.maps.MapLayer#parallaxY	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	34	f239218e0d47728e	form=var
 member	com.badlogic.gdx.maps.MapLayer#getParent	sge.maps.MapLayer#parent	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	36	5ad4ceca6d471784	name=parent$field
 member	com.badlogic.gdx.maps.MapLayer#getParent()	sge.maps.MapLayer#parent	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	142	a44ba8a8b20a1226	form=parenless
-member	com.badlogic.gdx.maps.MapLayer#setParent(Nullable)	sge.maps.MapLayer#parent_=(Nullable<MapLayer>)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	147	cff5c3e7e9766b84	
+member	com.badlogic.gdx.maps.MapLayer#setParent(Nullable)	sge.maps.MapLayer#parent_=(Nullable<MapLayer>)	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	147	9e2ec60bac73ff02	
 member	com.badlogic.gdx.maps.MapLayer#getProperties	sge.maps.MapLayer#properties	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	38	6491a91be1d4c540	form=val
 member	com.badlogic.gdx.maps.MapLayer#renderOffsetDirty	sge.maps.MapLayer#renderOffsetDirty	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	35	a78400d6b91809c7	vis=private
 member	com.badlogic.gdx.maps.MapLayer#getRenderOffsetX	sge.maps.MapLayer#renderOffsetX	Renamed	-	com/badlogic/gdx/maps/MapLayer.java	31	7d2a00213920e73e	name=renderOffsetX$field
@@ -12717,16 +12717,16 @@ member	com.badlogic.gdx.scenes.scene2d.Actor#getTop()	sge.scenes.scene2d.Actor#g
 member	com.badlogic.gdx.scenes.scene2d.Actor#getX(int)	sge.scenes.scene2d.Actor#getX(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	458	cdb327233de0cc2f	
 member	com.badlogic.gdx.scenes.scene2d.Actor#getY(int)	sge.scenes.scene2d.Actor#getY(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	517	818a19eaf4d8ff1d	
 member	com.badlogic.gdx.scenes.scene2d.Actor#hasActions()	sge.scenes.scene2d.Actor#hasActions	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	288	3921275ba440d4ce	form=parenless
-member	com.badlogic.gdx.scenes.scene2d.Actor#hasKeyboardFocus()	sge.scenes.scene2d.Actor#hasKeyboardFocus	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	411	2952ff42db2de361	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.Actor#hasKeyboardFocus()	sge.scenes.scene2d.Actor#hasKeyboardFocus	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	411	7e53c225cd28d772	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Actor#hasParent()	sge.scenes.scene2d.Actor#hasParent	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	356	b20c2fc45525b465	form=parenless
-member	com.badlogic.gdx.scenes.scene2d.Actor#hasScrollFocus()	sge.scenes.scene2d.Actor#hasScrollFocus	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	417	f0cb1a4f2a5cdc49	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.Actor#hasScrollFocus()	sge.scenes.scene2d.Actor#hasScrollFocus	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	417	42d0eb81ea74c087	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Actor#getHeight	sge.scenes.scene2d.Actor#height	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	80	8a276173d4e0dc4a	name=height$field
 member	com.badlogic.gdx.scenes.scene2d.Actor#getHeight()	sge.scenes.scene2d.Actor#height	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	575	6737622935691235	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Actor#hit(float,float,boolean)	sge.scenes.scene2d.Actor#hit(float,float,boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	220	5d6d0e99eef0df3f	
 member	com.badlogic.gdx.scenes.scene2d.Actor#isAscendantOf(Actor)	sge.scenes.scene2d.Actor#isAscendantOf(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	334	09293d92fa64aab4	
 member	com.badlogic.gdx.scenes.scene2d.Actor#isDescendantOf(Actor)	sge.scenes.scene2d.Actor#isDescendantOf(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	323	f83a91a8aa5b6681	
-member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusListener()	sge.scenes.scene2d.Actor#isTouchFocusListener	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	434	89b2d0a6fa358efe	form=parenless
-member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusTarget()	sge.scenes.scene2d.Actor#isTouchFocusTarget	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	424	c7c38425ac88127e	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusListener()	sge.scenes.scene2d.Actor#isTouchFocusListener	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	434	71d33384531d97f4	form=parenless
+member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusTarget()	sge.scenes.scene2d.Actor#isTouchFocusTarget	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	424	f0a6833c4e1f9e6c	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchable()	sge.scenes.scene2d.Actor#isTouchable	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	372	75d69314f4a6281f	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Actor#getListeners	sge.scenes.scene2d.Actor#listeners	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	72	ad71fbedd9f6fb28	name=listeners$field
 member	com.badlogic.gdx.scenes.scene2d.Actor#getListeners()	sge.scenes.scene2d.Actor#listeners	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	250	ba8032941368be72	form=parenless
@@ -12841,10 +12841,10 @@ member	com.badlogic.gdx.scenes.scene2d.Event#setTarget(Nullable)	sge.scenes.scen
 member	com.badlogic.gdx.scenes.scene2d.EventListener#handle(Event)	sge.scenes.scene2d.EventListener#handle(Event)	Renamed	-	com/badlogic/gdx/scenes/scene2d/EventListener.java	26	7f052b09e0be37f5	
 member	com.badlogic.gdx.scenes.scene2d.Group#<stmt1>	sge.scenes.scene2d.Group#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.scenes.scene2d.Group#act(Seconds)	sge.scenes.scene2d.Group#act(Seconds)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	46	77d38a2868c5f7af	
-member	com.badlogic.gdx.scenes.scene2d.Group#addActor(Actor)	sge.scenes.scene2d.Group#addActor(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	262	8a350b2abb5dd3af	
-member	com.badlogic.gdx.scenes.scene2d.Group#addActorAfter(Actor,Actor)	sge.scenes.scene2d.Group#addActorAfter(Actor,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	307	b48294fca186e69e	
-member	com.badlogic.gdx.scenes.scene2d.Group#addActorAt(int,Actor)	sge.scenes.scene2d.Group#addActorAt(int,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	276	c996b944eb8793ad	
-member	com.badlogic.gdx.scenes.scene2d.Group#addActorBefore(Actor,Actor)	sge.scenes.scene2d.Group#addActorBefore(Actor,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	292	73b4643b633cf117	
+member	com.badlogic.gdx.scenes.scene2d.Group#addActor(Actor)	sge.scenes.scene2d.Group#addActor(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	262	837a53a747bd941a	
+member	com.badlogic.gdx.scenes.scene2d.Group#addActorAfter(Actor,Actor)	sge.scenes.scene2d.Group#addActorAfter(Actor,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	307	0bcd17d31ebccd80	
+member	com.badlogic.gdx.scenes.scene2d.Group#addActorAt(int,Actor)	sge.scenes.scene2d.Group#addActorAt(int,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	276	21933242449c8f83	
+member	com.badlogic.gdx.scenes.scene2d.Group#addActorBefore(Actor,Actor)	sge.scenes.scene2d.Group#addActorBefore(Actor,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	292	6c445e4379bcd1e4	
 member	com.badlogic.gdx.scenes.scene2d.Group#applyTransform(Batch,Matrix4)	sge.scenes.scene2d.Group#applyTransform(Batch,Matrix4)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	203	e290bc7276c4512e	
 member	com.badlogic.gdx.scenes.scene2d.Group#applyTransform(ShapeRenderer,Matrix4)	sge.scenes.scene2d.Group#applyTransform(ShapeRenderer,Matrix4)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	217	9b9a50c6907b4cf8	
 member	com.badlogic.gdx.scenes.scene2d.Group#getChildren	sge.scenes.scene2d.Group#children	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	39	2f9a6da16e71d406	name=children$field
@@ -12965,8 +12965,8 @@ member	com.badlogic.gdx.scenes.scene2d.Stage#getBatch()	sge.scenes.scene2d.Stage
 member	com.badlogic.gdx.scenes.scene2d.Stage#calculateScissors(Rectangle,Rectangle)	sge.scenes.scene2d.Stage#calculateScissors(Rectangle,Rectangle)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	783	4e2f51b60f49d111	
 member	com.badlogic.gdx.scenes.scene2d.Stage#getCamera()	sge.scenes.scene2d.Stage#camera	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	730	6eb0c1a275fbb220	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Stage#cancelTouchFocus()	sge.scenes.scene2d.Stage#cancelTouchFocus()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	525	76234c679d135e95	
-member	com.badlogic.gdx.scenes.scene2d.Stage#cancelTouchFocus(Actor)	sge.scenes.scene2d.Stage#cancelTouchFocus(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	491	040b47f85f442b02	
-member	com.badlogic.gdx.scenes.scene2d.Stage#cancelTouchFocusExcept(Nullable,Nullable)	sge.scenes.scene2d.Stage#cancelTouchFocusExcept(Nullable<EventListener>,Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	531	a42547a0a7b11b31	
+member	com.badlogic.gdx.scenes.scene2d.Stage#cancelTouchFocus(Actor)	sge.scenes.scene2d.Stage#cancelTouchFocus(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	491	bee9c1c79b0c1bca	
+member	com.badlogic.gdx.scenes.scene2d.Stage#cancelTouchFocusExcept(Nullable,Nullable)	sge.scenes.scene2d.Stage#cancelTouchFocusExcept(Nullable<EventListener>,Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	531	9c0b141032abb6b6	
 member	com.badlogic.gdx.scenes.scene2d.Stage#clear()	sge.scenes.scene2d.Stage#clear()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	618	705a79b823e5fb42	
 member	com.badlogic.gdx.scenes.scene2d.Stage#dispose()	sge.scenes.scene2d.Stage#close()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	867	5d058bbd3ab152e5	
 member	com.badlogic.gdx.scenes.scene2d.Stage#debug	sge.scenes.scene2d.Stage#debug	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	68	b480760a037270eb	placement=companion
@@ -13004,7 +13004,7 @@ member	com.badlogic.gdx.scenes.scene2d.Stage#pointerTouched	sge.scenes.scene2d.S
 member	com.badlogic.gdx.scenes.scene2d.Stage#pools	sge.scenes.scene2d.Stage#pools	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	70	047ef6ef5c52dcd4	
 member	com.badlogic.gdx.scenes.scene2d.Stage#removeCaptureListener(EventListener)	sge.scenes.scene2d.Stage#removeCaptureListener(EventListener)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	596	7df0c21e391135c2	
 member	com.badlogic.gdx.scenes.scene2d.Stage#removeListener(EventListener)	sge.scenes.scene2d.Stage#removeListener(EventListener)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	584	a89c633390e96884	
-member	com.badlogic.gdx.scenes.scene2d.Stage#removeTouchFocus(EventListener,Actor,Actor,int,Button)	sge.scenes.scene2d.Stage#removeTouchFocus(EventListener,Actor,Actor,int,Button)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	477	8ad9fd2abbaddd31	
+member	com.badlogic.gdx.scenes.scene2d.Stage#removeTouchFocus(EventListener,Actor,Actor,int,Button)	sge.scenes.scene2d.Stage#removeTouchFocus(EventListener,Actor,Actor,int,Button)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	477	c533a9e5338f580a	
 member	com.badlogic.gdx.scenes.scene2d.Stage#getRoot	sge.scenes.scene2d.Stage#root	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	74	94177853c4a0b254	name=root$field
 member	com.badlogic.gdx.scenes.scene2d.Stage#getRoot()	sge.scenes.scene2d.Stage#root	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	735	ae71779e5be207a6	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.Stage#screenToStageCoordinates(Vector2)	sge.scenes.scene2d.Stage#screenToStageCoordinates(Vector2)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	760	2313043380e529b7	
@@ -13017,9 +13017,9 @@ member	com.badlogic.gdx.scenes.scene2d.Stage#setDebugParentUnderMouse(boolean)	s
 member	com.badlogic.gdx.scenes.scene2d.Stage#setDebugTableUnderMouse(Nullable)	sge.scenes.scene2d.Stage#setDebugTableUnderMouse(Nullable<Debug>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	851	5bb312a72347abec	
 member	com.badlogic.gdx.scenes.scene2d.Stage#setDebugTableUnderMouse(boolean)	sge.scenes.scene2d.Stage#setDebugTableUnderMouse(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	863	757e9aca7060fdfc	
 member	com.badlogic.gdx.scenes.scene2d.Stage#setDebugUnderMouse(boolean)	sge.scenes.scene2d.Stage#setDebugUnderMouse(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	828	9630cec2e91dc382	
-member	com.badlogic.gdx.scenes.scene2d.Stage#setKeyboardFocus(Nullable)	sge.scenes.scene2d.Stage#setKeyboardFocus(Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	640	652e93384b8ad18e	
+member	com.badlogic.gdx.scenes.scene2d.Stage#setKeyboardFocus(Nullable)	sge.scenes.scene2d.Stage#setKeyboardFocus(Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	640	e44eede809119574	
 member	com.badlogic.gdx.scenes.scene2d.Stage#setRoot(Group)	sge.scenes.scene2d.Stage#setRoot(Group)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	741	32f03307bc521889	
-member	com.badlogic.gdx.scenes.scene2d.Stage#setScrollFocus(Nullable)	sge.scenes.scene2d.Stage#setScrollFocus(Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	675	f7e1de740dd2efa3	
+member	com.badlogic.gdx.scenes.scene2d.Stage#setScrollFocus(Nullable)	sge.scenes.scene2d.Stage#setScrollFocus(Nullable<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	675	bb3307f679c40142	
 member	com.badlogic.gdx.scenes.scene2d.Stage#stageToScreenCoordinates(Vector2)	sge.scenes.scene2d.Stage#stageToScreenCoordinates(Vector2)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	767	e28e081fbd403a29	
 member	com.badlogic.gdx.scenes.scene2d.Stage#tempCoords	sge.scenes.scene2d.Stage#tempCoords	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	75	3205eed13a3f808f	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Stage#toScreenCoordinates(Vector2,Matrix4)	sge.scenes.scene2d.Stage#toScreenCoordinates(Vector2,Matrix4)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	777	9d9b4738fd182be2	
@@ -13651,7 +13651,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Cell#right()	sge.scenes.scene2d.ui.Cel
 member	com.badlogic.gdx.scenes.scene2d.ui.Cell#righti	sge.scenes.scene2d.ui.Cell#righti	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	18	a5e34a6b8fc9ff0a	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Cell#row()	sge.scenes.scene2d.ui.Cell#row()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	891	319d01bbbb419b4b	
 member	com.badlogic.gdx.scenes.scene2d.ui.Cell#set(Cell)	sge.scenes.scene2d.ui.Cell#set(Cell<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	934	0e9eefaa9c44d320	
-member	com.badlogic.gdx.scenes.scene2d.ui.Cell#setActor(Nullable)	sge.scenes.scene2d.ui.Cell#setActor(Nullable<A>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	55	e0ddf49ede4501a7	
+member	com.badlogic.gdx.scenes.scene2d.ui.Cell#setActor(Nullable)	sge.scenes.scene2d.ui.Cell#setActor(Nullable<A>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	55	7865e04004116b3e	
 member	com.badlogic.gdx.scenes.scene2d.ui.Cell#setActorBounds(float,float,float,float)	sge.scenes.scene2d.ui.Cell#setActorBounds(float,float,float,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	651	c84a1cb24953e7ac	
 member	com.badlogic.gdx.scenes.scene2d.ui.Cell#setActorHeight(float)	sge.scenes.scene2d.ui.Cell#setActorHeight(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	686	8581c57a3428a115	
 member	com.badlogic.gdx.scenes.scene2d.ui.Cell#setActorWidth(float)	sge.scenes.scene2d.ui.Cell#setActorWidth(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Cell.java	678	d6c616250bf95157	
@@ -13835,9 +13835,9 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Container#removeActor(Actor,boolean)	s
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#removeActorAt(int,boolean)	sge.scenes.scene2d.ui.Container#removeActorAt(int,boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	227	37bd8098f20ad036	
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#right()	sge.scenes.scene2d.ui.Container#right()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	611	830e0a36fbde31ec	
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#round	sge.scenes.scene2d.ui.Container#round	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	29	c71bd52823eba280	vis=private
-member	com.badlogic.gdx.scenes.scene2d.ui.Container#setActor(Nullable)	sge.scenes.scene2d.ui.Container#setActor(Nullable<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	172	b340d2e9dcf5ebb4	
+member	com.badlogic.gdx.scenes.scene2d.ui.Container#setActor(Nullable)	sge.scenes.scene2d.ui.Container#setActor(Nullable<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	172	e05c96930f75a539	
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#setBackground(Nullable)	sge.scenes.scene2d.ui.Container#setBackground(Nullable<Drawable>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	77	7146e60e93390aa1	
-member	com.badlogic.gdx.scenes.scene2d.ui.Container#setBackground(Nullable,boolean)	sge.scenes.scene2d.ui.Container#setBackground(Nullable<Drawable>,boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	85	164628654f0bae3f	
+member	com.badlogic.gdx.scenes.scene2d.ui.Container#setBackground(Nullable,boolean)	sge.scenes.scene2d.ui.Container#setBackground(Nullable<Drawable>,boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	85	d5dd64ccfec13c3f	
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#setClip(boolean)	sge.scenes.scene2d.ui.Container#setClip(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	741	c4750a16656e0fa5	
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#setCullingArea(Nullable)	sge.scenes.scene2d.ui.Container#setCullingArea(Nullable<Rectangle>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	156	c2c7cff38c028cf9	
 member	com.badlogic.gdx.scenes.scene2d.ui.Container#setRound(boolean)	sge.scenes.scene2d.ui.Container#setRound(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Container.java	724	2eeebb08ab11bc82	
@@ -13866,7 +13866,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#focusListener	sge.scenes.scene2
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#hide()	sge.scenes.scene2d.ui.Dialog#hide()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	245	2809ec176e7dd4cf	
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#hide(Nullable)	sge.scenes.scene2d.ui.Dialog#hide(Nullable<Action>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	224	0ef792c2c1e45e82	
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#ignoreTouchDown	sge.scenes.scene2d.ui.Dialog#ignoreTouchDown	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	49	a9b738e8654a0854	
-member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#initialize()	sge.scenes.scene2d.ui.Dialog#initialize()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	75	c2ba506b25ef0f79	vis=private
+member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#initialize()	sge.scenes.scene2d.ui.Dialog#initialize()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	75	644193c5e2a489eb	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#key(Key,Nullable)	sge.scenes.scene2d.ui.Dialog#key(Key,Nullable<Object>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	255	7b999fab54304a1e	
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#previousKeyboardFocus	sge.scenes.scene2d.ui.Dialog#previousKeyboardFocus	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	46	48a25a794a6d740b	
 member	com.badlogic.gdx.scenes.scene2d.ui.Dialog#previousScrollFocus	sge.scenes.scene2d.ui.Dialog#previousScrollFocus	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	46	2911b12d2bee3199	
@@ -14747,7 +14747,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#columnPrefWidth	sge.scenes.scene
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#columnWeightedWidth	sge.scenes.scene2d.ui.Table#columnWeightedWidth	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	58	5a1677a8b0191aea	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#columnWidth	sge.scenes.scene2d.ui.Table#columnWidth	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	73	a2bfb664bd61a943	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#columns	sge.scenes.scene2d.ui.Table#columns	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	60	5700638b65295cc7	vis=private
-member	com.badlogic.gdx.scenes.scene2d.ui.Table#computeSize()	sge.scenes.scene2d.ui.Table#computeSize()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	781	fafc9f1648243bb0	vis=private
+member	com.badlogic.gdx.scenes.scene2d.ui.Table#computeSize()	sge.scenes.scene2d.ui.Table#computeSize()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	781	7ba1b2ad0f26e30c	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#debug	sge.scenes.scene2d.ui.Table#debug	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	79	ff8f81465bed3122	name=debug$field$shadow
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#debug()	sge.scenes.scene2d.ui.Table#debug()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	604	e7576cba0f97c8e8	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#debug(Debug)	sge.scenes.scene2d.ui.Table#debug(Debug)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	645	bf5c42a4caa28bc8	
@@ -14769,7 +14769,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#endRow()	sge.scenes.scene2d.ui.T
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#ensureSize(Array,int)	sge.scenes.scene2d.ui.Table#ensureSize(Array<float>,int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	775	254f6de39f519253	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#expandHeight	sge.scenes.scene2d.ui.Table#expandHeight	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	74	e2e1754064cc0b70	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#expandWidth	sge.scenes.scene2d.ui.Table#expandWidth	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	74	60997d8ac99e3810	vis=private
-member	com.badlogic.gdx.scenes.scene2d.ui.Table#getCell(T)	sge.scenes.scene2d.ui.Table#getCell(T)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	416	01271effb25d7644	
+member	com.badlogic.gdx.scenes.scene2d.ui.Table#getCell(T)	sge.scenes.scene2d.ui.Table#getCell(T)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	416	7a16345fc772ef01	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#getCells()	sge.scenes.scene2d.ui.Table#getCells	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	427	5aa89fc923a482eb	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#getClip()	sge.scenes.scene2d.ui.Table#getClip()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	202	389d5072aec17580	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#getColumnMinWidth(int)	sge.scenes.scene2d.ui.Table#getColumnMinWidth(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	764	89970a5ecf00d6e8	
@@ -14831,7 +14831,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#rowMinHeight	sge.scenes.scene2d.
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#rowPrefHeight	sge.scenes.scene2d.ui.Table#rowPrefHeight	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	70	ac4e396be5c4bdff	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#rowWeightedHeight	sge.scenes.scene2d.ui.Table#rowWeightedHeight	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	58	d6f94f05a51751be	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#rows	sge.scenes.scene2d.ui.Table#rows	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	60	d344285832e82d65	vis=private
-member	com.badlogic.gdx.scenes.scene2d.ui.Table#setBackground(Nullable)	sge.scenes.scene2d.ui.Table#setBackground(Nullable<Drawable>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	148	842bcf62af1b21ff	
+member	com.badlogic.gdx.scenes.scene2d.ui.Table#setBackground(Nullable)	sge.scenes.scene2d.ui.Table#setBackground(Nullable<Drawable>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	148	7631bab7b83804f3	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#setBackground(String)	sge.scenes.scene2d.ui.Table#setBackground(String)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	142	e6a117298d04d867	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#setClip(boolean)	sge.scenes.scene2d.ui.Table#setClip(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	196	976ddcfa5e40ee27	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#setDebug(boolean)	sge.scenes.scene2d.ui.Table#setDebug(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	600	2148f0acca158227	
@@ -15467,7 +15467,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Window#<init>(String,Skin,String,Sge)	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt10>	sge.scenes.scene2d.ui.Window#<stmt10>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	83	d9d9190f8876aa5e	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt11>	sge.scenes.scene2d.ui.Window#<stmt11>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	84	0dd3138258a0d860	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt12>	sge.scenes.scene2d.ui.Window#<stmt12>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	86	cbcd4415cdb9aebf	
-member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt13>	sge.scenes.scene2d.ui.Window#<stmt13>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	92	c675a5d02acef9c4	
+member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt13>	sge.scenes.scene2d.ui.Window#<stmt13>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	92	2ffcab92d86784ca	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt1>	sge.scenes.scene2d.ui.Window#<stmt1>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	67	716316e60f470a2e	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt2>	sge.scenes.scene2d.ui.Window#<stmt2>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	68	3f13e24c563f95a0	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt3>	sge.scenes.scene2d.ui.Window#<stmt3>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	69	3669a0c18557ba26	
@@ -15484,13 +15484,13 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Window#drawBackground(Batch,float,floa
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#drawStageBackground(Batch,float,float,float,float,float)	sge.scenes.scene2d.ui.Window#drawStageBackground(Batch,float,float,float,float,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	260	8fbd60c71448672a	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#drawTitleTable	sge.scenes.scene2d.ui.Window#drawTitleTable	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	51	3496754c6c62bbf0	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#edge	sge.scenes.scene2d.ui.Window#edge	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	53	01dbb6b35a1a60b8	
-member	com.badlogic.gdx.scenes.scene2d.ui.Window#hit(float,float,boolean)	sge.scenes.scene2d.ui.Window#hit(float,float,boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	279	45c9f7784aebf668	
+member	com.badlogic.gdx.scenes.scene2d.ui.Window#hit(float,float,boolean)	sge.scenes.scene2d.ui.Window#hit(float,float,boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	279	0f425c9f8b70843d	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#isDragging()	sge.scenes.scene2d.ui.Window#isDragging	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	327	7094a785c1b84c75	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#isModal	sge.scenes.scene2d.ui.Window#isModal	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	46	7850baaddd699e5b	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#isMovable	sge.scenes.scene2d.ui.Window#isMovable	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	46	1f673319fcefd4ca	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#isResizable	sge.scenes.scene2d.ui.Window#isResizable	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	46	da23daca2f2aefb4	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#keepWithinStage	sge.scenes.scene2d.ui.Window#keepWithinStage	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	48	98ceeeecb8c9e40b	name=keepWithinStage$field
-member	com.badlogic.gdx.scenes.scene2d.ui.Window#keepWithinStage()	sge.scenes.scene2d.ui.Window#keepWithinStage()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	216	ed58f5ab0e8ca0bf	
+member	com.badlogic.gdx.scenes.scene2d.ui.Window#keepWithinStage()	sge.scenes.scene2d.ui.Window#keepWithinStage()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	216	4fc693aa6c755ac7	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#isModal()	sge.scenes.scene2d.ui.Window#modal	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	303	eddead48a9ec48d0	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#setModal(boolean)	sge.scenes.scene2d.ui.Window#modal_=(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	307	becc3fb2e9665235	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#isMovable()	sge.scenes.scene2d.ui.Window#movable	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	295	d286bbc0e84474af	form=parenless

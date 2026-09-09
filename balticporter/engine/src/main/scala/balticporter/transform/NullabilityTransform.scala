@@ -747,11 +747,15 @@ final class NullabilityTransform(
 
   /** An operator is never unwrapped here: the traversal is bottom-up, so unwrapping the receiver of
     * `x == null` would rewrite it to `x.get == null` one node BEFORE [[nullTest]] could see it,
-    * turning the mandatory rewrite into a run-time NPE. */
+    * turning the mandatory rewrite into a run-time NPE. `eq`/`ne` (AnyRef reference identity) are
+    * unwrapped with `.orNull` — null is a legal operand in a reference comparison (CLAUDE.md §4.4). */
   override def transformSelect(t0: Tree.Select)(using p: Program): Term =
     val t = wrapped.get(t0.sym).map(w => t0.copy(tpe = w)).getOrElse(t0)
     if isWrapper && isWrapped(t.qual) && !isWrapperMember(t.sym) && !isOperator(p, t.sym)
-    then t.copy(qual = unwrap(t.qual)) else t
+    then
+      if isRefEqOp(p, t.sym) then t.copy(qual = unwrapOrNull(t.qual))
+      else t.copy(qual = unwrap(t.qual))
+    else t
 
   override def transformApply(t: Tree.Apply)(using p: Program): Term =
     if !isWrapper then t
@@ -760,7 +764,8 @@ final class NullabilityTransform(
         val recvFixed = t.fun match
           case f @ Tree.Select(recv, m, _, _) if isWrapped(recv) && !isWrapperMember(m)
             && (!isOperator(p, m) || !isNullTestOp(p, m)) =>
-            t.copy(fun = f.copy(qual = unwrap(recv)))
+            if isRefEqOp(p, m) then t.copy(fun = f.copy(qual = unwrapOrNull(recv)))
+            else t.copy(fun = f.copy(qual = unwrap(recv)))
           case _ => t
         coerceArgs(recvFixed)
       }
@@ -1135,6 +1140,9 @@ final class NullabilityTransform(
 
   private def isNullTestOp(p: Program, s: SymId): Boolean =
     p.symbolOf(s).exists(x => x.name == "==" || x.name == "!=")
+
+  private def isRefEqOp(p: Program, s: SymId): Boolean =
+    p.symbolOf(s).exists(x => x.name == "eq" || x.name == "ne")
 
   /** the TOP-LEVEL unit a symbol belongs to — how a finding is held to the module that emits it. */
   private def unitOf(p: Program, id: SymId, fuel: Int = 64): SymId =
