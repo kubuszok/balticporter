@@ -1,0 +1,10 @@
+file	adjustment	reason
+scala/sge/ecs/SystemManagerSuite.scala	getSystem returns T (nullable) not Nullable[T]	ported SystemManager.getSystem applies .orNull — tests use != null / == null instead of .isDefined / .isEmpty
+scala/sge/ecs/EngineSuite.scala	override protected -> override def processEntity	ported IteratingSystem.processEntity is protected[systems] not protected; Scala forbids narrowing
+scala/sge/ecs/FamilySuite.scala	override protected -> override def processEntity	ported IteratingSystem.processEntity is protected[systems] not protected; Scala forbids narrowing
+scala/sge/ecs/systems/IteratingSystemSuite.scala	override protected -> override def processEntity	ported IteratingSystem.processEntity is protected[systems] not protected; Scala forbids narrowing
+scala/sge/ecs/systems/SortedIteratingSystemSuite.scala	override protected -> override def processEntity	ported SortedIteratingSystem.processEntity is protected[systems] not protected; Scala forbids narrowing
+scala/sge/ecs/systems/IntervalIteratingSystemSuite.scala	override protected -> override def processEntity	ported IntervalIteratingSystem.processEntity is protected[systems] not protected; Scala forbids narrowing
+scala/sge/ecs/systems/IntervalSystemSuite.scala	override protected -> override def updateInterval	ported IntervalSystem.updateInterval is protected[systems] not protected; Scala forbids narrowing
+scala/sge/ecs/utils/BagSuite.scala	get(100) beyond capacity throws AIOOBE not null	ported Bag.get indexes the array directly without bounds check; within-capacity null slots still return null
+scala/sge/ecs/PooledEngineSuite.scala	createComponent unregistered type succeeds on JVM	ported PooledEngine falls through to ComponentFactories.create which uses JVM reflection fallback for no-arg constructors

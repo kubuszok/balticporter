@@ -1503,3 +1503,44 @@ lazy val `sge-jbump-suite-check` = (projectMatrix in file("ported/sge-jbump-suit
   .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+
+// sge-ecs-suite-check — sge ecs (Ashley) test suite against the ported ecs module.
+lazy val `sge-ecs-suite-check` = (projectMatrix in file("ported/sge-ecs-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-ecs`)
+  .settings(
+    name := "balticporter-sge-ecs-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    Compile / scalacOptions += s"-Xmacro-settings:suiteNonce=${System.nanoTime}",
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories ++= {
+      val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge-extension" / "ecs" / "src" / "test"
+      val base = (ThisBuild / baseDirectory).value / "ported" / "sge-ecs-suite-check"
+      val platform = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
+        case Seq("js")     => "js"
+        case Seq("native") => "native"
+        case _             => "jvm"
+      if (platform == "jvm") Seq(t / "scala", t / "scalajvm", base / "adjusted")
+      else Seq(base / "shared")
+    },
+    Compile / unmanagedSources := {
+      val all = (Compile / unmanagedSources).value
+      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
+      val adjusted = all.filter(_.getPath.contains("/ported/sge-ecs-suite-check/adjusted/")).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-ecs-suite-check/adjusted/"))
+    },
+    Test / unmanagedSourceDirectories ++= (Compile / unmanagedSourceDirectories).value,
+    Test / unmanagedSources := {
+      val all = (Test / unmanagedSources).value
+      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
+      val adjusted = all.filter(_.getPath.contains("/ported/sge-ecs-suite-check/adjusted/")).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-ecs-suite-check/adjusted/"))
+    },
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
