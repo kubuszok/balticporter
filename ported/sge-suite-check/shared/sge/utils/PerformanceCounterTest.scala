@@ -23,12 +23,13 @@ class PerformanceCounterTest extends munit.FunSuite {
     assert(pc.current >= 0f) // may be 0 if extremely fast
   }
 
-  test("tick throws when not valid".ignore) { // SKIP: sge added validation; port doesn't throw
+  test("tick on invalid counter logs and returns without updating") {
     val pc = PerformanceCounter("test")
-    // current=0, valid=false -> tick should throw
-    intercept[Throwable] {
-      pc.tick(Seconds(1f / 60f))
-    }
+    // current=0, valid=false -> java logs an error and returns; port preserves that behavior
+    pc.tick(Seconds(1f / 60f))
+    assertEquals(pc.time.count, 0)
+    assertEquals(pc.valid, false)
+    assertEqualsFloat(pc.current, 0f, 0f)
   }
 
   test("tick updates time counter") {

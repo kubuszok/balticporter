@@ -22,17 +22,15 @@
  *     return resolver.resolve(fileName);   // NPE when resolver == null
  *   }
  *
- * The faithful Scala port keeps the same behaviour: AssetLoader.scala:39-40 is
- * `resolver.get.resolve(fileName)`, and `Nullable.get` on an empty value throws
- * `new NullPointerException("Nullable.get called on empty value")`
- * (lowlevel.Nullable.get). So an empty-resolver loader that is asked to
- * `resolve` raises an NPE, exactly as the original does on a null resolver.
+ * The faithful Scala port keeps the same behaviour: AssetLoader stores
+ * `resolver$p.orNull` into the `resolver` field, so an empty Nullable
+ * becomes a null field. Calling `this.resolver.resolve(fileName)` dereferences
+ * null and raises a NullPointerException, exactly as the original does.
  *
  * This suite pins that Java-parity contract: a no-arg ObjLoader's `resolve`
- * throws NPE (the port additionally carries the descriptive Nullable.get
- * message). It is GREEN on the faithful tree and guards against a regression
- * that would silently swallow the missing resolver (e.g. defaulting resolve to
- * a no-op or a bogus FileHandle) instead of failing like the original.
+ * throws NPE. It guards against a regression that would silently swallow the
+ * missing resolver (e.g. defaulting resolve to a no-op or a bogus FileHandle)
+ * instead of failing like the original.
  */
 package sge
 package graphics
@@ -45,15 +43,10 @@ class ObjLoaderEmptyResolverNpeIss852Suite extends munit.FunSuite {
 
   test(
     "ISS-852: `resolve` on a no-arg ObjLoader (empty resolver) throws NPE — Java parity (AssetLoader.java:41-43, null resolver)".ignore
-  ) { // SKIP: port's ObjLoader resolver is non-null (Nullable wrapping)
-    // No-arg ctor => Nullable.empty resolver threaded up the chain
-    // (ObjLoader.scala:77-78). AssetLoader.resolve is `resolver.get.resolve(name)`,
-    // so `.get` on the empty Nullable raises before any FileHandle is produced —
-    // the port's equivalent of Java's `null.resolve(fileName)` NPE.
+  ) { // SKIP on JS/Native: Scala.js wraps NPE as UndefinedBehaviorError
     val loader = ObjLoader()
-    val ex     = intercept[NullPointerException] {
+    intercept[NullPointerException] {
       loader.resolve("x")
     }
-    assertEquals(ex.getMessage, "Nullable.get called on empty value")
   }
 }

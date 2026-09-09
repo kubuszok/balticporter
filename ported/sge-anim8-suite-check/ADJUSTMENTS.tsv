@@ -1,0 +1,6 @@
+file	origin	adjustment	why
+sge/anim8/DitherAlgorithmSuite.scala	sge-extension/anim8/src/test/scala	DitherAlgorithm -> Dithered.DitherAlgorithm; values -> values(); 22 -> 24 constants	port keeps Java nesting (DitherAlgorithm is nested in Dithered interface) and upstream's 24 constants; sge lifted to top-level and counts 22
+sge/anim8/OtherMathSuite.scala	sge-extension/anim8/src/test/scala	no changes needed	identical API between sge and machine port
+sge/anim8/ConstantDataSuite.scala	sge-extension/anim8/src/test/scala	lengths 47006/6143 -> 32768/4096; different expected byte values	port keeps upstream ISO-8859-1 byte counts; sge externalised to resources and pinned UTF-8 encoded lengths
+sge/anim8/DataEmbeddingRedSuite.scala	sge-extension/anim8/src/test/scala	excluded	tests sge-specific resource-loading behaviour (classpath .bin files); machine port embeds data in source per upstream, so the test's premise does not apply
+sge/anim8/ChunkBufferSuite.scala	sge-extension/anim8/src/test/scalajvm	excluded	JVM-only test (java.util.zip); the port's own ChunkBufferSuite in ported/sge-anim8/src/test/ already covers this with the port's API

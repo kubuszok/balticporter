@@ -208,10 +208,9 @@ class VectorArithmeticTest extends munit.ScalaCheckSuite {
     assert(!Vector2(1, 1).isPerpendicular(Vector2(1, 0)))
   }
 
-  test("Vector2 epsilonEquals".ignore) { // SKIP: port's epsilonEquals takes Float param not given Epsilon
-    given Epsilon = Epsilon(0.01f)
-    assert(Vector2(1f, 2f).epsilonEquals(Vector2(1.005f, 2.005f)))
-    assert(!Vector2(1f, 2f).epsilonEquals(Vector2(1.02f, 2f)))
+  test("Vector2 epsilonEquals") {
+    assert(Vector2(1f, 2f).epsilonEquals(Vector2(1.005f, 2.005f), 0.01f))
+    assert(!Vector2(1f, 2f).epsilonEquals(Vector2(1.02f, 2f), 0.01f))
   }
 
   test("Vector2 mulAdd") {

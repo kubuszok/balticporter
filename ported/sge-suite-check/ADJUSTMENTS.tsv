@@ -50,19 +50,19 @@ sge/AndroidGraphicsTest.scala	sge/src/test/scalajvm	excluded (empty class)	tests
 sge/utils/TimerWakeupRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	timer thread wakeup model differs (sge thread model)
 sge/graphics/g3d/particles/SaveDataCodecSuite.scala	sge/src/test/scala	excluded (empty class)	port doesn't have sge's SaveData codec registration
 sge/utils/PoolManagerConcurrencyIss803Suite.scala	sge/src/test/scalajvm	excluded (empty class)	flaky concurrency; sge's PoolManager uses synchronized differently
-sge/scenes/scene2d/utils/SelectionChooseRedSuite.scala	sge/src/test/scala	excluded (empty class)	Selection.choose event firing differs
+sge/scenes/scene2d/utils/SelectionChooseRedSuite.scala	sge/src/test/scala	override protected -> override (1 method); full test adapted	port widened changed to public; port has java's early returns
 sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	particle serialization requires sge's codec system
 sge/graphics/g3d/ModelInstanceCopyNodesIss734RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	bone key severing relies on sge's null-store semantics
 sge/assets/AssetManagerAsyncISS561Test.scala	sge/src/test/scalajvm	excluded (empty class)	async asset loading; getDependencies returns null
-sge/assets/AssetManagerDescriptorRoutingIss830CoverageSuite.scala	sge/src/test/scalajvm	excluded (empty class)	descriptor routing; get returns null when unloaded
+sge/assets/AssetManagerDescriptorRoutingIss830CoverageSuite.scala	sge/src/test/scalajvm	wrong-type path asserts throw not empty; verify via 3-arg get	port's get(descriptor) uses required=true
 sge/DesktopFullscreenIss759FixSuite.scala	sge/src/test/scalajvm	excluded (empty class)	Display.Mode object identity (sge reimplemented)
 sge/scenes/scene2d/ActionTest.scala	sge/src/test/scala	5 tests ignored (moveBy/show/sequence/delay/parallel)	port's action pool returns 0.0 (engine investigation needed)
 sge/scenes/scene2d/actions/ActionsCharacterizationTest.scala	sge/src/test/scala	2 tests ignored (pool restore + moveBy)	port's pool reset and action duration differ
-sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	1 test ignored (tick throws)	sge added validation; port doesn't throw
+sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	tick test adapted to java behavior (log+return)	sge added validation; port preserves java's log-and-return
 sge/utils/BinaryHeapTest.scala	sge/src/test/scala	1 test ignored (contains identity)	Nullable wrapping breaks eq identity
-sge/utils/TextFormatterTest.scala	sge/src/test/scala	1 test ignored (null argument)	port's format throws NPE on null args
-sge/math/VectorArithmeticTest.scala	sge/src/test/scala	1 test ignored (Vector2 epsilonEquals)	port's epsilonEquals takes Float not given Epsilon
-sge/graphics/g3d/loader/ObjLoaderEmptyResolverNpeIss852Suite.scala	sge/src/test/scala	1 test ignored (resolve NPE)	port's ObjLoader resolver is non-null
-sge/assets/AssetManagerUnitTest.scala	sge/src/test/scalajvm	1 test ignored (get returns empty)	port's get throws instead of returning empty
+sge/utils/TextFormatterTest.scala	sge/src/test/scala	null argument test un-ignored	TextFormatter injection fixed to handle null varargs
+sge/math/VectorArithmeticTest.scala	sge/src/test/scala	epsilonEquals test uses explicit Float param	port's epsilonEquals takes Float not given Epsilon
+sge/graphics/g3d/loader/ObjLoaderEmptyResolverNpeIss852Suite.scala	sge/src/test/scala	resolve NPE test un-ignored; message assertion removed	port's resolver is null (orNull); NPE message differs from Nullable.get
+sge/assets/AssetManagerUnitTest.scala	sge/src/test/scalajvm	get-empty test uses 3-arg get(name, type, false)	port's 2-arg get throws; 3-arg with required=false returns empty
 sge/utils/PoolManagerTest.scala	sge/src/test/scala	2 tests ignored (reset + clean state)	port's Pool.Poolable reset differs
 sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	6 tests ignored (getDependencies null + data null)	port's loaders return null for no-deps

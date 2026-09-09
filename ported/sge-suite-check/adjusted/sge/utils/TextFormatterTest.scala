@@ -70,7 +70,7 @@ class TextFormatterTest extends munit.FunSuite {
     }
   }
 
-  test("null argument renders as null".ignore) { // SKIP: port's format throws NPE on null args
+  test("null argument renders as null") {
     assertEquals(fmt.format("{0}", null), "null")
   }
 }

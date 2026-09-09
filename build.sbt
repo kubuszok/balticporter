@@ -1544,3 +1544,60 @@ lazy val `sge-ecs-suite-check` = (projectMatrix in file("ported/sge-ecs-suite-ch
   .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+// sge-graphs-suite-check — sge's graphs test tree compiled against the machine-ported graphs.
+lazy val `sge-graphs-suite-check` = (projectMatrix in file("ported/sge-graphs-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-graphs`)
+  .settings(
+    name := "balticporter-sge-graphs-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-graphs-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-graphs-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+
+// sge-anim8-suite-check — sge's anim8 test tree compiled against the machine-ported anim8.
+lazy val `sge-anim8-suite-check` = (projectMatrix in file("ported/sge-anim8-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-anim8`)
+  .settings(
+    name := "balticporter-sge-anim8-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-anim8-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-anim8-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+
+// sge-screens-suite-check — sge's screens test tree compiled against the machine-ported screens.
+lazy val `sge-screens-suite-check` = (projectMatrix in file("ported/sge-screens-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-screens`)
+  .settings(
+    name := "balticporter-sge-screens-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    Compile / scalacOptions += s"-Xmacro-settings:suiteNonce=${System.nanoTime}",
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-screens-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-screens-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
