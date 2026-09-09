@@ -1428,11 +1428,12 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     Compile / unmanagedSourceDirectories ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
       val base = (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check"
-      val isJvm = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
-        case Seq() | Seq("jvm") => true
-        case _                  => false
-      if (isJvm) Seq(t / "scala", t / "scalajvm", base / "adjusted")
-      else Seq(base / "shared")
+      val platform = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
+        case Seq("js")     => "js"
+        case Seq("native") => "native"
+        case _             => "jvm"
+      if (platform == "jvm") Seq(t / "scala", t / "scalajvm", base / "adjusted")
+      else Seq(base / "shared") ++ (if (platform != "native") Seq(base / "shared-no-native") else Seq.empty)
     },
     Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
     Compile / unmanagedSources := {
