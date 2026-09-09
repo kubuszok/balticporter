@@ -20,7 +20,7 @@ derived(ambiguous)	23
 derived(rows)	6652
 derived(unmatched)	195
 heap-pollution	12
-idiom(converted)	508
+idiom(converted)	504
 idiom(refused)	3104
 idiom(residue)	0
 jdk-surface	14
@@ -29,11 +29,11 @@ markers	0
 nullability-boundary	261
 omissions	37
 opaque-boundary	18
-overload-risk	438
+overload-risk	437
 policy	40
 port-map	75
 portability(all)	153
-portability(emitted)	54
+portability(emitted)	52
 portability(injected)	5
 porter-notes	0
 remediation	10

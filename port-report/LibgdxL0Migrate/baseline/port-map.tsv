@@ -851,7 +851,6 @@ type	com.badlogic.gdx.utils.SortedIntList$NodePool	sge.utils.SortedIntList$NodeP
 type	com.badlogic.gdx.utils.StreamUtils	sge.utils.StreamUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream	sge.utils.StreamUtils$OptimizedByteArrayOutputStream	Renamed	-		0		form=class parents=java.io.ByteArrayOutputStream primary=(int) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.TimeUtils	sge.utils.TimeUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.Timer	sge.utils.Timer	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=Task,TimerThread,disposeThread,instance,post,schedule,thread,thread$field,threadLock
 type	com.badlogic.gdx.utils.Timer$Task	sge.utils.Timer$Task	Renamed	-		0		flags=abstract form=class parents=java.lang.Runnable primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.Timer$TimerThread	sge.utils.Timer$TimerThread	Renamed	-		0		form=class parents=java.lang.Runnable,sge.LifecycleListener primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.UBJsonReader	sge.utils.UBJsonReader	Renamed	-		0		form=class parents=sge.utils.BaseJsonReader primary=() primaryKind=unique-root primaryVis=public
@@ -929,6 +928,7 @@ type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=object prim
 type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		companion=yes form=class parents=sge.utils.Pool primary=(Class,int,int) primaryKind=unique-root primaryVis=public secondaries=(Class);(Class,int) tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.ShortArray	sge.utils.ShortArray	Dropped	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(DynamicArray);(short[]);(boolean,short[],int,int) statics=`with`,apply,from
 type	com.badlogic.gdx.utils.TextFormatter	sge.utils.TextFormatter	Substituted	-		0		form=class primary=(Locale,boolean) primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.utils.Timer	sge.utils.Timer	Substituted	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=Task,TimerThread,disposeThread,instance,post,schedule,thread,thread$field,threadLock
 type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		flags=final form=class primary=(Annotation) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.reflect.ClassReflection	sge.utils.reflect.ClassReflection	Dropped	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
@@ -18580,7 +18580,7 @@ member	com.badlogic.gdx.utils.Timer#<stmt4>	sge.utils.Timer#<stmt4>	Renamed	-	<s
 member	com.badlogic.gdx.utils.Timer#clear()	sge.utils.Timer#clear()	Renamed	-	com/badlogic/gdx/utils/Timer.java	122	57937699fad1c50d	
 member	com.badlogic.gdx.utils.Timer#delay(long)	sge.utils.Timer#delay(long)	Renamed	-	com/badlogic/gdx/utils/Timer.java	169	8040af19212d3247	
 member	com.badlogic.gdx.utils.Timer#instance(Sge)	sge.utils.Timer#instance(Sge)	Renamed	-	com/badlogic/gdx/utils/Timer.java	37	3e413d96b8cad987	placement=companion
-member	com.badlogic.gdx.utils.Timer#isEmpty()	sge.utils.Timer#isEmpty	Renamed	-	com/badlogic/gdx/utils/Timer.java	140	41603dd45e86c695	form=parenless
+member	com.badlogic.gdx.utils.Timer#isEmpty()	sge.utils.Timer#isEmpty()	Renamed	-	com/badlogic/gdx/utils/Timer.java	140	2c591250163da6b0	
 member	com.badlogic.gdx.utils.Timer#post(Task,Sge)	sge.utils.Timer#post(Task,Sge)	Renamed	-	com/badlogic/gdx/utils/Timer.java	180	6d2e1ff3c588fee8	placement=companion
 member	com.badlogic.gdx.utils.Timer#postTask(Task)	sge.utils.Timer#postTask(Task)	Renamed	-	com/badlogic/gdx/utils/Timer.java	63	8a9e7781560cde50	
 member	com.badlogic.gdx.utils.Timer#schedule(Task,Seconds,Seconds,Sge)	sge.utils.Timer#schedule(Task,Seconds,Seconds,Sge)	Renamed	-	com/badlogic/gdx/utils/Timer.java	192	f199d380345172bf	placement=companion
