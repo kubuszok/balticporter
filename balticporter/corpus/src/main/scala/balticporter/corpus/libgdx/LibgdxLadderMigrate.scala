@@ -387,7 +387,22 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("add", 1,
             "def add(actors: sge.scenes.scene2d.Actor*): sge.scenes.scene2d.ui.Table = { for (a <- actors) add(lowlevel.Nullable(a)); this }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#add(Actor*)"),
-            Some("sge's varargs add: `table.add(a1, a2, a3)` (K6.5)"), false)))),
+            Some("sge's varargs add: `table.add(a1, a2, a3)` (K6.5)"), false),
+          // sge's Table.stack takes Actor*; port takes Array[Actor]
+          balticporter.transform.AddMembersTransform.MemberSpec("stack", 1,
+            "def stack(actors: sge.scenes.scene2d.Actor*): sge.scenes.scene2d.ui.Cell[sge.scenes.scene2d.ui.Stack] = stack(actors.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#stack(Actor*)"),
+            Some("sge's varargs stack"), false),
+          // sge's Table.padTop takes Value only (not Float overload too); Preferences.put takes immutable Map
+          // — deep API shape differences, not fixable with an extra member
+          ))),
+      // VertexAttributes and Mesh varargs: sge takes T*; port takes Array[T]
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.graphics.VertexAttributes" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
+            "def apply(attributes: sge.graphics.VertexAttribute*): sge.graphics.VertexAttributes = new sge.graphics.VertexAttributes(attributes.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.VertexAttributes#apply"),
+            Some("sge's varargs ctor — port takes Array"), true)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(

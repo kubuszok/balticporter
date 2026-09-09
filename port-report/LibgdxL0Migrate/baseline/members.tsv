@@ -2924,11 +2924,12 @@ sge.graphics.VertexAttribute	sge.graphics.VertexAttribute#unit	val	9f1ba71497798
 sge.graphics.VertexAttribute	sge.graphics.VertexAttribute#usage	val	3ca7367e331c0c6e
 sge.graphics.VertexAttribute	sge.graphics.VertexAttribute#usageIndex	val	46303e930fb00d3e
 sge.graphics.VertexAttributes	list	val	f768b1e3a822c81c
-sge.graphics.VertexAttributes	sge.graphics.VertexAttributes	class	9597349a76a55992
+sge.graphics.VertexAttributes	sge.graphics.VertexAttributes	class	c65426610c8fad2b
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#<stmt1>	stmt	4a0f1d862eb4b97d
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#<stmt2>	stmt	6d2a8b5cd3c2d33e
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#<stmt3>	stmt	e5faddda11fed827
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#<stmt4>	stmt	a8ce16deac3a2445
+sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#<stmt5>	stmt	29f9b53c660ba237
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#attributes	val	92d8cc5ec3a84403
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#boneWeightUnits	val	28aff625a1caa550
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes#boneWeights()	def	0fe380653f5307c3
@@ -13847,7 +13848,7 @@ sge.scenes.scene2d.ui.Stack	sge.scenes.scene2d.ui.Stack#sizeInvalid	val	55eb84a4
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable	class	8ddaebfc0ca54616
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#setStyle(T)	def	10e1ccf8bff76426
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#style()	def	fc3e687f857c3b61
-sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	3bf2bbd54293eb12
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	58d79208c7439e07
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<init>(Nullable<Skin>,Sge)	ctor	220ed06d33d7dee9
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt1>	stmt	abca2bbe56b03719
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt2>	stmt	6af89f041e3a7e12
@@ -13857,6 +13858,7 @@ sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt5>	stmt	a3af24e2215
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt6>	stmt	da85a6fb14448258
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt7>	stmt	969c6c2015279abc
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt8>	stmt	bc766277d20b66b9
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt9>	stmt	930c8589dc066a78
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#add()	def	8b7b4f474b4c1255
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#add(Array<Actor>)	def	6ec1d5e310ffa6dc
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#add(Nullable<CharSequence>)	def	efe1901bd8bc31b2

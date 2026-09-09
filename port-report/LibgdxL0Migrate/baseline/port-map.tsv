@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=a6a143d0f6e843ff	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=c8a78e1b6f0cc149	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -130,7 +130,7 @@ type	com.badlogic.gdx.graphics.TextureData	sge.graphics.TextureData	Renamed	-		0
 type	com.badlogic.gdx.graphics.TextureData$Factory	sge.graphics.TextureData$Factory	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.TextureData$TextureDataType	sge.graphics.TextureData$TextureDataType	Renamed	-		0		companion=yes flags=enum form=enum parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
 type	com.badlogic.gdx.graphics.VertexAttribute	sge.graphics.VertexAttribute	Renamed	-		0		companion=yes flags=final form=class primary=(int,int,int,boolean,String,int) primaryKind=unique-root primaryVis=public secondaries=(int,int,String);(int,int,String,int);(int,int,DataType,boolean,String) statics=Binormal,BoneWeight,ColorPacked,ColorUnpacked,Normal,Position,Tangent,TexCoords
-type	com.badlogic.gdx.graphics.VertexAttributes	sge.graphics.VertexAttributes	Renamed	-		0		companion=yes flags=final form=class parents=balticporter.runtime.JavaIterable,java.lang.Comparable primary=(VertexAttribute[]) primaryKind=unique-root primaryVis=public statics=ReadonlyIterable,ReadonlyIterator,Usage
+type	com.badlogic.gdx.graphics.VertexAttributes	sge.graphics.VertexAttributes	Renamed	-		0		companion=yes flags=final form=class parents=balticporter.runtime.JavaIterable,java.lang.Comparable primary=(VertexAttribute[]) primaryKind=unique-root primaryVis=public statics=ReadonlyIterable,ReadonlyIterator,Usage,apply
 type	com.badlogic.gdx.graphics.VertexAttributes$ReadonlyIterable	sge.graphics.VertexAttributes$ReadonlyIterable	Renamed	-		0		form=class parents=balticporter.runtime.JavaIterable primary=(T[]) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.graphics.VertexAttributes$ReadonlyIterator	sge.graphics.VertexAttributes$ReadonlyIterator	Renamed	-		0		form=class parents=balticporter.runtime.JavaIterator,balticporter.runtime.JavaIterable primary=(T[]) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.graphics.VertexAttributes$Usage	sge.graphics.VertexAttributes$Usage	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
@@ -3935,6 +3935,7 @@ member	com.badlogic.gdx.graphics.VertexAttributes#<stmt1>	sge.graphics.VertexAtt
 member	com.badlogic.gdx.graphics.VertexAttributes#<stmt2>	sge.graphics.VertexAttributes#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	67	6d2a8b5cd3c2d33e	
 member	com.badlogic.gdx.graphics.VertexAttributes#<stmt3>	sge.graphics.VertexAttributes#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	70	e5faddda11fed827	
 member	com.badlogic.gdx.graphics.VertexAttributes#<stmt4>	sge.graphics.VertexAttributes#<stmt4>	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	71	a8ce16deac3a2445	
+member	com.badlogic.gdx.graphics.VertexAttributes#<stmt5>	sge.graphics.VertexAttributes#<stmt5>	Renamed	-	<synthetic>	0	29f9b53c660ba237	
 member	com.badlogic.gdx.graphics.VertexAttributes#attributes	sge.graphics.VertexAttributes#attributes	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	46	92d8cc5ec3a84403	vis=private
 member	com.badlogic.gdx.graphics.VertexAttributes#boneWeightUnits	sge.graphics.VertexAttributes#boneWeightUnits	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	55	28aff625a1caa550	vis=private
 member	com.badlogic.gdx.graphics.VertexAttributes#getBoneWeights()	sge.graphics.VertexAttributes#boneWeights	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	179	0fe380653f5307c3	form=parenless
@@ -14692,6 +14693,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt5>	sge.scenes.scene2d.ui.Ta
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt6>	sge.scenes.scene2d.ui.Table#<stmt6>	Renamed	-	<synthetic>	0	da85a6fb14448258	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt7>	sge.scenes.scene2d.ui.Table#<stmt7>	Renamed	-	<synthetic>	0	969c6c2015279abc	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt8>	sge.scenes.scene2d.ui.Table#<stmt8>	Renamed	-	<synthetic>	0	bc766277d20b66b9	
+member	com.badlogic.gdx.scenes.scene2d.ui.Table#<stmt9>	sge.scenes.scene2d.ui.Table#<stmt9>	Renamed	-	<synthetic>	0	930c8589dc066a78	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#add()	sge.scenes.scene2d.ui.Table#add()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	298	8b7b4f474b4c1255	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#add(Array)	sge.scenes.scene2d.ui.Table#add(Array<Actor>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	263	6ec1d5e310ffa6dc	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#add(Nullable)	sge.scenes.scene2d.ui.Table#add(Nullable<CharSequence>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	271	efe1901bd8bc31b2	
