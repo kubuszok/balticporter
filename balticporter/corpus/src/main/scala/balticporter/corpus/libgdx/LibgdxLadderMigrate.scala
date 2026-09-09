@@ -257,7 +257,12 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
             "def apply(name: java.lang.String, windowSize: scala.Int = 5): sge.utils.PerformanceCounter = new sge.utils.PerformanceCounter(name, windowSize)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.PerformanceCounter#apply"),
-            Some("factory with original param names — the funnel renamed them to $p"), true)),
+            Some("factory with original param names — the funnel renamed them to $p"), true),
+          // sge's toString(sb) takes scala.StringBuilder; the port takes java.lang.StringBuilder
+          balticporter.transform.AddMembersTransform.MemberSpec("toString", 1,
+            "def toString(sb: scala.collection.mutable.StringBuilder): scala.collection.mutable.StringBuilder = { toString(sb.underlying); sb }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.PerformanceCounter#toString(StringBuilder)"),
+            Some("sge uses scala.StringBuilder; port uses java.lang.StringBuilder"), false)),
         "com.badlogic.gdx.scenes.scene2d.Actor" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("isDebug", 0,
             "def isDebug: scala.Boolean = this.debug" + "$field",
@@ -364,6 +369,12 @@ object LibgdxLadder:
             "def this(name: java.lang.String, emitter: sge.graphics.g3d.particles.emitters.Emitter, renderer: sge.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?], influencers: sge.graphics.g3d.particles.influencers.Influencer*)(using sge.Sge) = this(name, emitter, renderer, influencers.toArray)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ParticleController#this(varargs)"),
             Some("sge's varargs ctor — delegates to Array ctor"), false)),
+        // sge's ParticleEffect takes varargs; port takes Array
+        "com.badlogic.gdx.graphics.g3d.particles.ParticleEffect" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(emitters: sge.graphics.g3d.particles.ParticleController*)(using sge.Sge) = { this(); for (e <- emitters) this.controllers.add(e) }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ParticleEffect#this(varargs)"),
+            Some("sge's varargs ctor — delegates to no-arg then adds"), false)),
         // sge's ModelInstance takes Nullable[Seq[String]]; port takes Array[String]
         "com.badlogic.gdx.graphics.g3d.ModelInstance" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
