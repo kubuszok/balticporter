@@ -14,3 +14,21 @@ sge/utils/PoolTest.scala	sge/src/test/scala	override protected val/def -> overri
 sge/scenes/scene2d/ui/LabelFontScaleRedSuite.scala	sge/src/test/scalajvm	override protected -> override (1 method)	port widened computePrefSize to public
 sge/math/CumulativeDistributionTest.scala	sge/src/test/scala	CumulativeDistribution[Int] -> [java.lang.Integer]; .intValue unbox	port's T <: Object bound; sge dropped the bound
 sge/graphics/g3d/particles/SaveDataCodecSuite.scala	sge/src/test/scala	load[Int] -> load[java.lang.Integer].map(_.intValue)	port's T <: Object bound; sge dropped the bound
+sge/SgeTestFixture.scala	sge/src/test/scala	NoopApplication extends JavaLoggingApplication	port keeps Application logging surface; sge removed it
+sge/AdapterDefaultsIss557RedSuite.scala	sge/src/test/scala	extends ApplicationListenerDefaults (2 inner classes)	port's ApplicationListener has no defaults
+sge/DesktopConfigKnobsIss762FixSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/DesktopConfigKnobsIss762RedSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/DesktopCustomCursorIss764RedSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/DesktopErrorCallbackOrderingIss807RedSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/DesktopFullscreenIss759FixSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/DesktopFullscreenIss759RedSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/graphics/g3d/decals/DecalSortRebindRedSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/graphics/g3d/decals/DecalSortRedSuite.scala	sge/src/test/scalajvm	extends ApplicationListenerDefaults	port's ApplicationListener has no defaults
+sge/graphics/DownloadPixmapRedSuite.scala	sge/src/test/scalajvm	extends JavaLoggingApplication	port keeps Application logging surface; sge removed it
+sge/utils/TimerWakeupRedSuite.scala	sge/src/test/scalajvm	extends JavaLoggingApplication	port keeps Application logging surface; sge removed it
+sge/graphics/g2d/BitmapFontRegionsAndGlyphMetricIss734RedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
+sge/graphics/g2d/PolygonSpriteBatchRedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
+sge/graphics/g2d/SpriteBatchBlendingToggleIss734RedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
+sge/graphics/g2d/SpriteBatchVertexGeometryISS561Suite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
+sge/graphics/g2d/SpriteCacheRedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
+sge/graphics/g2d/SpriteCacheRedefineRedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType

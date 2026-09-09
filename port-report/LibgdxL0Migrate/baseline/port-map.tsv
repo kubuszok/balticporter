@@ -947,6 +947,7 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
+type		sge.ApplicationListenerDefaults	Added	-		0		
 type		sge.FrameHookHost	Added	-		0		
 type		sge.HeadlessApplicationConfig	Added	-		0		
 type		sge.LlsExtensions	Added	-		0		
