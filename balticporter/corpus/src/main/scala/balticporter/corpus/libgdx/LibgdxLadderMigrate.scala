@@ -669,7 +669,11 @@ object LibgdxLadder:
           // parameters sge accepts as `Nullable` where java wrote no annotation (the demos pass `Nullable.empty`)
           "com.badlogic.gdx.graphics.g3d.ModelBatch#<init>#context", "com.badlogic.gdx.graphics.g3d.ModelBatch#<init>#shaderProvider",
           "com.badlogic.gdx.graphics.g3d.ModelBatch#<init>#sorter", "com.badlogic.gdx.utils.Clipboard#setContents#content",
-          "com.badlogic.gdx.maps.tiled.TiledMapTileLayer#setCell#cell"))),
+          "com.badlogic.gdx.maps.tiled.TiledMapTileLayer#setCell#cell",
+          // sge wraps these fields in Nullable; the reference has them private so the deriver didn't see them
+          "com.badlogic.gdx.scenes.scene2d.Action#target",
+          "com.badlogic.gdx.scenes.scene2d.Action#actor",
+          "com.badlogic.gdx.scenes.scene2d.Action#pool"))),
     // sge's audio opaques (`Volume`, `Pitch`, `Pan`, `SoundId`), each fenced to the files sge keeps it in.
     "audio" -> List(
       opaque(balticporter.tir.OpaqueSpec(
