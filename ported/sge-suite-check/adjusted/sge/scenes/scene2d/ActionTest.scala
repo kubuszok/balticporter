@@ -71,7 +71,7 @@ class ActionTest extends munit.FunSuite {
     assertEqualsFloat(actor.y, 170f, 0.01f)
   }
 
-  test("moveBy partial progress".ignore) { // SKIP: port's action pool returns 0.0 (engine investigation needed)
+  test("moveBy partial progress") {
     given Sge = ctx()
     val actor = Actor()
     actor.setPosition(0f, 0f)
@@ -108,7 +108,7 @@ class ActionTest extends munit.FunSuite {
     assert(!actor.visible)
   }
 
-  test("show action sets visible to true".ignore) { // SKIP: port's action pool returns 0.0
+  test("show action sets visible to true") {
     given Sge = ctx()
     val actor = Actor()
     actor.visible = false
@@ -162,7 +162,7 @@ class ActionTest extends munit.FunSuite {
   // Composition: sequence
   // ---------------------------------------------------------------------------
 
-  test("sequence runs actions in order".ignore) { // SKIP: port's action pool returns 0.0
+  test("sequence runs actions in order") {
     given Sge = ctx()
     val actor = Actor()
     actor.setPosition(0f, 0f)
@@ -188,7 +188,7 @@ class ActionTest extends munit.FunSuite {
   // Composition: parallel
   // ---------------------------------------------------------------------------
 
-  test("parallel runs actions concurrently".ignore) { // SKIP: port's action pool returns 0.0
+  test("parallel runs actions concurrently") {
     given Sge = ctx()
     val actor = Actor()
     actor.setPosition(0f, 0f)
@@ -208,7 +208,7 @@ class ActionTest extends munit.FunSuite {
   // Delay
   // ---------------------------------------------------------------------------
 
-  test("delay postpones wrapped action".ignore) { // SKIP: port's action pool returns 0.0
+  test("delay postpones wrapped action") {
     given Sge = ctx()
     val actor = Actor()
     actor.setPosition(0f, 0f)

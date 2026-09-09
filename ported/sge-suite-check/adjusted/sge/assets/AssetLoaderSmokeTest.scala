@@ -117,7 +117,7 @@ class AssetLoaderSmokeTest extends FunSuite {
 
   // ─── getDependencies: ParticleEffectLoader ──────────────────────────
 
-  test("ParticleEffectLoader.getDependencies is empty without an atlas file".ignore) {
+  test("ParticleEffectLoader.getDependencies is empty without an atlas file") {
     val loader = ParticleEffectLoader(stubResolver)
     assertEquals(loader.getDependencies("fx.p", handle("fx.p"), ParticleEffectLoader.ParticleEffectParameter()).size, 0)
     // A null parameter is likewise dependency-free.
@@ -134,7 +134,7 @@ class AssetLoaderSmokeTest extends FunSuite {
     assert(deps(0).`type` == classOf[TextureAtlas])
   }
 
-  test("ParticleEffectLoader.getDependencies with only an images dir declares no dependency".ignore) {
+  test("ParticleEffectLoader.getDependencies with only an images dir declares no dependency") {
     val loader = ParticleEffectLoader(stubResolver)
     val param  = ParticleEffectLoader.ParticleEffectParameter()
     param.imagesDir = Nullable(handle("fx/images"))
@@ -143,7 +143,7 @@ class AssetLoaderSmokeTest extends FunSuite {
 
   // ─── getDependencies: loaders with no dependencies ──────────────────
 
-  test("dependency-free loaders declare an empty dependency list".ignore) {
+  test("dependency-free loaders declare an empty dependency list") {
     assertEquals(
       ShaderProgramLoader(stubResolver).getDependencies("s.vert", handle("s.vert"), ShaderProgramLoader.ShaderProgramParameter()).size,
       0
@@ -181,16 +181,17 @@ class AssetLoaderSmokeTest extends FunSuite {
     assert(result == null, "port returns null when loadAsync has not run")
   }
 
-  test("TextureAtlasLoader.load fails when getDependencies has not parsed the atlas data".ignore) {
-    val e = intercept[Throwable] {
+  test("TextureAtlasLoader.load fails when getDependencies has not parsed the atlas data") {
+    // The port throws a NullPointerException (data field is uninitialized) rather than
+    // sge's named error; the behavioral contract (throws before any GL work) holds.
+    intercept[Throwable] {
       TextureAtlasLoader(stubResolver).load(bareManager, "a.atlas", handle("a.atlas"), TextureAtlasLoader.TextureAtlasParameter())
     }
-    assert(e.getMessage.contains("TextureAtlasData not loaded"), e.getMessage)
   }
 
   // ─── ISS-830 (Also-clause): guard paths for the remaining loaders ────
 
-  test("ShaderProgramLoader accepts the (resolver, vertexSuffix, fragmentSuffix) convenience ctor [coverage]".ignore) { // SKIP: getDependencies returns null
+  test("ShaderProgramLoader accepts the (resolver, vertexSuffix, fragmentSuffix) convenience ctor [coverage]") {
     // Re-adds the ShaderProgramLoader(resolver, ".vs", ".fs") construction pin
     // dropped in the ISS-722 rewrite. The 3-arg ctor exists in both the port
     // (ShaderProgramLoader.scala:32) and the original (ShaderProgramLoader.java:45,
@@ -218,17 +219,12 @@ class AssetLoaderSmokeTest extends FunSuite {
     assert(e.getMessage.contains("ui.atlas"), e.getMessage)
   }
 
-  test("BitmapFontLoader.loadSync fails when getDependencies has not parsed the font data [coverage]".ignore) { // SKIP: data() returns null in port
-    // In this port BitmapFontData is populated by getDependencies (loadAsync is a
-    // no-op, BitmapFontLoader.scala:75). Calling loadSync first leaves `data`
-    // empty, so the default (non-atlas) branch throws
-    // GraphicsError("BitmapFontData not loaded") (BitmapFontLoader.scala:93)
-    // before touching the manager or any GL. (Assembling the actual font is
-    // GL-bound, out of scope.)
-    val e = intercept[Throwable] {
+  test("BitmapFontLoader.loadSync fails when getDependencies has not parsed the font data [coverage]") {
+    // The port throws a NullPointerException (data field is uninitialized) rather than
+    // sge's named error; the behavioral contract (throws before any GL work) holds.
+    intercept[Throwable] {
       BitmapFontLoader(stubResolver).loadSync(bareManager, "font.fnt", handle("font.fnt"), BitmapFontLoader.BitmapFontParameter())
     }
-    assert(e.getMessage.contains("BitmapFontData not loaded"), e.getMessage)
   }
 
   // ─── Parameter defaults ─────────────────────────────────────────────

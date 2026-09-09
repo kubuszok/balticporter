@@ -830,6 +830,17 @@ object LibgdxLadder:
         "com.badlogic.gdx.Screen#show"   -> "{}", "com.badlogic.gdx.Screen#resize" -> "{}",
         "com.badlogic.gdx.Screen#pause"  -> "{}", "com.badlogic.gdx.Screen#resume" -> "{}",
         "com.badlogic.gdx.Screen#hide"   -> "{}")),
+      // sge returns empty DynamicArray instead of java's null from getDependencies (the reference
+      // port's convention, PixmapLoader.scala:8); callers call .size on the result without a null check.
+      new balticporter.transform.MethodBodyTransform(Map(
+        "com.badlogic.gdx.assets.loaders.ShaderProgramLoader#getDependencies"     -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.I18NBundleLoader#getDependencies"        -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.CubemapLoader#getDependencies"           -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.PixmapLoader#getDependencies"            -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.SoundLoader#getDependencies"             -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"             -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"           -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+        "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies"    -> "{ val deps = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }")),
       // `AssetManager.get` answers `Nullable` in sge (the demos write `.get`); java throws on a miss.
       new balticporter.transform.NullabilityTransform(
         annotations     = Set.empty,

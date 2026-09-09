@@ -189,10 +189,17 @@ object Pool {
   }
 
   /** A ready-made [[Pool]] that builds instances with the supplied factory and resets them through the given [[sge.utils.Poolable]] type class instance instead of the [[Pool.Poolable]] trait.
+    *
+    * `reset` checks [[Pool.Poolable]] at runtime first: when the call site has no
+    * `Pool.Poolable` bound on `A` the compiler resolves `Poolable[A]` to the noop
+    * fallback, so the type class alone would skip the object's own `reset()`.
     */
   class Default[A](createNewObject: () => A, override protected[utils] val initialCapacity: Int = 16, override protected[utils] val max: Int = Int.MaxValue)(using poolable: sge.utils.Poolable[A]) extends Pool[A] {
     override def newObject():             A    = createNewObject()
-    override protected def reset(obj: A): Unit = poolable.reset(obj)
+    override protected def reset(obj: A): Unit = obj match {
+      case p: Pool.Poolable => p.reset()
+      case _ => poolable.reset(obj)
+    }
   }
 
   /** A [[Pool]] that additionally tracks every [[obtain]]ed instance so the whole batch can be returned at once with [[flush]], rather than freeing each one individually.
