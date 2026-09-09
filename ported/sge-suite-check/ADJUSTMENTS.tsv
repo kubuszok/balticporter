@@ -40,3 +40,4 @@ sge/graphics/g3d/ModelInstanceCopyNodesIss734RedSuite.scala	sge/src/test/scalajv
 sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	intercept[SgeError.InvalidInput] -> intercept[Throwable]	port doesn't throw (sge added validation)
 sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	intercept[SgeError.*] -> intercept[Throwable] or removed (4 loadSync tests return null)	port returns null or throws GdxRuntimeException not SgeError
 sge/maps/tiled/TmxTileIdsEofRedSuite.scala	sge/src/test/scalajvm	IllegalArgumentException match -> any Throwable with message check	port wraps in GdxRuntimeException
+sge/utils/MkArrayOpaqueTest.scala	sge/src/test/scalajvm	_items -> items (field name)	port keeps java name; sge renamed to _items
