@@ -267,7 +267,12 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("disposeThread", 0,
             "private[sge] def disposeThread(): scala.Unit = { this.threadLock.synchronized { if (this.thread" + "$field != null) { this.thread" + "$field.dispose(); this.thread" + "$field = null } } }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.Timer#disposeThread"),
-            Some("sge's timer thread cleanup for test teardown"), true)),
+            Some("sge's timer thread cleanup for test teardown"), true),
+          // sge's scheduleTask has default delaySeconds=Seconds.zero; add 1-arg overload
+          balticporter.transform.AddMembersTransform.MemberSpec("scheduleTask", 1,
+            "def scheduleTask(task: sge.utils.Timer.Task): sge.utils.Timer.Task = scheduleTask(task, sge.utils.Seconds(0f))",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.Timer#scheduleTask(Task)"),
+            Some("sge has default delaySeconds=Seconds.zero"), false)),
         "com.badlogic.gdx.math.Vector3" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("cross", 0,
             "infix def cross(vector: sge.math.Vector3): sge.math.Vector3 = set(y * vector.z - z * vector.y, z * vector.x - x * vector.z, x * vector.y - y * vector.x)",
@@ -352,7 +357,19 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
             "def this(batches: lowlevel.Nullable[lowlevel.util.DynamicArray[sge.graphics.g3d.particles.batches.ParticleBatch[?]]]) = { this(new lowlevel.util.DynamicArray[sge.graphics.g3d.particles.batches.ParticleBatch[?]]()); this.batches = batches }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectLoadParameter#this(Nullable)"),
-            Some("sge wraps batches in Nullable"), false)))),
+            Some("sge wraps batches in Nullable"), false)),
+        // sge's ParticleController takes varargs; port takes Array
+        "com.badlogic.gdx.graphics.g3d.particles.ParticleController" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(name: java.lang.String, emitter: sge.graphics.g3d.particles.emitters.Emitter, renderer: sge.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?], influencers: sge.graphics.g3d.particles.influencers.Influencer*)(using sge.Sge) = this(name, emitter, renderer, influencers.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ParticleController#this(varargs)"),
+            Some("sge's varargs ctor — delegates to Array ctor"), false)),
+        // sge's ModelInstance takes Nullable[Seq[String]]; port takes Array[String]
+        "com.badlogic.gdx.graphics.g3d.ModelInstance" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(model: sge.graphics.g3d.Model, rootNodeIds: lowlevel.Nullable[scala.collection.immutable.Seq[java.lang.String]]) = this(model, rootNodeIds.map(s => { val a = new scala.Array[java.lang.String](s.size); s.copyToArray(a); a }).getOrElse(new scala.Array[java.lang.String](0)))",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.ModelInstance#this(Model,Nullable[Seq])"),
+            Some("sge takes Nullable[Seq[String]]; port takes String*"), false)))),
       // Table.add varargs
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.scenes.scene2d.ui.Table" -> List(

@@ -4663,7 +4663,7 @@ sge.graphics.g3d.ModelCache	sge.graphics.g3d.ModelCache$TightMeshPool#flush()	de
 sge.graphics.g3d.ModelCache	sge.graphics.g3d.ModelCache$TightMeshPool#freeMeshes	val	e7fb147c5a029283
 sge.graphics.g3d.ModelCache	sge.graphics.g3d.ModelCache$TightMeshPool#obtain(VertexAttributes,int,int)	def	79412ab2fc75e4c9
 sge.graphics.g3d.ModelCache	sge.graphics.g3d.ModelCache$TightMeshPool#usedMeshes	val	0b2013b78cd82188
-sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance	class	db11b8aa87752887
+sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance	class	d88ae779504bc80d
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<init>(Model)	ctor	72211357c605725b
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<init>(Model,Array<String>)	ctor	ca33a13b1e8d2530
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<init>(Model,DynamicArray<String>)	ctor	8dccb6a474b81e4a
@@ -4684,6 +4684,7 @@ sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<init>(ModelInstan
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<init>(ModelInstance,Matrix4)	ctor	1bae536209713daf
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<init>(ModelInstance,Nullable<Matrix4>,boolean)	ctor	ee16cc75e7075f03
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<stmt1>	stmt	abca2bbe56b03719
+sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#<stmt2>	stmt	6b55abce85fb167d
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#animations	val	3e1025169bd8afdd
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#calculateBoundingBox(BoundingBox)	def	4feabee12d21b4fc
 sge.graphics.g3d.ModelInstance	sge.graphics.g3d.ModelInstance#calculateTransforms()	def	ec62b84c3709a42f
@@ -5569,10 +5570,11 @@ sge.graphics.g3d.particles.ParticleChannels	sge.graphics.g3d.particles.ParticleC
 sge.graphics.g3d.particles.ParticleChannels	sge.graphics.g3d.particles.ParticleChannels$TextureRegionInitializer#get()	def	ec5e7733837e2dd5
 sge.graphics.g3d.particles.ParticleChannels	sge.graphics.g3d.particles.ParticleChannels$TextureRegionInitializer#init(FloatChannel)	def	4976f4fda8264908
 sge.graphics.g3d.particles.ParticleChannels	sge.graphics.g3d.particles.ParticleChannels$TextureRegionInitializer#instance	val	f8bf1e58cb44b82a
-sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController	class	e3ba3984edad0437
+sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController	class	9fca86802bca347b
 sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#<init>(Sge)	ctor	3e90d32af119de46
 sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#<init>(String,Emitter,ParticleControllerRenderer<?,?>,Array<Influencer>,Sge)	ctor	0f9aec3959c7db83
 sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#<stmt1>	stmt	abca2bbe56b03719
+sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#<stmt2>	stmt	70a1d15878fe89ab
 sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#DEFAULT_TIME_STEP	val	6e78005a47a260f4
 sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#_boundingBox	val	3add61a2d7d4f14f
 sge.graphics.g3d.particles.ParticleController	sge.graphics.g3d.particles.ParticleController#activateParticles(int,int)	def	443aa02613937aff
@@ -17257,10 +17259,11 @@ sge.utils.TimeUtils	sge.utils.TimeUtils#nanosPerMilli	val	e46fa9d5962e84e4
 sge.utils.TimeUtils	sge.utils.TimeUtils#nanosToMillis(Nanos)	def	9b65c2d83046a2cd
 sge.utils.TimeUtils	sge.utils.TimeUtils#timeSinceMillis(Millis)	def	9ce3c66ceeb36f38
 sge.utils.TimeUtils	sge.utils.TimeUtils#timeSinceNanos(Nanos)	def	63df445253dd47de
-sge.utils.Timer	sge.utils.Timer	class	f9343001b8e38054
+sge.utils.Timer	sge.utils.Timer	class	99ddcdc137038a20
 sge.utils.Timer	sge.utils.Timer#<stmt1>	stmt	abca2bbe56b03719
 sge.utils.Timer	sge.utils.Timer#<stmt2>	stmt	774d7a4acbf77bef
-sge.utils.Timer	sge.utils.Timer#<stmt3>	stmt	bb08e35c9094b9f2
+sge.utils.Timer	sge.utils.Timer#<stmt3>	stmt	7416c046a3a494a3
+sge.utils.Timer	sge.utils.Timer#<stmt4>	stmt	bb08e35c9094b9f2
 sge.utils.Timer	sge.utils.Timer#clear()	def	57937699fad1c50d
 sge.utils.Timer	sge.utils.Timer#delay(long)	def	8040af19212d3247
 sge.utils.Timer	sge.utils.Timer#instance(Sge)	def	3e413d96b8cad987

@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=9a3e40234f017b18	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=9186a2546b47470b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -5679,6 +5679,7 @@ member	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(ModelInstance)	sge.gra
 member	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(ModelInstance,Matrix4)	sge.graphics.g3d.ModelInstance#<init>(ModelInstance,Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g3d/ModelInstance.java	203	1bae536209713daf	
 member	com.badlogic.gdx.graphics.g3d.ModelInstance#<init>(ModelInstance,Nullable,boolean)	sge.graphics.g3d.ModelInstance#<init>(ModelInstance,Nullable<Matrix4>,boolean)	Renamed	-	com/badlogic/gdx/graphics/g3d/ModelInstance.java	208	ee16cc75e7075f03	
 member	com.badlogic.gdx.graphics.g3d.ModelInstance#<stmt1>	sge.graphics.g3d.ModelInstance#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
+member	com.badlogic.gdx.graphics.g3d.ModelInstance#<stmt2>	sge.graphics.g3d.ModelInstance#<stmt2>	Renamed	-	<synthetic>	0	6b55abce85fb167d	
 member	com.badlogic.gdx.graphics.g3d.ModelInstance#animations	sge.graphics.g3d.ModelInstance#animations	Renamed	-	com/badlogic/gdx/graphics/g3d/ModelInstance.java	51	3e1025169bd8afdd	
 member	com.badlogic.gdx.graphics.g3d.ModelInstance#calculateBoundingBox(BoundingBox)	sge.graphics.g3d.ModelInstance#calculateBoundingBox(BoundingBox)	Renamed	-	com/badlogic/gdx/graphics/g3d/ModelInstance.java	415	4feabee12d21b4fc	
 member	com.badlogic.gdx.graphics.g3d.ModelInstance#calculateTransforms()	sge.graphics.g3d.ModelInstance#calculateTransforms()	Renamed	-	com/badlogic/gdx/graphics/g3d/ModelInstance.java	402	ec62b84c3709a42f	
@@ -6521,6 +6522,7 @@ member	com.badlogic.gdx.graphics.g3d.particles.ParticleChannels$TextureRegionIni
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#<init>(Sge)	sge.graphics.g3d.particles.ParticleController#<init>(Sge)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleController.java	70	3e90d32af119de46	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#<init>(String,Emitter,ParticleControllerRenderer,Array,Sge)	sge.graphics.g3d.particles.ParticleController#<init>(String,Emitter,ParticleControllerRenderer<?,?>,Array<Influencer>,Sge)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleController.java	77	0f9aec3959c7db83	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#<stmt1>	sge.graphics.g3d.particles.ParticleController#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
+member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#<stmt2>	sge.graphics.g3d.particles.ParticleController#<stmt2>	Renamed	-	<synthetic>	0	70a1d15878fe89ab	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#DEFAULT_TIME_STEP	sge.graphics.g3d.particles.ParticleController#DEFAULT_TIME_STEP	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleController.java	40	6e78005a47a260f4	placement=companion
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#boundingBox	sge.graphics.g3d.particles.ParticleController#_boundingBox	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleController.java	65	3add61a2d7d4f14f	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleController#activateParticles(int,int)	sge.graphics.g3d.particles.ParticleController#activateParticles(int,int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleController.java	208	443aa02613937aff	
@@ -18555,7 +18557,8 @@ member	com.badlogic.gdx.utils.TimeUtils#timeSinceMillis(Millis)	sge.utils.TimeUt
 member	com.badlogic.gdx.utils.TimeUtils#timeSinceNanos(Nanos)	sge.utils.TimeUtils#timeSinceNanos(Nanos)	Renamed	-	com/badlogic/gdx/utils/TimeUtils.java	51	63df445253dd47de	placement=companion
 member	com.badlogic.gdx.utils.Timer#<stmt1>	sge.utils.Timer#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.utils.Timer#<stmt2>	sge.utils.Timer#<stmt2>	Renamed	-	com/badlogic/gdx/utils/Timer.java	59	774d7a4acbf77bef	
-member	com.badlogic.gdx.utils.Timer#<stmt3>	sge.utils.Timer#<stmt3>	Renamed	-	<synthetic>	0	bb08e35c9094b9f2	
+member	com.badlogic.gdx.utils.Timer#<stmt3>	sge.utils.Timer#<stmt3>	Renamed	-	<synthetic>	0	7416c046a3a494a3	
+member	com.badlogic.gdx.utils.Timer#<stmt4>	sge.utils.Timer#<stmt4>	Renamed	-	<synthetic>	0	bb08e35c9094b9f2	
 member	com.badlogic.gdx.utils.Timer#clear()	sge.utils.Timer#clear()	Renamed	-	com/badlogic/gdx/utils/Timer.java	122	57937699fad1c50d	
 member	com.badlogic.gdx.utils.Timer#delay(long)	sge.utils.Timer#delay(long)	Renamed	-	com/badlogic/gdx/utils/Timer.java	169	8040af19212d3247	
 member	com.badlogic.gdx.utils.Timer#instance(Sge)	sge.utils.Timer#instance(Sge)	Renamed	-	com/badlogic/gdx/utils/Timer.java	37	3e413d96b8cad987	placement=companion
