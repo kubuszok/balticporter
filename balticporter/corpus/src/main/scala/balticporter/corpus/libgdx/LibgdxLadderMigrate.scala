@@ -324,6 +324,18 @@ object LibgdxLadder:
             "def padBottom_=(v: sge.scenes.scene2d.ui.Value): scala.Unit = { this.padBottom" + "$field = v }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#padBottom_="),
             Some("explicit property setter — resolves fluent overload ambiguity"), false)),
+        // sge's Preferences.put takes immutable Map; port takes mutable.Map (from retarget)
+        "com.badlogic.gdx.Preferences" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("put", 1,
+            "def put(vals: scala.collection.immutable.Map[java.lang.String, ?]): sge.Preferences = { val m = scala.collection.mutable.Map.from(vals); put(m) }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Preferences#put(immutable.Map)"),
+            Some("sge uses immutable Map; port retargeted to mutable.Map — bridge"), false)),
+        // sge's I18NBundleParameter takes Nullable[Locale]; port takes bare Locale
+        "com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(locale: lowlevel.Nullable[java.util.Locale]) = this(locale, lowlevel.Nullable.empty)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#this(Nullable)"),
+            Some("sge wraps locale in Nullable; tests pass Nullable(Locale)"), false)),
         "com.badlogic.gdx.math.Vector2" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector2): sge.math.Vector2 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#+"), None, false),
           balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector2): sge.math.Vector2 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#-"), None, false)),

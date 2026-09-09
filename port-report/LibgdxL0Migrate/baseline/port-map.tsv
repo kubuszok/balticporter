@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=0e4abc644542ba1f	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=6dc7965d76e0b5bb	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1552,6 +1552,7 @@ member	com.badlogic.gdx.Net$HttpResponse#getStatus()	sge.Net$HttpResponse#status
 member	com.badlogic.gdx.Net$HttpResponseListener#cancelled()	sge.Net$HttpResponseListener#cancelled()	Renamed	-	com/badlogic/gdx/Net.java	339	69759d0eb94d2f9e	
 member	com.badlogic.gdx.Net$HttpResponseListener#failed(Throwable)	sge.Net$HttpResponseListener#failed(Throwable)	Renamed	-	com/badlogic/gdx/Net.java	337	c6f4bc333563c24c	
 member	com.badlogic.gdx.Net$HttpResponseListener#handleHttpResponse(HttpResponse)	sge.Net$HttpResponseListener#handleHttpResponse(HttpResponse)	Renamed	-	com/badlogic/gdx/Net.java	332	f242c0ce5ca34d77	
+member	com.badlogic.gdx.Preferences#<stmt1>	sge.Preferences#<stmt1>	Renamed	-	<synthetic>	0	6c356cf5a4cc14f8	
 member	com.badlogic.gdx.Preferences#clear()	sge.Preferences#clear()	Renamed	-	com/badlogic/gdx/Preferences.java	78	717a0052bf89055f	
 member	com.badlogic.gdx.Preferences#contains(String)	sge.Preferences#contains(String)	Renamed	-	com/badlogic/gdx/Preferences.java	76	0c5aae68441c82e4	
 member	com.badlogic.gdx.Preferences#flush()	sge.Preferences#flush()	Renamed	-	com/badlogic/gdx/Preferences.java	83	2ac38b9c953bf915	
@@ -1766,6 +1767,7 @@ member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#<ini
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#<init>(Locale)	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#<init>(Locale)	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	92	5d2f569923e6a89c	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt1>	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt1>	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	97	b8ce95c80464de4f	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt2>	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt2>	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	98	75b60f4e76d1d551	
+member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt3>	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt3>	Renamed	-	<synthetic>	0	098897845c61f0ed	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#encoding	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#encoding	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	86	5cca4e968a1b4067	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#locale	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#locale	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	85	0065dab313ea6959	
 member	com.badlogic.gdx.assets.loaders.ModelLoader#<stmt1>	sge.assets.loaders.ModelLoader#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
