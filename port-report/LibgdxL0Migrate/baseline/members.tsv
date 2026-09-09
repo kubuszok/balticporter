@@ -607,9 +607,11 @@ sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#resolve(AssetLoader<?,?>
 sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#startTime	val	695c8532e66cb84a
 sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#unload()	def	3aec08ba3069cdc8
 sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#update()	def	35af5d28e0cbf833
-sge.assets.AssetManager	sge.assets.AssetManager	class	0266e027d4440092
+sge.assets.AssetManager	sge.assets.AssetManager	class	f7d58ffa47dcb515
 sge.assets.AssetManager	sge.assets.AssetManager#<init>(FileHandleResolver,Sge)	ctor	f006578cf261f193
 sge.assets.AssetManager	sge.assets.AssetManager#<init>(Sge)	ctor	446ebab82c903ff7
+sge.assets.AssetManager	sge.assets.AssetManager#<stmt10>	stmt	82e6147a54e74775
+sge.assets.AssetManager	sge.assets.AssetManager#<stmt11>	stmt	01488e3be8bdeb6e
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt1>	stmt	abca2bbe56b03719
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt2>	stmt	8eaa1e4803ca9ec3
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt3>	stmt	45a14070653cdacb
@@ -618,7 +620,7 @@ sge.assets.AssetManager	sge.assets.AssetManager#<stmt5>	stmt	c637af1df264213c
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt6>	stmt	c988db98c570fc34
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt7>	stmt	51b9162df253dfd4
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt8>	stmt	ecc7e4486e7aa32e
-sge.assets.AssetManager	sge.assets.AssetManager#<stmt9>	stmt	01488e3be8bdeb6e
+sge.assets.AssetManager	sge.assets.AssetManager#<stmt9>	stmt	beed48d4fd6760ae
 sge.assets.AssetManager	sge.assets.AssetManager#addAsset(String,Class<T>,T)	def	0b49588acbf340ec
 sge.assets.AssetManager	sge.assets.AssetManager#addTask(AssetDescriptor<?>)	def	6880a9a2c4374e84
 sge.assets.AssetManager	sge.assets.AssetManager#assetDependencies	val	df123e2230e6eb35
@@ -3197,9 +3199,10 @@ sge.graphics.g2d.BitmapFontCache	sge.graphics.g2d.BitmapFontCache#x	val	b93d5bf1
 sge.graphics.g2d.BitmapFontCache	sge.graphics.g2d.BitmapFontCache#x()	def	f8f91217ea4c1793
 sge.graphics.g2d.BitmapFontCache	sge.graphics.g2d.BitmapFontCache#y	val	2f4a05bd7e4c1655
 sge.graphics.g2d.BitmapFontCache	sge.graphics.g2d.BitmapFontCache#y()	def	9682272211cbe3b0
-sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData	class	85d11679a05d5440
+sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData	class	feeaca8599618e02
 sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData#<init>()	ctor	83e6b0fdae2f17a2
 sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData#<init>(Nullable<FileHandle>,boolean)	ctor	55e19c62bad95ecb
+sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData#<stmt1>	stmt	47e4114ec8e6c305
 sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData#ascent	val	e0591971b538ccb2
 sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData#blankLineScale	val	8f3d36ec0e406ee5
 sge.graphics.g2d.BitmapFontData	sge.graphics.g2d.BitmapFontData#breakChars	val	a99455d4b76df693
@@ -14719,9 +14722,10 @@ sge.scenes.scene2d.utils.ArraySelection	sge.scenes.scene2d.utils.ArraySelection#
 sge.scenes.scene2d.utils.ArraySelection	sge.scenes.scene2d.utils.ArraySelection#rangeStart	val	488789a8f55db34a
 sge.scenes.scene2d.utils.ArraySelection	sge.scenes.scene2d.utils.ArraySelection#setRangeSelect(boolean)	def	01e4d741e0397051
 sge.scenes.scene2d.utils.ArraySelection	sge.scenes.scene2d.utils.ArraySelection#validate()	def	0c4e836565c05717
-sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable	class	bd1e13d76e35711b
+sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable	class	d22534e2b343efec
 sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable#<init>()	ctor	b78ff9d593e96b13
 sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable#<init>(Drawable)	ctor	41edaddb6f98e679
+sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable#<stmt1>	stmt	6e0646db949932b9
 sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable#bottomHeight	val	b7bbca3a12581388
 sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable#bottomHeight()	def	1719512867f24eca
 sge.scenes.scene2d.utils.BaseDrawable	sge.scenes.scene2d.utils.BaseDrawable#bottomHeight_=(float)	def	e19a17746de78545
@@ -14990,7 +14994,8 @@ sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#push
 sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#scissors	val	62bea5172191741f
 sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#tmp	val	cec18df5f46204a9
 sge.scenes.scene2d.utils.ScissorStack	sge.scenes.scene2d.utils.ScissorStack#viewport	val	782b365032d25f98
-sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection	class	0e1b55696e3d9ebe
+sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection	class	1919ea5afada875c
+sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#<stmt1>	stmt	639ced1e794fec31
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#_isDisabled	val	2a2de189a6c221bf
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#_lastSelected	val	9dd095a3b0a5269a
 sge.scenes.scene2d.utils.Selection	sge.scenes.scene2d.utils.Selection#actor	val	aeb22dc2a00b1564
@@ -16956,7 +16961,8 @@ sge.utils.PerformanceCounters	sge.utils.PerformanceCounters#nano2seconds	val	979
 sge.utils.PerformanceCounters	sge.utils.PerformanceCounters#tick()	def	61532aece8e6c6de
 sge.utils.PerformanceCounters	sge.utils.PerformanceCounters#tick(Seconds)	def	2e5d6446a3403a77
 sge.utils.PerformanceCounters	sge.utils.PerformanceCounters#toString(StringBuilder)	def	2ac80837646cf3a9
-sge.utils.PoolManager	sge.utils.PoolManager	class	8773c8b6309c3e21
+sge.utils.PoolManager	sge.utils.PoolManager	class	c54f1a3709d42eaf
+sge.utils.PoolManager	sge.utils.PoolManager#<stmt1>	stmt	dc283fb3b3b202fd
 sge.utils.PoolManager	sge.utils.PoolManager#addPool(Function0<T>,ClassTag<T>)	def	305e1c44ec739309
 sge.utils.PoolManager	sge.utils.PoolManager#addPool(Pool<T>,ClassTag<T>)	def	bc0c55a78a891c8f
 sge.utils.PoolManager	sge.utils.PoolManager#clear()	def	2593f6bdf8851dfe

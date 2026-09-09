@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=fe5cd1be85c29910	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=9201c30cec7a690e	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1634,6 +1634,8 @@ member	com.badlogic.gdx.assets.AssetLoadingTask#unload()	sge.assets.AssetLoading
 member	com.badlogic.gdx.assets.AssetLoadingTask#update()	sge.assets.AssetLoadingTask#update()	Renamed	-	com/badlogic/gdx/assets/AssetLoadingTask.java	87	35af5d28e0cbf833	
 member	com.badlogic.gdx.assets.AssetManager#<init>(FileHandleResolver,Sge)	sge.assets.AssetManager#<init>(FileHandleResolver,Sge)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	95	f006578cf261f193	
 member	com.badlogic.gdx.assets.AssetManager#<init>(Sge)	sge.assets.AssetManager#<init>(Sge)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	90	446ebab82c903ff7	
+member	com.badlogic.gdx.assets.AssetManager#<stmt10>	sge.assets.AssetManager#<stmt10>	Renamed	-	<synthetic>	0	82e6147a54e74775	
+member	com.badlogic.gdx.assets.AssetManager#<stmt11>	sge.assets.AssetManager#<stmt11>	Renamed	-	<synthetic>	0	01488e3be8bdeb6e	
 member	com.badlogic.gdx.assets.AssetManager#<stmt1>	sge.assets.AssetManager#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.assets.AssetManager#<stmt2>	sge.assets.AssetManager#<stmt2>	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	103	8eaa1e4803ca9ec3	
 member	com.badlogic.gdx.assets.AssetManager#<stmt3>	sge.assets.AssetManager#<stmt3>	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	104	45a14070653cdacb	
@@ -1642,7 +1644,7 @@ member	com.badlogic.gdx.assets.AssetManager#<stmt5>	sge.assets.AssetManager#<stm
 member	com.badlogic.gdx.assets.AssetManager#<stmt6>	sge.assets.AssetManager#<stmt6>	Renamed	-	<synthetic>	0	c988db98c570fc34	
 member	com.badlogic.gdx.assets.AssetManager#<stmt7>	sge.assets.AssetManager#<stmt7>	Renamed	-	<synthetic>	0	51b9162df253dfd4	
 member	com.badlogic.gdx.assets.AssetManager#<stmt8>	sge.assets.AssetManager#<stmt8>	Renamed	-	<synthetic>	0	ecc7e4486e7aa32e	
-member	com.badlogic.gdx.assets.AssetManager#<stmt9>	sge.assets.AssetManager#<stmt9>	Renamed	-	<synthetic>	0	01488e3be8bdeb6e	
+member	com.badlogic.gdx.assets.AssetManager#<stmt9>	sge.assets.AssetManager#<stmt9>	Renamed	-	<synthetic>	0	beed48d4fd6760ae	
 member	com.badlogic.gdx.assets.AssetManager#addAsset(String,Class,T)	sge.assets.AssetManager#addAsset(String,Class<T>,T)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	553	0b49588acbf340ec	
 member	com.badlogic.gdx.assets.AssetManager#addTask(AssetDescriptor)	sge.assets.AssetManager#addTask(AssetDescriptor<?>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	545	6880a9a2c4374e84	vis=private
 member	com.badlogic.gdx.assets.AssetManager#assetDependencies	sge.assets.AssetManager#assetDependencies	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	72	df123e2230e6eb35	
@@ -4196,6 +4198,7 @@ member	com.badlogic.gdx.graphics.g2d.BitmapFontCache#getY	sge.graphics.g2d.Bitma
 member	com.badlogic.gdx.graphics.g2d.BitmapFontCache#getY()	sge.graphics.g2d.BitmapFontCache#y	Renamed	-	com/badlogic/gdx/graphics/g2d/BitmapFontCache.java	543	9682272211cbe3b0	form=parenless
 member	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#<init>()	sge.graphics.g2d.BitmapFontData#<init>()	Renamed	-	com/badlogic/gdx/graphics/g2d/BitmapFont.java	479	83e6b0fdae2f17a2	
 member	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#<init>(Nullable,boolean)	sge.graphics.g2d.BitmapFontData#<init>(Nullable<FileHandle>,boolean)	Renamed	-	com/badlogic/gdx/graphics/g2d/BitmapFont.java	482	55e19c62bad95ecb	
+member	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#<stmt1>	sge.graphics.g2d.BitmapFontData#<stmt1>	Renamed	-	<synthetic>	0	47e4114ec8e6c305	
 member	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#ascent	sge.graphics.g2d.BitmapFontData#ascent	Renamed	-	com/badlogic/gdx/graphics/g2d/BitmapFont.java	448	e0591971b538ccb2	
 member	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#blankLineScale	sge.graphics.g2d.BitmapFontData#blankLineScale	Renamed	-	com/badlogic/gdx/graphics/g2d/BitmapFont.java	455	8f3d36ec0e406ee5	
 member	com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#breakChars	sge.graphics.g2d.BitmapFontData#breakChars	Renamed	-	com/badlogic/gdx/graphics/g2d/BitmapFont.java	472	a99455d4b76df693	
@@ -15522,6 +15525,7 @@ member	com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#setRangeSelect(boole
 member	com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#validate()	sge.scenes.scene2d.utils.ArraySelection#validate()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ArraySelection.java	71	0c4e836565c05717	
 member	com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#<init>()	sge.scenes.scene2d.utils.BaseDrawable#<init>()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/BaseDrawable.java	29	b78ff9d593e96b13	
 member	com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#<init>(Drawable)	sge.scenes.scene2d.utils.BaseDrawable#<init>(Drawable)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/BaseDrawable.java	33	41edaddb6f98e679	
+member	com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#<stmt1>	sge.scenes.scene2d.utils.BaseDrawable#<stmt1>	Renamed	-	<synthetic>	0	6e0646db949932b9	
 member	com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#getBottomHeight	sge.scenes.scene2d.utils.BaseDrawable#bottomHeight	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/BaseDrawable.java	27	b7bbca3a12581388	name=bottomHeight$field
 member	com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#getBottomHeight()	sge.scenes.scene2d.utils.BaseDrawable#bottomHeight	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/BaseDrawable.java	70	1719512867f24eca	form=parenless
 member	com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#setBottomHeight(float)	sge.scenes.scene2d.utils.BaseDrawable#bottomHeight_=(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/BaseDrawable.java	74	e19a17746de78545	
@@ -15772,6 +15776,7 @@ member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#pushScissors(Rectangle
 member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#scissors	sge.scenes.scene2d.utils.ScissorStack#scissors	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ScissorStack.java	34	62bea5172191741f	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#tmp	sge.scenes.scene2d.utils.ScissorStack#tmp	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ScissorStack.java	35	cec18df5f46204a9	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.utils.ScissorStack#viewport	sge.scenes.scene2d.utils.ScissorStack#viewport	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/ScissorStack.java	36	782b365032d25f98	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.utils.Selection#<stmt1>	sge.scenes.scene2d.utils.Selection#<stmt1>	Renamed	-	<synthetic>	0	639ced1e794fec31	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#isDisabled	sge.scenes.scene2d.utils.Selection#_isDisabled	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	19	2a2de189a6c221bf	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#lastSelected	sge.scenes.scene2d.utils.Selection#_lastSelected	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	24	9dd095a3b0a5269a	
 member	com.badlogic.gdx.scenes.scene2d.utils.Selection#actor	sge.scenes.scene2d.utils.Selection#actor	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/Selection.java	16	aeb22dc2a00b1564	vis=private
@@ -18178,6 +18183,7 @@ member	com.badlogic.gdx.utils.Pool#obtain()	sge.utils.Pool#obtain()	Renamed	-	co
 member	com.badlogic.gdx.utils.Pool#peak	sge.utils.Pool#peak	Renamed	-	com/badlogic/gdx/utils/Pool.java	26	b5fa103678296f61	
 member	com.badlogic.gdx.utils.Pool#reset(T)	sge.utils.Pool#reset(T)	Renamed	-	com/badlogic/gdx/utils/Pool.java	83	80c00d8dfb1da449	
 member	com.badlogic.gdx.utils.Pool$Poolable#reset()	sge.utils.Pool$Poolable#reset()	Renamed	-	com/badlogic/gdx/utils/Pool.java	130	bd084f605a883ac1	
+member	com.badlogic.gdx.utils.PoolManager#<stmt1>	sge.utils.PoolManager#<stmt1>	Renamed	-	<synthetic>	0	dc283fb3b3b202fd	
 member	com.badlogic.gdx.utils.PoolManager#addPool(Function0,ClassTag)	sge.utils.PoolManager#addPool(Function0<T>,ClassTag<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	15	305e1c44ec739309	
 member	com.badlogic.gdx.utils.PoolManager#addPool(Pool,ClassTag)	sge.utils.PoolManager#addPool(Pool<T>,ClassTag<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	20	bc0c55a78a891c8f	
 member	com.badlogic.gdx.utils.PoolManager#clear()	sge.utils.PoolManager#clear()	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	81	2593f6bdf8851dfe	

@@ -208,7 +208,8 @@ object LibgdxLadder:
       "com.badlogic.gdx.utils.XmlReader" -> List("Element"),
       // sge keeps java's setters AND spells each as a property setter (`x_=` = `setX(value)`)
       "com.badlogic.gdx.scenes.scene2d.Actor" -> List("x_=", "y_=", "width_=", "height_=", "scaleX_=", "scaleY_=", "rotation_=",
-        ))),
+        ),
+      )),
       // encodeResourceJson stub (the full body needs ParticleEffectCodecs injected)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g3d.particles.ResourceData" -> List(
@@ -237,7 +238,16 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
             "def apply[T <: java.lang.Object](assetDescriptor: sge.assets.AssetDescriptor[T]): T = get[T](assetDescriptor).getOrElse(throw new java.lang.IllegalArgumentException(\"Asset not loaded: \" + assetDescriptor.fileName))",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#apply(AssetDescriptor)"),
-            Some("sge's throwing apply — delegates to the port's Nullable-returning get"), false)),
+            Some("sge's throwing apply — delegates to the port's Nullable-returning get"), false),
+          // sge spells AssetManager.errorListener as a property; java only has setErrorListener
+          balticporter.transform.AddMembersTransform.MemberSpec("errorListener", 0,
+            "def errorListener: lowlevel.Nullable[sge.assets.AssetErrorListener] = lowlevel.Nullable(this.listener)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#errorListener"),
+            Some("sge's errorListener getter — java only had setErrorListener"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("errorListener_=", 0,
+            "def errorListener_=(listener: lowlevel.Nullable[sge.assets.AssetErrorListener]): scala.Unit = setErrorListener(listener)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#errorListener_="),
+            Some("sge's errorListener setter — property pair"), false)),
         "com.badlogic.gdx.assets.loaders.SkinLoader$SkinParameter" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
             "def apply(textureAtlasPath: lowlevel.Nullable[java.lang.String] = lowlevel.Nullable.empty, resources: lowlevel.Nullable[lowlevel.util.ObjectMap[java.lang.String, java.lang.Object]] = lowlevel.Nullable.empty): sge.assets.loaders.SkinLoader.SkinParameter = new sge.assets.loaders.SkinLoader.SkinParameter(textureAtlasPath, resources)",
@@ -290,7 +300,31 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector2): sge.math.Vector2 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#+"), None, false),
           balticporter.transform.AddMembersTransform.MemberSpec("-", 0, "def -(v: sge.math.Vector2): sge.math.Vector2 = sub(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector2#-"), None, false)),
         "com.badlogic.gdx.math.Vector4" -> List(
-          balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector4): sge.math.Vector4 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector4#+"), None, false)))),
+          balticporter.transform.AddMembersTransform.MemberSpec("+", 0, "def +(v: sge.math.Vector4): sge.math.Vector4 = add(v)", balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Vector4#+"), None, false)),
+        // sge's BitmapFontData.imagePaths is a var; the port has getter only (field renamed to imagePaths$field)
+        "com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("imagePaths_=", 0,
+            "def imagePaths_=(v: lowlevel.Nullable[scala.Array[java.lang.String]]): scala.Unit = { this.imagePaths" + "$field = v }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData#imagePaths_="),
+            Some("sge's imagePaths setter — field was renamed to imagePaths$field"), false)),
+        // sge spells BaseDrawable.name as a var; the port has getter (from getName) but no setter
+        "com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("name_=", 0,
+            "def name_=(v: lowlevel.Nullable[java.lang.String]): scala.Unit = setName(v)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable#name_="),
+            Some("sge's name setter — delegates to the port's setName"), false)),
+        // sge's Selection extends Scala Iterable; the port's extends JavaIterable — add toList
+        "com.badlogic.gdx.scenes.scene2d.utils.Selection" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("toList", 0,
+            "def toList: scala.List[T] = { val b = scala.List.newBuilder[T]; val it = iterator(); while (it.hasNext()) b += it.next(); b.result() }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.utils.Selection#toList"),
+            Some("sge's Selection extends Scala Iterable — bridge"), false)),
+        // sge added poolOrNull with ClassTag
+        "com.badlogic.gdx.utils.PoolManager" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("poolOrNull", 0,
+            "def poolOrNull[T <: java.lang.Object](using ct: scala.reflect.ClassTag[T]): lowlevel.Nullable[sge.utils.Pool[T]] = { val p = this.typePools.get(ct.runtimeClass.asInstanceOf[java.lang.Class[T]]); if (p.isEmpty) lowlevel.Nullable.empty else lowlevel.Nullable(p.get.asInstanceOf[sge.utils.Pool[T]]) }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.PoolManager#poolOrNull"),
+            Some("sge's ClassTag-based Nullable pool lookup"), false)))),
       // Table.add varargs
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.scenes.scene2d.ui.Table" -> List(
