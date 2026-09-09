@@ -216,7 +216,7 @@ class ParticleEffectIoRedSuite extends munit.FunSuite {
     // (ResourceData.scala 304-310), so the unboxing below throws
     // ClassCastException (Long cannot be cast to Integer) — exactly the
     // MeshSpawnShapeValue.load crash (MeshSpawnShapeValue.scala line 88) — RED.
-    val restored: Int = sd2.load[Int]("index").getOrElse(-1)
+    val restored: Int = sd2.load[java.lang.Integer]("index").map(_.intValue).getOrElse(-1)
     assertEquals(restored, 7, "Integer SaveData value must survive the round-trip as an Int")
   }
 

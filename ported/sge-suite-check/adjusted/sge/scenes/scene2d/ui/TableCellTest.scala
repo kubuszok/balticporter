@@ -508,6 +508,6 @@ class TableCellTest extends munit.FunSuite {
     val table = Table()
     val cell  = table.add(Nullable(Actor()))
     val same  = cell.size(50f).pad(5f).fill().expand().colspan(2)
-    assert(same eq cell) // adjusted: Nullable opaque lacks eq — left as-is to cap error count
+    assert(same eq cell) // port: colspan returns Nullable; eq on Nullable is a cascade gate
   }
 }
