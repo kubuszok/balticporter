@@ -340,7 +340,19 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
             "def this(fileName: java.lang.String, assetType: java.lang.Class[T], params: lowlevel.Nullable[sge.assets.AssetLoaderParameters[T]]) = { this(); this.fileName = fileName; this.`type` = assetType; this.params = params.asInstanceOf[lowlevel.Nullable[sge.assets.AssetLoaderParameters[?]]] }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetDescriptor#this(String,Class,Nullable)"),
-            Some("sge wraps params in Nullable; tests pass Nullable.empty"), false)))),
+            Some("sge wraps params in Nullable; tests pass Nullable.empty"), false)),
+        // sge's ParticleEffectSaveParameter has default batches=Nullable.empty; port requires 3+ args
+        "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectSaveParameter" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(file: sge.files.FileHandle, manager: sge.assets.AssetManager) = this(file, manager, lowlevel.Nullable.empty)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectSaveParameter#this(FileHandle,AssetManager)"),
+            Some("sge has batches=Nullable.empty default; add 2-arg ctor"), false)),
+        // sge's ParticleEffectLoadParameter has a no-arg ctor; port requires batches
+        "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectLoadParameter" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(batches: lowlevel.Nullable[lowlevel.util.DynamicArray[sge.graphics.g3d.particles.batches.ParticleBatch[?]]]) = { this(new lowlevel.util.DynamicArray[sge.graphics.g3d.particles.batches.ParticleBatch[?]]()); this.batches = batches }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectLoadParameter#this(Nullable)"),
+            Some("sge wraps batches in Nullable"), false)))),
       // Table.add varargs
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.scenes.scene2d.ui.Table" -> List(
