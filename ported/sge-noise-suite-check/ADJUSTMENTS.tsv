@@ -1,0 +1,4 @@
+file	origin	adjustment	why
+sge/noise/NoiseSuite.scala	sge-extension/noise/src/test/scala	gen.radius -> gen.setRadius(); gen.modifier -> gen.setModifier(); gen.seed -> gen.setSeed(); grid.getArray -> grid.getArray()	port keeps Java getter/setter API; sge collapsed to direct field access
+sge/noise/CellularAutomataSuite.scala	sge-extension/noise/src/test/scala	gen.iterationsAmount -> gen.setIterationsAmount(); gen.initiate -> gen.setInitiate()	port keeps Java getter/setter API; sge collapsed to direct field access
+sge/noise/DungeonSuite.scala	sge-extension/noise/src/test/scala	gen.roomGenerationAttempts -> gen.setRoomGenerationAttempts(); gen.minRoomSize -> gen.setMinRoomSize(); gen.maxRoomSize -> gen.setMaxRoomSize(); gen.deadEndRemovalIterations -> gen.setDeadEndRemovalIterations(); addRoomTypes(a, b, c) -> addRoomTypes(Array(a, b, c))	port keeps Java getter/setter API and Array param; sge collapsed to direct field access and varargs

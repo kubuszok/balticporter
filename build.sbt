@@ -1462,3 +1462,26 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
   ))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+
+// sge-noise-suite-check — noise extension's OWN test tree compiled against the noise port.
+// All platforms use the shared/ adjusted copies (the emitted port uses getter/setter API where
+// sge's hand port uses direct field access).
+lazy val `sge-noise-suite-check` = (projectMatrix in file("ported/sge-noise-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-noise`)
+  .settings(
+    name := "balticporter-sge-noise-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-noise-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-noise-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Test / fork := true,
+  ))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
