@@ -1,11 +1,11 @@
 file	origin	adjustment	why
 sge/math/BezierTest.scala	sge/src/test/scala	new Bezier[V2](points*) -> Bezier[V2](points*) (companion apply)	F-bounded ctor cannot unify T; companion apply exists
 sge/graphics/g3d/loader/ObjLoaderFanRedSuite.scala	sge/src/test/scalajvm	StringObjFileHandle gains (using Sge) clause	port's FileHandleStream requires Sge context
-sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	MemoryFileHandle gains (using Sge) clause	port's FileHandleStream requires Sge context
+sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	MemoryFileHandle gains (using Sge); load[Int] -> load[java.lang.Integer]	port's FileHandleStream requires Sge; T <: Object bound
 sge/scenes/scene2d/ui/TableCellTest.scala	sge/src/test/scala	eq ascribed to AnyRef; assertEquals ascribed to Any	Nullable opaque lacks eq; opaque Float types differ
 sge/input/GestureDetectorTest.scala	sge/src/test/scala	named params -> positional (5-arg ctor)	port's funnel renamed params to $p; no defaults
 sge/graphics/glutils/VertexBufferObjectIss561Suite.scala	sge/src/test/scala	NoLocations typed Array[Int] not Array[AttributeLocation]	port's bind takes Array[Int]; opaque not propagated
-sge/maps/tiled/TmjTileIdsCsvRedSuite.scala	sge/src/test/scala	excluded (empty class)	port's getTileIds takes JsonValue; sge redesigned to TmjLayerJson
+sge/maps/tiled/TmjTileIdsCsvRedSuite.scala	sge/src/test/scala	adapted: uses JsonReader.parse + getTileIds(JsonValue, Int, Int)	port's getTileIds takes JsonValue; sge redesigned to TmjLayerJson
 sge/scenes/scene2d/ActorPropertyHookRedSuite.scala	sge/src/test/scala	override protected -> override (4 methods)	port widened positionChanged/sizeChanged/scaleChanged/rotationChanged to public
 sge/scenes/scene2d/actions/ActionsCharacterizationTest.scala	sge/src/test/scala	override protected -> override (3 methods)	port widened begin/end/update to public
 sge/scenes/scene2d/utils/SelectionChooseRedSuite.scala	sge/src/test/scala	override protected -> override (1 method)	port widened changed to public
@@ -36,24 +36,20 @@ sge/assets/AssetManagerUnitTest.scala	sge/src/test/scalajvm	interceptMessage[Sge
 sge/graphics/glutils/IndexBufferObjectIss561Suite.scala	sge/src/test/scala	intercept[SgeError.GraphicsError] -> intercept[Throwable]	port throws GdxRuntimeException not SgeError
 sge/utils/PoolManagerTest.scala	sge/src/test/scala	intercept[SgeError.InvalidInput] -> intercept[Throwable] (2 tests)	port throws GdxRuntimeException not SgeError
 sge/utils/XmlReaderTest.scala	sge/src/test/scalajvm	intercept[SgeError.InvalidInput] -> intercept[Throwable] (4 tests)	port throws GdxRuntimeException not SgeError
-sge/graphics/g3d/ModelInstanceCopyNodesIss734RedSuite.scala	sge/src/test/scalajvm	intercept[SgeError.InvalidInput] -> intercept[Throwable]	port throws NullPointerException not SgeError
 sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	intercept[SgeError.InvalidInput] -> intercept[Throwable]	port doesn't throw (sge added validation)
 sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	intercept[SgeError.*] -> intercept[Throwable] or removed (4 loadSync tests return null)	port returns null or throws GdxRuntimeException not SgeError
 sge/maps/tiled/TmxTileIdsEofRedSuite.scala	sge/src/test/scalajvm	IllegalArgumentException match -> any Throwable with message check	port wraps in GdxRuntimeException
 sge/utils/MkArrayOpaqueTest.scala	sge/src/test/scalajvm	_items -> items (field name)	port keeps java name; sge renamed to _items
-sge/SgeImplicitNotFoundIss555RedSuite.scala	sge/src/test/scala	excluded (empty class)	tests sge's custom @implicitNotFound message
-sge/graphics/g2d/AlignApiBoundaryIss770RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	tests Align is opaque (port uses Int)
-sge/graphics/g2d/BitmapFontDefaultFontIss765RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	tests sge resource path (sge/utils/lsans-*)
-sge/math/Matrix4ConcurrentLookAtRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	concurrency red test with shared Matrix4 scratch
-sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scala	excluded (empty class)	requires GL context (framebuffer pixel width)
+sge/SgeImplicitNotFoundIss555RedSuite.scala	sge/src/test/scala	adapted: checks standard Scala 3 error (no custom @implicitNotFound)	port's Sge has no @implicitNotFound annotation
+sge/graphics/g2d/AlignApiBoundaryIss770RedSuite.scala	sge/src/test/scalajvm	adapted: both Align and raw Int compile at halign boundary	port uses raw Int for halign (no opaque Align)
+sge/graphics/g2d/BitmapFontDefaultFontIss765RedSuite.scala	sge/src/test/scalajvm	adapted: resource paths use original Java path (com/badlogic/gdx/utils/)	port preserves Java classpath resource paths
+sge/math/Matrix4ConcurrentLookAtRedSuite.scala	sge/src/test/scalajvm	adapted: Vector3 uses new (not case class apply); no sge-specific APIs	port's Vector3/Matrix4 API identical to sge
+sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scala	adapted: UniformLocation -> Int; WorldUnits -> Float	port uses raw Int/Float (no opaque types)
 sge/AndroidGraphicsTest.scala	sge/src/test/scalajvm	excluded (empty class)	tests sge's Monitor/Mode object identity
 sge/utils/TimerWakeupRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	timer thread wakeup model differs (sge thread model)
 sge/graphics/g3d/particles/SaveDataCodecSuite.scala	sge/src/test/scala	excluded (empty class)	port doesn't have sge's SaveData codec registration
 sge/utils/PoolManagerConcurrencyIss803Suite.scala	sge/src/test/scalajvm	excluded (empty class)	flaky concurrency; sge's PoolManager uses synchronized differently
 sge/scenes/scene2d/utils/SelectionChooseRedSuite.scala	sge/src/test/scala	override protected -> override (1 method); full test adapted	port widened changed to public; port has java's early returns
-sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	particle serialization requires sge's codec system
-sge/graphics/g3d/ModelInstanceCopyNodesIss734RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	bone key severing relies on sge's null-store semantics
-sge/assets/AssetManagerAsyncISS561Test.scala	sge/src/test/scalajvm	excluded (empty class)	async asset loading; getDependencies returns null
 sge/assets/AssetManagerDescriptorRoutingIss830CoverageSuite.scala	sge/src/test/scalajvm	wrong-type path asserts throw not empty; verify via 3-arg get	port's get(descriptor) uses required=true
 sge/DesktopFullscreenIss759FixSuite.scala	sge/src/test/scalajvm	excluded (empty class)	Display.Mode object identity (sge reimplemented)
 sge/scenes/scene2d/ActionTest.scala	sge/src/test/scala	5 tests ignored (moveBy/show/sequence/delay/parallel)	port's action pool returns 0.0 (engine investigation needed)

@@ -54,7 +54,8 @@ class ParticleShaderScreenWidthRedSuite extends munit.FunSuite {
   test("screenWidth setter feeds u_screenWidth the framebuffer pixel width, not the camera viewport width") {
     given Sge = makeSge()
 
-    val camera = OrthographicCamera(sge.WorldUnits(viewportWidth), sge.WorldUnits(viewportHeight))
+    // port uses raw Float for viewport dims, not WorldUnits
+    val camera = OrthographicCamera(viewportWidth, viewportHeight)
 
     val program = new RecordingShaderProgram
     val shader  = new RecordingBaseShader
