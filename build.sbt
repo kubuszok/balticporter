@@ -1426,14 +1426,24 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     testFrameworks += new TestFramework("munit.Framework"),
     Compile / unmanagedSourceDirectories ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
-      Seq(t / "scala", t / "scalajvm", (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check" / "adjusted")
+      val isJvm = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
+        case Seq() | Seq("jvm") => true
+        case _                  => false
+      val base = (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check"
+      val common = Seq(t / "scala", base / "adjusted")
+      if (isJvm) common ++ Seq(t / "scalajvm", base / "adjusted-jvm")
+      else common
     },
     Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
     Compile / unmanagedSources := {
       val all = (Compile / unmanagedSources).value
+      val isJvm = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
+        case Seq() | Seq("jvm") => true
+        case _                  => false
       def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
-      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
+      def isAdjusted(f: File): Boolean = { val p = f.getPath; p.contains("/sge-suite-check/adjusted/") || p.contains("/sge-suite-check/adjusted-jvm/") }
+      val adjusted = all.filter(isAdjusted).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !isAdjusted(f))
     },
     // the suite's test bodies are Compile sources (the gate is the COMPILE); Test scope duplicates
     // them so `sbt test` also runs the munit suites
@@ -1441,14 +1451,18 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     Test / unmanagedSources := {
       val all = (Test / unmanagedSources).value
       def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
-      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
+      def isAdjusted(f: File): Boolean = { val p = f.getPath; p.contains("/sge-suite-check/adjusted/") || p.contains("/sge-suite-check/adjusted-jvm/") }
+      val adjusted = all.filter(isAdjusted).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !isAdjusted(f))
     },
     Test / unmanagedResources ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
       ((t / "resources") ** "*").get()
     },
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
     Test / fork := true,
     Test / javaOptions += "--enable-native-access=ALL-UNNAMED",
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV))
+  ))
+  .jsPlatform(scalaVersions = Seq(scalaV))
+  .nativePlatform(scalaVersions = Seq(scalaV))
