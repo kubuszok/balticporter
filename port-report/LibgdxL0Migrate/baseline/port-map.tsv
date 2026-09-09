@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=c8a78e1b6f0cc149	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=ff80b3d3a77d6ac9	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -5393,6 +5393,8 @@ member	com.badlogic.gdx.graphics.g2d.TextureAtlas$AtlasSprite#setY(float)	sge.gr
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#<init>()	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<init>()	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	260	f781ec1b12357067	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#<init>(FileHandle,FileHandle,boolean)	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<init>(FileHandle,FileHandle,boolean)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	263	745c156e28f31beb	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt1>	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt1>	Renamed	-	<synthetic>	0	26599792662dac02	
+member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt2>	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt2>	Renamed	-	<synthetic>	0	c50d1071b50c242b	
+member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt3>	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt3>	Renamed	-	<synthetic>	0	2e2ca821fe4e250b	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#load(FileHandle,FileHandle,boolean)	sge.graphics.g2d.TextureAtlas$TextureAtlasData#load(FileHandle,FileHandle,boolean)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	267	a70ad3cbc6b9dec6	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#getPages	sge.graphics.g2d.TextureAtlas$TextureAtlasData#pages	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	257	472c22031b2b5d5c	name=pages$field
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#getPages()	sge.graphics.g2d.TextureAtlas$TextureAtlasData#pages	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	452	c53f671171a0529a	form=parenless
@@ -11413,6 +11415,7 @@ member	com.badlogic.gdx.math.Interpolation$SwingIn#scale	sge.math.Interpolation$
 member	com.badlogic.gdx.math.Interpolation$SwingOut#<stmt1>	sge.math.Interpolation$SwingOut#<stmt1>	Renamed	-	com/badlogic/gdx/math/Interpolation.java	419	7c34838951adef58	
 member	com.badlogic.gdx.math.Interpolation$SwingOut#apply(float)	sge.math.Interpolation$SwingOut#apply(float)	Renamed	-	com/badlogic/gdx/math/Interpolation.java	422	6195fa46c9718b1f	
 member	com.badlogic.gdx.math.Interpolation$SwingOut#scale	sge.math.Interpolation$SwingOut#scale	Renamed	-	com/badlogic/gdx/math/Interpolation.java	416	8e3c04209d8ca3d9	
+member	com.badlogic.gdx.math.Intersector#<stmt1>	sge.math.Intersector#<stmt1>	Renamed	-	<synthetic>	0	96ce039926ccfcf6	
 member	com.badlogic.gdx.math.Intersector#best	sge.math.Intersector#best	Renamed	-	com/badlogic/gdx/math/Intersector.java	845	bce0d9d2b28f6133	placement=companion
 member	com.badlogic.gdx.math.Intersector#det(float,float,float,float)	sge.math.Intersector#det(float,float,float,float)	Renamed	-	com/badlogic/gdx/math/Intersector.java	1132	8fcd1aea4196d66e	placement=companion
 member	com.badlogic.gdx.math.Intersector#detd(double,double,double,double)	sge.math.Intersector#detd(double,double,double,double)	Renamed	-	com/badlogic/gdx/math/Intersector.java	1136	43752a101c13b466	placement=companion
@@ -11696,6 +11699,7 @@ member	com.badlogic.gdx.math.realMin	realMin	Renamed	-	com/badlogic/gdx/math/Oct
 member	com.badlogic.gdx.math.Octree#<stmt1>	sge.math.Octree#<stmt1>	Renamed	-	com/badlogic/gdx/math/Octree.java	89	56dc265103303f17	
 member	com.badlogic.gdx.math.Octree#<stmt2>	sge.math.Octree#<stmt2>	Renamed	-	com/badlogic/gdx/math/Octree.java	90	929c1ea471a01571	
 member	com.badlogic.gdx.math.Octree#<stmt3>	sge.math.Octree#<stmt3>	Renamed	-	com/badlogic/gdx/math/Octree.java	91	bcb47c7321cb1218	
+member	com.badlogic.gdx.math.Octree#<stmt4>	sge.math.Octree#<stmt4>	Renamed	-	<synthetic>	0	3d1be0a922877414	
 member	com.badlogic.gdx.math.Octree#add(T)	sge.math.Octree#add(T)	Renamed	-	com/badlogic/gdx/math/Octree.java	102	9b1cd22214288729	
 member	com.badlogic.gdx.math.Octree#collider	sge.math.Octree#collider	Renamed	-	com/badlogic/gdx/math/Octree.java	78	118eeb2a0410c22d	
 member	com.badlogic.gdx.math.Octree#createNode(Vector3,Vector3,int)	sge.math.Octree#createNode(Vector3,Vector3,int)	Renamed	-	com/badlogic/gdx/math/Octree.java	94	a8d536608cfb8268	

@@ -402,7 +402,30 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
             "def apply(attributes: sge.graphics.VertexAttribute*): sge.graphics.VertexAttributes = new sge.graphics.VertexAttributes(attributes.toArray)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.VertexAttributes#apply"),
-            Some("sge's varargs ctor — port takes Array"), true)))),
+            Some("sge's varargs ctor — port takes Array"), true)),
+        // sge's TextureAtlasData has Region/Page as inner classes of the CLASS; the port puts them
+        // in the companion object — add factory methods on the class so `data.Region()` works
+        "com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("Region", 0,
+            "def Region(): sge.graphics.g2d.TextureAtlas.TextureAtlasData.Region = new sge.graphics.g2d.TextureAtlas.TextureAtlasData.Region()",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#Region"),
+            Some("sge's Region is an inner class; port puts it in companion — factory bridge"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("Page", 0,
+            "def Page(): sge.graphics.g2d.TextureAtlas.TextureAtlasData.Page = new sge.graphics.g2d.TextureAtlas.TextureAtlasData.Page()",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#Page"),
+            Some("sge's Page is an inner class; port puts it in companion — factory bridge"), false)),
+        // sge's Intersector.isPointInPolygon takes Array[Vector2]; port retargeted to DynamicArray
+        "com.badlogic.gdx.math.Intersector" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("isPointInPolygon", 1,
+            "def isPointInPolygon(polygon: scala.Array[sge.math.Vector2], point: sge.math.Vector2): scala.Boolean = { val da = new lowlevel.util.DynamicArray[sge.math.Vector2](true, polygon, 0, polygon.length); isPointInPolygon(da, point) }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Intersector#isPointInPolygon(Array)"),
+            Some("sge uses Array[Vector2]; port retargeted to DynamicArray — bridge"), true)),
+        // sge's Octree.getAll takes mutable.Set; port takes ObjectSet
+        "com.badlogic.gdx.math.Octree" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("getAll", 1,
+            "def getAll(resultSet: scala.collection.mutable.Set[T]): scala.collection.mutable.Set[T] = { val os = new lowlevel.util.ObjectSet[T](); getAll(os); val it = os.iterator(); while (it.hasNext()) resultSet.add(it.next()); resultSet }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Octree#getAll(Set)"),
+            Some("sge uses mutable.Set; port uses ObjectSet — bridge"), false)))),
       // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g2d.Animation" -> List(

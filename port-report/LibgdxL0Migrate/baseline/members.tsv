@@ -4305,7 +4305,7 @@ sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache$Cache#maxCount	val	bf0
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache$Cache#offset	val	2a952f20efcdb8a1
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache$Cache#textureCount	val	d1ac5e3f36fabc9a
 sge.graphics.g2d.SpriteCache	sge.graphics.g2d.SpriteCache$Cache#textures	val	a2c1cc821813f877
-sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas	class	0329e7f5e2ee93bd
+sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas	class	fc27088f552eb69c
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas#<init>(FileHandle,FileHandle,Sge)	ctor	4c27b18d39d1a744
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas#<init>(FileHandle,FileHandle,boolean,Sge)	ctor	20115280b430a341
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas#<init>(FileHandle,Sge)	ctor	1ce0d4f6c2177c89
@@ -4377,10 +4377,12 @@ sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$AtlasSprite#x()	def	
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$AtlasSprite#x_=(float)	def	7aebe552e406ebf7
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$AtlasSprite#y()	def	1a5f984fb773f364
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$AtlasSprite#y_=(float)	def	f74701c16c6daa58
-sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData	class	e27c530b964999d4
+sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData	class	da4b0e319e42f5f9
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<init>()	ctor	f781ec1b12357067
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<init>(FileHandle,FileHandle,boolean)	ctor	745c156e28f31beb
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt1>	stmt	26599792662dac02
+sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt2>	stmt	c50d1071b50c242b
+sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#<stmt3>	stmt	2e2ca821fe4e250b
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#load(FileHandle,FileHandle,boolean)	def	a70ad3cbc6b9dec6
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#pages	val	472c22031b2b5d5c
 sge.graphics.g2d.TextureAtlas	sge.graphics.g2d.TextureAtlas$TextureAtlasData#pages()	def	c53f671171a0529a
@@ -10730,7 +10732,8 @@ sge.math.Interpolation	sge.math.Interpolation$SwingOut	class	837b4134fd33bdaf
 sge.math.Interpolation	sge.math.Interpolation$SwingOut#<stmt1>	stmt	7c34838951adef58
 sge.math.Interpolation	sge.math.Interpolation$SwingOut#apply(float)	def	6195fa46c9718b1f
 sge.math.Interpolation	sge.math.Interpolation$SwingOut#scale	val	8e3c04209d8ca3d9
-sge.math.Intersector	sge.math.Intersector	class	ac3c15f3e1894c9b
+sge.math.Intersector	sge.math.Intersector	class	cc118c23cc2b8b43
+sge.math.Intersector	sge.math.Intersector#<stmt1>	stmt	96ce039926ccfcf6
 sge.math.Intersector	sge.math.Intersector#best	val	bce0d9d2b28f6133
 sge.math.Intersector	sge.math.Intersector#det(float,float,float,float)	def	8fcd1aea4196d66e
 sge.math.Intersector	sge.math.Intersector#detd(double,double,double,double)	def	43752a101c13b466
@@ -11015,10 +11018,11 @@ sge.math.Matrix4	sge.math.Matrix4#val	val	be232872f4c6b5c0
 sge.math.Matrix4	sge.math.Matrix4#values()	def	4ac684204e86ddde
 sge.math.Octree	realMax	val	9f19e711d03e074b
 sge.math.Octree	realMin	val	27e986fe7bda78bc
-sge.math.Octree	sge.math.Octree	class	3368463ae3af5b7f
+sge.math.Octree	sge.math.Octree	class	dc5631d1f9e4de58
 sge.math.Octree	sge.math.Octree#<stmt1>	stmt	56dc265103303f17
 sge.math.Octree	sge.math.Octree#<stmt2>	stmt	929c1ea471a01571
 sge.math.Octree	sge.math.Octree#<stmt3>	stmt	bcb47c7321cb1218
+sge.math.Octree	sge.math.Octree#<stmt4>	stmt	3d1be0a922877414
 sge.math.Octree	sge.math.Octree#add(T)	def	9b1cd22214288729
 sge.math.Octree	sge.math.Octree#collider	val	118eeb2a0410c22d
 sge.math.Octree	sge.math.Octree#createNode(Vector3,Vector3,int)	def	a8d536608cfb8268
