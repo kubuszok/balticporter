@@ -377,7 +377,7 @@ def portSettings(dir: String): Seq[Setting[?]] = Seq(
   // sbt caps PRINTED diagnostics at maxErrors (100): lls read 100 where "149 errors found" (2026-09-05).
   maxErrors := 100000,
   publish / skip := true,
-  scalacOptions := Seq("-nowarn"),
+  scalacOptions ++= Seq("-nowarn"),
   cleanFiles += (ThisBuild / baseDirectory).value / "ported" / dir / "src_managed",
 )
 
@@ -1426,7 +1426,12 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     testFrameworks += new TestFramework("munit.Framework"),
     Compile / unmanagedSourceDirectories ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
-      Seq(t / "scala", t / "scalajvm", (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check" / "adjusted")
+      val base = (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check"
+      val isJvm = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
+        case Seq() | Seq("jvm") => true
+        case _                  => false
+      if (isJvm) Seq(t / "scala", t / "scalajvm", base / "adjusted")
+      else Seq(base / "shared")
     },
     Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
     Compile / unmanagedSources := {
@@ -1448,7 +1453,10 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
       ((t / "resources") ** "*").get()
     },
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
     Test / fork := true,
     Test / javaOptions += "--enable-native-access=ALL-UNNAMED",
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV))
+  ))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
