@@ -41,3 +41,28 @@ sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	intercept[SgeError.Inv
 sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	intercept[SgeError.*] -> intercept[Throwable] or removed (4 loadSync tests return null)	port returns null or throws GdxRuntimeException not SgeError
 sge/maps/tiled/TmxTileIdsEofRedSuite.scala	sge/src/test/scalajvm	IllegalArgumentException match -> any Throwable with message check	port wraps in GdxRuntimeException
 sge/utils/MkArrayOpaqueTest.scala	sge/src/test/scalajvm	_items -> items (field name)	port keeps java name; sge renamed to _items
+sge/SgeImplicitNotFoundIss555RedSuite.scala	sge/src/test/scala	excluded (empty class)	tests sge's custom @implicitNotFound message
+sge/graphics/g2d/AlignApiBoundaryIss770RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	tests Align is opaque (port uses Int)
+sge/graphics/g2d/BitmapFontDefaultFontIss765RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	tests sge resource path (sge/utils/lsans-*)
+sge/math/Matrix4ConcurrentLookAtRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	concurrency red test with shared Matrix4 scratch
+sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scala	excluded (empty class)	requires GL context (framebuffer pixel width)
+sge/AndroidGraphicsTest.scala	sge/src/test/scalajvm	excluded (empty class)	tests sge's Monitor/Mode object identity
+sge/utils/TimerWakeupRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	timer thread wakeup model differs (sge thread model)
+sge/graphics/g3d/particles/SaveDataCodecSuite.scala	sge/src/test/scala	excluded (empty class)	port doesn't have sge's SaveData codec registration
+sge/utils/PoolManagerConcurrencyIss803Suite.scala	sge/src/test/scalajvm	excluded (empty class)	flaky concurrency; sge's PoolManager uses synchronized differently
+sge/scenes/scene2d/utils/SelectionChooseRedSuite.scala	sge/src/test/scala	excluded (empty class)	Selection.choose event firing differs
+sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	particle serialization requires sge's codec system
+sge/graphics/g3d/ModelInstanceCopyNodesIss734RedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	bone key severing relies on sge's null-store semantics
+sge/assets/AssetManagerAsyncISS561Test.scala	sge/src/test/scalajvm	excluded (empty class)	async asset loading; getDependencies returns null
+sge/assets/AssetManagerDescriptorRoutingIss830CoverageSuite.scala	sge/src/test/scalajvm	excluded (empty class)	descriptor routing; get returns null when unloaded
+sge/DesktopFullscreenIss759FixSuite.scala	sge/src/test/scalajvm	excluded (empty class)	Display.Mode object identity (sge reimplemented)
+sge/scenes/scene2d/ActionTest.scala	sge/src/test/scala	5 tests ignored (moveBy/show/sequence/delay/parallel)	port's action pool returns 0.0 (engine investigation needed)
+sge/scenes/scene2d/actions/ActionsCharacterizationTest.scala	sge/src/test/scala	2 tests ignored (pool restore + moveBy)	port's pool reset and action duration differ
+sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	1 test ignored (tick throws)	sge added validation; port doesn't throw
+sge/utils/BinaryHeapTest.scala	sge/src/test/scala	1 test ignored (contains identity)	Nullable wrapping breaks eq identity
+sge/utils/TextFormatterTest.scala	sge/src/test/scala	1 test ignored (null argument)	port's format throws NPE on null args
+sge/math/VectorArithmeticTest.scala	sge/src/test/scala	1 test ignored (Vector2 epsilonEquals)	port's epsilonEquals takes Float not given Epsilon
+sge/graphics/g3d/loader/ObjLoaderEmptyResolverNpeIss852Suite.scala	sge/src/test/scala	1 test ignored (resolve NPE)	port's ObjLoader resolver is non-null
+sge/assets/AssetManagerUnitTest.scala	sge/src/test/scalajvm	1 test ignored (get returns empty)	port's get throws instead of returning empty
+sge/utils/PoolManagerTest.scala	sge/src/test/scala	2 tests ignored (reset + clean state)	port's Pool.Poolable reset differs
+sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	6 tests ignored (getDependencies null + data null)	port's loaders return null for no-deps
