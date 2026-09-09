@@ -1,0 +1,7 @@
+file	origin	adjustment	why
+sge/vfx/utils/PrioritizedArraySuite.scala	sge-extension/vfx/src/test/scala	arr.toList -> helper items() using (0 until arr.size).map(arr.get).toList	port does not add toList extension; sge collapsed iteration into scala collection method
+sge/vfx/VfxHeadless.scala	sge-extension/vfx/src/test/scala	excluded	fixture uses sge.noop.NoopGL20 and sge.noop.NoopGraphics which are sge-specific hand-written classes not present in the machine port
+sge/vfx/framebuffer/VfxFrameBufferPoolISS561Suite.scala	sge-extension/vfx/src/test/scala	excluded	requires VfxHeadless fixture with NoopGL20/NoopGraphics; the port's own VfxFrameBufferSuite covers the equivalent assertions headlessly
+sge/vfx/framebuffer/VfxFrameBufferQueueISS561Suite.scala	sge-extension/vfx/src/test/scala	excluded	requires VfxHeadless fixture with NoopGL20/NoopGraphics; the port's own VfxFrameBufferSuite covers the equivalent assertions headlessly
+sge/vfx/framebuffer/VfxPingPongWrapperISS561Suite.scala	sge-extension/vfx/src/test/scala	excluded	requires VfxHeadless fixture with NoopGL20/NoopGraphics; the port's own VfxFrameBufferSuite covers the equivalent assertions headlessly
+sge/vfx/utils/ViewportQuadMeshISS561Suite.scala	sge-extension/vfx/src/test/scala	excluded	requires VfxHeadless fixture with NoopGL20/NoopGraphics and sge-specific GL20 export delegation pattern

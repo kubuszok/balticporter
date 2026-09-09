@@ -1601,3 +1601,40 @@ lazy val `sge-screens-suite-check` = (projectMatrix in file("ported/sge-screens-
   .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+// sge-vfx-suite-check — sge's vfx test tree compiled against the machine-ported vfx.
+lazy val `sge-vfx-suite-check` = (projectMatrix in file("ported/sge-vfx-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-vfx`)
+  .settings(
+    name := "balticporter-sge-vfx-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-vfx-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-vfx-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+
+// sge-ai-suite-check — sge's ai test tree compiled against the machine-ported ai.
+lazy val `sge-ai-suite-check` = (projectMatrix in file("ported/sge-ai-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-ai`)
+  .settings(
+    name := "balticporter-sge-ai-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-ai-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-ai-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := true))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
