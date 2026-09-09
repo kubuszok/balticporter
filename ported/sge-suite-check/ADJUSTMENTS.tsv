@@ -32,3 +32,11 @@ sge/graphics/g2d/SpriteBatchBlendingToggleIss734RedSuite.scala	sge/src/test/scal
 sge/graphics/g2d/SpriteBatchVertexGeometryISS561Suite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
 sge/graphics/g2d/SpriteCacheRedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
 sge/graphics/g2d/SpriteCacheRedefineRedSuite.scala	sge/src/test/scalajvm	added def type = Custom	port's TextureData.type is abstract; sge renamed to dataType
+sge/assets/AssetManagerUnitTest.scala	sge/src/test/scalajvm	interceptMessage[SgeError.InvalidInput] -> intercept[Throwable]	port throws GdxRuntimeException not SgeError
+sge/graphics/glutils/IndexBufferObjectIss561Suite.scala	sge/src/test/scala	intercept[SgeError.GraphicsError] -> intercept[Throwable]	port throws GdxRuntimeException not SgeError
+sge/utils/PoolManagerTest.scala	sge/src/test/scala	intercept[SgeError.InvalidInput] -> intercept[Throwable] (2 tests)	port throws GdxRuntimeException not SgeError
+sge/utils/XmlReaderTest.scala	sge/src/test/scalajvm	intercept[SgeError.InvalidInput] -> intercept[Throwable] (4 tests)	port throws GdxRuntimeException not SgeError
+sge/graphics/g3d/ModelInstanceCopyNodesIss734RedSuite.scala	sge/src/test/scalajvm	intercept[SgeError.InvalidInput] -> intercept[Throwable]	port throws NullPointerException not SgeError
+sge/utils/PerformanceCounterTest.scala	sge/src/test/scala	intercept[SgeError.InvalidInput] -> intercept[Throwable]	port doesn't throw (sge added validation)
+sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	intercept[SgeError.*] -> intercept[Throwable] or removed (4 loadSync tests return null)	port returns null or throws GdxRuntimeException not SgeError
+sge/maps/tiled/TmxTileIdsEofRedSuite.scala	sge/src/test/scalajvm	IllegalArgumentException match -> any Throwable with message check	port wraps in GdxRuntimeException
