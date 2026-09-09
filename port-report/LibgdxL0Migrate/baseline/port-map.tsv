@@ -994,6 +994,7 @@ type		sge.platform.Gdx2dOps	Added	-		0
 type		sge.platform.GlOps	Added	-		0		
 type		sge.platform.WindowingOps	Added	-		0		
 type		sge.scenes.scene2d.ui.SkinStyleReader	Added	-		0		
+type		sge.utils.AlignType	Added	-		0		
 type		sge.utils.DynamicArrayOps	Added	-		0		
 type		sge.utils.JsonCodecs	Added	-		0		
 type		sge.utils.LenientJson	Added	-		0		
