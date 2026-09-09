@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=6dc7965d76e0b5bb	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=bc0de4875b757431	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -10177,6 +10177,7 @@ member	com.badlogic.gdx.input.GestureDetector$VelocityTracker#start(float,float,
 member	com.badlogic.gdx.input.GestureDetector$VelocityTracker#update(float,float,Nanos)	sge.input.GestureDetector$VelocityTracker#update(float,float,Nanos)	Renamed	-	com/badlogic/gdx/input/GestureDetector.java	427	3db43cfc5b3f85d3	
 member	com.badlogic.gdx.input.GestureDetector$VelocityTracker#getVelocityX()	sge.input.GestureDetector$VelocityTracker#velocityX	Renamed	-	com/badlogic/gdx/input/GestureDetector.java	441	a74814d7ee9a3cc2	form=parenless
 member	com.badlogic.gdx.input.GestureDetector$VelocityTracker#getVelocityY()	sge.input.GestureDetector$VelocityTracker#velocityY	Renamed	-	com/badlogic/gdx/input/GestureDetector.java	448	b224dd949dcd18e2	form=parenless
+member	com.badlogic.gdx.input.NativeInputConfiguration#<stmt1>	sge.input.NativeInputConfiguration#<stmt1>	Renamed	-	<synthetic>	0	6a0e791c4501fc4d	
 member	com.badlogic.gdx.input.NativeInputConfiguration#getAutoComplete	sge.input.NativeInputConfiguration#autoComplete	Renamed	-	com/badlogic/gdx/input/NativeInputConfiguration.java	18	bb5e66bc0adaefdd	name=autoComplete$field
 member	com.badlogic.gdx.input.NativeInputConfiguration#getAutoComplete()	sge.input.NativeInputConfiguration#autoComplete	Renamed	-	com/badlogic/gdx/input/NativeInputConfiguration.java	112	19e2d13dc316bc3d	form=parenless
 member	com.badlogic.gdx.input.NativeInputConfiguration#getCloseCallback	sge.input.NativeInputConfiguration#closeCallback	Renamed	-	com/badlogic/gdx/input/NativeInputConfiguration.java	20	e9be4ebc9185a470	name=closeCallback$field

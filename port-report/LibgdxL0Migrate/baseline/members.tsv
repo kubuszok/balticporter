@@ -9395,7 +9395,8 @@ sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#start(float,
 sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#update(float,float,Nanos)	def	3db43cfc5b3f85d3
 sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#velocityX()	def	a74814d7ee9a3cc2
 sge.input.GestureDetector	sge.input.GestureDetector$VelocityTracker#velocityY()	def	b224dd949dcd18e2
-sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration	class	2b709b80e218ce23
+sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration	class	6d5b891f4a54db1b
+sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration#<stmt1>	stmt	6a0e791c4501fc4d
 sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration#autoComplete	val	bb5e66bc0adaefdd
 sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration#autoComplete()	def	19e2d13dc316bc3d
 sge.input.NativeInputConfiguration	sge.input.NativeInputConfiguration#closeCallback	val	e9be4ebc9185a470

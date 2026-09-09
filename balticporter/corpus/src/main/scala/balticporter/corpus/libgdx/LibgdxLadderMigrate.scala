@@ -330,6 +330,12 @@ object LibgdxLadder:
             "def put(vals: scala.collection.immutable.Map[java.lang.String, ?]): sge.Preferences = { val m = scala.collection.mutable.Map.from(vals); put(m) }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Preferences#put(immutable.Map)"),
             Some("sge uses immutable Map; port retargeted to mutable.Map — bridge"), false)),
+        // sge's NativeInputConfiguration.setMaxLength takes Option[Int]; port takes Int (-1 sentinel)
+        "com.badlogic.gdx.input.NativeInputConfiguration" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("setMaxLength", 1,
+            "def setMaxLength(maxLength: scala.Option[scala.Int]): sge.input.NativeInputConfiguration = setMaxLength(maxLength.getOrElse(-1))",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.input.NativeInputConfiguration#setMaxLength(Option)"),
+            Some("sge uses Option[Int]; port uses Int (-1 sentinel) — bridge"), false)),
         // sge's I18NBundleParameter takes Nullable[Locale]; port takes bare Locale
         "com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
