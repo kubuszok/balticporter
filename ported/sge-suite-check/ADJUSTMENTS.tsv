@@ -1,1 +1,8 @@
 file	origin	adjustment	why
+sge/math/BezierTest.scala	sge/src/test/scala	new Bezier[V2](points*) -> Bezier[V2](points*) (companion apply)	F-bounded ctor cannot unify T; companion apply exists
+sge/graphics/g3d/loader/ObjLoaderFanRedSuite.scala	sge/src/test/scalajvm	StringObjFileHandle gains (using Sge) clause	port's FileHandleStream requires Sge context
+sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	MemoryFileHandle gains (using Sge) clause	port's FileHandleStream requires Sge context
+sge/scenes/scene2d/ui/TableCellTest.scala	sge/src/test/scala	eq ascribed to AnyRef; assertEquals ascribed to Any	Nullable opaque lacks eq; opaque Float types differ
+sge/input/GestureDetectorTest.scala	sge/src/test/scala	named params -> positional (5-arg ctor)	port's funnel renamed params to $p; no defaults
+sge/graphics/glutils/VertexBufferObjectIss561Suite.scala	sge/src/test/scala	NoLocations typed Array[Int] not Array[AttributeLocation]	port's bind takes Array[Int]; opaque not propagated
+sge/maps/tiled/TmjTileIdsCsvRedSuite.scala	sge/src/test/scala	excluded (empty class)	port's getTileIds takes JsonValue; sge redesigned to TmjLayerJson
