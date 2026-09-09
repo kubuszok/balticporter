@@ -1,0 +1,8 @@
+file	origin	adjustment	why
+sge/visui/SizesSuite.scala	sge-extension/visui/src/test/scala	Sizes() -> new Sizes(); Sizes(original) -> new Sizes(original)	port has no apply factory method in Sizes companion; the class uses a funnelled constructor
+sge/visui/util/ValidatorsSuite.scala	sge-extension/visui/src/test/scala	C() -> new C() for all validators; useEquals = true -> true (positional); v.useEquals = true -> v.setUseEquals(true) for LesserThanValidator	port keeps Java constructor style (no apply) and Java setter API; LesserThanValidator renamed equals field to equals$shadow
+sge/visui/util/ColorUtilsSuite.scala	sge-extension/visui/src/test/scala	(none)	API matches: ColorUtils is an object with the same static method signatures
+sge/visui/util/OsUtilsSuite.scala	sge-extension/visui/src/test/scalajvm	OsUtils.isWindows -> OsUtils.isWindows(); OsUtils.isMac -> OsUtils.isMac(); OsUtils.isUnix -> OsUtils.isUnix()	port keeps parenthesised nullary methods (not parenless)
+adjusted/sge/visui/widget/VisTextField.scala	port src_managed	keyboard.show(true/false) -> keyboard.show(this)/keyboard.close()	upstream VisUI calls show(boolean) but vendored libGDX has show(TextField); 3 residual port errors fixed for suite compilation
+adjusted/sge/visui/widget/VisTextButton.scala	port src_managed	private var style -> private var visStyle$field	field name clashes with inherited Button.style$field; renamed to avoid override conflict
+adjusted/sge/visui/widget/PopupMenu.scala	port src_managed	add(Nullable[T]) -> add(T)	override signature must match parent Table.add[T](actor: T); Nullable wrapper removed from parameter and call site

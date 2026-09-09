@@ -1660,3 +1660,66 @@ lazy val `sge-textra-suite-check` = (projectMatrix in file("ported/sge-textra-su
   ))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+
+// sge-visui-suite-check — sge's visui test tree compiled against the machine-ported visui.
+// The port has 3 residual errors in VisTextField.scala (upstream-version keyboard.show break),
+// so this project bypasses port-sge-visui and compiles the visui sources itself. JVM compiles
+// the full port (with adjusted VisTextField/VisTextButton/PopupMenu); JS/Native compile only
+// the CLOSURE — the files the cross-platform tests transitively name — to avoid linking types
+// that reference JVM-only APIs (java.text.MessageFormat via Locales/I18NBundle chain).
+lazy val `sge-visui-suite-check` = (projectMatrix in file("ported/sge-visui-suite-check"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge`)
+  .settings(
+    name := "balticporter-sge-visui-suite-check",
+    publish / skip := true,
+    maxErrors := 100000,
+    scalacOptions ++= Seq("-nowarn"),
+    Compile / scalacOptions += s"-Xmacro-settings:suiteNonce=${System.nanoTime}",
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.3.6"),
+    testFrameworks += new TestFramework("munit.Framework"),
+    // Shared (cross-platform) test sources.
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-visui-suite-check" / "shared",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-visui-suite-check" / "shared",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Test / fork := true,
+    // JVM: full visui port sources with adjusted overlay.
+    Compile / sourceGenerators += Def.task {
+      val visuiEmit = (ThisBuild / baseDirectory).value / "ported" / "sge-visui" / "src_managed" / "main" / "scala"
+      val adjusted  = (ThisBuild / baseDirectory).value / "ported" / "sge-visui-suite-check" / "adjusted"
+      val all       = ((visuiEmit ** "*.scala").get() ++ (adjusted ** "*.scala").get())
+      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/visui/"); if (i < 0) p else p.substring(i + 1) }
+      val adjustedKeys = all.filter(_.getPath.contains("/sge-visui-suite-check/adjusted/")).map(key).toSet
+      val withOverlay = all.filterNot(f => adjustedKeys(key(f)) && !f.getPath.contains("/sge-visui-suite-check/adjusted/"))
+      withOverlay.filterNot { f =>
+        val fp = f.getPath.replace('\\', '/')
+        fp.contains("/widget/file/") || fp.contains("/util/adapter/") ||
+          fp.endsWith("/ListView.scala")
+      }
+    }.taskValue,
+    Compile / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-visui" / "src_managed" / "main" / "resources",
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-visui-suite-check" / "jvm-only",
+    Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "sge-visui-suite-check" / "jvm-only",
+  ))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Test / fork := false,
+    // JS/Native: closure only — the files the cross-platform tests transitively name.
+    Compile / sourceGenerators += Def.task {
+      val visuiEmit = (ThisBuild / baseDirectory).value / "ported" / "sge-visui" / "src_managed" / "main" / "scala" / "sge" / "visui"
+      Seq("Sizes.scala", "util/ColorUtils.scala", "util/OsUtils.scala", "util/Validators.scala", "util/InputValidator.scala").flatMap { f =>
+        val p = visuiEmit / f; if (p.exists()) Seq(p) else Nil
+      }
+    }.taskValue,
+  ))
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Test / fork := false,
+    Compile / sourceGenerators += Def.task {
+      val visuiEmit = (ThisBuild / baseDirectory).value / "ported" / "sge-visui" / "src_managed" / "main" / "scala" / "sge" / "visui"
+      Seq("Sizes.scala", "util/ColorUtils.scala", "util/OsUtils.scala", "util/Validators.scala", "util/InputValidator.scala").flatMap { f =>
+        val p = visuiEmit / f; if (p.exists()) Seq(p) else Nil
+      }
+    }.taskValue,
+  ))
