@@ -850,7 +850,6 @@ type	com.badlogic.gdx.utils.SortedIntList$Node	sge.utils.SortedIntList$Node	Rena
 type	com.badlogic.gdx.utils.SortedIntList$NodePool	sge.utils.SortedIntList$NodePool	Renamed	-		0		companion=yes form=class parents=sge.utils.Pool primary=() primaryKind=unique-root primaryVis=public tparams="[E <: java.lang.Object]"
 type	com.badlogic.gdx.utils.StreamUtils	sge.utils.StreamUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream	sge.utils.StreamUtils$OptimizedByteArrayOutputStream	Renamed	-		0		form=class parents=java.io.ByteArrayOutputStream primary=(int) primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.TextFormatter	sge.utils.TextFormatter	Renamed	-		0		form=class primary=(Locale,boolean) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.TimeUtils	sge.utils.TimeUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.Timer	sge.utils.Timer	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=Task,TimerThread,disposeThread,instance,post,schedule,thread,thread$field,threadLock
 type	com.badlogic.gdx.utils.Timer$Task	sge.utils.Timer$Task	Renamed	-		0		flags=abstract form=class parents=java.lang.Runnable primary=() primaryKind=unique-root primaryVis=public
@@ -929,6 +928,7 @@ type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Substituted	-		0		companion=yes 
 type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		companion=yes form=class parents=sge.utils.Pool primary=(Class,int,int) primaryKind=unique-root primaryVis=public secondaries=(Class);(Class,int) tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.ShortArray	sge.utils.ShortArray	Dropped	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(DynamicArray);(short[]);(boolean,short[],int,int) statics=`with`,apply,from
+type	com.badlogic.gdx.utils.TextFormatter	sge.utils.TextFormatter	Substituted	-		0		form=class primary=(Locale,boolean) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		flags=final form=class primary=(Annotation) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.reflect.ClassReflection	sge.utils.reflect.ClassReflection	Dropped	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public

@@ -1420,6 +1420,7 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     name := "balticporter-sge-suite-check",
     publish / skip := true,
     maxErrors := 100000,
+    Compile / scalacOptions += s"-Xmacro-settings:suiteNonce=${System.nanoTime}",
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit"            % "1.3.6",
       "org.scalameta" %% "munit-scalacheck" % "1.3.1"),

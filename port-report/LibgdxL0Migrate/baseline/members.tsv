@@ -17258,15 +17258,6 @@ sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream	class
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#<stmt1>	stmt	530daac93fe16088
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#getBuffer()	def	1596c48f5fc41efa
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#toByteArray()	def	49f408e60139e2a7
-sge.utils.TextFormatter	sge.utils.TextFormatter	class	22ed5b4e3c19970c
-sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt1>	stmt	2db2add005442b74
-sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt2>	stmt	278ea23f825b79dd
-sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt3>	stmt	7ebf2b7610fe7c3d
-sge.utils.TextFormatter	sge.utils.TextFormatter#buffer	val	5f8ec94fc0d69073
-sge.utils.TextFormatter	sge.utils.TextFormatter#format(String,Array<Object>)	def	abc13db97530fe87
-sge.utils.TextFormatter	sge.utils.TextFormatter#messageFormat	val	4e7fa575aa65f706
-sge.utils.TextFormatter	sge.utils.TextFormatter#replaceEscapeChars(String)	def	ed8f3796904aa274
-sge.utils.TextFormatter	sge.utils.TextFormatter#simpleFormat(String,Array<Object>)	def	06e410d83723d479
 sge.utils.TimeUtils	sge.utils.TimeUtils	class	355e0df8407bf895
 sge.utils.TimeUtils	sge.utils.TimeUtils#millis()	def	a5601ccbe63ee1f8
 sge.utils.TimeUtils	sge.utils.TimeUtils#millisToNanos(Millis)	def	22912cbc8b6be56b

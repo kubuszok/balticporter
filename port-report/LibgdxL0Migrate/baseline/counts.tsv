@@ -13,7 +13,7 @@ collection-closure	0
 collection-internal	0
 collection-retarget	182
 context-seam	35
-dependency-coverage	37
+dependency-coverage	36
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
 derived(ambiguous)	23
@@ -33,10 +33,10 @@ overload-risk	438
 policy	40
 port-map	75
 portability(all)	153
-portability(emitted)	56
+portability(emitted)	54
 portability(injected)	5
 porter-notes	0
-remediation	11
+remediation	10
 resources	8
 rewrite-callsites	1
 signature	10

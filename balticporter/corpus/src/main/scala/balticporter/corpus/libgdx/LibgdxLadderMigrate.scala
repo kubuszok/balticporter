@@ -1047,6 +1047,7 @@ object LibgdxLadder:
 
   /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
   val stepTypeDrops: Map[String, Set[String]] = Map(
+    "helpers" -> Set("com.badlogic.gdx.utils.TextFormatter"),
     "json" -> Set("com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader", "com.badlogic.gdx.scenes.scene2d.ui.Skin"),
     // java's JNI-backed classes: sge's shared files (natives step) stand at the same names;
     // `GdxNativesLoader` has no reader and no sge counterpart
@@ -1094,6 +1095,7 @@ object LibgdxLadder:
   /** per step, the hand-written injections (standing order 4): `ladder-overrides/` holds the
     * reflection-free `Json`, `ReflectionException` and the asset-type registry. */
   def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
+    "helpers"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-helpers")),
     "reflection" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides")),
     "net"        -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-net/shared")),
     "mathunits"  -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-math")),
