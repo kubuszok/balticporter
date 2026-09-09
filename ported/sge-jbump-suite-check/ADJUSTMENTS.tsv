@@ -1,0 +1,8 @@
+file	action	reason
+sge/jbump/WorldSuite.scala	adapted	No Nullable wrapping in machine port: Item/World/Collisions use `new`, Collision fields are raw references, CollisionFilter.filter takes/returns raw types, Collisions.get returns Collision directly
+sge/jbump/CollisionMathSuite.scala	adapted	Same Nullable-removal adaptations as WorldSuite; filter-returning-null uses raw null instead of Nullable.Null
+sge/jbump/CollisionsCopyCtorRedSuite.scala	adapted	Renamed to CollisionsCopyCtorSuite; Collisions.add takes raw Item/Response instead of Nullable, Collisions.get returns raw Collision
+sge/jbump/JbumpNullProjectRedSuite.scala	adapted	Renamed to NullProjectSuite; passes raw null instead of Nullable.Null, reads raw Collision fields
+sge/jbump/CollisionFilterNullableItemRedSuite.scala	excluded	Tests hand-port-specific Nullable[Item[?]] parameter typing on CollisionFilter.filter; the machine port uses raw Item[?] per Java semantics
+sge/jbump/JbumpLowlevelNullableContractRedSuite.scala	excluded	Tests that jbump APIs use lowlevel.Nullable from lls; the machine port is standalone vendored with no lls dependency and no Nullable wrapping
+sge/jbump/util/NullableCompat.scala	excluded	Test-scope alias for sge.jbump.util.Nullable; not needed since the machine port does not use Nullable
