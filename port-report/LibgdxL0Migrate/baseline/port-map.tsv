@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=ff80b3d3a77d6ac9	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=ae127169c21ab5eb	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -3303,6 +3303,7 @@ member	com.badlogic.gdx.graphics.GL31#glVertexAttribBinding(int,int)	sge.graphic
 member	com.badlogic.gdx.graphics.GL31#glVertexAttribFormat(int,int,DataType,boolean,int)	sge.graphics.GL31#glVertexAttribFormat(int,int,DataType,boolean,int)	Renamed	-	com/badlogic/gdx/graphics/GL31.java	844	c6c8dec55f260307	
 member	com.badlogic.gdx.graphics.GL31#glVertexAttribIFormat(int,int,DataType,int)	sge.graphics.GL31#glVertexAttribIFormat(int,int,DataType,int)	Renamed	-	com/badlogic/gdx/graphics/GL31.java	848	e3cdeb60232e6a4b	
 member	com.badlogic.gdx.graphics.GL31#glVertexBindingDivisor(int,int)	sge.graphics.GL31#glVertexBindingDivisor(int,int)	Renamed	-	com/badlogic/gdx/graphics/GL31.java	856	eb7076ebad7a2168	
+member	com.badlogic.gdx.graphics.GL32#<stmt1>	sge.graphics.GL32#<stmt1>	Renamed	-	<synthetic>	0	effce193fb9e2d49	
 member	com.badlogic.gdx.graphics.GL32#GL_BUFFER	sge.graphics.GL32#GL_BUFFER	Renamed	-	com/badlogic/gdx/graphics/GL32.java	74	9b23239e4335124e	placement=companion
 member	com.badlogic.gdx.graphics.GL32#GL_CLAMP_TO_BORDER	sge.graphics.GL32#GL_CLAMP_TO_BORDER	Renamed	-	com/badlogic/gdx/graphics/GL32.java	41	02c85fd67c43c564	placement=companion
 member	com.badlogic.gdx.graphics.GL32#GL_COLORBURN	sge.graphics.GL32#GL_COLORBURN	Renamed	-	com/badlogic/gdx/graphics/GL32.java	178	fa0ff63f809c1f15	placement=companion

@@ -9,3 +9,7 @@ extension [A <: AnyRef](os: lowlevel.util.OrderedSet[A]) {
   /** sge keeps `first` on `OrderedSet`; the lls port renamed it to `head` */
   inline def first: A = os.head
 }
+extension (a: sge.scenes.scene2d.Actor) {
+  def right: Float = a.x + a.width
+  def top: Float = a.y + a.height
+}

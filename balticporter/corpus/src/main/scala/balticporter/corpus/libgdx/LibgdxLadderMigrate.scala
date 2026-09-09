@@ -414,6 +414,12 @@ object LibgdxLadder:
             "def Page(): sge.graphics.g2d.TextureAtlas.TextureAtlasData.Page = new sge.graphics.g2d.TextureAtlas.TextureAtlasData.Page()",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.TextureAtlas$TextureAtlasData#Page"),
             Some("sge's Page is an inner class; port puts it in companion — factory bridge"), false)),
+        // sge has DebugProc as an inner trait of GL32; the port puts it in the companion object
+        "com.badlogic.gdx.graphics.GL32" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("DebugProc", 0,
+            "type DebugProc = sge.graphics.GL32.DebugProc",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.GL32#DebugProc"),
+            Some("type alias — inner trait moved to companion by the port"), false)),
         // sge's Intersector.isPointInPolygon takes Array[Vector2]; port retargeted to DynamicArray
         "com.badlogic.gdx.math.Intersector" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("isPointInPolygon", 1,

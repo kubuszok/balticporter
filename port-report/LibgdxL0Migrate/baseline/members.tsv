@@ -2322,7 +2322,8 @@ sge.graphics.GL31	sge.graphics.GL31#glVertexAttribBinding(int,int)	def	aabec279a
 sge.graphics.GL31	sge.graphics.GL31#glVertexAttribFormat(int,int,DataType,boolean,int)	def	c6c8dec55f260307
 sge.graphics.GL31	sge.graphics.GL31#glVertexAttribIFormat(int,int,DataType,int)	def	e3cdeb60232e6a4b
 sge.graphics.GL31	sge.graphics.GL31#glVertexBindingDivisor(int,int)	def	eb7076ebad7a2168
-sge.graphics.GL32	sge.graphics.GL32	class	fef8a7d25c8fdf03
+sge.graphics.GL32	sge.graphics.GL32	class	45414ae977269474
+sge.graphics.GL32	sge.graphics.GL32#<stmt1>	stmt	effce193fb9e2d49
 sge.graphics.GL32	sge.graphics.GL32#GL_BUFFER	val	9b23239e4335124e
 sge.graphics.GL32	sge.graphics.GL32#GL_CLAMP_TO_BORDER	val	02c85fd67c43c564
 sge.graphics.GL32	sge.graphics.GL32#GL_COLORBURN	val	fa0ff63f809c1f15
