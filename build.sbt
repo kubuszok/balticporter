@@ -1426,34 +1426,29 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     testFrameworks += new TestFramework("munit.Framework"),
     Compile / unmanagedSourceDirectories ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
-      val isJvm = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
-        case Seq() | Seq("jvm") => true
-        case _                  => false
-      val base = (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check"
-      val common = Seq(t / "scala", base / "adjusted")
-      if (isJvm) common ++ Seq(t / "scalajvm", base / "adjusted-jvm")
-      else common
+      Seq(t / "scala", t / "scalajvm", (ThisBuild / baseDirectory).value / "ported" / "sge-suite-check" / "adjusted")
     },
     Compile / unmanagedResources := (Compile / unmanagedResources).value.filterNot(_.getName == "AndroidManifest.xml"),
     Compile / unmanagedSources := {
       val all = (Compile / unmanagedSources).value
-      val isJvm = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match
-        case Seq() | Seq("jvm") => true
-        case _                  => false
       def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
-      def isAdjusted(f: File): Boolean = { val p = f.getPath; p.contains("/sge-suite-check/adjusted/") || p.contains("/sge-suite-check/adjusted-jvm/") }
-      val adjusted = all.filter(isAdjusted).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !isAdjusted(f))
+      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
     },
-    // Tests live in COMPILE scope (for the compile gate). To RUN: move them to Test scope
-    // EXCLUSIVELY — `Test / sources` overridden to be the test files ONLY, not inheriting Compile.
-    Test / sources := (Compile / sources).value,
+    // the suite's test bodies are Compile sources (the gate is the COMPILE); Test scope duplicates
+    // them so `sbt test` also runs the munit suites
+    Test / unmanagedSourceDirectories ++= (Compile / unmanagedSourceDirectories).value,
+    Test / unmanagedSources := {
+      val all = (Test / unmanagedSources).value
+      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
+      val adjusted = all.filter(_.getPath.contains("/ported/sge-suite-check/adjusted/")).map(key).toSet
+      all.filterNot(f => adjusted(key(f)) && !f.getPath.contains("/ported/sge-suite-check/adjusted/"))
+    },
     Test / unmanagedResources ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
       ((t / "resources") ** "*").get()
     },
-  )
-  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
     Test / fork := true,
     Test / javaOptions += "--enable-native-access=ALL-UNNAMED",
-  ))
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV))

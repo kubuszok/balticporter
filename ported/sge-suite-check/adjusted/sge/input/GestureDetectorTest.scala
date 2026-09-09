@@ -14,10 +14,7 @@ import sge.utils.{ Seconds, Timer }
 
 class GestureDetectorTest extends FunSuite {
 
-  override def afterAll(): Unit = {
-    Timer.disposeThread()
-    super.afterAll()
-  }
+  // Timer.disposeThread() removed: JVM-only (no timer thread on JS/Native)
 
   // ─── Helpers ─────────────────────────────────────────────────────────
 
