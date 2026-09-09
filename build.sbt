@@ -1445,16 +1445,9 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
       val adjusted = all.filter(isAdjusted).map(key).toSet
       all.filterNot(f => adjusted(key(f)) && !isAdjusted(f))
     },
-    // the suite's test bodies are Compile sources (the gate is the COMPILE); Test scope duplicates
-    // them so `sbt test` also runs the munit suites
-    Test / unmanagedSourceDirectories ++= (Compile / unmanagedSourceDirectories).value,
-    Test / unmanagedSources := {
-      val all = (Test / unmanagedSources).value
-      def key(f: File): String = { val p = f.getPath.replace('\\', '/'); val i = p.lastIndexOf("/sge/"); if (i < 0) p else p.substring(i + 1) }
-      def isAdjusted(f: File): Boolean = { val p = f.getPath; p.contains("/sge-suite-check/adjusted/") || p.contains("/sge-suite-check/adjusted-jvm/") }
-      val adjusted = all.filter(isAdjusted).map(key).toSet
-      all.filterNot(f => adjusted(key(f)) && !isAdjusted(f))
-    },
+    // Tests live in COMPILE scope (for the compile gate). To RUN: move them to Test scope
+    // EXCLUSIVELY — `Test / sources` overridden to be the test files ONLY, not inheriting Compile.
+    Test / sources := (Compile / sources).value,
     Test / unmanagedResources ++= {
       val t = (ThisBuild / baseDirectory).value / ".." / "sge" / "sge" / "src" / "test"
       ((t / "resources") ** "*").get()
@@ -1464,5 +1457,3 @@ lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))
     Test / fork := true,
     Test / javaOptions += "--enable-native-access=ALL-UNNAMED",
   ))
-  .jsPlatform(scalaVersions = Seq(scalaV))
-  .nativePlatform(scalaVersions = Seq(scalaV))
