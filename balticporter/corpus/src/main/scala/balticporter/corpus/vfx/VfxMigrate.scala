@@ -66,6 +66,8 @@ object VfxPolicy:
       // sge puts gdx-vfx at sge.vfx with upstream subpackages carried straight through;
       // libGDX's own com.badlogic.gdx -> sge is INHERITED, not restated.
       packageRenames = Map("com.crashinvaders.vfx" -> "sge.vfx"),
+      // base renamed setTransform -> transform_= (BeanPropertyTransform); this override must go
+      dropMethods = Set("com.crashinvaders.vfx.scene2d.VfxWidgetGroup#setTransform"),
       // TWO PER-LOCATION SELECTIONS (`DESIGN.md` §8.16/§8.21): `@SuppressWarnings` on
       // ShaderVfxEffect suppresses nothing even in java (no cast, no type variable, no raw
       // type anywhere in the 193-line class) -- the port drops a marker that was already
@@ -86,6 +88,38 @@ object VfxPolicy:
         // a context fails loudly, residue the hand port avoids by hand-writing the member.
         new balticporter.transform.MethodBodyTransform(Map(
           "com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>" -> "{ }",
+          // Align opaque boundary: Align.left/right/top/bottom are Align (opaque Int);
+          // bitwise & needs both sides as Int
+          "com.crashinvaders.vfx.effects.RadialBlurEffect#setOrigin(int)" ->
+            """{
+              |  var originX: scala.Float = 0.0f; var originY: scala.Float = 0.0f
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.left)) != 0) { originX = 0.0f }
+              |  else { if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.right)) != 0) { originX = 1.0f } else { originX = 0.5f } }
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.bottom)) != 0) { originY = 0.0f }
+              |  else { if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.top)) != 0) { originY = 1.0f } else { originY = 0.5f } }
+              |  this.setOrigin(originX, originY)
+              |}""".stripMargin,
+          "com.crashinvaders.vfx.effects.ZoomEffect#setOrigin(int)" ->
+            """{
+              |  var originX: scala.Float = 0.0f; var originY: scala.Float = 0.0f
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.left)) != 0) { originX = 0.0f }
+              |  else { if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.right)) != 0) { originX = 1.0f } else { originX = 0.5f } }
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.bottom)) != 0) { originY = 0.0f }
+              |  else { if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.top)) != 0) { originY = 1.0f } else { originY = 0.5f } }
+              |  this.setOrigin(originX, originY)
+              |}""".stripMargin,
+          "com.crashinvaders.vfx.utils.CommonUtils#getAlignFactorX" ->
+            """{
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.left)) != 0) { return 0.0f } else ()
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.right)) != 0) { return 1.0f } else ()
+              |  return 0.5f
+              |}""".stripMargin,
+          "com.crashinvaders.vfx.utils.CommonUtils#getAlignFactorY" ->
+            """{
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.bottom)) != 0) { return 0.0f } else ()
+              |  if ((sge.utils.Align.toInt(align) & sge.utils.Align.toInt(sge.utils.Align.top)) != 0) { return 1.0f } else ()
+              |  return 0.5f
+              |}""".stripMargin,
           "com.crashinvaders.vfx.framebuffer.VfxFrameBuffer#getBoundFboHandle" ->
             """{
               |  if (sge.vfx.gl.VfxGLUtils.glExtension == null)
