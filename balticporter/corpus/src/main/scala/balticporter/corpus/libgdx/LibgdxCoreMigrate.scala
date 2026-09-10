@@ -1857,6 +1857,139 @@ object LibgdxPolicy:
                |    particle.setOrigin(sprite.originX, sprite.originY)
                |  }; i = i + 1 } } }
                |}""".stripMargin,
+           "com.badlogic.gdx.graphics.g2d.ParticleEmitter#activateParticle" ->
+             """{
+               |  var sprite: sge.graphics.g2d.Sprite = null
+               |  this.spriteMode$field match {
+               |    case null => throw new java.lang.NullPointerException("switch selector was null")
+               |    case sge.graphics.g2d.ParticleEmitter.SpriteMode.single | sge.graphics.g2d.ParticleEmitter.SpriteMode.animated => {
+               |      sprite = { val bp$tpl25 = this.sprites$field; { if (bp$tpl25.isEmpty) throw new java.lang.IllegalStateException("Array is empty."); bp$tpl25.first } }
+               |    }
+               |    case sge.graphics.g2d.ParticleEmitter.SpriteMode.random => {
+               |      sprite = this.sprites$field.random().get
+               |    }
+               |    case _ => ()
+               |  }
+               |  var particle: sge.graphics.g2d.ParticleEmitter.Particle = this.particles$field(index)
+               |  if (particle == null) {
+               |    this.particles$field(index) = { particle = this.newParticle(sprite); particle }
+               |    particle.flip(this.flipX, this.flipY$field)
+               |  } else { particle.set(sprite) }
+               |  val percent: scala.Float = this.durationTimer / this.duration$field.asInstanceOf[scala.Float]
+               |  val updateFlags: scala.Int = this.updateFlags
+               |  if (this.lifeValue.independent$field) { this.generateLifeValues() } else ()
+               |  if (this.lifeOffsetValue.independent$field) { this.generateLifeOffsetValues() } else ()
+               |  particle.currentLife = { particle.life = this.life$field + (this.lifeDiff * this.lifeValue.getScale(percent)).asInstanceOf[scala.Int]; particle.life }
+               |  if (this.velocityValue.active$field) {
+               |    particle.velocity = this.velocityValue.newLowValue()
+               |    particle.velocityDiff = this.velocityValue.newHighValue()
+               |    if (!this.velocityValue.relative$field) { particle.velocityDiff = particle.velocityDiff - particle.velocity } else ()
+               |  } else ()
+               |  particle.angle = this.angleValue.newLowValue()
+               |  particle.angleDiff = this.angleValue.newHighValue()
+               |  if (!this.angleValue.relative$field) { particle.angleDiff = particle.angleDiff - particle.angle } else ()
+               |  var angle: scala.Float = 0.toFloat
+               |  if ((updateFlags & ParticleEmitter.UPDATE_ANGLE) == 0) {
+               |    angle = particle.angle + (particle.angleDiff * this.angleValue.getScale(0.toFloat))
+               |    particle.angle = angle
+               |    particle.angleCos = sge.math.MathUtils.cosDeg(angle)
+               |    particle.angleSin = sge.math.MathUtils.sinDeg(angle)
+               |  } else ()
+               |  val spriteWidth: scala.Float = sprite.width
+               |  val spriteHeight: scala.Float = sprite.height
+               |  particle.xScale = this.xScaleValue.newLowValue() / spriteWidth
+               |  particle.xScaleDiff = this.xScaleValue.newHighValue() / spriteWidth
+               |  if (!this.xScaleValue.relative$field) { particle.xScaleDiff = particle.xScaleDiff - particle.xScale } else ()
+               |  if (this.yScaleValue.active$field) {
+               |    particle.yScale = this.yScaleValue.newLowValue() / spriteHeight
+               |    particle.yScaleDiff = this.yScaleValue.newHighValue() / spriteHeight
+               |    if (!this.yScaleValue.relative$field) { particle.yScaleDiff = particle.yScaleDiff - particle.yScale } else ()
+               |    particle.setScale(particle.xScale + (particle.xScaleDiff * this.xScaleValue.getScale(0.toFloat)), particle.yScale + (particle.yScaleDiff * this.yScaleValue.getScale(0.toFloat)))
+               |  } else { particle.setScale(particle.xScale + (particle.xScaleDiff * this.xScaleValue.getScale(0.toFloat))) }
+               |  if (this.rotationValue.active$field) {
+               |    particle.rotation$shadow = this.rotationValue.newLowValue()
+               |    particle.rotationDiff = this.rotationValue.newHighValue()
+               |    if (!this.rotationValue.relative$field) { particle.rotationDiff = particle.rotationDiff - particle.rotation$shadow } else ()
+               |    var rotation: scala.Float = particle.rotation$shadow + (particle.rotationDiff * this.rotationValue.getScale(0.toFloat))
+               |    if (this.aligned$field) { rotation = rotation + angle } else ()
+               |    particle.setRotation(rotation)
+               |  } else ()
+               |  if (this.windValue.active$field) {
+               |    particle.wind = this.windValue.newLowValue()
+               |    particle.windDiff = this.windValue.newHighValue()
+               |    if (!this.windValue.relative$field) { particle.windDiff = particle.windDiff - particle.wind } else ()
+               |  } else ()
+               |  if (this.gravityValue.active$field) {
+               |    particle.gravity = this.gravityValue.newLowValue()
+               |    particle.gravityDiff = this.gravityValue.newHighValue()
+               |    if (!this.gravityValue.relative$field) { particle.gravityDiff = particle.gravityDiff - particle.gravity } else ()
+               |  } else ()
+               |  var color: scala.Array[scala.Float] = particle.tint
+               |  if (color == null) { particle.tint = { color = new scala.Array[scala.Float](3); color } } else ()
+               |  val temp: scala.Array[scala.Float] = this.tintValue.getColor(0.toFloat)
+               |  color(0) = temp(0); color(1) = temp(1); color(2) = temp(2)
+               |  particle.transparency = this.transparencyValue.newLowValue()
+               |  particle.transparencyDiff = this.transparencyValue.newHighValue() - particle.transparency
+               |  var x: scala.Float = this.x$field
+               |  if (this.xOffsetValue.active$field) { x = x + this.xOffsetValue.newLowValue() } else ()
+               |  var y: scala.Float = this.y$field
+               |  if (this.yOffsetValue.active$field) { y = y + this.yOffsetValue.newLowValue() } else ()
+               |  this.spawnShapeValue.shape$field match {
+               |    case null => throw new java.lang.NullPointerException("switch selector was null")
+               |    case sge.graphics.g2d.ParticleEmitter.SpawnShape.square => {
+               |      val width: scala.Float = this.spawnWidth$field + (this.spawnWidthDiff * this.spawnWidthValue.getScale(percent))
+               |      val height: scala.Float = this.spawnHeight$field + (this.spawnHeightDiff * this.spawnHeightValue.getScale(percent))
+               |      x = x + (sge.math.MathUtils.random(width) - (width * 0.5f))
+               |      y = y + (sge.math.MathUtils.random(height) - (height * 0.5f))
+               |    }
+               |    case sge.graphics.g2d.ParticleEmitter.SpawnShape.ellipse => scala.util.boundary { (case$39: scala.util.boundary.Label[scala.Unit]) ?=> {
+               |      val width: scala.Float = this.spawnWidth$field + (this.spawnWidthDiff * this.spawnWidthValue.getScale(percent))
+               |      val height: scala.Float = this.spawnHeight$field + (this.spawnHeightDiff * this.spawnHeightValue.getScale(percent))
+               |      val radiusX: scala.Float = width * 0.5f
+               |      val radiusY: scala.Float = height * 0.5f
+               |      if ((radiusX == 0) || (radiusY == 0)) { scala.util.boundary.break(())(using case$39) } else ()
+               |      val scaleY: scala.Float = radiusX / radiusY.asInstanceOf[scala.Float]
+               |      if (this.spawnShapeValue.edges$field) {
+               |        var spawnAngle: scala.Float = 0.0f
+               |        this.spawnShapeValue.side$field match {
+               |          case null => throw new java.lang.NullPointerException("switch selector was null")
+               |          case sge.graphics.g2d.ParticleEmitter.SpawnEllipseSide.top => { spawnAngle = -sge.math.MathUtils.random(179.0f) }
+               |          case sge.graphics.g2d.ParticleEmitter.SpawnEllipseSide.bottom => { spawnAngle = sge.math.MathUtils.random(179.0f) }
+               |          case _ => { spawnAngle = sge.math.MathUtils.random(360.0f) }
+               |        }
+               |        val cosDeg: scala.Float = sge.math.MathUtils.cosDeg(spawnAngle)
+               |        val sinDeg: scala.Float = sge.math.MathUtils.sinDeg(spawnAngle)
+               |        x = x + (cosDeg * radiusX)
+               |        y = y + ((sinDeg * radiusX) / scaleY)
+               |        if ((updateFlags & ParticleEmitter.UPDATE_ANGLE) == 0) {
+               |          particle.angle = spawnAngle; particle.angleCos = cosDeg; particle.angleSin = sinDeg
+               |        } else ()
+               |      } else {
+               |        val radius2: scala.Float = radiusX * radiusX
+               |        scala.util.boundary { while (true) {
+               |          val px: scala.Float = sge.math.MathUtils.random(width) - radiusX
+               |          val py: scala.Float = sge.math.MathUtils.random(width) - radiusX
+               |          if (((px * px) + (py * py)) <= radius2) { x = x + px; y = y + (py / scaleY); scala.util.boundary.break(()) } else ()
+               |        } }
+               |      }
+               |    } }
+               |    case sge.graphics.g2d.ParticleEmitter.SpawnShape.line => {
+               |      val width: scala.Float = this.spawnWidth$field + (this.spawnWidthDiff * this.spawnWidthValue.getScale(percent))
+               |      val height: scala.Float = this.spawnHeight$field + (this.spawnHeightDiff * this.spawnHeightValue.getScale(percent))
+               |      if (width != 0) {
+               |        val lineX: scala.Float = width * sge.math.MathUtils.random()
+               |        x = x + lineX; y = y + (lineX * (height / width.asInstanceOf[scala.Float]))
+               |      } else { y = y + (height * sge.math.MathUtils.random()) }
+               |    }
+               |    case _ => ()
+               |  }
+               |  particle.setBounds(x - (spriteWidth * 0.5f), y - (spriteHeight * 0.5f), spriteWidth, spriteHeight)
+               |  var offsetTime: scala.Int = (this.lifeOffset$field + (this.lifeOffsetDiff * this.lifeOffsetValue.getScale(percent))).asInstanceOf[scala.Int]
+               |  if (offsetTime > 0) {
+               |    if (offsetTime >= particle.currentLife) { offsetTime = particle.currentLife - 1 } else ()
+               |    this.updateParticle(particle, offsetTime / 1000.0f, offsetTime)
+               |  } else ()
+               |}""".stripMargin,
            // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
            // --- Screen default empty bodies (sge convention: only `render` is abstract) ---
            "com.badlogic.gdx.Screen#show"   -> "{}", "com.badlogic.gdx.Screen#resize" -> "{}",
