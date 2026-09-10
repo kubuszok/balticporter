@@ -47,7 +47,7 @@ sge/math/Matrix4ConcurrentLookAtRedSuite.scala	sge/src/test/scalajvm	adapted: Ve
 sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scala	adapted: UniformLocation -> Int; WorldUnits -> Float	port uses raw Int/Float (no opaque types)
 sge/AndroidGraphicsTest.scala	sge/src/test/scalajvm	excluded (empty class)	tests sge's Monitor/Mode object identity
 sge/utils/TimerWakeupRedSuite.scala	sge/src/test/scalajvm	excluded (empty class)	timer thread wakeup model differs (sge thread model)
-sge/graphics/g3d/particles/SaveDataCodecSuite.scala	sge/src/test/scala	excluded (empty class)	port doesn't have sge's SaveData codec registration
+sge/graphics/g3d/particles/SaveDataCodecSuite.scala	sge/src/test/scala	codec registered in test beforeAll; 7 of 8 adapted	FINDING A test dropped (needs companion-object init pattern the port lacks)
 sge/utils/PoolManagerConcurrencyIss803Suite.scala	sge/src/test/scalajvm	excluded (empty class)	flaky concurrency; sge's PoolManager uses synchronized differently
 sge/scenes/scene2d/utils/SelectionChooseRedSuite.scala	sge/src/test/scala	override protected -> override (1 method); full test adapted	port widened changed to public; port has java's early returns
 sge/assets/AssetManagerDescriptorRoutingIss830CoverageSuite.scala	sge/src/test/scalajvm	wrong-type path asserts throw not empty; verify via 3-arg get	port's get(descriptor) uses required=true

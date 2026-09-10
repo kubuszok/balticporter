@@ -33,7 +33,7 @@ class BinaryHeapTest extends munit.FunSuite {
     assertEqualsFloat(heap.peek().value, 5f, 0f)
   }
 
-  test("contains with identity uses reference equality".ignore) { // BinaryHeap.nodes iterator walks null slots past size
+  test("contains with identity uses reference equality") {
     // Regression: contains(_, true) used == instead of eq
     val n1   = BinaryHeap.Node(1f)
     val n2   = BinaryHeap.Node(1f)
