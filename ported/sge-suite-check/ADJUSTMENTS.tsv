@@ -63,7 +63,7 @@ sge/assets/AssetManagerUnitTest.scala	sge/src/test/scalajvm	get-empty test uses 
 sge/utils/PoolManagerTest.scala	sge/src/test/scala	2 tests ignored (reset + clean state)	port's Pool.Poolable reset differs
 sge/assets/AssetLoaderSmokeTest.scala	sge/src/test/scalajvm	6 tests ignored (getDependencies null + data null)	port's loaders return null for no-deps
 sge/math/Matrix4ConcurrentLookAtRedSuite.scala	sge/src/test/scalajvm	ignored	ISS-832: RED test — upstream thread-safety bug with shared Matrix4 scratch vectors; faithfully reproduced
-sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	2 ISS-507 tests ignored	ctor-funnel bug: ResourceData(T) skips field init; save path NPEs
+sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	2 ISS-507 tests ignored	ctor-funnel bug fixed; save round-trip hits LegacyJson serialization state error
 sge/assets/AssetManagerAsyncISS561Test.scala	sge/src/test/scalajvm	get call uses 3-arg with required=false	port's 2-arg get throws; same fix as AssetManagerUnitTest
 sge/maps/tiled/TmjTileIdsCsvRedSuite.scala	sge/src/test/scala	JSON wrapped in {"data": ...}	getTileIds expects parent object with "data" child, not bare array
-sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scalajvm	Gdx.graphics set in test	emitted code reads legacy Gdx.graphics static; Sge context alone insufficient
+sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scalajvm	no workaround needed	setter reads shader.sgeContext.graphics.width (Gdx.graphics eliminated)
