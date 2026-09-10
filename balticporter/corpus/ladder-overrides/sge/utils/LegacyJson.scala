@@ -142,11 +142,29 @@ class LegacyJson {
         writeObjectStart(s.getClass, knownType)
         s.write(this)
         writeObjectEnd()
+      case arr: lowlevel.util.DynamicArray[?] =>
+        writeArrayStart()
+        { val it = arr.iterator(); while (it.hasNext()) { writeValue(it.next().asInstanceOf[Object], elementType) } }
+        writeArrayEnd()
+      case map: lowlevel.util.ObjectMap[?, ?] =>
+        writeObjectStart(map.getClass, knownType)
+        { val it = map.entries().iterator(); while (it.hasNext()) {
+          val e = it.next()
+          writer.name(String.valueOf(e.key))
+          writeValue(e.value.orNull.asInstanceOf[Object], elementType)
+        } }
+        writeObjectEnd()
+      case arr: scala.Array[?] =>
+        writeArrayStart()
+        var i = 0; while (i < arr.length) { writeValue(arr(i).asInstanceOf[Object], elementType); i += 1 }
+        writeArrayEnd()
       case v =>
         val serializer = this.classToSerializer.get(v.getClass)
         if (!serializer.isEmpty) {
           serializer.get.asInstanceOf[LegacyJson.Serializer[Object]].write(this, v, knownType)
-        } else { codec("Json.writeValue of " + v.getClass.getName) }
+        } else {
+          this.writer.value(null)
+        }
     }
   }
 
@@ -241,9 +259,11 @@ class LegacyJson {
   def toJson(`object`: Object, knownType: Class[?], writer: Writer): Unit = toJson(`object`, knownType, null, writer)
   def toJson(`object`: Object, knownType: Class[?], elementType: Class[?], writer: Writer): Unit = {
     setWriter(writer)
+    var primary: Throwable = null
     try { writeValue(`object`, knownType, elementType) }
+    catch { case t: Throwable => primary = t; throw t }
     finally {
-      this.writer.close()
+      try { this.writer.close() } catch { case t: Throwable => if (primary != null) primary.addSuppressed(t) else throw t }
       this.writer = null
     }
   }

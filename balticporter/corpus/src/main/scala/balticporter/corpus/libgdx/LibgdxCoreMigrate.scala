@@ -1794,14 +1794,14 @@ object LibgdxPolicy:
            "com.badlogic.gdx.Screen#pause"  -> "{}", "com.badlogic.gdx.Screen#resume" -> "{}",
            "com.badlogic.gdx.Screen#hide"   -> "{}",
            // --- getDependencies: return empty DynamicArray instead of null (sge convention) ---
-           "com.badlogic.gdx.assets.loaders.ShaderProgramLoader#getDependencies"  -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.I18NBundleLoader#getDependencies"     -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.CubemapLoader#getDependencies"        -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.PixmapLoader#getDependencies"         -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.SoundLoader#getDependencies"          -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"          -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"        -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies" -> "{ val deps = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
+           "com.badlogic.gdx.assets.loaders.ShaderProgramLoader#getDependencies"  -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.I18NBundleLoader#getDependencies"     -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.CubemapLoader#getDependencies"        -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.PixmapLoader#getDependencies"         -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.SoundLoader#getDependencies"          -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"          -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"        -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies" -> "{ val deps = lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
            // --- ParticleEffectLoader#save: use no-arg ResourceData ctor (ctor-funnel bug in 1-arg) ---
            "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#save" ->
              """{
