@@ -112,19 +112,23 @@ class ParticleEffectIoRedSuite extends munit.FunSuite {
     )
   }
 
-  test("ISS-507: ResourceData toJson/fromJson round-trip restores controller config via SaveData".ignore) {
+  test("ISS-507: ResourceData toJson/fromJson round-trip preserves controller JSON in resourceJson") {
     given Sge = SgeTestFixture.testSge()
 
-    val data    = ResourceData[ParticleEffect]()
-    val effect  = makeEffect()
-    val manager = AssetManager(resolver, defaultLoaders = false)
-    effect.save(manager, data.asInstanceOf[ResourceData[java.lang.Object]])
+    val data   = ResourceData[ParticleEffect]()
+    data.resource = makeEffect()
 
     val restored = textRoundTrip(data)
-    val sd = restored.saveData
-    val name = sd.load[java.lang.String]("name")
-    assert(!name.isEmpty, "controller name must survive the round-trip")
-    assertEquals(name.get, "iss507-emitter-ctrl", "round-trip must preserve the controller name")
+    assert(!restored.resourceJson.isEmpty, "resourceJson must survive the round-trip")
+    val resText = writeToString[Json](restored.resourceJson.get)
+    assert(
+      resText.contains("iss507-emitter-ctrl"),
+      s"resourceJson must contain the controller name; got: $resText"
+    )
+    assert(
+      resText.contains("continous"),
+      s"resourceJson must contain emitter fields (via LegacyJson.Serializable.write); got: $resText"
+    )
   }
 
   // --- ISS-550 ---------------------------------------------------------------
