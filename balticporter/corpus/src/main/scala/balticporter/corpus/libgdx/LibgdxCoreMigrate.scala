@@ -100,6 +100,16 @@ object LibgdxPolicy:
       // THE REFERENCE HAND PORT for sge. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../sge/sge/src/main/scala").normalize))),
+      externalParenless = Set(
+        "lowlevel.util.DynamicArray#isEmpty",
+        "lowlevel.util.ObjectMap#isEmpty",
+        "lowlevel.util.OrderedSet#first",
+        "lowlevel.util.Pool#getFree",
+        "com.badlogic.gdx.utils.Array#isEmpty",
+        "com.badlogic.gdx.utils.ObjectMap#isEmpty",
+        "com.badlogic.gdx.utils.OrderedSet#first",
+        "com.badlogic.gdx.utils.Pool#getFree",
+      ),
     )
 
   /** Boundary rows this port has read and accepted (`DESIGN.md` §8.16) — each leaves its
@@ -160,6 +170,10 @@ object LibgdxPolicy:
       "org.junit.runner.Description#getTestClass",
       "org.junit.runner.Description#getMethodName",
       "org.junit.runner.Description#getAnnotations",
+      "lowlevel.util.DynamicArray#isEmpty",
+      "lowlevel.util.ObjectMap#isEmpty",
+      "lowlevel.util.OrderedSet#first",
+      "lowlevel.util.Pool#getFree",
     ),
   ))
 
@@ -1749,8 +1763,7 @@ object LibgdxPolicy:
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
-    List(beanProperties, nullaryArity,
-         new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget ++ libCollectionRetargets,
+    List(new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget ++ libCollectionRetargets,
                                   retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites,
                                   retargetRewritesByDesc = libCollectionConstructRewritesByDesc,
                                   retargetTypeArgs = libCollectionRetargetTypeArgs,
@@ -1764,6 +1777,7 @@ object LibgdxPolicy:
            "com.badlogic.gdx.graphics.g3d.particles.ParticleShader$Setters#screenWidth" ->
              "new sge.graphics.g3d.shaders.BaseShader.GlobalSetter() { override def set(shader: sge.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: sge.graphics.g3d.Renderable, combinedAttributes: sge.graphics.g3d.Attributes): scala.Unit = shader.set(inputID, shader.sgeContext.graphics.width.asInstanceOf[scala.Float]) }")),
          globalsToContext,
+         beanProperties, nullaryArity,
          new balticporter.transform.AddMembersTransform(Map(
            "com.badlogic.gdx.graphics.g3d.shaders.BaseShader" -> List(
              balticporter.transform.AddMembersTransform.MemberSpec("sgeContext", 0,
@@ -1801,15 +1815,15 @@ object LibgdxPolicy:
            "com.badlogic.gdx.assets.loaders.SoundLoader#getDependencies"          -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
            "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"          -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
            "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"        -> "lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]]()",
-           "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies" -> "{ val deps = lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
+           "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies" -> "{ val deps = lowlevel.util.DynamicArray.apply[sge.assets.AssetDescriptor[?]](); if ((param != null) && (param.atlasFile != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
            // --- ParticleEffectLoader#save: use no-arg ResourceData ctor (ctor-funnel bug in 1-arg) ---
            "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#save" ->
              """{
                |  val data = new sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]()
                |  data.resource = effect
                |  effect.save(parameter.manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
-               |  if (!parameter.batches.isEmpty) {
-               |    for (batch <- parameter.batches.get) {
+               |  if (parameter.batches != null) {
+               |    for (batch <- parameter.batches) {
                |      var save: scala.Boolean = false
                |      scala.util.boundary { for (controller <- effect.controllers) {
                |        if (controller.renderer.isCompatible(batch)) { save = true; scala.util.boundary.break(()) } else ()
