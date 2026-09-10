@@ -112,6 +112,8 @@ object LibgdxPolicy:
         "sge.utils.Pool#getFree",
         "sge.utils.DynamicArray#isEmpty",
         "sge.utils.FloatArray#isEmpty",
+        "lowlevel.util.OrderedSet#orderedItems",
+        "sge.utils.OrderedSet#orderedItems",
       ),
     )
 
@@ -1797,13 +1799,13 @@ object LibgdxPolicy:
            "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex" ->
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items()
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first.get, false)
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin,
            // wave 3.1m: SgeList.selectedIndex — same OrderedSet vs ObjectSet pattern.
            "com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex" ->
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items()
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first.get, false)
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin,
            // --- Nullable unwrapping at external lls method returns (ObjectMap.put/remove/findKey, DynamicArray.random, OrderedSet.first) ---
            "com.badlogic.gdx.graphics.Colors#put" -> "{ return Colors.map.put(name, color).orNull }",
@@ -1812,6 +1814,49 @@ object LibgdxPolicy:
            "com.badlogic.gdx.scenes.scene2d.ui.Skin#find" -> "{ if (resource == null) { throw new java.lang.IllegalArgumentException(\"style cannot be null.\") }; val typeResources = this.resources.get(resource.getClass()).orNull; if (typeResources == null) { return lowlevel.Nullable.empty }; return typeResources.findKey(resource, true) }",
            "com.badlogic.gdx.utils.PoolManager#addPool(Class,Pool)" -> "{ val oldPool = this.typePools.put(poolClass, pool).orNull; if (oldPool != null) { throw new sge.utils.GdxRuntimeException(\"Attempt to add pool with already existing class: \" + poolClass + \", use PoolManager#set instead\") } }",
            "com.badlogic.gdx.utils.PoolManager#addPool(Class,DefaultPool$PoolSupplier)" -> "{ val p = new sge.utils.DefaultPool[T](poolSupplier); val oldPool = this.typePools.put(poolClass, p).orNull; if (oldPool != null) { throw new sge.utils.GdxRuntimeException(\"Attempt to add pool with already existing class: \" + poolClass) } }",
+           // DynamicArray.random() returns Nullable[T] in lls; these sites use the value as T
+           "com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#newObject" ->
+             "{ return new sge.graphics.g3d.ModelInstance(models.random().get) }",
+           "com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#newObject" ->
+             "{ val controller = templates.random().get.copy(); controller.init(); return controller }",
+           "com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer$Random#activateParticles" ->
+             """{
+               |  var i = startIndex * this.regionChannel.strideSize; val c = i + (count * this.regionChannel.strideSize)
+               |  while (i < c) {
+               |    val region = regions.random().get
+               |    this.regionChannel.data$shadow(i + sge.graphics.g3d.particles.ParticleChannels.UOffset) = region.u
+               |    this.regionChannel.data$shadow(i + sge.graphics.g3d.particles.ParticleChannels.VOffset) = region.v
+               |    this.regionChannel.data$shadow(i + sge.graphics.g3d.particles.ParticleChannels.U2Offset) = region.u2
+               |    this.regionChannel.data$shadow(i + sge.graphics.g3d.particles.ParticleChannels.V2Offset) = region.v2
+               |    this.regionChannel.data$shadow(i + sge.graphics.g3d.particles.ParticleChannels.HalfWidthOffset) = 0.5f
+               |    this.regionChannel.data$shadow(i + sge.graphics.g3d.particles.ParticleChannels.HalfHeightOffset) = region.halfInvAspectRatio
+               |    i = i + this.regionChannel.strideSize
+               |  }
+               |}""".stripMargin,
+           "com.badlogic.gdx.graphics.g2d.ParticleEmitter#setSprites" ->
+             """{
+               |  this.sprites$field = sprites
+               |  if (sprites.size == 0) { return } else ()
+               |  scala.util.boundary { { var i: scala.Int = 0; val n: scala.Int = this.particles$field.length; while (i < n) { {
+               |    val particle: sge.graphics.g2d.ParticleEmitter.Particle = this.particles$field(i)
+               |    if (particle == null) { scala.util.boundary.break(()) } else ()
+               |    var sprite: sge.graphics.g2d.Sprite = null
+               |    this.spriteMode$field match {
+               |      case null => throw new java.lang.NullPointerException("switch selector was null")
+               |      case sge.graphics.g2d.ParticleEmitter.SpriteMode.single =>
+               |        sprite = { val bp$tpl26 = sprites; { if (bp$tpl26.isEmpty) throw new java.lang.IllegalStateException("Array is empty."); bp$tpl26.first } }
+               |      case sge.graphics.g2d.ParticleEmitter.SpriteMode.random =>
+               |        sprite = sprites.random().get
+               |      case sge.graphics.g2d.ParticleEmitter.SpriteMode.animated =>
+               |        val percent: scala.Float = 1 - (particle.currentLife / particle.life.asInstanceOf[scala.Float])
+               |        particle.frame = java.lang.Math.min((percent * sprites.size).asInstanceOf[scala.Int], sprites.size - 1)
+               |        sprite = sprites.apply(particle.frame)
+               |      case _ => ()
+               |    }
+               |    particle.setRegion(sprite)
+               |    particle.setOrigin(sprite.originX, sprite.originY)
+               |  }; i = i + 1 } } }
+               |}""".stripMargin,
            // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
            // --- Screen default empty bodies (sge convention: only `render` is abstract) ---
            "com.badlogic.gdx.Screen#show"   -> "{}", "com.badlogic.gdx.Screen#resize" -> "{}",
