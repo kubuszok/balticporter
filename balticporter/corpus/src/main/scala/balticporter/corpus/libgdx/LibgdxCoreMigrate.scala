@@ -105,10 +105,13 @@ object LibgdxPolicy:
         "lowlevel.util.ObjectMap#isEmpty",
         "lowlevel.util.OrderedSet#first",
         "lowlevel.util.Pool#getFree",
-        "com.badlogic.gdx.utils.Array#isEmpty",
-        "com.badlogic.gdx.utils.ObjectMap#isEmpty",
-        "com.badlogic.gdx.utils.OrderedSet#first",
-        "com.badlogic.gdx.utils.Pool#getFree",
+        // after package rename: call-site symbols keep the renamed owner
+        "sge.utils.Array#isEmpty",
+        "sge.utils.ObjectMap#isEmpty",
+        "sge.utils.OrderedSet#first",
+        "sge.utils.Pool#getFree",
+        "sge.utils.DynamicArray#isEmpty",
+        "sge.utils.FloatArray#isEmpty",
       ),
     )
 
@@ -1793,14 +1796,14 @@ object LibgdxPolicy:
            // has no image in lls.
            "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex" ->
              """{
-               |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
+               |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items()
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first, false)
                |}""".stripMargin,
            // wave 3.1m: SgeList.selectedIndex — same OrderedSet vs ObjectSet pattern.
            "com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex" ->
              """{
-               |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
+               |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items()
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first, false)
                |}""".stripMargin,
            // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
            // --- Screen default empty bodies (sge convention: only `render` is abstract) ---
