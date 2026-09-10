@@ -5,7 +5,7 @@ package utils
 class PrioritizedArraySuite extends munit.FunSuite {
 
   private def items(a: PrioritizedArray[String]): List[String] =
-    (0 until a.size).map(a.get).toList
+    (0 until a.size()).map(a.get).toList
 
   test("add items and iterate in priority order") {
     val arr = new PrioritizedArray[String]()
@@ -19,7 +19,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     val arr = new PrioritizedArray[String]()
     arr.add("first")
     arr.add("second")
-    assertEquals(arr.size, 2)
+    assertEquals(arr.size(), 2)
     assertEquals(items(arr), List("first", "second"))
   }
 
@@ -28,9 +28,9 @@ class PrioritizedArraySuite extends munit.FunSuite {
     val item = "hello"
     arr.add(item, 1)
     arr.add("world", 2)
-    assertEquals(arr.size, 2)
+    assertEquals(arr.size(), 2)
     arr.remove(item)
-    assertEquals(arr.size, 1)
+    assertEquals(arr.size(), 1)
     assertEquals(items(arr), List("world"))
   }
 
@@ -40,7 +40,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     arr.add("b", 2)
     arr.add("c", 3)
     arr.remove(1) // removes "b" (index 1 in priority-sorted order)
-    assertEquals(arr.size, 2)
+    assertEquals(arr.size(), 2)
   }
 
   test("contains checks identity") {
@@ -56,7 +56,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     arr.add("a")
     arr.add("b")
     arr.clear()
-    assertEquals(arr.size, 0)
+    assertEquals(arr.size(), 0)
     assertEquals(items(arr), Nil)
   }
 
@@ -83,13 +83,13 @@ class PrioritizedArraySuite extends munit.FunSuite {
 
   test("size is accurate") {
     val arr = new PrioritizedArray[java.lang.Integer]()
-    assertEquals(arr.size, 0)
+    assertEquals(arr.size(), 0)
     arr.add(java.lang.Integer.valueOf(1))
-    assertEquals(arr.size, 1)
+    assertEquals(arr.size(), 1)
     arr.add(java.lang.Integer.valueOf(2))
-    assertEquals(arr.size, 2)
+    assertEquals(arr.size(), 2)
     arr.remove(1)
-    assertEquals(arr.size, 1)
+    assertEquals(arr.size(), 1)
   }
 
   test("stable sort preserves insertion order for equal priorities") {
