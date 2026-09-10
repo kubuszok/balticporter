@@ -852,6 +852,9 @@ object LibgdxLadder:
         "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"             -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
         "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"           -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
         "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies"    -> "{ val deps = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
+        // BinaryHeap.contains: iterate only up to size, not the full backing array (sge fix)
+        "com.badlogic.gdx.utils.BinaryHeap#contains" ->
+          "{ if (node == null) { throw new java.lang.IllegalArgumentException(\"node cannot be null.\") }; var i = 0; if (identity) { while (i < this.size) { if (this.nodes(i) eq node) { return true }; i += 1 } } else { while (i < this.size) { if (this.nodes(i).equals(node.asInstanceOf[java.lang.Object])) { return true }; i += 1 } }; return false }",
         // ctor-funnel bug: ResourceData(T) skips field init — use no-arg ctor + set resource
         "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#save" ->
           """{
