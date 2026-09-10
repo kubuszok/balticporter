@@ -3,7 +3,7 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** Replaces a named method's body with ready-made Scala, keeping the rest of the class
+/** Replaces a named method's or field's body with ready-made Scala, keeping the rest of the class
   * mechanically translated — the seam `dropTypes`/`inject`/`dropMethods` cannot express. Runs as a
   * phase so the replacement lands in the TIR before checks read it. Refuses constructors
   * (`CtorFunnel`'s job). CLAUDE.md §1(b): empty `bodies` = no-op. `bodies` keys `owner#name[(P1,P2)]`
@@ -116,10 +116,33 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
             ))
             d.copy(rhs = Some(Tree.Opaque(bodies(k), d.returnTpt.tpe, d.origin)))
 
+    def rewriteVal(v: Tree.ValDef, owner: String): Tree.ValDef =
+      bySym.get(v.symbol) match
+        case None => v
+        case Some(k) =>
+          val nm = program.symbolOf(v.symbol).map(_.name).getOrElse("")
+          done += k
+          record(Decision(
+            kind       = Decision.Kind.SubstitutedBody,
+            subject    = v.symbol,
+            subjectFqn = MemberKey(owner, nm).render,
+            detail     = Map(
+              "key"  -> k,
+              "from" -> "the mechanically translated java body",
+              "to"   -> "hand-written Scala from MethodBodyTransform(bodies)",
+              "why"  -> ("the signature is UNCHANGED and every call site still type-checks; " +
+                "only the behaviour behind it is this port's rather than upstream's"),
+            ),
+            reason = Reason.Configured(name, k),
+            origin = v.origin,
+          ))
+          v.copy(rhs = Some(Tree.Opaque(bodies(k), v.tpt.tpe, v.origin)))
+
     def rewrite(cd: Tree.ClassDef): Tree.ClassDef =
       val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")
       val body = cd.body.map {
         case d: Tree.DefDef   => rewriteDef(d, owner)
+        case v: Tree.ValDef   => rewriteVal(v, owner)
         case c: Tree.ClassDef => rewrite(c)
         case other            => other
       }

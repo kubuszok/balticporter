@@ -628,9 +628,13 @@ object LibgdxLadder:
         "com.badlogic.gdx.input.NativeInputConfiguration#setType" -> "setInputType",
         "com.badlogic.gdx.math.Vector#len"  -> "length",   "com.badlogic.gdx.math.Vector#len2" -> "lengthSq",
         "com.badlogic.gdx.math.Vector#dst"  -> "distance", "com.badlogic.gdx.math.Vector#dst2" -> "distanceSq",
-        "com.badlogic.gdx.math.Vector#scl"  -> "scale",    "com.badlogic.gdx.math.Vector#nor"  -> "normalize"))),
+        "com.badlogic.gdx.math.Vector#scl"  -> "scale",    "com.badlogic.gdx.math.Vector#nor"  -> "normalize")),
         // (the classes' own overloads — `dst(x, y)`, static `len(x, y)` — keep java's names: a second
         // key on the same component REFUSES the whole rename, 3 -> 23 policy rows; counted residue)
+      // screenWidth body substituted BEFORE globals->implicits so the phase sees no Gdx.graphics read
+      new balticporter.transform.MethodBodyTransform(Map(
+        "com.badlogic.gdx.graphics.g3d.particles.ParticleShader$Setters#screenWidth" ->
+          "new sge.graphics.g3d.shaders.BaseShader.GlobalSetter() { override def set(shader: sge.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: sge.graphics.g3d.Renderable, combinedAttributes: sge.graphics.g3d.Attributes): scala.Unit = { shader.set(inputID, shader.sgeContext.graphics.width.asInstanceOf[scala.Float]) } }"))),
 
     // the implicit `Sge` context instead of the `Gdx` globals: the full port's holder policy lifted
     // verbatim (attach on the CLASS, read by `summon`, refuse at the boundary, two lazy statics);
@@ -660,6 +664,7 @@ object LibgdxLadder:
         // `Gdx.files.getExternalStoragePath()` (in `file()`) is a value given at construction.
         capture  = Map("com.badlogic.gdx.files.FileHandle" ->
           "files.getExternalStoragePath() as externalStoragePath: lowlevel.Nullable = lowlevel.Nullable.empty"),
+        forceThread = Set("com.badlogic.gdx.graphics.g3d.shaders.BaseShader"),
         sites    = Map(
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
           "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),
@@ -823,7 +828,13 @@ object LibgdxLadder:
           balticporter.transform.AddMembersTransform.MemberSpec("load", 2,
             "def load[T <: java.lang.Object](fileName: java.lang.String, parameter: sge.assets.AssetLoaderParameters[T])(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]], parameter)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#load"),
-            Some("sge's class-tag `load[T](fileName, parameter)` (PROGRESS.md §13.29)"), false)))),
+            Some("sge's class-tag `load[T](fileName, parameter)` (PROGRESS.md §13.29)"), false)),
+        "com.badlogic.gdx.graphics.g3d.shaders.BaseShader" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("sgeContext", 0,
+            "val sgeContext: sge.Sge = scala.Predef.summon[sge.Sge]",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.shaders.BaseShader#sgeContext"),
+            Some("sge's sgeContext: Sge exposed to setters (replaces Gdx.graphics static)"), false)),
+)),
       // sge's `Screen` gives every lifecycle member but `render` an empty default (a screen overrides
       // what it needs — the demos implement `show`/`render`/`resize`/`hide`/`close` only).
       new balticporter.transform.MethodBodyTransform(Map(
@@ -840,7 +851,28 @@ object LibgdxLadder:
         "com.badlogic.gdx.assets.loaders.SoundLoader#getDependencies"             -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
         "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"             -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
         "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"           -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
-        "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies"    -> "{ val deps = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }")),
+        "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies"    -> "{ val deps = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
+        // ctor-funnel bug: ResourceData(T) skips field init — use no-arg ctor + set resource
+        "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#save" ->
+          """{
+            |  val data = new sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]()
+            |  data.resource = effect
+            |  effect.save(parameter.manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
+            |  if (!parameter.batches.isEmpty) {
+            |    for (batch <- parameter.batches.get) {
+            |      var save: scala.Boolean = false
+            |      scala.util.boundary { for (controller <- effect.controllers) {
+            |        if (controller.renderer.isCompatible(batch)) { save = true; scala.util.boundary.break(()) } else ()
+            |      } }
+            |      if (save) {
+            |        batch.asInstanceOf[sge.graphics.g3d.particles.batches.ParticleBatch[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]].save(parameter.manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]].asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
+            |      } else ()
+            |    }
+            |  } else ()
+            |  val json = new sge.utils.LegacyJson(parameter.jsonOutputType)
+            |  if (parameter.prettyPrint) { val prettyJson = json.prettyPrint(data); parameter.file.writeString(prettyJson, false) }
+            |  else { json.toJson(data, parameter.file) }
+            |}""".stripMargin)),
       // `AssetManager.get` answers `Nullable` in sge (the demos write `.get`); java throws on a miss.
       new balticporter.transform.NullabilityTransform(
         annotations     = Set.empty,

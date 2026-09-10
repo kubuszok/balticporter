@@ -15,6 +15,7 @@ final class ContextNeed(
     val statics: Map[SymId, String],
     /** traits the manifest allows to become abstract classes. */
     promoteAllowed: Set[SymId],
+    forceThreaded: Set[SymId] = Set.empty,
     seam: (ContextSeamCheck.Kind, String, String, String, Origin, SymId) => Unit,
     refuse: (SymId, String) => Unit,
     /** the `sites` entries that BOUND: the policy key → the symbols it named. Empty is the pre-CT6
@@ -364,6 +365,10 @@ final class ContextNeed(
     // `Use` edge then carries the need to every reader.
     deferrals.foreach(d =>
       enqueue(Node.M(d.field), Edge(Edge.Kind.Seed, d.field, d.field, Decision.originOf(program, d.field))))
+
+    // forceThread: classes the policy forces into the closure even without a direct read
+    forceThreaded.foreach(c =>
+      enqueue(Node.C(c), Edge(Edge.Kind.Seed, c, c, Decision.originOf(program, c))))
 
     while work.nonEmpty do
       work.dequeue() match

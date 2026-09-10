@@ -30,6 +30,7 @@ final case class ContextHolder(
       * shape, `FileHandle(file, type, externalStoragePath)`). Per-declaration (DESIGN.md §8.4). */
     capture: Map[String, String] = Map.empty,
     promoteToClass: Set[String] = Set.empty,
+    forceThread: Set[String] = Set.empty,
     scope: RuleScope = RuleScope.everywhere,
 ):
   /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
@@ -43,7 +44,7 @@ final case class ContextHolder(
   def sharedSurface: String =
     val ms = members.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
     s"$holder|${context.token}|$ms|${attach.token}|${reader.token}|${boundary.token}|" +
-      s"${promoteToClass.toList.sorted.mkString(",")}|${scope.fingerprint}"
+      s"${promoteToClass.toList.sorted.mkString(",")}|${forceThread.toList.sorted.mkString(",")}|${scope.fingerprint}"
 
   /** this holder with a dependent's per-declaration entries folded in; clashing keys have already
     * been refused by the caller, so this only composes. */

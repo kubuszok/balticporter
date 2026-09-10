@@ -58,7 +58,7 @@ final class GlobalsToImplicitsTransform(
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
       (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
-       h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.scope.entries))
+       h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.forceThread ++ h.scope.entries))
     val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
@@ -155,6 +155,7 @@ final class GlobalsToImplicitsTransform(
   private var boundStatics: Map[String, Map[String, List[SymId]]] = Map.empty
   private var boundHolder: Map[String, SymId]                     = Map.empty
   private var boundPromote: Map[String, Set[SymId]]               = Map.empty
+  private var boundForce:   Map[String, Set[SymId]]               = Map.empty
   /** `sites` entries resolved per holder: key -> symbols named. Used for the CT6 dead-binding
     * report and as a `lazy-init` entry's candidate subjects. */
   private var boundSites: Map[String, Map[String, List[SymId]]]   = Map.empty
@@ -290,6 +291,9 @@ final class GlobalsToImplicitsTransform(
             .toOption).map(_ -> t)).toMap)
       boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
         binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
+          .toOption))
+      boundForce = boundForce.updated(h.holder, h.forceThread.flatMap(t =>
+        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.forceThread", t)
           .toOption))
 
       h.scope.entries.foreach(e =>
@@ -675,6 +679,7 @@ final class GlobalsToImplicitsTransform(
       }
     }
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
+                                boundForce.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
                                 (s, why) => refuse(h, why),
                                 boundSites.getOrElse(h.holder, Map.empty),

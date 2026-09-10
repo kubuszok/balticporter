@@ -1758,7 +1758,19 @@ object LibgdxPolicy:
                                   retargetIndexedFields = libRetargetIndexedFields), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
-         nullability, globalsToContext,
+         nullability,
+         // screenWidth body substituted BEFORE globals->implicits so the phase sees no Gdx.graphics read
+         new balticporter.transform.MethodBodyTransform(Map(
+           "com.badlogic.gdx.graphics.g3d.particles.ParticleShader$Setters#screenWidth" ->
+             "new sge.graphics.g3d.shaders.BaseShader.GlobalSetter() { override def set(shader: sge.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: sge.graphics.g3d.Renderable, combinedAttributes: sge.graphics.g3d.Attributes): scala.Unit = shader.set(inputID, shader.sgeContext.graphics.width.asInstanceOf[scala.Float]) }")),
+         globalsToContext,
+         new balticporter.transform.AddMembersTransform(Map(
+           "com.badlogic.gdx.graphics.g3d.shaders.BaseShader" -> List(
+             balticporter.transform.AddMembersTransform.MemberSpec("sgeContext", 0,
+               "val sgeContext: sge.Sge = scala.Predef.summon[sge.Sge]",
+               balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.shaders.BaseShader#sgeContext"),
+               Some("sge's sgeContext: Sge exposed to setters (replaces Gdx.graphics static)"), false)),
+)),
          new balticporter.transform.MethodBodyTransform(Map(
            // AssetManager#clear, ArraySelection#validate: retired by K36 rows.
            // wave 3.1m: SelectBox.selectedIndex — OrderedSet vs ObjectSet (broken subtyping edge).
@@ -1777,6 +1789,40 @@ object LibgdxPolicy:
                |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin,
            // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
+           // --- Screen default empty bodies (sge convention: only `render` is abstract) ---
+           "com.badlogic.gdx.Screen#show"   -> "{}", "com.badlogic.gdx.Screen#resize" -> "{}",
+           "com.badlogic.gdx.Screen#pause"  -> "{}", "com.badlogic.gdx.Screen#resume" -> "{}",
+           "com.badlogic.gdx.Screen#hide"   -> "{}",
+           // --- getDependencies: return empty DynamicArray instead of null (sge convention) ---
+           "com.badlogic.gdx.assets.loaders.ShaderProgramLoader#getDependencies"  -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.I18NBundleLoader#getDependencies"     -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.CubemapLoader#getDependencies"        -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.PixmapLoader#getDependencies"         -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.SoundLoader#getDependencies"          -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.MusicLoader#getDependencies"          -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.TextureLoader#getDependencies"        -> "new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()",
+           "com.badlogic.gdx.assets.loaders.ParticleEffectLoader#getDependencies" -> "{ val deps = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]](); if ((param != null) && (!param.atlasFile.isEmpty)) { deps.add(new sge.assets.AssetDescriptor[sge.graphics.g2d.TextureAtlas](param.atlasFile.orNull, classOf[sge.graphics.g2d.TextureAtlas]).asInstanceOf[sge.assets.AssetDescriptor[?]]) }; deps }",
+           // --- ParticleEffectLoader#save: use no-arg ResourceData ctor (ctor-funnel bug in 1-arg) ---
+           "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#save" ->
+             """{
+               |  val data = new sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]()
+               |  data.resource = effect
+               |  effect.save(parameter.manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
+               |  if (!parameter.batches.isEmpty) {
+               |    for (batch <- parameter.batches.get) {
+               |      var save: scala.Boolean = false
+               |      scala.util.boundary { for (controller <- effect.controllers) {
+               |        if (controller.renderer.isCompatible(batch)) { save = true; scala.util.boundary.break(()) } else ()
+               |      } }
+               |      if (save) {
+               |        batch.asInstanceOf[sge.graphics.g3d.particles.batches.ParticleBatch[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]].save(parameter.manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]].asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
+               |      } else ()
+               |    }
+               |  } else ()
+               |  val json = new sge.utils.Json(parameter.jsonOutputType)
+               |  if (parameter.prettyPrint) { val prettyJson = json.prettyPrint(data); parameter.file.writeString(prettyJson, false) }
+               |  else { json.toJson(data, parameter.file) }
+               |}""".stripMargin,
          )),
          // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
          // sge hand-ported Pool as a TRAIT with abstract vals (justified, kind=api; AD-003).
@@ -1853,6 +1899,7 @@ object LibgdxPolicy:
         attach   = balticporter.transform.ContextAttach.Class,
         reader   = balticporter.transform.ContextReader.Summon,
         boundary = balticporter.transform.ContextBoundary.Refuse,
+        forceThread = Set("com.badlogic.gdx.graphics.g3d.shaders.BaseShader"),
         sites    = Map(
           // `static final OnscreenKeyboard DEFAULT_ONSCREEN_KEYBOARD = new DefaultOnscreenKeyboard()`
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" ->
