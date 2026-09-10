@@ -214,7 +214,7 @@ object LibgdxLadder:
       new balticporter.transform.AddMembersTransform(Map(
         "com.badlogic.gdx.graphics.g3d.particles.ResourceData" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("encodeResourceJson", 1,
-            "private[particles] def encodeResourceJson(resource: Any): sge.utils.Json =\n    throw new UnsupportedOperationException(\"particle resource serialization requires ParticleEffectCodecs\")",
+            "private[particles] def encodeResourceJson(resource: Any): sge.utils.Json = {\n    resource match {\n      case effect: sge.graphics.g3d.particles.ParticleEffect =>\n        val json = new sge.utils.LegacyJson(sge.utils.JsonWriter.OutputType.json)\n        val ctrls = scala.collection.immutable.Vector.newBuilder[sge.utils.Json]\n        for (ctrl <- effect.controllers) {\n          val text = json.toJson(ctrl.asInstanceOf[java.lang.Object])\n          ctrls += sge.utils.readFromString[sge.utils.Json](text)(using hearth.kindlings.jsoniterjson.codec.JsonCodec.jsonValueCodec)\n        }\n        sge.utils.Json.obj(\"controllers\" -> sge.utils.Json.arr(ctrls.result()*), \"class\" -> sge.utils.Json.fromString(resource.getClass.getName))\n      case _ => sge.utils.Json.Null\n    }\n  }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ResourceData#encodeResourceJson"),
             Some("stub — the full body needs the codecs injected"), true),
           balticporter.transform.AddMembersTransform.MemberSpec("fromJson", 1,

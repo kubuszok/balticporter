@@ -92,11 +92,12 @@ class ParticleEffectIoRedSuite extends munit.FunSuite {
 
   // --- ISS-507 ---------------------------------------------------------------
 
-  test("ISS-507: save populates ResourceData with controller name + emitter fields".ignore) {
+  test("ISS-507: save populates ResourceData with controller name + emitter fields") {
     given Sge = SgeTestFixture.testSge()
 
     val data   = ResourceData[ParticleEffect]()
     val effect = makeEffect()
+    data.resource = effect
     val manager = AssetManager(resolver, defaultLoaders = false)
     effect.save(manager, data.asInstanceOf[ResourceData[java.lang.Object]])
 
