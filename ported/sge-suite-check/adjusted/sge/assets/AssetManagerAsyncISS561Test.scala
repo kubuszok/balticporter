@@ -137,7 +137,7 @@ class AssetManagerAsyncISS561Test extends FunSuite {
     manager.load("a.async", classOf[AsyncAsset])
     assert(!manager.isFinished, "queued async asset must leave manager not finished")
     assertEquals(manager.isLoaded("a.async"), false)
-    assert(manager.get[AsyncAsset]("a.async", classOf[AsyncAsset]).isEmpty, "get must be empty before update")
+    assert(manager.get[AsyncAsset]("a.async", classOf[AsyncAsset], false).isEmpty, "get must be empty before update")
     assert(manager.contains("a.async"), "contains must be true for a queued asset")
     assertEquals(phases.size, 0, "no loader phase may run from load() alone")
 

@@ -30,6 +30,7 @@ class ParticleShaderScreenWidthRedSuite extends munit.FunSuite {
     val graphics = new NoopGraphics(framebufferWidth, framebufferHeight) {
       override def gl20: GL20 = NoopGL20
     }
+    sge.Gdx.graphics = graphics
     SgeTestFixture.testSge(graphics = graphics)
   }
 

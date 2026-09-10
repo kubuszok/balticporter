@@ -20,7 +20,7 @@ class TmjTileIdsCsvRedSuite extends munit.FunSuite {
   private val reader = new sge.utils.JsonReader()
 
   private def assertLoud(description: String, dataJson: String): Unit = {
-    val element = reader.parse(dataJson)
+    val element = reader.parse(s"""{"data": $dataJson}""")
     Try(BaseTmjMapLoader.getTileIds(element, 2, 2)) match {
       case Success(ids) =>
         fail(
@@ -53,7 +53,7 @@ class TmjTileIdsCsvRedSuite extends munit.FunSuite {
   }
 
   test("ISS-780 control: a well-formed CSV data array decodes to the exact gids") {
-    val element = reader.parse("[1, 2, 3, 4]")
+    val element = reader.parse("""{"data": [1, 2, 3, 4]}""")
     val ids = BaseTmjMapLoader.getTileIds(element, 2, 2)
     assertEquals(ids.toList, List(1, 2, 3, 4))
   }
