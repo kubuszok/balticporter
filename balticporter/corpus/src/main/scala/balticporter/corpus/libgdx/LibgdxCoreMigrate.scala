@@ -1797,14 +1797,21 @@ object LibgdxPolicy:
            "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex" ->
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items()
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first, false)
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first.get, false)
                |}""".stripMargin,
            // wave 3.1m: SgeList.selectedIndex — same OrderedSet vs ObjectSet pattern.
            "com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex" ->
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items()
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first, false)
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first.get, false)
                |}""".stripMargin,
+           // --- Nullable unwrapping at external lls method returns (ObjectMap.put/remove/findKey, DynamicArray.random, OrderedSet.first) ---
+           "com.badlogic.gdx.graphics.Colors#put" -> "{ return Colors.map.put(name, color).orNull }",
+           "com.badlogic.gdx.graphics.g3d.decals.PluggableGroupStrategy#unPlug" -> "{ return this.plugs.remove(group).orNull }",
+           "com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop#removeSource" -> "{ val dragListener: sge.scenes.scene2d.utils.DragListener = this.sourceListeners.remove(source).get; source.actor$field.removeCaptureListener(dragListener) }",
+           "com.badlogic.gdx.scenes.scene2d.ui.Skin#find" -> "{ if (resource == null) { throw new java.lang.IllegalArgumentException(\"style cannot be null.\") }; val typeResources = this.resources.get(resource.getClass()).orNull; if (typeResources == null) { return lowlevel.Nullable.empty }; return typeResources.findKey(resource, true) }",
+           "com.badlogic.gdx.utils.PoolManager#addPool(Class,Pool)" -> "{ val oldPool = this.typePools.put(poolClass, pool).orNull; if (oldPool != null) { throw new sge.utils.GdxRuntimeException(\"Attempt to add pool with already existing class: \" + poolClass + \", use PoolManager#set instead\") } }",
+           "com.badlogic.gdx.utils.PoolManager#addPool(Class,DefaultPool$PoolSupplier)" -> "{ val p = new sge.utils.DefaultPool[T](poolSupplier); val oldPool = this.typePools.put(poolClass, p).orNull; if (oldPool != null) { throw new sge.utils.GdxRuntimeException(\"Attempt to add pool with already existing class: \" + poolClass) } }",
            // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
            // --- Screen default empty bodies (sge convention: only `render` is abstract) ---
            "com.badlogic.gdx.Screen#show"   -> "{}", "com.badlogic.gdx.Screen#resize" -> "{}",
