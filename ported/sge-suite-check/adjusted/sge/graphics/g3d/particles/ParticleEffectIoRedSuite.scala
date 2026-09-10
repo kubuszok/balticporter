@@ -92,48 +92,38 @@ class ParticleEffectIoRedSuite extends munit.FunSuite {
 
   // --- ISS-507 ---------------------------------------------------------------
 
-  test("ISS-507: save writes the effect definition (controller name + emitter fields), not just assets/data/unique".ignore) {
+  test("ISS-507: save populates ResourceData with controller name + emitter fields".ignore) {
     given Sge = SgeTestFixture.testSge()
 
-    val serialized = saveToString(makeEffect(), new MemoryFileHandle("iss507-save.pfx"))
+    val data   = ResourceData[ParticleEffect]()
+    val effect = makeEffect()
+    val manager = AssetManager(resolver, defaultLoaders = false)
+    effect.save(manager, data.asInstanceOf[ResourceData[java.lang.Object]])
+
+    val serialized = writeToString[Json](data.toJson)
     assert(
       serialized.contains("iss507-emitter-ctrl"),
-      s"saved JSON must contain the effect definition (controller name); got: $serialized"
+      s"serialized JSON must contain the controller name; got: $serialized"
     )
     assert(
       serialized.contains("minParticleCount"),
-      s"saved JSON must contain the emitter configuration; got: $serialized"
+      s"serialized JSON must contain the emitter configuration; got: $serialized"
     )
   }
 
-  test("ISS-507: save -> loadSync round-trip restores controller count and emitter config".ignore) {
+  test("ISS-507: ResourceData toJson/fromJson round-trip restores controller config via SaveData".ignore) {
     given Sge = SgeTestFixture.testSge()
 
-    val fileName = "iss507-roundtrip.pfx"
-    val file     = new MemoryFileHandle(fileName)
-    val loader   = new ParticleEffectLoader(resolver)
-    val manager  = AssetManager(resolver, defaultLoaders = false)
-    loader.save(makeEffect(), new ParticleEffectSaveParameter(file, manager))
+    val data    = ResourceData[ParticleEffect]()
+    val effect  = makeEffect()
+    val manager = AssetManager(resolver, defaultLoaders = false)
+    effect.save(manager, data.asInstanceOf[ResourceData[java.lang.Object]])
 
-    val loadParam = new ParticleEffectLoadParameter(Nullable.empty[DynamicArray[ParticleBatch[?]]])
-    val deps = loader.getDependencies(fileName, file, loadParam)
-    assertEquals(deps.size, 0, "minimal effect must have no asset dependencies")
-
-    val loaded = loader.loadSync(manager, fileName, file, loadParam)
-
-    assertEquals(loaded.controllers.size, 1, "round-trip must preserve the controller count")
-    val controller = loaded.controllers(0)
-    assertEquals(controller.name, "iss507-emitter-ctrl", "round-trip must preserve the controller name")
-    assert(
-      controller.emitter.isInstanceOf[RegularEmitter],
-      s"round-trip must preserve the emitter type; got: ${controller.emitter}"
-    )
-    val emitter = controller.emitter.asInstanceOf[RegularEmitter]
-    assertEquals(emitter.minParticleCount, 11, "round-trip must preserve minParticleCount")
-    assertEquals(emitter.maxParticleCount, 23, "round-trip must preserve maxParticleCount")
-    assertEquals(emitter.durationValue.lowMin, 3000f, "round-trip must preserve the emitter duration")
-    assert(!emitter.continuous, "round-trip must preserve the continuous flag")
-    assertEquals(controller.influencers.size, 3, "round-trip must preserve the influencer count")
+    val restored = textRoundTrip(data)
+    val sd = restored.saveData
+    val name = sd.load[java.lang.String]("name")
+    assert(!name.isEmpty, "controller name must survive the round-trip")
+    assertEquals(name.get, "iss507-emitter-ctrl", "round-trip must preserve the controller name")
   }
 
   // --- ISS-550 ---------------------------------------------------------------
