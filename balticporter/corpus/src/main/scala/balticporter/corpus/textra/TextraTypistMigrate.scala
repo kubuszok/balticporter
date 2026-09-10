@@ -94,6 +94,11 @@ object TextraTypistPolicy:
       dependencies = List(
         balticporter.catalog.ArtifactDep("com.github.tommyettinger", "regexodus", "0.1.21",
                                          balticporter.catalog.CrossKind.Java)),
+      externalParenless = Set(
+        "lowlevel.util.DynamicArray#isEmpty", "sge.utils.DynamicArray#isEmpty",
+        "sge.scenes.scene2d.Actor#x", "sge.scenes.scene2d.Actor#y",
+        "sge.graphics.g2d.BitmapFont#region",
+      ),
       surface = List(
         globals,
         // DEPENDENT OPAQUE SEEDS for the Align family — five declarations propagation cannot

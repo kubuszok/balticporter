@@ -117,6 +117,9 @@ object VisUiPolicy:
       // nothing else (verified: neither imports the other). §4.56's trap, not a construct
       // with two answers -- no rename/substitution/redirect may reach across on the name
       // alone.
+      externalParenless = Set(
+        "sge.scenes.scene2d.Actor#x", "sge.scenes.scene2d.Actor#y",
+      ),
       surface = List(
         // THE ONE MEMBER THIS LIBRARY HAS TO MOVE (`PROGRESS.md` §10.9.7 family 2, D13):
         // libGDX's Disposable->AutoCloseable redirect renames `dispose -> close`, and two of
