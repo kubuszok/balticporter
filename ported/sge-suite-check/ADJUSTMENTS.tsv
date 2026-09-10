@@ -67,3 +67,4 @@ sge/graphics/g3d/particles/ParticleEffectIoRedSuite.scala	sge/src/test/scalajvm	
 sge/assets/AssetManagerAsyncISS561Test.scala	sge/src/test/scalajvm	get call uses 3-arg with required=false	port's 2-arg get throws; same fix as AssetManagerUnitTest
 sge/maps/tiled/TmjTileIdsCsvRedSuite.scala	sge/src/test/scala	JSON wrapped in {"data": ...}	getTileIds expects parent object with "data" child, not bare array
 sge/graphics/g3d/particles/ParticleShaderScreenWidthRedSuite.scala	sge/src/test/scalajvm	no workaround needed	setter reads shader.sgeContext.graphics.width (Gdx.graphics eliminated)
+sge/noop/NoopGraphicsTest.scala	sge/src/test/scala	no changes needed	Pixels and Seconds opaque types exist in the ladder port
