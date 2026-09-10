@@ -67,6 +67,9 @@ object Anim8Policy:
       resolutions = Map(
         "java.util.Arrays#fill(float[],int,int,float)" -> "accept-jdk-member",
       ),
+      externalParenless = Set(
+        "lowlevel.util.DynamicArray#isEmpty", "sge.utils.DynamicArray#isEmpty",
+        "com.badlogic.gdx.utils.Array#isEmpty", "sge.utils.Array#isEmpty"),
       surface = List(
         // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted; must run
         // after any seam re-pointing such a reference.

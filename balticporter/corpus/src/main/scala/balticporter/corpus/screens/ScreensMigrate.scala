@@ -81,7 +81,7 @@ object ScreensPolicy:
         "de.eskalon.commons.core"   -> "sge.screen",
         "de.eskalon.commons.utils"  -> "sge.screen.utils",
       ),
-      surface = List(guacamole, nullability),
+      surface = List(guacamole, nullability, balticporter.transform.PortMapTransform.forBases("sge")),
       // THE REFERENCE HAND PORT for sge-screens. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../sge/sge-extension/screens/src/main/scala").normalize))),
