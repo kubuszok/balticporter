@@ -684,7 +684,7 @@ object JavaCollections {
       // `AbstractMap` derives both from `entrySet`, i.e. in O(n). The map this views has them, and
       // a consumer that looks a key up should not pay for the whole spine.
       override def size(): Int = m.size
-      override def isEmpty(): Boolean = m.isEmpty
+      override def isEmpty: Boolean = m.isEmpty
     }
 
     private final class ListView(q: scala.collection.Seq[Any]) extends java.util.AbstractList[Any] {

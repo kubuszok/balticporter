@@ -132,7 +132,9 @@ object LlsPolicy:
       "com.badlogic.gdx.utils.OrderedSet#first" -> "head"))),
     "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = Twelve,
       force = Set("com.badlogic.gdx.utils.Array#head", "com.badlogic.gdx.utils.ArrayMap#firstKey",
-        "com.badlogic.gdx.utils.ArrayMap#firstValue"))),
+        "com.badlogic.gdx.utils.ArrayMap#firstValue",
+        "com.badlogic.gdx.utils.Array#isEmpty", "com.badlogic.gdx.utils.ObjectMap#isEmpty",
+        "com.badlogic.gdx.utils.OrderedSet#first", "com.badlogic.gdx.utils.OrderedSet#orderedItems"))),
     "bean"     -> List(new balticporter.transform.BeanPropertyTransform(Map.empty, Map.empty, scope = Twelve)),
     "enrich"   -> List(LlsEnrich.transform(rungs("witness"))),
     "witness"  -> List(

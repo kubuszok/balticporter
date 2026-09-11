@@ -13,7 +13,7 @@ trait JavaCollection[A] extends JavaIterable[A] {
 
   // ---- derived, per java.util.AbstractCollection, over `iterator()` and `size()` ----
 
-  def isEmpty(): Boolean = size() == 0
+  def isEmpty: Boolean = size() == 0
 
   /** java's own null-tolerant comparison: a `null` probe matches a `null` element. */
   def contains(o: java.lang.Object): Boolean = {
@@ -137,7 +137,7 @@ object JavaCollection {
       }
     }
     def size(): Int                 = xs.size
-    override def isEmpty(): Boolean          = xs.isEmpty
+    override def isEmpty: Boolean          = xs.isEmpty
     override def contains(o: java.lang.Object): Boolean = xs.contains(o)
     override def add(e: A): Boolean          = { xs += e; true }
     override def remove(o: java.lang.Object): Boolean = {
@@ -158,7 +158,7 @@ object JavaCollection {
       override def remove(): Unit = it.remove()
     }
     def size(): Int                                     = c.size()
-    override def isEmpty(): Boolean                     = c.isEmpty()
+    override def isEmpty: Boolean                     = c.isEmpty
     override def contains(o: java.lang.Object): Boolean = c.contains(o)
     override def add(e: A): Boolean                     = c.add(e)
     override def remove(o: java.lang.Object): Boolean   = c.remove(o)
@@ -180,7 +180,7 @@ object JavaCollection {
       }
     }
     def size(): Int                 = xs.size
-    override def isEmpty(): Boolean = xs.isEmpty
+    override def isEmpty: Boolean = xs.isEmpty
     override def contains(o: java.lang.Object): Boolean =
       xs.exists(e => if o == null then e == null else o.equals(e))
     override def add(e: A): Boolean = if xs.contains(e) then false else { xs += e; true }
@@ -197,7 +197,7 @@ object JavaCollection {
   def unmodifiableFrom[A](xs: scala.collection.Iterable[A]): JavaCollection[A] = new JavaCollection[A] {
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
     def size(): Int                 = xs.size
-    override def isEmpty(): Boolean          = xs.isEmpty
+    override def isEmpty: Boolean          = xs.isEmpty
     override def contains(o: java.lang.Object): Boolean = xs.iterator.contains(o)
     override def add(e: A): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
     override def remove(o: java.lang.Object): Boolean = throw new UnsupportedOperationException("remove on an unmodifiable collection")
@@ -217,7 +217,7 @@ object JavaCollection {
       override def remove(): Unit = throw new UnsupportedOperationException("remove on an unmodifiable collection")
     }
     def size(): Int                 = c.size()
-    override def isEmpty(): Boolean          = c.isEmpty()
+    override def isEmpty: Boolean          = c.isEmpty
     override def contains(o: java.lang.Object): Boolean = c.contains(o)
     override def add(e: T): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
     override def remove(o: java.lang.Object): Boolean = throw new UnsupportedOperationException("remove on an unmodifiable collection")
