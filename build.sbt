@@ -320,7 +320,6 @@ lazy val corpus = project
   .settings(
     name := "balticporter-corpus",
     libraryDependencies += munit,
-    publish / skip := true,
     Compile / run / fork := true,
     Compile / run / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
     // …AND FOR TESTS, which is not symmetry — it is the one thing that makes an `assume`-guarded
@@ -1722,4 +1721,32 @@ lazy val `sge-visui-suite-check` = (projectMatrix in file("ported/sge-visui-suit
         val p = visuiEmit / f; if (p.exists()) Seq(p) else Nil
       }
     }.taskValue,
+  ))
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Demo — Pong game on desktop (JVM) and browser (JS)
+// ──────────────────────────────────────────────────────────────────────────────
+lazy val demo = (projectMatrix in file("ported/demo"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-sge-l0`)
+  .settings(
+    name := "balticporter-demo",
+    publish / skip := true,
+    scalacOptions ++= Seq("-nowarn"),
+    Compile / unmanagedSourceDirectories ++= {
+      val base = (ThisBuild / baseDirectory).value / "ported" / "demo" / "src" / "main"
+      val platform = virtualAxes.?.value.toSeq.flatten.collect { case p: VirtualAxis.PlatformAxis => p.directorySuffix } match {
+        case Seq("js")     => "scalajs"
+        case Seq("native") => "scalanative"
+        case _             => "scaladesktop"
+      }
+      Seq(base / platform)
+    },
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Compile / mainClass := Some("demos.pong.DesktopMain"),
+    fork := true,
+  ))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(
+    Compile / mainClass := Some("demos.pong.BrowserMain"),
   ))
