@@ -1144,7 +1144,7 @@ final case class PortRun(
       case Determinism.Emission =>
         // Second emitter: same Surface and decisions, but NOT the catalog log (would double counts).
         val injSurf = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
-        val extP = manifest.map(_.externalParenless).getOrElse(Set.empty)
+        val extP = manifest.map(_.effectiveExternalParenless).getOrElse(Set.empty)
         val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
                                    preview, bestEffort, Some(once.surface), injectedSurface = injSurf,
                                    externalParenless = extP)
@@ -1681,7 +1681,7 @@ final case class PortRun(
       program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
     // Emitter reads decisions, catalog, injected surface, and external parenless members.
     val injSurface = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
-    val extParenless = manifest.map(_.externalParenless).getOrElse(Set.empty)
+    val extParenless = manifest.map(_.effectiveExternalParenless).getOrElse(Set.empty)
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
                                  Some(surface), catalog = catalog, injectedSurface = injSurface,
                                  externalParenless = extParenless)

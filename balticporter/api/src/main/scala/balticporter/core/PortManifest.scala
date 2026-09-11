@@ -137,8 +137,9 @@ final case class PortManifest(
   /** the manifests whose policy this one APPLIES, in precedence order. */
   lazy val policyChain: List[PortManifest] = if inherit then baseChain :+ this else List(this)
 
-  def effectiveDropTypes: Set[String]   = policyChain.flatMap(_.dropTypes).toSet
-  def effectiveDropMethods: Set[String] = policyChain.flatMap(_.dropMethods).toSet
+  def effectiveDropTypes: Set[String]          = policyChain.flatMap(_.dropTypes).toSet
+  def effectiveDropMethods: Set[String]        = policyChain.flatMap(_.dropMethods).toSet
+  def effectiveExternalParenless: Set[String]  = policyChain.flatMap(_.externalParenless).toSet
 
   /** bases first, this manifest last — so a dependent's declaration wins, and
     * [[ManifestAgreement]] reports the override rather than the engine hiding it. */
