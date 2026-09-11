@@ -81,7 +81,20 @@ object ScreensPolicy:
         "de.eskalon.commons.core"   -> "sge.screen",
         "de.eskalon.commons.utils"  -> "sge.screen.utils",
       ),
-      surface = List(guacamole, nullability, balticporter.transform.PortMapTransform.forBases("sge")),
+      surface = List(guacamole, nullability,
+        new balticporter.transform.MethodBodyTransform(Map(
+          "de.eskalon.commons.screen.transition.impl.ShaderTransition#render" ->
+            """{
+              |  this.renderContext.begin()
+              |  this.program$field.bind()
+              |  this.program$field.setUniformMatrix(sge.graphics.UniformLocation(this.projTransLoc), this.viewport.camera.combined)
+              |  this.program$field.setUniformf(sge.graphics.UniformLocation(this.progressLoc), progress)
+              |  this.program$field.setUniformi(sge.graphics.UniformLocation(this.lastScreenLoc), this.renderContext.textureBinder.bind(lastScreen.texture))
+              |  this.program$field.setUniformi(sge.graphics.UniformLocation(this.currScreenLoc), this.renderContext.textureBinder.bind(currScreen.texture))
+              |  this.screenQuad.render(this.program$field, sge.graphics.GL20.GL_TRIANGLE_STRIP)
+              |  this.renderContext.end()
+              |}""".stripMargin)),
+        balticporter.transform.PortMapTransform.forBases("sge")),
       // THE REFERENCE HAND PORT for sge-screens. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../sge/sge-extension/screens/src/main/scala").normalize))),
