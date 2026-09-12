@@ -182,10 +182,18 @@ object TsToScalaEmitter:
         // R7: if this array is mutated via .push(), use ArrayBuffer
         val isMutatedArray = currentMutatedArrays.contains(name) && rawType.startsWith("Vector[")
         val tpe = if isMutatedArray then rawType.replace("Vector[", "ArrayBuffer[") else rawType
-        // R8: integer variables — Double initialized with int literal → Int
+        // R8: integer variables — int literal init → Int when const OR when
+        // the variable is used as an array index (flow analysis approximation)
         val tpeFixed = if tpe == "Double" then
           val initText = findInitializer(d, file)
-          if initText.matches("-?\\d+") then "Int" else tpe
+          if isConst && initText.matches("-?\\d+") then "Int"
+          // For vars: only Int if initialized with integer AND name suggests index/counter
+          else if !isConst && initText.matches("-?\\d+") then
+            val nm = name.toLowerCase
+            if nm.contains("index") || nm == "i" || nm == "j" || nm == "pos" ||
+               nm.contains("count") || nm.contains("length") then "Int"
+            else tpe
+          else tpe
         else tpe
         val init = findInitializer(d, file)
         val initFixed = if isMutatedArray && (init == "Vector.empty" || init.startsWith("ArrayBuffer")) then
@@ -407,9 +415,14 @@ object TsToScalaEmitter:
         case "BinaryExpression" =>
           val op = node.operator.map(tsOpToScala).getOrElse("???")
           val right = emitExpr(node.children.last, file)
-          // R15: arr[arr.length] = x → arr += x
           val lhs = node.children.head
-          if op == "=" && lhs.kind == "ElementAccessExpression" then
+          // Destructuring: [a, b] = expr → a = expr(0); b = expr(1)
+          if op == "=" && lhs.kind == "ArrayLiteralExpression" then
+            val names = lhs.children.map(c => emitExpr(c, file))
+            val rExpr = emitExpr(node.children.last, file)
+            names.zipWithIndex.map { case (n, i) => s"$n = $rExpr($i)" }.mkString("; ")
+          // R15: arr[arr.length] = x → arr += x
+          else if op == "=" && lhs.kind == "ElementAccessExpression" then
             val arrObj = emitExpr(lhs.children.head, file)
             val idx = lhs.children.lastOption
             val isAppend = idx.exists { i =>
@@ -503,7 +516,12 @@ object TsToScalaEmitter:
 
         case "ArrayLiteralExpression" =>
           val elems = node.children.map(emitExpr(_, file))
+          // Check if this is a tuple type (return value like [x, y])
+          val isTuple = node.`type`.flatMap(file.types.get).exists { t =>
+            t.text.startsWith("[") && t.text.contains(",")
+          }
           if elems.isEmpty then "Vector.empty"
+          else if isTuple then s"(${elems.mkString(", ")})"
           else s"Vector(${elems.mkString(", ")})"
 
         case "ObjectLiteralExpression" =>
@@ -685,12 +703,19 @@ object TsToScalaEmitter:
         case "booleanLiteral" => "Boolean"
         case "reference" =>
           val target = rt.target.flatMap(file.types.get).map(_.text).getOrElse("Any")
-          // Resolve type aliases (R8: TokenType → Int)
-          val resolved = typeAliasMap.getOrElse(target, target)
-          val typeArgs = rt.typeArguments.getOrElse(Nil).flatMap(file.types.get)
-            .map(rastTypeToScala(_, file))
-          if typeArgs.nonEmpty then s"$resolved[${typeArgs.mkString(", ")}]"
-          else resolved
+          // Tuple types: [number, number] → (Double, Double)
+          if rt.text.startsWith("[") && rt.text.contains(",") then
+            val typeArgs = rt.typeArguments.getOrElse(Nil).flatMap(file.types.get)
+              .map(rastTypeToScala(_, file))
+            if typeArgs.nonEmpty then s"(${typeArgs.mkString(", ")})"
+            else rt.text // fallback
+          else
+            // Resolve type aliases (R8: TokenType → Int)
+            val resolved = typeAliasMap.getOrElse(target, target)
+            val typeArgs = rt.typeArguments.getOrElse(Nil).flatMap(file.types.get)
+              .map(rastTypeToScala(_, file))
+            if typeArgs.nonEmpty then s"$resolved[${typeArgs.mkString(", ")}]"
+            else resolved
         case "object" =>
           resolveObjectType(rt, file)
         case _ =>
@@ -713,6 +738,9 @@ object TsToScalaEmitter:
         case "TypeReference" =>
           val name = node.children.headOption.flatMap(_.text).getOrElse("Any")
           typeAliasMap.getOrElse(name, name)
+        case "TupleType" =>
+          val elems = node.children.map(syntaxTypeToScala)
+          s"(${elems.mkString(", ")})"
         case _ => "Any"
 
     private def resolveFunctionReturnType(node: RastNode, file: RastFile): String =
