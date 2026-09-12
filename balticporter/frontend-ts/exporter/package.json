@@ -1,0 +1,16 @@
+{
+  "name": "@balticporter/ts-exporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "export": "node dist/export.js"
+  },
+  "dependencies": {
+    "typescript": "5.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}
