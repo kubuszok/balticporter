@@ -68,9 +68,13 @@ enum Language(val prefix: String):
   case Dart       extends Language("DT")
 
 /** TIR-level frontend SPI — a second frontend can exist without touching the Java/Spoon path.
-  * DESIGN.md §3.2: the stable frontend boundary is a `Program`, not a parsed model. */
+  * DESIGN.md §3.2: the stable frontend boundary is a `Program`, not a parsed model.
+  * Registered through `META-INF/services/balticporter.core.TirFrontend` and discovered
+  * by [[FrontendRegistry]]; `.conf` names the frontend with `input.frontend = "<name>"`. */
 trait TirFrontend:
   def build(cfg: FrontendConfig, subs: Substitutions, catalog: balticporter.catalog.CatalogLog,
             lenient: Boolean): balticporter.tir.Program
+  /** Stable name for `.conf` lookup — e.g. `"java-spoon"`, `"typescript"`. */
+  def name: String
   def language: Language
   def defaultInclude: List[String]

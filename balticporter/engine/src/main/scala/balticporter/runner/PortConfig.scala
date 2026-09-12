@@ -1,7 +1,7 @@
 package balticporter.runner
 
 import balticporter.catalog.Platform
-import balticporter.core.{AnnotationPolicy, FrontendConfig, ParityRef, PortManifest, Provenance, RealPath, RuntimeMode}
+import balticporter.core.{AnnotationPolicy, FrontendConfig, FrontendRegistry, ParityRef, PortManifest, Provenance, RealPath, RuntimeMode, TirFrontend}
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{ConfigError, ConfigView}
 
@@ -28,10 +28,11 @@ object PortConfig:
       conf: Path,
       args: Seq[String] = Nil,
       registry: TransformRegistry = TransformRegistry.discover(),
+      frontendRegistry: FrontendRegistry = FrontendRegistry.discover(),
   ): PortRun =
     val file = conf.toAbsolutePath.normalize
     val view = HoconView.root(HoconView.parse(file))
-    val run  = read(view, file, args, registry, Nil)
+    val run  = read(view, file, args, registry, frontendRegistry, Nil)
     refuseUnread(view, file)
     run
 
@@ -60,13 +61,16 @@ object PortConfig:
 
   private def read(
       view: HoconView, file: Path, args: Seq[String],
-      registry: TransformRegistry, seen: List[Path],
+      registry: TransformRegistry, frontendRegistry: FrontendRegistry, seen: List[Path],
   ): PortRun =
     val dir      = file.getParent
     val label    = view.requireString("label")
     val input    = view.requireChild("input")
     val output   = view.requireChild("output")
     val srcRoot  = resolvePath(dir, input.requireString("sourceRoot"))
+
+    val tirFrontend: TirFrontend = frontendRegistry.get(
+      input.string("frontend").getOrElse("java-spoon"))
 
     val frontend = FrontendConfig(
       sourceRoot      = srcRoot,
@@ -111,6 +115,7 @@ object PortConfig:
       nextStep    = view.string("nextStep").getOrElse(""),
       // Every remedy this classpath declares, for load-time validation of selections.
       knownRemedies = registry.remedies,
+      tirFrontend  = tirFrontend,
     )
 
   /** CLI `--determinism=` flag beats the file, which beats the default. */

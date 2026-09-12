@@ -24,10 +24,11 @@ enum Area:
 
 /** `JS-E04`. Stable, NEVER reused and NEVER renumbered — which is why [[Differences.retired]]
   * exists: an id absorbed into another row keeps its number out of circulation rather than freeing
-  * it. Always rendered with the `JS-` prefix, so a catalog id can never be mistaken for an
-  * `ENGINE-LIMITS.md` one (both files have a `G22`, and they are different facts). */
-final case class DiffId(area: Area, n: Int):
-  override def toString: String = f"JS-$area%s$n%02d"
+  * it. Rendered with a language prefix (`JS-` for Java, `TS-` for TypeScript, `DT-` for Dart),
+  * so a catalog id can never be mistaken for an `ENGINE-LIMITS.md` one (both files have a `G22`,
+  * and they are different facts). */
+final case class DiffId(area: Area, n: Int, lang: balticporter.core.Language = balticporter.core.Language.Java):
+  override def toString: String = f"${lang.prefix}-$area%s$n%02d"
 
 /** what a reader of the emitted code would SEE if the difference were mishandled — which decides
   * what evidence could exist for the row at all. */

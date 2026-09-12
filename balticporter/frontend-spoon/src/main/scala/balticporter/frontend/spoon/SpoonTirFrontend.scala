@@ -12,6 +12,8 @@ class SpoonTirFrontend extends TirFrontend:
     val types = SpoonTir.buildModel(cfg, lenient = lenient)
     SpoonTir.fromTypes(types, subs, catalog, cfg.preservedAnnotations, cfg.internTypes)
 
+  def name: String = "java-spoon"
+
   def language: Language = Language.Java
 
   def defaultInclude: List[String] = List("**.java")
