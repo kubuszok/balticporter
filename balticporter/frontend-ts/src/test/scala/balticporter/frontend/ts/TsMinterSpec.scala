@@ -82,3 +82,19 @@ class TsMinterSpec extends munit.FunSuite:
     val files = List(loadRast("/rast/hachure-fill/src/hachure.rast.json"))
     val program = mintAndReport("hachure-fill", files)
     assert(program.units.nonEmpty)
+
+  test("rough.js core (17 files) → Program"):
+    val dir = "/rast/roughjs/src/"
+    val fileNames = List(
+      "core.rast.json", "math.rast.json", "geometry.rast.json",
+      "generator.rast.json", "renderer.rast.json",
+      "canvas.rast.json", "svg.rast.json", "rough.rast.json",
+      "fillers/filler-interface.rast.json", "fillers/filler.rast.json",
+      "fillers/hachure-filler.rast.json", "fillers/hatch-filler.rast.json",
+      "fillers/zigzag-filler.rast.json", "fillers/zigzag-line-filler.rast.json",
+      "fillers/dashed-filler.rast.json", "fillers/dot-filler.rast.json",
+      "fillers/scan-line-hachure.rast.json",
+    )
+    val files = fileNames.map(f => loadRast(dir + f))
+    val program = mintAndReport("rough.js", files)
+    assert(program.units.size >= 17, s"expected >= 17 units for 17 files, got ${program.units.size}")

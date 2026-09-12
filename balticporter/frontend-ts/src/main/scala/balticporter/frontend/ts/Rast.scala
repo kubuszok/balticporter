@@ -92,6 +92,8 @@ object Rast:
     CodecMakerConfig
       .withDiscriminatorFieldName(None)
       .withAllowRecursiveTypes(true)
+      .withMapMaxInsertNumber(1000000)
+      .withSetMaxInsertNumber(1000000)
   )
 
   def readFile(path: java.nio.file.Path): RastFile =

@@ -1,0 +1,3080 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/roughjs/src/fillers/filler.ts",
+  "sha256": "2ce45f985b922b19db1dd7b48f46d1012ab57c9976786c0e4f8ba16d572f3bf5",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                1,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    1,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        10
+                      ],
+                      "type": "t0",
+                      "text": "ResolvedOptions",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            33
+          ],
+          "type": "t0",
+          "value": "../core"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        2,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                2,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    2,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        10
+                      ],
+                      "type": "t0",
+                      "text": "PatternFiller",
+                      "resolvedSymbol": "s1"
+                    }
+                  ]
+                },
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    2,
+                    25
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        25
+                      ],
+                      "type": "t0",
+                      "text": "RenderHelper",
+                      "resolvedSymbol": "s2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            45
+          ],
+          "type": "t0",
+          "value": "./filler-interface"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        3,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            3,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                3,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    3,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        3,
+                        10
+                      ],
+                      "type": "t1",
+                      "text": "HachureFiller",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            3,
+            31
+          ],
+          "type": "t0",
+          "value": "./hachure-filler"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        4,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            4,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                4,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    4,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        10
+                      ],
+                      "type": "t45",
+                      "text": "ZigZagFiller",
+                      "resolvedSymbol": "s4"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            4,
+            30
+          ],
+          "type": "t0",
+          "value": "./zigzag-filler"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        5,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            5,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                5,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    5,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        5,
+                        10
+                      ],
+                      "type": "t48",
+                      "text": "HatchFiller",
+                      "resolvedSymbol": "s5"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            5,
+            29
+          ],
+          "type": "t0",
+          "value": "./hatch-filler"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        6,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            6,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                6,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    6,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        6,
+                        10
+                      ],
+                      "type": "t51",
+                      "text": "DotFiller",
+                      "resolvedSymbol": "s6"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            6,
+            27
+          ],
+          "type": "t0",
+          "value": "./dot-filler"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        7,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            7,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                7,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    7,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        7,
+                        10
+                      ],
+                      "type": "t55",
+                      "text": "DashedFiller",
+                      "resolvedSymbol": "s7"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            7,
+            30
+          ],
+          "type": "t0",
+          "value": "./dashed-filler"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        8,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            8,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                8,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    8,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        8,
+                        10
+                      ],
+                      "type": "t59",
+                      "text": "ZigZagLineFiller",
+                      "resolvedSymbol": "s8"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            8,
+            34
+          ],
+          "type": "t0",
+          "value": "./zigzag-line-filler"
+        }
+      ]
+    },
+    {
+      "kind": "FirstStatement",
+      "kindCode": 243,
+      "pos": [
+        10,
+        1
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            10,
+            1
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                10,
+                7
+              ],
+              "symbol": "s9",
+              "type": "t63",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    10,
+                    7
+                  ],
+                  "type": "t63",
+                  "text": "fillers",
+                  "resolvedSymbol": "s9"
+                },
+                {
+                  "kind": "TypeLiteral",
+                  "kindCode": 187,
+                  "pos": [
+                    10,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "IndexSignature",
+                      "kindCode": 181,
+                      "pos": [
+                        10,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "kind": "Parameter",
+                          "kindCode": 169,
+                          "pos": [
+                            10,
+                            19
+                          ],
+                          "symbol": "s10",
+                          "type": "t7",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                10,
+                                19
+                              ],
+                              "type": "t7",
+                              "text": "name",
+                              "resolvedSymbol": "s10"
+                            },
+                            {
+                              "kind": "StringKeyword",
+                              "kindCode": 154,
+                              "pos": [
+                                10,
+                                25
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TypeReference",
+                          "kindCode": 183,
+                          "pos": [
+                            10,
+                            34
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                10,
+                                34
+                              ],
+                              "type": "t64",
+                              "text": "PatternFiller",
+                              "resolvedSymbol": "s1"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    10,
+                    52
+                  ],
+                  "type": "t66"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        12,
+        1
+      ],
+      "symbol": "s11",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "ExportKeyword",
+          "kindCode": 95,
+          "pos": [
+            12,
+            1
+          ]
+        },
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            12,
+            17
+          ],
+          "type": "t67",
+          "text": "getFiller",
+          "resolvedSymbol": "s11"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            12,
+            27
+          ],
+          "symbol": "s12",
+          "type": "t6",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                12,
+                27
+              ],
+              "type": "t6",
+              "text": "o",
+              "resolvedSymbol": "s12"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                12,
+                30
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    12,
+                    30
+                  ],
+                  "type": "t6",
+                  "text": "ResolvedOptions",
+                  "resolvedSymbol": "s0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            12,
+            47
+          ],
+          "symbol": "s13",
+          "type": "t3",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                12,
+                47
+              ],
+              "type": "t3",
+              "text": "helper",
+              "resolvedSymbol": "s13"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                12,
+                55
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    12,
+                    55
+                  ],
+                  "type": "t3",
+                  "text": "RenderHelper",
+                  "resolvedSymbol": "s2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "TypeReference",
+          "kindCode": 183,
+          "pos": [
+            12,
+            70
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                12,
+                70
+              ],
+              "type": "t64",
+              "text": "PatternFiller",
+              "resolvedSymbol": "s1"
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            12,
+            84
+          ],
+          "children": [
+            {
+              "kind": "FirstStatement",
+              "kindCode": 243,
+              "pos": [
+                13,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "VariableDeclarationList",
+                  "kindCode": 261,
+                  "pos": [
+                    13,
+                    3
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableDeclaration",
+                      "kindCode": 260,
+                      "pos": [
+                        13,
+                        7
+                      ],
+                      "symbol": "s14",
+                      "type": "t7",
+                      "flags": [
+                        "let"
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            13,
+                            7
+                          ],
+                          "type": "t7",
+                          "text": "fillerName",
+                          "resolvedSymbol": "s14"
+                        },
+                        {
+                          "kind": "BinaryExpression",
+                          "kindCode": 226,
+                          "pos": [
+                            13,
+                            20
+                          ],
+                          "type": "t7",
+                          "operator": "BarBarToken",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                13,
+                                20
+                              ],
+                              "type": "t7",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    13,
+                                    20
+                                  ],
+                                  "type": "t6",
+                                  "text": "o",
+                                  "resolvedSymbol": "s12"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    13,
+                                    22
+                                  ],
+                                  "type": "t7",
+                                  "text": "fillStyle",
+                                  "resolvedSymbol": "s15"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "BarBarToken",
+                              "kindCode": 57,
+                              "pos": [
+                                13,
+                                32
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                13,
+                                35
+                              ],
+                              "type": "t68",
+                              "value": "hachure"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "IfStatement",
+              "kindCode": 245,
+              "pos": [
+                14,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "PrefixUnaryExpression",
+                  "kindCode": 224,
+                  "pos": [
+                    14,
+                    7
+                  ],
+                  "type": "t13",
+                  "operator": "ExclamationToken",
+                  "children": [
+                    {
+                      "kind": "ElementAccessExpression",
+                      "kindCode": 212,
+                      "pos": [
+                        14,
+                        8
+                      ],
+                      "type": "t64",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            14,
+                            8
+                          ],
+                          "type": "t63",
+                          "text": "fillers",
+                          "resolvedSymbol": "s9"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            14,
+                            16
+                          ],
+                          "type": "t7",
+                          "text": "fillerName",
+                          "resolvedSymbol": "s14"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    14,
+                    29
+                  ],
+                  "children": [
+                    {
+                      "kind": "SwitchStatement",
+                      "kindCode": 255,
+                      "pos": [
+                        15,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            15,
+                            13
+                          ],
+                          "type": "t7",
+                          "text": "fillerName",
+                          "resolvedSymbol": "s14"
+                        },
+                        {
+                          "kind": "CaseBlock",
+                          "kindCode": 269,
+                          "pos": [
+                            15,
+                            25
+                          ],
+                          "children": [
+                            {
+                              "kind": "CaseClause",
+                              "kindCode": 296,
+                              "pos": [
+                                16,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    16,
+                                    12
+                                  ],
+                                  "type": "t69",
+                                  "value": "zigzag"
+                                },
+                                {
+                                  "kind": "IfStatement",
+                                  "kindCode": 245,
+                                  "pos": [
+                                    17,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixUnaryExpression",
+                                      "kindCode": 224,
+                                      "pos": [
+                                        17,
+                                        13
+                                      ],
+                                      "type": "t13",
+                                      "operator": "ExclamationToken",
+                                      "children": [
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            17,
+                                            14
+                                          ],
+                                          "type": "t64",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                17,
+                                                14
+                                              ],
+                                              "type": "t63",
+                                              "text": "fillers",
+                                              "resolvedSymbol": "s9"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                17,
+                                                22
+                                              ],
+                                              "type": "t69",
+                                              "text": "fillerName",
+                                              "resolvedSymbol": "s14"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        17,
+                                        35
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            18,
+                                            11
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpression",
+                                              "kindCode": 226,
+                                              "pos": [
+                                                18,
+                                                11
+                                              ],
+                                              "type": "t46",
+                                              "operator": "FirstAssignment",
+                                              "children": [
+                                                {
+                                                  "kind": "ElementAccessExpression",
+                                                  "kindCode": 212,
+                                                  "pos": [
+                                                    18,
+                                                    11
+                                                  ],
+                                                  "type": "t64",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        18,
+                                                        11
+                                                      ],
+                                                      "type": "t63",
+                                                      "text": "fillers",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        18,
+                                                        19
+                                                      ],
+                                                      "type": "t69",
+                                                      "text": "fillerName",
+                                                      "resolvedSymbol": "s14"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "FirstAssignment",
+                                                  "kindCode": 64,
+                                                  "pos": [
+                                                    18,
+                                                    31
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NewExpression",
+                                                  "kindCode": 214,
+                                                  "pos": [
+                                                    18,
+                                                    33
+                                                  ],
+                                                  "type": "t46",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        18,
+                                                        37
+                                                      ],
+                                                      "type": "t45",
+                                                      "text": "ZigZagFiller",
+                                                      "resolvedSymbol": "s4"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        18,
+                                                        50
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "helper",
+                                                      "resolvedSymbol": "s13"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "BreakStatement",
+                                  "kindCode": 252,
+                                  "pos": [
+                                    20,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "CaseClause",
+                              "kindCode": 296,
+                              "pos": [
+                                21,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    21,
+                                    12
+                                  ],
+                                  "type": "t70",
+                                  "value": "cross-hatch"
+                                },
+                                {
+                                  "kind": "IfStatement",
+                                  "kindCode": 245,
+                                  "pos": [
+                                    22,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixUnaryExpression",
+                                      "kindCode": 224,
+                                      "pos": [
+                                        22,
+                                        13
+                                      ],
+                                      "type": "t13",
+                                      "operator": "ExclamationToken",
+                                      "children": [
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            22,
+                                            14
+                                          ],
+                                          "type": "t64",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                22,
+                                                14
+                                              ],
+                                              "type": "t63",
+                                              "text": "fillers",
+                                              "resolvedSymbol": "s9"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                22,
+                                                22
+                                              ],
+                                              "type": "t70",
+                                              "text": "fillerName",
+                                              "resolvedSymbol": "s14"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        22,
+                                        35
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            23,
+                                            11
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpression",
+                                              "kindCode": 226,
+                                              "pos": [
+                                                23,
+                                                11
+                                              ],
+                                              "type": "t49",
+                                              "operator": "FirstAssignment",
+                                              "children": [
+                                                {
+                                                  "kind": "ElementAccessExpression",
+                                                  "kindCode": 212,
+                                                  "pos": [
+                                                    23,
+                                                    11
+                                                  ],
+                                                  "type": "t64",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        23,
+                                                        11
+                                                      ],
+                                                      "type": "t63",
+                                                      "text": "fillers",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        23,
+                                                        19
+                                                      ],
+                                                      "type": "t70",
+                                                      "text": "fillerName",
+                                                      "resolvedSymbol": "s14"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "FirstAssignment",
+                                                  "kindCode": 64,
+                                                  "pos": [
+                                                    23,
+                                                    31
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NewExpression",
+                                                  "kindCode": 214,
+                                                  "pos": [
+                                                    23,
+                                                    33
+                                                  ],
+                                                  "type": "t49",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        23,
+                                                        37
+                                                      ],
+                                                      "type": "t48",
+                                                      "text": "HatchFiller",
+                                                      "resolvedSymbol": "s5"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        23,
+                                                        49
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "helper",
+                                                      "resolvedSymbol": "s13"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "BreakStatement",
+                                  "kindCode": 252,
+                                  "pos": [
+                                    25,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "CaseClause",
+                              "kindCode": 296,
+                              "pos": [
+                                26,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    26,
+                                    12
+                                  ],
+                                  "type": "t71",
+                                  "value": "dots"
+                                },
+                                {
+                                  "kind": "IfStatement",
+                                  "kindCode": 245,
+                                  "pos": [
+                                    27,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixUnaryExpression",
+                                      "kindCode": 224,
+                                      "pos": [
+                                        27,
+                                        13
+                                      ],
+                                      "type": "t13",
+                                      "operator": "ExclamationToken",
+                                      "children": [
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            27,
+                                            14
+                                          ],
+                                          "type": "t64",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                27,
+                                                14
+                                              ],
+                                              "type": "t63",
+                                              "text": "fillers",
+                                              "resolvedSymbol": "s9"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                27,
+                                                22
+                                              ],
+                                              "type": "t71",
+                                              "text": "fillerName",
+                                              "resolvedSymbol": "s14"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        27,
+                                        35
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            28,
+                                            11
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpression",
+                                              "kindCode": 226,
+                                              "pos": [
+                                                28,
+                                                11
+                                              ],
+                                              "type": "t52",
+                                              "operator": "FirstAssignment",
+                                              "children": [
+                                                {
+                                                  "kind": "ElementAccessExpression",
+                                                  "kindCode": 212,
+                                                  "pos": [
+                                                    28,
+                                                    11
+                                                  ],
+                                                  "type": "t64",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        28,
+                                                        11
+                                                      ],
+                                                      "type": "t63",
+                                                      "text": "fillers",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        28,
+                                                        19
+                                                      ],
+                                                      "type": "t71",
+                                                      "text": "fillerName",
+                                                      "resolvedSymbol": "s14"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "FirstAssignment",
+                                                  "kindCode": 64,
+                                                  "pos": [
+                                                    28,
+                                                    31
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NewExpression",
+                                                  "kindCode": 214,
+                                                  "pos": [
+                                                    28,
+                                                    33
+                                                  ],
+                                                  "type": "t52",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        28,
+                                                        37
+                                                      ],
+                                                      "type": "t51",
+                                                      "text": "DotFiller",
+                                                      "resolvedSymbol": "s6"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        28,
+                                                        47
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "helper",
+                                                      "resolvedSymbol": "s13"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "BreakStatement",
+                                  "kindCode": 252,
+                                  "pos": [
+                                    30,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "CaseClause",
+                              "kindCode": 296,
+                              "pos": [
+                                31,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    31,
+                                    12
+                                  ],
+                                  "type": "t72",
+                                  "value": "dashed"
+                                },
+                                {
+                                  "kind": "IfStatement",
+                                  "kindCode": 245,
+                                  "pos": [
+                                    32,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixUnaryExpression",
+                                      "kindCode": 224,
+                                      "pos": [
+                                        32,
+                                        13
+                                      ],
+                                      "type": "t13",
+                                      "operator": "ExclamationToken",
+                                      "children": [
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            32,
+                                            14
+                                          ],
+                                          "type": "t64",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                32,
+                                                14
+                                              ],
+                                              "type": "t63",
+                                              "text": "fillers",
+                                              "resolvedSymbol": "s9"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                32,
+                                                22
+                                              ],
+                                              "type": "t72",
+                                              "text": "fillerName",
+                                              "resolvedSymbol": "s14"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        32,
+                                        35
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            33,
+                                            11
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpression",
+                                              "kindCode": 226,
+                                              "pos": [
+                                                33,
+                                                11
+                                              ],
+                                              "type": "t56",
+                                              "operator": "FirstAssignment",
+                                              "children": [
+                                                {
+                                                  "kind": "ElementAccessExpression",
+                                                  "kindCode": 212,
+                                                  "pos": [
+                                                    33,
+                                                    11
+                                                  ],
+                                                  "type": "t64",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        33,
+                                                        11
+                                                      ],
+                                                      "type": "t63",
+                                                      "text": "fillers",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        33,
+                                                        19
+                                                      ],
+                                                      "type": "t72",
+                                                      "text": "fillerName",
+                                                      "resolvedSymbol": "s14"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "FirstAssignment",
+                                                  "kindCode": 64,
+                                                  "pos": [
+                                                    33,
+                                                    31
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NewExpression",
+                                                  "kindCode": 214,
+                                                  "pos": [
+                                                    33,
+                                                    33
+                                                  ],
+                                                  "type": "t56",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        33,
+                                                        37
+                                                      ],
+                                                      "type": "t55",
+                                                      "text": "DashedFiller",
+                                                      "resolvedSymbol": "s7"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        33,
+                                                        50
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "helper",
+                                                      "resolvedSymbol": "s13"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "BreakStatement",
+                                  "kindCode": 252,
+                                  "pos": [
+                                    35,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "CaseClause",
+                              "kindCode": 296,
+                              "pos": [
+                                36,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    36,
+                                    12
+                                  ],
+                                  "type": "t73",
+                                  "value": "zigzag-line"
+                                },
+                                {
+                                  "kind": "IfStatement",
+                                  "kindCode": 245,
+                                  "pos": [
+                                    37,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixUnaryExpression",
+                                      "kindCode": 224,
+                                      "pos": [
+                                        37,
+                                        13
+                                      ],
+                                      "type": "t13",
+                                      "operator": "ExclamationToken",
+                                      "children": [
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            37,
+                                            14
+                                          ],
+                                          "type": "t64",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                37,
+                                                14
+                                              ],
+                                              "type": "t63",
+                                              "text": "fillers",
+                                              "resolvedSymbol": "s9"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                37,
+                                                22
+                                              ],
+                                              "type": "t73",
+                                              "text": "fillerName",
+                                              "resolvedSymbol": "s14"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        37,
+                                        35
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            38,
+                                            11
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpression",
+                                              "kindCode": 226,
+                                              "pos": [
+                                                38,
+                                                11
+                                              ],
+                                              "type": "t60",
+                                              "operator": "FirstAssignment",
+                                              "children": [
+                                                {
+                                                  "kind": "ElementAccessExpression",
+                                                  "kindCode": 212,
+                                                  "pos": [
+                                                    38,
+                                                    11
+                                                  ],
+                                                  "type": "t64",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        38,
+                                                        11
+                                                      ],
+                                                      "type": "t63",
+                                                      "text": "fillers",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        38,
+                                                        19
+                                                      ],
+                                                      "type": "t73",
+                                                      "text": "fillerName",
+                                                      "resolvedSymbol": "s14"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "FirstAssignment",
+                                                  "kindCode": 64,
+                                                  "pos": [
+                                                    38,
+                                                    31
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NewExpression",
+                                                  "kindCode": 214,
+                                                  "pos": [
+                                                    38,
+                                                    33
+                                                  ],
+                                                  "type": "t60",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        38,
+                                                        37
+                                                      ],
+                                                      "type": "t59",
+                                                      "text": "ZigZagLineFiller",
+                                                      "resolvedSymbol": "s8"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        38,
+                                                        54
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "helper",
+                                                      "resolvedSymbol": "s13"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "BreakStatement",
+                                  "kindCode": 252,
+                                  "pos": [
+                                    40,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "CaseClause",
+                              "kindCode": 296,
+                              "pos": [
+                                41,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    41,
+                                    12
+                                  ],
+                                  "type": "t68",
+                                  "value": "hachure"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "DefaultClause",
+                              "kindCode": 297,
+                              "pos": [
+                                42,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "ExpressionStatement",
+                                  "kindCode": 244,
+                                  "pos": [
+                                    43,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "BinaryExpression",
+                                      "kindCode": 226,
+                                      "pos": [
+                                        43,
+                                        9
+                                      ],
+                                      "type": "t68",
+                                      "operator": "FirstAssignment",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            43,
+                                            9
+                                          ],
+                                          "type": "t7",
+                                          "text": "fillerName",
+                                          "resolvedSymbol": "s14"
+                                        },
+                                        {
+                                          "kind": "FirstAssignment",
+                                          "kindCode": 64,
+                                          "pos": [
+                                            43,
+                                            20
+                                          ]
+                                        },
+                                        {
+                                          "kind": "StringLiteral",
+                                          "kindCode": 11,
+                                          "pos": [
+                                            43,
+                                            22
+                                          ],
+                                          "type": "t68",
+                                          "value": "hachure"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "IfStatement",
+                                  "kindCode": 245,
+                                  "pos": [
+                                    44,
+                                    9
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixUnaryExpression",
+                                      "kindCode": 224,
+                                      "pos": [
+                                        44,
+                                        13
+                                      ],
+                                      "type": "t13",
+                                      "operator": "ExclamationToken",
+                                      "children": [
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            44,
+                                            14
+                                          ],
+                                          "type": "t64",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                44,
+                                                14
+                                              ],
+                                              "type": "t63",
+                                              "text": "fillers",
+                                              "resolvedSymbol": "s9"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                44,
+                                                22
+                                              ],
+                                              "type": "t7",
+                                              "text": "fillerName",
+                                              "resolvedSymbol": "s14"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        44,
+                                        35
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            45,
+                                            11
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpression",
+                                              "kindCode": 226,
+                                              "pos": [
+                                                45,
+                                                11
+                                              ],
+                                              "type": "t2",
+                                              "operator": "FirstAssignment",
+                                              "children": [
+                                                {
+                                                  "kind": "ElementAccessExpression",
+                                                  "kindCode": 212,
+                                                  "pos": [
+                                                    45,
+                                                    11
+                                                  ],
+                                                  "type": "t64",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        45,
+                                                        11
+                                                      ],
+                                                      "type": "t63",
+                                                      "text": "fillers",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        45,
+                                                        19
+                                                      ],
+                                                      "type": "t7",
+                                                      "text": "fillerName",
+                                                      "resolvedSymbol": "s14"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "FirstAssignment",
+                                                  "kindCode": 64,
+                                                  "pos": [
+                                                    45,
+                                                    31
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NewExpression",
+                                                  "kindCode": 214,
+                                                  "pos": [
+                                                    45,
+                                                    33
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        45,
+                                                        37
+                                                      ],
+                                                      "type": "t1",
+                                                      "text": "HachureFiller",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        45,
+                                                        51
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "helper",
+                                                      "resolvedSymbol": "s13"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "BreakStatement",
+                                  "kindCode": 252,
+                                  "pos": [
+                                    47,
+                                    9
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                50,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "ElementAccessExpression",
+                  "kindCode": 212,
+                  "pos": [
+                    50,
+                    10
+                  ],
+                  "type": "t64",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        50,
+                        10
+                      ],
+                      "type": "t63",
+                      "text": "fillers",
+                      "resolvedSymbol": "s9"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        50,
+                        18
+                      ],
+                      "type": "t7",
+                      "text": "fillerName",
+                      "resolvedSymbol": "s14"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "ResolvedOptions",
+      "flags": [],
+      "declarationType": "t6"
+    },
+    "s1": {
+      "name": "PatternFiller",
+      "flags": [],
+      "declarationType": "t64"
+    },
+    "s2": {
+      "name": "RenderHelper",
+      "flags": [],
+      "declarationType": "t3"
+    },
+    "s3": {
+      "name": "HachureFiller",
+      "flags": [],
+      "declarationType": "t2"
+    },
+    "s4": {
+      "name": "ZigZagFiller",
+      "flags": [],
+      "declarationType": "t46"
+    },
+    "s5": {
+      "name": "HatchFiller",
+      "flags": [],
+      "declarationType": "t49"
+    },
+    "s6": {
+      "name": "DotFiller",
+      "flags": [],
+      "declarationType": "t52"
+    },
+    "s7": {
+      "name": "DashedFiller",
+      "flags": [],
+      "declarationType": "t56"
+    },
+    "s8": {
+      "name": "ZigZagLineFiller",
+      "flags": [],
+      "declarationType": "t60"
+    },
+    "s9": {
+      "name": "fillers",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s10": {
+      "name": "name",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s11": {
+      "name": "getFiller",
+      "flags": [
+        "function"
+      ],
+      "parent": "s16"
+    },
+    "s12": {
+      "name": "o",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s13": {
+      "name": "helper",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s14": {
+      "name": "fillerName",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s15": {
+      "name": "fillStyle",
+      "flags": [
+        "property"
+      ],
+      "parent": "s17"
+    },
+    "s16": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/roughjs/src/fillers/filler\"",
+      "flags": []
+    },
+    "s17": {
+      "name": "ResolvedOptions",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t6",
+      "parent": "s18"
+    },
+    "s18": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/roughjs/src/core\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t5": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t7": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t9": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t11": {
+      "kind": "function",
+      "text": "() => number",
+      "parameters": [],
+      "returnType": "t5"
+    },
+    "t10": {
+      "kind": "object",
+      "text": "Random",
+      "members": {
+        "seed": "t5",
+        "next": "t11"
+      }
+    },
+    "t8": {
+      "kind": "union",
+      "text": "Random | undefined",
+      "types": [
+        "t9",
+        "t10"
+      ]
+    },
+    "t13": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t14": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t12": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t13",
+        "t14"
+      ]
+    },
+    "t15": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t9",
+        "t7"
+      ]
+    },
+    "t16": {
+      "kind": "union",
+      "text": "number | undefined",
+      "types": [
+        "t9",
+        "t5"
+      ]
+    },
+    "t18": {
+      "kind": "array",
+      "text": "number[]",
+      "elementType": "t5"
+    },
+    "t17": {
+      "kind": "union",
+      "text": "number[] | undefined",
+      "types": [
+        "t9",
+        "t18"
+      ]
+    },
+    "t6": {
+      "kind": "object",
+      "text": "ResolvedOptions",
+      "members": {
+        "maxRandomnessOffset": "t5",
+        "roughness": "t5",
+        "bowing": "t5",
+        "stroke": "t7",
+        "strokeWidth": "t5",
+        "curveFitting": "t5",
+        "curveTightness": "t5",
+        "curveStepCount": "t5",
+        "fillStyle": "t7",
+        "fillWeight": "t5",
+        "hachureAngle": "t5",
+        "hachureGap": "t5",
+        "dashOffset": "t5",
+        "dashGap": "t5",
+        "zigzagOffset": "t5",
+        "seed": "t5",
+        "randomizer": "t8",
+        "disableMultiStroke": "t12",
+        "disableMultiStrokeFill": "t12",
+        "preserveVertices": "t12",
+        "fillShapeRoughnessGain": "t5",
+        "fill": "t15",
+        "simplification": "t16",
+        "strokeLineDash": "t17",
+        "strokeLineDashOffset": "t16",
+        "fillLineDash": "t17",
+        "fillLineDashOffset": "t16",
+        "fixedDecimalPlaceDigits": "t16"
+      }
+    },
+    "t4": {
+      "kind": "function",
+      "text": "(x: number, o: ResolvedOptions) => number",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t19": {
+      "kind": "function",
+      "text": "(min: number, max: number, o: ResolvedOptions) => number",
+      "parameters": [
+        {
+          "name": "min",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"path\"",
+      "value": "path"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"fillPath\"",
+      "value": "fillPath"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"fillSketch\"",
+      "value": "fillSketch"
+    },
+    "t22": {
+      "kind": "union",
+      "text": "OpSetType",
+      "types": [
+        "t23",
+        "t24",
+        "t25"
+      ]
+    },
+    "t29": {
+      "kind": "stringLiteral",
+      "text": "\"move\"",
+      "value": "move"
+    },
+    "t30": {
+      "kind": "stringLiteral",
+      "text": "\"bcurveTo\"",
+      "value": "bcurveTo"
+    },
+    "t31": {
+      "kind": "stringLiteral",
+      "text": "\"lineTo\"",
+      "value": "lineTo"
+    },
+    "t28": {
+      "kind": "union",
+      "text": "OpType",
+      "types": [
+        "t29",
+        "t30",
+        "t31"
+      ]
+    },
+    "t27": {
+      "kind": "object",
+      "text": "Op",
+      "members": {
+        "op": "t28",
+        "data": "t18"
+      }
+    },
+    "t26": {
+      "kind": "array",
+      "text": "Op[]",
+      "elementType": "t27"
+    },
+    "t35": {
+      "kind": "other",
+      "text": "?"
+    },
+    "t36": {
+      "kind": "other",
+      "text": "?"
+    },
+    "t34": {
+      "kind": "reference",
+      "text": "[?, ?]",
+      "target": "t34",
+      "typeArguments": [
+        "t35",
+        "t36"
+      ]
+    },
+    "t33": {
+      "kind": "reference",
+      "text": "Point",
+      "target": "t34",
+      "typeArguments": [
+        "t5",
+        "t5"
+      ]
+    },
+    "t32": {
+      "kind": "union",
+      "text": "Point | undefined",
+      "types": [
+        "t9",
+        "t33"
+      ]
+    },
+    "t21": {
+      "kind": "object",
+      "text": "OpSet",
+      "members": {
+        "type": "t22",
+        "ops": "t26",
+        "size": "t32",
+        "path": "t15"
+      }
+    },
+    "t20": {
+      "kind": "function",
+      "text": "(x: number, y: number, width: number, height: number, o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t37": {
+      "kind": "function",
+      "text": "(x1: number, y1: number, x2: number, y2: number, o: ResolvedOptions) => Op[]",
+      "parameters": [
+        {
+          "name": "x1",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "y1",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "x2",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "y2",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t26"
+    },
+    "t3": {
+      "kind": "object",
+      "text": "RenderHelper",
+      "members": {
+        "randOffset": "t4",
+        "randOffsetWithRange": "t19",
+        "ellipse": "t20",
+        "doubleLineOps": "t37"
+      }
+    },
+    "t40": {
+      "kind": "array",
+      "text": "Point[]",
+      "elementType": "t33"
+    },
+    "t39": {
+      "kind": "array",
+      "text": "Point[][]",
+      "elementType": "t40"
+    },
+    "t38": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t41": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t44": {
+      "kind": "reference",
+      "text": "Line",
+      "target": "t34",
+      "typeArguments": [
+        "t33",
+        "t33"
+      ]
+    },
+    "t43": {
+      "kind": "array",
+      "text": "Line[]",
+      "elementType": "t44"
+    },
+    "t42": {
+      "kind": "function",
+      "text": "(lines: Line[], o: ResolvedOptions) => Op[]",
+      "parameters": [
+        {
+          "name": "lines",
+          "type": "t43",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t26"
+    },
+    "t2": {
+      "kind": "object",
+      "text": "HachureFiller",
+      "members": {
+        "helper": "t3",
+        "fillPolygons": "t38",
+        "_fillPolygons": "t41",
+        "renderLines": "t42"
+      }
+    },
+    "t1": {
+      "kind": "object",
+      "text": "typeof HachureFiller",
+      "members": {
+        "prototype": "t2"
+      }
+    },
+    "t47": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t46": {
+      "kind": "object",
+      "text": "ZigZagFiller",
+      "members": {
+        "fillPolygons": "t47",
+        "helper": "t3",
+        "_fillPolygons": "t41",
+        "renderLines": "t42"
+      }
+    },
+    "t45": {
+      "kind": "object",
+      "text": "typeof ZigZagFiller",
+      "members": {
+        "prototype": "t46"
+      }
+    },
+    "t50": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t49": {
+      "kind": "object",
+      "text": "HatchFiller",
+      "members": {
+        "fillPolygons": "t50",
+        "helper": "t3",
+        "_fillPolygons": "t41",
+        "renderLines": "t42"
+      }
+    },
+    "t48": {
+      "kind": "object",
+      "text": "typeof HatchFiller",
+      "members": {
+        "prototype": "t49"
+      }
+    },
+    "t53": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t54": {
+      "kind": "function",
+      "text": "(lines: Line[], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "lines",
+          "type": "t43",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t52": {
+      "kind": "object",
+      "text": "DotFiller",
+      "members": {
+        "helper": "t3",
+        "fillPolygons": "t53",
+        "dotsOnLines": "t54"
+      }
+    },
+    "t51": {
+      "kind": "object",
+      "text": "typeof DotFiller",
+      "members": {
+        "prototype": "t52"
+      }
+    },
+    "t57": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t58": {
+      "kind": "function",
+      "text": "(lines: Line[], o: ResolvedOptions) => Op[]",
+      "parameters": [
+        {
+          "name": "lines",
+          "type": "t43",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t26"
+    },
+    "t56": {
+      "kind": "object",
+      "text": "DashedFiller",
+      "members": {
+        "helper": "t3",
+        "fillPolygons": "t57",
+        "dashedLine": "t58"
+      }
+    },
+    "t55": {
+      "kind": "object",
+      "text": "typeof DashedFiller",
+      "members": {
+        "prototype": "t56"
+      }
+    },
+    "t61": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t62": {
+      "kind": "function",
+      "text": "(lines: Line[], zo: number, o: ResolvedOptions) => Op[]",
+      "parameters": [
+        {
+          "name": "lines",
+          "type": "t43",
+          "optional": false
+        },
+        {
+          "name": "zo",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t26"
+    },
+    "t60": {
+      "kind": "object",
+      "text": "ZigZagLineFiller",
+      "members": {
+        "helper": "t3",
+        "fillPolygons": "t61",
+        "zigzagLines": "t62"
+      }
+    },
+    "t59": {
+      "kind": "object",
+      "text": "typeof ZigZagLineFiller",
+      "members": {
+        "prototype": "t60"
+      }
+    },
+    "t63": {
+      "kind": "object",
+      "text": "{ [name: string]: PatternFiller; }",
+      "members": {}
+    },
+    "t65": {
+      "kind": "function",
+      "text": "(polygonList: Point[][], o: ResolvedOptions) => OpSet",
+      "parameters": [
+        {
+          "name": "polygonList",
+          "type": "t39",
+          "optional": false
+        },
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t64": {
+      "kind": "object",
+      "text": "PatternFiller",
+      "members": {
+        "fillPolygons": "t65"
+      }
+    },
+    "t66": {
+      "kind": "object",
+      "text": "{}",
+      "members": {}
+    },
+    "t67": {
+      "kind": "function",
+      "text": "(o: ResolvedOptions, helper: RenderHelper) => PatternFiller",
+      "parameters": [
+        {
+          "name": "o",
+          "type": "t6",
+          "optional": false
+        },
+        {
+          "name": "helper",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t64"
+    },
+    "t68": {
+      "kind": "stringLiteral",
+      "text": "\"hachure\"",
+      "value": "hachure"
+    },
+    "t69": {
+      "kind": "stringLiteral",
+      "text": "\"zigzag\"",
+      "value": "zigzag"
+    },
+    "t70": {
+      "kind": "stringLiteral",
+      "text": "\"cross-hatch\"",
+      "value": "cross-hatch"
+    },
+    "t71": {
+      "kind": "stringLiteral",
+      "text": "\"dots\"",
+      "value": "dots"
+    },
+    "t72": {
+      "kind": "stringLiteral",
+      "text": "\"dashed\"",
+      "value": "dashed"
+    },
+    "t73": {
+      "kind": "stringLiteral",
+      "text": "\"zigzag-line\"",
+      "value": "zigzag-line"
+    }
+  }
+}
