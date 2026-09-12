@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/path-data-parser/src/index.ts",
+  "sha256": "776241a0bef8164ca17ca45a43f845b160a8c34d593f350290525893a25aa259",
+  "nodes": [
+    {
+      "kind": "ExportDeclaration",
+      "kindCode": 278,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "NamedExports",
+          "kindCode": 279,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "ExportSpecifier",
+              "kindCode": 281,
+              "pos": [
+                1,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    1,
+                    10
+                  ],
+                  "type": "t0",
+                  "text": "parsePath",
+                  "resolvedSymbol": "s0"
+                }
+              ]
+            },
+            {
+              "kind": "ExportSpecifier",
+              "kindCode": 281,
+              "pos": [
+                1,
+                21
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    1,
+                    21
+                  ],
+                  "type": "t6",
+                  "text": "serialize",
+                  "resolvedSymbol": "s1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            38
+          ],
+          "type": "t7",
+          "value": "./parser.js"
+        }
+      ]
+    },
+    {
+      "kind": "ExportDeclaration",
+      "kindCode": 278,
+      "pos": [
+        2,
+        1
+      ],
+      "children": [
+        {
+          "kind": "NamedExports",
+          "kindCode": 279,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "ExportSpecifier",
+              "kindCode": 281,
+              "pos": [
+                2,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    2,
+                    10
+                  ],
+                  "type": "t8",
+                  "text": "absolutize",
+                  "resolvedSymbol": "s2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            28
+          ],
+          "type": "t7",
+          "value": "./absolutize.js"
+        }
+      ]
+    },
+    {
+      "kind": "ExportDeclaration",
+      "kindCode": 278,
+      "pos": [
+        3,
+        1
+      ],
+      "children": [
+        {
+          "kind": "NamedExports",
+          "kindCode": 279,
+          "pos": [
+            3,
+            8
+          ],
+          "children": [
+            {
+              "kind": "ExportSpecifier",
+              "kindCode": 281,
+              "pos": [
+                3,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    3,
+                    10
+                  ],
+                  "type": "t9",
+                  "text": "normalize",
+                  "resolvedSymbol": "s3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            3,
+            27
+          ],
+          "type": "t7",
+          "value": "./normalize.js"
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "parsePath",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s1": {
+      "name": "serialize",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s2": {
+      "name": "absolutize",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s3": {
+      "name": "normalize",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s4": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/path-data-parser/src/index\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t5": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t4": {
+      "kind": "array",
+      "text": "number[]",
+      "elementType": "t5"
+    },
+    "t3": {
+      "kind": "object",
+      "text": "Segment",
+      "members": {
+        "key": "t1",
+        "data": "t4"
+      }
+    },
+    "t2": {
+      "kind": "array",
+      "text": "Segment[]",
+      "elementType": "t3"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(d: string) => Segment[]",
+      "parameters": [
+        {
+          "name": "d",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t6": {
+      "kind": "function",
+      "text": "(segments: Segment[]) => string",
+      "parameters": [
+        {
+          "name": "segments",
+          "type": "t2",
+          "optional": false
+        }
+      ],
+      "returnType": "t1"
+    },
+    "t7": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t8": {
+      "kind": "function",
+      "text": "(segments: Segment[]) => Segment[]",
+      "parameters": [
+        {
+          "name": "segments",
+          "type": "t2",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t9": {
+      "kind": "function",
+      "text": "(segments: Segment[]) => Segment[]",
+      "parameters": [
+        {
+          "name": "segments",
+          "type": "t2",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    }
+  }
+}
