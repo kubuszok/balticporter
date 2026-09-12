@@ -77,7 +77,6 @@ object TsToScalaEmitter:
 
       // Private interfaces as nested case classes
       for (iface <- interfaces if !isExported(iface))
-        sb.append("  ")
         emitCaseClass(iface, file, indent = "  ")
 
       // Constants and variables
@@ -106,12 +105,6 @@ object TsToScalaEmitter:
       val name = nameOf(node)
       val isPrivate = !isExported(node)
       val params = node.children.filter(_.kind == "Parameter")
-      val paramList = params.map { p =>
-        val pName = nameOf(p)
-        val escapedName = if scalaKeywords.contains(pName) then s"`$pName`" else pName
-        val pType = resolveScalaType(p, file)
-        s"$escapedName: $pType"
-      }
       val retType = resolveFunctionReturnType(node, file)
       val body = node.children.find(_.kind == "Block")
       val vis = if isPrivate then "private " else ""
@@ -122,11 +115,21 @@ object TsToScalaEmitter:
       // Detect reassigned parameters — need local var copies
       val reassignedParams = body.map(b => collectReassignedVars(b, params.map(nameOf).toSet)).getOrElse(Set.empty)
 
+      val paramList = params.map { p =>
+        val pName = nameOf(p)
+        val isReassigned = reassignedParams.contains(pName)
+        val sigName = if isReassigned then s"${pName}0" else pName
+        val escapedName = if scalaKeywords.contains(sigName) then s"`$sigName`" else sigName
+        val pType = resolveScalaType(p, file)
+        s"$escapedName: $pType"
+      }
+
       sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType =\n")
       // Emit var copies for reassigned params
       for (p <- params if reassignedParams.contains(nameOf(p)))
         val pName = nameOf(p)
-        sb.append(s"${indent}  var $pName = $pName\n")
+        val pType = resolveScalaType(p, file)
+        sb.append(s"${indent}  var $pName: $pType = ${pName}0\n")
       body match
         case Some(block) => emitBlock(block, file, indent + "  ")
         case None => sb.append(s"${indent}  ???\n")
@@ -199,7 +202,11 @@ object TsToScalaEmitter:
       node.kind match
         case "ReturnStatement" =>
           val expr = node.children.headOption.map(c => emitExpr(c, file)).getOrElse("()")
-          sb.append(s"${indent}return $expr\n")
+          // If returning a bare mutable collection variable, convert to immutable
+          val converted = if currentMutatedArrays.contains(expr.trim) then
+            s"$expr.toVector"
+          else expr
+          sb.append(s"${indent}return $converted\n")
 
         case "IfStatement" =>
           // R14: if (d.match(regex)) { ... RegExp.$1 ... } → regex.findPrefixMatchOf(d) match { ... }
@@ -293,20 +300,39 @@ object TsToScalaEmitter:
           body.foreach(b => emitBlock(b, file, indent + "  "))
 
     private def emitForLoop(node: RastNode, file: RastFile, indent: String): Unit =
-      // C-style for: emit as while
+      // R12: C-style for(init; cond; update) body → { init; while(cond) { body; update } }
+      // Children after R1 filtering: init, cond, update, body (may be missing some)
       val children = node.children.toArray
-      // init, cond, update, body — but some may be missing
-      sb.append(s"$indent// C-style for loop\n")
-      sb.append(s"$indent{\n")
-      // Simplified: just emit children
       if children.length >= 4 then
-        // init
-        emitStatement(children(0), file, indent + "  ")
+        // Init might be VariableDeclarationList — wrap as VariableStatement
+        val initChild = children(0)
+        if initChild.kind == "VariableDeclarationList" then
+          // Emit each declaration
+          val decls = initChild.children.filter(_.kind == "VariableDeclaration")
+          for (d <- decls)
+            val n = nameOf(d)
+            val isConst = d.flags.contains("const")
+            val kw = if isConst then "val" else "var"
+            // For-loop init: the init expr is the last child after the name
+            val initExpr = d.children.drop(1).lastOption.map(emitExpr(_, file)).getOrElse("0")
+            // R8: for-loop variables are typically Int (used as indices)
+            sb.append(s"$indent$kw $n: Int = $initExpr\n")
+        else
+          emitStatement(initChild, file, indent)
         val cond = emitExpr(children(1), file)
-        sb.append(s"${indent}  while ($cond)\n")
-        emitStatement(children(3), file, indent + "    ")
-        emitStatement(children(2), file, indent + "    ")
-      sb.append(s"$indent}\n")
+        sb.append(s"${indent}while ($cond)\n")
+        emitStatement(children(3), file, indent + "  ")
+        // update
+        val update = emitExpr(children(2), file)
+        sb.append(s"${indent}  $update\n")
+      else if children.length >= 3 then
+        val cond = emitExpr(children(0), file)
+        sb.append(s"${indent}while ($cond)\n")
+        emitStatement(children(2), file, indent + "  ")
+        val update = emitExpr(children(1), file)
+        sb.append(s"${indent}  $update\n")
+      else
+        sb.append(s"$indent// TODO: for loop with ${children.length} children\n")
 
     private def emitSwitch(node: RastNode, file: RastFile, indent: String): Unit =
       val scrutinee = emitExpr(node.children.head, file)
@@ -425,7 +451,12 @@ object TsToScalaEmitter:
           fn match
             case s if s.endsWith(".push") =>
               val obj = s.stripSuffix(".push")
-              s"$obj += ${args.mkString(", ")}"
+              // Check for spread: tokens.push(...data) → tokens ++= data
+              val hasSpread = node.children.drop(1).exists(_.kind == "SpreadElement")
+              if hasSpread && args.length == 1 then
+                s"$obj ++= ${args.head.stripSuffix("*")}"
+              else if args.length == 1 then s"$obj += ${args.head}"
+              else args.map(a => s"$obj += $a").mkString("; ")
             case s if s.endsWith(".substr") =>
               val obj = s.stripSuffix(".substr")
               s"$obj.substring(${args.mkString(", ")})"
@@ -500,7 +531,7 @@ object TsToScalaEmitter:
 
         case "SpreadElement" =>
           val expr = emitExpr(node.children.head, file)
-          s"$expr*"
+          s"$expr*" // note: in a += context this becomes data.foreach(arr += _)
 
         case "TypeAssertionExpression" | "AsExpression" =>
           emitExpr(node.children.head, file)
@@ -515,7 +546,9 @@ object TsToScalaEmitter:
             case Some(RastValue.Str(s)) => s
             case _ => node.text.getOrElse("/???/")
           val body = text.stripPrefix("/").reverse.dropWhile(_ != '/').reverse.stripSuffix("/")
-          s"\"$body\".r"
+          // Escape backslashes for Scala string literal
+          val escaped = body.replace("\\", "\\\\")
+          s"\"$escaped\".r"
 
         case "TypeOfExpression" =>
           val operand = emitExpr(node.children.head, file)
@@ -538,6 +571,7 @@ object TsToScalaEmitter:
         val data = kvMap("data")
         val dataFixed = if data.startsWith("Vector(") then data
           else if data.startsWith("[...") then data.drop(4).dropRight(1)
+          else if currentMutatedArrays.contains(data) then s"$data.toVector"
           else data
         s"Segment(${kvMap("key")}, $dataFixed)"
       else if fieldNames == Set("type", "text") || fieldNames == Set("`type`", "text") then
@@ -786,7 +820,8 @@ object TsToScalaEmitter:
                     case Some(RastValue.Str(s)) => s
                     case _ => r.text.getOrElse("")
                   val body = regexStr.stripPrefix("/").reverse.dropWhile(_ != '/').reverse.stripSuffix("/")
-                  Some((obj, s"\"$body\".r"))
+                  val escaped = body.replace("\\", "\\\\")
+                  Some((obj, s"\"$escaped\".r"))
                 else None
               }
             else None
