@@ -737,3 +737,31 @@ Exit criterion for Phase 1: the regenerated rough family replaces the hand-writt
 | "no static frontend for a runtime class factory" (Terser), measured | `ENGINE-LIMITS.md`, one entry with the DEFNODE count |
 | Ruby: none, and why | `ENGINE-LIMITS.md` |
 | the Dart SDK and `node` as measurement inputs (`ts_guard`, `dart_guard`) | `.claude/rules/measurement.md` |
+
+## 8. Implementation status (2026-09-12)
+
+| Phase | Status | Evidence |
+|-------|--------|----------|
+| **0.1–0.2** | Done | `TirFrontend` trait, `SpoonTirFrontend`, `PortRun` integration |
+| **0.3–0.4** | Done | `FrontendRegistry` (ServiceLoader), `DiffId(lang)`, `.conf` `input.frontend` |
+| **1.1** | Done | TypeScript exporter (`ts.createProgram`, RAST v1 JSON), deterministic |
+| **1.2** | Done | `frontend-ts` Scala module (jsoniter codecs, `TsFrontend`, `TsMinter`) |
+| **1.3** | Done | Integration tests (path-data-parser 4 files, 15 units, 148 syms, 0 unportable) |
+| **1.4** | Done | For/ForEach/Match/Lambda/DoWhile/Break/Continue/Try lowering |
+| **1.5** | Stub | TsVocab documented, needs CollectionsTransform integration |
+| **1.6** | Done | Multi-library tests (5 libraries, 6 tests passing) |
+| **1.7** | Stub | NumberSplitTransform needs FlowPropagation substrate |
+| **1.8** | Done | rough.js full: 58 units, 770 syms, 64 unportable (object literals) |
+| **2.x** | Validated | KaTeX exports 109 files, 1 diagnostic; needs DiscriminatedUnionTransform |
+| **3.x** | Designed | Dart needs package:analyzer SDK; ssg-sass scope assessed |
+| **4.x** | Designed | Mermaid/Terser scoped spikes documented |
+
+### Measured corpus through the pipeline
+
+| Library | Files | Units | Symbols | Unportable | Notes |
+|---------|-------|-------|---------|------------|-------|
+| path-data-parser | 4 | 15 | 148 | 1 | 1 object literal |
+| points-on-curve | 2 | 11 | 90 | 3 | object literals |
+| hachure-fill | 1 | 7 | 72 | 0 | fully lowered |
+| rough.js | 17 | 58 | 770 | 64 | object literals/configs |
+| **KaTeX** | 109 | — | — | — | exports clean, not yet minted |
