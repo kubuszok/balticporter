@@ -115,14 +115,27 @@ object TsToScalaEmitter:
       // Detect reassigned parameters — need local var copies
       val reassignedParams = body.map(b => collectReassignedVars(b, params.map(nameOf).toSet)).getOrElse(Set.empty)
 
+      // Track optional params for truthiness checks
+      val optionalParams = mutable.Set.empty[String]
       val paramList = params.map { p =>
         val pName = nameOf(p)
         val isReassigned = reassignedParams.contains(pName)
         val sigName = if isReassigned then s"${pName}0" else pName
         val escapedName = if scalaKeywords.contains(sigName) then s"`$sigName`" else sigName
-        val pType = resolveScalaType(p, file)
-        s"$escapedName: $pType"
+        val isOptional = p.flags.contains("QuestionToken")
+        val rawType = resolveScalaType(p, file)
+        val pType = if isOptional then
+          optionalParams += pName
+          s"Option[$rawType] = None"
+        else rawType
+        // Handle array destructuring param: [x, y] → tuple
+        val hasArrayBinding = p.children.exists(_.kind == "ArrayBindingPattern")
+        if hasArrayBinding then
+          s"${escapedName}: (Double, Double)"
+        else
+          s"$escapedName: $pType"
       }
+      currentOptionalParams = optionalParams.toSet
 
       sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType =\n")
       // Emit var copies for reassigned params
@@ -134,10 +147,13 @@ object TsToScalaEmitter:
         case Some(block) => emitBlock(block, file, indent + "  ")
         case None => sb.append(s"${indent}  ???\n")
       currentMutatedArrays = Set.empty
+      currentOptionalParams = Set.empty
       sb.append("\n")
 
     // R7: track which variables are mutated via .push() — they need ArrayBuffer
     private var currentMutatedArrays: Set[String] = Set.empty
+    // Track optional params for truthiness checks
+    private var currentOptionalParams: Set[String] = Set.empty
 
     private def collectMutatedArrays(body: RastNode): Set[String] =
       val result = mutable.Set.empty[String]
@@ -175,6 +191,17 @@ object TsToScalaEmitter:
         else Nil
       }
       for (d <- decls)
+        // Check for array destructuring: const [x, y] = expr
+        val hasArrayBinding = d.children.exists(_.kind == "ArrayBindingPattern")
+        if hasArrayBinding then
+          val pattern = d.children.find(_.kind == "ArrayBindingPattern").get
+          val names = pattern.children.filter(_.kind == "BindingElement").flatMap(
+            _.children.find(_.kind == "Identifier").flatMap(_.text))
+          val initExpr = d.children.find(c => c.kind != "Identifier" && c.kind != "ArrayBindingPattern" && !c.kind.contains("Type"))
+            .map(emitExpr(_, file)).getOrElse("???")
+          for ((n, idx) <- names.zipWithIndex)
+            sb.append(s"${indent}val $n: Double = $initExpr($idx)\n")
+        else {
         val name = nameOf(d)
         val isConst = d.flags.contains("const")
         val keyword = if isConst then "val" else "var"
@@ -200,6 +227,7 @@ object TsToScalaEmitter:
           tpe.replace("ArrayBuffer[", "ArrayBuffer.empty[").stripSuffix("]") + "]"
         else init
         sb.append(s"$indent$keyword $name: $tpeFixed = $initFixed\n")
+        } // end else (not array binding)
 
     private def emitBlock(block: RastNode, file: RastFile, indent: String): Unit =
       val stmts = block.children
@@ -232,9 +260,12 @@ object TsToScalaEmitter:
                 sb.append(s"$indent  case None => ()\n")
             case None =>
               val cond = emitExpr(condNode, file)
-              // JS truthiness: numeric expressions in if conditions need != 0
+              // JS truthiness: optional params → .isDefined, numeric → != 0
               val condType = condNode.`type`.flatMap(file.types.get).map(_.kind).getOrElse("")
-              val condFixed = if condType == "number" && !cond.contains("==") && !cond.contains("!=") && !cond.contains("<") && !cond.contains(">")
+              val isOptionalRef = condNode.kind == "Identifier" && condNode.text.exists(currentOptionalParams.contains)
+              val condFixed = if isOptionalRef then
+                s"$cond.isDefined"
+              else if condType == "number" && !cond.contains("==") && !cond.contains("!=") && !cond.contains("<") && !cond.contains(">")
                 then s"($cond) != 0"
                 else cond
               sb.append(s"${indent}if ($condFixed) then\n")
@@ -386,6 +417,9 @@ object TsToScalaEmitter:
                 .foreach(s => emitStatement(s, file, indent + "    "))
             case _ => ()
           i += 1
+        // R12-exhaustive: if no DefaultClause, add case _ => ()
+        val hasDefault = clauses.exists(_.kind == "DefaultClause")
+        if !hasDefault then sb.append(s"$indent  case _ => ()\n")
       }
 
     private def emitExpr(node: RastNode, file: RastFile): String =
@@ -439,7 +473,19 @@ object TsToScalaEmitter:
             else s"${emitExpr(lhs, file)} $op $right"
           else
             val left = emitExpr(node.children.head, file)
-            if op == "=" || op == "+=" || op == "-=" then
+            // R7-IntDiv: integer / integer → float division to avoid truncation
+            if op == "/" then
+              val leftIsInt = node.children.head.kind == "NumericLiteral" && node.children.head.value.exists {
+                case RastValue.Num(v) => v == v.toLong
+                case _ => false
+              }
+              val rightIsInt = node.children.last.kind == "NumericLiteral" && node.children.last.value.exists {
+                case RastValue.Num(v) => v == v.toLong
+                case _ => false
+              }
+              if leftIsInt && rightIsInt then s"(${left}.0 / $right)"
+              else s"($left $op $right)"
+            else if op == "=" || op == "+=" || op == "-=" then
               s"$left $op $right"
             else
               s"($left $op $right)"
@@ -484,6 +530,16 @@ object TsToScalaEmitter:
             case s if s.endsWith(".join") =>
               val obj = s.stripSuffix(".join")
               s"$obj.mkString(${args.mkString(", ")})"
+            case s if s.endsWith(".forEach") || s.endsWith(".foreach") =>
+              val obj = s.stripSuffix(".forEach").stripSuffix(".foreach")
+              s"$obj.foreach(${args.mkString(", ")})"
+            case s if s.endsWith(".concat") =>
+              val obj = s.stripSuffix(".concat")
+              s"($obj ++ ${args.mkString(", ")})"
+            case s if s.endsWith(".toFixed") =>
+              val obj = s.stripSuffix(".toFixed")
+              val precision = args.headOption.getOrElse("0")
+              s"""f"$${$obj}%.${precision}f""""
             case s if s.endsWith(".map") =>
               val obj = s.stripSuffix(".map")
               // R14: detect 2-param arrow (d, i) => ... → zipWithIndex.map { case (d, i) => ... }
@@ -533,14 +589,27 @@ object TsToScalaEmitter:
           val isTuple = node.`type`.flatMap(file.types.get).exists { t =>
             t.text.startsWith("[") && t.text.contains(",")
           }
-          // Check if all children are spread: [...data] → data
+          val hasSpread = node.children.exists(_.kind == "SpreadElement")
           val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
           if node.children.isEmpty then "Vector.empty"
           else if allSpread && node.children.length == 1 then
             emitExpr(node.children.head.children.head, file)
           else if isTuple then
-            val elems = node.children.map(emitExpr(_, file))
+            val elems = node.children.map(c =>
+              if c.kind == "SpreadElement" then emitExpr(c.children.head, file) else emitExpr(c, file))
             s"(${elems.mkString(", ")})"
+          else if hasSpread then
+            // Mixed spread + non-spread: Vector(a, b) ++ spread
+            val nonSpread = node.children.takeWhile(_.kind != "SpreadElement")
+            val spreadPart = node.children.dropWhile(_.kind != "SpreadElement")
+            val prefix = if nonSpread.nonEmpty then
+              s"Vector(${nonSpread.map(emitExpr(_, file)).mkString(", ")})"
+            else "Vector.empty"
+            val suffix = spreadPart.map { c =>
+              if c.kind == "SpreadElement" then emitExpr(c.children.head, file)
+              else s"Vector(${emitExpr(c, file)})"
+            }
+            (prefix +: suffix).mkString(" ++ ")
           else
             val elems = node.children.map(emitExpr(_, file))
             s"Vector(${elems.mkString(", ")})"
