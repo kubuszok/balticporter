@@ -60,3 +60,17 @@ object AnnotationPolicy:
 trait Frontend:
   /** Parse + resolve, returning units in the order of `cfg.files`. */
   def parse(cfg: FrontendConfig): List[BUnit]
+
+/** Source language — decides the catalog prefix (`DiffId`) and the default file globs. */
+enum Language(val prefix: String):
+  case Java       extends Language("JS")
+  case TypeScript extends Language("TS")
+  case Dart       extends Language("DT")
+
+/** TIR-level frontend SPI — a second frontend can exist without touching the Java/Spoon path.
+  * DESIGN.md §3.2: the stable frontend boundary is a `Program`, not a parsed model. */
+trait TirFrontend:
+  def build(cfg: FrontendConfig, subs: Substitutions, catalog: balticporter.catalog.CatalogLog,
+            lenient: Boolean): balticporter.tir.Program
+  def language: Language
+  def defaultInclude: List[String]

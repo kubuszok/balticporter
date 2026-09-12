@@ -2,7 +2,7 @@ package balticporter.runner
 
 import balticporter.core.*
 import balticporter.emit.TirEmitter
-import balticporter.frontend.spoon.SpoonTir
+import balticporter.frontend.spoon.SpoonTirFrontend
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, DerivedPolicy, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, ElementWitnessCheck, ElementWitnessTransform, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, NullaryArityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
@@ -72,6 +72,7 @@ final case class PortRun(
     /** Extra KNOWN remedies from the classpath that this run's pipeline does not carry.
       * Lets the config loader distinguish a typo from a missing phase. Empty default. */
     knownRemedies: RemedyVocabulary = RemedyVocabulary.empty,
+    tirFrontend: TirFrontend = SpoonTirFrontend(),
 ):
 
   private def say(s: String): Unit = println(s"[$label] $s")
@@ -1656,12 +1657,8 @@ final case class PortRun(
 
   private def translateOnce(): PortRun.Translated =
     val enrichedFrontend = frontend.copy(internTypes = frontend.internTypes ++ collectInternTypes())
-    val types   = SpoonTir.buildModel(enrichedFrontend, lenient = lenient)
-    // Catalog log: per-translation (Determinism.Full translates twice). fatal=false: counts, not aborts.
     val catalog = new balticporter.catalog.CatalogLog(fatal = false)
-    // Preserved annotations (T16): empty default, travels with frontend config.
-    val parsed  = SpoonTir.fromTypes(types, policySubs, catalog, enrichedFrontend.preservedAnnotations,
-                                     enrichedFrontend.internTypes)
+    val parsed  = tirFrontend.build(enrichedFrontend, policySubs, catalog, lenient)
     // Policy binding: resolved before any phase runs, per-translation.
     val binder = new PolicyBinder(parsed, parsed.members, runScope(parsed))
     bindDeclaredPolicy(binder)
