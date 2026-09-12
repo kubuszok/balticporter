@@ -158,7 +158,7 @@ class TsExporter {
     const sf = this.sourceFile;
     const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
     const result: RastNode = {
-      kind: ts.SyntaxKind[node.kind],
+      kind: TsExporter.canonicalKind(node.kind),
       kindCode: node.kind,
       pos: [line + 1, character + 1],
     };
@@ -185,16 +185,17 @@ class TsExporter {
     // Literal values
     if (ts.isStringLiteral(node)) result.value = node.text;
     else if (ts.isNumericLiteral(node)) result.value = Number(node.text);
+    else if (ts.isRegularExpressionLiteral(node)) result.value = node.text;
     else if (node.kind === ts.SyntaxKind.TrueKeyword) result.value = true;
     else if (node.kind === ts.SyntaxKind.FalseKeyword) result.value = false;
 
     // Operators
     if (ts.isBinaryExpression(node))
-      result.operator = ts.SyntaxKind[node.operatorToken.kind];
+      result.operator = TsExporter.canonicalKind(node.operatorToken.kind);
     if (ts.isPrefixUnaryExpression(node))
-      result.operator = ts.SyntaxKind[node.operator];
+      result.operator = TsExporter.canonicalKind(node.operator);
     if (ts.isPostfixUnaryExpression(node))
-      result.operator = ts.SyntaxKind[node.operator];
+      result.operator = TsExporter.canonicalKind(node.operator);
 
     // Flags
     const flags = this.nodeFlags(node);
@@ -214,9 +215,40 @@ class TsExporter {
   private visitChildren(node: ts.Node): RastNode[] {
     const children: RastNode[] = [];
     node.forEachChild(child => {
+      // R1: skip punctuation/operator tokens that forEachChild visits
+      if (this.isPunctuationToken(child)) return;
       children.push(this.visitNode(child));
     });
     return children;
+  }
+
+  private isPunctuationToken(node: ts.Node): boolean {
+    const k = node.kind;
+    // Keep: identifiers, literals, keywords used as values, type keywords
+    if (ts.isIdentifier(node) || ts.isStringLiteral(node) || ts.isNumericLiteral(node) ||
+        ts.isRegularExpressionLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ||
+        ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node))
+      return false;
+    if (k === ts.SyntaxKind.ThisKeyword || k === ts.SyntaxKind.SuperKeyword ||
+        k === ts.SyntaxKind.TrueKeyword || k === ts.SyntaxKind.FalseKeyword ||
+        k === ts.SyntaxKind.NullKeyword || k === ts.SyntaxKind.UndefinedKeyword)
+      return false;
+    // Skip: operator tokens, punctuation, modifiers
+    if (ts.isModifier(node)) return true;
+    if (k === ts.SyntaxKind.QuestionToken || k === ts.SyntaxKind.ColonToken ||
+        k === ts.SyntaxKind.EqualsGreaterThanToken || k === ts.SyntaxKind.DotDotDotToken ||
+        k === ts.SyntaxKind.SemicolonToken || k === ts.SyntaxKind.CommaToken ||
+        k === ts.SyntaxKind.OpenParenToken || k === ts.SyntaxKind.CloseParenToken ||
+        k === ts.SyntaxKind.OpenBraceToken || k === ts.SyntaxKind.CloseBraceToken ||
+        k === ts.SyntaxKind.OpenBracketToken || k === ts.SyntaxKind.CloseBracketToken ||
+        k === ts.SyntaxKind.DotToken || k === ts.SyntaxKind.ExclamationToken)
+      return true;
+    // Skip binary/assignment operator tokens
+    if (k >= ts.SyntaxKind.FirstBinaryOperator && k <= ts.SyntaxKind.LastBinaryOperator)
+      return true;
+    if (k >= ts.SyntaxKind.FirstAssignment && k <= ts.SyntaxKind.LastAssignment)
+      return true;
+    return false;
   }
 
   private getNodeSymbol(node: ts.Node): ts.Symbol | undefined {
@@ -381,6 +413,21 @@ class TsExporter {
     }
 
     return { kind: "other", text };
+  }
+
+  // R2: map SyntaxKind aliases to canonical names
+  private static readonly KIND_ALIASES: Record<number, string> = {
+    [ts.SyntaxKind.FirstStatement]: "VariableStatement",
+    [ts.SyntaxKind.FirstAssignment]: "EqualsToken",
+    [ts.SyntaxKind.FirstCompoundAssignment]: "PlusEqualsToken",
+    [ts.SyntaxKind.FirstBinaryOperator]: "LessThanToken",
+    [ts.SyntaxKind.FirstLiteralToken]: "NumericLiteral",
+    [ts.SyntaxKind.FirstTemplateToken]: "NoSubstitutionTemplateLiteral",
+    [ts.SyntaxKind.LastTemplateToken]: "TemplateTail",
+  };
+
+  static canonicalKind(kind: ts.SyntaxKind): string {
+    return TsExporter.KIND_ALIASES[kind] ?? ts.SyntaxKind[kind];
   }
 
   private isExpression(node: ts.Node): boolean {

@@ -107,3 +107,26 @@ class TsMinterSpec extends munit.FunSuite:
     ).map(loadRast)
     val program = mintAndReport("katex-subset", files)
     assert(program.units.nonEmpty, "KaTeX should produce units")
+
+  test("path-data-parser → emitted Scala source"):
+    val files = List(
+      "/rast/path-data-parser/src/parser.rast.json",
+      "/rast/path-data-parser/src/absolutize.rast.json",
+      "/rast/path-data-parser/src/normalize.rast.json",
+    ).map(loadRast)
+
+    val config = TsToScalaEmitter.EmitConfig(
+      packageName = "pathdata",
+      imports = List("scala.collection.mutable.ArrayBuffer"),
+    )
+    val emitted = TsToScalaEmitter.emit(files, config)
+    
+    for ((name, source) <- emitted)
+      println(s"=== $name.scala ===")
+      println(source)
+      println()
+
+    assert(emitted.nonEmpty, "should emit at least one file")
+    assert(emitted.contains("parser"), "should emit parser")
+    assert(emitted.contains("absolutize"), "should emit absolutize")
+    assert(emitted.contains("normalize"), "should emit normalize")
