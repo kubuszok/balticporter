@@ -232,7 +232,12 @@ object TsToScalaEmitter:
                 sb.append(s"$indent  case None => ()\n")
             case None =>
               val cond = emitExpr(condNode, file)
-              sb.append(s"${indent}if ($cond) then\n")
+              // JS truthiness: numeric expressions in if conditions need != 0
+              val condType = condNode.`type`.flatMap(file.types.get).map(_.kind).getOrElse("")
+              val condFixed = if condType == "number" && !cond.contains("==") && !cond.contains("!=") && !cond.contains("<") && !cond.contains(">")
+                then s"($cond) != 0"
+                else cond
+              sb.append(s"${indent}if ($condFixed) then\n")
               emitStatement(node.children(1), file, indent + "  ")
               if node.children.length > 2 then
                 sb.append(s"${indent}else\n")
@@ -481,7 +486,16 @@ object TsToScalaEmitter:
               s"$obj.mkString(${args.mkString(", ")})"
             case s if s.endsWith(".map") =>
               val obj = s.stripSuffix(".map")
-              s"$obj.map(${args.mkString(", ")})"
+              // R14: detect 2-param arrow (d, i) => ... → zipWithIndex.map { case (d, i) => ... }
+              val arrowArg = node.children.drop(1).headOption
+              val arrowParams = arrowArg.toList.flatMap(_.children.filter(_.kind == "Parameter"))
+              if arrowParams.length == 2 then
+                val p1 = nameOf(arrowParams(0))
+                val p2 = nameOf(arrowParams(1))
+                val body = arrowArg.flatMap(_.children.find(c => c.kind != "Parameter")).map(emitExpr(_, file)).getOrElse("???")
+                s"$obj.zipWithIndex.map { case ($p1, $p2) => $body }"
+              else
+                s"$obj.map(${args.mkString(", ")})"
             case "parseFloat" =>
               s"${args.head}.toDouble"
             case "Math.abs" =>
@@ -515,14 +529,21 @@ object TsToScalaEmitter:
           s"$obj($idx)"
 
         case "ArrayLiteralExpression" =>
-          val elems = node.children.map(emitExpr(_, file))
           // Check if this is a tuple type (return value like [x, y])
           val isTuple = node.`type`.flatMap(file.types.get).exists { t =>
             t.text.startsWith("[") && t.text.contains(",")
           }
-          if elems.isEmpty then "Vector.empty"
-          else if isTuple then s"(${elems.mkString(", ")})"
-          else s"Vector(${elems.mkString(", ")})"
+          // Check if all children are spread: [...data] → data
+          val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
+          if node.children.isEmpty then "Vector.empty"
+          else if allSpread && node.children.length == 1 then
+            emitExpr(node.children.head.children.head, file)
+          else if isTuple then
+            val elems = node.children.map(emitExpr(_, file))
+            s"(${elems.mkString(", ")})"
+          else
+            val elems = node.children.map(emitExpr(_, file))
+            s"Vector(${elems.mkString(", ")})"
 
         case "ObjectLiteralExpression" =>
           emitObjectLiteral(node, file)
@@ -539,10 +560,16 @@ object TsToScalaEmitter:
           s"($inner)"
 
         case "ConditionalExpression" =>
-          val cond = emitExpr(node.children(0), file)
+          val condNode0 = node.children(0)
+          val cond = emitExpr(condNode0, file)
           val thenE = emitExpr(node.children(1), file)
           val elseE = emitExpr(node.children(2), file)
-          s"(if ($cond) $thenE else $elseE)"
+          // JS truthiness: numeric condition in ternary needs != 0
+          val condType = condNode0.`type`.flatMap(file.types.get).map(_.kind).getOrElse("")
+          val condFixed = if condType == "number" && !cond.contains("==") && !cond.contains("!=") && !cond.contains("<") && !cond.contains(">")
+            then s"($cond) != 0"
+            else cond
+          s"(if ($condFixed) $thenE else $elseE)"
 
         case "ArrowFunction" | "FunctionExpression" =>
           emitArrowFunction(node, file)
