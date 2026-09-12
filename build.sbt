@@ -321,10 +321,14 @@ lazy val `frontend-ts` = project
 // Phase 3 of the non-Java frontends plan. Primary target: dart-sass (ssg-sass).
 lazy val `frontend-dart` = project
   .in(file("balticporter/frontend-dart"))
-  .dependsOn(api)
+  .dependsOn(api, `frontend-ts`)
   .settings(
     name := "balticporter-frontend-dart",
-    libraryDependencies += munit,
+    libraryDependencies ++= Seq(
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.36.4",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.36.4" % Provided,
+      munit,
+    ),
   )
 
 // Helpers a CONSUMER writing tests against the engine needs: run Java source through phases and

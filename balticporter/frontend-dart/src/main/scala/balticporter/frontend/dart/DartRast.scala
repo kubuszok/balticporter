@@ -77,32 +77,7 @@ final case class DartRastComment(
     pos: (Int, Int),
 )
 
-enum DartRastValue:
-  case Str(v: String)
-  case Num(v: Double)
-  case Bool(v: Boolean)
-  case IntVal(v: Long)
-
-object DartRastValue:
-  given codec: JsonValueCodec[DartRastValue] = new JsonValueCodec[DartRastValue]:
-    def decodeValue(in: JsonReader, default: DartRastValue): DartRastValue =
-      in.nextToken() match
-        case '"' =>
-          in.rollbackToken()
-          Str(in.readString(null))
-        case 't' | 'f' =>
-          in.rollbackToken()
-          Bool(in.readBoolean())
-        case _ =>
-          in.rollbackToken()
-          val d = in.readDouble()
-          if d == d.toLong.toDouble then IntVal(d.toLong) else Num(d)
-    def encodeValue(x: DartRastValue, out: JsonWriter): Unit = x match
-      case Str(v)    => out.writeVal(v)
-      case Num(v)    => out.writeVal(v)
-      case Bool(v)   => out.writeVal(v)
-      case IntVal(v) => out.writeVal(v)
-    def nullValue: DartRastValue = null
+type DartRastValue = balticporter.frontend.ts.RastValue
 
 object DartRast:
   given fileCodec: JsonValueCodec[DartRastFile] = JsonCodecMaker.make(
