@@ -50,7 +50,6 @@ private class MintContext(subs: Substitutions, catalog: CatalogLog):
 
       case "ClassDeclaration" =>
         val name = nameOf(node)
-        val isExport = node.flags.contains("ExportKeyword")
         val sym = freshSym(name, name, Flags(), SymId.None, TypeRepr.NoType, origin)
         val members = node.children.filter(isClassMember).map(c => mintMember(c, sym, name, file))
         List(ClassDef(sym, Nil, None, members, origin))
@@ -187,6 +186,71 @@ private class MintContext(subs: Substitutions, catalog: CatalogLog):
       case "ThrowStatement" =>
         val expr = mintExpr(node.children.head, file)
         Throw(expr, TypeRepr.NoType, origin)
+      case "ForStatement" =>
+        val parts = node.children
+        val init = parts.filter(c => c.kind == "VariableDeclarationList" || c.kind == "FirstStatement")
+          .flatMap(c => List(mintStatement(c, file)))
+        val cond = parts.find(c => c.kind != "VariableDeclarationList" && c.kind != "FirstStatement" && c.kind != "Block" && isExprKind(c.kind))
+          .map(c => mintExpr(c, file))
+        val body = parts.find(_.kind == "Block").map(c => mintExpr(c, file))
+          .getOrElse(Literal(Constant.UnitC, TypeRepr.NoType, origin))
+        For(init, cond, Nil, body, TypeRepr.NoType, origin)
+      case "ForOfStatement" | "ForInStatement" =>
+        val binding = node.children.find(c => c.kind == "VariableDeclarationList")
+          .flatMap(_.children.headOption)
+          .map { d =>
+            val name = nameOf(d)
+            val sym = freshSym(name, name, Flags(isParam = true), SymId.None, TypeRepr.NoType, origin)
+            ValDef(sym, TypeTree(TypeRepr.NoType, origin), None, origin)
+          }.getOrElse {
+            val sym = freshSym("$it", "$it", Flags(isParam = true), SymId.None, TypeRepr.NoType, origin)
+            ValDef(sym, TypeTree(TypeRepr.NoType, origin), None, origin)
+          }
+        val iterable = node.children.find(c => isExprKind(c.kind)).map(c => mintExpr(c, file))
+          .getOrElse(Literal(Constant.UnitC, TypeRepr.NoType, origin))
+        val body = node.children.find(_.kind == "Block").map(c => mintExpr(c, file))
+          .getOrElse(Literal(Constant.UnitC, TypeRepr.NoType, origin))
+        ForEach(binding, iterable, body, TypeRepr.NoType, origin)
+      case "SwitchStatement" =>
+        val scrutinee = mintExpr(node.children.head, file)
+        val caseBlock = node.children.find(_.kind == "CaseBlock")
+        val cases = caseBlock.toList.flatMap(_.children).map { clause =>
+          val isDefault = clause.kind == "DefaultClause"
+          val labels = if isDefault then Nil
+                       else clause.children.headOption.toList.map(c => mintExpr(c, file))
+          val bodyStmts = clause.children.drop(if isDefault then 0 else 1).map(c => mintStatement(c, file))
+          val bodyTerm = if bodyStmts.isEmpty then Literal(Constant.UnitC, TypeRepr.NoType, origin)
+                         else bodyStmts.last match
+                           case t: Term => Block(bodyStmts.init, t, TypeRepr.NoType, origin)
+                           case _ => Block(bodyStmts, Literal(Constant.UnitC, TypeRepr.NoType, origin), TypeRepr.NoType, origin)
+          CaseDef(labels, None, bodyTerm, isDefault)
+        }
+        Match(scrutinee, cases, TypeRepr.NoType, origin)
+      case "DoStatement" =>
+        val body = mintExpr(node.children.head, file)
+        val cond = node.children.lift(1).map(c => mintExpr(c, file))
+          .getOrElse(Literal(Constant.BoolC(true), TypeRepr.NoType, origin))
+        DoWhile(body, cond, TypeRepr.NoType, origin)
+      case "BreakStatement" =>
+        Break(None, TypeRepr.NoType, origin)
+      case "ContinueStatement" =>
+        Continue(None, TypeRepr.NoType, origin)
+      case "TryStatement" =>
+        val tryBody = node.children.find(_.kind == "Block").map(c => mintExpr(c, file))
+          .getOrElse(Literal(Constant.UnitC, TypeRepr.NoType, origin))
+        val catchClause = node.children.find(_.kind == "CatchClause")
+        val catches = catchClause.toList.map { cc =>
+          val paramNode = cc.children.find(_.kind == "VariableDeclaration").orElse(cc.children.find(_.kind == "Identifier"))
+          val paramName = paramNode.flatMap(_.text).orElse(paramNode.map(nameOf)).getOrElse("e")
+          val paramSym = freshSym(paramName, paramName, Flags(isParam = true), SymId.None, TypeRepr.NoType, origin)
+          val paramDef = ValDef(paramSym, TypeTree(TypeRepr.NoType, origin), None, origin)
+          val body = cc.children.find(_.kind == "Block").map(c => mintExpr(c, file))
+            .getOrElse(Literal(Constant.UnitC, TypeRepr.NoType, origin))
+          CatchCase(paramDef, body)
+        }
+        val finallyBody = node.children.lastOption.filter(c => c.kind == "Block" && catchClause.exists(_ ne c))
+          .map(c => mintExpr(c, file))
+        Try(Nil, tryBody, catches, finallyBody, TypeRepr.NoType, origin)
       case _ =>
         Unportable(Literal(Constant.UnitC, TypeRepr.NoType, origin),
           UnportableKind.FrontendBlindSpot, MarkerState.Open,
@@ -263,6 +327,46 @@ private class MintContext(subs: Substitutions, catalog: CatalogLog):
       case "AsExpression" | "TypeAssertionExpression" =>
         node.children.headOption.map(c => mintExpr(c, file)).getOrElse(
           Literal(Constant.UnitC, TypeRepr.NoType, origin))
+      case "ArrowFunction" | "FunctionExpression" =>
+        val params = mintParams(node, file, SymId.None)
+        val body = mintBody(node, file)
+        Lambda(params, body, resolveTypeRepr(node, file), origin)
+      case "TemplateExpression" =>
+        val parts = node.children.flatMap { c =>
+          c.kind match
+            case "TemplateHead" | "TemplateTail" | "TemplateMiddle" =>
+              val s = c.value match { case Some(RastValue.Str(v)) => v; case _ => c.text.getOrElse("") }
+              if s.isEmpty then Nil else List(Literal(Constant.StringC(s), TypeRepr.NoType, origin))
+            case "TemplateSpan" => c.children.map(cc => mintExpr(cc, file))
+            case _ => List(mintExpr(c, file))
+        }
+        parts.reduceOption { (a, b) =>
+          Apply(a, List(b), SymId.None, TypeRepr.NoType, origin)
+        }.getOrElse(Literal(Constant.StringC(""), TypeRepr.NoType, origin))
+      case "NewExpression" =>
+        val tpe = resolveTypeRepr(node, file)
+        val args = node.children.drop(1).filter(c => isExprKind(c.kind)).map(c => mintExpr(c, file))
+        val newExpr = New(TypeTree(tpe, origin), tpe, origin)
+        if args.isEmpty then newExpr
+        else Apply(newExpr, args, SymId.None, tpe, origin)
+      case "ObjectLiteralExpression" =>
+        Unportable(Literal(Constant.UnitC, TypeRepr.NoType, origin),
+          UnportableKind.FrontendBlindSpot, MarkerState.Open,
+          None, "TS object literal", resolveTypeRepr(node, file), origin)
+      case "SpreadElement" =>
+        val inner = node.children.headOption.map(c => mintExpr(c, file))
+          .getOrElse(Literal(Constant.UnitC, TypeRepr.NoType, origin))
+        Spread(inner, resolveTypeRepr(node, file), origin)
+      case "PrefixUnaryExpression" =>
+        mintExpr(node.children.head, file)
+      case "PostfixUnaryExpression" =>
+        mintExpr(node.children.head, file)
+      case "TypeOfExpression" =>
+        Literal(Constant.StringC("object"), TypeRepr.NoType, origin)
+      case "VoidExpression" =>
+        Literal(Constant.UnitC, TypeRepr.NoType, origin)
+      case "DeleteExpression" =>
+        Literal(Constant.BoolC(true), TypeRepr.NoType, origin)
       case "Block" =>
         val stmts = node.children.map(c => mintStatement(c, file))
         if stmts.isEmpty then Literal(Constant.UnitC, TypeRepr.NoType, origin)
@@ -275,6 +379,22 @@ private class MintContext(subs: Substitutions, catalog: CatalogLog):
         Unportable(Literal(Constant.UnitC, TypeRepr.NoType, origin),
           UnportableKind.FrontendBlindSpot, MarkerState.Open,
           None, s"TS expr: ${node.kind}", resolveTypeRepr(node, file), origin)
+
+  private def isExprKind(kind: String): Boolean =
+    kind match
+      case "Identifier" | "NumericLiteral" | "StringLiteral" | "TrueKeyword" | "FalseKeyword" |
+           "NullKeyword" | "BinaryExpression" | "CallExpression" | "PropertyAccessExpression" |
+           "ElementAccessExpression" | "ArrayLiteralExpression" | "ObjectLiteralExpression" |
+           "ParenthesizedExpression" | "ConditionalExpression" | "ArrowFunction" |
+           "FunctionExpression" | "TemplateExpression" | "NewExpression" |
+           "PrefixUnaryExpression" | "PostfixUnaryExpression" | "AsExpression" |
+           "TypeAssertionExpression" | "SpreadElement" | "TypeOfExpression" |
+           "VoidExpression" | "DeleteExpression" | "FirstTemplateToken" |
+           "NoSubstitutionTemplateLiteral" | "RegularExpressionLiteral" |
+           "TaggedTemplateExpression" | "AwaitExpression" | "YieldExpression" |
+           "ThisKeyword" | "SuperKeyword" | "NonNullExpression" |
+           "SatisfiesExpression" | "CommaListExpression" => true
+      case _ => false
 
   private def nameOf(node: RastNode): String =
     node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse(
