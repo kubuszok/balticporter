@@ -25,3 +25,4 @@ balticporter.runner.NullaryArityFactory
 balticporter.runner.ClassTagParamsFactory
 balticporter.runner.VisibilityFactory
 balticporter.transform.DiscriminatedUnionTransformFactory
+balticporter.transform.DefnodeNormalizationRuleFactory

@@ -66,6 +66,7 @@ enum Language(val prefix: String):
   case Java       extends Language("JS")
   case TypeScript extends Language("TS")
   case Dart       extends Language("DT")
+  case JavaScript extends Language("JX")
 
 /** TIR-level frontend SPI — a second frontend can exist without touching the Java/Spoon path.
   * DESIGN.md §3.2: the stable frontend boundary is a `Program`, not a parsed model.
