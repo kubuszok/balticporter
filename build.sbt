@@ -302,6 +302,21 @@ lazy val `frontend-spoon` = project
     ),
   )
 
+// TypeScript frontend — reads RAST v1 JSON (produced by the Node.js exporter) and builds a TIR
+// Program. No dependency on Spoon or on Node.js at compile time; the exporter is invoked as a
+// subprocess or pointed at pre-exported JSON.
+lazy val `frontend-ts` = project
+  .in(file("balticporter/frontend-ts"))
+  .dependsOn(api)
+  .settings(
+    name := "balticporter-frontend-ts",
+    libraryDependencies ++= Seq(
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.36.4",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.36.4" % Provided,
+      munit,
+    ),
+  )
+
 // Helpers a CONSUMER writing tests against the engine needs: run Java source through phases and
 // assert on the emitted Scala. Filled from what `corpus/src/test` repeats verbatim in every
 // spec (see `PortFixture`). `munit` is a COMPILE dependency here — a testkit whose users write
