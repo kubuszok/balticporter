@@ -317,6 +317,16 @@ lazy val `frontend-ts` = project
     ),
   )
 
+// Dart frontend — stub awaiting Dart SDK. The exporter uses package:analyzer for resolved ASTs.
+// Phase 3 of the non-Java frontends plan. Primary target: dart-sass (ssg-sass).
+lazy val `frontend-dart` = project
+  .in(file("balticporter/frontend-dart"))
+  .dependsOn(api)
+  .settings(
+    name := "balticporter-frontend-dart",
+    libraryDependencies += munit,
+  )
+
 // Helpers a CONSUMER writing tests against the engine needs: run Java source through phases and
 // assert on the emitted Scala. Filled from what `corpus/src/test` repeats verbatim in every
 // spec (see `PortFixture`). `munit` is a COMPILE dependency here — a testkit whose users write
