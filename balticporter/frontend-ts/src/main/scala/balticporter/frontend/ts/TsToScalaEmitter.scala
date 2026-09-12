@@ -122,8 +122,18 @@ object TsToScalaEmitter:
         val isReassigned = reassignedParams.contains(pName)
         val sigName = if isReassigned then s"${pName}0" else pName
         val escapedName = if scalaKeywords.contains(sigName) then s"`$sigName`" else sigName
-        val isOptional = p.flags.contains("QuestionToken")
-        val rawType = resolveScalaType(p, file)
+        val isOptional = p.flags.contains("QuestionToken") || {
+          p.`type`.flatMap(file.types.get).exists(t => t.text.contains("| undefined"))
+        }
+        val rawType = if isOptional then
+          val baseType = p.`type`.flatMap(file.types.get).map { t =>
+            if t.kind == "union" then
+              val nonUndef = t.types.getOrElse(Nil).flatMap(file.types.get).filter(_.kind != "undefined")
+              nonUndef.headOption.map(nt => rastTypeToScala(nt, file)).getOrElse("Any")
+            else rastTypeToScala(t, file)
+          }.getOrElse("Any")
+          baseType
+        else resolveScalaType(p, file)
         val pType = if isOptional then
           optionalParams += pName
           s"Option[$rawType] = None"
@@ -197,7 +207,7 @@ object TsToScalaEmitter:
           val pattern = d.children.find(_.kind == "ArrayBindingPattern").get
           val names = pattern.children.filter(_.kind == "BindingElement").flatMap(
             _.children.find(_.kind == "Identifier").flatMap(_.text))
-          val initExpr = d.children.find(c => c.kind != "Identifier" && c.kind != "ArrayBindingPattern" && !c.kind.contains("Type"))
+          val initExpr = d.children.find(c => c.kind != "ArrayBindingPattern" && !c.kind.contains("Type") && !c.kind.contains("Keyword"))
             .map(emitExpr(_, file)).getOrElse("???")
           for ((n, idx) <- names.zipWithIndex)
             sb.append(s"${indent}val $n: Double = $initExpr($idx)\n")
