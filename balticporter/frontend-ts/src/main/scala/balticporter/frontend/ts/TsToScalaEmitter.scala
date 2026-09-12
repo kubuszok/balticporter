@@ -84,6 +84,7 @@ object TsToScalaEmitter:
 
     private def emitFunction(node: RastNode, file: RastFile, indent: String): Unit =
       val name = nameOf(node)
+      val isPrivate = !isExported(node)
       val params = node.children.filter(_.kind == "Parameter")
       val paramList = params.map { p =>
         val pName = nameOf(p)
@@ -93,12 +94,49 @@ object TsToScalaEmitter:
       }
       val retType = resolveFunctionReturnType(node, file)
       val body = node.children.find(_.kind == "Block")
+      val vis = if isPrivate then "private " else ""
 
-      sb.append(s"${indent}def $name(${paramList.mkString(", ")}): $retType =\n")
+      // R7: detect mutated arrays in this function body
+      body.foreach(b => currentMutatedArrays = collectMutatedArrays(b))
+
+      sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType =\n")
       body match
         case Some(block) => emitBlock(block, file, indent + "  ")
         case None => sb.append(s"${indent}  ???\n")
+      currentMutatedArrays = Set.empty
       sb.append("\n")
+
+    // R7: track which variables are mutated via .push() — they need ArrayBuffer
+    private var currentMutatedArrays: Set[String] = Set.empty
+
+    private def collectMutatedArrays(body: RastNode): Set[String] =
+      val result = mutable.Set.empty[String]
+      def walk(n: RastNode): Unit =
+        // Detect .push() calls
+        if n.kind == "CallExpression" then
+          val fn = n.children.headOption
+          fn.foreach { f =>
+            if f.kind == "PropertyAccessExpression" then
+              val method = f.children.lastOption.flatMap(_.text)
+              if method.contains("push") then
+                val obj = f.children.headOption.flatMap(_.text).orElse(
+                  f.children.headOption.map(c => nameOf(c)))
+                obj.foreach(result += _)
+          }
+        // Detect arr[arr.length] = x patterns (R15)
+        if n.kind == "BinaryExpression" then
+          val lhs = n.children.headOption
+          lhs.foreach { l =>
+            if l.kind == "ElementAccessExpression" then
+              val arrName = l.children.headOption.flatMap(_.text)
+              arrName.foreach(result += _)
+          }
+        // Detect arr += x patterns
+        if n.kind == "BinaryExpression" && n.operator.exists(o => o == "PlusEqualsToken" || o == "FirstCompoundAssignment") then
+          n.children.headOption.flatMap(_.text).foreach(result += _)
+        n.children.foreach(walk)
+      walk(body)
+      result.toSet
 
     private def emitVariableStatement(node: RastNode, file: RastFile, indent: String): Unit =
       val decls = node.children.flatMap { child =>
@@ -110,9 +148,20 @@ object TsToScalaEmitter:
         val name = nameOf(d)
         val isConst = d.flags.contains("const")
         val keyword = if isConst then "val" else "var"
-        val tpe = resolveScalaType(d, file)
+        val rawType = resolveScalaType(d, file)
+        // R7: if this array is mutated via .push(), use ArrayBuffer
+        val isMutatedArray = currentMutatedArrays.contains(name) && rawType.startsWith("Vector[")
+        val tpe = if isMutatedArray then rawType.replace("Vector[", "ArrayBuffer[") else rawType
+        // R8: integer constants
+        val tpeFixed = if isConst && tpe == "Double" then
+          val init = findInitializer(d, file)
+          if init.matches("-?\\d+") then "Int" else tpe
+        else tpe
         val init = findInitializer(d, file)
-        sb.append(s"$indent$keyword $name: $tpe = $init\n")
+        val initFixed = if isMutatedArray && (init == "Vector.empty" || init.startsWith("ArrayBuffer")) then
+          tpe.replace("ArrayBuffer[", "ArrayBuffer.empty[").stripSuffix("]") + "]"
+        else init
+        sb.append(s"$indent$keyword $name: $tpeFixed = $initFixed\n")
 
     private def emitBlock(block: RastNode, file: RastFile, indent: String): Unit =
       val stmts = block.children
@@ -126,12 +175,26 @@ object TsToScalaEmitter:
           sb.append(s"${indent}return $expr\n")
 
         case "IfStatement" =>
-          val cond = emitExpr(node.children.head, file)
-          sb.append(s"${indent}if ($cond) then\n")
-          emitStatement(node.children(1), file, indent + "  ")
-          if node.children.length > 2 then
-            sb.append(s"${indent}else\n")
-            emitStatement(node.children(2), file, indent + "  ")
+          // R14: if (d.match(regex)) { ... RegExp.$1 ... } → regex.findPrefixMatchOf(d) match { ... }
+          val condNode = node.children.head
+          val regexMatch = detectRegexMatch(condNode)
+          regexMatch match
+            case Some((obj, regex)) =>
+              sb.append(s"$indent$regex.findPrefixMatchOf($obj) match\n")
+              sb.append(s"$indent  case Some(_m) =>\n")
+              emitStatement(node.children(1), file, indent + "    ")
+              if node.children.length > 2 then
+                sb.append(s"$indent  case None =>\n")
+                emitStatement(node.children(2), file, indent + "    ")
+              else
+                sb.append(s"$indent  case None => ()\n")
+            case None =>
+              val cond = emitExpr(condNode, file)
+              sb.append(s"${indent}if ($cond) then\n")
+              emitStatement(node.children(1), file, indent + "  ")
+              if node.children.length > 2 then
+                sb.append(s"${indent}else\n")
+                emitStatement(node.children(2), file, indent + "  ")
 
         case "Block" =>
           emitBlock(node, file, indent)
@@ -223,16 +286,40 @@ object TsToScalaEmitter:
       val caseBlock = node.children.find(_.kind == "CaseBlock")
       sb.append(s"$indent$scrutinee match\n")
       caseBlock.foreach { cb =>
-        for (clause <- cb.children)
-          clause.kind match
+        val clauses = cb.children.toArray
+        var i = 0
+        while i < clauses.length do
+          clauses(i).kind match
             case "CaseClause" =>
-              val value = clause.children.headOption.map(emitExpr(_, file)).getOrElse("_")
-              sb.append(s"$indent  case $value =>\n")
-              clause.children.drop(1).foreach(s => emitStatement(s, file, indent + "    "))
+              val stmts = clauses(i).children.drop(1).filter(s => s.kind != "BreakStatement")
+              if stmts.isEmpty && i + 1 < clauses.length && clauses(i + 1).kind == "CaseClause" then
+                // R11: merge empty case with next — collect all empty adjacent cases
+                val values = mutable.ArrayBuffer[String]()
+                values += clauses(i).children.headOption.map(emitExpr(_, file)).getOrElse("_")
+                while i + 1 < clauses.length && clauses(i + 1).kind == "CaseClause" &&
+                      clauses(i + 1).children.drop(1).filter(_.kind != "BreakStatement").isEmpty &&
+                      i + 2 < clauses.length do
+                  i += 1
+                  values += clauses(i).children.headOption.map(emitExpr(_, file)).getOrElse("_")
+                // Next case has the body
+                i += 1
+                if i < clauses.length && clauses(i).kind == "CaseClause" then
+                  values += clauses(i).children.headOption.map(emitExpr(_, file)).getOrElse("_")
+                  sb.append(s"$indent  case ${values.mkString(" | ")} =>\n")
+                  clauses(i).children.drop(1).filter(_.kind != "BreakStatement")
+                    .foreach(s => emitStatement(s, file, indent + "    "))
+                else
+                  sb.append(s"$indent  case ${values.mkString(" | ")} =>\n")
+              else
+                val value = clauses(i).children.headOption.map(emitExpr(_, file)).getOrElse("_")
+                sb.append(s"$indent  case $value =>\n")
+                stmts.foreach(s => emitStatement(s, file, indent + "    "))
             case "DefaultClause" =>
               sb.append(s"$indent  case _ =>\n")
-              clause.children.foreach(s => emitStatement(s, file, indent + "    "))
+              clauses(i).children.filter(_.kind != "BreakStatement")
+                .foreach(s => emitStatement(s, file, indent + "    "))
             case _ => ()
+          i += 1
       }
 
     private def emitExpr(node: RastNode, file: RastFile): String =
@@ -265,13 +352,26 @@ object TsToScalaEmitter:
         case "NullKeyword" => "null"
 
         case "BinaryExpression" =>
-          val left = emitExpr(node.children.head, file)
           val op = node.operator.map(tsOpToScala).getOrElse("???")
           val right = emitExpr(node.children.last, file)
-          if op == "=" || op == "+=" || op == "-=" then
-            s"$left $op $right"
+          // R15: arr[arr.length] = x → arr += x
+          val lhs = node.children.head
+          if op == "=" && lhs.kind == "ElementAccessExpression" then
+            val arrObj = emitExpr(lhs.children.head, file)
+            val idx = lhs.children.lastOption
+            val isAppend = idx.exists { i =>
+              i.kind == "PropertyAccessExpression" &&
+              i.children.lastOption.flatMap(_.text).contains("length") &&
+              emitExpr(i.children.head, file) == arrObj
+            }
+            if isAppend then s"$arrObj += $right"
+            else s"${emitExpr(lhs, file)} $op $right"
           else
-            s"($left $op $right)"
+            val left = emitExpr(node.children.head, file)
+            if op == "=" || op == "+=" || op == "-=" then
+              s"$left $op $right"
+            else
+              s"($left $op $right)"
 
         case "PrefixUnaryExpression" =>
           val operand = emitExpr(node.children.head, file)
@@ -302,8 +402,8 @@ object TsToScalaEmitter:
             case s if s.endsWith(".substr") =>
               val obj = s.stripSuffix(".substr")
               s"$obj.substring(${args.mkString(", ")})"
-            case s if s.endsWith(".match") =>
-              val obj = s.stripSuffix(".match")
+            case s if s.endsWith(".`match`") || s.endsWith(".match") =>
+              val obj = s.stripSuffix(".`match`").stripSuffix(".match")
               s"${args.head}.findPrefixMatchOf($obj).isDefined"
             case s if s.endsWith(".join") =>
               val obj = s.stripSuffix(".join")
@@ -550,16 +650,26 @@ object TsToScalaEmitter:
         case _ => "Any"
 
     private def resolveFunctionReturnType(node: RastNode, file: RastFile): String =
-      // Check type annotation on function
+      // R4: read from the function's own type first
       node.`type`.flatMap(file.types.get) match
         case Some(rt) if rt.kind == "function" =>
           rt.returnType.flatMap(file.types.get).map(rastTypeToScala(_, file)).getOrElse("Any")
         case _ =>
-          // Look for explicit return type annotation
-          val returnTypeNode = node.children.find(c =>
-            c.kind == "TypeReference" || c.kind == "ArrayType" ||
-            c.kind == "NumberKeyword" || c.kind == "StringKeyword")
-          returnTypeNode.map(syntaxTypeToScala).getOrElse("Any")
+          // Try the name identifier's type (it carries the full function signature)
+          val nameId = node.children.find(_.kind == "Identifier")
+          val fromName = nameId.flatMap(_.`type`).flatMap(file.types.get).flatMap { rt =>
+            if rt.kind == "function" then
+              rt.returnType.flatMap(file.types.get).map(rastTypeToScala(_, file))
+            else None
+          }
+          fromName.getOrElse {
+            // Explicit return type annotation in children
+            val returnTypeNode = node.children.find(c =>
+              c.kind == "TypeReference" || c.kind == "ArrayType" ||
+              c.kind == "NumberKeyword" || c.kind == "StringKeyword" ||
+              c.kind == "BooleanKeyword" || c.kind == "VoidKeyword")
+            returnTypeNode.map(syntaxTypeToScala).getOrElse("Any")
+          }
 
     // --- Helpers ---
 
@@ -612,6 +722,40 @@ object TsToScalaEmitter:
       "final", "sealed", "private", "protected", "override", "lazy",
       "implicit", "given", "using", "then", "end",
     )
+
+    /** R14: detect `d.match(/regex/)` pattern in a condition node */
+    private def detectRegexMatch(node: RastNode): Option[(String, String)] =
+      if node.kind == "CallExpression" then
+        val fn = node.children.headOption
+        fn.flatMap { f =>
+          if f.kind == "PropertyAccessExpression" then
+            val method = f.children.lastOption.flatMap(_.text)
+            if method.contains("match") then
+              val obj = simpleExprName(f.children.head)
+              val regexArg = node.children.drop(1).headOption
+              regexArg.flatMap { r =>
+                if r.kind == "RegularExpressionLiteral" then
+                  val regexStr = r.value match
+                    case Some(RastValue.Str(s)) => s
+                    case _ => r.text.getOrElse("")
+                  val body = regexStr.stripPrefix("/").reverse.dropWhile(_ != '/').reverse.stripSuffix("/")
+                  Some((obj, s"\"$body\".r"))
+                else None
+              }
+            else None
+          else None
+        }
+      else None
+
+    // need a version that doesn't require file for simple obj name extraction
+    private def simpleExprName(node: RastNode): String =
+      node.kind match
+        case "Identifier" => node.text.getOrElse("???")
+        case "PropertyAccessExpression" =>
+          val obj = simpleExprName(node.children.head)
+          val prop = node.children.lastOption.flatMap(_.text).getOrElse("???")
+          s"$obj.$prop"
+        case _ => "???"
 
     private def escapeString(s: String): String =
       s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
