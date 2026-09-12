@@ -1,0 +1,11 @@
+name: balticporter_dart_exporter
+description: Baltic Porter Dart Exporter — extracts resolved AST from Dart sources
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  analyzer: ^6.0.0
+  path: ^1.8.0
