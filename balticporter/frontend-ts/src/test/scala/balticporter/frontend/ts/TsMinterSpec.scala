@@ -98,3 +98,12 @@ class TsMinterSpec extends munit.FunSuite:
     val files = fileNames.map(f => loadRast(dir + f))
     val program = mintAndReport("rough.js", files)
     assert(program.units.size >= 17, s"expected >= 17 units for 17 files, got ${program.units.size}")
+
+  test("KaTeX subset (3 files) → Program"):
+    val files = List(
+      "/rast/katex/src/ParseError.rast.json",
+      "/rast/katex/src/types.rast.json",
+      "/rast/katex/src/Namespace.rast.json",
+    ).map(loadRast)
+    val program = mintAndReport("katex-subset", files)
+    assert(program.units.nonEmpty, "KaTeX should produce units")

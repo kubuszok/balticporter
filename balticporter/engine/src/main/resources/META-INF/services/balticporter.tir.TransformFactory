@@ -24,3 +24,4 @@ balticporter.runner.ElementWitnessFactory
 balticporter.runner.NullaryArityFactory
 balticporter.runner.ClassTagParamsFactory
 balticporter.runner.VisibilityFactory
+balticporter.transform.DiscriminatedUnionTransformFactory
