@@ -29,6 +29,7 @@ object TsToScalaEmitter:
 
   private class EmitContext(config: EmitConfig):
     private val sb = new StringBuilder
+    private val typeAliasMap = mutable.Map.empty[String, String]
 
     def emitFile(file: RastFile, fileName: String): String =
       sb.clear()
@@ -45,6 +46,26 @@ object TsToScalaEmitter:
         n.kind == "FirstStatement" || n.kind == "VariableStatement")
       val typeAliases = file.nodes.filter(_.kind == "TypeAliasDeclaration")
 
+      // Resolve type aliases FIRST so they're available during emission
+      for (ta <- typeAliases)
+        val taName = nameOf(ta)
+        // Try RAST type field first, then inspect children (UnionType, etc.)
+        val tpe = ta.`type`.flatMap(file.types.get).map(rastTypeToScala(_, file)).getOrElse {
+          val unionChild = ta.children.find(_.kind == "UnionType")
+          unionChild match
+            case Some(u) =>
+              val memberKinds = u.children.map(_.kind)
+              // All numeric literals → Int
+              if memberKinds.forall(k => k == "LiteralType" || k == "NumericLiteral") then "Int"
+              // All string literals → String
+              else if memberKinds.forall(k => k == "LiteralType" || k == "StringLiteral") then "String"
+              else "Any"
+            case None =>
+              // Single type child
+              ta.children.find(c => c.kind != "Identifier").map(syntaxTypeToScala).getOrElse("Any")
+        }
+        typeAliasMap(taName) = tpe
+
       // Emit exported interfaces as case classes
       for (iface <- interfaces)
         val name = nameOf(iface)
@@ -59,7 +80,6 @@ object TsToScalaEmitter:
         sb.append("  ")
         emitCaseClass(iface, file, indent = "  ")
 
-      // Type aliases (skip — they don't translate directly)
       // Constants and variables
       for (vs <- variables)
         emitVariableStatement(vs, file, "  ")
@@ -99,7 +119,14 @@ object TsToScalaEmitter:
       // R7: detect mutated arrays in this function body
       body.foreach(b => currentMutatedArrays = collectMutatedArrays(b))
 
+      // Detect reassigned parameters — need local var copies
+      val reassignedParams = body.map(b => collectReassignedVars(b, params.map(nameOf).toSet)).getOrElse(Set.empty)
+
       sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType =\n")
+      // Emit var copies for reassigned params
+      for (p <- params if reassignedParams.contains(nameOf(p)))
+        val pName = nameOf(p)
+        sb.append(s"${indent}  var $pName = $pName\n")
       body match
         case Some(block) => emitBlock(block, file, indent + "  ")
         case None => sb.append(s"${indent}  ???\n")
@@ -152,10 +179,10 @@ object TsToScalaEmitter:
         // R7: if this array is mutated via .push(), use ArrayBuffer
         val isMutatedArray = currentMutatedArrays.contains(name) && rawType.startsWith("Vector[")
         val tpe = if isMutatedArray then rawType.replace("Vector[", "ArrayBuffer[") else rawType
-        // R8: integer constants
-        val tpeFixed = if isConst && tpe == "Double" then
-          val init = findInitializer(d, file)
-          if init.matches("-?\\d+") then "Int" else tpe
+        // R8: integer variables — Double initialized with int literal → Int
+        val tpeFixed = if tpe == "Double" then
+          val initText = findInitializer(d, file)
+          if initText.matches("-?\\d+") then "Int" else tpe
         else tpe
         val init = findInitializer(d, file)
         val initFixed = if isMutatedArray && (init == "Vector.empty" || init.startsWith("ArrayBuffer")) then
@@ -604,11 +631,12 @@ object TsToScalaEmitter:
           s"Vector[$elem]"
         case "union" =>
           val memberTypes = rt.types.getOrElse(Nil).flatMap(file.types.get)
-          val scalaTypes = memberTypes.map(rastTypeToScala(_, file)).filterNot(_ == "Null").distinct
-          // All-number-literal union → Int
-          if memberTypes.forall(_.kind == "numberLiteral") then "Int"
+          val nonNull = memberTypes.filterNot(t => t.kind == "null" || t.kind == "undefined")
+          val scalaTypes = nonNull.map(rastTypeToScala(_, file)).distinct
+          // All-number-literal union → Int (R8: TokenType = 0 | 1 | 2)
+          if nonNull.forall(_.kind == "numberLiteral") then "Int"
           // All-string-literal union → String
-          else if memberTypes.forall(_.kind == "stringLiteral") then "String"
+          else if nonNull.forall(_.kind == "stringLiteral") then "String"
           else if scalaTypes.length == 1 then scalaTypes.head
           else scalaTypes.mkString(" | ")
         case "function" =>
@@ -623,10 +651,12 @@ object TsToScalaEmitter:
         case "booleanLiteral" => "Boolean"
         case "reference" =>
           val target = rt.target.flatMap(file.types.get).map(_.text).getOrElse("Any")
+          // Resolve type aliases (R8: TokenType → Int)
+          val resolved = typeAliasMap.getOrElse(target, target)
           val typeArgs = rt.typeArguments.getOrElse(Nil).flatMap(file.types.get)
             .map(rastTypeToScala(_, file))
-          if typeArgs.nonEmpty then s"$target[${typeArgs.mkString(", ")}]"
-          else target
+          if typeArgs.nonEmpty then s"$resolved[${typeArgs.mkString(", ")}]"
+          else resolved
         case "object" =>
           resolveObjectType(rt, file)
         case _ =>
@@ -634,7 +664,8 @@ object TsToScalaEmitter:
             s"Vector[${rt.text.replace("[]", "").trim}]"
           else if rt.text.contains("[key:") then
             resolveObjectType(rt, file)
-          else rt.text
+          else
+            typeAliasMap.getOrElse(rt.text, rt.text)
 
     private def syntaxTypeToScala(node: RastNode): String =
       node.kind match
@@ -646,7 +677,8 @@ object TsToScalaEmitter:
           val elem = node.children.headOption.map(syntaxTypeToScala).getOrElse("Any")
           s"Vector[$elem]"
         case "TypeReference" =>
-          node.children.headOption.flatMap(_.text).getOrElse("Any")
+          val name = node.children.headOption.flatMap(_.text).getOrElse("Any")
+          typeAliasMap.getOrElse(name, name)
         case _ => "Any"
 
     private def resolveFunctionReturnType(node: RastNode, file: RastFile): String =
@@ -722,6 +754,21 @@ object TsToScalaEmitter:
       "final", "sealed", "private", "protected", "override", "lazy",
       "implicit", "given", "using", "then", "end",
     )
+
+    /** Detect which parameter names are reassigned in a function body */
+    private def collectReassignedVars(body: RastNode, paramNames: Set[String]): Set[String] =
+      val result = mutable.Set.empty[String]
+      def walk(n: RastNode): Unit =
+        if n.kind == "BinaryExpression" && n.operator.exists(o =>
+          o == "EqualsToken" || o == "FirstAssignment" || o == "PlusEqualsToken" ||
+          o == "MinusEqualsToken" || o == "FirstCompoundAssignment") then
+          n.children.headOption.foreach { lhs =>
+            val name = lhs.text.orElse(lhs.children.find(_.kind == "Identifier").flatMap(_.text))
+            name.filter(paramNames.contains).foreach(result += _)
+          }
+        n.children.foreach(walk)
+      walk(body)
+      result.toSet
 
     /** R14: detect `d.match(/regex/)` pattern in a condition node */
     private def detectRegexMatch(node: RastNode): Option[(String, String)] =
