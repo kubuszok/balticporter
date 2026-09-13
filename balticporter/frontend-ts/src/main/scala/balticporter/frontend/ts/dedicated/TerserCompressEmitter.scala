@@ -277,7 +277,9 @@ object TerserCompressEmitter:
       val scalaMethod = snakeToCamel(methodName)
       sb.append(s"  // --- $methodName (${family.size} overrides) ---\n\n")
 
-      for entry <- family do
+      if family.size == 1 then
+        // Single override: emit as a plain method
+        val entry = family.head
         val scalaClass = astVarToScalaName(entry.className)
         val result = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
         totalRefusals += result.refusalCount
@@ -286,15 +288,38 @@ object TerserCompressEmitter:
         else refused += 1
 
         val paramDecls = entry.params.map(p => s"${snakeToCamel(p)}: Any")
-        val paramStr = if paramDecls.isEmpty then "" else s"(${paramDecls.mkString(", ")})"
+        val paramStr = if paramDecls.isEmpty then s"(node: $scalaClass)" else s"(node: $scalaClass, ${paramDecls.mkString(", ")})"
         val statusComment =
           if result.isComplete then ""
           else s" /* ${result.refusalCount} untranslated: ${result.refusalReasons.take(3).mkString(", ")} */"
 
-        sb.append(s"  /** $scalaClass.$scalaMethod */\n")
-        sb.append(s"  def ${scalaMethod}_${scalaClass}$paramStr: Any =$statusComment\n")
+        sb.append(s"  def $scalaMethod$paramStr: Any =$statusComment\n")
         sb.append(result.scalaBody)
         sb.append("\n")
+      else
+        // Multiple overrides: emit as pattern-match function
+        val allParams = family.flatMap(_.params).distinct
+        val paramDecls = allParams.map(p => s"${snakeToCamel(p)}: Any")
+        val paramStr = if paramDecls.isEmpty then "(node: AstNode)" else s"(node: AstNode, ${paramDecls.mkString(", ")})"
+        sb.append(s"  def $scalaMethod$paramStr: Any = node match {\n")
+
+        for entry <- family do
+          val scalaClass = astVarToScalaName(entry.className)
+          val result = DefmethodBodyTranslator.translateBody(entry, hierarchy, "      ")
+          totalRefusals += result.refusalCount
+          if result.isComplete then full += 1
+          else if result.refusalCount <= 2 then partial += 1
+          else refused += 1
+
+          val statusComment =
+            if result.isComplete then ""
+            else s" /* ${result.refusalCount} untranslated */"
+
+          sb.append(s"    case n: $scalaClass =>$statusComment\n")
+          sb.append(result.scalaBody)
+
+        sb.append(s"    case _ => ()\n")
+        sb.append(s"  }\n\n")
 
     // Free functions
     if freeFns.nonEmpty then
