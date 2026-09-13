@@ -272,3 +272,228 @@ class TerserEmitterSpec extends munit.FunSuite:
     val path = outDir.resolve("SymbolDef.scala")
     java.nio.file.Files.writeString(path, scala)
     println(s"[emit] SymbolDef.scala: ${scala.linesIterator.size} lines -> $path")
+
+  // -----------------------------------------------------------------------
+  // NativeObjects emission (compress/native-objects.js)
+  // -----------------------------------------------------------------------
+
+  test("native-objects.js: emit NativeObjects object"):
+    val rast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitNativeObjects(rast)
+    println("=== NativeObjects.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object NativeObjects"), "should emit NativeObjects object")
+    // purePropAccessGlobals
+    assert(scala.contains("purePropAccessGlobals"), "should have purePropAccessGlobals")
+    assert(scala.contains("\"Number\""), "should contain Number")
+    assert(scala.contains("\"Array\""), "should contain Array")
+    assert(scala.contains("\"Promise\""), "should contain Promise")
+    // pureNativeMethods
+    assert(scala.contains("pureNativeMethods"), "should have pureNativeMethods")
+    assert(scala.contains("\"charAt\""), "should contain charAt method")
+    assert(scala.contains("\"indexOf\""), "should contain indexOf method")
+    assert(scala.contains("objectMethods"), "should use objectMethods set")
+    // pureNativeFns
+    assert(scala.contains("pureNativeFns"), "should have pureNativeFns")
+    assert(scala.contains("\"isArray\""), "should contain isArray")
+    assert(scala.contains("\"abs\""), "should contain abs (Math)")
+    assert(scala.contains("\"keys\""), "should contain keys (Object)")
+    // pureNativeValues
+    assert(scala.contains("pureNativeValues"), "should have pureNativeValues")
+    assert(scala.contains("\"PI\""), "should contain PI")
+    assert(scala.contains("\"MAX_VALUE\""), "should contain MAX_VALUE")
+    // Lookup helpers
+    assert(scala.contains("def isPureNativeMethod"), "should have isPureNativeMethod")
+    assert(scala.contains("def isPureNativeFn"), "should have isPureNativeFn")
+    assert(scala.contains("def isPureNativeValue"), "should have isPureNativeValue")
+
+  test("native-objects.js: emitted NativeObjects matches hand-port API"):
+    val rast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitNativeObjects(rast)
+    // Structure
+    assert(scala.contains("Map[String, Set[String]]"), "pureNativeMethods should be Map[String, Set[String]]")
+    assert(scala.contains("Set[String]"), "purePropAccessGlobals should be Set[String]")
+    // objectMethods is private
+    assert(scala.contains("private val objectMethods"), "objectMethods should be private")
+    // Boolean/Function just use objectMethods
+    assert(scala.contains("\"Boolean\" -> objectMethods"), "Boolean should map to objectMethods")
+    assert(scala.contains("\"Function\" -> objectMethods"), "Function should map to objectMethods")
+    // String has many methods
+    assert(scala.contains("\"trimStart\""), "String should have trimStart")
+    assert(scala.contains("\"replaceAll\""), "String should have replaceAll")
+
+  test("native-objects.js: write emitted NativeObjects to target"):
+    val rast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitNativeObjects(rast)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val path = outDir.resolve("NativeObjects.scala")
+    java.nio.file.Files.writeString(path, scala)
+    println(s"[emit] NativeObjects.scala: ${scala.linesIterator.size} lines -> $path")
+
+  // -----------------------------------------------------------------------
+  // Sourcemap module emission
+  // -----------------------------------------------------------------------
+
+  test("sourcemap: emit Base64 codec"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitBase64(dummyRast)
+    println("=== Base64.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object Base64"), "should emit Base64 object")
+    assert(scala.contains("def encode(str: String): String"), "should have encode method")
+    assert(scala.contains("def decode(b64: String): String"), "should have decode method")
+    assert(scala.contains("StandardCharsets.UTF_8"), "should use UTF_8")
+    assert(scala.contains("Alphabet"), "should have Alphabet array")
+    assert(scala.contains("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"),
+      "should have base64 alphabet")
+    assert(scala.contains("0x3f"), "should use bit masks")
+
+  test("sourcemap: emit VlqCodec"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitVlqCodec(dummyRast)
+    println("=== VlqCodec.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object VlqCodec"), "should emit VlqCodec object")
+    assert(scala.contains("def encode(value: Int): String"), "should have encode method")
+    assert(scala.contains("def decode(str: String, offset: Int): (Int, Int)"), "should have decode method")
+    assert(scala.contains("def encodeSegment(values: Array[Int]): String"), "should have encodeSegment method")
+    assert(scala.contains("def decodeMappings(mappings: String)"), "should have decodeMappings method")
+    assert(scala.contains("def encodeMappings(decoded: Array[Array[Array[Int]]])"), "should have encodeMappings method")
+    assert(scala.contains("VlqBaseShift"), "should have VLQ constants")
+    assert(scala.contains("VlqContinuation"), "should have continuation bit")
+
+  test("sourcemap: emit SourceMapTypes"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitSourceMapTypes(dummyRast)
+    println("=== SourceMapTypes.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class SourceMapping"), "should have SourceMapping")
+    assert(scala.contains("generatedLine"), "should have generatedLine field")
+    assert(scala.contains("generatedColumn"), "should have generatedColumn field")
+    assert(scala.contains("originalLine"), "should have originalLine field")
+    assert(scala.contains("final case class SourceMapData"), "should have SourceMapData")
+    assert(scala.contains("version:        Int = 3"), "should default version to 3")
+    assert(scala.contains("sources:"), "should have sources field")
+    assert(scala.contains("sourcesContent:"), "should have sourcesContent field")
+    assert(scala.contains("final case class OriginalPosition"), "should have OriginalPosition")
+    assert(scala.contains("final case class SourceMapOptions"), "should have SourceMapOptions")
+
+  test("sourcemap: emit InlineSourceMap"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitInlineSourceMap(dummyRast)
+    println("=== InlineSourceMap.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object InlineSourceMap"), "should emit InlineSourceMap object")
+    assert(scala.contains("def readSourceMap(code: String): String | Null"), "should have readSourceMap method")
+    assert(scala.contains("InlineMapRegex"), "should have regex")
+    assert(scala.contains("Base64.decode"), "should use Base64.decode")
+    assert(scala.contains("sourceMappingURL"), "should reference sourceMappingURL")
+    assert(scala.contains("inline source map not found"), "should have warning message")
+
+  test("sourcemap: write all emitted sourcemap files to target"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val files = List(
+      ("Base64", dedicated.TerserEmitter.emitBase64(dummyRast)),
+      ("VlqCodec", dedicated.TerserEmitter.emitVlqCodec(dummyRast)),
+      ("SourceMapTypes", dedicated.TerserEmitter.emitSourceMapTypes(dummyRast)),
+      ("InlineSourceMap", dedicated.TerserEmitter.emitInlineSourceMap(dummyRast)),
+    )
+    for ((name, source) <- files) {
+      val path = outDir.resolve(s"$name.scala")
+      java.nio.file.Files.writeString(path, source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
+    }
+    println(s"[emit] Total: ${files.size} sourcemap files written")
+
+  // -----------------------------------------------------------------------
+  // Output module emission
+  // -----------------------------------------------------------------------
+
+  test("output: emit OutputOptions case class"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitOutputOptions(dummyRast)
+    println("=== OutputOptions.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class OutputOptions"), "should emit OutputOptions case class")
+    assert(scala.contains("asciiOnly:"), "should have asciiOnly field")
+    assert(scala.contains("beautify:"), "should have beautify field")
+    assert(scala.contains("ecma:                Int = 5"), "should default ecma to 5")
+    assert(scala.contains("semicolons:          Boolean = true"), "should default semicolons to true")
+    assert(scala.contains("shorthand:           Option[Boolean] = None"), "should have Optional shorthand")
+    assert(scala.contains("quoteStyle:          Int = 0"), "should have quoteStyle")
+    assert(scala.contains("sourceMap:           ssg.js.sourcemap.SourceMap | Null = null"), "should have sourceMap")
+    assert(scala.contains("maxLineLen:"), "should have maxLineLen")
+    assert(scala.contains("preamble:"), "should have preamble")
+    assert(scala.contains("wrapIife:"), "should have wrapIife")
+
+  test("output: emit JsNumber object"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitJsNumber(dummyRast)
+    println("=== JsNumber.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object JsNumber"), "should emit JsNumber object")
+    assert(scala.contains("def toJsString(num: Double): String"), "should have toJsString method")
+    assert(scala.contains("\"NaN\""), "should handle NaN")
+    assert(scala.contains("\"Infinity\""), "should handle Infinity")
+    assert(scala.contains("ecmaFormat"), "should use ecmaFormat helper")
+    assert(scala.contains("private def ecmaFormat"), "should have ecmaFormat method")
+    assert(scala.contains("n <= 21"), "should implement ECMA cases")
+    assert(scala.contains("\"e\""), "should format with exponent")
+    assert(scala.contains("mantissa"), "should parse mantissa")
+    assert(scala.contains("parsedExp"), "should parse exponent")
+
+  test("output: write all emitted output files to target"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val files = List(
+      ("OutputOptions", dedicated.TerserEmitter.emitOutputOptions(dummyRast)),
+      ("JsNumber", dedicated.TerserEmitter.emitJsNumber(dummyRast)),
+    )
+    for ((name, source) <- files) {
+      val path = outDir.resolve(s"$name.scala")
+      java.nio.file.Files.writeString(path, source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
+    }
+    println(s"[emit] Total: ${files.size} output files written")
+
+  // -----------------------------------------------------------------------
+  // AST token emission
+  // -----------------------------------------------------------------------
+
+  test("ast: emit AstToken case class"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstToken(dummyRast)
+    println("=== AstToken.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class AstToken"), "should emit AstToken case class")
+    assert(scala.contains("tokenType:      String"), "should have tokenType field")
+    assert(scala.contains("value:          String"), "should have value field")
+    assert(scala.contains("line:           Int"), "should have line field")
+    assert(scala.contains("col:            Int"), "should have col field")
+    assert(scala.contains("pos:            Int"), "should have pos field")
+    assert(scala.contains("var flags:      Int = 0"), "should have mutable flags field")
+    assert(scala.contains("commentsBefore: List[AstToken]"), "should have commentsBefore")
+    assert(scala.contains("commentsAfter:  List[AstToken]"), "should have commentsAfter")
+    assert(scala.contains("def nlb:"), "should have nlb accessor")
+    assert(scala.contains("def nlb_="), "should have nlb setter")
+    assert(scala.contains("def quote:"), "should have quote accessor")
+    assert(scala.contains("def quote_="), "should have quote setter")
+    assert(scala.contains("def templateEnd:"), "should have templateEnd accessor")
+    assert(scala.contains("FlagNlb"), "should have FlagNlb constant")
+    assert(scala.contains("FlagQuoteSingle"), "should have FlagQuoteSingle constant")
+    assert(scala.contains("FlagQuoteExists"), "should have FlagQuoteExists constant")
+    assert(scala.contains("FlagTemplateEnd"), "should have FlagTemplateEnd constant")
+    assert(scala.contains("val Empty: AstToken"), "should have Empty sentinel")
+
+  test("ast: write emitted AstToken to target"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstToken(dummyRast)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val path = outDir.resolve("AstToken.scala")
+    java.nio.file.Files.writeString(path, scala)
+    println(s"[emit] AstToken.scala: ${scala.linesIterator.size} lines -> $path")

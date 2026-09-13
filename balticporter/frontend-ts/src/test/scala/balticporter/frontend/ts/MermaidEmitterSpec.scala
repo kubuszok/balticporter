@@ -570,3 +570,145 @@ class MermaidEmitterSpec extends munit.FunSuite:
       println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
     }
     println(s"[emit] Total: ${allFiles.size} diagram files written")
+
+  // -- Complete Cynefin diagram emission ----------------------------------------
+
+  test("cynefin -> CynefinDb class"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitCynefinDb(rast)
+    println("=== CynefinDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class CynefinItem"), "should have CynefinItem case class")
+    assert(scala.contains("final class CynefinDb"), "should have CynefinDb class")
+    assert(scala.contains("def addItem"), "should have addItem method")
+    assert(scala.contains("def itemsInDomain"), "should have itemsInDomain method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("cynefin -> CynefinDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitCynefinDiagram(rast)
+    println("=== CynefinDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object CynefinDiagram"), "should emit CynefinDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("\"cynefin\""), "should detect cynefin keyword")
+    assert(scala.contains("CynefinParser.parse"), "should delegate to CynefinParser")
+    assert(scala.contains("CynefinRenderer.render"), "should delegate to CynefinRenderer")
+
+  test("cynefin -> CynefinParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitCynefinParser(rast)
+    println("=== CynefinParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object CynefinParser"), "should emit CynefinParser object")
+    assert(scala.contains("def parse(input: String): CynefinDb"), "should have parse method")
+    assert(scala.contains("\"cynefin\""), "should parse cynefin keyword")
+    assert(scala.contains("addItem"), "should add items")
+    assert(scala.contains("colonIdx"), "should parse domain:items")
+
+  test("cynefin -> CynefinRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitCynefinRenderer(rast)
+    println("=== CynefinRenderer.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object CynefinRenderer"), "should emit CynefinRenderer object")
+    assert(scala.contains("def render(db: CynefinDb, config: MermaidConfig)"), "should accept CynefinDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("cynefinDomain"), "should have cynefinDomain CSS class")
+    assert(scala.contains("cynefinTitle"), "should have cynefinTitle CSS class")
+    assert(scala.contains("Disorder"), "should have Disorder center")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("cynefin -> CynefinStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitCynefinStyles(rast)
+    println("=== CynefinStyles.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object CynefinStyles"), "should emit CynefinStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("cynefinTitle"), "should have cynefinTitle style")
+    assert(scala.contains("cynefinItem"), "should have cynefinItem style")
+
+  // -- Complete TreeView diagram emission ----------------------------------------
+
+  test("treeview -> TreeViewDb class"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitTreeviewDb(rast)
+    println("=== TreeviewDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class TreeNode"), "should have TreeNode case class")
+    assert(scala.contains("final class TreeViewDb"), "should have TreeViewDb class")
+    assert(scala.contains("def addRoot"), "should have addRoot method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("treeview -> TreeViewDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitTreeviewDiagram(rast)
+    println("=== TreeviewDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object TreeViewDiagram"), "should emit TreeViewDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("\"treeview\""), "should detect treeview keyword")
+    assert(scala.contains("TreeViewParser.parse"), "should delegate to TreeViewParser")
+    assert(scala.contains("TreeViewRenderer.render"), "should delegate to TreeViewRenderer")
+
+  test("treeview -> TreeViewParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitTreeviewParser(rast)
+    println("=== TreeviewParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object TreeViewParser"), "should emit TreeViewParser object")
+    assert(scala.contains("def parse(input: String): TreeViewDb"), "should have parse method")
+    assert(scala.contains("\"treeview\""), "should parse treeview keyword")
+    assert(scala.contains("TreeNode"), "should create TreeNode")
+    assert(scala.contains("stack"), "should use stack for indentation")
+
+  test("treeview -> TreeViewRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitTreeviewRenderer(rast)
+    println("=== TreeviewRenderer.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object TreeViewRenderer"), "should emit TreeViewRenderer object")
+    assert(scala.contains("def render(db: TreeViewDb, config: MermaidConfig)"), "should accept TreeViewDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("treeNode"), "should have treeNode CSS class")
+    assert(scala.contains("treeConnector"), "should have treeConnector CSS class")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("treeview -> TreeViewStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitTreeviewStyles(rast)
+    println("=== TreeviewStyles.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object TreeViewStyles"), "should emit TreeViewStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("treeNode"), "should have treeNode style")
+    assert(scala.contains("treeConnector"), "should have treeConnector style")
+
+  // -- Write cynefin and treeview diagram files ---------------------------------
+
+  test("write complete cynefin and treeview diagram files"):
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
+    java.nio.file.Files.createDirectories(outDir)
+
+    val dummyRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+
+    val allFiles = List(
+      ("CynefinDb",       dedicated.MermaidEmitter.emitCynefinDb(dummyRast)),
+      ("CynefinDiagram",  dedicated.MermaidEmitter.emitCynefinDiagram(dummyRast)),
+      ("CynefinParser",   dedicated.MermaidEmitter.emitCynefinParser(dummyRast)),
+      ("CynefinRenderer", dedicated.MermaidEmitter.emitCynefinRenderer(dummyRast)),
+      ("CynefinStyles",   dedicated.MermaidEmitter.emitCynefinStyles(dummyRast)),
+      ("TreeviewDb",       dedicated.MermaidEmitter.emitTreeviewDb(dummyRast)),
+      ("TreeviewDiagram",  dedicated.MermaidEmitter.emitTreeviewDiagram(dummyRast)),
+      ("TreeviewParser",   dedicated.MermaidEmitter.emitTreeviewParser(dummyRast)),
+      ("TreeviewRenderer", dedicated.MermaidEmitter.emitTreeviewRenderer(dummyRast)),
+      ("TreeviewStyles",   dedicated.MermaidEmitter.emitTreeviewStyles(dummyRast)),
+    )
+
+    for ((name, source) <- allFiles) {
+      val path = outDir.resolve(s"$name.scala")
+      java.nio.file.Files.writeString(path, source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
+    }
+    println(s"[emit] Total: ${allFiles.size} cynefin+treeview diagram files written")

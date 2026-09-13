@@ -615,6 +615,66 @@ object MermaidEmitter {
     else List(css + "\n")
   }
 
+  /** Checks that every `${...}` interpolation in the extracted CSS references
+    * a `vars.xxx` field that actually exists on ThemeVariables. Returns false if any
+    * reference is to a field from the upstream TS config type (like PacketDiagramConfig)
+    * that has no ThemeVariables equivalent, or if the parameter name was not rewritten
+    * to `vars` at all.
+    */
+  private def cssRefsAreThemeVars(css: String): Boolean = {
+    // Every interpolation must be vars.knownField (possibly wrapped in an if-else)
+    val allInterpolations = """\$\{([^}]+)\}""".r
+    val varRefPattern = """vars\.(\w+)""".r
+    val matches = allInterpolations.findAllMatchIn(css).toList
+    if (matches.isEmpty) return true // no interpolations at all is fine
+    matches.forall { m =>
+      val expr = m.group(1)
+      val refs = varRefPattern.findAllMatchIn(expr).toList
+      // Must have at least one vars.xxx reference and all must be known fields
+      refs.nonEmpty && refs.forall(r => knownThemeVarFields.contains(r.group(1)))
+    }
+  }
+
+  private val knownThemeVarFields: Set[String] = Set(
+    "darkMode", "background", "primaryColor", "secondaryColor", "tertiaryColor",
+    "primaryBorderColor", "secondaryBorderColor", "tertiaryBorderColor",
+    "primaryTextColor", "secondaryTextColor", "tertiaryTextColor",
+    "lineColor", "textColor", "mainBkg", "secondBkg", "border1", "border2",
+    "arrowheadColor", "fontFamily", "fontSize", "labelBackground", "THEME_COLOR_LIMIT",
+    "nodeBkg", "nodeBorder", "clusterBkg", "clusterBorder", "defaultLinkColor",
+    "titleColor", "edgeLabelBackground", "nodeTextColor",
+    "actorBorder", "actorBkg", "actorTextColor", "actorLineColor",
+    "signalColor", "signalTextColor", "labelBoxBkgColor", "labelBoxBorderColor",
+    "labelTextColor", "loopTextColor", "noteBorderColor", "noteBkgColor", "noteTextColor",
+    "activationBorderColor", "activationBkgColor", "sequenceNumberColor",
+    "sectionBkgColor", "altSectionBkgColor", "sectionBkgColor2", "excludeBkgColor",
+    "taskBorderColor", "taskBkgColor", "taskTextLightColor", "taskTextColor",
+    "taskTextDarkColor", "taskTextOutsideColor", "taskTextClickableColor",
+    "activeTaskBorderColor", "activeTaskBkgColor", "gridColor", "todayLineColor",
+    "done", "doneTaskBkgColor", "doneTaskBorderColor",
+    "pieStrokeColor", "pieStrokeWidth", "pieOpacity", "pieOuterStrokeColor",
+    "pieOuterStrokeWidth", "pieTitleTextSize", "pieTitleTextColor",
+    "pieSectionTextSize", "pieSectionTextColor", "pieLegendTextSize", "pieLegendTextColor",
+    "mainContrastColor", "darkTextColor", "altBackground",
+    "classText", "fillType0", "fillType1", "fillType2", "fillType3",
+    "fillType4", "fillType5", "fillType6", "fillType7",
+    "compositeBackground", "compositeBorder", "compositeTitleBackground",
+    "requirementBackground", "requirementBorderColor", "requirementBorderSize",
+    "requirementTextColor", "relationColor", "relationLabelBackground", "relationLabelColor",
+    "quadrant1Fill", "quadrant2Fill", "quadrant3Fill", "quadrant4Fill",
+    "quadrant1TextFill", "quadrant2TextFill", "quadrant3TextFill", "quadrant4TextFill",
+    "quadrantExternalBorderStrokeFill", "quadrantInternalBorderStrokeFill",
+    "quadrantPointFill", "quadrantPointTextFill", "quadrantTitleFill",
+    "quadrantXAxisTextFill", "quadrantYAxisTextFill",
+    "note", "text", "contrast", "labelColor", "labelBackgroundColor", "specialStateColor",
+    "stateBkg", "stateLabelColor", "transitionColor", "transitionLabelColor",
+    "errorBkgColor", "errorTextColor", "personBkg", "personBorder",
+    "scaleLabelColor", "branchLabelColor", "commitLabelColor", "commitLabelBackground",
+    "commitLabelFontSize", "tagLabelFontSize", "tagLabelColor", "tagLabelBackground",
+    "tagLabelBorder", "innerEndBackground", "critBkgColor", "critBorderColor", "critical",
+    "attributeBackgroundColorOdd", "attributeBackgroundColorEven",
+  )
+
   private def rewriteThemeAccess(node: RastNode, paramName: String): String = {
     // options.pieStrokeColor -> vars.pieStrokeColor
     node.kind match {
@@ -2001,19 +2061,24 @@ object MermaidEmitter {
     sb.append("object PacketStyles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String =\n")
 
-    // Try RAST extraction first
+    // Try RAST extraction first, but validate the result references real ThemeVariables fields.
+    // The upstream TS uses a PacketDiagramConfig with fields like byteFontSize, startByteColor
+    // that do not exist on the hand-ported ThemeVariables — the fallback maps to the correct fields.
     val templateExpr = findTemplateExpression(rast)
-    templateExpr match {
+    val usedFallback = templateExpr match {
       case Some(tmpl) =>
         val paramName = findStylesParamName(rast)
         val cssBlocks = extractCssFromTemplate(tmpl, paramName)
-        if (cssBlocks.nonEmpty) {
+        if (cssBlocks.nonEmpty && cssRefsAreThemeVars(cssBlocks.head)) {
           sb.append(s"""    s\"\"\"${cssBlocks.head}\"\"\".stripMargin\n""")
+          false
         } else {
           emitPacketStylesFallback(sb)
+          true
         }
       case None =>
         emitPacketStylesFallback(sb)
+        true
     }
 
     sb.append("}\n")
@@ -2219,6 +2284,1035 @@ object MermaidEmitter {
     sb.append("       |  stroke-width: 1px;\n")
     sb.append("       |}\n")
     sb.append("       |.kanbanCardLabel {\n")
+    sb.append("       |  font-size: 12px;\n")
+    sb.append("       |  fill: $${vars.textColor};\n")
+    sb.append("       |  font-family: $${vars.fontFamily};\n")
+    sb.append("       |}\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  // -- Complete Cynefin diagram emission ----------------------------------------
+
+  /** Emits the CynefinDb class with CynefinItem case class. */
+  def emitCynefinDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "CynefinDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage cynefin\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** An item placed in a Cynefin domain. */\n")
+    sb.append("final case class CynefinItem(label: String, domain: String)\n\n")
+    sb.append("/** Mutable database for Cynefin diagram data. */\n")
+    sb.append("final class CynefinDb {\n\n")
+    sb.append("  var title:          String = \"\"\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n\n")
+    sb.append("  /** Items in each domain. */\n")
+    sb.append("  val items: mutable.ArrayBuffer[CynefinItem] = mutable.ArrayBuffer.empty\n\n")
+    sb.append("  def addItem(label: String, domain: String): Unit = items += CynefinItem(label, domain)\n\n")
+    sb.append("  def itemsInDomain(domain: String): Seq[CynefinItem] =\n")
+    sb.append("    items.filter(_.domain.toLowerCase == domain.toLowerCase).toSeq\n\n")
+    sb.append("  def clear(): Unit = { title = \"\"; accTitle = \"\"; accDescription = \"\"; items.clear() }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the CynefinDiagram facade. */
+  def emitCynefinDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "CynefinDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage cynefin\n\n")
+    sb.append("import lowlevel.Nullable\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("/** Cynefin framework diagram type registration and rendering entry point. */\n")
+    sb.append("object CynefinDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean =\n")
+    sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"cynefin\")\n\n")
+    sb.append("  def parse(text: String): CynefinDb = CynefinParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append("    val db = new CynefinDb\n")
+    sb.append("    title.foreach(t => db.title = t)\n")
+    sb.append("    CynefinParser.parse(text, db)\n")
+    sb.append("    CynefinRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the CynefinParser. */
+  def emitCynefinParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "CynefinParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage cynefin\n\n")
+    sb.append("import ssg.mermaid.parse.ParseException\n\n")
+    sb.append("/** Hand-written parser for Mermaid Cynefin diagram syntax. */\n")
+    sb.append("object CynefinParser {\n\n")
+    sb.append("  def parse(input: String): CynefinDb = parse(input, new CynefinDb)\n\n")
+    sb.append("  def parse(input: String, db: CynefinDb): CynefinDb = {\n")
+    sb.append("    val cleaned = cleanInput(input)\n")
+    sb.append("    val lines   = cleaned.split(\"\\n\").map(_.trim).filter(_.nonEmpty)\n\n")
+    sb.append("    var i = 0\n")
+    sb.append("    while (i < lines.length && !lines(i).toLowerCase.startsWith(\"cynefin\")) i += 1\n")
+    sb.append("    if (i >= lines.length) throw new ParseException(\"Expected 'cynefin' keyword\", 1, 1)\n")
+    sb.append("    i += 1\n\n")
+    sb.append("    while (i < lines.length) {\n")
+    sb.append("      val line = lines(i).trim; i += 1\n")
+    sb.append("      if (line.startsWith(\"%%\")) {\n")
+    sb.append("        // skip\n")
+    sb.append("      } else if (line.toLowerCase.startsWith(\"title\")) {\n")
+    sb.append("        db.title = line.substring(5).trim\n")
+    sb.append("      } else {\n")
+    sb.append("        // Parse domain: items\n")
+    sb.append("        val colonIdx = line.indexOf(':')\n")
+    sb.append("        if (colonIdx > 0) {\n")
+    sb.append("          val domain   = line.substring(0, colonIdx).trim\n")
+    sb.append("          val itemsStr = line.substring(colonIdx + 1).trim\n")
+    sb.append("          val itemList = itemsStr.split(\",\").map(_.trim).filter(_.nonEmpty)\n")
+    sb.append("          for (item <- itemList)\n")
+    sb.append("            db.addItem(item, domain)\n")
+    sb.append("        }\n")
+    sb.append("      }\n")
+    sb.append("    }\n")
+    sb.append("    db\n")
+    sb.append("  }\n\n")
+    sb.append("  private def cleanInput(input: String): String =\n")
+    sb.append("    input.replaceAll(\"%%\\\\{[^}]*\\\\}%%\", \"\")\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the CynefinRenderer. */
+  def emitCynefinRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "CynefinRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage cynefin\n\n")
+    sb.append("import ssg.mermaid.Accessibility\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("/** Renders a Cynefin framework diagram to SVG. */\n")
+    sb.append("object CynefinRenderer {\n\n")
+    sb.append("  private val Size:         Double              = 500.0\n")
+    sb.append("  private val Padding:      Double              = 30.0\n")
+    sb.append("  private val DomainColors: Map[String, String] = Map(\n")
+    sb.append("    \"complex\" -> \"#e8d5f5\",\n")
+    sb.append("    \"complicated\" -> \"#d5e8f5\",\n")
+    sb.append("    \"clear\" -> \"#d5f5e8\",\n")
+    sb.append("    \"chaotic\" -> \"#f5e8d5\",\n")
+    sb.append("    \"obvious\" -> \"#d5f5e8\",\n")
+    sb.append("    \"disorder\" -> \"#f5f5d5\"\n")
+    sb.append("  )\n\n")
+    sb.append("  def render(db: CynefinDb, config: MermaidConfig): String = {\n")
+    sb.append("    val svgSize = Size + Padding * 2 + 40\n")
+    sb.append("    val viewBox = s\"0 0 $svgSize $svgSize\"\n")
+    sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n\n")
+    sb.append("    Accessibility.applyTo(svg, \"cynefin\", db.accTitle, db.accDescription)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = CynefinStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+    sb.append("    val mainGroup = svg.append(\"g\")\n")
+    sb.append("    val half      = Size / 2\n\n")
+    sb.append("    if (db.title.nonEmpty) {\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgSize / 2).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"cynefinTitle\", true).text(db.title)\n")
+    sb.append("    }\n\n")
+    sb.append("    val ox = Padding; val oy = Padding + 20\n\n")
+    sb.append("    // Four quadrants\n")
+    sb.append("    val domains = Seq(\n")
+    sb.append("      (\"Complex\", ox, oy, half, half),\n")
+    sb.append("      (\"Complicated\", ox + half, oy, half, half),\n")
+    sb.append("      (\"Chaotic\", ox, oy + half, half, half),\n")
+    sb.append("      (\"Clear\", ox + half, oy + half, half, half)\n")
+    sb.append("    )\n\n")
+    sb.append("    for ((name, x, y, w, h) <- domains) {\n")
+    sb.append("      val color = DomainColors.getOrElse(name.toLowerCase, \"#f0f0f0\")\n")
+    sb.append("      mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", w).attr(\"height\", h).style(\"fill\", color).style(\"stroke\", \"#ccc\").classed(\"cynefinDomain\", true)\n\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + 20).attr(\"text-anchor\", \"middle\").classed(\"cynefinDomainLabel\", true).text(name)\n\n")
+    sb.append("      // Items in this domain\n")
+    sb.append("      val domainItems = db.itemsInDomain(name)\n")
+    sb.append("      for ((item, idx) <- domainItems.zipWithIndex)\n")
+    sb.append("        mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + 45 + idx * 20).attr(\"text-anchor\", \"middle\").classed(\"cynefinItem\", true).text(item.label)\n")
+    sb.append("    }\n\n")
+    sb.append("    // Center: Disorder\n")
+    sb.append("    val centerSize = 80.0\n")
+    sb.append("    mainGroup\n")
+    sb.append("      .append(\"rect\")\n")
+    sb.append("      .attr(\"x\", ox + half - centerSize / 2)\n")
+    sb.append("      .attr(\"y\", oy + half - centerSize / 2)\n")
+    sb.append("      .attr(\"width\", centerSize)\n")
+    sb.append("      .attr(\"height\", centerSize)\n")
+    sb.append("      .style(\"fill\", DomainColors(\"disorder\"))\n")
+    sb.append("      .style(\"stroke\", \"#999\")\n")
+    sb.append("      .classed(\"cynefinDomain\", true)\n")
+    sb.append("    mainGroup.append(\"text\").attr(\"x\", ox + half).attr(\"y\", oy + half + 5).attr(\"text-anchor\", \"middle\").classed(\"cynefinDomainLabel\", true).text(\"Disorder\")\n\n")
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits CynefinStyles. */
+  def emitCynefinStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "CynefinStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage cynefin\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("object CynefinStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".cynefinTitle { font-size: 18px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |.cynefinDomain { stroke-width: 1px; }\n")
+    sb.append("       |.cynefinDomainLabel { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |.cynefinItem { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  // -- Complete TreeView diagram emission ----------------------------------------
+
+  /** Emits the TreeViewDb class with TreeNode case class. */
+  def emitTreeviewDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "TreeviewDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage treeview\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** A node in a tree view. */\n")
+    sb.append("final case class TreeNode(label: String, children: mutable.ArrayBuffer[TreeNode] = mutable.ArrayBuffer.empty)\n\n")
+    sb.append("/** Mutable database for tree view diagram data. */\n")
+    sb.append("final class TreeViewDb {\n\n")
+    sb.append("  var title:          String = \"\"\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n\n")
+    sb.append("  val roots: mutable.ArrayBuffer[TreeNode] = mutable.ArrayBuffer.empty\n\n")
+    sb.append("  def addRoot(label: String): TreeNode = {\n")
+    sb.append("    val node = TreeNode(label); roots += node; node\n")
+    sb.append("  }\n\n")
+    sb.append("  def clear(): Unit = { title = \"\"; accTitle = \"\"; accDescription = \"\"; roots.clear() }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the TreeViewDiagram facade. */
+  def emitTreeviewDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "TreeviewDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage treeview\n\n")
+    sb.append("import lowlevel.Nullable\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("object TreeViewDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean =\n")
+    sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"treeview\")\n\n")
+    sb.append("  def parse(text: String): TreeViewDb = TreeViewParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append("    val db = new TreeViewDb\n")
+    sb.append("    title.foreach(t => db.title = t)\n")
+    sb.append("    TreeViewParser.parse(text, db)\n")
+    sb.append("    TreeViewRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the TreeViewParser. */
+  def emitTreeviewParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "TreeviewParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage treeview\n\n")
+    sb.append("import ssg.mermaid.parse.ParseException\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** Hand-written parser for Mermaid tree view syntax. */\n")
+    sb.append("object TreeViewParser {\n\n")
+    sb.append("  def parse(input: String): TreeViewDb =\n")
+    sb.append("    parse(input, new TreeViewDb)\n\n")
+    sb.append("  def parse(input: String, db: TreeViewDb): TreeViewDb = {\n")
+    sb.append("    val cleaned = cleanInput(input)\n")
+    sb.append("    val lines   = cleaned.split(\"\\n\")\n\n")
+    sb.append("    var i = 0\n")
+    sb.append("    while (i < lines.length && !lines(i).trim.toLowerCase.startsWith(\"treeview\")) i += 1\n")
+    sb.append("    if (i >= lines.length) throw new ParseException(\"Expected 'treeView' keyword\", 1, 1)\n")
+    sb.append("    i += 1\n\n")
+    sb.append("    // Parse indentation-based tree\n")
+    sb.append("    val stack = mutable.ArrayBuffer.empty[(Int, TreeNode)]\n\n")
+    sb.append("    while (i < lines.length) {\n")
+    sb.append("      val line    = lines(i); i += 1\n")
+    sb.append("      val trimmed = line.trim\n")
+    sb.append("      if (trimmed.isEmpty || trimmed.startsWith(\"%%\")) {\n")
+    sb.append("        // skip\n")
+    sb.append("      } else {\n")
+    sb.append("        val indent = line.length - line.stripLeading().length\n")
+    sb.append("        val node   = TreeNode(trimmed)\n\n")
+    sb.append("        // Pop stack to find parent\n")
+    sb.append("        while (stack.nonEmpty && stack.last._1 >= indent) stack.remove(stack.size - 1)\n\n")
+    sb.append("        if (stack.isEmpty) {\n")
+    sb.append("          db.roots += node\n")
+    sb.append("        } else {\n")
+    sb.append("          stack.last._2.children += node\n")
+    sb.append("        }\n")
+    sb.append("        stack += ((indent, node))\n")
+    sb.append("      }\n")
+    sb.append("    }\n")
+    sb.append("    db\n")
+    sb.append("  }\n\n")
+    sb.append("  private def cleanInput(input: String): String =\n")
+    sb.append("    input.replaceAll(\"%%\\\\{[^}]*\\\\}%%\", \"\")\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the TreeViewRenderer. */
+  def emitTreeviewRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "TreeviewRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage treeview\n\n")
+    sb.append("import ssg.mermaid.Accessibility\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("/** Renders a tree view diagram to SVG. */\n")
+    sb.append("object TreeViewRenderer {\n\n")
+    sb.append("  private val IndentSize: Double = 30.0\n")
+    sb.append("  private val LineHeight: Double = 25.0\n")
+    sb.append("  private val Padding:    Double = 20.0\n\n")
+    sb.append("  def render(db: TreeViewDb, config: MermaidConfig): String = {\n")
+    sb.append("    // Count total nodes for sizing\n")
+    sb.append("    var totalNodes = 0\n")
+    sb.append("    var maxDepth   = 0\n")
+    sb.append("    def count(node: TreeNode, depth: Int): Unit = {\n")
+    sb.append("      totalNodes += 1; maxDepth = math.max(maxDepth, depth)\n")
+    sb.append("      node.children.foreach(count(_, depth + 1))\n")
+    sb.append("    }\n")
+    sb.append("    db.roots.foreach(count(_, 0))\n")
+    sb.append("    totalNodes = totalNodes.max(1)\n\n")
+    sb.append("    val svgWidth  = (maxDepth + 1) * IndentSize + 300 + Padding * 2\n")
+    sb.append("    val svgHeight = totalNodes * LineHeight + Padding * 2 + 40\n")
+    sb.append("    val viewBox   = s\"0 0 $svgWidth $svgHeight\"\n")
+    sb.append("    val svg       = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n\n")
+    sb.append("    Accessibility.applyTo(svg, \"treeView\", db.accTitle, db.accDescription)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = TreeViewStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+    sb.append("    val mainGroup = svg.append(\"g\")\n\n")
+    sb.append("    if (db.title.nonEmpty) {\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2).attr(\"y\", 20).attr(\"text-anchor\", \"middle\").classed(\"treeTitle\", true).text(db.title)\n")
+    sb.append("    }\n\n")
+    sb.append("    var yPos = Padding + (if (db.title.nonEmpty) 30 else 0)\n\n")
+    sb.append("    def renderNode(node: TreeNode, depth: Int, parentX: Double, parentY: Double): Unit = {\n")
+    sb.append("      val x = Padding + depth * IndentSize\n")
+    sb.append("      val y = yPos\n")
+    sb.append("      yPos += LineHeight\n\n")
+    sb.append("      // Connector line from parent\n")
+    sb.append("      if (depth > 0) {\n")
+    sb.append("        mainGroup.append(\"line\").attr(\"x1\", parentX + 5).attr(\"y1\", parentY).attr(\"x2\", x).attr(\"y2\", y).classed(\"treeConnector\", true)\n")
+    sb.append("      }\n\n")
+    sb.append("      // Node circle\n")
+    sb.append("      mainGroup.append(\"circle\").attr(\"cx\", x + 5).attr(\"cy\", y).attr(\"r\", 4).classed(\"treeNode\", true)\n\n")
+    sb.append("      // Label\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + 15).attr(\"y\", y + 4).classed(\"treeLabel\", true).text(node.label)\n\n")
+    sb.append("      for (child <- node.children)\n")
+    sb.append("        renderNode(child, depth + 1, x, y)\n")
+    sb.append("    }\n\n")
+    sb.append("    db.roots.foreach(renderNode(_, 0, 0, 0))\n\n")
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits TreeViewStyles. */
+  def emitTreeviewStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "TreeviewStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage treeview\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("object TreeViewStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".treeTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |.treeNode { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; }\n")
+    sb.append("       |.treeConnector { stroke: $${vars.lineColor}; stroke-width: 1px; }\n")
+    sb.append("       |.treeLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  // -- Complete Wardley diagram emission ----------------------------------------
+
+  /** Emits the WardleyDb class with WardleyComponent and WardleyLink case classes. */
+  def emitWardleyDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "WardleyDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage wardley\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** A component in a Wardley map (position on evolution/value chain axes). */\n")
+    sb.append("final case class WardleyComponent(name: String, visibility: Double, evolution: Double)\n\n")
+    sb.append("/** A dependency link. */\n")
+    sb.append("final case class WardleyLink(from: String, to: String)\n\n")
+    sb.append("/** Mutable database for Wardley map data. */\n")
+    sb.append("final class WardleyDb {\n\n")
+    sb.append("  var title:          String = \"\"\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n\n")
+    sb.append("  val components: mutable.ArrayBuffer[WardleyComponent] = mutable.ArrayBuffer.empty\n")
+    sb.append("  val links:      mutable.ArrayBuffer[WardleyLink]      = mutable.ArrayBuffer.empty\n\n")
+    sb.append("  def addComponent(name: String, visibility: Double, evolution: Double): Unit =\n")
+    sb.append("    components += WardleyComponent(name, visibility, evolution)\n\n")
+    sb.append("  def addLink(from: String, to: String): Unit = links += WardleyLink(from, to)\n\n")
+    sb.append("  def clear(): Unit = { title = \"\"; accTitle = \"\"; accDescription = \"\"; components.clear(); links.clear() }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the WardleyDiagram facade. */
+  def emitWardleyDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "WardleyDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage wardley\n\n")
+    sb.append("import lowlevel.Nullable\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("object WardleyDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean =\n")
+    sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"wardley\")\n\n")
+    sb.append("  def parse(text: String): WardleyDb = WardleyParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append("    val db = new WardleyDb\n")
+    sb.append("    title.foreach(t => db.title = t)\n")
+    sb.append("    WardleyParser.parse(text, db)\n")
+    sb.append("    WardleyRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the WardleyParser. */
+  def emitWardleyParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "WardleyParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage wardley\n\n")
+    sb.append("import ssg.mermaid.parse.ParseException\n\n")
+    sb.append("/** Hand-written parser for Mermaid Wardley map syntax. */\n")
+    sb.append("object WardleyParser {\n\n")
+    sb.append("  def parse(input: String): WardleyDb = parse(input, new WardleyDb)\n\n")
+    sb.append("  def parse(input: String, db: WardleyDb): WardleyDb = {\n")
+    sb.append("    val cleaned = cleanInput(input)\n")
+    sb.append("    val lines   = cleaned.split(\"\\n\").map(_.trim).filter(_.nonEmpty)\n\n")
+    sb.append("    var i = 0\n")
+    sb.append("    while (i < lines.length && !lines(i).toLowerCase.startsWith(\"wardley\")) i += 1\n")
+    sb.append("    if (i >= lines.length) throw new ParseException(\"Expected 'wardley' keyword\", 1, 1)\n")
+    sb.append("    i += 1\n\n")
+    sb.append("    while (i < lines.length) {\n")
+    sb.append("      val line = lines(i).trim; i += 1\n")
+    sb.append("      if (line.startsWith(\"%%\")) { /* skip */ }\n")
+    sb.append("      else if (line.toLowerCase.startsWith(\"title\")) { db.title = line.substring(5).trim }\n")
+    sb.append("      else if (line.toLowerCase.startsWith(\"component \")) {\n")
+    sb.append("        val rest       = line.substring(10).trim\n")
+    sb.append("        val bracketIdx = rest.indexOf('[')\n")
+    sb.append("        if (bracketIdx >= 0) {\n")
+    sb.append("          val name       = rest.substring(0, bracketIdx).trim\n")
+    sb.append("          val endIdx     = rest.indexOf(']', bracketIdx)\n")
+    sb.append("          val coords     = if (endIdx > bracketIdx) rest.substring(bracketIdx + 1, endIdx) else \"\"\n")
+    sb.append("          val parts      = coords.split(\",\").map(_.trim)\n")
+    sb.append("          val visibility = parts.headOption\n")
+    sb.append("            .flatMap(s => try Some(s.toDouble) catch { case _: NumberFormatException => None })\n")
+    sb.append("            .getOrElse(0.5)\n")
+    sb.append("          val evolution = parts.lift(1)\n")
+    sb.append("            .flatMap(s => try Some(s.toDouble) catch { case _: NumberFormatException => None })\n")
+    sb.append("            .getOrElse(0.5)\n")
+    sb.append("          db.addComponent(name, visibility, evolution)\n")
+    sb.append("        } else {\n")
+    sb.append("          db.addComponent(rest, 0.5, 0.5)\n")
+    sb.append("        }\n")
+    sb.append("      } else if (line.contains(\"-->\")) {\n")
+    sb.append("        val parts = line.split(\"-->\").map(_.trim)\n")
+    sb.append("        if (parts.length == 2) db.addLink(parts(0), parts(1))\n")
+    sb.append("      }\n")
+    sb.append("    }\n")
+    sb.append("    db\n")
+    sb.append("  }\n\n")
+    sb.append("  private def cleanInput(input: String): String =\n")
+    sb.append("    input.replaceAll(\"%%\\\\{[^}]*\\\\}%%\", \"\")\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the WardleyRenderer. */
+  def emitWardleyRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "WardleyRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage wardley\n\n")
+    sb.append("import ssg.mermaid.Accessibility\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** Renders a Wardley map to SVG. */\n")
+    sb.append("object WardleyRenderer {\n\n")
+    sb.append("  private val Padding:         Double        = 50.0\n")
+    sb.append("  private val ChartWidth:      Double        = 600.0\n")
+    sb.append("  private val ChartHeight:     Double        = 400.0\n")
+    sb.append("  private val EvolutionLabels: Array[String] = Array(\"Genesis\", \"Custom Built\", \"Product\", \"Commodity\")\n\n")
+    sb.append("  def render(db: WardleyDb, config: MermaidConfig): String = {\n")
+    sb.append("    val svgWidth  = ChartWidth + Padding * 3\n")
+    sb.append("    val svgHeight = ChartHeight + Padding * 3 + (if (db.title.nonEmpty) 30 else 0)\n")
+    sb.append("    val viewBox   = s\"0 0 $svgWidth $svgHeight\"\n")
+    sb.append("    val svg       = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n")
+    sb.append("    Accessibility.applyTo(svg, \"wardley\", db.accTitle, db.accDescription)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = WardleyStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+    sb.append("    val mainGroup = svg.append(\"g\")\n")
+    sb.append("    var yOff      = Padding\n\n")
+    sb.append("    if (db.title.nonEmpty) {\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"wardleyTitle\", true).text(db.title)\n")
+    sb.append("      yOff += 30\n")
+    sb.append("    }\n\n")
+    sb.append("    val chartX = Padding * 2; val chartY = yOff\n\n")
+    sb.append("    mainGroup.append(\"rect\").attr(\"x\", chartX).attr(\"y\", chartY).attr(\"width\", ChartWidth).attr(\"height\", ChartHeight).style(\"fill\", \"#fafafa\").style(\"stroke\", \"#ccc\")\n\n")
+    sb.append("    for ((label, idx) <- EvolutionLabels.zipWithIndex) {\n")
+    sb.append("      val x = chartX + (idx + 0.5) * ChartWidth / 4\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", chartY + ChartHeight + 20).attr(\"text-anchor\", \"middle\").classed(\"wardleyAxisLabel\", true).text(label)\n")
+    sb.append("      if (idx > 0) {\n")
+    sb.append("        val dx = chartX + idx * ChartWidth / 4\n")
+    sb.append("        mainGroup.append(\"line\").attr(\"x1\", dx).attr(\"y1\", chartY).attr(\"x2\", dx).attr(\"y2\", chartY + ChartHeight).style(\"stroke\", \"#ddd\").style(\"stroke-dasharray\", \"3,3\")\n")
+    sb.append("      }\n")
+    sb.append("    }\n\n")
+    sb.append("    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + 10).attr(\"text-anchor\", \"end\").classed(\"wardleyAxisLabel\", true).text(\"Visible\")\n")
+    sb.append("    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + ChartHeight).attr(\"text-anchor\", \"end\").classed(\"wardleyAxisLabel\", true).text(\"Invisible\")\n\n")
+    sb.append("    val positions = mutable.Map.empty[String, (Double, Double)]\n")
+    sb.append("    for (comp <- db.components) {\n")
+    sb.append("      val x = chartX + comp.evolution * ChartWidth\n")
+    sb.append("      val y = chartY + (1.0 - comp.visibility) * ChartHeight\n")
+    sb.append("      positions(comp.name) = (x, y)\n")
+    sb.append("      mainGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", y).attr(\"r\", 6).classed(\"wardleyComponent\", true)\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + 10).attr(\"y\", y + 4).classed(\"wardleyComponentLabel\", true).text(comp.name)\n")
+    sb.append("    }\n\n")
+    sb.append("    for (link <- db.links)\n")
+    sb.append("      for {\n")
+    sb.append("        (sx, sy) <- positions.get(link.from)\n")
+    sb.append("        (tx, ty) <- positions.get(link.to)\n")
+    sb.append("      }\n")
+    sb.append("        mainGroup.append(\"line\").attr(\"x1\", sx).attr(\"y1\", sy).attr(\"x2\", tx).attr(\"y2\", ty).classed(\"wardleyLink\", true)\n\n")
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits WardleyStyles. */
+  def emitWardleyStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "WardleyStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage wardley\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("object WardleyStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".wardleyTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |.wardleyAxisLabel { font-size: 11px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |.wardleyComponent { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n")
+    sb.append("       |.wardleyComponentLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append("       |.wardleyLink { stroke: $${vars.lineColor}; stroke-width: 1px; }\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  // -- Complete Ishikawa diagram emission ----------------------------------------
+
+  /** Emits the IshikawaDb class with CauseBranch case class. */
+  def emitIshikawaDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "IshikawaDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage ishikawa\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** A cause branch in an Ishikawa (fishbone) diagram. */\n")
+    sb.append("final case class CauseBranch(label: String, causes: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty)\n\n")
+    sb.append("/** Mutable database for Ishikawa diagram data. */\n")
+    sb.append("final class IshikawaDb {\n\n")
+    sb.append("  var title:          String = \"\"\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n")
+    sb.append("  var effect:         String = \"\"\n\n")
+    sb.append("  val branches: mutable.ArrayBuffer[CauseBranch] = mutable.ArrayBuffer.empty\n\n")
+    sb.append("  def setEffect(label: String): Unit = effect = label\n\n")
+    sb.append("  def addBranch(label: String): CauseBranch = {\n")
+    sb.append("    val b = CauseBranch(label)\n")
+    sb.append("    branches += b\n")
+    sb.append("    b\n")
+    sb.append("  }\n\n")
+    sb.append("  def addCause(branchLabel: String, cause: String): Unit =\n")
+    sb.append("    branches.find(_.label == branchLabel).foreach(_.causes += cause)\n\n")
+    sb.append("  def addCauseToLast(cause: String): Unit =\n")
+    sb.append("    if (branches.nonEmpty) branches.last.causes += cause\n\n")
+    sb.append("  def clear(): Unit = {\n")
+    sb.append("    title = \"\"; accTitle = \"\"; accDescription = \"\"; effect = \"\"; branches.clear()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the IshikawaDiagram facade. */
+  def emitIshikawaDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "IshikawaDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage ishikawa\n\n")
+    sb.append("import lowlevel.Nullable\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("/** Ishikawa (fishbone/cause-and-effect) diagram type registration and rendering entry point. */\n")
+    sb.append("object IshikawaDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean = {\n")
+    sb.append("    val firstLine = text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase\n")
+    sb.append("    firstLine.startsWith(\"ishikawa\")\n")
+    sb.append("  }\n\n")
+    sb.append("  def parse(text: String): IshikawaDb = IshikawaParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append("    val db = new IshikawaDb\n")
+    sb.append("    title.foreach(t => db.title = t)\n")
+    sb.append("    IshikawaParser.parse(text, db)\n")
+    sb.append("    IshikawaRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the IshikawaParser. */
+  def emitIshikawaParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "IshikawaParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage ishikawa\n\n")
+    sb.append("import ssg.mermaid.parse.ParseException\n\n")
+    sb.append("/** Hand-written parser for Mermaid Ishikawa (fishbone) syntax. */\n")
+    sb.append("object IshikawaParser {\n\n")
+    sb.append("  def parse(input: String): IshikawaDb = parse(input, new IshikawaDb)\n\n")
+    sb.append("  def parse(input: String, db: IshikawaDb): IshikawaDb = {\n")
+    sb.append("    val cleaned = cleanInput(input)\n")
+    sb.append("    val lines   = cleaned.split(\"\\n\")\n\n")
+    sb.append("    var i = 0\n")
+    sb.append("    while (i < lines.length && !lines(i).trim.toLowerCase.startsWith(\"ishikawa\")) i += 1\n")
+    sb.append("    if (i >= lines.length) throw new ParseException(\"Expected 'ishikawa' keyword\", 1, 1)\n")
+    sb.append("    i += 1\n\n")
+    sb.append("    while (i < lines.length) {\n")
+    sb.append("      val line = lines(i); val trimmed = line.trim; i += 1\n")
+    sb.append("      if (trimmed.isEmpty || trimmed.startsWith(\"%%\")) {\n")
+    sb.append("        // skip\n")
+    sb.append("      } else {\n")
+    sb.append("        val indent     = line.length - line.stripLeading().length\n")
+    sb.append("        val (_, label) = parseIdLabel(trimmed)\n\n")
+    sb.append("        if (indent < 2) {\n")
+    sb.append("          if (db.effect.isEmpty && db.branches.isEmpty) {\n")
+    sb.append("            db.setEffect(label)\n")
+    sb.append("          } else {\n")
+    sb.append("            db.addBranch(label)\n")
+    sb.append("          }\n")
+    sb.append("        } else {\n")
+    sb.append("          db.addCauseToLast(label)\n")
+    sb.append("        }\n")
+    sb.append("      }\n")
+    sb.append("    }\n")
+    sb.append("    db\n")
+    sb.append("  }\n\n")
+    sb.append("  private def cleanInput(input: String): String =\n")
+    sb.append("    input.replaceAll(\"%%\\\\{[^}]*\\\\}%%\", \"\")\n\n")
+    sb.append("  private def parseIdLabel(text: String): (String, String) = {\n")
+    sb.append("    val bracketIdx = text.indexOf('[')\n")
+    sb.append("    if (bracketIdx >= 0) {\n")
+    sb.append("      val id       = text.substring(0, bracketIdx).trim\n")
+    sb.append("      val endIdx   = text.lastIndexOf(']')\n")
+    sb.append("      val rawLabel = if (endIdx > bracketIdx) text.substring(bracketIdx + 1, endIdx).trim else text.substring(bracketIdx + 1).trim\n")
+    sb.append("      val label    = if (rawLabel.startsWith(\"\\\"\") && rawLabel.endsWith(\"\\\"\")) rawLabel.substring(1, rawLabel.length - 1) else rawLabel\n")
+    sb.append("      (if (id.nonEmpty) id else label, label)\n")
+    sb.append("    } else (text, text)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the IshikawaRenderer. */
+  def emitIshikawaRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "IshikawaRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage ishikawa\n\n")
+    sb.append("import ssg.mermaid.Accessibility\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("/** Renders an Ishikawa (fishbone/cause-and-effect) diagram to SVG. */\n")
+    sb.append("object IshikawaRenderer {\n\n")
+    sb.append("  private val Padding:      Double = 30.0\n")
+    sb.append("  private val SpineLength:  Double = 600.0\n")
+    sb.append("  private val BranchLength: Double = 120.0\n")
+    sb.append("  private val CauseSpacing: Double = 25.0\n\n")
+    sb.append("  def render(db: IshikawaDb, config: MermaidConfig): String = {\n")
+    sb.append("    val branchCount = db.branches.size.max(1)\n")
+    sb.append("    val maxCauses   = if (db.branches.isEmpty) 0 else db.branches.map(_.causes.size).max\n")
+    sb.append("    val svgWidth    = SpineLength + Padding * 3 + 100\n")
+    sb.append("    val svgHeight   = BranchLength * 2 + maxCauses * CauseSpacing + Padding * 2 + 60\n\n")
+    sb.append("    val viewBox = s\"0 0 $svgWidth $svgHeight\"\n")
+    sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n")
+    sb.append("    Accessibility.applyTo(svg, \"ishikawa\", db.accTitle, db.accDescription)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = IshikawaStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+    sb.append("    val marker = defs.append(\"marker\")\n")
+    sb.append("    marker.attr(\"id\", \"fishhead\").attr(\"viewBox\", \"0 0 10 10\")\n")
+    sb.append("    marker.attr(\"refX\", 10).attr(\"refY\", 5).attr(\"markerWidth\", 8).attr(\"markerHeight\", 8).attr(\"orient\", \"auto\")\n")
+    sb.append("    marker.append(\"path\").attr(\"d\", \"M 0 0 L 10 5 L 0 10 z\").style(\"fill\", themeVars.lineColor)\n\n")
+    sb.append("    val mainGroup   = svg.append(\"g\")\n")
+    sb.append("    val spineY      = svgHeight / 2\n")
+    sb.append("    val spineStartX = Padding\n")
+    sb.append("    val spineEndX   = SpineLength + Padding\n\n")
+    sb.append("    val spine = mainGroup.append(\"line\")\n")
+    sb.append("    spine.attr(\"x1\", spineStartX).attr(\"y1\", spineY)\n")
+    sb.append("    spine.attr(\"x2\", spineEndX).attr(\"y2\", spineY)\n")
+    sb.append("    spine.attr(\"marker-end\", \"url(#fishhead)\").classed(\"ishikawaSpine\", true)\n\n")
+    sb.append("    if (db.effect.nonEmpty) {\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", spineEndX + 15).attr(\"y\", spineY + 5).attr(\"text-anchor\", \"start\").classed(\"ishikawaEffect\", true).text(db.effect)\n")
+    sb.append("    }\n\n")
+    sb.append("    val spacing = if (branchCount > 1) (SpineLength - 60) / (branchCount - 1).toDouble else SpineLength / 2\n")
+    sb.append("    for ((branch, idx) <- db.branches.zipWithIndex) {\n")
+    sb.append("      val branchX    = spineStartX + 30 + spacing * idx\n")
+    sb.append("      val isTop      = idx % 2 == 0\n")
+    sb.append("      val branchEndY = if (isTop) spineY - BranchLength else spineY + BranchLength\n\n")
+    sb.append("      val line = mainGroup.append(\"line\")\n")
+    sb.append("      line.attr(\"x1\", branchX).attr(\"y1\", spineY)\n")
+    sb.append("      line.attr(\"x2\", branchX).attr(\"y2\", branchEndY)\n")
+    sb.append("      line.classed(\"ishikawaBranch\", true)\n\n")
+    sb.append("      val labelY = if (isTop) branchEndY - 10 else branchEndY + 20\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", branchX).attr(\"y\", labelY).attr(\"text-anchor\", \"middle\").classed(\"ishikawaBranchLabel\", true).text(branch.label)\n\n")
+    sb.append("      for ((cause, cIdx) <- branch.causes.zipWithIndex) {\n")
+    sb.append("        val causeY = if (isTop) branchEndY + 20 + cIdx * CauseSpacing else branchEndY - 20 - cIdx * CauseSpacing\n")
+    sb.append("        val causeEndX = branchX + 80\n")
+    sb.append("        val causeLine = mainGroup.append(\"line\")\n")
+    sb.append("        causeLine.attr(\"x1\", branchX).attr(\"y1\", causeY)\n")
+    sb.append("        causeLine.attr(\"x2\", causeEndX).attr(\"y2\", causeY)\n")
+    sb.append("        causeLine.classed(\"ishikawaCause\", true)\n")
+    sb.append("        mainGroup.append(\"text\").attr(\"x\", causeEndX + 5).attr(\"y\", causeY + 4).attr(\"text-anchor\", \"start\").classed(\"ishikawaCauseLabel\", true).text(cause)\n")
+    sb.append("      }\n")
+    sb.append("    }\n\n")
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits IshikawaStyles. */
+  def emitIshikawaStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "IshikawaStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage ishikawa\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("/** CSS class generation for Ishikawa diagram elements. */\n")
+    sb.append("object IshikawaStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".ishikawaSpine {\n")
+    sb.append("       |  stroke: $${vars.lineColor};\n")
+    sb.append("       |  stroke-width: 3px;\n")
+    sb.append("       |}\n")
+    sb.append("       |.ishikawaEffect {\n")
+    sb.append("       |  font-size: 16px;\n")
+    sb.append("       |  font-weight: bold;\n")
+    sb.append("       |  fill: $${vars.textColor};\n")
+    sb.append("       |  font-family: $${vars.fontFamily};\n")
+    sb.append("       |}\n")
+    sb.append("       |.ishikawaBranch {\n")
+    sb.append("       |  stroke: $${vars.lineColor};\n")
+    sb.append("       |  stroke-width: 2px;\n")
+    sb.append("       |}\n")
+    sb.append("       |.ishikawaBranchLabel {\n")
+    sb.append("       |  font-size: 14px;\n")
+    sb.append("       |  font-weight: bold;\n")
+    sb.append("       |  fill: $${vars.textColor};\n")
+    sb.append("       |  font-family: $${vars.fontFamily};\n")
+    sb.append("       |}\n")
+    sb.append("       |.ishikawaCause {\n")
+    sb.append("       |  stroke: $${vars.lineColor};\n")
+    sb.append("       |  stroke-width: 1px;\n")
+    sb.append("       |}\n")
+    sb.append("       |.ishikawaCauseLabel {\n")
+    sb.append("       |  font-size: 11px;\n")
+    sb.append("       |  fill: $${vars.textColor};\n")
+    sb.append("       |  font-family: $${vars.fontFamily};\n")
+    sb.append("       |}\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  // -- Complete Venn diagram emission ----------------------------------------
+
+  /** Emits the VennDb class with VennSet and VennIntersection case classes. */
+  def emitVennDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "VennDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage venn\n\n")
+    sb.append("import scala.collection.mutable\n\n")
+    sb.append("/** A set in a Venn diagram. */\n")
+    sb.append("final case class VennSet(id: String, label: String, size: Double = 1.0)\n\n")
+    sb.append("/** An intersection label. */\n")
+    sb.append("final case class VennIntersection(sets: Seq[String], label: String)\n\n")
+    sb.append("/** Mutable database for Venn diagram data. */\n")
+    sb.append("final class VennDb {\n\n")
+    sb.append("  var title:          String = \"\"\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n\n")
+    sb.append("  val sets:          mutable.ArrayBuffer[VennSet]          = mutable.ArrayBuffer.empty\n")
+    sb.append("  val intersections: mutable.ArrayBuffer[VennIntersection] = mutable.ArrayBuffer.empty\n\n")
+    sb.append("  def addSet(id: String, label: String, size: Double = 1.0): Unit =\n")
+    sb.append("    sets += VennSet(id, label, size)\n\n")
+    sb.append("  def addIntersection(setIds: Seq[String], label: String): Unit =\n")
+    sb.append("    intersections += VennIntersection(setIds, label)\n\n")
+    sb.append("  def clear(): Unit = {\n")
+    sb.append("    title = \"\"; accTitle = \"\"; accDescription = \"\"; sets.clear(); intersections.clear()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the VennDiagram facade. */
+  def emitVennDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "VennDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage venn\n\n")
+    sb.append("import lowlevel.Nullable\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("/** Venn diagram type registration and rendering entry point. */\n")
+    sb.append("object VennDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean = {\n")
+    sb.append("    val firstLine = text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase\n")
+    sb.append("    firstLine.startsWith(\"venn-beta\")\n")
+    sb.append("  }\n\n")
+    sb.append("  def parse(text: String): VennDb = VennParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append("    val db = new VennDb\n")
+    sb.append("    title.foreach(t => db.title = t)\n")
+    sb.append("    VennParser.parse(text, db)\n")
+    sb.append("    VennRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the VennParser. */
+  def emitVennParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "VennParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage venn\n\n")
+    sb.append("import ssg.mermaid.parse.{ ParseException, Scanner }\n\n")
+    sb.append("import scala.util.boundary\n")
+    sb.append("import scala.util.boundary.break\n\n")
+    sb.append("/** Hand-written parser for Mermaid Venn diagram syntax. */\n")
+    sb.append("object VennParser {\n\n")
+    sb.append("  def parse(input: String): VennDb = parse(input, new VennDb)\n\n")
+    sb.append("  def parse(input: String, db: VennDb): VennDb = {\n")
+    sb.append("    val cleaned = cleanInput(input)\n")
+    sb.append("    val scanner = new Scanner(cleaned)\n\n")
+    sb.append("    scanner.skipWhitespaceAndNewlines()\n")
+    sb.append("    if (!scanner.matchStrIgnoreCase(\"venn-beta\")) {\n")
+    sb.append("      throw new ParseException(\"Expected 'venn-beta' keyword\", scanner.line, scanner.col)\n")
+    sb.append("    }\n")
+    sb.append("    skipToNewline(scanner)\n")
+    sb.append("    parseBody(scanner, db)\n")
+    sb.append("    db\n")
+    sb.append("  }\n\n")
+    sb.append("  private def cleanInput(input: String): String =\n")
+    sb.append("    input.replaceAll(\"%%\\\\{[^}]*\\\\}%%\", \"\").replaceAll(\"%%[^\\n]*\", \"\")\n\n")
+    sb.append("  private def parseBody(scanner: Scanner, db: VennDb): Unit = boundary {\n")
+    sb.append("    while (!scanner.isEof) {\n")
+    sb.append("      scanner.skipWhitespaceAndNewlines()\n")
+    sb.append("      if (scanner.isEof) break()\n\n")
+    sb.append("      if (scanner.peek() == '%') { skipToNewline(scanner) }\n")
+    sb.append("      else if (tryParseTitle(scanner, db)) {}\n")
+    sb.append("      else if (tryParseSet(scanner, db)) {}\n")
+    sb.append("      else if (tryParseIntersection(scanner, db)) {}\n")
+    sb.append("      else { skipToNewline(scanner) }\n")
+    sb.append("    }\n")
+    sb.append("  }\n\n")
+    sb.append("  private def tryParseTitle(scanner: Scanner, db: VennDb): Boolean = boundary {\n")
+    sb.append("    val saved = scanner.save()\n")
+    sb.append("    if (!scanner.matchStrIgnoreCase(\"title\")) { break(false) }\n")
+    sb.append("    if (!scanner.isEof && scanner.peek() != ' ' && scanner.peek() != '\\t' && scanner.peek() != '\\n') {\n")
+    sb.append("      scanner.restore(saved); break(false)\n")
+    sb.append("    }\n")
+    sb.append("    scanner.skipWhitespace()\n")
+    sb.append("    db.title = readTextUntilNewline(scanner).trim\n")
+    sb.append("    true\n")
+    sb.append("  }\n\n")
+    sb.append("  private def tryParseSet(scanner: Scanner, db: VennDb): Boolean = boundary {\n")
+    sb.append("    val saved = scanner.save()\n")
+    sb.append("    if (!scanner.matchStrIgnoreCase(\"set\")) { scanner.restore(saved); break(false) }\n")
+    sb.append("    if (!scanner.isEof && !scanner.peek().isWhitespace) { scanner.restore(saved); break(false) }\n")
+    sb.append("    scanner.skipWhitespace()\n\n")
+    sb.append("    val id = readIdent(scanner)\n")
+    sb.append("    if (id.isEmpty) { scanner.restore(saved); break(false) }\n")
+    sb.append("    scanner.skipWhitespace()\n\n")
+    sb.append("    val label = if (!scanner.isEof && scanner.peek() == '[') {\n")
+    sb.append("      scanner.advance()\n")
+    sb.append("      if (!scanner.isEof && scanner.peek() == '\"') {\n")
+    sb.append("        val l = scanner.readQuotedString()\n")
+    sb.append("        if (!scanner.isEof && scanner.peek() == ']') scanner.advance()\n")
+    sb.append("        l\n")
+    sb.append("      } else {\n")
+    sb.append("        scanner.readUntil(']').trim\n")
+    sb.append("      }\n")
+    sb.append("    } else id\n\n")
+    sb.append("    db.addSet(id, label)\n")
+    sb.append("    skipToNewline(scanner)\n")
+    sb.append("    true\n")
+    sb.append("  }\n\n")
+    sb.append("  private def tryParseIntersection(scanner: Scanner, db: VennDb): Boolean = boundary {\n")
+    sb.append("    val saved = scanner.save()\n")
+    sb.append("    if (!scanner.matchStrIgnoreCase(\"intersection\")) { scanner.restore(saved); break(false) }\n")
+    sb.append("    if (!scanner.isEof && !scanner.peek().isWhitespace) { scanner.restore(saved); break(false) }\n")
+    sb.append("    scanner.skipWhitespace()\n\n")
+    sb.append("    val setIds = scala.collection.mutable.ArrayBuffer.empty[String]\n")
+    sb.append("    while (!scanner.isEof && scanner.peek() != '[' && scanner.peek() != '\\n') {\n")
+    sb.append("      val id = readIdent(scanner)\n")
+    sb.append("      if (id.nonEmpty) setIds += id\n")
+    sb.append("      scanner.skipWhitespace()\n")
+    sb.append("      if (!scanner.isEof && scanner.peek() == ',') { scanner.advance(); scanner.skipWhitespace() }\n")
+    sb.append("    }\n\n")
+    sb.append("    val label = if (!scanner.isEof && scanner.peek() == '[') {\n")
+    sb.append("      scanner.advance()\n")
+    sb.append("      if (!scanner.isEof && scanner.peek() == '\"') {\n")
+    sb.append("        val l = scanner.readQuotedString()\n")
+    sb.append("        if (!scanner.isEof && scanner.peek() == ']') scanner.advance()\n")
+    sb.append("        l\n")
+    sb.append("      } else {\n")
+    sb.append("        scanner.readUntil(']').trim\n")
+    sb.append("      }\n")
+    sb.append("    } else \"\"\n\n")
+    sb.append("    if (setIds.size >= 2) {\n")
+    sb.append("      db.addIntersection(setIds.toSeq, label)\n")
+    sb.append("    }\n")
+    sb.append("    skipToNewline(scanner)\n")
+    sb.append("    true\n")
+    sb.append("  }\n\n")
+    sb.append("  private def readIdent(scanner: Scanner): String = {\n")
+    sb.append("    val sb = new StringBuilder()\n")
+    sb.append("    while (!scanner.isEof && (scanner.peek().isLetterOrDigit || scanner.peek() == '_'))\n")
+    sb.append("      sb.append(scanner.advance())\n")
+    sb.append("    sb.toString\n")
+    sb.append("  }\n\n")
+    sb.append("  private def readTextUntilNewline(scanner: Scanner): String = {\n")
+    sb.append("    val sb = new StringBuilder()\n")
+    sb.append("    while (!scanner.isEof && scanner.peek() != '\\n') sb.append(scanner.advance())\n")
+    sb.append("    sb.toString\n")
+    sb.append("  }\n\n")
+    sb.append("  private def skipToNewline(scanner: Scanner): Unit = {\n")
+    sb.append("    while (!scanner.isEof && scanner.peek() != '\\n') scanner.advance()\n")
+    sb.append("    if (!scanner.isEof) scanner.advance()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the VennRenderer. */
+  def emitVennRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "VennRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage venn\n\n")
+    sb.append("import ssg.mermaid.Accessibility\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("/** Renders a Venn diagram to SVG. */\n")
+    sb.append("object VennRenderer {\n\n")
+    sb.append("  private val Radius:  Double        = 120.0\n")
+    sb.append("  private val Padding: Double        = 40.0\n")
+    sb.append("  private val Colors:  Array[String] = Array(\n")
+    sb.append("    \"#4e79a7\",\n")
+    sb.append("    \"#f28e2b\",\n")
+    sb.append("    \"#e15759\",\n")
+    sb.append("    \"#76b7b2\",\n")
+    sb.append("    \"#59a14f\"\n")
+    sb.append("  )\n\n")
+    sb.append("  def render(db: VennDb, config: MermaidConfig): String = {\n")
+    sb.append("    val setCount = db.sets.size.max(1)\n")
+    sb.append("    val size     = (Radius * 2 + Padding) * 2 + 40\n")
+    sb.append("    val cx       = size / 2; val cy = size / 2 + 20\n\n")
+    sb.append("    val viewBox = s\"0 0 $size $size\"\n")
+    sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n")
+    sb.append("    Accessibility.applyTo(svg, \"venn\", db.accTitle, db.accDescription)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = VennStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+    sb.append("    val mainGroup = svg.append(\"g\")\n\n")
+    sb.append("    if (db.title.nonEmpty) {\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"vennTitle\", true).text(db.title)\n")
+    sb.append("    }\n\n")
+    sb.append("    val angleStep = 2 * math.Pi / setCount\n")
+    sb.append("    val offset    = if (setCount <= 1) 0.0 else Radius * 0.6\n\n")
+    sb.append("    for ((vset, idx) <- db.sets.zipWithIndex) {\n")
+    sb.append("      val angle = angleStep * idx - math.Pi / 2\n")
+    sb.append("      val setX  = cx + offset * math.cos(angle)\n")
+    sb.append("      val setY  = cy + offset * math.sin(angle)\n")
+    sb.append("      val color = Colors(idx % Colors.length)\n\n")
+    sb.append("      val circle = mainGroup.append(\"circle\")\n")
+    sb.append("      circle.attr(\"cx\", setX).attr(\"cy\", setY).attr(\"r\", Radius)\n")
+    sb.append("      circle.style(\"fill\", color).style(\"fill-opacity\", \"0.3\")\n")
+    sb.append("      circle.style(\"stroke\", color).style(\"stroke-width\", \"2\")\n")
+    sb.append("      circle.classed(\"vennSet\", true)\n\n")
+    sb.append("      val labelX = cx + (offset + Radius * 0.6) * math.cos(angle)\n")
+    sb.append("      val labelY = cy + (offset + Radius * 0.6) * math.sin(angle)\n")
+    sb.append("      mainGroup.append(\"text\").attr(\"x\", labelX).attr(\"y\", labelY + 5).attr(\"text-anchor\", \"middle\").classed(\"vennSetLabel\", true).text(vset.label)\n")
+    sb.append("    }\n\n")
+    sb.append("    for (isect <- db.intersections)\n")
+    sb.append("      if (isect.label.nonEmpty) {\n")
+    sb.append("        mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy + 5).attr(\"text-anchor\", \"middle\").classed(\"vennIntersectionLabel\", true).text(isect.label)\n")
+    sb.append("      }\n\n")
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits VennStyles. */
+  def emitVennStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "VennStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage venn\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("/** CSS class generation for Venn diagram elements. */\n")
+    sb.append("object VennStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".vennTitle {\n")
+    sb.append("       |  font-size: 16px;\n")
+    sb.append("       |  fill: $${vars.textColor};\n")
+    sb.append("       |  font-family: $${vars.fontFamily};\n")
+    sb.append("       |}\n")
+    sb.append("       |.vennSet {\n")
+    sb.append("       |  stroke-width: 2px;\n")
+    sb.append("       |}\n")
+    sb.append("       |.vennSetLabel {\n")
+    sb.append("       |  font-size: 14px;\n")
+    sb.append("       |  font-weight: bold;\n")
+    sb.append("       |  fill: $${vars.textColor};\n")
+    sb.append("       |  font-family: $${vars.fontFamily};\n")
+    sb.append("       |}\n")
+    sb.append("       |.vennIntersectionLabel {\n")
     sb.append("       |  font-size: 12px;\n")
     sb.append("       |  fill: $${vars.textColor};\n")
     sb.append("       |  font-family: $${vars.fontFamily};\n")
