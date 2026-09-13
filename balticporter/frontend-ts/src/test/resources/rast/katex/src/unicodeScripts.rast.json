@@ -1,0 +1,3898 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/katex/src/unicodeScripts.ts",
+  "sha256": "daa4cbbd11dee174f1d9a1b5ceb23e943647a6bf56e57d901d7aea4f6ee3abe1",
+  "nodes": [
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        13,
+        1
+      ],
+      "symbol": "s0",
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/*\n * This file defines the Unicode scripts and script families that we\n * support. To add new scripts or families, just add a new entry to the\n * scriptData array below. Adding scripts to the scriptData array allows\n * characters from that script to appear in \\text{} environments.\n */",
+          "pos": [
+            1,
+            1
+          ]
+        },
+        {
+          "kind": "block",
+          "text": "/**\n * Each script or script family has a name and an array of blocks.\n * Each block is an array of two numbers which specify the start and\n * end points (inclusive) of a block of Unicode codepoints.\n */",
+          "pos": [
+            8,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            13,
+            6
+          ],
+          "type": "t0",
+          "text": "Script",
+          "resolvedSymbol": "s0"
+        },
+        {
+          "kind": "TypeLiteral",
+          "kindCode": 187,
+          "pos": [
+            13,
+            15
+          ],
+          "children": [
+            {
+              "kind": "PropertySignature",
+              "kindCode": 171,
+              "pos": [
+                14,
+                5
+              ],
+              "symbol": "s1",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    14,
+                    5
+                  ],
+                  "type": "t1",
+                  "text": "name",
+                  "resolvedSymbol": "s1"
+                },
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    14,
+                    11
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertySignature",
+              "kindCode": 171,
+              "pos": [
+                15,
+                5
+              ],
+              "symbol": "s2",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    15,
+                    5
+                  ],
+                  "type": "t2",
+                  "text": "blocks",
+                  "resolvedSymbol": "s2"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    15,
+                    13
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        15,
+                        13
+                      ],
+                      "type": "t5",
+                      "text": "Array",
+                      "resolvedSymbol": "s3"
+                    },
+                    {
+                      "kind": "TypeReference",
+                      "kindCode": 183,
+                      "pos": [
+                        15,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            15,
+                            19
+                          ],
+                          "type": "t5",
+                          "text": "Array",
+                          "resolvedSymbol": "s3"
+                        },
+                        {
+                          "kind": "NumberKeyword",
+                          "kindCode": 150,
+                          "pos": [
+                            15,
+                            25
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        22,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Unicode block data for the families of scripts we support in \\text{}.\n * Scripts only need to appear here if they do not have font metrics.\n */",
+          "pos": [
+            18,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            22,
+            1
+          ],
+          "comments": [
+            {
+              "kind": "block",
+              "text": "/**\n * Unicode block data for the families of scripts we support in \\text{}.\n * Scripts only need to appear here if they do not have font metrics.\n */",
+              "pos": [
+                18,
+                1
+              ]
+            }
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                22,
+                7
+              ],
+              "symbol": "s4",
+              "type": "t7",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    22,
+                    7
+                  ],
+                  "type": "t7",
+                  "text": "scriptData",
+                  "resolvedSymbol": "s4"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    22,
+                    19
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        22,
+                        19
+                      ],
+                      "type": "t5",
+                      "text": "Array",
+                      "resolvedSymbol": "s3"
+                    },
+                    {
+                      "kind": "TypeReference",
+                      "kindCode": 183,
+                      "pos": [
+                        22,
+                        25
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            22,
+                            25
+                          ],
+                          "type": "t0",
+                          "text": "Script",
+                          "resolvedSymbol": "s0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "ArrayLiteralExpression",
+                  "kindCode": 209,
+                  "pos": [
+                    22,
+                    35
+                  ],
+                  "type": "t8",
+                  "children": [
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        23,
+                        5
+                      ],
+                      "type": "t12",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            26,
+                            9
+                          ],
+                          "comments": [
+                            {
+                              "kind": "line",
+                              "text": "// Latin characters beyond the Latin-1 characters we have metrics for.",
+                              "pos": [
+                                24,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Needed for Czech, Hungarian and Turkish text, for example.",
+                              "pos": [
+                                25,
+                                9
+                              ]
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                26,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s5",
+                              "comments": [
+                                {
+                                  "kind": "line",
+                                  "text": "// Latin characters beyond the Latin-1 characters we have metrics for.",
+                                  "pos": [
+                                    24,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Needed for Czech, Hungarian and Turkish text, for example.",
+                                  "pos": [
+                                    25,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                26,
+                                15
+                              ],
+                              "type": "t13",
+                              "value": "latin"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            27,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                27,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s6"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                27,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    28,
+                                    13
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        28,
+                                        14
+                                      ],
+                                      "type": "t14",
+                                      "value": 256
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        28,
+                                        22
+                                      ],
+                                      "type": "t15",
+                                      "value": 591
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    29,
+                                    13
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        29,
+                                        14
+                                      ],
+                                      "type": "t16",
+                                      "value": 768
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        29,
+                                        22
+                                      ],
+                                      "type": "t17",
+                                      "value": 879
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        32,
+                        5
+                      ],
+                      "type": "t18",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            36,
+                            9
+                          ],
+                          "comments": [
+                            {
+                              "kind": "line",
+                              "text": "// The Cyrillic script used by Russian and related languages.",
+                              "pos": [
+                                33,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// A Cyrillic subset used to be supported as explicitly defined",
+                              "pos": [
+                                34,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// symbols in symbols.js",
+                              "pos": [
+                                35,
+                                9
+                              ]
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                36,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s7",
+                              "comments": [
+                                {
+                                  "kind": "line",
+                                  "text": "// The Cyrillic script used by Russian and related languages.",
+                                  "pos": [
+                                    33,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// A Cyrillic subset used to be supported as explicitly defined",
+                                  "pos": [
+                                    34,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// symbols in symbols.js",
+                                  "pos": [
+                                    35,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                36,
+                                15
+                              ],
+                              "type": "t19",
+                              "value": "cyrillic"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            37,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                37,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s8"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                37,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    37,
+                                    18
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        37,
+                                        19
+                                      ],
+                                      "type": "t20",
+                                      "value": 1024
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        37,
+                                        27
+                                      ],
+                                      "type": "t21",
+                                      "value": 1279
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        39,
+                        5
+                      ],
+                      "type": "t22",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            41,
+                            9
+                          ],
+                          "comments": [
+                            {
+                              "kind": "line",
+                              "text": "// Armenian",
+                              "pos": [
+                                40,
+                                9
+                              ]
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                41,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s9",
+                              "comments": [
+                                {
+                                  "kind": "line",
+                                  "text": "// Armenian",
+                                  "pos": [
+                                    40,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                41,
+                                15
+                              ],
+                              "type": "t23",
+                              "value": "armenian"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            42,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                42,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s10"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                42,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    42,
+                                    18
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        42,
+                                        19
+                                      ],
+                                      "type": "t24",
+                                      "value": 1328
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        42,
+                                        27
+                                      ],
+                                      "type": "t25",
+                                      "value": 1423
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        44,
+                        5
+                      ],
+                      "type": "t26",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            60,
+                            9
+                          ],
+                          "comments": [
+                            {
+                              "kind": "line",
+                              "text": "// The Brahmic scripts of South and Southeast Asia",
+                              "pos": [
+                                45,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Devanagari (0900–097F)",
+                              "pos": [
+                                46,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Bengali (0980–09FF)",
+                              "pos": [
+                                47,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Gurmukhi (0A00–0A7F)",
+                              "pos": [
+                                48,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Gujarati (0A80–0AFF)",
+                              "pos": [
+                                49,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Oriya (0B00–0B7F)",
+                              "pos": [
+                                50,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Tamil (0B80–0BFF)",
+                              "pos": [
+                                51,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Telugu (0C00–0C7F)",
+                              "pos": [
+                                52,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Kannada (0C80–0CFF)",
+                              "pos": [
+                                53,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Malayalam (0D00–0D7F)",
+                              "pos": [
+                                54,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Sinhala (0D80–0DFF)",
+                              "pos": [
+                                55,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Thai (0E00–0E7F)",
+                              "pos": [
+                                56,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Lao (0E80–0EFF)",
+                              "pos": [
+                                57,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Tibetan (0F00–0FFF)",
+                              "pos": [
+                                58,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// Myanmar (1000–109F)",
+                              "pos": [
+                                59,
+                                9
+                              ]
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                60,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s11",
+                              "comments": [
+                                {
+                                  "kind": "line",
+                                  "text": "// The Brahmic scripts of South and Southeast Asia",
+                                  "pos": [
+                                    45,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Devanagari (0900–097F)",
+                                  "pos": [
+                                    46,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Bengali (0980–09FF)",
+                                  "pos": [
+                                    47,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Gurmukhi (0A00–0A7F)",
+                                  "pos": [
+                                    48,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Gujarati (0A80–0AFF)",
+                                  "pos": [
+                                    49,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Oriya (0B00–0B7F)",
+                                  "pos": [
+                                    50,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Tamil (0B80–0BFF)",
+                                  "pos": [
+                                    51,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Telugu (0C00–0C7F)",
+                                  "pos": [
+                                    52,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Kannada (0C80–0CFF)",
+                                  "pos": [
+                                    53,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Malayalam (0D00–0D7F)",
+                                  "pos": [
+                                    54,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Sinhala (0D80–0DFF)",
+                                  "pos": [
+                                    55,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Thai (0E00–0E7F)",
+                                  "pos": [
+                                    56,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Lao (0E80–0EFF)",
+                                  "pos": [
+                                    57,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Tibetan (0F00–0FFF)",
+                                  "pos": [
+                                    58,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// Myanmar (1000–109F)",
+                                  "pos": [
+                                    59,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                60,
+                                15
+                              ],
+                              "type": "t27",
+                              "value": "brahmic"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            61,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                61,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s12"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                61,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    61,
+                                    18
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        61,
+                                        19
+                                      ],
+                                      "type": "t28",
+                                      "value": 2304
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        61,
+                                        27
+                                      ],
+                                      "type": "t29",
+                                      "value": 4255
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        63,
+                        5
+                      ],
+                      "type": "t30",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            64,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                64,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s13"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                64,
+                                15
+                              ],
+                              "type": "t31",
+                              "value": "georgian"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            65,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                65,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s14"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                65,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    65,
+                                    18
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        65,
+                                        19
+                                      ],
+                                      "type": "t32",
+                                      "value": 4256
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        65,
+                                        27
+                                      ],
+                                      "type": "t33",
+                                      "value": 4351
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        67,
+                        5
+                      ],
+                      "type": "t34",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            70,
+                            9
+                          ],
+                          "comments": [
+                            {
+                              "kind": "line",
+                              "text": "// Chinese and Japanese.",
+                              "pos": [
+                                68,
+                                9
+                              ]
+                            },
+                            {
+                              "kind": "line",
+                              "text": "// The \"k\" in cjk is for Korean, but we've separated Korean out",
+                              "pos": [
+                                69,
+                                9
+                              ]
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                70,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s15",
+                              "comments": [
+                                {
+                                  "kind": "line",
+                                  "text": "// Chinese and Japanese.",
+                                  "pos": [
+                                    68,
+                                    9
+                                  ]
+                                },
+                                {
+                                  "kind": "line",
+                                  "text": "// The \"k\" in cjk is for Korean, but we've separated Korean out",
+                                  "pos": [
+                                    69,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                70,
+                                15
+                              ],
+                              "type": "t35",
+                              "value": "cjk"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            71,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                71,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s16"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                71,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    72,
+                                    13
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        72,
+                                        14
+                                      ],
+                                      "type": "t36",
+                                      "value": 12288
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        72,
+                                        22
+                                      ],
+                                      "type": "t37",
+                                      "value": 12543
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    73,
+                                    13
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        73,
+                                        14
+                                      ],
+                                      "type": "t38",
+                                      "value": 19968
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        73,
+                                        22
+                                      ],
+                                      "type": "t39",
+                                      "value": 40879
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    74,
+                                    13
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        74,
+                                        14
+                                      ],
+                                      "type": "t40",
+                                      "value": 65280
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        74,
+                                        22
+                                      ],
+                                      "type": "t41",
+                                      "value": 65376
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ObjectLiteralExpression",
+                      "kindCode": 210,
+                      "pos": [
+                        78,
+                        5
+                      ],
+                      "type": "t42",
+                      "children": [
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            80,
+                            9
+                          ],
+                          "comments": [
+                            {
+                              "kind": "line",
+                              "text": "// Korean",
+                              "pos": [
+                                79,
+                                9
+                              ]
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                80,
+                                9
+                              ],
+                              "type": "t1",
+                              "text": "name",
+                              "resolvedSymbol": "s17",
+                              "comments": [
+                                {
+                                  "kind": "line",
+                                  "text": "// Korean",
+                                  "pos": [
+                                    79,
+                                    9
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                80,
+                                15
+                              ],
+                              "type": "t43",
+                              "value": "hangul"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PropertyAssignment",
+                          "kindCode": 303,
+                          "pos": [
+                            81,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                81,
+                                9
+                              ],
+                              "type": "t10",
+                              "text": "blocks",
+                              "resolvedSymbol": "s18"
+                            },
+                            {
+                              "kind": "ArrayLiteralExpression",
+                              "kindCode": 209,
+                              "pos": [
+                                81,
+                                17
+                              ],
+                              "type": "t10",
+                              "children": [
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    81,
+                                    18
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        81,
+                                        19
+                                      ],
+                                      "type": "t44",
+                                      "value": 44032
+                                    },
+                                    {
+                                      "kind": "NumericLiteral",
+                                      "kindCode": 9,
+                                      "pos": [
+                                        81,
+                                        27
+                                      ],
+                                      "type": "t45",
+                                      "value": 55215
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        89,
+        1
+      ],
+      "symbol": "s19",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Given a codepoint, return the name of the script or script family\n * it is from, or null if it is not part of a known block\n */",
+          "pos": [
+            85,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            89,
+            17
+          ],
+          "type": "t46",
+          "text": "scriptFromCodepoint",
+          "resolvedSymbol": "s19"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            89,
+            37
+          ],
+          "symbol": "s20",
+          "type": "t4",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                89,
+                37
+              ],
+              "type": "t4",
+              "text": "codepoint",
+              "resolvedSymbol": "s20"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                89,
+                48
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "UnionType",
+          "kindCode": 192,
+          "pos": [
+            89,
+            57
+          ],
+          "children": [
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                89,
+                57
+              ]
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                89,
+                66
+              ],
+              "children": [
+                {
+                  "kind": "NullKeyword",
+                  "kindCode": 106,
+                  "pos": [
+                    89,
+                    66
+                  ],
+                  "type": "t49"
+                }
+              ]
+            },
+            {
+              "kind": "UndefinedKeyword",
+              "kindCode": 157,
+              "pos": [
+                89,
+                73
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            89,
+            83
+          ],
+          "children": [
+            {
+              "kind": "ForStatement",
+              "kindCode": 248,
+              "pos": [
+                90,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "VariableDeclarationList",
+                  "kindCode": 261,
+                  "pos": [
+                    90,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableDeclaration",
+                      "kindCode": 260,
+                      "pos": [
+                        90,
+                        14
+                      ],
+                      "symbol": "s21",
+                      "type": "t4",
+                      "flags": [
+                        "let"
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            90,
+                            14
+                          ],
+                          "type": "t4",
+                          "text": "i",
+                          "resolvedSymbol": "s21"
+                        },
+                        {
+                          "kind": "NumericLiteral",
+                          "kindCode": 9,
+                          "pos": [
+                            90,
+                            18
+                          ],
+                          "type": "t50",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    90,
+                    21
+                  ],
+                  "type": "t51",
+                  "operator": "LessThanToken",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        90,
+                        21
+                      ],
+                      "type": "t4",
+                      "text": "i",
+                      "resolvedSymbol": "s21"
+                    },
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        90,
+                        25
+                      ],
+                      "type": "t4",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            90,
+                            25
+                          ],
+                          "type": "t7",
+                          "text": "scriptData",
+                          "resolvedSymbol": "s4"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            90,
+                            36
+                          ],
+                          "type": "t4",
+                          "text": "length",
+                          "resolvedSymbol": "s22"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PostfixUnaryExpression",
+                  "kindCode": 225,
+                  "pos": [
+                    90,
+                    44
+                  ],
+                  "type": "t4",
+                  "operator": "PlusPlusToken",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        90,
+                        44
+                      ],
+                      "type": "t4",
+                      "text": "i",
+                      "resolvedSymbol": "s21"
+                    }
+                  ]
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    90,
+                    49
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableStatement",
+                      "kindCode": 243,
+                      "pos": [
+                        91,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationList",
+                          "kindCode": 261,
+                          "pos": [
+                            91,
+                            9
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclaration",
+                              "kindCode": 260,
+                              "pos": [
+                                91,
+                                15
+                              ],
+                              "symbol": "s23",
+                              "type": "t0",
+                              "flags": [
+                                "const"
+                              ],
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    91,
+                                    15
+                                  ],
+                                  "type": "t0",
+                                  "text": "script",
+                                  "resolvedSymbol": "s23"
+                                },
+                                {
+                                  "kind": "ElementAccessExpression",
+                                  "kindCode": 212,
+                                  "pos": [
+                                    91,
+                                    24
+                                  ],
+                                  "type": "t0",
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        91,
+                                        24
+                                      ],
+                                      "type": "t7",
+                                      "text": "scriptData",
+                                      "resolvedSymbol": "s4"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        91,
+                                        35
+                                      ],
+                                      "type": "t4",
+                                      "text": "i",
+                                      "resolvedSymbol": "s21"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ForStatement",
+                      "kindCode": 248,
+                      "pos": [
+                        92,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationList",
+                          "kindCode": 261,
+                          "pos": [
+                            92,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclaration",
+                              "kindCode": 260,
+                              "pos": [
+                                92,
+                                18
+                              ],
+                              "symbol": "s24",
+                              "type": "t4",
+                              "flags": [
+                                "let"
+                              ],
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    92,
+                                    18
+                                  ],
+                                  "type": "t4",
+                                  "text": "i",
+                                  "resolvedSymbol": "s24"
+                                },
+                                {
+                                  "kind": "NumericLiteral",
+                                  "kindCode": 9,
+                                  "pos": [
+                                    92,
+                                    22
+                                  ],
+                                  "type": "t50",
+                                  "value": 0
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "BinaryExpression",
+                          "kindCode": 226,
+                          "pos": [
+                            92,
+                            25
+                          ],
+                          "type": "t51",
+                          "operator": "LessThanToken",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                92,
+                                25
+                              ],
+                              "type": "t4",
+                              "text": "i",
+                              "resolvedSymbol": "s24"
+                            },
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                92,
+                                29
+                              ],
+                              "type": "t4",
+                              "children": [
+                                {
+                                  "kind": "PropertyAccessExpression",
+                                  "kindCode": 211,
+                                  "pos": [
+                                    92,
+                                    29
+                                  ],
+                                  "type": "t2",
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        92,
+                                        29
+                                      ],
+                                      "type": "t0",
+                                      "text": "script",
+                                      "resolvedSymbol": "s23"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        92,
+                                        36
+                                      ],
+                                      "type": "t2",
+                                      "text": "blocks",
+                                      "resolvedSymbol": "s2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    92,
+                                    43
+                                  ],
+                                  "type": "t4",
+                                  "text": "length",
+                                  "resolvedSymbol": "s25"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PostfixUnaryExpression",
+                          "kindCode": 225,
+                          "pos": [
+                            92,
+                            51
+                          ],
+                          "type": "t4",
+                          "operator": "PlusPlusToken",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                92,
+                                51
+                              ],
+                              "type": "t4",
+                              "text": "i",
+                              "resolvedSymbol": "s24"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "Block",
+                          "kindCode": 241,
+                          "pos": [
+                            92,
+                            56
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableStatement",
+                              "kindCode": 243,
+                              "pos": [
+                                93,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "VariableDeclarationList",
+                                  "kindCode": 261,
+                                  "pos": [
+                                    93,
+                                    13
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableDeclaration",
+                                      "kindCode": 260,
+                                      "pos": [
+                                        93,
+                                        19
+                                      ],
+                                      "symbol": "s26",
+                                      "type": "t3",
+                                      "flags": [
+                                        "const"
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            93,
+                                            19
+                                          ],
+                                          "type": "t3",
+                                          "text": "block",
+                                          "resolvedSymbol": "s26"
+                                        },
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            93,
+                                            27
+                                          ],
+                                          "type": "t3",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                93,
+                                                27
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    93,
+                                                    27
+                                                  ],
+                                                  "type": "t0",
+                                                  "text": "script",
+                                                  "resolvedSymbol": "s23"
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    93,
+                                                    34
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "blocks",
+                                                  "resolvedSymbol": "s2"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                93,
+                                                41
+                                              ],
+                                              "type": "t4",
+                                              "text": "i",
+                                              "resolvedSymbol": "s24"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "IfStatement",
+                              "kindCode": 245,
+                              "pos": [
+                                94,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "BinaryExpression",
+                                  "kindCode": 226,
+                                  "pos": [
+                                    94,
+                                    17
+                                  ],
+                                  "type": "t51",
+                                  "operator": "AmpersandAmpersandToken",
+                                  "children": [
+                                    {
+                                      "kind": "BinaryExpression",
+                                      "kindCode": 226,
+                                      "pos": [
+                                        94,
+                                        17
+                                      ],
+                                      "type": "t51",
+                                      "operator": "GreaterThanEqualsToken",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            94,
+                                            17
+                                          ],
+                                          "type": "t4",
+                                          "text": "codepoint",
+                                          "resolvedSymbol": "s20"
+                                        },
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            94,
+                                            30
+                                          ],
+                                          "type": "t4",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                94,
+                                                30
+                                              ],
+                                              "type": "t3",
+                                              "text": "block",
+                                              "resolvedSymbol": "s26"
+                                            },
+                                            {
+                                              "kind": "NumericLiteral",
+                                              "kindCode": 9,
+                                              "pos": [
+                                                94,
+                                                36
+                                              ],
+                                              "type": "t50",
+                                              "value": 0
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "BinaryExpression",
+                                      "kindCode": 226,
+                                      "pos": [
+                                        94,
+                                        42
+                                      ],
+                                      "type": "t51",
+                                      "operator": "LessThanEqualsToken",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            94,
+                                            42
+                                          ],
+                                          "type": "t4",
+                                          "text": "codepoint",
+                                          "resolvedSymbol": "s20"
+                                        },
+                                        {
+                                          "kind": "ElementAccessExpression",
+                                          "kindCode": 212,
+                                          "pos": [
+                                            94,
+                                            55
+                                          ],
+                                          "type": "t4",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                94,
+                                                55
+                                              ],
+                                              "type": "t3",
+                                              "text": "block",
+                                              "resolvedSymbol": "s26"
+                                            },
+                                            {
+                                              "kind": "NumericLiteral",
+                                              "kindCode": 9,
+                                              "pos": [
+                                                94,
+                                                61
+                                              ],
+                                              "type": "t54",
+                                              "value": 1
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    94,
+                                    65
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "ReturnStatement",
+                                      "kindCode": 253,
+                                      "pos": [
+                                        95,
+                                        17
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "PropertyAccessExpression",
+                                          "kindCode": 211,
+                                          "pos": [
+                                            95,
+                                            24
+                                          ],
+                                          "type": "t1",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                95,
+                                                24
+                                              ],
+                                              "type": "t0",
+                                              "text": "script",
+                                              "resolvedSymbol": "s23"
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                95,
+                                                31
+                                              ],
+                                              "type": "t1",
+                                              "text": "name",
+                                              "resolvedSymbol": "s1"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                99,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "NullKeyword",
+                  "kindCode": 106,
+                  "pos": [
+                    99,
+                    12
+                  ],
+                  "type": "t49"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        106,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * A flattened version of all the supported blocks in a single array.\n * This is an optimization to make supportedCodepoint() fast.\n */",
+          "pos": [
+            102,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            106,
+            1
+          ],
+          "comments": [
+            {
+              "kind": "block",
+              "text": "/**\n * A flattened version of all the supported blocks in a single array.\n * This is an optimization to make supportedCodepoint() fast.\n */",
+              "pos": [
+                102,
+                1
+              ]
+            }
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                106,
+                7
+              ],
+              "symbol": "s27",
+              "type": "t3",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    106,
+                    7
+                  ],
+                  "type": "t3",
+                  "text": "allBlocks",
+                  "resolvedSymbol": "s27"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    106,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        106,
+                        18
+                      ],
+                      "type": "t5",
+                      "text": "Array",
+                      "resolvedSymbol": "s3"
+                    },
+                    {
+                      "kind": "NumberKeyword",
+                      "kindCode": 150,
+                      "pos": [
+                        106,
+                        24
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "ArrayLiteralExpression",
+                  "kindCode": 209,
+                  "pos": [
+                    106,
+                    34
+                  ],
+                  "type": "t55"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExpressionStatement",
+      "kindCode": 244,
+      "pos": [
+        107,
+        1
+      ],
+      "children": [
+        {
+          "kind": "CallExpression",
+          "kindCode": 213,
+          "pos": [
+            107,
+            1
+          ],
+          "type": "t57",
+          "children": [
+            {
+              "kind": "PropertyAccessExpression",
+              "kindCode": 211,
+              "pos": [
+                107,
+                1
+              ],
+              "type": "t58",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    107,
+                    1
+                  ],
+                  "type": "t7",
+                  "text": "scriptData",
+                  "resolvedSymbol": "s4"
+                },
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    107,
+                    12
+                  ],
+                  "type": "t58",
+                  "text": "forEach",
+                  "resolvedSymbol": "s28"
+                }
+              ]
+            },
+            {
+              "kind": "ArrowFunction",
+              "kindCode": 219,
+              "pos": [
+                107,
+                20
+              ],
+              "type": "t61",
+              "children": [
+                {
+                  "kind": "Parameter",
+                  "kindCode": 169,
+                  "pos": [
+                    107,
+                    20
+                  ],
+                  "symbol": "s29",
+                  "type": "t0",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        107,
+                        20
+                      ],
+                      "type": "t0",
+                      "text": "s",
+                      "resolvedSymbol": "s29"
+                    }
+                  ]
+                },
+                {
+                  "kind": "CallExpression",
+                  "kindCode": 213,
+                  "pos": [
+                    107,
+                    25
+                  ],
+                  "type": "t57",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        107,
+                        25
+                      ],
+                      "type": "t62",
+                      "children": [
+                        {
+                          "kind": "PropertyAccessExpression",
+                          "kindCode": 211,
+                          "pos": [
+                            107,
+                            25
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                107,
+                                25
+                              ],
+                              "type": "t0",
+                              "text": "s",
+                              "resolvedSymbol": "s29"
+                            },
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                107,
+                                27
+                              ],
+                              "type": "t2",
+                              "text": "blocks",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            107,
+                            34
+                          ],
+                          "type": "t62",
+                          "text": "forEach",
+                          "resolvedSymbol": "s30"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ArrowFunction",
+                      "kindCode": 219,
+                      "pos": [
+                        107,
+                        42
+                      ],
+                      "type": "t64",
+                      "children": [
+                        {
+                          "kind": "Parameter",
+                          "kindCode": 169,
+                          "pos": [
+                            107,
+                            42
+                          ],
+                          "symbol": "s31",
+                          "type": "t3",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                107,
+                                42
+                              ],
+                              "type": "t3",
+                              "text": "b",
+                              "resolvedSymbol": "s31"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            107,
+                            47
+                          ],
+                          "type": "t4",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                107,
+                                47
+                              ],
+                              "type": "t65",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    107,
+                                    47
+                                  ],
+                                  "type": "t3",
+                                  "text": "allBlocks",
+                                  "resolvedSymbol": "s27"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    107,
+                                    57
+                                  ],
+                                  "type": "t65",
+                                  "text": "push",
+                                  "resolvedSymbol": "s32"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SpreadElement",
+                              "kindCode": 230,
+                              "pos": [
+                                107,
+                                62
+                              ],
+                              "type": "t4",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    107,
+                                    65
+                                  ],
+                                  "type": "t3",
+                                  "text": "b",
+                                  "resolvedSymbol": "s31"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        117,
+        1
+      ],
+      "symbol": "s33",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Given a codepoint, return true if it falls within one of the\n * scripts or script families defined above and false otherwise.\n *\n * Micro benchmarks shows that this is faster than\n * /[\\u3000-\\u30FF\\u4E00-\\u9FAF\\uFF00-\\uFF60\\uAC00-\\uD7AF\\u0900-\\u109F]/.test()\n * in Firefox, Chrome and Node.\n */",
+          "pos": [
+            109,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            117,
+            17
+          ],
+          "type": "t66",
+          "text": "supportedCodepoint",
+          "resolvedSymbol": "s33"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            117,
+            36
+          ],
+          "symbol": "s34",
+          "type": "t4",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                117,
+                36
+              ],
+              "type": "t4",
+              "text": "codepoint",
+              "resolvedSymbol": "s34"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                117,
+                47
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "BooleanKeyword",
+          "kindCode": 136,
+          "pos": [
+            117,
+            56
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            117,
+            64
+          ],
+          "children": [
+            {
+              "kind": "ForStatement",
+              "kindCode": 248,
+              "pos": [
+                118,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "VariableDeclarationList",
+                  "kindCode": 261,
+                  "pos": [
+                    118,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableDeclaration",
+                      "kindCode": 260,
+                      "pos": [
+                        118,
+                        14
+                      ],
+                      "symbol": "s35",
+                      "type": "t4",
+                      "flags": [
+                        "let"
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            118,
+                            14
+                          ],
+                          "type": "t4",
+                          "text": "i",
+                          "resolvedSymbol": "s35"
+                        },
+                        {
+                          "kind": "NumericLiteral",
+                          "kindCode": 9,
+                          "pos": [
+                            118,
+                            18
+                          ],
+                          "type": "t50",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    118,
+                    21
+                  ],
+                  "type": "t51",
+                  "operator": "LessThanToken",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        118,
+                        21
+                      ],
+                      "type": "t4",
+                      "text": "i",
+                      "resolvedSymbol": "s35"
+                    },
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        118,
+                        25
+                      ],
+                      "type": "t4",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            118,
+                            25
+                          ],
+                          "type": "t3",
+                          "text": "allBlocks",
+                          "resolvedSymbol": "s27"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            118,
+                            35
+                          ],
+                          "type": "t4",
+                          "text": "length",
+                          "resolvedSymbol": "s36"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    118,
+                    43
+                  ],
+                  "type": "t4",
+                  "operator": "PlusEqualsToken",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        118,
+                        43
+                      ],
+                      "type": "t4",
+                      "text": "i",
+                      "resolvedSymbol": "s35"
+                    },
+                    {
+                      "kind": "NumericLiteral",
+                      "kindCode": 9,
+                      "pos": [
+                        118,
+                        48
+                      ],
+                      "type": "t67",
+                      "value": 2
+                    }
+                  ]
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    118,
+                    51
+                  ],
+                  "children": [
+                    {
+                      "kind": "IfStatement",
+                      "kindCode": 245,
+                      "pos": [
+                        119,
+                        9
+                      ],
+                      "children": [
+                        {
+                          "kind": "BinaryExpression",
+                          "kindCode": 226,
+                          "pos": [
+                            119,
+                            13
+                          ],
+                          "type": "t51",
+                          "operator": "AmpersandAmpersandToken",
+                          "children": [
+                            {
+                              "kind": "BinaryExpression",
+                              "kindCode": 226,
+                              "pos": [
+                                119,
+                                13
+                              ],
+                              "type": "t51",
+                              "operator": "GreaterThanEqualsToken",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    119,
+                                    13
+                                  ],
+                                  "type": "t4",
+                                  "text": "codepoint",
+                                  "resolvedSymbol": "s34"
+                                },
+                                {
+                                  "kind": "ElementAccessExpression",
+                                  "kindCode": 212,
+                                  "pos": [
+                                    119,
+                                    26
+                                  ],
+                                  "type": "t4",
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        119,
+                                        26
+                                      ],
+                                      "type": "t3",
+                                      "text": "allBlocks",
+                                      "resolvedSymbol": "s27"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        119,
+                                        36
+                                      ],
+                                      "type": "t4",
+                                      "text": "i",
+                                      "resolvedSymbol": "s35"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "BinaryExpression",
+                              "kindCode": 226,
+                              "pos": [
+                                119,
+                                42
+                              ],
+                              "type": "t51",
+                              "operator": "LessThanEqualsToken",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    119,
+                                    42
+                                  ],
+                                  "type": "t4",
+                                  "text": "codepoint",
+                                  "resolvedSymbol": "s34"
+                                },
+                                {
+                                  "kind": "ElementAccessExpression",
+                                  "kindCode": 212,
+                                  "pos": [
+                                    119,
+                                    55
+                                  ],
+                                  "type": "t4",
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        119,
+                                        55
+                                      ],
+                                      "type": "t3",
+                                      "text": "allBlocks",
+                                      "resolvedSymbol": "s27"
+                                    },
+                                    {
+                                      "kind": "BinaryExpression",
+                                      "kindCode": 226,
+                                      "pos": [
+                                        119,
+                                        65
+                                      ],
+                                      "type": "t4",
+                                      "operator": "PlusToken",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            119,
+                                            65
+                                          ],
+                                          "type": "t4",
+                                          "text": "i",
+                                          "resolvedSymbol": "s35"
+                                        },
+                                        {
+                                          "kind": "NumericLiteral",
+                                          "kindCode": 9,
+                                          "pos": [
+                                            119,
+                                            69
+                                          ],
+                                          "type": "t54",
+                                          "value": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "Block",
+                          "kindCode": 241,
+                          "pos": [
+                            119,
+                            73
+                          ],
+                          "children": [
+                            {
+                              "kind": "ReturnStatement",
+                              "kindCode": 253,
+                              "pos": [
+                                120,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "TrueKeyword",
+                                  "kindCode": 112,
+                                  "pos": [
+                                    120,
+                                    20
+                                  ],
+                                  "type": "t53",
+                                  "value": true
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                123,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "FalseKeyword",
+                  "kindCode": 97,
+                  "pos": [
+                    123,
+                    12
+                  ],
+                  "type": "t52",
+                  "value": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Script",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t0"
+    },
+    "s1": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s2": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s3": {
+      "name": "Array",
+      "flags": [
+        "interface",
+        "variable"
+      ],
+      "declarationType": "t5"
+    },
+    "s4": {
+      "name": "scriptData",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s5": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s38"
+    },
+    "s6": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s38"
+    },
+    "s7": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s39"
+    },
+    "s8": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s39"
+    },
+    "s9": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s40"
+    },
+    "s10": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s40"
+    },
+    "s11": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s41"
+    },
+    "s12": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s41"
+    },
+    "s13": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s42"
+    },
+    "s14": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s42"
+    },
+    "s15": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s43"
+    },
+    "s16": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s43"
+    },
+    "s17": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s18": {
+      "name": "blocks",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s19": {
+      "name": "scriptFromCodepoint",
+      "flags": [
+        "function"
+      ],
+      "parent": "s45"
+    },
+    "s20": {
+      "name": "codepoint",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s21": {
+      "name": "i",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s22": {
+      "name": "length",
+      "flags": [
+        "property"
+      ],
+      "parent": "s46"
+    },
+    "s23": {
+      "name": "script",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s24": {
+      "name": "i",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s25": {
+      "name": "length",
+      "flags": [
+        "property"
+      ],
+      "parent": "s46"
+    },
+    "s26": {
+      "name": "block",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s27": {
+      "name": "allBlocks",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s28": {
+      "name": "forEach",
+      "flags": [
+        "method"
+      ],
+      "parent": "s46"
+    },
+    "s29": {
+      "name": "s",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s30": {
+      "name": "forEach",
+      "flags": [
+        "method"
+      ],
+      "parent": "s46"
+    },
+    "s31": {
+      "name": "b",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s32": {
+      "name": "push",
+      "flags": [
+        "method"
+      ],
+      "parent": "s46"
+    },
+    "s33": {
+      "name": "supportedCodepoint",
+      "flags": [
+        "function"
+      ],
+      "parent": "s45"
+    },
+    "s34": {
+      "name": "codepoint",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s35": {
+      "name": "i",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s36": {
+      "name": "length",
+      "flags": [
+        "property"
+      ],
+      "parent": "s46"
+    },
+    "s37": {
+      "name": "__type",
+      "flags": []
+    },
+    "s38": {
+      "name": "__object",
+      "flags": []
+    },
+    "s39": {
+      "name": "__object",
+      "flags": []
+    },
+    "s40": {
+      "name": "__object",
+      "flags": []
+    },
+    "s41": {
+      "name": "__object",
+      "flags": []
+    },
+    "s42": {
+      "name": "__object",
+      "flags": []
+    },
+    "s43": {
+      "name": "__object",
+      "flags": []
+    },
+    "s44": {
+      "name": "__object",
+      "flags": []
+    },
+    "s45": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/katex/src/unicodeScripts\"",
+      "flags": []
+    },
+    "s46": {
+      "name": "Array",
+      "flags": [
+        "interface",
+        "variable"
+      ],
+      "declarationType": "t68"
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t4": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t3": {
+      "kind": "array",
+      "text": "number[]",
+      "elementType": "t4"
+    },
+    "t2": {
+      "kind": "array",
+      "text": "number[][]",
+      "elementType": "t3"
+    },
+    "t0": {
+      "kind": "object",
+      "text": "Script",
+      "members": {
+        "name": "t1",
+        "blocks": "t2"
+      }
+    },
+    "t6": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t5": {
+      "kind": "array",
+      "text": "T[]",
+      "elementType": "t6"
+    },
+    "t7": {
+      "kind": "array",
+      "text": "Script[]",
+      "elementType": "t0"
+    },
+    "t11": {
+      "kind": "array",
+      "text": "number[]",
+      "elementType": "t4"
+    },
+    "t10": {
+      "kind": "array",
+      "text": "number[][]",
+      "elementType": "t11"
+    },
+    "t9": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t8": {
+      "kind": "array",
+      "text": "{ name: string; blocks: number[][]; }[]",
+      "elementType": "t9"
+    },
+    "t12": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t13": {
+      "kind": "stringLiteral",
+      "text": "\"latin\"",
+      "value": "latin"
+    },
+    "t14": {
+      "kind": "numberLiteral",
+      "text": "256",
+      "value": 256
+    },
+    "t15": {
+      "kind": "numberLiteral",
+      "text": "591",
+      "value": 591
+    },
+    "t16": {
+      "kind": "numberLiteral",
+      "text": "768",
+      "value": 768
+    },
+    "t17": {
+      "kind": "numberLiteral",
+      "text": "879",
+      "value": 879
+    },
+    "t18": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t19": {
+      "kind": "stringLiteral",
+      "text": "\"cyrillic\"",
+      "value": "cyrillic"
+    },
+    "t20": {
+      "kind": "numberLiteral",
+      "text": "1024",
+      "value": 1024
+    },
+    "t21": {
+      "kind": "numberLiteral",
+      "text": "1279",
+      "value": 1279
+    },
+    "t22": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"armenian\"",
+      "value": "armenian"
+    },
+    "t24": {
+      "kind": "numberLiteral",
+      "text": "1328",
+      "value": 1328
+    },
+    "t25": {
+      "kind": "numberLiteral",
+      "text": "1423",
+      "value": 1423
+    },
+    "t26": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t27": {
+      "kind": "stringLiteral",
+      "text": "\"brahmic\"",
+      "value": "brahmic"
+    },
+    "t28": {
+      "kind": "numberLiteral",
+      "text": "2304",
+      "value": 2304
+    },
+    "t29": {
+      "kind": "numberLiteral",
+      "text": "4255",
+      "value": 4255
+    },
+    "t30": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t31": {
+      "kind": "stringLiteral",
+      "text": "\"georgian\"",
+      "value": "georgian"
+    },
+    "t32": {
+      "kind": "numberLiteral",
+      "text": "4256",
+      "value": 4256
+    },
+    "t33": {
+      "kind": "numberLiteral",
+      "text": "4351",
+      "value": 4351
+    },
+    "t34": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t35": {
+      "kind": "stringLiteral",
+      "text": "\"cjk\"",
+      "value": "cjk"
+    },
+    "t36": {
+      "kind": "numberLiteral",
+      "text": "12288",
+      "value": 12288
+    },
+    "t37": {
+      "kind": "numberLiteral",
+      "text": "12543",
+      "value": 12543
+    },
+    "t38": {
+      "kind": "numberLiteral",
+      "text": "19968",
+      "value": 19968
+    },
+    "t39": {
+      "kind": "numberLiteral",
+      "text": "40879",
+      "value": 40879
+    },
+    "t40": {
+      "kind": "numberLiteral",
+      "text": "65280",
+      "value": 65280
+    },
+    "t41": {
+      "kind": "numberLiteral",
+      "text": "65376",
+      "value": 65376
+    },
+    "t42": {
+      "kind": "object",
+      "text": "{ name: string; blocks: number[][]; }",
+      "members": {
+        "name": "t1",
+        "blocks": "t10"
+      }
+    },
+    "t43": {
+      "kind": "stringLiteral",
+      "text": "\"hangul\"",
+      "value": "hangul"
+    },
+    "t44": {
+      "kind": "numberLiteral",
+      "text": "44032",
+      "value": 44032
+    },
+    "t45": {
+      "kind": "numberLiteral",
+      "text": "55215",
+      "value": 55215
+    },
+    "t48": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t49": {
+      "kind": "null",
+      "text": "null"
+    },
+    "t47": {
+      "kind": "union",
+      "text": "string | null | undefined",
+      "types": [
+        "t48",
+        "t49",
+        "t1"
+      ]
+    },
+    "t46": {
+      "kind": "function",
+      "text": "(codepoint: number) => string | null | undefined",
+      "parameters": [
+        {
+          "name": "codepoint",
+          "type": "t4",
+          "optional": false
+        }
+      ],
+      "returnType": "t47"
+    },
+    "t50": {
+      "kind": "numberLiteral",
+      "text": "0",
+      "value": 0
+    },
+    "t52": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t53": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t51": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t52",
+        "t53"
+      ]
+    },
+    "t54": {
+      "kind": "numberLiteral",
+      "text": "1",
+      "value": 1
+    },
+    "t56": {
+      "kind": "never",
+      "text": "never"
+    },
+    "t55": {
+      "kind": "array",
+      "text": "never[]",
+      "elementType": "t56"
+    },
+    "t57": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t59": {
+      "kind": "function",
+      "text": "(value: Script, index: number, array: Script[]) => void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t0",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t4",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t7",
+          "optional": false
+        }
+      ],
+      "returnType": "t57"
+    },
+    "t60": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t58": {
+      "kind": "function",
+      "text": "(callbackfn: (value: Script, index: number, array: Script[]) => void, thisArg?: any) => void",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t59",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t60",
+          "optional": false
+        }
+      ],
+      "returnType": "t57"
+    },
+    "t61": {
+      "kind": "function",
+      "text": "(s: Script) => void",
+      "parameters": [
+        {
+          "name": "s",
+          "type": "t0",
+          "optional": false
+        }
+      ],
+      "returnType": "t57"
+    },
+    "t63": {
+      "kind": "function",
+      "text": "(value: number[], index: number, array: number[][]) => void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t4",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t2",
+          "optional": false
+        }
+      ],
+      "returnType": "t57"
+    },
+    "t62": {
+      "kind": "function",
+      "text": "(callbackfn: (value: number[], index: number, array: number[][]) => void, thisArg?: any) => void",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t63",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t60",
+          "optional": false
+        }
+      ],
+      "returnType": "t57"
+    },
+    "t64": {
+      "kind": "function",
+      "text": "(b: number[]) => number",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t4"
+    },
+    "t65": {
+      "kind": "function",
+      "text": "(...items: number[]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t4"
+    },
+    "t66": {
+      "kind": "function",
+      "text": "(codepoint: number) => boolean",
+      "parameters": [
+        {
+          "name": "codepoint",
+          "type": "t4",
+          "optional": false
+        }
+      ],
+      "returnType": "t51"
+    },
+    "t67": {
+      "kind": "numberLiteral",
+      "text": "2",
+      "value": 2
+    },
+    "t68": {
+      "kind": "reference",
+      "text": "Array<T>",
+      "target": "t68",
+      "typeArguments": [
+        "t6"
+      ]
+    }
+  }
+}

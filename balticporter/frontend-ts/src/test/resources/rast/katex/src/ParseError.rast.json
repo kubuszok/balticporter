@@ -200,14 +200,6 @@
           ],
           "children": [
             {
-              "kind": "OverrideKeyword",
-              "kindCode": 164,
-              "pos": [
-                14,
-                5
-              ]
-            },
-            {
               "kind": "Identifier",
               "kindCode": 80,
               "pos": [
@@ -499,14 +491,6 @@
                   "resolvedSymbol": "s10"
                 },
                 {
-                  "kind": "QuestionToken",
-                  "kindCode": 58,
-                  "pos": [
-                    24,
-                    14
-                  ]
-                },
-                {
                   "kind": "UnionType",
                   "kindCode": 192,
                   "pos": [
@@ -596,7 +580,7 @@
               ],
               "children": [
                 {
-                  "kind": "FirstStatement",
+                  "kind": "VariableStatement",
                   "kindCode": 243,
                   "pos": [
                     26,
@@ -656,14 +640,6 @@
                                   "value": "KaTeX parse error: "
                                 },
                                 {
-                                  "kind": "PlusToken",
-                                  "kindCode": 40,
-                                  "pos": [
-                                    26,
-                                    43
-                                  ]
-                                },
-                                {
                                   "kind": "Identifier",
                                   "kindCode": 80,
                                   "pos": [
@@ -683,7 +659,7 @@
                   ]
                 },
                 {
-                  "kind": "FirstStatement",
+                  "kind": "VariableStatement",
                   "kindCode": 243,
                   "pos": [
                     27,
@@ -729,7 +705,7 @@
                   ]
                 },
                 {
-                  "kind": "FirstStatement",
+                  "kind": "VariableStatement",
                   "kindCode": 243,
                   "pos": [
                     28,
@@ -775,7 +751,7 @@
                   ]
                 },
                 {
-                  "kind": "FirstStatement",
+                  "kind": "VariableStatement",
                   "kindCode": 243,
                   "pos": [
                     30,
@@ -834,14 +810,6 @@
                                   "type": "t462",
                                   "text": "token",
                                   "resolvedSymbol": "s10"
-                                },
-                                {
-                                  "kind": "AmpersandAmpersandToken",
-                                  "kindCode": 56,
-                                  "pos": [
-                                    30,
-                                    27
-                                  ]
                                 },
                                 {
                                   "kind": "PropertyAccessExpression",
@@ -914,14 +882,6 @@
                           "resolvedSymbol": "s14"
                         },
                         {
-                          "kind": "AmpersandAmpersandToken",
-                          "kindCode": 56,
-                          "pos": [
-                            31,
-                            17
-                          ]
-                        },
-                        {
                           "kind": "BinaryExpression",
                           "kindCode": 226,
                           "pos": [
@@ -962,14 +922,6 @@
                                   "text": "start",
                                   "resolvedSymbol": "s16"
                                 }
-                              ]
-                            },
-                            {
-                              "kind": "LessThanEqualsToken",
-                              "kindCode": 33,
-                              "pos": [
-                                31,
-                                30
                               ]
                             },
                             {
@@ -1018,7 +970,7 @@
                       ],
                       "children": [
                         {
-                          "kind": "FirstStatement",
+                          "kind": "VariableStatement",
                           "kindCode": 243,
                           "pos": [
                             35,
@@ -1180,7 +1132,7 @@
                                 13
                               ],
                               "type": "t12",
-                              "operator": "FirstAssignment",
+                              "operator": "EqualsToken",
                               "comments": [
                                 {
                                   "kind": "line",
@@ -1211,14 +1163,6 @@
                                         13
                                       ]
                                     }
-                                  ]
-                                },
-                                {
-                                  "kind": "FirstAssignment",
-                                  "kindCode": 64,
-                                  "pos": [
-                                    38,
-                                    19
                                   ]
                                 },
                                 {
@@ -1274,7 +1218,7 @@
                                 13
                               ],
                               "type": "t12",
-                              "operator": "FirstAssignment",
+                              "operator": "EqualsToken",
                               "children": [
                                 {
                                   "kind": "Identifier",
@@ -1286,14 +1230,6 @@
                                   "type": "t464",
                                   "text": "end",
                                   "resolvedSymbol": "s13"
-                                },
-                                {
-                                  "kind": "FirstAssignment",
-                                  "kindCode": 64,
-                                  "pos": [
-                                    39,
-                                    17
-                                  ]
                                 },
                                 {
                                   "kind": "PropertyAccessExpression",
@@ -1362,14 +1298,6 @@
                                   "resolvedSymbol": "s12"
                                 },
                                 {
-                                  "kind": "EqualsEqualsEqualsToken",
-                                  "kindCode": 37,
-                                  "pos": [
-                                    40,
-                                    23
-                                  ]
-                                },
-                                {
                                   "kind": "PropertyAccessExpression",
                                   "kindCode": 211,
                                   "pos": [
@@ -1428,7 +1356,7 @@
                                         17
                                       ],
                                       "type": "t2",
-                                      "operator": "FirstCompoundAssignment",
+                                      "operator": "PlusEqualsToken",
                                       "children": [
                                         {
                                           "kind": "Identifier",
@@ -1440,14 +1368,6 @@
                                           "type": "t2",
                                           "text": "error",
                                           "resolvedSymbol": "s11"
-                                        },
-                                        {
-                                          "kind": "FirstCompoundAssignment",
-                                          "kindCode": 65,
-                                          "pos": [
-                                            41,
-                                            23
-                                          ]
                                         },
                                         {
                                           "kind": "StringLiteral",
@@ -1489,7 +1409,7 @@
                                         17
                                       ],
                                       "type": "t2",
-                                      "operator": "FirstCompoundAssignment",
+                                      "operator": "PlusEqualsToken",
                                       "children": [
                                         {
                                           "kind": "Identifier",
@@ -1501,14 +1421,6 @@
                                           "type": "t2",
                                           "text": "error",
                                           "resolvedSymbol": "s11"
-                                        },
-                                        {
-                                          "kind": "FirstCompoundAssignment",
-                                          "kindCode": 65,
-                                          "pos": [
-                                            43,
-                                            23
-                                          ]
                                         },
                                         {
                                           "kind": "BinaryExpression",
@@ -1541,14 +1453,6 @@
                                                   "value": " at position "
                                                 },
                                                 {
-                                                  "kind": "PlusToken",
-                                                  "kindCode": 40,
-                                                  "pos": [
-                                                    43,
-                                                    42
-                                                  ]
-                                                },
-                                                {
                                                   "kind": "ParenthesizedExpression",
                                                   "kindCode": 217,
                                                   "pos": [
@@ -1579,15 +1483,7 @@
                                                           "resolvedSymbol": "s12"
                                                         },
                                                         {
-                                                          "kind": "PlusToken",
-                                                          "kindCode": 40,
-                                                          "pos": [
-                                                            43,
-                                                            51
-                                                          ]
-                                                        },
-                                                        {
-                                                          "kind": "FirstLiteralToken",
+                                                          "kind": "NumericLiteral",
                                                           "kindCode": 9,
                                                           "pos": [
                                                             43,
@@ -1600,14 +1496,6 @@
                                                     }
                                                   ]
                                                 }
-                                              ]
-                                            },
-                                            {
-                                              "kind": "PlusToken",
-                                              "kindCode": 40,
-                                              "pos": [
-                                                43,
-                                                56
                                               ]
                                             },
                                             {
@@ -1631,7 +1519,7 @@
                           ]
                         },
                         {
-                          "kind": "FirstStatement",
+                          "kind": "VariableStatement",
                           "kindCode": 243,
                           "pos": [
                             47,
@@ -1794,7 +1682,8 @@
                                             47,
                                             64
                                           ],
-                                          "type": "t8"
+                                          "type": "t8",
+                                          "value": "/[^]/g"
                                         },
                                         {
                                           "kind": "StringLiteral",
@@ -1815,7 +1704,7 @@
                           ]
                         },
                         {
-                          "kind": "FirstStatement",
+                          "kind": "VariableStatement",
                           "kindCode": 243,
                           "pos": [
                             50,
@@ -1910,15 +1799,7 @@
                                   "resolvedSymbol": "s12"
                                 },
                                 {
-                                  "kind": "GreaterThanToken",
-                                  "kindCode": 32,
-                                  "pos": [
-                                    51,
-                                    23
-                                  ]
-                                },
-                                {
-                                  "kind": "FirstLiteralToken",
+                                  "kind": "NumericLiteral",
                                   "kindCode": 9,
                                   "pos": [
                                     51,
@@ -1953,7 +1834,7 @@
                                         17
                                       ],
                                       "type": "t2",
-                                      "operator": "FirstAssignment",
+                                      "operator": "EqualsToken",
                                       "children": [
                                         {
                                           "kind": "Identifier",
@@ -1965,14 +1846,6 @@
                                           "type": "t464",
                                           "text": "left",
                                           "resolvedSymbol": "s25"
-                                        },
-                                        {
-                                          "kind": "FirstAssignment",
-                                          "kindCode": 64,
-                                          "pos": [
-                                            52,
-                                            22
-                                          ]
                                         },
                                         {
                                           "kind": "BinaryExpression",
@@ -1993,14 +1866,6 @@
                                               ],
                                               "type": "t474",
                                               "value": "…"
-                                            },
-                                            {
-                                              "kind": "PlusToken",
-                                              "kindCode": 40,
-                                              "pos": [
-                                                52,
-                                                28
-                                              ]
                                             },
                                             {
                                               "kind": "CallExpression",
@@ -2066,15 +1931,7 @@
                                                       "resolvedSymbol": "s12"
                                                     },
                                                     {
-                                                      "kind": "MinusToken",
-                                                      "kindCode": 41,
-                                                      "pos": [
-                                                        52,
-                                                        48
-                                                      ]
-                                                    },
-                                                    {
-                                                      "kind": "FirstLiteralToken",
+                                                      "kind": "NumericLiteral",
                                                       "kindCode": 9,
                                                       "pos": [
                                                         52,
@@ -2130,7 +1987,7 @@
                                         17
                                       ],
                                       "type": "t2",
-                                      "operator": "FirstAssignment",
+                                      "operator": "EqualsToken",
                                       "children": [
                                         {
                                           "kind": "Identifier",
@@ -2142,14 +1999,6 @@
                                           "type": "t464",
                                           "text": "left",
                                           "resolvedSymbol": "s25"
-                                        },
-                                        {
-                                          "kind": "FirstAssignment",
-                                          "kindCode": 64,
-                                          "pos": [
-                                            54,
-                                            22
-                                          ]
                                         },
                                         {
                                           "kind": "CallExpression",
@@ -2194,7 +2043,7 @@
                                               ]
                                             },
                                             {
-                                              "kind": "FirstLiteralToken",
+                                              "kind": "NumericLiteral",
                                               "kindCode": 9,
                                               "pos": [
                                                 54,
@@ -2225,7 +2074,7 @@
                           ]
                         },
                         {
-                          "kind": "FirstStatement",
+                          "kind": "VariableStatement",
                           "kindCode": 243,
                           "pos": [
                             56,
@@ -2286,7 +2135,7 @@
                                 17
                               ],
                               "type": "t49",
-                              "operator": "FirstBinaryOperator",
+                              "operator": "LessThanToken",
                               "children": [
                                 {
                                   "kind": "BinaryExpression",
@@ -2310,15 +2159,7 @@
                                       "resolvedSymbol": "s13"
                                     },
                                     {
-                                      "kind": "PlusToken",
-                                      "kindCode": 40,
-                                      "pos": [
-                                        57,
-                                        21
-                                      ]
-                                    },
-                                    {
-                                      "kind": "FirstLiteralToken",
+                                      "kind": "NumericLiteral",
                                       "kindCode": 9,
                                       "pos": [
                                         57,
@@ -2327,14 +2168,6 @@
                                       "type": "t473",
                                       "value": 15
                                     }
-                                  ]
-                                },
-                                {
-                                  "kind": "FirstBinaryOperator",
-                                  "kindCode": 30,
-                                  "pos": [
-                                    57,
-                                    26
                                   ]
                                 },
                                 {
@@ -2396,7 +2229,7 @@
                                         17
                                       ],
                                       "type": "t2",
-                                      "operator": "FirstAssignment",
+                                      "operator": "EqualsToken",
                                       "children": [
                                         {
                                           "kind": "Identifier",
@@ -2408,14 +2241,6 @@
                                           "type": "t464",
                                           "text": "right",
                                           "resolvedSymbol": "s26"
-                                        },
-                                        {
-                                          "kind": "FirstAssignment",
-                                          "kindCode": 64,
-                                          "pos": [
-                                            58,
-                                            23
-                                          ]
                                         },
                                         {
                                           "kind": "BinaryExpression",
@@ -2502,15 +2327,7 @@
                                                       "resolvedSymbol": "s13"
                                                     },
                                                     {
-                                                      "kind": "PlusToken",
-                                                      "kindCode": 40,
-                                                      "pos": [
-                                                        58,
-                                                        46
-                                                      ]
-                                                    },
-                                                    {
-                                                      "kind": "FirstLiteralToken",
+                                                      "kind": "NumericLiteral",
                                                       "kindCode": 9,
                                                       "pos": [
                                                         58,
@@ -2521,14 +2338,6 @@
                                                     }
                                                   ]
                                                 }
-                                              ]
-                                            },
-                                            {
-                                              "kind": "PlusToken",
-                                              "kindCode": 40,
-                                              "pos": [
-                                                58,
-                                                52
                                               ]
                                             },
                                             {
@@ -2573,7 +2382,7 @@
                                         17
                                       ],
                                       "type": "t2",
-                                      "operator": "FirstAssignment",
+                                      "operator": "EqualsToken",
                                       "children": [
                                         {
                                           "kind": "Identifier",
@@ -2585,14 +2394,6 @@
                                           "type": "t464",
                                           "text": "right",
                                           "resolvedSymbol": "s26"
-                                        },
-                                        {
-                                          "kind": "FirstAssignment",
-                                          "kindCode": 64,
-                                          "pos": [
-                                            60,
-                                            23
-                                          ]
                                         },
                                         {
                                           "kind": "CallExpression",
@@ -2673,7 +2474,7 @@
                                 13
                               ],
                               "type": "t2",
-                              "operator": "FirstCompoundAssignment",
+                              "operator": "PlusEqualsToken",
                               "children": [
                                 {
                                   "kind": "Identifier",
@@ -2685,14 +2486,6 @@
                                   "type": "t2",
                                   "text": "error",
                                   "resolvedSymbol": "s11"
-                                },
-                                {
-                                  "kind": "FirstCompoundAssignment",
-                                  "kindCode": 65,
-                                  "pos": [
-                                    62,
-                                    19
-                                  ]
                                 },
                                 {
                                   "kind": "BinaryExpression",
@@ -2726,14 +2519,6 @@
                                           "resolvedSymbol": "s25"
                                         },
                                         {
-                                          "kind": "PlusToken",
-                                          "kindCode": 40,
-                                          "pos": [
-                                            62,
-                                            27
-                                          ]
-                                        },
-                                        {
                                           "kind": "Identifier",
                                           "kindCode": 80,
                                           "pos": [
@@ -2744,14 +2529,6 @@
                                           "text": "underlined",
                                           "resolvedSymbol": "s22"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "kind": "PlusToken",
-                                      "kindCode": 40,
-                                      "pos": [
-                                        62,
-                                        40
                                       ]
                                     },
                                     {
@@ -2928,7 +2705,7 @@
                         9
                       ],
                       "type": "t39",
-                      "operator": "FirstAssignment",
+                      "operator": "EqualsToken",
                       "children": [
                         {
                           "kind": "PropertyAccessExpression",
@@ -2959,14 +2736,6 @@
                               "text": "position",
                               "resolvedSymbol": "s6"
                             }
-                          ]
-                        },
-                        {
-                          "kind": "FirstAssignment",
-                          "kindCode": 64,
-                          "pos": [
-                            68,
-                            23
                           ]
                         },
                         {
@@ -3024,14 +2793,6 @@
                               "resolvedSymbol": "s12"
                             },
                             {
-                              "kind": "ExclamationEqualsToken",
-                              "kindCode": 36,
-                              "pos": [
-                                69,
-                                19
-                              ]
-                            },
-                            {
                               "kind": "NullKeyword",
                               "kindCode": 106,
                               "pos": [
@@ -3040,14 +2801,6 @@
                               ],
                               "type": "t5"
                             }
-                          ]
-                        },
-                        {
-                          "kind": "AmpersandAmpersandToken",
-                          "kindCode": 56,
-                          "pos": [
-                            69,
-                            27
                           ]
                         },
                         {
@@ -3070,14 +2823,6 @@
                               "type": "t39",
                               "text": "end",
                               "resolvedSymbol": "s13"
-                            },
-                            {
-                              "kind": "ExclamationEqualsToken",
-                              "kindCode": 36,
-                              "pos": [
-                                69,
-                                34
-                              ]
                             },
                             {
                               "kind": "NullKeyword",
@@ -3116,7 +2861,7 @@
                                 13
                               ],
                               "type": "t12",
-                              "operator": "FirstAssignment",
+                              "operator": "EqualsToken",
                               "children": [
                                 {
                                   "kind": "PropertyAccessExpression",
@@ -3150,14 +2895,6 @@
                                   ]
                                 },
                                 {
-                                  "kind": "FirstAssignment",
-                                  "kindCode": 64,
-                                  "pos": [
-                                    70,
-                                    25
-                                  ]
-                                },
-                                {
                                   "kind": "BinaryExpression",
                                   "kindCode": 226,
                                   "pos": [
@@ -3177,14 +2914,6 @@
                                       "type": "t12",
                                       "text": "end",
                                       "resolvedSymbol": "s13"
-                                    },
-                                    {
-                                      "kind": "MinusToken",
-                                      "kindCode": 41,
-                                      "pos": [
-                                        70,
-                                        31
-                                      ]
                                     },
                                     {
                                       "kind": "Identifier",
@@ -3223,7 +2952,7 @@
                         9
                       ],
                       "type": "t2",
-                      "operator": "FirstAssignment",
+                      "operator": "EqualsToken",
                       "children": [
                         {
                           "kind": "PropertyAccessExpression",
@@ -3254,14 +2983,6 @@
                               "text": "rawMessage",
                               "resolvedSymbol": "s8"
                             }
-                          ]
-                        },
-                        {
-                          "kind": "FirstAssignment",
-                          "kindCode": 64,
-                          "pos": [
-                            72,
-                            25
                           ]
                         },
                         {

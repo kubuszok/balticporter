@@ -26,24 +26,6 @@
       ],
       "children": [
         {
-          "kind": "ExportKeyword",
-          "kindCode": 95,
-          "pos": [
-            7,
-            1
-          ],
-          "comments": [
-            {
-              "kind": "block",
-              "text": "/**\n * This file consists only of basic types used in multiple places.\n * For types with javascript, create separate files by themselves.\n */",
-              "pos": [
-                2,
-                1
-              ]
-            }
-          ]
-        },
-        {
           "kind": "Identifier",
           "kindCode": 80,
           "pos": [
@@ -224,120 +206,6 @@
         }
       ],
       "children": [
-        {
-          "kind": "ExportKeyword",
-          "kindCode": 95,
-          "pos": [
-            22,
-            1
-          ],
-          "comments": [
-            {
-              "kind": "line",
-              "text": "// LaTeX argument type.",
-              "pos": [
-                9,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   - \"size\": A size-like thing, such as \"1em\" or \"5ex\"",
-              "pos": [
-                10,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   - \"color\": An html color, like \"#abc\" or \"blue\"",
-              "pos": [
-                11,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   - \"url\": An url string, in which \"\\\" will be ignored",
-              "pos": [
-                12,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   -        if it precedes [#$%&~_^\\{}]",
-              "pos": [
-                13,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   - \"raw\": A string, allowing single character, percent sign,",
-              "pos": [
-                14,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//            and nested braces",
-              "pos": [
-                15,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   - \"original\": The same type as the environment that the",
-              "pos": [
-                16,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//                 function being parsed is in (e.g. used for the",
-              "pos": [
-                17,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//                 bodies of functions like \\textcolor where the",
-              "pos": [
-                18,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//                 first argument is special and the second",
-              "pos": [
-                19,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//                 argument is parsed normally)",
-              "pos": [
-                20,
-                1
-              ]
-            },
-            {
-              "kind": "line",
-              "text": "//   - Mode: Node group parsed in given mode.",
-              "pos": [
-                21,
-                1
-              ]
-            }
-          ]
-        },
         {
           "kind": "Identifier",
           "kindCode": 80,
@@ -545,24 +413,6 @@
       ],
       "children": [
         {
-          "kind": "ExportKeyword",
-          "kindCode": 95,
-          "pos": [
-            26,
-            1
-          ],
-          "comments": [
-            {
-              "kind": "line",
-              "text": "// LaTeX display style.",
-              "pos": [
-                25,
-                1
-              ]
-            }
-          ]
-        },
-        {
           "kind": "Identifier",
           "kindCode": 80,
           "pos": [
@@ -687,24 +537,6 @@
         }
       ],
       "children": [
-        {
-          "kind": "ExportKeyword",
-          "kindCode": 95,
-          "pos": [
-            29,
-            1
-          ],
-          "comments": [
-            {
-              "kind": "line",
-              "text": "// Allowable token text for \"break\" arguments in parser.",
-              "pos": [
-                28,
-                1
-              ]
-            }
-          ]
-        },
         {
           "kind": "Identifier",
           "kindCode": 80,
@@ -910,24 +742,6 @@
         }
       ],
       "children": [
-        {
-          "kind": "ExportKeyword",
-          "kindCode": 95,
-          "pos": [
-            33,
-            1
-          ],
-          "comments": [
-            {
-              "kind": "line",
-              "text": "// Math font variants.",
-              "pos": [
-                32,
-                1
-              ]
-            }
-          ]
-        },
         {
           "kind": "Identifier",
           "kindCode": 80,
