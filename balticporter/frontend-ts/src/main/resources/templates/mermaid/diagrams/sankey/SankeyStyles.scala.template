@@ -1,0 +1,39 @@
+package ssg
+package mermaid
+package diagrams
+package sankey
+
+import ssg.mermaid.theme.ThemeVariables
+
+/** CSS class generation for Sankey diagram elements. */
+object SankeyStyles {
+
+  /** Generates CSS rules for all Sankey diagram elements. */
+  def generate(vars: ThemeVariables): String = {
+    val sb = new StringBuilder()
+
+    sb.append(
+      s""".sankeyNode {
+         |  stroke: ${vars.lineColor};
+         |  stroke-width: 0.5px;
+         |}
+         |""".stripMargin
+    )
+
+    sb.append(s""".sankeyFlow {
+                 |  stroke: none;
+                 |}
+                 |""".stripMargin)
+
+    sb.append(
+      s""".sankeyLabel {
+         |  font-size: 12px;
+         |  fill: ${vars.textColor};
+         |  font-family: ${vars.fontFamily};
+         |}
+         |""".stripMargin
+    )
+
+    sb.toString
+  }
+}
