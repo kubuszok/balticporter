@@ -143,7 +143,7 @@ class MermaidDiagramEmitters2Spec extends munit.FunSuite:
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate")
     assert(scala.contains(".c4Person"), "should have c4Person CSS")
     assert(scala.contains(".c4System"), "should have c4System CSS")
-    assert(scala.contains(".c4Boundary"), "should have c4Boundary CSS")
+    assert(scala.contains(".c4Rel"), "should have c4Rel CSS")
 
   // ===========================================================================
   // 4. Gantt diagram
@@ -229,9 +229,9 @@ class MermaidDiagramEmitters2Spec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters2.emitGitStyles(dummyRast)
     assert(scala.contains("object GitStyles"), "should emit object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate")
-    assert(scala.contains(".gitCommit"), "should have gitCommit CSS")
-    assert(scala.contains(".gitBranch"), "should have gitBranch CSS")
-    assert(scala.contains(".gitTag"), "should have gitTag CSS")
+    assert(scala.contains(".commit-node"), "should have commit-node CSS")
+    assert(scala.contains(".branch-label"), "should have branch-label CSS")
+    assert(scala.contains(".tag-label"), "should have tag-label CSS")
 
   // ===========================================================================
   // 6. State diagram
@@ -273,9 +273,9 @@ class MermaidDiagramEmitters2Spec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters2.emitStateStyles(dummyRast)
     assert(scala.contains("object StateStyles"), "should emit object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate")
-    assert(scala.contains(".stateNode"), "should have stateNode CSS")
-    assert(scala.contains(".stateStart"), "should have stateStart CSS")
-    assert(scala.contains(".stateTransition"), "should have stateTransition CSS")
+    assert(scala.contains(".statebox"), "should have statebox CSS")
+    assert(scala.contains(".start-state"), "should have start-state CSS")
+    assert(scala.contains(".transition"), "should have transition CSS")
 
   // ===========================================================================
   // 7. XY Chart diagram
@@ -317,9 +317,9 @@ class MermaidDiagramEmitters2Spec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters2.emitXyChartStyles(dummyRast)
     assert(scala.contains("object XyChartStyles"), "should emit object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate")
-    assert(scala.contains(".xyTitle"), "should have xyTitle CSS")
-    assert(scala.contains(".xyAxis"), "should have xyAxis CSS")
-    assert(scala.contains(".xyBar"), "should have xyBar CSS")
+    assert(scala.contains(".xychartTitleText"), "should have xychartTitleText CSS")
+    assert(scala.contains(".xychartAxis"), "should have xychartAxis CSS")
+    assert(scala.contains(".xychartBar"), "should have xychartBar CSS")
 
   // ===========================================================================
   // 8. Flowchart diagram
@@ -405,9 +405,9 @@ class MermaidDiagramEmitters2Spec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters2.emitClassStyles(dummyRast)
     assert(scala.contains("object ClassStyles"), "should emit object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate")
-    assert(scala.contains(".classBox"), "should have classBox CSS")
+    assert(scala.contains(".classTitle"), "should have classTitle CSS")
     assert(scala.contains(".classLabel"), "should have classLabel CSS")
-    assert(scala.contains(".classRelation"), "should have classRelation CSS")
+    assert(scala.contains(".relation"), "should have relation CSS")
 
   // ===========================================================================
   // 10. Sequence diagram

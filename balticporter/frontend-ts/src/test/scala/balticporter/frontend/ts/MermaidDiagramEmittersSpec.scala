@@ -406,9 +406,9 @@ class MermaidDiagramEmittersSpec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters.emitMindmapStyles(dummyRast)
     assert(scala.contains("object MindmapStyles"), "should emit MindmapStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
-    assert(scala.contains("mindmapRoot"), "should have mindmapRoot style")
-    assert(scala.contains("mindmapNode"), "should have mindmapNode style")
-    assert(scala.contains("mindmapBranch"), "should have mindmapBranch style")
+    assert(scala.contains("mindmap-shape"), "should have mindmap-shape style")
+    assert(scala.contains("mindmap-text"), "should have mindmap-text style")
+    assert(scala.contains("mindmap-edge"), "should have mindmap-edge style")
 
   // ===========================================================================
   // 9. Quadrant
@@ -458,8 +458,8 @@ class MermaidDiagramEmittersSpec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters.emitQuadrantStyles(dummyRast)
     assert(scala.contains("object QuadrantStyles"), "should emit QuadrantStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
-    assert(scala.contains("quadrantTitle"), "should have quadrantTitle style")
-    assert(scala.contains("quadrantQ1"), "should have quadrantQ1 style")
+    assert(scala.contains("quadrantTitleText"), "should have quadrantTitleText style")
+    assert(scala.contains("quadrantLabel"), "should have quadrantLabel style")
     assert(scala.contains("quadrantPoint"), "should have quadrantPoint style")
 
   // ===========================================================================
@@ -506,9 +506,9 @@ class MermaidDiagramEmittersSpec extends munit.FunSuite:
     val scala = dedicated.MermaidDiagramEmitters.emitSankeyStyles(dummyRast)
     assert(scala.contains("object SankeyStyles"), "should emit SankeyStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
-    assert(scala.contains("sankeyTitle"), "should have sankeyTitle style")
     assert(scala.contains("sankeyNode"), "should have sankeyNode style")
     assert(scala.contains("sankeyFlow"), "should have sankeyFlow style")
+    assert(scala.contains("sankeyLabel"), "should have sankeyLabel style")
 
   // ===========================================================================
   // Write all files
