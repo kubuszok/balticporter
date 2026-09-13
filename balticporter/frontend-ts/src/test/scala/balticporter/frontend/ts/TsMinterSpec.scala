@@ -115,9 +115,21 @@ class TsMinterSpec extends munit.FunSuite:
       "/rast/path-data-parser/src/normalize.rast.json",
     ).map(loadRast)
 
+    val jsNumHelper = """  private def jsNum(v: Double): String = {
+    if (v.isNaN) { "NaN" }
+    else if (v.isPosInfinity) { "Infinity" }
+    else if (v.isNegInfinity) { "-Infinity" }
+    else if (v == Math.rint(v) && Math.abs(v) < 1e21) { new java.math.BigDecimal(v).toBigInteger.toString }
+    else { java.lang.Double.toString(v) }
+  }"""
     val config = TsToScalaEmitter.EmitConfig(
-      packageName = "pathdata",
+      packageName = "ssg.graphs.commons.rough.pathdata",
       imports = List("scala.collection.mutable.ArrayBuffer"),
+      braceStyle = true,
+      errorClassName = "PathDataParseError",
+      extraDeclarations = Map(
+        "parser" -> "final class PathDataParseError(message: String) extends RuntimeException(message)",
+      ),
     )
     val emitted = TsToScalaEmitter.emit(files, config)
     

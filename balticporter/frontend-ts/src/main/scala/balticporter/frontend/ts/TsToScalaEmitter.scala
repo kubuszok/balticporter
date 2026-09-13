@@ -15,6 +15,9 @@ object TsToScalaEmitter:
   final case class EmitConfig(
       packageName: String,
       imports: List[String] = Nil,
+      braceStyle: Boolean = true,
+      errorClassName: String = "RuntimeException",
+      extraDeclarations: Map[String, String] = Map.empty,
   )
 
   def emit(files: List[RastFile], config: EmitConfig): Map[String, String] =
@@ -74,8 +77,11 @@ object TsToScalaEmitter:
         if isExported(iface) then
           emitCaseClass(iface, file)
 
+      // Emit extra declarations before the object (e.g., error classes)
+      config.extraDeclarations.get(fileName).foreach(d => sb.append(d + "\n\n"))
+
       // Emit the module object with functions and variables
-      sb.append(s"object $objectName:\n\n")
+      sb.append(s"object $objectName {\n\n")
 
       // Private interfaces as nested case classes
       for (iface <- interfaces if !isExported(iface))
@@ -89,6 +95,7 @@ object TsToScalaEmitter:
       for (fn <- functions)
         emitFunction(fn, file, "  ")
 
+      sb.append("}\n")
       sb.toString
 
     private def emitCaseClass(node: RastNode, file: RastFile, indent: String = ""): Unit =
@@ -154,7 +161,7 @@ object TsToScalaEmitter:
       }.toSet
       if optParamIndices.nonEmpty then functionOptionalParams(name) = optParamIndices
 
-      sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType =\n")
+      sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType = {\n")
       // Emit var copies for reassigned params
       for (p <- params if reassignedParams.contains(nameOf(p)))
         val pName = nameOf(p)
@@ -165,7 +172,7 @@ object TsToScalaEmitter:
         case None => sb.append(s"${indent}  ???\n")
       currentMutatedArrays = Set.empty
       currentOptionalParams = Set.empty
-      sb.append("\n")
+      sb.append(s"$indent}\n\n")
 
     // R7: track which variables are mutated via .push() — they need ArrayBuffer
     private var currentMutatedArrays: Set[String] = Set.empty
@@ -279,7 +286,7 @@ object TsToScalaEmitter:
           val regexMatch = detectRegexMatch(condNode)
           regexMatch match
             case Some((obj, regex)) =>
-              sb.append(s"$indent$regex.findPrefixMatchOf($obj) match\n")
+              sb.append(s"$indent$regex.findPrefixMatchOf($obj) match {\n")
               sb.append(s"$indent  case Some(_m) =>\n")
               emitStatement(node.children(1), file, indent + "    ")
               if node.children.length > 2 then
@@ -287,6 +294,7 @@ object TsToScalaEmitter:
                 emitStatement(node.children(2), file, indent + "    ")
               else
                 sb.append(s"$indent  case None => ()\n")
+              sb.append(s"$indent}\n")
             case None =>
               val cond = emitExpr(condNode, file)
               // JS truthiness: optional params → .isDefined, numeric → != 0
@@ -297,11 +305,12 @@ object TsToScalaEmitter:
               else if condType == "number" && !cond.contains("==") && !cond.contains("!=") && !cond.contains("<") && !cond.contains(">")
                 then s"($cond) != 0"
                 else cond
-              sb.append(s"${indent}if ($condFixed) then\n")
+              sb.append(s"${indent}if ($condFixed) {\n")
               emitStatement(node.children(1), file, indent + "  ")
               if node.children.length > 2 then
-                sb.append(s"${indent}else\n")
+                sb.append(s"$indent} else {\n")
                 emitStatement(node.children(2), file, indent + "  ")
+              sb.append(s"$indent}\n")
 
         case "Block" =>
           emitBlock(node, file, indent)
@@ -321,8 +330,9 @@ object TsToScalaEmitter:
 
         case "WhileStatement" =>
           val cond = emitExpr(node.children.head, file)
-          sb.append(s"${indent}while ($cond)\n")
+          sb.append(s"${indent}while ($cond) {\n")
           emitStatement(node.children(1), file, indent + "  ")
+          sb.append(s"$indent}\n")
 
         case "SwitchStatement" =>
           emitSwitch(node, file, indent)
@@ -364,13 +374,15 @@ object TsToScalaEmitter:
       destructured match
         case Some(pattern) =>
           val fields = pattern.children.filter(_.kind == "BindingElement").map(nameOf)
-          sb.append(s"${indent}for (_item <- $iterExpr)\n")
+          sb.append(s"${indent}for (_item <- $iterExpr) {\n")
           for (f <- fields)
             sb.append(s"${indent}  val $f = _item.$f\n")
           body.foreach(b => emitBlock(b, file, indent + "  "))
+          sb.append(s"$indent}\n")
         case None =>
-          sb.append(s"${indent}for ($bindingName <- $iterExpr)\n")
+          sb.append(s"${indent}for ($bindingName <- $iterExpr) {\n")
           body.foreach(b => emitBlock(b, file, indent + "  "))
+          sb.append(s"$indent}\n")
 
     private def emitForLoop(node: RastNode, file: RastFile, indent: String): Unit =
       // R12: C-style for(init; cond; update) body → { init; while(cond) { body; update } }
@@ -393,24 +405,26 @@ object TsToScalaEmitter:
         else
           emitStatement(initChild, file, indent)
         val cond = emitExpr(children(1), file)
-        sb.append(s"${indent}while ($cond)\n")
+        sb.append(s"${indent}while ($cond) {\n")
         emitStatement(children(3), file, indent + "  ")
         // update
         val update = emitExpr(children(2), file)
         sb.append(s"${indent}  $update\n")
+        sb.append(s"$indent}\n")
       else if children.length >= 3 then
         val cond = emitExpr(children(0), file)
-        sb.append(s"${indent}while ($cond)\n")
+        sb.append(s"${indent}while ($cond) {\n")
         emitStatement(children(2), file, indent + "  ")
         val update = emitExpr(children(1), file)
         sb.append(s"${indent}  $update\n")
+        sb.append(s"$indent}\n")
       else
         sb.append(s"$indent// TODO: for loop with ${children.length} children\n")
 
     private def emitSwitch(node: RastNode, file: RastFile, indent: String): Unit =
       val scrutinee = emitExpr(node.children.head, file)
       val caseBlock = node.children.find(_.kind == "CaseBlock")
-      sb.append(s"$indent$scrutinee match\n")
+      sb.append(s"$indent($scrutinee) match {\n")
       caseBlock.foreach { cb =>
         val clauses = cb.children.toArray
         var i = 0
@@ -449,6 +463,7 @@ object TsToScalaEmitter:
         // R12-exhaustive: if no DefaultClause, add case _ => ()
         val hasDefault = clauses.exists(_.kind == "DefaultClause")
         if !hasDefault then sb.append(s"$indent  case _ => ()\n")
+        sb.append(s"$indent}\n")
       }
 
     private def emitExpr(node: RastNode, file: RastFile): String =
@@ -707,7 +722,7 @@ object TsToScalaEmitter:
           val cls = emitExpr(node.children.head, file)
           val args = node.children.drop(1).map(emitExpr(_, file))
           if cls == "Array" then "ArrayBuffer.empty"
-          else if cls == "Error" then s"new RuntimeException(${args.mkString(", ")})"
+          else if cls == "Error" then s"new ${config.errorClassName}(${args.mkString(", ")})"
           else s"new $cls(${args.mkString(", ")})"
 
         case "ParenthesizedExpression" =>
