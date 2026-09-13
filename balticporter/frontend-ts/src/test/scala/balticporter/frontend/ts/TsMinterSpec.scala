@@ -285,3 +285,13 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
       println(s"=== $name-dedicated.scala ===")
       println(source)
     assert(emitted.contains("PointsOnPath"), "should emit PointsOnPath")
+
+  test("roughjs fillers → emitted Scala source (dedicated)"):
+    val rastBase = java.nio.file.Path.of(sys.props.getOrElse("user.dir", "."))
+      .resolve("src/test/resources/rast/roughjs/src/fillers")
+    val emitted = dedicated.RoughFillersEmitter.emit(rastBase)
+    for ((name, source) <- emitted.toList.sortBy(_._1))
+      println(s"=== $name.scala ===")
+      println(source)
+      println()
+    assert(emitted.size == 9, s"expected 9 filler files, got ${emitted.size}")
