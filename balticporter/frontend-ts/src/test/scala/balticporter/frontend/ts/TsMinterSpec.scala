@@ -295,3 +295,16 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
       println(source)
       println()
     assert(emitted.size == 9, s"expected 9 filler files, got ${emitted.size}")
+
+  test("roughjs engine (renderer + generator) → emitted Scala source"):
+    val rendererRast = loadRast("/rast/roughjs/src/renderer.rast.json")
+    val generatorRast = loadRast("/rast/roughjs/src/generator.rast.json")
+    val emitted = dedicated.RoughEngineEmitter.emit(rendererRast, generatorRast)
+    // Write full emitted files for inspection
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-rough")
+    java.nio.file.Files.createDirectories(outDir)
+    for ((name, source) <- emitted)
+      java.nio.file.Files.writeString(outDir.resolve(s"$name.scala"), source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines → $outDir/$name.scala")
+    assert(emitted.contains("RoughRenderer"), "should emit RoughRenderer")
+    assert(emitted.contains("RoughGenerator"), "should emit RoughGenerator")
