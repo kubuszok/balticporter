@@ -664,12 +664,29 @@ object TsToScalaEmitter:
         case "PropertyAccessExpression" =>
           val obj = emitExpr(node.children.head, file)
           val prop = node.children.lastOption.flatMap(_.text).getOrElse("???")
-          // Rewrite JS-specific property access
-          if obj == "RegExp" && prop.startsWith("$") then
+          // Math methods → scala.math
+          if obj == "Math" then
+            prop match
+              case "PI" => "math.Pi"
+              case "sqrt" | "pow" | "cos" | "sin" | "atan2" | "abs" |
+                   "floor" | "ceil" | "max" | "min" | "log" | "tan" | "asin" | "acos" =>
+                s"math.$prop"
+              case "round" => "math.round"
+              case _ => s"math.$prop"
+          // RegExp.$1 → _m.group(1)
+          else if obj == "RegExp" && prop.startsWith("$") then
             val groupNum = prop.drop(1)
             s"_m.group($groupNum)"
           else if prop == "length" then
             s"$obj.length"
+          else if prop == "push" then
+            s"$obj.+="
+          else if prop == "forEach" then
+            s"$obj.foreach"
+          else if prop == "splice" then
+            s"$obj.remove"
+          else if prop == "filter" then
+            s"$obj.filter"
           else if scalaKeywords.contains(prop) then
             s"$obj.`$prop`"
           else
@@ -920,13 +937,18 @@ object TsToScalaEmitter:
         case "numberLiteral" => "Int"
         case "booleanLiteral" => "Boolean"
         case "reference" =>
-          val target = rt.target.flatMap(file.types.get).map(_.text).getOrElse("Any")
+          val targetType = rt.target.flatMap(file.types.get)
+          val target = targetType.map(_.text).getOrElse("Any")
           // Tuple types: [number, number] → (Double, Double)
-          if rt.text.startsWith("[") && rt.text.contains(",") then
+          // Check both the reference text AND the target text for tuple patterns
+          val isTuple = (rt.text.startsWith("[") && rt.text.contains(",")) ||
+            (target.startsWith("[") && target.contains(",")) ||
+            targetType.exists(t => t.kind == "reference" && t.text.startsWith("["))
+          if isTuple then
             val typeArgs = rt.typeArguments.getOrElse(Nil).flatMap(file.types.get)
               .map(rastTypeToScala(_, file))
             if typeArgs.nonEmpty then s"(${typeArgs.mkString(", ")})"
-            else rt.text // fallback
+            else "(Double, Double)" // fallback for unresolved tuple
           else
             // Resolve type aliases (R8: TokenType → Int)
             val resolved = typeAliasMap.getOrElse(target, target)
