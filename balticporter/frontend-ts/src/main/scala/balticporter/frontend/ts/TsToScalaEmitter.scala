@@ -30,6 +30,8 @@ object TsToScalaEmitter:
   private class EmitContext(config: EmitConfig):
     private val sb = new StringBuilder
     private val typeAliasMap = mutable.Map.empty[String, String]
+    // Track which function parameters are optional (for Some(...) wrapping at call sites)
+    private val functionOptionalParams = mutable.Map.empty[String, Set[Int]]
 
     def emitFile(file: RastFile, fileName: String): String =
       sb.clear()
@@ -146,6 +148,11 @@ object TsToScalaEmitter:
           s"$escapedName: $pType"
       }
       currentOptionalParams = optionalParams.toSet
+      // Register optional param positions for this function (for call-site Some wrapping)
+      val optParamIndices = params.zipWithIndex.collect {
+        case (p, i) if optionalParams.contains(nameOf(p)) => i
+      }.toSet
+      if optParamIndices.nonEmpty then functionOptionalParams(name) = optParamIndices
 
       sb.append(s"$indent${vis}def $name(${paramList.mkString(", ")}): $retType =\n")
       // Emit var copies for reassigned params
@@ -194,6 +201,11 @@ object TsToScalaEmitter:
       walk(body)
       result.toSet
 
+    private def inferPushedElementType(varName: String, file: RastFile): String =
+      // Walk the current function body looking for varName.push(x) and infer type from x
+      // For now use a heuristic: if push arg starts with Vector(, element is Vector[Double]
+      "Vector[Double]"  // conservative default for path-data-parser
+
     private def emitVariableStatement(node: RastNode, file: RastFile, indent: String): Unit =
       val decls = node.children.flatMap { child =>
         if child.kind == "VariableDeclarationList" then
@@ -218,7 +230,12 @@ object TsToScalaEmitter:
         val rawType = resolveScalaType(d, file)
         // R7: if this array is mutated via .push(), use ArrayBuffer
         val isMutatedArray = currentMutatedArrays.contains(name) && rawType.startsWith("Vector[")
-        val tpe = if isMutatedArray then rawType.replace("Vector[", "ArrayBuffer[") else rawType
+        val tpeAB = if isMutatedArray then rawType.replace("Vector[", "ArrayBuffer[") else rawType
+        // Element type inference: if ArrayBuffer[Any], try to infer from pushed values
+        val tpe = if tpeAB.contains("[Any]") && isMutatedArray then
+          val inferredElem = inferPushedElementType(name, file)
+          if inferredElem.nonEmpty then tpeAB.replace("[Any]", s"[$inferredElem]") else tpeAB
+        else tpeAB
         // R8: integer variables — int literal init → Int when const OR when
         // the variable is used as an array index (flow analysis approximation)
         val tpeFixed = if tpe == "Double" then
@@ -235,6 +252,8 @@ object TsToScalaEmitter:
         val init = findInitializer(d, file)
         val initFixed = if isMutatedArray && (init == "Vector.empty" || init.startsWith("ArrayBuffer")) then
           tpe.replace("ArrayBuffer[", "ArrayBuffer.empty[").stripSuffix("]") + "]"
+        else if isMutatedArray && init.startsWith("Vector(") then
+          init.replace("Vector(", "ArrayBuffer(")
         else init
         sb.append(s"$indent$keyword $name: $tpeFixed = $initFixed\n")
         } // end else (not array binding)
@@ -469,7 +488,17 @@ object TsToScalaEmitter:
           if op == "=" && lhs.kind == "ArrayLiteralExpression" then
             val names = lhs.children.map(c => emitExpr(c, file))
             val rExpr = emitExpr(node.children.last, file)
-            names.zipWithIndex.map { case (n, i) => s"$n = $rExpr($i)" }.mkString("; ")
+            // Optional unwrap: if the RHS is an optional param, use .get
+            val rhsName = node.children.last.text.getOrElse("")
+            val rAccess = if currentOptionalParams.contains(rhsName) then s"$rExpr.get" else rExpr
+            // Tuple return: if RHS is a call returning tuple, bind to temp and use ._1/_2
+            val rhsType = node.children.last.`type`.flatMap(file.types.get)
+            val isTupleReturn = rhsType.exists(t => t.text.startsWith("[") && t.text.contains(","))
+            if isTupleReturn then
+              val tmpName = s"_d${names.hashCode.abs % 1000}"
+              s"val $tmpName = $rAccess; ${names.zipWithIndex.map { case (n, i) => s"$n = $tmpName._${i+1}" }.mkString("; ")}"
+            else
+              names.zipWithIndex.map { case (n, i) => s"$n = $rAccess($i)" }.mkString("; ")
           // R15: arr[arr.length] = x → arr += x
           else if op == "=" && lhs.kind == "ElementAccessExpression" then
             val arrObj = emitExpr(lhs.children.head, file)
@@ -497,6 +526,14 @@ object TsToScalaEmitter:
               else s"($left $op $right)"
             else if op == "=" || op == "+=" || op == "-=" then
               s"$left $op $right"
+            else if op == "&&" || op == "||" then
+              // Number truthiness in boolean context: sweepFlag && ... → (sweepFlag != 0) && ...
+              val lhsType = node.children.head.`type`.flatMap(file.types.get).map(_.kind).getOrElse("")
+              val lhsIsOptional = node.children.head.kind == "Identifier" && node.children.head.text.exists(currentOptionalParams.contains)
+              val fixedLeft = if lhsIsOptional then s"$left.isDefined"
+                else if lhsType == "number" && !left.contains("==") && !left.contains("!=") && !left.contains("<") && !left.contains(">") then s"($left != 0)"
+                else left
+              s"($fixedLeft $op $right)"
             else
               s"($left $op $right)"
 
@@ -505,7 +542,12 @@ object TsToScalaEmitter:
           node.operator match
             case Some("MinusToken") => s"-$operand"
             case Some("PlusToken") => s"$operand.toDouble"
-            case Some("ExclamationToken") => s"!$operand"
+            case Some("ExclamationToken") =>
+              val opType = node.children.head.`type`.flatMap(file.types.get).map(_.kind).getOrElse("")
+              val opIsOptional = node.children.head.kind == "Identifier" && node.children.head.text.exists(currentOptionalParams.contains)
+              if opIsOptional then s"$operand.isEmpty"
+              else if opType == "number" then s"($operand == 0)"
+              else s"!$operand"
             case Some("TildeToken") => s"~$operand"
             case Some("PlusPlusToken") => s"{ $operand += 1; $operand }"
             case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
@@ -573,7 +615,15 @@ object TsToScalaEmitter:
             case "Math.cos" | "Math.sin" | "Math.atan2" | "Math.PI" | "Math.ceil" | "Math.round" | "Math.min" | "Math.max" | "Math.pow" =>
               s"$fn(${args.mkString(", ")})"
             case _ =>
-              s"$fn(${args.mkString(", ")})"
+              // Option wrapping: wrap args at optional parameter positions with Some(...)
+              val calledFnName = node.children.head.text.getOrElse(fn)
+              val optIndices = functionOptionalParams.getOrElse(calledFnName, Set.empty)
+              if optIndices.nonEmpty then
+                val wrappedArgs = args.zipWithIndex.map { case (a, i) =>
+                  if optIndices.contains(i) then s"Some($a)" else a
+                }
+                s"$fn(${wrappedArgs.mkString(", ")})"
+              else s"$fn(${args.mkString(", ")})"
 
         case "PropertyAccessExpression" =>
           val obj = emitExpr(node.children.head, file)
@@ -592,7 +642,25 @@ object TsToScalaEmitter:
         case "ElementAccessExpression" =>
           val obj = emitExpr(node.children.head, file)
           val idx = emitExpr(node.children.last, file)
-          s"$obj($idx)"
+          // Optional indexing: recursive(0) → recursive.get(0)
+          val objName = node.children.head.text.getOrElse("")
+          val isOptional = currentOptionalParams.contains(objName)
+          // Tuple field access: r._1 instead of r(0) when r has tuple type
+          val objType = node.children.head.`type`.flatMap(file.types.get)
+          val isTupleAccess = objType.exists(t => t.text.startsWith("[") && t.text.contains(","))
+          // Call returning tuple indexed: rotate(x,y,a)(0) → { val _r = rotate(x,y,a); _r._1 }
+          val callReturnsTuple = node.children.head.kind == "CallExpression" && {
+            node.children.head.`type`.flatMap(file.types.get).exists(t => t.text.startsWith("[") && t.text.contains(","))
+          }
+          if callReturnsTuple && idx.matches("\\d+") then
+            val tupleIdx = idx.toInt + 1
+            s"{ val _r = $obj; _r._$tupleIdx }"
+          else if isTupleAccess && idx.matches("\\d+") then
+            val tupleIdx = idx.toInt + 1
+            s"$obj._$tupleIdx"
+          else if isOptional then
+            s"$obj.get($idx)"
+          else s"$obj($idx)"
 
         case "ArrayLiteralExpression" =>
           // Check if this is a tuple type (return value like [x, y])
@@ -621,7 +689,15 @@ object TsToScalaEmitter:
             }
             (prefix +: suffix).mkString(" ++ ")
           else
-            val elems = node.children.map(emitExpr(_, file))
+            val elems = node.children.map { c =>
+              val e = emitExpr(c, file)
+              // If element is a known mutated array (ArrayBuffer), add .toVector
+              // Only if the variable's RAST type is an array type
+              val eName = c.text.getOrElse("")
+              val isArrayVar = currentMutatedArrays.contains(eName) && c.`type`.flatMap(file.types.get).exists(t =>
+                t.kind == "array" || t.text.contains("[]"))
+              if isArrayVar then s"$e.toVector" else e
+            }
             s"Vector(${elems.mkString(", ")})"
 
         case "ObjectLiteralExpression" =>
@@ -886,7 +962,18 @@ object TsToScalaEmitter:
       val init = node.children.find(c =>
         c.kind != "Identifier" && !c.kind.contains("Keyword") &&
         !c.kind.contains("Type") && c.kind != "Parameter")
-      init.map(emitExpr(_, file)).getOrElse("???")
+      init.map(emitExpr(_, file)).getOrElse {
+        // Missing initializer: provide type-appropriate zero value
+        val tpe = resolveScalaType(node, file)
+        tpe match
+          case "Double" => "0.0"
+          case "Int" => "0"
+          case "Boolean" | "java.lang.Boolean" => "false"
+          case "String" => "\"\""
+          case t if t.startsWith("Vector[") => "Vector.empty"
+          case t if t.startsWith("ArrayBuffer[") => "ArrayBuffer.empty"
+          case _ => "???"
+      }
 
     private def capitalize(s: String): String =
       if s.isEmpty then s
@@ -931,8 +1018,12 @@ object TsToScalaEmitter:
           o == "EqualsToken" || o == "FirstAssignment" || o == "PlusEqualsToken" ||
           o == "MinusEqualsToken" || o == "FirstCompoundAssignment") then
           n.children.headOption.foreach { lhs =>
-            val name = lhs.text.orElse(lhs.children.find(_.kind == "Identifier").flatMap(_.text))
-            name.filter(paramNames.contains).foreach(result += _)
+            if lhs.kind == "ArrayLiteralExpression" then
+              // Destructuring: [x1, y1] = ... — each element is reassigned
+              lhs.children.flatMap(_.text).filter(paramNames.contains).foreach(result += _)
+            else
+              val name = lhs.text.orElse(lhs.children.find(_.kind == "Identifier").flatMap(_.text))
+              name.filter(paramNames.contains).foreach(result += _)
           }
         n.children.foreach(walk)
       walk(body)
