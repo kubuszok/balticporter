@@ -162,3 +162,40 @@ class TsMinterSpec extends munit.FunSuite:
     assert(emitted.contains("parser"), "should emit parser")
     assert(emitted.contains("absolutize"), "should emit absolutize")
     assert(emitted.contains("normalize"), "should emit normalize")
+
+  test("points-on-curve → emitted Scala source"):
+    val files = List(
+      "/rast/points-on-curve/src/index.rast.json",
+      "/rast/points-on-curve/src/curve-to-bezier.rast.json",
+    ).map(loadRast)
+
+    val config = TsToScalaEmitter.EmitConfig(
+      packageName = "ssg.graphs.commons.rough.curve",
+      imports = List("scala.collection.mutable.ArrayBuffer"),
+      braceStyle = true,
+      skipIndex = false,
+      fileNameMap = Map("index" -> "PointsOnCurve", "curve-to-bezier" -> "CurveToBezier"),
+    )
+    val emitted = TsToScalaEmitter.emit(files, config)
+    for ((name, source) <- emitted)
+      println(s"=== poc_$name.scala ===")
+      println(source)
+      println()
+    assert(emitted.nonEmpty, "should emit at least one file")
+
+  test("hachure-fill → emitted Scala source"):
+    val files = List(
+      "/rast/hachure-fill/src/hachure.rast.json",
+    ).map(loadRast)
+
+    val config = TsToScalaEmitter.EmitConfig(
+      packageName = "ssg.graphs.commons.rough.fillers",
+      imports = List("scala.collection.mutable.ArrayBuffer"),
+      braceStyle = true,
+    )
+    val emitted = TsToScalaEmitter.emit(files, config)
+    for ((name, source) <- emitted)
+      println(s"=== hf_$name.scala ===")
+      println(source)
+      println()
+    assert(emitted.nonEmpty, "should emit at least one file")

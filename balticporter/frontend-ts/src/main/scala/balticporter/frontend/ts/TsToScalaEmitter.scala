@@ -19,13 +19,16 @@ object TsToScalaEmitter:
       errorClassName: String = "RuntimeException",
       extraDeclarations: Map[String, String] = Map.empty,
       postProcess: Map[String, List[(String, String)]] = Map.empty,
+      skipIndex: Boolean = true,
+      fileNameMap: Map[String, String] = Map.empty,
   )
 
   def emit(files: List[RastFile], config: EmitConfig): Map[String, String] =
     val ctx = new EmitContext(config)
     files.flatMap { f =>
-      val fileName = f.path.split('/').last.stripSuffix(".ts")
-      if fileName == "index" then None
+      val rawName = f.path.split('/').last.stripSuffix(".ts")
+      val fileName = config.fileNameMap.getOrElse(rawName, rawName)
+      if config.skipIndex && rawName == "index" then None
       else
         var scala = ctx.emitFile(f, fileName)
         for (replacements <- config.postProcess.get(fileName); (pattern, replacement) <- replacements)
