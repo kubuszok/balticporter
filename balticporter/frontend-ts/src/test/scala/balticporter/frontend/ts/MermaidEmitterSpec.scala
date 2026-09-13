@@ -191,3 +191,163 @@ class MermaidEmitterSpec extends munit.FunSuite:
       java.nio.file.Files.writeString(path, scala)
       println(s"[emit] $objectName.scala: ${scala.linesIterator.size} lines -> $path")
     }
+
+  // -- Complete Info diagram emission -----------------------------------------
+
+  test("infoDb.ts -> InfoDb class with version/accTitle/accDescription"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitInfoDb(rast)
+    println("=== InfoDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final class InfoDb"), "should emit InfoDb class")
+    assert(scala.contains("var version"), "should have version field")
+    assert(scala.contains("UpstreamVersion"), "should reference UpstreamVersion")
+    assert(scala.contains("def clear()"), "should have clear method")
+    assert(scala.contains("accTitle"), "should have accTitle field")
+    assert(scala.contains("accDescription"), "should have accDescription field")
+
+  test("infoDiagram.ts -> InfoDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
+    val scala = dedicated.MermaidEmitter.emitInfoDiagram(rast)
+    println("=== InfoDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object InfoDiagram"), "should emit InfoDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("def parse(text: String): InfoDb"), "should have parse method")
+    assert(scala.contains("def render(text: String, config: MermaidConfig"), "should have render method")
+    assert(scala.contains("InfoParser.parse(text)"), "should delegate to InfoParser")
+    assert(scala.contains("InfoRenderer.render(db, config)"), "should delegate to InfoRenderer")
+
+  test("infoParser.ts -> InfoParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoParser.rast.json")
+    val scala = dedicated.MermaidEmitter.emitInfoParser(rast)
+    println("=== InfoParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object InfoParser"), "should emit InfoParser object")
+    assert(scala.contains("def parse(input: String): InfoDb"), "should have parse method")
+    assert(scala.contains("new InfoDb"), "should create InfoDb")
+
+  test("infoRenderer.ts -> complete InfoRenderer with theming and a11y"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
+    val scala = dedicated.MermaidEmitter.emitInfoRenderer(rast)
+    println("=== InfoRenderer.scala (complete emitted) ===")
+    println(scala)
+    assert(scala.contains("object InfoRenderer"), "should emit InfoRenderer object")
+    assert(scala.contains("def render(db: InfoDb, config: MermaidConfig)"), "should accept InfoDb and MermaidConfig")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("Accessibility.applyTo"), "should apply accessibility")
+    assert(scala.contains("Theme.getThemeByName"), "should look up theme")
+    assert(scala.contains("InfoStyles.generate"), "should generate CSS")
+    assert(scala.contains("CssGenerator.generateBaseStyles"), "should generate base CSS")
+    assert(scala.contains("db.version"), "should reference db.version")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("info styles -> InfoStyles"):
+    // InfoStyles uses the infoDb RAST as a reference (no separate styles RAST exists)
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitInfoStyles(rast)
+    println("=== InfoStyles.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object InfoStyles"), "should emit InfoStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables): String"), "should have generate method")
+    assert(scala.contains("vars.textColor"), "should reference textColor")
+    assert(scala.contains("vars.fontFamily"), "should reference fontFamily")
+
+  // -- Complete Error diagram emission ----------------------------------------
+
+  test("errorDiagram.ts -> ErrorDb class"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val scala = dedicated.MermaidEmitter.emitErrorDb(rast)
+    println("=== ErrorDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final class ErrorDb"), "should emit ErrorDb class")
+    assert(scala.contains("var errorMessage"), "should have errorMessage field")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("errorDiagram.ts -> ErrorDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val scala = dedicated.MermaidEmitter.emitErrorDiagram(rast)
+    println("=== ErrorDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object ErrorDiagram"), "should emit ErrorDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("def parse(text: String): ErrorDb"), "should have parse method")
+    assert(scala.contains("def render(text: String, config: MermaidConfig"), "should have render method")
+    assert(scala.contains("def renderError(message: String"), "should have renderError method")
+    assert(scala.contains("ErrorParser.parse(text)"), "should delegate to ErrorParser")
+    assert(scala.contains("ErrorRenderer.render(db, config)"), "should delegate to ErrorRenderer")
+
+  test("errorDiagram.ts -> ErrorParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val scala = dedicated.MermaidEmitter.emitErrorParser(rast)
+    println("=== ErrorParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object ErrorParser"), "should emit ErrorParser object")
+    assert(scala.contains("def parse(input: String): ErrorDb"), "should have parse method")
+    assert(scala.contains("new ErrorDb"), "should create ErrorDb")
+    assert(scala.contains("db.errorMessage = cleaned"), "should set error message")
+
+  test("errorRenderer.ts -> complete ErrorRenderer with theming"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
+    val scala = dedicated.MermaidEmitter.emitErrorRenderer(rast)
+    println("=== ErrorRenderer.scala (complete emitted) ===")
+    println(scala)
+    assert(scala.contains("object ErrorRenderer"), "should emit ErrorRenderer object")
+    assert(scala.contains("def render(db: ErrorDb, config: MermaidConfig)"), "should accept ErrorDb and MermaidConfig")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("Theme.getThemeByName"), "should look up theme")
+    assert(scala.contains("ErrorStyles.generate"), "should generate CSS")
+    assert(scala.contains("db.errorMessage"), "should reference db.errorMessage")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+    // Error icon elements
+    assert(scala.contains("circle"), "should have circle element")
+    assert(scala.contains("\"errorText\""), "should have errorText class")
+
+  test("error styles -> ErrorStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val scala = dedicated.MermaidEmitter.emitErrorStyles(rast)
+    println("=== ErrorStyles.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object ErrorStyles"), "should emit ErrorStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables): String"), "should have generate method")
+    assert(scala.contains("vars.fontFamily"), "should reference fontFamily")
+    assert(scala.contains("#cc0000"), "should have error color")
+
+  // -- Write complete diagram files -------------------------------------------
+
+  test("write complete info and error diagram files"):
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
+    java.nio.file.Files.createDirectories(outDir)
+
+    // Info diagram
+    val infoDbRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val infoDiagramRast = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
+    val infoParserRast = loadRast("/rast/mermaid/src/diagrams/info/infoParser.rast.json")
+    val infoRendererRast = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
+
+    val infoFiles = List(
+      ("InfoDb", dedicated.MermaidEmitter.emitInfoDb(infoDbRast)),
+      ("InfoDiagram", dedicated.MermaidEmitter.emitInfoDiagram(infoDiagramRast)),
+      ("InfoParser", dedicated.MermaidEmitter.emitInfoParser(infoParserRast)),
+      ("InfoRenderer", dedicated.MermaidEmitter.emitInfoRenderer(infoRendererRast)),
+      ("InfoStyles", dedicated.MermaidEmitter.emitInfoStyles(infoDbRast)),
+    )
+
+    // Error diagram
+    val errorDiagramRast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val errorRendererRast = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
+
+    val errorFiles = List(
+      ("ErrorDb", dedicated.MermaidEmitter.emitErrorDb(errorDiagramRast)),
+      ("ErrorDiagram", dedicated.MermaidEmitter.emitErrorDiagram(errorDiagramRast)),
+      ("ErrorParser", dedicated.MermaidEmitter.emitErrorParser(errorDiagramRast)),
+      ("ErrorRenderer", dedicated.MermaidEmitter.emitErrorRenderer(errorRendererRast)),
+      ("ErrorStyles", dedicated.MermaidEmitter.emitErrorStyles(errorDiagramRast)),
+    )
+
+    for ((name, source) <- infoFiles ++ errorFiles) {
+      val path = outDir.resolve(s"$name.scala")
+      java.nio.file.Files.writeString(path, source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
+    }
+    println(s"[emit] Total: ${(infoFiles ++ errorFiles).size} diagram files written")

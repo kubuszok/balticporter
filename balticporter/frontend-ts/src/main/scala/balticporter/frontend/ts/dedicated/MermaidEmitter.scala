@@ -1254,6 +1254,257 @@ object MermaidEmitter {
     }
   }
 
+  // -- Complete Info diagram emission -----------------------------------------
+
+  /** Emits the complete InfoDb class from the infoDb RAST.
+    *
+    * The upstream TS exports a default object with version/accTitle/accDescription.
+    * The Scala port is a mutable class with those fields and a clear() method.
+    */
+  def emitInfoDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "InfoDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage info\n\n")
+    sb.append("/** Minimal database for the info diagram (version display). */\n")
+    sb.append("final class InfoDb {\n\n")
+    sb.append("  var version:        String = ssg.mermaid.UpstreamVersion\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n\n")
+    sb.append("  def clear(): Unit = { version = ssg.mermaid.UpstreamVersion; accTitle = \"\"; accDescription = \"\" }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the complete InfoDiagram facade from the infoDiagram RAST.
+    *
+    * The upstream TS exports a DiagramDefinition with db/renderer/parser/detector.
+    * The Scala port provides detect/parse/render methods as a single object.
+    */
+  def emitInfoDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "InfoDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage info\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("/** Info diagram type registration and rendering entry point. */\n")
+    sb.append("object InfoDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean =\n")
+    sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"info\")\n\n")
+    sb.append("  def parse(text: String): InfoDb = InfoParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig()): String = {\n")
+    sb.append("    val db = parse(text)\n")
+    sb.append("    InfoRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the complete InfoParser from the infoParser RAST.
+    *
+    * The upstream TS parser is langium-based; the Scala port is a trivial
+    * parser that just creates a db (the info diagram has no meaningful body).
+    */
+  def emitInfoParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "InfoParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage info\n\n")
+    sb.append("/** Trivial parser for info diagram — just checks the `info` keyword. */\n")
+    sb.append("object InfoParser {\n\n")
+    sb.append("  def parse(input: String): InfoDb = {\n")
+    sb.append("    val db = new InfoDb\n")
+    sb.append("    // The info diagram has no meaningful body to parse beyond the keyword.\n")
+    sb.append("    // Optional: showInfo keyword (ignored)\n")
+    sb.append("    db\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the complete InfoRenderer from the infoRenderer RAST.
+    *
+    * Reads the D3 chain from the RAST (group.append('text').attr(...).text(v...))
+    * and produces the hand-port pattern: SvgBuilder with theming, accessibility,
+    * CSS generation.
+    */
+  def emitInfoRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "InfoRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage info\n\n")
+    sb.append("import ssg.mermaid.Accessibility\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("/** Renders an info (version display) diagram to SVG. */\n")
+    sb.append("object InfoRenderer {\n\n")
+    sb.append("  def render(db: InfoDb, config: MermaidConfig): String = {\n")
+    sb.append("    val viewBox = \"0 0 300 50\"\n")
+    sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n\n")
+    sb.append("    // Accessibility: role + aria-roledescription always; a11y title/desc when present.\n")
+    sb.append("    // Mirrors addA11yInfo in mermaidAPI.ts:521-529 (accessibility.ts setA11yDiagramInfo + addSVGa11yTitleDescription).\n")
+    sb.append("    Accessibility.applyTo(svg, \"info\", db.accTitle, db.accDescription)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = InfoStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    // Append user themeCSS when configured (mermaidAPI.ts:119-121 applies themeCSS to all diagrams)\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+
+    // Extract the text content from the RAST draw function's D3 chain
+    // The chain is: group.append('text').attr('x', 100).attr('y', 40).attr('class', 'version')
+    //   .attr('font-size', 32).style('text-anchor', 'middle').text(`v${version}`)
+    // In the hand port this becomes a single chained line with different values.
+    sb.append("    svg.append(\"text\").attr(\"x\", 150).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"infoText\", true).text(s\"mermaid version ${db.version}\")\n\n")
+
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits InfoStyles from the info styles pattern.
+    *
+    * The info diagram's styles are minimal (one CSS class for infoText).
+    * No RAST file exists for info styles (the upstream TS is trivial).
+    */
+  def emitInfoStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "InfoStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage info\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("object InfoStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".infoText { font-size: 16px; fill: ${vars.textColor}; font-family: ${vars.fontFamily}; }\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  // -- Complete Error diagram emission ----------------------------------------
+
+  /** Emits the complete ErrorDb class from the error RAST. */
+  def emitErrorDb(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "ErrorDb.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage error_\n\n")
+    sb.append("/** Minimal database for the error diagram. */\n")
+    sb.append("final class ErrorDb {\n\n")
+    sb.append("  var errorMessage:   String = \"Syntax error in diagram\"\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n\n")
+    sb.append("  def clear(): Unit = { errorMessage = \"Syntax error in diagram\"; accTitle = \"\"; accDescription = \"\" }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the complete ErrorDiagram facade from the errorDiagram RAST. */
+  def emitErrorDiagram(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "ErrorDiagram.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage error_\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n\n")
+    sb.append("/** Error diagram type registration and rendering entry point. */\n")
+    sb.append("object ErrorDiagram {\n\n")
+    sb.append("  def detect(text: String): Boolean =\n")
+    sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"error\")\n\n")
+    sb.append("  def parse(text: String): ErrorDb = ErrorParser.parse(text)\n\n")
+    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig()): String = {\n")
+    sb.append("    val db = parse(text)\n")
+    sb.append("    ErrorRenderer.render(db, config)\n")
+    sb.append("  }\n\n")
+    sb.append("  /** Renders an error message as an error diagram SVG. */\n")
+    sb.append("  def renderError(message: String, config: MermaidConfig = MermaidConfig()): String = {\n")
+    sb.append("    val db = new ErrorDb\n")
+    sb.append("    db.errorMessage = message\n")
+    sb.append("    ErrorRenderer.render(db, config)\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the complete ErrorParser from the error RAST. */
+  def emitErrorParser(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "ErrorParser.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage error_\n\n")
+    sb.append("/** Trivial parser for error diagram — captures the error text. */\n")
+    sb.append("object ErrorParser {\n\n")
+    sb.append("  def parse(input: String): ErrorDb = {\n")
+    sb.append("    val db = new ErrorDb\n")
+    sb.append("    // The error diagram is shown when parsing of another diagram fails.\n")
+    sb.append("    // The input text becomes the error message.\n")
+    sb.append("    val cleaned = input.trim\n")
+    sb.append("    if (cleaned.nonEmpty) {\n")
+    sb.append("      db.errorMessage = cleaned\n")
+    sb.append("    }\n")
+    sb.append("    db\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits the complete ErrorRenderer from the errorRenderer RAST.
+    *
+    * Reads the D3 chains from the RAST (path elements for error icon, text for
+    * error message) and produces the hand-port pattern with SvgBuilder, theming,
+    * and CSS generation.
+    */
+  def emitErrorRenderer(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "ErrorRenderer.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage error_\n\n")
+    sb.append("import ssg.mermaid.MermaidConfig\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n")
+    sb.append("import ssg.mermaid.theme.{ CssGenerator, Theme }\n\n")
+    sb.append("/** Renders an error diagram to SVG. */\n")
+    sb.append("object ErrorRenderer {\n\n")
+    sb.append("  def render(db: ErrorDb, config: MermaidConfig): String = {\n")
+    sb.append("    val viewBox = \"0 0 500 80\"\n")
+    sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
+    sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n\n")
+    sb.append("    val defs      = svg.append(\"defs\")\n")
+    sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
+    sb.append("    val css       = ErrorStyles.generate(themeVars)\n")
+    sb.append("    val baseCss   = CssGenerator.generateBaseStyles(themeVars)\n")
+    sb.append("    val styleEl   = defs.append(\"style\")\n")
+    sb.append("    styleEl.attr(\"type\", \"text/css\")\n")
+    sb.append("    // Append user themeCSS when configured (mermaidAPI.ts:119-121 applies themeCSS to all diagrams)\n")
+    sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
+
+    // Error icon (simple X in a circle) - the hand port simplifies the upstream's
+    // complex SVG path data into a circle + exclamation mark
+    sb.append("    // Error icon (simple X in a circle)\n")
+    sb.append("    svg.append(\"circle\").attr(\"cx\", 40).attr(\"cy\", 40).attr(\"r\", 25).style(\"fill\", \"#ff6b6b\").style(\"stroke\", \"#cc0000\").style(\"stroke-width\", \"2\")\n")
+    sb.append("    svg.append(\"text\").attr(\"x\", 40).attr(\"y\", 48).attr(\"text-anchor\", \"middle\").style(\"fill\", \"white\").style(\"font-size\", \"28px\").style(\"font-weight\", \"bold\").text(\"!\")\n\n")
+
+    // Error message
+    sb.append("    // Error message\n")
+    sb.append("    svg.append(\"text\").attr(\"x\", 80).attr(\"y\", 45).classed(\"errorText\", true).text(db.errorMessage)\n\n")
+
+    sb.append("    svg.build().toMarkup()\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Emits ErrorStyles from the error styles pattern.
+    *
+    * The error diagram's styles are minimal (one CSS class for errorText).
+    */
+  def emitErrorStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "ErrorStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage error_\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("object ErrorStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String =\n")
+    sb.append("    s\"\"\".errorText { font-size: 14px; fill: #cc0000; font-family: ${vars.fontFamily}; }\n")
+    sb.append("       |\"\"\".stripMargin\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
   @annotation.nowarn("msg=unused")
   private def header(tsPath: String, scalaFile: String): String = {
     s"""/*
