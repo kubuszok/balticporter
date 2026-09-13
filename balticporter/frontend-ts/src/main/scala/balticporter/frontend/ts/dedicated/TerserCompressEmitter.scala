@@ -838,15 +838,19 @@ object TerserCompressEmitter:
       // Count braces starting from after the `=`
       findMatchingBrace(lines, sigEndLine, eqIdx + 1)
     else if afterEq.nonEmpty then
-      // Single-expression body on the same line as `=`
-      // But it might continue on subsequent lines (multi-line expression)
-      findExpressionEnd(lines, sigEndLine)
+      // Body on the same line as `=`
+      if afterEq.contains("{") then
+        // Braced body starting on the same line (e.g., "= value match {" or "= {")
+        findMatchingBrace(lines, sigEndLine, eqIdx + 1)
+      else
+        // Single-expression body — may continue on subsequent lines
+        findExpressionEnd(lines, sigEndLine)
     else
       // Body starts on next line
       if sigEndLine + 1 < lines.size then
         val nextLine = lines(sigEndLine + 1).trim
-        if nextLine.startsWith("{") then
-          // Braced body starting on next line
+        if nextLine.startsWith("{") || nextLine.contains("{") then
+          // Braced body starting on next line (e.g., "value match {")
           findMatchingBrace(lines, sigEndLine + 1, 0)
         else
           // Non-braced expression body
