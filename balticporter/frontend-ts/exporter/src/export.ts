@@ -528,7 +528,7 @@ function main() {
 
     const rast = exporter.exportFile(sf);
     const relPath = path.relative(configDir, sf.fileName)
-      .replace(/\.tsx?$/, ".rast.json");
+      .replace(/\.(tsx?|jsx?)$/, ".rast.json");
     const outPath = path.join(outDir, relPath);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(rast, null, 2) + "\n");
