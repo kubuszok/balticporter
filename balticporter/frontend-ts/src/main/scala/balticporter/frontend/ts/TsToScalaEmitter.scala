@@ -616,10 +616,25 @@ object TsToScalaEmitter:
               val obj = s.stripSuffix(".push")
               // Check for spread: tokens.push(...data) → tokens ++= data
               val hasSpread = node.children.drop(1).exists(_.kind == "SpreadElement")
+              // Detect if target buffer has string|number element type (serialize pattern)
+              val receiverNode = node.children.head match
+                case pa if pa.kind == "PropertyAccessExpression" => Some(pa.children.head)
+                case _ => None
+              val isStringBuffer = receiverNode.exists { rn =>
+                rn.`type`.flatMap(file.types.get).exists { t =>
+                  t.text.contains("string | number") || t.text.contains("(string | number)")
+                }
+              }
+              def wrapJsNum(a: String): String =
+                if isStringBuffer && a.matches(""".*\(\d+\)""") && !a.startsWith("jsNum") && !a.contains("\"") then
+                  s"jsNum($a)"
+                else a
               if hasSpread && args.length == 1 then
-                s"$obj ++= ${args.head.stripSuffix("*")}"
-              else if args.length == 1 then s"$obj += ${args.head}"
-              else args.map(a => s"$obj += $a").mkString("; ")
+                val spreadArg = args.head.stripSuffix("*")
+                if isStringBuffer then s"$spreadArg.foreach(d => $obj += jsNum(d))"
+                else s"$obj ++= $spreadArg"
+              else if args.length == 1 then s"$obj += ${wrapJsNum(args.head)}"
+              else args.map(a => s"$obj += ${wrapJsNum(a)}").mkString("; ")
             case s if s.endsWith(".substr") =>
               val obj = s.stripSuffix(".substr")
               s"$obj.substring(${args.mkString(", ")})"
@@ -691,7 +706,7 @@ object TsToScalaEmitter:
           else if prop == "length" then
             s"$obj.length"
           else if prop == "push" then
-            s"$obj.+="
+            s"$obj.push"
           else if prop == "forEach" then
             s"$obj.foreach"
           else if prop == "splice" then
