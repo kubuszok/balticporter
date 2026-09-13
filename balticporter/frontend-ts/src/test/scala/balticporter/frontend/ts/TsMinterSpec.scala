@@ -267,3 +267,21 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
     assert(scala.contains("object HachureFill"), "should emit HachureFill object")
     assert(scala.contains("case class Point"), "should emit Point case class")
     assert(scala.contains("def hachureLines"), "should emit hachureLines method")
+
+  test("points-on-curve → dedicated emitter"):
+    val indexRast = loadRast("/rast/points-on-curve/src/index.rast.json")
+    val ctbRast = loadRast("/rast/points-on-curve/src/curve-to-bezier.rast.json")
+    val emitted = dedicated.PointsOnCurveEmitter.emit(indexRast, ctbRast)
+    for ((name, source) <- emitted)
+      println(s"=== $name-dedicated.scala ===")
+      println(source)
+    assert(emitted.contains("PointsOnCurve"), "should emit PointsOnCurve")
+    assert(emitted.contains("CurveToBezier"), "should emit CurveToBezier")
+
+  test("points-on-path → dedicated emitter"):
+    val rast = loadRast("/rast/points-on-path/src/index.rast.json")
+    val emitted = dedicated.PointsOnPathEmitter.emit(rast)
+    for ((name, source) <- emitted)
+      println(s"=== $name-dedicated.scala ===")
+      println(source)
+    assert(emitted.contains("PointsOnPath"), "should emit PointsOnPath")
