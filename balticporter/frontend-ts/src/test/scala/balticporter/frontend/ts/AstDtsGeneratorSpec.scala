@@ -224,6 +224,93 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
     println(s"=== total: $lines lines, ${dedicated.AstDtsGenerator.countTypedFields(hierarchy)} typed fields ===")
 
   // --------------------------------------------------------------------------
+  // Reference-derived type improvement
+  // --------------------------------------------------------------------------
+
+  private val astReferenceRoot = java.nio.file.Path.of(
+    "/Users/dev/Workspaces/kubuszok/ssg/ssg-js/src/main/scala/ssg/js/ast"
+  )
+
+  private val astReferenceFiles = List(
+    "AstNode.scala", "AstClasses.scala", "AstExpressions.scala",
+    "AstStatements.scala", "AstDefinitions.scala", "AstScope.scala",
+    "AstSymbols.scala",
+  )
+
+  private def loadReferenceSources: List[String] =
+    astReferenceFiles.flatMap { name =>
+      val p = astReferenceRoot.resolve(name)
+      if java.nio.file.Files.exists(p) then
+        Some(new String(java.nio.file.Files.readAllBytes(p)))
+      else None
+    }
+
+  test("parseFieldsFromScala extracts val declarations too"):
+    val source = """
+      |class AstFoo extends AstNode {
+      |  var mutableField: String = ""
+      |  val readOnlyField: Int = 0
+      |}
+      """.stripMargin
+    val fields = dedicated.AstDtsGenerator.parseFieldsFromScala(source)
+    assertEquals(fields.size, 2)
+    assertEquals(fields(0).fieldName, "mutableField")
+    assertEquals(fields(1).fieldName, "readOnlyField")
+
+  test("generateFromReference uses reference types when available"):
+    if !java.nio.file.Files.exists(astReferenceRoot) then
+      println("SKIP: ssg reference not found at " + astReferenceRoot)
+    else
+      val rast = loadRast("/rast/terser/lib/ast.rast.json")
+      val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
+      val sources = loadReferenceSources
+      assert(sources.nonEmpty, "Should find reference sources")
+
+      // Parse fields from reference
+      val allFields = sources.flatMap(dedicated.AstDtsGenerator.parseFieldsFromScala)
+      val fieldMap = dedicated.AstDtsGenerator.buildFieldTypeMap(allFields)
+
+      println(s"\nReference field coverage:")
+      println(s"  Total parsed fields: ${allFields.size}")
+      println(s"  Distinct JS classes with fields: ${fieldMap.size}")
+
+      // Generate with and without reference
+      val dtsHeuristic = dedicated.AstDtsGenerator.generate(hierarchy, dedicated.AstDtsGenerator.commonDefmethodDecls)
+      val dtsReference = dedicated.AstDtsGenerator.generateFromReference(hierarchy, sources)
+
+      // The reference version should differ from heuristic (more specific types)
+      val metrics = dedicated.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, fieldMap)
+      println(s"\nDerivation metrics:")
+      println(s"  Total DEFNODE fields: ${metrics.totalFields}")
+      println(s"  Reference-derived:    ${metrics.referenceDerived}")
+      println(s"  Heuristic fallback:   ${metrics.heuristicFallback}")
+      val pct = if metrics.totalFields > 0 then metrics.referenceDerived * 100.0 / metrics.totalFields else 0.0
+      println(f"  Coverage:             $pct%.1f%%")
+
+      // Reference-derived count should be meaningfully higher than 0
+      assert(metrics.referenceDerived > 0,
+        s"Expected some reference-derived fields, got ${metrics.referenceDerived}")
+
+      // Write both versions for manual comparison
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/dts-comparison")
+      java.nio.file.Files.createDirectories(outDir)
+      java.nio.file.Files.writeString(outDir.resolve("ast-heuristic.d.ts"), dtsHeuristic)
+      java.nio.file.Files.writeString(outDir.resolve("ast-reference.d.ts"), dtsReference)
+      println(s"\nOutput: $outDir/ast-{heuristic,reference}.d.ts")
+
+  test("countDerivedVsHeuristic returns correct counts"):
+    val hierarchy = List(
+      dedicated.TerserEmitter.DefnodeClass("AST_Foo", "Foo", List("bar", "baz"), Some("AST_Node"), Nil),
+    )
+    val refFields = Map(
+      "AST_Foo" -> List(dedicated.AstDtsGenerator.DerivedField("bar", "string")),
+    )
+    val metrics = dedicated.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, refFields)
+    assertEquals(metrics.totalFields, 2)
+    assertEquals(metrics.referenceDerived, 1)
+    assertEquals(metrics.heuristicFallback, 1)
+
+  // --------------------------------------------------------------------------
   // Helpers
   // --------------------------------------------------------------------------
 

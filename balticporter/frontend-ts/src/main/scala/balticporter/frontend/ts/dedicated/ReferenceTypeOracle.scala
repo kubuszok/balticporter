@@ -239,6 +239,7 @@ object ReferenceTypeOracle:
   /** Map from emitter object name to the reference file's object name.
     * The emitter uses names like `CompressCommon` while the reference uses `Common`. */
   val emitterToReferenceObject: Map[String, String] = Map(
+    // Compress modules
     "CompressCommon"      -> "Common",
     "CompressIndex"       -> "Compressor",
     "Inference"           -> "Inference",
@@ -249,10 +250,18 @@ object ReferenceTypeOracle:
     "ReduceVars"          -> "ReduceVars",
     "TightenBody"         -> "TightenBody",
     "Inline"              -> "Inline",
+    // Non-compress modules
+    "ScopeAnalysis"       -> "ScopeAnalysis",
+    "OutputStream"        -> "OutputStream",
+    "AstSize"             -> "AstSize",
+    "AstEquivalent"       -> "AstEquivalent",
+    "PropMangler"         -> "PropMangler",
+    "Mangler"             -> "Mangler",
   )
 
   /** Map from reference file's object name to the source file name. */
   val referenceObjectToFile: Map[String, String] = Map(
+    // Compress modules
     "Common"             -> "Common.scala",
     "Compressor"         -> "Compressor.scala",
     "Inference"          -> "Inference.scala",
@@ -268,6 +277,13 @@ object ReferenceTypeOracle:
     "CompressorFlags"    -> "CompressorFlags.scala",
     "NativeObjects"      -> "NativeObjects.scala",
     "CompressorOptions"  -> "CompressorOptions.scala",
+    // Non-compress modules
+    "ScopeAnalysis"      -> "ScopeAnalysis.scala",
+    "OutputStream"       -> "OutputStream.scala",
+    "AstSize"            -> "AstSize.scala",
+    "AstEquivalent"      -> "AstEquivalent.scala",
+    "PropMangler"        -> "PropMangler.scala",
+    "Mangler"            -> "Mangler.scala",
   )
 
   // -------------------------------------------------------------------------
@@ -457,6 +473,32 @@ object ReferenceTypeOracle:
     ho("argsAsNames", List(ParamSig("lambda", "AstLambda")), "ArrayBuffer[AstSymbol]")
     ho("hoistDeclarations", List(ParamSig("self", "AstScope"), ParamSig("compressor", "CompressorLike")), "AstScope")
     ho("hoistProperties", List(ParamSig("self", "AstScope"), ParamSig("compressor", "CompressorLike")), "AstScope")
+
+    // --- ScopeAnalysis ---
+    def sa(name: String, params: List[ParamSig], ret: String): Unit =
+      methods(("ScopeAnalysis", name)) = MethodSig(name, params, ret)
+
+    sa("figureOutScope", List(ParamSig("node", "AstToplevel"), ParamSig("options", "ScopeOptions")), "Unit")
+    sa("nextMangledName", List(ParamSig("scope", "AstScope"), ParamSig("options", "MangleOptions")), "String")
+
+    // --- OutputStream ---
+    def os(name: String, params: List[ParamSig], ret: String): Unit =
+      methods(("OutputStream", name)) = MethodSig(name, params, ret)
+
+    os("print", List(ParamSig("node", "AstNode")), "Unit")
+    os("printAtom", List(ParamSig("str", "String")), "Unit")
+
+    // --- AstSize ---
+    def az(name: String, params: List[ParamSig], ret: String): Unit =
+      methods(("AstSize", name)) = MethodSig(name, params, ret)
+
+    az("size", List(ParamSig("node", "AstNode")), "Int")
+
+    // --- AstEquivalent ---
+    def ae(name: String, params: List[ParamSig], ret: String): Unit =
+      methods(("AstEquivalent", name)) = MethodSig(name, params, ret)
+
+    ae("equivalentTo", List(ParamSig("node", "AstNode"), ParamSig("other", "AstNode")), "Boolean")
 
     TypeOracle(methods.toMap)
 

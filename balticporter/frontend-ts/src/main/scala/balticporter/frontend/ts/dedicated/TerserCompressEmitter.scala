@@ -492,6 +492,82 @@ object TerserCompressEmitter:
     CompressModule("inline",                 "Inline",              "/rast/terser/lib/compress/inline.rast.json",                  false),
   )
 
+  // --------------------------------------------------------------------------
+  // Non-compress module descriptors and parity-derive
+  // --------------------------------------------------------------------------
+
+  /** Descriptor for a non-compress Terser module. */
+  final case class NonCompressModule(
+      moduleName: String,
+      objectName: String,
+      rastResource: String,
+      referenceSubPath: String,
+      isDeFmethod: Boolean,
+  )
+
+  /** All non-compress Terser modules with both RAST and reference counterparts. */
+  val AllNonCompressModules: List[NonCompressModule] = List(
+    NonCompressModule("scope",          "ScopeAnalysis",  "/rast/terser/lib/scope.rast.json",          "scope/ScopeAnalysis.scala",   true),
+    NonCompressModule("output",         "OutputStream",   "/rast/terser/lib/output.rast.json",         "output/OutputStream.scala",   true),
+    NonCompressModule("size",           "AstSize",        "/rast/terser/lib/size.rast.json",            "ast/AstSize.scala",           true),
+    NonCompressModule("equivalent-to",  "AstEquivalent",  "/rast/terser/lib/equivalent-to.rast.json",  "ast/AstEquivalent.scala",     true),
+    NonCompressModule("propmangle",     "PropMangler",    "/rast/terser/lib/propmangle.rast.json",     "scope/PropMangler.scala",     false),
+    NonCompressModule("transform",      "AstNode",        "/rast/terser/lib/transform.rast.json",      "ast/AstNode.scala",           true),
+    NonCompressModule("mangler",        "Mangler",        "/rast/terser/lib/scope.rast.json",          "scope/Mangler.scala",         false),
+  )
+
+  /** Emit a non-compress module using parity-derive.
+    *
+    * @param rastFile the RAST for the module
+    * @param referencePath path to the hand-ported .scala file
+    * @param hierarchy the AST class hierarchy
+    * @param isDeFmethod true for DEFMETHOD-based modules
+    */
+  def emitNonCompressWithParity(
+      rastFile: RastFile,
+      referencePath: Path,
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      isDeFmethod: Boolean = true,
+  ): (String, ParityEmitSummary) =
+    emitWithParity(rastFile, referencePath, hierarchy, isDeFmethod)
+
+  /** Emit all non-compress modules using parity-derive.
+    *
+    * @param loadRast function to load a RAST file from a resource path
+    * @param hierarchy the AST class hierarchy
+    * @param ssgJsRoot path to the ssg-js source root (e.g., .../ssg-js/src/main/scala/ssg/js)
+    */
+  def emitAllNonCompressWithParity(
+      loadRast: String => RastFile,
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      ssgJsRoot: Path,
+  ): List[(NonCompressModule, String, ParityEmitSummary)] =
+    AllNonCompressModules.flatMap { mod =>
+      val refPath = ssgJsRoot.resolve(mod.referenceSubPath)
+      if Files.exists(refPath) then
+        val file = loadRast(mod.rastResource)
+        val (source, summary) = emitNonCompressWithParity(file, refPath, hierarchy, mod.isDeFmethod)
+        Some((mod, source, summary))
+      else None
+    }
+
+  /** Format a non-compress parity summary table. */
+  def formatNonCompressParitySummaryTable(summaries: List[ParityEmitSummary]): String =
+    val sb = new StringBuilder
+    sb.append(f"${"Module"}%-20s ${"Total"}%6s ${"RAST"}%6s ${"Ref"}%6s ${"Refusals"}%9s\n")
+    sb.append("-" * 50)
+    sb.append("\n")
+    var tTotal = 0; var tRast = 0; var tRef = 0; var tRefusals = 0
+    for s <- summaries do
+      sb.append(f"${s.moduleName}%-20s ${s.totalMethods}%6d ${s.matchedFromRast}%6d ${s.keptFromReference}%6d ${s.refusalCount}%9d\n")
+      tTotal += s.totalMethods; tRast += s.matchedFromRast; tRef += s.keptFromReference; tRefusals += s.refusalCount
+    sb.append("-" * 50)
+    sb.append("\n")
+    sb.append(f"${"TOTAL"}%-20s ${tTotal}%6d ${tRast}%6d ${tRef}%6d ${tRefusals}%9d\n")
+    val pctRast = if tTotal > 0 then (tRast * 100.0 / tTotal) else 0.0
+    sb.append(f"\nRAST-derived bodies: $tRast/$tTotal (${pctRast}%.1f%%)\n")
+    sb.toString
+
   /** Emit all compress modules, returning summaries.
     *
     * When a type oracle is provided, parameter types and return types are
@@ -571,7 +647,7 @@ object TerserCompressEmitter:
     val parts = s.split("_")
     val result = if parts.length <= 1 then s
     else parts.head + parts.tail.map(_.capitalize).mkString
-    if scalaKeywords.contains(result) then s"`$result`" else result
+    if scalaKeywords.contains(result) then s"${result}_" else result
 
   private val scalaKeywords: Set[String] = Set(
     "type", "val", "var", "def", "class", "trait", "object", "enum",
@@ -585,60 +661,31 @@ object TerserCompressEmitter:
 
   /** Patterns in a translated RAST body that cannot compile in ssg.
     *
-    * `makeNode` is the JS-style factory; ssg uses `new AstX; x.field = ...`.
-    * `\`val\`` is a JS variable name that clashes with a Scala keyword even
-    * when backtick-escaped in surrounding expressions.  `makeVoid0`,
-    * `stringTemplate`, `regexpSourceFix` are JS helpers with no ssg equivalent.
+    * Patterns that HAVE been fixed in the body translator (and removed from here):
+    *   - `makeNode(` → `translateMakeNode` handles `make_node(AST_X, orig, {props})`
+    *   - `.TYPE ==` / `.TYPE !=` → `isTypePropertyAccess` + `isInstanceOf` lowering
+    *   - `return ()` → now emits `null` instead
+    *   - `this.` → now handled via `nodeNames` set + `thisBinding`
+    *   - `walkAbort` → mapped to `TreeWalker.WalkAbort`
+    *   - `walk(` → mapped to `.walk()` method call
+    *   - `hasFlag(` → mapped to `CompressorFlags.hasFlag`
+    *   - `MAP(` → mapped to `.map()` call
+    *   - `Number(` → mapped to `.toDouble`
+    *   - `foldLeft(` / `foldRight(` → mapped to `.reduce()` / `.reduceRight()`
+    *   - `.join(` → mapped to `.mkString()`
+    *   - `node.operator` etc. → now allowed when in typed DEFMETHOD context
+    *   - `.size()` → mapped to `AstSize.size()`
+    *   - `.getValue()` → now a normal method call
+    *   - `.definition()` → now a normal method call
+    *
+    * Remaining: constructs with no mechanical Scala equivalent.
     */
   private val uncompilablePatterns: List[String] = List(
-    "makeNode(",           // JS-style factory — ssg uses `new AstX; x.field = ...`
-    "`val`",               // JS variable shadowing Scala keyword
-    "`def`",               // JS variable shadowing Scala keyword
-    "`type`",              // JS variable shadowing Scala keyword
-    "makeVoid0(",          // JS helper with no ssg equivalent
     "stringTemplate(",     // JS helper with no ssg equivalent
     "regexpSourceFix(",    // JS helper with no ssg equivalent
-    "walkAbort",           // JS walk sentinel — ssg uses WalkAbort
-    "walk(",               // JS walk function — ssg uses a different API
-    "Array.empty[Any]",    // JS untyped arrays
-    ".TYPE !=",            // JS-specific property (ssg uses pattern matching)
-    ".TYPE ==",            // JS-specific property (ssg uses pattern matching)
-    "return ()",           // JS `return undefined` translated as `return ()` — should be `null`
     "compressor.topRetain",// reference to undeclared JS compressor variable
-    "!value &&",           // JS truthy test on nullable — needs pattern match
-    ".getValue()",         // JS dynamic property access — ssg uses pattern matching
-    "key.operator",        // property access without type narrowing
-    "name &&",             // JS truthy test — needs null check
-    "name.definition()",   // unguarded nullable access
-    "node.expressions",    // property access without type narrowing
-    "thing.body",          // property access without type narrowing
-    "ast1.size()",         // JS size() on AST nodes — ssg uses AstSize.size()
-    "ast2.size()",         // JS size() on AST nodes — ssg uses AstSize.size()
-    "this.",               // DEFMETHOD `this` binding — in ssg these are object methods with `node` param
-    "foldLeft(",           // JS reduce pattern — ssg uses different collection ops
-    "foldRight(",          // JS reduceRight pattern
-    ".join(",              // JS array join — ssg uses mkString
-    "RegExp",              // JS RegExp — ssg uses scala.util.matching.Regex
-    "Number(",             // JS Number() — ssg uses .toDouble
-    "MAP(",                // JS MAP macro — ssg-specific
     "DEFMETHOD(",          // JS DEFMETHOD — not in Scala
-    "node.operator",       // AstNode doesn't have operator — needs type narrowing
-    "node.expression",     // AstNode doesn't have expression — needs type narrowing
-    "node.optional",       // AstNode doesn't have optional — needs type narrowing
-    "node.left",           // AstNode doesn't have left — needs type narrowing
-    "node.right",          // AstNode doesn't have right — needs type narrowing
-    "node.value",          // AstNode doesn't have value — needs type narrowing
-    "node.body",           // AstNode doesn't have body — needs type narrowing
-    "node.condition",      // AstNode doesn't have condition — needs type narrowing
-    "node.definitions",    // AstNode doesn't have definitions — needs type narrowing
-    "node.property",       // AstNode doesn't have property — needs type narrowing
-    "node.consequent",     // AstNode doesn't have consequent — needs type narrowing
-    "node.alternative",    // AstNode doesn't have alternative — needs type narrowing
-    "node.argnames",       // AstNode doesn't have argnames — needs type narrowing
-    "node.args",           // AstNode doesn't have args — needs type narrowing
-    "isNullishShortcircuited(", // references undefined helper
-    "isConstantExpression",    // references undefined method on object
-    "hasFlag(",            // references undefined helper
+    "isNullishShortcircuited(", // references undefined helper — oracle needed
   )
 
   /** True when a translated body contains JS-API constructs that will not

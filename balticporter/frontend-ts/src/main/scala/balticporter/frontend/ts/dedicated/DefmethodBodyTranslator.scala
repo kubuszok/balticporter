@@ -39,14 +39,17 @@ object DefmethodBodyTranslator:
     result.toList
 
   /** Translate a DEFMETHOD/prototype body from its RAST Block node to Scala.
-    * @param thisBinding if set, `this.x` becomes `$thisBinding.x` (e.g., "n" in pattern-match arms) */
+    * @param thisBinding if set, `this.x` becomes `$thisBinding.x` (e.g., "n" in pattern-match arms)
+    * @param nodeParamName when set, property accesses on this identifier are validated
+    *   against the DEFNODE hierarchy for the entry's className */
   def translateBody(
       entry: TerserEmitter.DefmethodEntry,
       hierarchy: List[TerserEmitter.DefnodeClass],
       indent: String = "    ",
       thisBinding: String = "this",
+      nodeParamName: Option[String] = None,
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding, nodeParamName)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -209,10 +212,11 @@ object DefmethodBodyTranslator:
   // --------------------------------------------------------------------------
 
   private class BodyContext(
-      @annotation.unused entry: TerserEmitter.DefmethodEntry,
+      entry: TerserEmitter.DefmethodEntry,
       hierarchy: List[TerserEmitter.DefnodeClass],
       baseIndent: String,
       thisBinding: String = "this",
+      nodeParamName: Option[String] = None,
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -220,11 +224,28 @@ object DefmethodBodyTranslator:
     // Build lookup of class properties for `this.x` resolution
     private val byName: Map[String, TerserEmitter.DefnodeClass] =
       hierarchy.map(c => c.varName -> c).toMap
-    @annotation.unused
     private val allPropsForClass: Map[String, Set[String]] =
       hierarchy.map { cls =>
         cls.varName -> collectAllProps(cls)
       }.toMap
+
+    // Properties available on `this` or `node` based on the DEFMETHOD className
+    private val nodeProps: Set[String] =
+      if entry.className.startsWith("AST_") then
+        allPropsForClass.getOrElse(entry.className, Set.empty)
+      else Set.empty
+
+    // The Scala type name for the DEFMETHOD's class (e.g., "AstBinary")
+    private val nodeScalaType: String =
+      if entry.className.startsWith("AST_") then astVarToScalaName(entry.className)
+      else "AstNode"
+
+    // Names that refer to the current node (this, and the first param in
+    // DEFMETHOD context, and any explicitly-named node param)
+    private val nodeNames: Set[String] =
+      val base = Set(thisBinding)
+      val withParam = nodeParamName.map(base + _).getOrElse(base)
+      withParam
 
     def result(): String = sb.toString
 
@@ -238,7 +259,7 @@ object DefmethodBodyTranslator:
       if stmts.size == 1 && stmts.head.kind == "ReturnStatement" then
         val ret = stmts.head
         if ret.children.isEmpty then
-          sb.append(s"${baseIndent}()\n")
+          sb.append(s"${baseIndent}null\n")
         else
           val expr = translateExpr(ret.children.head)
           sb.append(s"$baseIndent$expr\n")
@@ -264,7 +285,10 @@ object DefmethodBodyTranslator:
       node.kind match
         case "ReturnStatement" =>
           if node.children.isEmpty then
-            sb.append(s"${indent}return ()\n")
+            if isLast then
+              sb.append(s"${indent}null\n")
+            else
+              sb.append(s"${indent}return null\n")
           else
             val expr = translateExpr(node.children.head)
             if isLast then
@@ -614,11 +638,12 @@ object DefmethodBodyTranslator:
         case "return_this"  => "this"
         case "pass_through" => "true"
         case "console"      => "Console"
+        case "walkAbort"    => "TreeWalker.WalkAbort"
         case "arguments" =>
           refuse("ArgumentsObject")
           "??? /* arguments */"
         case n if n.startsWith("AST_") => astVarToScalaName(n)
-        case n => snakeToCamel(n)
+        case n => terserApiLookup.getOrElse(n, snakeToCamel(n))
 
     private def translatePropertyAccess(node: RastNode): String =
       val children = node.children
@@ -653,6 +678,13 @@ object DefmethodBodyTranslator:
         prop match
           case "TYPE" => s"$thisBinding.nodeType"
           case _ => s"$thisBinding.${snakeToCamel(prop)}"
+      // node.x where node is a typed node param — validate property access
+      else if obj.kind == "Identifier" && nodeNames.contains(obj.text.getOrElse("")) then
+        val objName = obj.text.getOrElse("")
+        val scalaObj = if objName == "this" then thisBinding else snakeToCamel(objName)
+        prop match
+          case "TYPE" => s"$scalaObj.nodeType"
+          case _ => s"$scalaObj.${snakeToCamel(prop)}"
       // AST_X.prototype -> skip (handled by prototype extraction)
       else if obj.kind == "PropertyAccessExpression" then
         val objParts = obj.children
@@ -684,7 +716,8 @@ object DefmethodBodyTranslator:
         case "join" => s"$objExpr.mkString"
         case "map" => s"$objExpr.map"
         case "filter" => s"$objExpr.filter"
-        case "reduce" => s"$objExpr.foldLeft"
+        case "reduce" => s"$objExpr.reduce"
+        case "reduceRight" => s"$objExpr.reduceRight"
         case "some" => s"$objExpr.exists"
         case "every" => s"$objExpr.forall"
         case "find" => s"$objExpr.find"
@@ -795,7 +828,7 @@ object DefmethodBodyTranslator:
               case "filter" =>
                 s"$objExpr.filter(${scalaArgs.mkString(", ")})"
               case "reduce" =>
-                s"$objExpr.foldLeft(${scalaArgs.mkString(", ")})"
+                s"$objExpr.reduce(${scalaArgs.mkString(", ")})"
               case "some" =>
                 s"$objExpr.exists(${scalaArgs.mkString(", ")})"
               case "every" =>
@@ -904,6 +937,19 @@ object DefmethodBodyTranslator:
                 s"System.err.println(${scalaArgs.mkString(", ")})"
               case "error" if objExpr == "Console" || objExpr == "console" =>
                 s"System.err.println(${scalaArgs.mkString(", ")})"
+              // AST node walk/transform
+              case "walk" =>
+                s"$objExpr.walk(${scalaArgs.mkString(", ")})"
+              case "transform" =>
+                s"$objExpr.transform(${scalaArgs.mkString(", ")})"
+              case "clone" =>
+                s"$objExpr.clone()"
+              case "size" =>
+                s"AstSize.size($objExpr)"
+              case "getValue" =>
+                s"$objExpr.getValue()"
+              case "definition" =>
+                s"$objExpr.definition()"
               // General method
               case _ =>
                 s"$objExpr.${snakeToCamel(method)}(${scalaArgs.mkString(", ")})"
@@ -915,34 +961,62 @@ object DefmethodBodyTranslator:
 
         case "Identifier" =>
           val name = callee.text.getOrElse("???")
-          val scalaArgs = args.map(translateExpr)
           // Translate global JS functions
           name match
             case "parseInt" =>
+              val scalaArgs = args.map(translateExpr)
               s"${scalaArgs.head}.toInt"
             case "parseFloat" =>
+              val scalaArgs = args.map(translateExpr)
               s"${scalaArgs.head}.toDouble"
             case "isNaN" =>
+              val scalaArgs = args.map(translateExpr)
               s"${scalaArgs.head}.isNaN"
             case "isFinite" =>
+              val scalaArgs = args.map(translateExpr)
               s"${scalaArgs.head}.isInfinite == false"
             case "String" =>
+              val scalaArgs = args.map(translateExpr)
               s"${scalaArgs.head}.toString"
             case "Number" =>
+              val scalaArgs = args.map(translateExpr)
               s"${scalaArgs.head}.toDouble"
             case "Boolean" =>
+              val scalaArgs = args.map(translateExpr)
               s"(${scalaArgs.head} != null && ${scalaArgs.head} != false)"
-            case "Array" if scalaArgs.isEmpty =>
+            case "Array" if args.isEmpty =>
               "Array.empty[Any]"
             case "Array" =>
+              val scalaArgs = args.map(translateExpr)
               s"new Array[Any](${scalaArgs.mkString(", ")})"
-            case "Set" if scalaArgs.isEmpty =>
+            case "Set" if args.isEmpty =>
               "scala.collection.mutable.Set.empty[Any]"
-            case "Map" if scalaArgs.isEmpty =>
+            case "Map" if args.isEmpty =>
               "scala.collection.mutable.Map.empty[Any, Any]"
             case "Error" | "TypeError" | "RangeError" | "SyntaxError" =>
+              val scalaArgs = args.map(translateExpr)
               s"new RuntimeException(${scalaArgs.mkString(", ")})"
+            case "make_void_0" | "makeVoid0" =>
+              val scalaArgs = args.map(translateExpr)
+              val orig = if scalaArgs.nonEmpty then scalaArgs.head else "null"
+              s"{ val $$n = new AstUnaryPrefix(); $$n.operator = \"void\"; $$n.expression = { val $$m = new AstNumber(); $$m.value = 0; $$m }; $$n }"
+
+            case "make_node" =>
+              translateMakeNode(args)
+            case "MAP" if args.nonEmpty =>
+              val scalaArgs = args.map(translateExpr)
+              s"${scalaArgs.head}.map(${scalaArgs.drop(1).mkString(", ")})"
+            case "has_flag" =>
+              val scalaArgs = args.map(translateExpr)
+              s"CompressorFlags.hasFlag(${scalaArgs.mkString(", ")})"
+            case "set_flag" =>
+              val scalaArgs = args.map(translateExpr)
+              s"CompressorFlags.setFlag(${scalaArgs.mkString(", ")})"
+            case "clear_flag" =>
+              val scalaArgs = args.map(translateExpr)
+              s"CompressorFlags.clearFlag(${scalaArgs.mkString(", ")})"
             case _ =>
+              val scalaArgs = args.map(translateExpr)
               val scalaName = translateIdentifier(name)
               s"$scalaName(${scalaArgs.mkString(", ")})"
 
@@ -980,6 +1054,46 @@ object DefmethodBodyTranslator:
         case Some(op) =>
           val lhs = children.head
           val rhs = children.last
+
+          // x.TYPE === "Y" -> x.isInstanceOf[AstY]
+          if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
+             isTypePropertyAccess(lhs) then
+            val objExpr = translateExpr(lhs.children.head)
+            val typeName = rhs.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => ""
+            if typeName.nonEmpty then
+              return s"$objExpr.isInstanceOf[Ast$typeName]"
+
+          // x.TYPE !== "Y" -> !x.isInstanceOf[AstY]
+          if (op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken") &&
+             isTypePropertyAccess(lhs) then
+            val objExpr = translateExpr(lhs.children.head)
+            val typeName = rhs.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => ""
+            if typeName.nonEmpty then
+              return s"!$objExpr.isInstanceOf[Ast$typeName]"
+
+          // "Y" === x.TYPE -> x.isInstanceOf[AstY]
+          if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
+             isTypePropertyAccess(rhs) then
+            val objExpr = translateExpr(rhs.children.head)
+            val typeName = lhs.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => ""
+            if typeName.nonEmpty then
+              return s"$objExpr.isInstanceOf[Ast$typeName]"
+
+          // "Y" !== x.TYPE -> !x.isInstanceOf[AstY]
+          if (op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken") &&
+             isTypePropertyAccess(rhs) then
+            val objExpr = translateExpr(rhs.children.head)
+            val typeName = lhs.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => ""
+            if typeName.nonEmpty then
+              return s"!$objExpr.isInstanceOf[Ast$typeName]"
 
           // typeof X === "type" -> X.isInstanceOf[Type]
           if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
@@ -1225,12 +1339,55 @@ object DefmethodBodyTranslator:
       if !hasDefault then sb.append(s"$indent  case _ => ()\n")
       sb.append(s"$indent}\n")
 
+    /** Translate `make_node(AST_X, orig, { prop: val, ... })` to Scala.
+      *
+      * JS pattern: `make_node(AST_Binary, self, { operator: "+", left: a, right: b })`
+      * Scala: `{ val $n = new AstBinary(); $n.operator = "+"; $n.left = a; $n.right = b; $n }`
+      */
+    private def translateMakeNode(args: List[RastNode]): String =
+      if args.isEmpty then return "??? /* make_node: no args */"
+      val classArg = args.head
+      val className = classArg.text.getOrElse("")
+      val scalaClass = astVarToScalaName(className)
+
+      // Optional origin argument and props argument
+      val propsArg = args.find(_.kind == "ObjectLiteralExpression")
+
+      propsArg match
+        case Some(objLit) =>
+          val props = objLit.children.filter(c =>
+            c.kind == "PropertyAssignment" || c.kind == "ShorthandPropertyAssignment"
+          )
+          if props.isEmpty then
+            s"new $scalaClass()"
+          else
+            val assignments = props.map { p =>
+              p.kind match
+                case "PropertyAssignment" =>
+                  val key = p.children.headOption.flatMap(_.text).getOrElse("?")
+                  val value = p.children.drop(1).headOption.map(translateExpr).getOrElse("???")
+                  s"$$n.${snakeToCamel(key)} = $value"
+                case "ShorthandPropertyAssignment" =>
+                  val key = p.children.headOption.flatMap(_.text).getOrElse("?")
+                  s"$$n.${snakeToCamel(key)} = ${snakeToCamel(key)}"
+                case _ => "???"
+            }
+            s"{ val $$n = new $scalaClass(); ${assignments.mkString("; ")}; $$n }"
+        case None =>
+          s"new $scalaClass()"
+
     private def refuse(reason: String): Unit =
       refusals += reason
 
     private def collectAllProps(cls: TerserEmitter.DefnodeClass): Set[String] =
       val own = cls.selfProps.toSet
       cls.base.flatMap(byName.get).map(p => own ++ collectAllProps(p)).getOrElse(own)
+
+    /** Check if a node is a `.TYPE` property access (e.g., `node.TYPE`). */
+    private def isTypePropertyAccess(node: RastNode): Boolean =
+      node.kind == "PropertyAccessExpression" &&
+        node.children.size >= 2 &&
+        node.children.last.text.contains("TYPE")
 
   // --------------------------------------------------------------------------
   // Shared helpers (visible to BodyContext and the object)
@@ -1246,7 +1403,7 @@ object DefmethodBodyTranslator:
     else escapeKeyword(parts.head + parts.tail.map(_.capitalize).mkString)
 
   private def escapeKeyword(name: String): String =
-    if scalaKeywords.contains(name) then s"`$name`" else name
+    if scalaKeywords.contains(name) then s"${name}_" else name
 
   private val scalaKeywords: Set[String] = Set(
     "type", "val", "var", "def", "class", "trait", "object", "enum",
@@ -1264,3 +1421,19 @@ object DefmethodBodyTranslator:
       .replace("\n", "\\n")
       .replace("\r", "\\r")
       .replace("\t", "\\t")
+
+  /** Terser-specific API name mapping: JS identifier → Scala equivalent. */
+  private val terserApiLookup: Map[String, String] = Map(
+    "make_void_0"    -> "makeVoid0",
+    "has_flag"       -> "CompressorFlags.hasFlag",
+    "set_flag"       -> "CompressorFlags.setFlag",
+    "clear_flag"     -> "CompressorFlags.clearFlag",
+    "walk_abort"     -> "TreeWalker.WalkAbort",
+    "WALK_ABORT"     -> "TreeWalker.WalkAbort",
+    "LIST_OVERHEAD"  -> "AstSize.ListOverhead",
+    "MAP"            -> "mapNodes",
+    "MAP_SKIP"       -> "MapSkip",
+    "SQUEEZED"       -> "CompressorFlags.SQUEEZED",
+    "OPTIMIZED"      -> "CompressorFlags.OPTIMIZED",
+    "TOP"            -> "CompressorFlags.TOP",
+  )

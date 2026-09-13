@@ -123,6 +123,7 @@ object AstDtsGenerator:
   def generate(
       hierarchy: List[TerserEmitter.DefnodeClass],
       defmethodFamilies: Map[String, List[DefmethodDecl]] = Map.empty,
+      referenceFields: Map[String, List[DerivedField]] = Map.empty,
   ): String =
     val sb = new StringBuilder
     val byName = hierarchy.map(c => c.varName -> c).toMap
@@ -170,7 +171,7 @@ object AstDtsGenerator:
 
     // Emit each DEFNODE class
     for cls <- hierarchy do
-      emitClassDecl(sb, cls, byName)
+      emitClassDecl(sb, cls, byName, referenceFields)
 
     // Emit DEFMETHOD augmentations (module-level interface merging)
     for (className, methods) <- defmethodFamilies do
@@ -226,6 +227,7 @@ object AstDtsGenerator:
       sb: StringBuilder,
       cls: TerserEmitter.DefnodeClass,
       byName: Map[String, TerserEmitter.DefnodeClass],
+      referenceFields: Map[String, List[DerivedField]] = Map.empty,
   ): Unit =
     val extendsClause = cls.base match
       case Some(parent) if byName.contains(parent) => s" extends $parent"
@@ -243,10 +245,21 @@ object AstDtsGenerator:
       sb.append("  start: AST_Token | null;\n")
       sb.append("  end: AST_Token | null;\n")
 
-    // Self-properties with inferred types (skip start/end on root -- already emitted above)
+    // Build lookup from reference fields for this class (snake_case name -> tsType)
+    val refLookup: Map[String, String] = referenceFields
+      .getOrElse(cls.varName, Nil)
+      .map(f => f.jsName -> f.tsType)
+      .toMap
+
+    // Self-properties: use reference type when available and more specific than
+    // heuristic; fall back to heuristic when the reference type is just `any`
     val skipProps = if isRoot then Set("start", "end") else Set.empty[String]
     for prop <- cls.selfProps if !skipProps.contains(prop) do
-      val field = inferTsFieldType(prop, cls.varName)
+      val heuristic = inferTsFieldType(prop, cls.varName)
+      val field = refLookup.get(prop) match
+        case Some(tsType) if !isLessSpecific(tsType, heuristic.tsType) =>
+          DerivedField(prop, tsType)
+        case _ => heuristic
       sb.append(s"  ${field.jsName}: ${field.tsType};\n")
 
     // DEFNODE methods declared in the constructor object
@@ -379,13 +392,13 @@ object AstDtsGenerator:
 
   /** Parse field declarations from a Scala source string.
     *
-    * Looks for `var fieldName: Type = ...` patterns within class/trait bodies.
+    * Looks for `var`/`val` field declarations within class/trait bodies.
     * Returns a list of (className, fieldName, scalaType) tuples.
     */
   def parseFieldsFromScala(source: String): List[ParsedField] =
     val result = mutable.ListBuffer.empty[ParsedField]
     val classOrTrait = """(?:class|trait)\s+(Ast\w+)""".r
-    val varDecl = """\s+var\s+(\w+)\s*:\s*(.+?)\s*=""".r
+    val fieldDecl = """\s+(?:var|val)\s+(\w+)\s*:\s*(.+?)\s*=""".r
 
     var currentClass = ""
     for line <- source.linesIterator do
@@ -393,7 +406,7 @@ object AstDtsGenerator:
         currentClass = m.group(1)
       }
       if currentClass.nonEmpty then
-        varDecl.findFirstMatchIn(line).foreach { m =>
+        fieldDecl.findFirstMatchIn(line).foreach { m =>
           val fieldName = m.group(1)
           val scalaType = m.group(2).trim
           result += ParsedField(currentClass, fieldName, scalaType)
@@ -422,6 +435,17 @@ object AstDtsGenerator:
         }
       }
 
+  /** True when `refType` is strictly less specific than `heuristicType`.
+    * E.g. `any`, `any[]`, `Map<string, any>` are less specific than a
+    * concrete type when the heuristic doesn't use `any`.
+    */
+  private def isLessSpecific(refType: String, heuristicType: String): Boolean =
+    // If the reference type contains `any` anywhere and the heuristic doesn't,
+    // prefer the heuristic — the reference lost type information
+    val refHasAny = refType.contains("any")
+    val heuristicHasAny = heuristicType.contains("any")
+    refHasAny && !heuristicHasAny
+
   /** Convert camelCase to snake_case. */
   private def camelToSnake(s: String): String =
     val sb = new StringBuilder
@@ -436,17 +460,42 @@ object AstDtsGenerator:
 
   /** Generate a `.d.ts` with field types derived from reference port sources.
     *
-    * Convenience method that combines hierarchy extraction, reference field
-    * parsing, and `.d.ts` generation in one call. The `referenceSources` are
-    * the content strings of the hand-ported AST files.
+    * Combines hierarchy extraction, reference field parsing, and `.d.ts`
+    * generation. When a DEFNODE property has a matching field in the
+    * reference, the reference type is used (via `scalaTypeToTs`); otherwise
+    * `inferTsFieldType` provides the heuristic fallback.
     */
   def generateFromReference(
       hierarchy: List[TerserEmitter.DefnodeClass],
       referenceSources: List[String],
   ): String =
     val allFields = referenceSources.flatMap(parseFieldsFromScala)
-    val _fieldMap = buildFieldTypeMap(allFields) // available for future enrichment
-    // For now, generate using inferTsFieldType which already mirrors
-    // the reference's type decisions. The reference sources serve as
-    // a cross-check and can provide additional fields not in DEFNODE props.
-    generate(hierarchy, commonDefmethodDecls)
+    val fieldMap = buildFieldTypeMap(allFields)
+    generate(hierarchy, commonDefmethodDecls, fieldMap)
+
+  /** Derivation metrics: how many DEFNODE fields are covered by reference
+    * types vs falling back to the heuristic.
+    */
+  final case class DerivationMetrics(
+      totalFields: Int,
+      referenceDerived: Int,
+      heuristicFallback: Int,
+  )
+
+  /** Count how many fields use reference-derived types vs heuristic. */
+  def countDerivedVsHeuristic(
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      referenceFields: Map[String, List[DerivedField]],
+  ): DerivationMetrics =
+    var total = 0
+    var fromRef = 0
+    var fromHeuristic = 0
+    for cls <- hierarchy do
+      val isRoot = cls.base.isEmpty || cls.varName == "AST_Node"
+      val skipProps = if isRoot then Set("start", "end") else Set.empty[String]
+      val refLookup = referenceFields.getOrElse(cls.varName, Nil).map(_.jsName).toSet
+      for prop <- cls.selfProps if !skipProps.contains(prop) do
+        total += 1
+        if refLookup.contains(prop) then fromRef += 1
+        else fromHeuristic += 1
+    DerivationMetrics(total, fromRef, fromHeuristic)

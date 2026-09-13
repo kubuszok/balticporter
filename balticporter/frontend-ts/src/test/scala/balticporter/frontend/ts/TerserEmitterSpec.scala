@@ -639,3 +639,75 @@ class TerserEmitterSpec extends munit.FunSuite:
     val noScala = dedicated.TerserEmitter.emitNativeObjects(noRast)
     java.nio.file.Files.writeString(outDir.resolve("NativeObjects.scala"), noScala)
     println(s"[emit] NativeObjects.scala: ${noScala.linesIterator.size} lines")
+
+  // -----------------------------------------------------------------------
+  // Deterministic regeneration tests
+  // -----------------------------------------------------------------------
+
+  test("deterministic: hierarchy and body translation produce identical output"):
+    val astRast = loadRast("/rast/terser/lib/ast.rast.json")
+    val commonRast = loadRast("/rast/terser/lib/compress/common.rast.json")
+
+    // Run 1
+    val hierarchy1 = dedicated.TerserEmitter.extractHierarchy(astRast)
+    val summary1 = dedicated.TerserEmitter.hierarchySummary(hierarchy1)
+    val freeFns1 = dedicated.TerserEmitter.extractFreeFunctions(commonRast)
+    val bodies1 = freeFns1.map { fn =>
+      val entry = dedicated.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+      dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy1, "    ")
+    }
+
+    // Run 2
+    val hierarchy2 = dedicated.TerserEmitter.extractHierarchy(astRast)
+    val summary2 = dedicated.TerserEmitter.hierarchySummary(hierarchy2)
+    val freeFns2 = dedicated.TerserEmitter.extractFreeFunctions(commonRast)
+    val bodies2 = freeFns2.map { fn =>
+      val entry = dedicated.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+      dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy2, "    ")
+    }
+
+    assertEquals(summary1, summary2, "hierarchy summary should be byte-equal across runs")
+    assertEquals(hierarchy1.size, hierarchy2.size, "hierarchy size should match")
+    for (c1, c2) <- hierarchy1.zip(hierarchy2) do
+      assertEquals(c1.varName, c2.varName, s"class name mismatch")
+      assertEquals(c1.typeName, c2.typeName, s"type name mismatch for ${c1.varName}")
+      assertEquals(c1.selfProps, c2.selfProps, s"props mismatch for ${c1.varName}")
+      assertEquals(c1.base, c2.base, s"base mismatch for ${c1.varName}")
+
+    assertEquals(freeFns1.size, freeFns2.size, "free function count should match")
+    for (f1, f2) <- freeFns1.zip(freeFns2) do
+      assertEquals(f1.name, f2.name, "function name mismatch")
+
+    assertEquals(bodies1.size, bodies2.size, "body count should match")
+    for i <- bodies1.indices do
+      assertEquals(bodies1(i).scalaBody, bodies2(i).scalaBody,
+        s"body ${freeFns1(i).name} should be byte-equal across runs")
+      assertEquals(bodies1(i).refusalCount, bodies2(i).refusalCount,
+        s"refusal count for ${freeFns1(i).name} should match")
+
+    println(s"Determinism verified: ${hierarchy1.size} classes, ${freeFns1.size} functions, ${bodies1.size} bodies")
+
+  test("deterministic: Mermaid styles emission produces identical output"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+
+    val out1 = dedicated.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
+    val out2 = dedicated.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
+
+    assertEquals(out1, out2, "Mermaid styles emission should be byte-equal across runs")
+    println(s"Mermaid styles determinism verified: ${out1.linesIterator.size} lines")
+
+  test("deterministic: vitest→MUnit emission produces identical output"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/info.spec.rast.json")
+    val cfg = dedicated.VitestToMunitEmitter.EmitConfig(
+      packageName = "test.generated",
+      className = "InfoSuite",
+    )
+
+    val result1 = dedicated.VitestToMunitEmitter.emit(rast, cfg)
+    val result2 = dedicated.VitestToMunitEmitter.emit(rast, cfg)
+
+    assertEquals(result1.scala, result2.scala, "vitest emission should be byte-equal across runs")
+    assertEquals(result1.testCount, result2.testCount, "test count should match")
+    assertEquals(result1.ignoredCount, result2.ignoredCount, "ignored count should match")
+    assertEquals(result1.assertionCounts, result2.assertionCounts, "assertion counts should match")
+    println(s"Vitest→MUnit determinism verified: ${result1.testCount} tests, ${result1.scala.linesIterator.size} lines")

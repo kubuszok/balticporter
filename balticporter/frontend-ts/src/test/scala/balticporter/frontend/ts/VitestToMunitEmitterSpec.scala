@@ -167,3 +167,91 @@ class VitestToMunitEmitterSpec extends munit.FunSuite:
     println(result.scala)
     println(s"Tests: ${result.testCount}, Ignored: ${result.ignoredCount}")
     println(s"Assertions: ${result.assertionCounts}")
+
+  // -----------------------------------------------------------------------
+  // Batch: emit all mermaid spec files
+  // -----------------------------------------------------------------------
+
+  private val allSpecResources: List[String] = List(
+    "/rast/mermaid/src/accessibility.spec.rast.json",
+    "/rast/mermaid/src/config.spec.rast.json",
+    "/rast/mermaid/src/dagre-wrapper/edgeMarker.spec.rast.json",
+    "/rast/mermaid/src/diagram-api/comments.spec.rast.json",
+    "/rast/mermaid/src/diagram-api/diagram-orchestration.spec.rast.json",
+    "/rast/mermaid/src/diagram-api/diagramAPI.spec.rast.json",
+    "/rast/mermaid/src/diagram-api/frontmatter.spec.rast.json",
+    "/rast/mermaid/src/diagram.spec.rast.json",
+    "/rast/mermaid/src/diagrams/block/layout.spec.rast.json",
+    "/rast/mermaid/src/diagrams/block/parser/block.spec.rast.json",
+    "/rast/mermaid/src/diagrams/class/classDiagram.spec.rast.json",
+    "/rast/mermaid/src/diagrams/class/classTypes.spec.rast.json",
+    "/rast/mermaid/src/diagrams/common/common.spec.rast.json",
+    "/rast/mermaid/src/diagrams/er/erRenderer.spec.rast.json",
+    "/rast/mermaid/src/diagrams/flowchart/flowDb.spec.rast.json",
+    "/rast/mermaid/src/diagrams/gantt/ganttDb.spec.rast.json",
+    "/rast/mermaid/src/diagrams/info/info.spec.rast.json",
+    "/rast/mermaid/src/diagrams/mindmap/mindmap.spec.rast.json",
+    "/rast/mermaid/src/diagrams/packet/packet.spec.rast.json",
+    "/rast/mermaid/src/diagrams/pie/pie.spec.rast.json",
+    "/rast/mermaid/src/diagrams/quadrant-chart/parser/quadrant.jison.spec.rast.json",
+    "/rast/mermaid/src/diagrams/quadrant-chart/quadrantDb.spec.rast.json",
+    "/rast/mermaid/src/diagrams/sankey/parser/sankey.spec.rast.json",
+    "/rast/mermaid/src/diagrams/xychart/parser/xychart.jison.spec.rast.json",
+    "/rast/mermaid/src/mermaid.spec.rast.json",
+    "/rast/mermaid/src/mermaidAPI.spec.rast.json",
+    "/rast/mermaid/src/rendering-util/createText.spec.rast.json",
+    "/rast/mermaid/src/rendering-util/handle-markdown-text.spec.rast.json",
+    "/rast/mermaid/src/rendering-util/rendering-elements/edgeMarker.spec.rast.json",
+    "/rast/mermaid/src/rendering-util/splitText.spec.rast.json",
+    "/rast/mermaid/src/styles.spec.rast.json",
+    "/rast/mermaid/src/utils.spec.rast.json",
+    "/rast/mermaid/src/utils/imperativeState.spec.rast.json",
+    "/rast/mermaid/src/utils/subGraphTitleMargins.spec.rast.json",
+  )
+
+  test("batch: emit all mermaid spec files"):
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-vitest")
+    java.nio.file.Files.createDirectories(outDir)
+
+    var totalTests = 0
+    var totalIgnored = 0
+    var totalFiles = 0
+    var failedFiles = 0
+    val totalAssertions = scala.collection.mutable.Map.empty[String, Int].withDefaultValue(0)
+    val fileSummaries = scala.collection.mutable.ListBuffer.empty[(String, Int, Int, Int, String)]
+
+    for resource <- allSpecResources do
+      val shortName = resource.split("/").last.stripSuffix(".rast.json")
+      try
+        val rast = loadRast(resource)
+        val cfg = dedicated.VitestToMunitEmitter.EmitConfig(
+          packageName = "test.generated",
+          className = shortName.replace(".", "_").replace("-", "_").capitalize + "Suite",
+        )
+        val result = dedicated.VitestToMunitEmitter.emit(rast, cfg)
+        totalTests += result.testCount
+        totalIgnored += result.ignoredCount
+        totalFiles += 1
+        val assertCount = result.assertionCounts.values.sum
+        for (k, v) <- result.assertionCounts do totalAssertions(k) += v
+        fileSummaries += ((shortName, result.testCount, result.ignoredCount, assertCount, "ok"))
+
+        val outFile = outDir.resolve(cfg.className + ".scala")
+        java.nio.file.Files.writeString(outFile, result.scala)
+      catch
+        case e: Exception =>
+          failedFiles += 1
+          fileSummaries += ((shortName, 0, 0, 0, s"FAIL: ${e.getMessage.take(60)}"))
+
+    println("\n=== Batch Vitest→MUnit Emission Summary ===")
+    println(f"${"File"}%-45s ${"Tests"}%6s ${"Ign"}%5s ${"Assert"}%7s ${"Status"}%-20s")
+    println("-" * 90)
+    for (name, tests, ign, asserts, status) <- fileSummaries do
+      println(f"$name%-45s $tests%6d $ign%5d $asserts%7d $status%-20s")
+    println("-" * 90)
+    println(f"${"TOTAL"}%-45s $totalTests%6d $totalIgnored%5d ${totalAssertions.values.sum}%7d")
+    println(s"\nFiles: $totalFiles ok, $failedFiles failed (of ${allSpecResources.size})")
+    println(s"Assertion breakdown: ${totalAssertions.toList.sortBy(-_._2).map((k,v) => s"$k=$v").mkString(", ")}")
+    println(s"\nEmitted to: $outDir")
+
+    assert(totalTests >= 200, s"Expected >= 200 total tests, got $totalTests")

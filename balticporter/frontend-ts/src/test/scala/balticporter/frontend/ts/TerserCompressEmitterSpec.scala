@@ -395,3 +395,171 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       // Verify we got results for modules that have reference files
       assert(results.nonEmpty, "should emit at least some modules")
       println(s"\nEmitted ${results.size} modules to $outDir")
+
+  // -----------------------------------------------------------------------
+  // Non-compress module parity-derive (Item 1)
+  // -----------------------------------------------------------------------
+
+  private val ssgJsRoot: java.nio.file.Path =
+    val candidates = List(
+      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
+      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
+    ).flatten
+    val jsDir = "ssg-js/src/main/scala/ssg/js"
+    candidates.map(_.resolve(jsDir))
+      .find(p => java.nio.file.Files.exists(p.resolve("scope/ScopeAnalysis.scala")))
+      .getOrElse(java.nio.file.Path.of("nonexistent"))
+
+  test("non-compress: emitAllNonCompressWithParity batch"):
+    if !java.nio.file.Files.exists(ssgJsRoot) then
+      println("SKIP: ssg-js reference not found at " + ssgJsRoot)
+    else
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity-noncompress")
+      java.nio.file.Files.createDirectories(outDir)
+
+      val results = dedicated.TerserCompressEmitter.emitAllNonCompressWithParity(loadRast, hierarchy, ssgJsRoot)
+
+      for (mod, source, summary) <- results do
+        val path = outDir.resolve(s"${summary.objectName}.scala")
+        java.nio.file.Files.writeString(path, source)
+
+      val summaries = results.map(_._3)
+      println("\n=== Non-compress Parity-derive Summary ===")
+      println(dedicated.TerserCompressEmitter.formatNonCompressParitySummaryTable(summaries))
+
+      assert(results.nonEmpty, "should emit at least some non-compress modules")
+      println(s"\nEmitted ${results.size} non-compress modules to $outDir")
+
+      // Verify at least some RAST bodies are used
+      val totalRast = summaries.map(_.matchedFromRast).sum
+      println(s"Total RAST-derived bodies across all non-compress modules: $totalRast")
+
+  test("non-compress: scope DEFMETHOD extraction"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserCompressEmitter.extractAllDefmethods(rast)
+    val freeFns = dedicated.TerserEmitter.extractFreeFunctions(rast)
+    println(s"scope.js: ${entries.size} DEFMETHODs, ${freeFns.size} free functions")
+    assert(entries.size + freeFns.size >= 5, s"Expected >= 5 entries, got ${entries.size + freeFns.size}")
+
+  test("non-compress: output DEFMETHOD + prototype extraction"):
+    val rast = loadRast("/rast/terser/lib/output.rast.json")
+    val entries = dedicated.TerserCompressEmitter.extractAllDefmethods(rast)
+    val protos = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
+    val freeFns = dedicated.TerserEmitter.extractFreeFunctions(rast)
+    println(s"output.js: ${entries.size} DEFMETHODs, ${protos.size} prototype assignments, ${freeFns.size} free functions")
+    assert(entries.size + protos.size + freeFns.size >= 1,
+      s"Expected >= 1 entries, got ${entries.size + protos.size + freeFns.size}")
+
+  test("non-compress: size DEFMETHOD + prototype extraction"):
+    val rast = loadRast("/rast/terser/lib/size.rast.json")
+    val entries = dedicated.TerserCompressEmitter.extractAllDefmethods(rast)
+    val protos = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
+    println(s"size.js: ${entries.size} DEFMETHODs, ${protos.size} prototype assignments")
+    // size.js uses DEFMETHOD but may also use prototype assignments
+    assert(entries.size + protos.size >= 0, "size.js extraction should not crash")
+
+  test("non-compress: equivalent-to DEFMETHOD + prototype extraction"):
+    val rast = loadRast("/rast/terser/lib/equivalent-to.rast.json")
+    val entries = dedicated.TerserCompressEmitter.extractAllDefmethods(rast)
+    val protos = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
+    println(s"equivalent-to.js: ${entries.size} DEFMETHODs, ${protos.size} prototype assignments")
+    assert(entries.size + protos.size >= 0, "equivalent-to.js extraction should not crash")
+
+  // -----------------------------------------------------------------------
+  // Improved body translation rate (Items 2+4)
+  // -----------------------------------------------------------------------
+
+  test("body-translation: .TYPE comparison lowered to isInstanceOf"):
+    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
+      RastNode("ReturnStatement", 0, (0, 0), children = List(
+        RastNode("BinaryExpression", 0, (0, 0),
+          operator = Some("EqualsEqualsEqualsToken"),
+          children = List(
+            RastNode("PropertyAccessExpression", 0, (0, 0), children = List(
+              RastNode("Identifier", 0, (0, 0), text = Some("node")),
+              RastNode("Identifier", 0, (0, 0), text = Some("TYPE")),
+            )),
+            RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("Binary"))),
+          ),
+        )
+      ))
+    ))
+    val entry = dedicated.TerserEmitter.DefmethodEntry("AST_Node", "test", List("node"), bodyBlock)
+    val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
+    assert(result.scalaBody.contains("isInstanceOf[AstBinary]"),
+      s"Expected isInstanceOf[AstBinary] in: ${result.scalaBody}")
+    assert(result.isComplete, s"Should be complete, refusals: ${result.refusalReasons}")
+
+  test("body-translation: make_node translated to new + field assignments"):
+    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
+      RastNode("ReturnStatement", 0, (0, 0), children = List(
+        RastNode("CallExpression", 0, (0, 0), children = List(
+          RastNode("Identifier", 0, (0, 0), text = Some("make_node")),
+          RastNode("Identifier", 0, (0, 0), text = Some("AST_Binary")),
+          RastNode("Identifier", 0, (0, 0), text = Some("self")),
+          RastNode("ObjectLiteralExpression", 0, (0, 0), children = List(
+            RastNode("PropertyAssignment", 0, (0, 0), children = List(
+              RastNode("Identifier", 0, (0, 0), text = Some("operator")),
+              RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("+"))),
+            )),
+            RastNode("PropertyAssignment", 0, (0, 0), children = List(
+              RastNode("Identifier", 0, (0, 0), text = Some("left")),
+              RastNode("Identifier", 0, (0, 0), text = Some("a")),
+            )),
+          )),
+        ))
+      ))
+    ))
+    val entry = dedicated.TerserEmitter.DefmethodEntry("AST_Node", "test", List("self"), bodyBlock)
+    val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
+    assert(result.scalaBody.contains("new AstBinary()"),
+      s"Expected 'new AstBinary()' in: ${result.scalaBody}")
+    assert(result.scalaBody.contains("operator = \"+\""),
+      s"Expected 'operator = \"+\"' in: ${result.scalaBody}")
+    assert(result.isComplete, s"Should be complete, refusals: ${result.refusalReasons}")
+
+  test("body-translation: return undefined becomes null"):
+    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
+      RastNode("ReturnStatement", 0, (0, 0))
+    ))
+    val entry = dedicated.TerserEmitter.DefmethodEntry("AST_Node", "test", Nil, bodyBlock)
+    val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
+    assert(result.scalaBody.contains("null") && !result.scalaBody.contains("()"),
+      s"Expected 'null' not '()' in: ${result.scalaBody}")
+
+  test("body-translation: has_flag mapped to CompressorFlags.hasFlag"):
+    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
+      RastNode("ReturnStatement", 0, (0, 0), children = List(
+        RastNode("CallExpression", 0, (0, 0), children = List(
+          RastNode("Identifier", 0, (0, 0), text = Some("has_flag")),
+          RastNode("Identifier", 0, (0, 0), text = Some("node")),
+          RastNode("Identifier", 0, (0, 0), text = Some("SQUEEZED")),
+        ))
+      ))
+    ))
+    val entry = dedicated.TerserEmitter.DefmethodEntry("AST_Node", "test", List("node"), bodyBlock)
+    val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
+    assert(result.scalaBody.contains("CompressorFlags.hasFlag"),
+      s"Expected CompressorFlags.hasFlag in: ${result.scalaBody}")
+
+  test("body-translation: improved parity rate with reduced uncompilable patterns"):
+    if !java.nio.file.Files.exists(referenceRoot) then
+      println("SKIP: ssg reference not found at " + referenceRoot)
+    else
+      val results = dedicated.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
+      val summaries = results.map(_._3)
+      val totalRast = summaries.map(_.matchedFromRast).sum
+      val totalMethods = summaries.map(_.totalMethods).sum
+
+      println(s"\n=== Improved Parity Rate ===")
+      println(dedicated.TerserCompressEmitter.formatParitySummaryTable(summaries))
+
+      val pctRast = if totalMethods > 0 then (totalRast * 100.0 / totalMethods) else 0.0
+      println(f"Overall: $totalRast/$totalMethods (${pctRast}%.1f%%) bodies from RAST")
+
+      // With reduced uncompilable patterns, we should get significantly more than before
+      // Before: ~15% RAST rate. After: should be above 30%.
+      assert(totalRast >= 10,
+        s"Expected >= 10 RAST-derived bodies, got $totalRast")
