@@ -186,6 +186,10 @@ class TsExporter {
     if (ts.isStringLiteral(node)) result.value = node.text;
     else if (ts.isNumericLiteral(node)) result.value = Number(node.text);
     else if (ts.isRegularExpressionLiteral(node)) result.value = node.text;
+    else if (ts.isNoSubstitutionTemplateLiteral(node)) result.value = node.text;
+    else if (ts.isTemplateHead(node)) result.value = node.text;
+    else if (ts.isTemplateMiddle(node)) result.value = node.text;
+    else if (ts.isTemplateTail(node)) result.value = node.text;
     else if (node.kind === ts.SyntaxKind.TrueKeyword) result.value = true;
     else if (node.kind === ts.SyntaxKind.FalseKeyword) result.value = false;
 

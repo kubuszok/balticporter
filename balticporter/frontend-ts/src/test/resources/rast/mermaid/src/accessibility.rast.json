@@ -1,0 +1,1755 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/accessibility.ts",
+  "sha256": "29058735ef6d4ffd0ac1c026f2ae0158cbe697a03cdc0df1488d14241650e0f0",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        8,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Accessibility (a11y) functions, types, helpers.\n *\n * @see https://www.w3.org/WAI/\n * @see https://www.w3.org/TR/wai-aria-1.1/\n * @see https://www.w3.org/TR/svg-aam-1.0/\n */",
+          "pos": [
+            1,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            8,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                8,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    8,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        8,
+                        15
+                      ],
+                      "type": "t0",
+                      "text": "D3Element",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            8,
+            32
+          ],
+          "type": "t1",
+          "value": "./types.js"
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        19,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * SVG element role:\n * The SVG element role _should_ be set to 'graphics-document' per SVG standard\n * but in practice is not always done by browsers, etc. (As of 2022-12-08).\n * A fallback role of 'document' should be set for those browsers, etc., that only support ARIA 1.0.\n *\n * @see https://www.w3.org/TR/svg-aam-1.0/#roleMappingGeneralRules\n * @see https://www.w3.org/TR/graphics-aria-1.0/#graphics-document\n */",
+          "pos": [
+            10,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            19,
+            1
+          ],
+          "comments": [
+            {
+              "kind": "block",
+              "text": "/**\n * SVG element role:\n * The SVG element role _should_ be set to 'graphics-document' per SVG standard\n * but in practice is not always done by browsers, etc. (As of 2022-12-08).\n * A fallback role of 'document' should be set for those browsers, etc., that only support ARIA 1.0.\n *\n * @see https://www.w3.org/TR/svg-aam-1.0/#roleMappingGeneralRules\n * @see https://www.w3.org/TR/graphics-aria-1.0/#graphics-document\n */",
+              "pos": [
+                10,
+                1
+              ]
+            }
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                19,
+                7
+              ],
+              "symbol": "s1",
+              "type": "t2",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    19,
+                    7
+                  ],
+                  "type": "t2",
+                  "text": "SVG_ROLE",
+                  "resolvedSymbol": "s1"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    19,
+                    18
+                  ],
+                  "type": "t3",
+                  "value": "graphics-document document"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        27,
+        1
+      ],
+      "symbol": "s2",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Add role and aria-roledescription to the svg element.\n *\n * @param svg - d3 object that contains the SVG HTML element\n * @param diagramType - diagram name for to the aria-roledescription\n */",
+          "pos": [
+            21,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            27,
+            17
+          ],
+          "type": "t4",
+          "text": "setA11yDiagramInfo",
+          "resolvedSymbol": "s2"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            27,
+            36
+          ],
+          "symbol": "s3",
+          "type": "t0",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                27,
+                36
+              ],
+              "type": "t0",
+              "text": "svg",
+              "resolvedSymbol": "s3"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                27,
+                41
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    27,
+                    41
+                  ],
+                  "type": "t0",
+                  "text": "D3Element",
+                  "resolvedSymbol": "s0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            27,
+            52
+          ],
+          "symbol": "s4",
+          "type": "t5",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                27,
+                52
+              ],
+              "type": "t5",
+              "text": "diagramType",
+              "resolvedSymbol": "s4"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                27,
+                65
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            27,
+            73
+          ],
+          "children": [
+            {
+              "kind": "ExpressionStatement",
+              "kindCode": 244,
+              "pos": [
+                28,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "CallExpression",
+                  "kindCode": 213,
+                  "pos": [
+                    28,
+                    3
+                  ],
+                  "type": "t0",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        28,
+                        3
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            28,
+                            3
+                          ],
+                          "type": "t0",
+                          "text": "svg",
+                          "resolvedSymbol": "s3"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            28,
+                            7
+                          ],
+                          "type": "t0",
+                          "text": "attr"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        28,
+                        12
+                      ],
+                      "type": "t7",
+                      "value": "role"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        28,
+                        20
+                      ],
+                      "type": "t3",
+                      "text": "SVG_ROLE",
+                      "resolvedSymbol": "s1"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "IfStatement",
+              "kindCode": 245,
+              "pos": [
+                29,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    29,
+                    7
+                  ],
+                  "type": "t8",
+                  "operator": "ExclamationEqualsEqualsToken",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        29,
+                        7
+                      ],
+                      "type": "t5",
+                      "text": "diagramType",
+                      "resolvedSymbol": "s4"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        29,
+                        23
+                      ],
+                      "type": "t11",
+                      "value": ""
+                    }
+                  ]
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    29,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        30,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            30,
+                            5
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                30,
+                                5
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    30,
+                                    5
+                                  ],
+                                  "type": "t0",
+                                  "text": "svg",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    30,
+                                    9
+                                  ],
+                                  "type": "t0",
+                                  "text": "attr"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                30,
+                                14
+                              ],
+                              "type": "t12",
+                              "value": "aria-roledescription"
+                            },
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                30,
+                                38
+                              ],
+                              "type": "t5",
+                              "text": "diagramType",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        45,
+        1
+      ],
+      "symbol": "s5",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Add an accessible title and/or description element to a chart.\n * The title is usually not displayed and the description is never displayed.\n *\n * The following charts display their title as a visual and accessibility element: gantt.\n *\n * @param svg - d3 node to insert the a11y title and desc info\n * @param a11yTitle - a11y title. undefined or empty strings mean to skip them\n * @param a11yDesc - a11y description. undefined or empty strings mean to skip them\n * @param baseId - id used to construct the a11y title and description id\n */",
+          "pos": [
+            34,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            45,
+            17
+          ],
+          "type": "t13",
+          "text": "addSVGa11yTitleDescription",
+          "resolvedSymbol": "s5"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            46,
+            3
+          ],
+          "symbol": "s6",
+          "type": "t0",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                46,
+                3
+              ],
+              "type": "t0",
+              "text": "svg",
+              "resolvedSymbol": "s6"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                46,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    46,
+                    8
+                  ],
+                  "type": "t0",
+                  "text": "D3Element",
+                  "resolvedSymbol": "s0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            47,
+            3
+          ],
+          "symbol": "s7",
+          "type": "t14",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                47,
+                3
+              ],
+              "type": "t14",
+              "text": "a11yTitle",
+              "resolvedSymbol": "s7"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                47,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    47,
+                    14
+                  ]
+                },
+                {
+                  "kind": "UndefinedKeyword",
+                  "kindCode": 157,
+                  "pos": [
+                    47,
+                    23
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            48,
+            3
+          ],
+          "symbol": "s8",
+          "type": "t14",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                48,
+                3
+              ],
+              "type": "t14",
+              "text": "a11yDesc",
+              "resolvedSymbol": "s8"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                48,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    48,
+                    13
+                  ]
+                },
+                {
+                  "kind": "UndefinedKeyword",
+                  "kindCode": 157,
+                  "pos": [
+                    48,
+                    22
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            49,
+            3
+          ],
+          "symbol": "s9",
+          "type": "t5",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                49,
+                3
+              ],
+              "type": "t5",
+              "text": "baseId",
+              "resolvedSymbol": "s9"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                49,
+                11
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "VoidKeyword",
+          "kindCode": 116,
+          "pos": [
+            50,
+            4
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            50,
+            9
+          ],
+          "children": [
+            {
+              "kind": "IfStatement",
+              "kindCode": 245,
+              "pos": [
+                51,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    51,
+                    7
+                  ],
+                  "type": "t8",
+                  "operator": "EqualsEqualsEqualsToken",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        51,
+                        7
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            51,
+                            7
+                          ],
+                          "type": "t0",
+                          "text": "svg",
+                          "resolvedSymbol": "s6"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            51,
+                            11
+                          ],
+                          "type": "t0",
+                          "text": "insert"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        51,
+                        22
+                      ],
+                      "type": "t15",
+                      "text": "undefined",
+                      "resolvedSymbol": "s10"
+                    }
+                  ]
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    51,
+                    33
+                  ],
+                  "children": [
+                    {
+                      "kind": "ReturnStatement",
+                      "kindCode": 253,
+                      "pos": [
+                        52,
+                        5
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "IfStatement",
+              "kindCode": 245,
+              "pos": [
+                55,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    55,
+                    7
+                  ],
+                  "type": "t14",
+                  "text": "a11yDesc",
+                  "resolvedSymbol": "s8"
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    55,
+                    17
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableStatement",
+                      "kindCode": 243,
+                      "pos": [
+                        56,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationList",
+                          "kindCode": 261,
+                          "pos": [
+                            56,
+                            5
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclaration",
+                              "kindCode": 260,
+                              "pos": [
+                                56,
+                                11
+                              ],
+                              "symbol": "s11",
+                              "type": "t5",
+                              "flags": [
+                                "const"
+                              ],
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    56,
+                                    11
+                                  ],
+                                  "type": "t5",
+                                  "text": "descId",
+                                  "resolvedSymbol": "s11"
+                                },
+                                {
+                                  "kind": "TemplateExpression",
+                                  "kindCode": 228,
+                                  "pos": [
+                                    56,
+                                    20
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "TemplateHead",
+                                      "kindCode": 16,
+                                      "pos": [
+                                        56,
+                                        20
+                                      ],
+                                      "value": "chart-desc-"
+                                    },
+                                    {
+                                      "kind": "TemplateSpan",
+                                      "kindCode": 239,
+                                      "pos": [
+                                        56,
+                                        34
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            56,
+                                            34
+                                          ],
+                                          "type": "t5",
+                                          "text": "baseId",
+                                          "resolvedSymbol": "s9"
+                                        },
+                                        {
+                                          "kind": "TemplateTail",
+                                          "kindCode": 18,
+                                          "pos": [
+                                            56,
+                                            40
+                                          ],
+                                          "value": ""
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        57,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            57,
+                            5
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                57,
+                                5
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    57,
+                                    5
+                                  ],
+                                  "type": "t0",
+                                  "text": "svg",
+                                  "resolvedSymbol": "s6"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    57,
+                                    9
+                                  ],
+                                  "type": "t0",
+                                  "text": "attr"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                57,
+                                14
+                              ],
+                              "type": "t16",
+                              "value": "aria-describedby"
+                            },
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                57,
+                                34
+                              ],
+                              "type": "t5",
+                              "text": "descId",
+                              "resolvedSymbol": "s11"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        58,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            58,
+                            5
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                58,
+                                5
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "CallExpression",
+                                  "kindCode": 213,
+                                  "pos": [
+                                    58,
+                                    5
+                                  ],
+                                  "type": "t0",
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        58,
+                                        5
+                                      ],
+                                      "type": "t0",
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            58,
+                                            5
+                                          ],
+                                          "type": "t0",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                58,
+                                                5
+                                              ],
+                                              "type": "t0",
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    58,
+                                                    5
+                                                  ],
+                                                  "type": "t0",
+                                                  "text": "svg",
+                                                  "resolvedSymbol": "s6"
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    58,
+                                                    9
+                                                  ],
+                                                  "type": "t0",
+                                                  "text": "insert"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "StringLiteral",
+                                              "kindCode": 11,
+                                              "pos": [
+                                                58,
+                                                16
+                                              ],
+                                              "type": "t17",
+                                              "value": "desc"
+                                            },
+                                            {
+                                              "kind": "StringLiteral",
+                                              "kindCode": 11,
+                                              "pos": [
+                                                58,
+                                                24
+                                              ],
+                                              "type": "t18",
+                                              "value": ":first-child"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            58,
+                                            40
+                                          ],
+                                          "type": "t0",
+                                          "text": "attr"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "StringLiteral",
+                                      "kindCode": 11,
+                                      "pos": [
+                                        58,
+                                        45
+                                      ],
+                                      "type": "t19",
+                                      "value": "id"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        58,
+                                        51
+                                      ],
+                                      "type": "t5",
+                                      "text": "descId",
+                                      "resolvedSymbol": "s11"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    58,
+                                    59
+                                  ],
+                                  "type": "t0",
+                                  "text": "text"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                58,
+                                64
+                              ],
+                              "type": "t5",
+                              "text": "a11yDesc",
+                              "resolvedSymbol": "s8"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "IfStatement",
+              "kindCode": 245,
+              "pos": [
+                60,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    60,
+                    7
+                  ],
+                  "type": "t14",
+                  "text": "a11yTitle",
+                  "resolvedSymbol": "s7"
+                },
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    60,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableStatement",
+                      "kindCode": 243,
+                      "pos": [
+                        61,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationList",
+                          "kindCode": 261,
+                          "pos": [
+                            61,
+                            5
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclaration",
+                              "kindCode": 260,
+                              "pos": [
+                                61,
+                                11
+                              ],
+                              "symbol": "s12",
+                              "type": "t5",
+                              "flags": [
+                                "const"
+                              ],
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    61,
+                                    11
+                                  ],
+                                  "type": "t5",
+                                  "text": "titleId",
+                                  "resolvedSymbol": "s12"
+                                },
+                                {
+                                  "kind": "TemplateExpression",
+                                  "kindCode": 228,
+                                  "pos": [
+                                    61,
+                                    21
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "TemplateHead",
+                                      "kindCode": 16,
+                                      "pos": [
+                                        61,
+                                        21
+                                      ],
+                                      "value": "chart-title-"
+                                    },
+                                    {
+                                      "kind": "TemplateSpan",
+                                      "kindCode": 239,
+                                      "pos": [
+                                        61,
+                                        36
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            61,
+                                            36
+                                          ],
+                                          "type": "t5",
+                                          "text": "baseId",
+                                          "resolvedSymbol": "s9"
+                                        },
+                                        {
+                                          "kind": "TemplateTail",
+                                          "kindCode": 18,
+                                          "pos": [
+                                            61,
+                                            42
+                                          ],
+                                          "value": ""
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        62,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            62,
+                            5
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                62,
+                                5
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    62,
+                                    5
+                                  ],
+                                  "type": "t0",
+                                  "text": "svg",
+                                  "resolvedSymbol": "s6"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    62,
+                                    9
+                                  ],
+                                  "type": "t0",
+                                  "text": "attr"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                62,
+                                14
+                              ],
+                              "type": "t20",
+                              "value": "aria-labelledby"
+                            },
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                62,
+                                33
+                              ],
+                              "type": "t5",
+                              "text": "titleId",
+                              "resolvedSymbol": "s12"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        63,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            63,
+                            5
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                63,
+                                5
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "CallExpression",
+                                  "kindCode": 213,
+                                  "pos": [
+                                    63,
+                                    5
+                                  ],
+                                  "type": "t0",
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        63,
+                                        5
+                                      ],
+                                      "type": "t0",
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            63,
+                                            5
+                                          ],
+                                          "type": "t0",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                63,
+                                                5
+                                              ],
+                                              "type": "t0",
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    63,
+                                                    5
+                                                  ],
+                                                  "type": "t0",
+                                                  "text": "svg",
+                                                  "resolvedSymbol": "s6"
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    63,
+                                                    9
+                                                  ],
+                                                  "type": "t0",
+                                                  "text": "insert"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "StringLiteral",
+                                              "kindCode": 11,
+                                              "pos": [
+                                                63,
+                                                16
+                                              ],
+                                              "type": "t21",
+                                              "value": "title"
+                                            },
+                                            {
+                                              "kind": "StringLiteral",
+                                              "kindCode": 11,
+                                              "pos": [
+                                                63,
+                                                25
+                                              ],
+                                              "type": "t18",
+                                              "value": ":first-child"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            63,
+                                            41
+                                          ],
+                                          "type": "t0",
+                                          "text": "attr"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "StringLiteral",
+                                      "kindCode": 11,
+                                      "pos": [
+                                        63,
+                                        46
+                                      ],
+                                      "type": "t19",
+                                      "value": "id"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        63,
+                                        52
+                                      ],
+                                      "type": "t5",
+                                      "text": "titleId",
+                                      "resolvedSymbol": "s12"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    63,
+                                    61
+                                  ],
+                                  "type": "t0",
+                                  "text": "text"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                63,
+                                66
+                              ],
+                              "type": "t5",
+                              "text": "a11yTitle",
+                              "resolvedSymbol": "s7"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "D3Element",
+      "flags": []
+    },
+    "s1": {
+      "name": "SVG_ROLE",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s2": {
+      "name": "setA11yDiagramInfo",
+      "flags": [
+        "function"
+      ],
+      "parent": "s13"
+    },
+    "s3": {
+      "name": "svg",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s4": {
+      "name": "diagramType",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s5": {
+      "name": "addSVGa11yTitleDescription",
+      "flags": [
+        "function"
+      ],
+      "parent": "s13"
+    },
+    "s6": {
+      "name": "svg",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s7": {
+      "name": "a11yTitle",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s8": {
+      "name": "a11yDesc",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s9": {
+      "name": "baseId",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s10": {
+      "name": "undefined",
+      "flags": [
+        "property"
+      ]
+    },
+    "s11": {
+      "name": "descId",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s12": {
+      "name": "titleId",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s13": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/accessibility\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t2": {
+      "kind": "stringLiteral",
+      "text": "\"graphics-document document\"",
+      "value": "graphics-document document"
+    },
+    "t3": {
+      "kind": "stringLiteral",
+      "text": "\"graphics-document document\"",
+      "value": "graphics-document document"
+    },
+    "t5": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t6": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t4": {
+      "kind": "function",
+      "text": "(svg: any, diagramType: string) => void",
+      "parameters": [
+        {
+          "name": "svg",
+          "type": "t0",
+          "optional": false
+        },
+        {
+          "name": "diagramType",
+          "type": "t5",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t7": {
+      "kind": "stringLiteral",
+      "text": "\"role\"",
+      "value": "role"
+    },
+    "t9": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t10": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t8": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t9",
+        "t10"
+      ]
+    },
+    "t11": {
+      "kind": "stringLiteral",
+      "text": "\"\"",
+      "value": ""
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"aria-roledescription\"",
+      "value": "aria-roledescription"
+    },
+    "t15": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t14": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t15",
+        "t5"
+      ]
+    },
+    "t13": {
+      "kind": "function",
+      "text": "(svg: any, a11yTitle: string | undefined, a11yDesc: string | undefined, baseId: string) => void",
+      "parameters": [
+        {
+          "name": "svg",
+          "type": "t0",
+          "optional": false
+        },
+        {
+          "name": "a11yTitle",
+          "type": "t14",
+          "optional": false
+        },
+        {
+          "name": "a11yDesc",
+          "type": "t14",
+          "optional": false
+        },
+        {
+          "name": "baseId",
+          "type": "t5",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"aria-describedby\"",
+      "value": "aria-describedby"
+    },
+    "t17": {
+      "kind": "stringLiteral",
+      "text": "\"desc\"",
+      "value": "desc"
+    },
+    "t18": {
+      "kind": "stringLiteral",
+      "text": "\":first-child\"",
+      "value": ":first-child"
+    },
+    "t19": {
+      "kind": "stringLiteral",
+      "text": "\"id\"",
+      "value": "id"
+    },
+    "t20": {
+      "kind": "stringLiteral",
+      "text": "\"aria-labelledby\"",
+      "value": "aria-labelledby"
+    },
+    "t21": {
+      "kind": "stringLiteral",
+      "text": "\"title\"",
+      "value": "title"
+    }
+  }
+}

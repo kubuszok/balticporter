@@ -1,0 +1,1812 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/packet/styles.ts",
+  "sha256": "c0dc37a89784e1588df0fdabaa4fe5daaf8b782849a1cec69640c2a355672248",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                1,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    1,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        15
+                      ],
+                      "type": "t0",
+                      "text": "DiagramStylesProvider",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            44
+          ],
+          "type": "t3",
+          "value": "../../diagram-api/types.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        2,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                2,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    2,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        10
+                      ],
+                      "type": "t4",
+                      "text": "cleanAndMerge",
+                      "resolvedSymbol": "s1"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            31
+          ],
+          "type": "t3",
+          "value": "../../utils.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        3,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            3,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                3,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    3,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        3,
+                        15
+                      ],
+                      "type": "t9",
+                      "text": "PacketStyleOptions",
+                      "resolvedSymbol": "s2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            3,
+            41
+          ],
+          "type": "t3",
+          "value": "./types.js"
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        5,
+        1
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            5,
+            1
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                5,
+                7
+              ],
+              "symbol": "s3",
+              "type": "t9",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    5,
+                    7
+                  ],
+                  "type": "t9",
+                  "text": "defaultPacketStyleOptions",
+                  "resolvedSymbol": "s3"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    5,
+                    34
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        5,
+                        34
+                      ],
+                      "type": "t9",
+                      "text": "PacketStyleOptions",
+                      "resolvedSymbol": "s2"
+                    }
+                  ]
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    5,
+                    55
+                  ],
+                  "type": "t11",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        6,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            6,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "byteFontSize",
+                          "resolvedSymbol": "s4"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            6,
+                            17
+                          ],
+                          "type": "t12",
+                          "value": "10px"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        7,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            7,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "startByteColor",
+                          "resolvedSymbol": "s5"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            7,
+                            19
+                          ],
+                          "type": "t13",
+                          "value": "black"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        8,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            8,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "endByteColor",
+                          "resolvedSymbol": "s6"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            8,
+                            17
+                          ],
+                          "type": "t13",
+                          "value": "black"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        9,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            9,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "labelColor",
+                          "resolvedSymbol": "s7"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            9,
+                            15
+                          ],
+                          "type": "t13",
+                          "value": "black"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        10,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            10,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "labelFontSize",
+                          "resolvedSymbol": "s8"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            10,
+                            18
+                          ],
+                          "type": "t14",
+                          "value": "12px"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        11,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            11,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "titleColor",
+                          "resolvedSymbol": "s9"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            11,
+                            15
+                          ],
+                          "type": "t13",
+                          "value": "black"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        12,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            12,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "titleFontSize",
+                          "resolvedSymbol": "s10"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            12,
+                            18
+                          ],
+                          "type": "t15",
+                          "value": "14px"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        13,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            13,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "blockStrokeColor",
+                          "resolvedSymbol": "s11"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            13,
+                            21
+                          ],
+                          "type": "t13",
+                          "value": "black"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        14,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            14,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "blockStrokeWidth",
+                          "resolvedSymbol": "s12"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            14,
+                            21
+                          ],
+                          "type": "t16",
+                          "value": "1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        15,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            15,
+                            3
+                          ],
+                          "type": "t2",
+                          "text": "blockFillColor",
+                          "resolvedSymbol": "s13"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            15,
+                            19
+                          ],
+                          "type": "t17",
+                          "value": "#efefef"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        18,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            18,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                18,
+                14
+              ],
+              "symbol": "s14",
+              "type": "t0",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    18,
+                    14
+                  ],
+                  "type": "t0",
+                  "text": "styles",
+                  "resolvedSymbol": "s14"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    18,
+                    22
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        18,
+                        22
+                      ],
+                      "type": "t0",
+                      "text": "DiagramStylesProvider",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                },
+                {
+                  "kind": "ArrowFunction",
+                  "kindCode": 219,
+                  "pos": [
+                    18,
+                    46
+                  ],
+                  "type": "t18",
+                  "children": [
+                    {
+                      "kind": "Parameter",
+                      "kindCode": 169,
+                      "pos": [
+                        18,
+                        47
+                      ],
+                      "type": "t19",
+                      "children": [
+                        {
+                          "kind": "ObjectBindingPattern",
+                          "kindCode": 206,
+                          "pos": [
+                            18,
+                            47
+                          ],
+                          "children": [
+                            {
+                              "kind": "BindingElement",
+                              "kindCode": 208,
+                              "pos": [
+                                18,
+                                49
+                              ],
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    18,
+                                    49
+                                  ],
+                                  "type": "t20",
+                                  "text": "packet",
+                                  "resolvedSymbol": "s15"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TypeLiteral",
+                          "kindCode": 187,
+                          "pos": [
+                            18,
+                            59
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertySignature",
+                              "kindCode": 171,
+                              "pos": [
+                                18,
+                                61
+                              ],
+                              "symbol": "s16",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    18,
+                                    61
+                                  ],
+                                  "type": "t20",
+                                  "text": "packet",
+                                  "resolvedSymbol": "s16"
+                                },
+                                {
+                                  "kind": "TypeReference",
+                                  "kindCode": 183,
+                                  "pos": [
+                                    18,
+                                    70
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        18,
+                                        70
+                                      ],
+                                      "type": "t9",
+                                      "text": "PacketStyleOptions",
+                                      "resolvedSymbol": "s2"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "ObjectLiteralExpression",
+                          "kindCode": 210,
+                          "pos": [
+                            18,
+                            93
+                          ],
+                          "type": "t21"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Block",
+                      "kindCode": 241,
+                      "pos": [
+                        18,
+                        100
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableStatement",
+                          "kindCode": 243,
+                          "pos": [
+                            19,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclarationList",
+                              "kindCode": 261,
+                              "pos": [
+                                19,
+                                3
+                              ],
+                              "children": [
+                                {
+                                  "kind": "VariableDeclaration",
+                                  "kindCode": 260,
+                                  "pos": [
+                                    19,
+                                    9
+                                  ],
+                                  "symbol": "s17",
+                                  "type": "t9",
+                                  "flags": [
+                                    "const"
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        19,
+                                        9
+                                      ],
+                                      "type": "t9",
+                                      "text": "options",
+                                      "resolvedSymbol": "s17"
+                                    },
+                                    {
+                                      "kind": "CallExpression",
+                                      "kindCode": 213,
+                                      "pos": [
+                                        19,
+                                        19
+                                      ],
+                                      "type": "t9",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            19,
+                                            19
+                                          ],
+                                          "type": "t4",
+                                          "text": "cleanAndMerge",
+                                          "resolvedSymbol": "s1"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            19,
+                                            33
+                                          ],
+                                          "type": "t9",
+                                          "text": "defaultPacketStyleOptions",
+                                          "resolvedSymbol": "s3"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            19,
+                                            60
+                                          ],
+                                          "type": "t20",
+                                          "text": "packet",
+                                          "resolvedSymbol": "s15"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "ReturnStatement",
+                          "kindCode": 253,
+                          "pos": [
+                            21,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "TemplateExpression",
+                              "kindCode": 228,
+                              "pos": [
+                                21,
+                                10
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "TemplateHead",
+                                  "kindCode": 16,
+                                  "pos": [
+                                    21,
+                                    10
+                                  ],
+                                  "value": "\n\t.packetByte {\n\t\tfont-size: "
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    23,
+                                    16
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        23,
+                                        16
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            23,
+                                            16
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            23,
+                                            24
+                                          ],
+                                          "type": "t10",
+                                          "text": "byteFontSize",
+                                          "resolvedSymbol": "s18"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        23,
+                                        36
+                                      ],
+                                      "value": ";\n\t}\n\t.packetByte.start {\n\t\tfill: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    26,
+                                    11
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        26,
+                                        11
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            26,
+                                            11
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            26,
+                                            19
+                                          ],
+                                          "type": "t10",
+                                          "text": "startByteColor",
+                                          "resolvedSymbol": "s19"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        26,
+                                        33
+                                      ],
+                                      "value": ";\n\t}\n\t.packetByte.end {\n\t\tfill: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    29,
+                                    11
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        29,
+                                        11
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            29,
+                                            11
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            29,
+                                            19
+                                          ],
+                                          "type": "t10",
+                                          "text": "endByteColor",
+                                          "resolvedSymbol": "s20"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        29,
+                                        31
+                                      ],
+                                      "value": ";\n\t}\n\t.packetLabel {\n\t\tfill: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    32,
+                                    11
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        32,
+                                        11
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            32,
+                                            11
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            32,
+                                            19
+                                          ],
+                                          "type": "t10",
+                                          "text": "labelColor",
+                                          "resolvedSymbol": "s21"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        32,
+                                        29
+                                      ],
+                                      "value": ";\n\t\tfont-size: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    33,
+                                    16
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        33,
+                                        16
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            33,
+                                            16
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            33,
+                                            24
+                                          ],
+                                          "type": "t10",
+                                          "text": "labelFontSize",
+                                          "resolvedSymbol": "s22"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        33,
+                                        37
+                                      ],
+                                      "value": ";\n\t}\n\t.packetTitle {\n\t\tfill: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    36,
+                                    11
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        36,
+                                        11
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            36,
+                                            11
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            36,
+                                            19
+                                          ],
+                                          "type": "t10",
+                                          "text": "titleColor",
+                                          "resolvedSymbol": "s23"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        36,
+                                        29
+                                      ],
+                                      "value": ";\n\t\tfont-size: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    37,
+                                    16
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        37,
+                                        16
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            37,
+                                            16
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            37,
+                                            24
+                                          ],
+                                          "type": "t10",
+                                          "text": "titleFontSize",
+                                          "resolvedSymbol": "s24"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        37,
+                                        37
+                                      ],
+                                      "value": ";\n\t}\n\t.packetBlock {\n\t\tstroke: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    40,
+                                    13
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        40,
+                                        13
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            40,
+                                            13
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            40,
+                                            21
+                                          ],
+                                          "type": "t10",
+                                          "text": "blockStrokeColor",
+                                          "resolvedSymbol": "s25"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        40,
+                                        37
+                                      ],
+                                      "value": ";\n\t\tstroke-width: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    41,
+                                    19
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        41,
+                                        19
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            41,
+                                            19
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            41,
+                                            27
+                                          ],
+                                          "type": "t10",
+                                          "text": "blockStrokeWidth",
+                                          "resolvedSymbol": "s26"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateMiddle",
+                                      "kindCode": 17,
+                                      "pos": [
+                                        41,
+                                        43
+                                      ],
+                                      "value": ";\n\t\tfill: "
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "TemplateSpan",
+                                  "kindCode": 239,
+                                  "pos": [
+                                    42,
+                                    11
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PropertyAccessExpression",
+                                      "kindCode": 211,
+                                      "pos": [
+                                        42,
+                                        11
+                                      ],
+                                      "type": "t10",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            42,
+                                            11
+                                          ],
+                                          "type": "t9",
+                                          "text": "options",
+                                          "resolvedSymbol": "s17"
+                                        },
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            42,
+                                            19
+                                          ],
+                                          "type": "t10",
+                                          "text": "blockFillColor",
+                                          "resolvedSymbol": "s27"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "TemplateTail",
+                                      "kindCode": 18,
+                                      "pos": [
+                                        42,
+                                        33
+                                      ],
+                                      "value": ";\n\t}\n\t"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        47,
+        1
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            47,
+            16
+          ],
+          "type": "t0",
+          "text": "styles",
+          "resolvedSymbol": "s14"
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "DiagramStylesProvider",
+      "flags": [],
+      "declarationType": "t0"
+    },
+    "s1": {
+      "name": "cleanAndMerge",
+      "flags": []
+    },
+    "s2": {
+      "name": "PacketStyleOptions",
+      "flags": [],
+      "declarationType": "t9"
+    },
+    "s3": {
+      "name": "defaultPacketStyleOptions",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s4": {
+      "name": "byteFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s5": {
+      "name": "startByteColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s6": {
+      "name": "endByteColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s7": {
+      "name": "labelColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s8": {
+      "name": "labelFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s9": {
+      "name": "titleColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s10": {
+      "name": "titleFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s11": {
+      "name": "blockStrokeColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s12": {
+      "name": "blockStrokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s13": {
+      "name": "blockFillColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s14": {
+      "name": "styles",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s29"
+    },
+    "s15": {
+      "name": "packet",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s16": {
+      "name": "packet",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s17": {
+      "name": "options",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s18": {
+      "name": "byteFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s19": {
+      "name": "startByteColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s20": {
+      "name": "endByteColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s21": {
+      "name": "labelColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s22": {
+      "name": "labelFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s23": {
+      "name": "titleColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s24": {
+      "name": "titleFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s25": {
+      "name": "blockStrokeColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s26": {
+      "name": "blockStrokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s27": {
+      "name": "blockFillColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s28": {
+      "name": "__object",
+      "flags": []
+    },
+    "s29": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/packet/styles\"",
+      "flags": []
+    },
+    "s30": {
+      "name": "__type",
+      "flags": []
+    },
+    "s31": {
+      "name": "PacketStyleOptions",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t9",
+      "parent": "s32"
+    },
+    "s32": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/packet/types\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t2": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "DiagramStylesProvider",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t3": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t5": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t7": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t8": {
+      "kind": "object",
+      "text": "Partial<T>",
+      "members": {}
+    },
+    "t6": {
+      "kind": "union",
+      "text": "Partial<T> | undefined",
+      "types": [
+        "t7",
+        "t8"
+      ]
+    },
+    "t4": {
+      "kind": "function",
+      "text": "<T>(defaultData: T, data?: Partial<T> | undefined) => T",
+      "parameters": [
+        {
+          "name": "defaultData",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t10": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t7",
+        "t2"
+      ]
+    },
+    "t9": {
+      "kind": "object",
+      "text": "PacketStyleOptions",
+      "members": {
+        "byteFontSize": "t10",
+        "startByteColor": "t10",
+        "endByteColor": "t10",
+        "labelColor": "t10",
+        "labelFontSize": "t10",
+        "blockStrokeColor": "t10",
+        "blockStrokeWidth": "t10",
+        "blockFillColor": "t10",
+        "titleColor": "t10",
+        "titleFontSize": "t10"
+      }
+    },
+    "t11": {
+      "kind": "object",
+      "text": "{ byteFontSize: string; startByteColor: string; endByteColor: string; labelColor: string; labelFontSize: string; titleColor: string; titleFontSize: string; blockStrokeColor: string; blockStrokeWidth: string; blockFillColor: string; }",
+      "members": {
+        "byteFontSize": "t2",
+        "startByteColor": "t2",
+        "endByteColor": "t2",
+        "labelColor": "t2",
+        "labelFontSize": "t2",
+        "titleColor": "t2",
+        "titleFontSize": "t2",
+        "blockStrokeColor": "t2",
+        "blockStrokeWidth": "t2",
+        "blockFillColor": "t2"
+      }
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"10px\"",
+      "value": "10px"
+    },
+    "t13": {
+      "kind": "stringLiteral",
+      "text": "\"black\"",
+      "value": "black"
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"12px\"",
+      "value": "12px"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"14px\"",
+      "value": "14px"
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"1\"",
+      "value": "1"
+    },
+    "t17": {
+      "kind": "stringLiteral",
+      "text": "\"#efefef\"",
+      "value": "#efefef"
+    },
+    "t20": {
+      "kind": "union",
+      "text": "PacketStyleOptions | undefined",
+      "types": [
+        "t7",
+        "t9"
+      ]
+    },
+    "t19": {
+      "kind": "object",
+      "text": "{ packet?: PacketStyleOptions | undefined; }",
+      "members": {
+        "packet": "t20"
+      }
+    },
+    "t18": {
+      "kind": "function",
+      "text": "({ packet }?: { packet?: PacketStyleOptions | undefined; }) => string",
+      "parameters": [
+        {
+          "name": "__0",
+          "type": "t19",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t21": {
+      "kind": "object",
+      "text": "{}",
+      "members": {}
+    }
+  }
+}

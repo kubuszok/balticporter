@@ -1,0 +1,1208 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/pie/pieStyles.ts",
+  "sha256": "4e20862bc5472a951c7e1f13120a07269a9d40e2b645e5e37bcd17c61e5dd25f",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                1,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    1,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        15
+                      ],
+                      "type": "t0",
+                      "text": "DiagramStylesProvider",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            44
+          ],
+          "type": "t3",
+          "value": "../../diagram-api/types.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        2,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                2,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    2,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        15
+                      ],
+                      "type": "t4",
+                      "text": "PieStyleOptions",
+                      "resolvedSymbol": "s1"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            38
+          ],
+          "type": "t3",
+          "value": "./pieTypes.js"
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        4,
+        1
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            4,
+            1
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                4,
+                7
+              ],
+              "symbol": "s2",
+              "type": "t0",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    4,
+                    7
+                  ],
+                  "type": "t0",
+                  "text": "getStyles",
+                  "resolvedSymbol": "s2"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    4,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        18
+                      ],
+                      "type": "t0",
+                      "text": "DiagramStylesProvider",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                },
+                {
+                  "kind": "ArrowFunction",
+                  "kindCode": 219,
+                  "pos": [
+                    4,
+                    42
+                  ],
+                  "type": "t5",
+                  "children": [
+                    {
+                      "kind": "Parameter",
+                      "kindCode": 169,
+                      "pos": [
+                        4,
+                        43
+                      ],
+                      "symbol": "s3",
+                      "type": "t4",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            4,
+                            43
+                          ],
+                          "type": "t4",
+                          "text": "options",
+                          "resolvedSymbol": "s3"
+                        },
+                        {
+                          "kind": "TypeReference",
+                          "kindCode": 183,
+                          "pos": [
+                            4,
+                            52
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                4,
+                                52
+                              ],
+                              "type": "t4",
+                              "text": "PieStyleOptions",
+                              "resolvedSymbol": "s1"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateExpression",
+                      "kindCode": 228,
+                      "pos": [
+                        5,
+                        3
+                      ],
+                      "type": "t2",
+                      "children": [
+                        {
+                          "kind": "TemplateHead",
+                          "kindCode": 16,
+                          "pos": [
+                            5,
+                            3
+                          ],
+                          "value": "\n  .pieCircle{\n    stroke: "
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            7,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                7,
+                                15
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    7,
+                                    15
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    7,
+                                    23
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieStrokeColor",
+                                  "resolvedSymbol": "s4"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                7,
+                                37
+                              ],
+                              "value": ";\n    stroke-width : "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            8,
+                            22
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                8,
+                                22
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    8,
+                                    22
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    8,
+                                    30
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieStrokeWidth",
+                                  "resolvedSymbol": "s5"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                8,
+                                44
+                              ],
+                              "value": ";\n    opacity : "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            9,
+                            17
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                9,
+                                17
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    9,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    9,
+                                    25
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieOpacity",
+                                  "resolvedSymbol": "s6"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                9,
+                                35
+                              ],
+                              "value": ";\n  }\n  .pieOuterCircle{\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            12,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                12,
+                                15
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    12,
+                                    15
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    12,
+                                    23
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieOuterStrokeColor",
+                                  "resolvedSymbol": "s7"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                12,
+                                42
+                              ],
+                              "value": ";\n    stroke-width: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            13,
+                            21
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                13,
+                                21
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    13,
+                                    21
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    13,
+                                    29
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieOuterStrokeWidth",
+                                  "resolvedSymbol": "s8"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                13,
+                                48
+                              ],
+                              "value": ";\n    fill: none;\n  }\n  .pieTitleText {\n    text-anchor: middle;\n    font-size: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            18,
+                            18
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                18,
+                                18
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    18,
+                                    18
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    18,
+                                    26
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieTitleTextSize",
+                                  "resolvedSymbol": "s9"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                18,
+                                42
+                              ],
+                              "value": ";\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            19,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                19,
+                                13
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    19,
+                                    13
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    19,
+                                    21
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieTitleTextColor",
+                                  "resolvedSymbol": "s10"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                19,
+                                38
+                              ],
+                              "value": ";\n    font-family: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            20,
+                            20
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                20,
+                                20
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    20,
+                                    20
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    20,
+                                    28
+                                  ],
+                                  "type": "t2",
+                                  "text": "fontFamily",
+                                  "resolvedSymbol": "s11"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                20,
+                                38
+                              ],
+                              "value": ";\n  }\n  .slice {\n    font-family: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            23,
+                            20
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                23,
+                                20
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    23,
+                                    20
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    23,
+                                    28
+                                  ],
+                                  "type": "t2",
+                                  "text": "fontFamily",
+                                  "resolvedSymbol": "s11"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                23,
+                                38
+                              ],
+                              "value": ";\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            24,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                24,
+                                13
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    24,
+                                    13
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    24,
+                                    21
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieSectionTextColor",
+                                  "resolvedSymbol": "s12"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                24,
+                                40
+                              ],
+                              "value": ";\n    font-size:"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            25,
+                            17
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                25,
+                                17
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    25,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    25,
+                                    25
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieSectionTextSize",
+                                  "resolvedSymbol": "s13"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                25,
+                                43
+                              ],
+                              "value": ";\n    // fill: white;\n  }\n  .legend text {\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            29,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                29,
+                                13
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    29,
+                                    13
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    29,
+                                    21
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieLegendTextColor",
+                                  "resolvedSymbol": "s14"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                29,
+                                39
+                              ],
+                              "value": ";\n    font-family: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            30,
+                            20
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                30,
+                                20
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    30,
+                                    20
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    30,
+                                    28
+                                  ],
+                                  "type": "t2",
+                                  "text": "fontFamily",
+                                  "resolvedSymbol": "s11"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                30,
+                                38
+                              ],
+                              "value": ";\n    font-size: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            31,
+                            18
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                31,
+                                18
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    31,
+                                    18
+                                  ],
+                                  "type": "t4",
+                                  "text": "options",
+                                  "resolvedSymbol": "s3"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    31,
+                                    26
+                                  ],
+                                  "type": "t2",
+                                  "text": "pieLegendTextSize",
+                                  "resolvedSymbol": "s15"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateTail",
+                              "kindCode": 18,
+                              "pos": [
+                                31,
+                                43
+                              ],
+                              "value": ";\n  }\n"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        35,
+        1
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            35,
+            16
+          ],
+          "type": "t0",
+          "text": "getStyles",
+          "resolvedSymbol": "s2"
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "DiagramStylesProvider",
+      "flags": [],
+      "declarationType": "t0"
+    },
+    "s1": {
+      "name": "PieStyleOptions",
+      "flags": [],
+      "declarationType": "t4"
+    },
+    "s2": {
+      "name": "getStyles",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s3": {
+      "name": "options",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s4": {
+      "name": "pieStrokeColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s5": {
+      "name": "pieStrokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s6": {
+      "name": "pieOpacity",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s7": {
+      "name": "pieOuterStrokeColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s8": {
+      "name": "pieOuterStrokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s9": {
+      "name": "pieTitleTextSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s10": {
+      "name": "pieTitleTextColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s11": {
+      "name": "fontFamily",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s12": {
+      "name": "pieSectionTextColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s13": {
+      "name": "pieSectionTextSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s14": {
+      "name": "pieLegendTextColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s15": {
+      "name": "pieLegendTextSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s16": {
+      "name": "PieStyleOptions",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t4",
+      "parent": "s17"
+    },
+    "s17": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/pie/pieTypes\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t2": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "DiagramStylesProvider",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t3": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t4": {
+      "kind": "object",
+      "text": "PieStyleOptions",
+      "members": {
+        "fontFamily": "t2",
+        "pie1": "t2",
+        "pie2": "t2",
+        "pie3": "t2",
+        "pie4": "t2",
+        "pie5": "t2",
+        "pie6": "t2",
+        "pie7": "t2",
+        "pie8": "t2",
+        "pie9": "t2",
+        "pie10": "t2",
+        "pie11": "t2",
+        "pie12": "t2",
+        "pieTitleTextSize": "t2",
+        "pieTitleTextColor": "t2",
+        "pieSectionTextSize": "t2",
+        "pieSectionTextColor": "t2",
+        "pieLegendTextSize": "t2",
+        "pieLegendTextColor": "t2",
+        "pieStrokeColor": "t2",
+        "pieStrokeWidth": "t2",
+        "pieOuterStrokeWidth": "t2",
+        "pieOuterStrokeColor": "t2",
+        "pieOpacity": "t2"
+      }
+    },
+    "t5": {
+      "kind": "function",
+      "text": "(options: PieStyleOptions) => string",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t4",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    }
+  }
+}
