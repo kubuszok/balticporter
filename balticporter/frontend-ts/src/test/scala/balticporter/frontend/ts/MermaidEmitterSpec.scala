@@ -65,6 +65,19 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("object Comments"), "should emit Comments object")
     assert(scala.contains("cleanupComments"), "should contain cleanupComments")
 
+  // -- CommonDb ---------------------------------------------------------------
+
+  test("commonDb.ts -> CommonDb trait"):
+    val rast = loadRast("/rast/mermaid/src/accessibility.rast.json") // any RAST for the signature
+    val scala = dedicated.MermaidEmitter.emitCommonDb(rast)
+    println("=== CommonDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("trait CommonDb"), "should emit CommonDb trait")
+    assert(scala.contains("var accTitle"), "should have accTitle field")
+    assert(scala.contains("var accDescription"), "should have accDescription field")
+    assert(scala.contains("var diagramTitle"), "should have diagramTitle field")
+    assert(scala.contains("def clearCommon()"), "should have clearCommon method")
+
   // -- Accessibility ----------------------------------------------------------
 
   test("accessibility.ts -> Accessibility object"):
@@ -77,8 +90,50 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("setA11yDiagramInfo"), "should have setA11yDiagramInfo")
     assert(scala.contains("addSVGa11yTitleDescription"), "should have addSVGa11yTitleDescription")
     assert(scala.contains("graphics-document document"), "should have SVG_ROLE value")
+    assert(scala.contains("SvgRole"), "should rename SVG_ROLE to SvgRole")
+    assert(scala.contains("def applyTo("), "should have applyTo convenience method")
+    // Verify string interpolation is correct (single $ not $$)
+    assert(scala.contains("s\"chart-desc-$baseId\""), "descId should use single $")
 
   // -- Write emitted files for inspection -------------------------------------
+
+  // -- Dedicated style emitters -----------------------------------------------
+
+  test("block/styles.ts -> dedicated BlockStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/block/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitBlockStyles(rast)
+    println("=== BlockStyles.scala (dedicated) ===")
+    println(scala)
+    assert(scala.contains("object BlockStyles"), "should emit BlockStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("vars."), "should reference vars.xxx fields")
+    assert(!scala.contains("options."), "should NOT reference options.xxx")
+    assert(!scala.contains("fade("), "should NOT contain fade() calls")
+
+  test("flowchart/styles.ts -> dedicated FlowchartStyles with edgeClass"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitFlowchartStyles(rast)
+    println("=== FlowchartStyles.scala (dedicated) ===")
+    println(scala)
+    assert(scala.contains("object FlowchartStyles"), "should emit FlowchartStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("def edgeClass(stroke: String)"), "should have edgeClass method")
+    assert(scala.contains("def nodeClass(index: Int)"), "should have nodeClass method")
+    assert(scala.contains("vars."), "should reference vars.xxx fields")
+    assert(!scala.contains("options."), "should NOT reference options.xxx")
+    assert(scala.contains("edge-pattern-dotted"), "should have edge patterns")
+
+  test("mindmap/styles.ts -> dedicated MindmapStyles with cScale loop"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitMindmapStyles(rast)
+    println("=== MindmapStyles.scala (dedicated) ===")
+    println(scala)
+    assert(scala.contains("object MindmapStyles"), "should emit MindmapStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("vars.cScale(i)"), "should use cScale with index")
+    assert(scala.contains("THEME_COLOR_LIMIT"), "should iterate up to THEME_COLOR_LIMIT")
+    assert(scala.contains("mindmap-shape"), "should have mindmap-shape CSS class")
+    assert(!scala.contains("options"), "should NOT reference options")
 
   test("write all emitted files to target/emitted-mermaid"):
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
@@ -86,18 +141,17 @@ class MermaidEmitterSpec extends munit.FunSuite:
 
     val emitted = scala.collection.mutable.LinkedHashMap.empty[String, String]
 
-    // Styles
-    for ((rastPath, objectName, pkg) <- List(
-      ("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json", "PieStyles", "pie"),
-      ("/rast/mermaid/src/diagrams/flowchart/styles.rast.json", "FlowchartStyles", "flowchart"),
-      ("/rast/mermaid/src/diagrams/block/styles.rast.json", "BlockStyles", "block"),
-      ("/rast/mermaid/src/diagrams/packet/styles.rast.json", "PacketStyles", "packet"),
-      ("/rast/mermaid/src/diagrams/mindmap/styles.rast.json", "MindmapStyles", "mindmap"),
-    )) {
-      val rast = loadRast(rastPath)
-      val scala = dedicated.MermaidEmitter.emitStyles(rast, objectName, pkg)
-      emitted(objectName) = scala
-    }
+    // Styles - use dedicated emitters
+    val pieStylesRast = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+    emitted("PieStyles") = dedicated.MermaidEmitter.emitPieStyles(pieStylesRast)
+    val flowchartStylesRast = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+    emitted("FlowchartStyles") = dedicated.MermaidEmitter.emitFlowchartStyles(flowchartStylesRast)
+    val blockStylesRast = loadRast("/rast/mermaid/src/diagrams/block/styles.rast.json")
+    emitted("BlockStyles") = dedicated.MermaidEmitter.emitBlockStyles(blockStylesRast)
+    val packetStylesRast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    emitted("PacketStyles") = dedicated.MermaidEmitter.emitPacketStyles(packetStylesRast)
+    val mindmapStylesRast = loadRast("/rast/mermaid/src/diagrams/mindmap/styles.rast.json")
+    emitted("MindmapStyles") = dedicated.MermaidEmitter.emitMindmapStyles(mindmapStylesRast)
 
     // Utility
     val commentsRast = loadRast("/rast/mermaid/src/diagram-api/comments.rast.json")

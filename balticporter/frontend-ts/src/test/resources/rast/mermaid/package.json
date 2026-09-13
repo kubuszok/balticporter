@@ -1,0 +1,4373 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/package.json",
+  "sha256": "2b67d59aa2a55fd5bc1ad0864e20962e4cf5145856758ed56d10fcb001fb9490",
+  "nodes": [
+    {
+      "kind": "ExpressionStatement",
+      "kindCode": 244,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ObjectLiteralExpression",
+          "kindCode": 210,
+          "pos": [
+            1,
+            1
+          ],
+          "type": "t0",
+          "children": [
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                2,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    2,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "name"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    2,
+                    11
+                  ],
+                  "type": "t11",
+                  "value": "mermaid"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                3,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    3,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "version"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    3,
+                    14
+                  ],
+                  "type": "t12",
+                  "value": "11.0.0"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                4,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    4,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "description"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    4,
+                    18
+                  ],
+                  "type": "t13",
+                  "value": "Markdown-ish syntax for generating flowcharts, mindmaps, sequence diagrams, class diagrams, gantt charts, git graphs and more."
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                5,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    5,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "type"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    5,
+                    11
+                  ],
+                  "type": "t14",
+                  "value": "module"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                6,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    6,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "module"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    6,
+                    13
+                  ],
+                  "type": "t15",
+                  "value": "./dist/mermaid.core.mjs"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                7,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    7,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "types"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    7,
+                    12
+                  ],
+                  "type": "t16",
+                  "value": "./dist/mermaid.d.ts"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                8,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    8,
+                    3
+                  ],
+                  "type": "t17",
+                  "value": "exports"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    8,
+                    14
+                  ],
+                  "type": "t19",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        9,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            9,
+                            5
+                          ],
+                          "type": "t21",
+                          "value": "."
+                        },
+                        {
+                          "kind": "ObjectLiteralExpression",
+                          "kindCode": 210,
+                          "pos": [
+                            9,
+                            10
+                          ],
+                          "type": "t22",
+                          "children": [
+                            {
+                              "kind": "PropertyAssignment",
+                              "kindCode": 303,
+                              "pos": [
+                                10,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    10,
+                                    7
+                                  ],
+                                  "type": "t1",
+                                  "value": "types"
+                                },
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    10,
+                                    16
+                                  ],
+                                  "type": "t16",
+                                  "value": "./dist/mermaid.d.ts"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "PropertyAssignment",
+                              "kindCode": 303,
+                              "pos": [
+                                11,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    11,
+                                    7
+                                  ],
+                                  "type": "t1",
+                                  "value": "import"
+                                },
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    11,
+                                    17
+                                  ],
+                                  "type": "t15",
+                                  "value": "./dist/mermaid.core.mjs"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "PropertyAssignment",
+                              "kindCode": 303,
+                              "pos": [
+                                12,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    12,
+                                    7
+                                  ],
+                                  "type": "t1",
+                                  "value": "default"
+                                },
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    12,
+                                    18
+                                  ],
+                                  "type": "t15",
+                                  "value": "./dist/mermaid.core.mjs"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        14,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            14,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "./*"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            14,
+                            12
+                          ],
+                          "type": "t23",
+                          "value": "./*"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                16,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    16,
+                    3
+                  ],
+                  "type": "t4",
+                  "value": "keywords"
+                },
+                {
+                  "kind": "ArrayLiteralExpression",
+                  "kindCode": 209,
+                  "pos": [
+                    16,
+                    15
+                  ],
+                  "type": "t4",
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        17,
+                        5
+                      ],
+                      "type": "t24",
+                      "value": "diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        18,
+                        5
+                      ],
+                      "type": "t25",
+                      "value": "markdown"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        19,
+                        5
+                      ],
+                      "type": "t26",
+                      "value": "flowchart"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        20,
+                        5
+                      ],
+                      "type": "t27",
+                      "value": "sequence diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        21,
+                        5
+                      ],
+                      "type": "t28",
+                      "value": "gantt"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        22,
+                        5
+                      ],
+                      "type": "t29",
+                      "value": "class diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        23,
+                        5
+                      ],
+                      "type": "t30",
+                      "value": "git graph"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        24,
+                        5
+                      ],
+                      "type": "t31",
+                      "value": "mindmap"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        25,
+                        5
+                      ],
+                      "type": "t32",
+                      "value": "packet diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        26,
+                        5
+                      ],
+                      "type": "t33",
+                      "value": "c4 diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        27,
+                        5
+                      ],
+                      "type": "t34",
+                      "value": "er diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        28,
+                        5
+                      ],
+                      "type": "t35",
+                      "value": "pie chart"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        29,
+                        5
+                      ],
+                      "type": "t36",
+                      "value": "pie diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        30,
+                        5
+                      ],
+                      "type": "t37",
+                      "value": "quadrant chart"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        31,
+                        5
+                      ],
+                      "type": "t38",
+                      "value": "requirement diagram"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        32,
+                        5
+                      ],
+                      "type": "t39",
+                      "value": "graph"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                34,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    34,
+                    3
+                  ],
+                  "type": "t40",
+                  "value": "scripts"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    34,
+                    14
+                  ],
+                  "type": "t41",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        35,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            35,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "clean"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            35,
+                            14
+                          ],
+                          "type": "t42",
+                          "value": "rimraf dist"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        36,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            36,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "dev"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            36,
+                            12
+                          ],
+                          "type": "t43",
+                          "value": "pnpm -w dev"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        37,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            37,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:code"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            37,
+                            18
+                          ],
+                          "type": "t44",
+                          "value": "typedoc src/defaultConfig.ts src/config.ts src/mermaid.ts && prettier --write ./src/docs/config/setup"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        38,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            38,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:build"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            38,
+                            19
+                          ],
+                          "type": "t45",
+                          "value": "rimraf ../../docs && pnpm docs:spellcheck && pnpm docs:code && tsx scripts/docs.cli.mts"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        39,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            39,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:verify"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            39,
+                            20
+                          ],
+                          "type": "t46",
+                          "value": "pnpm docs:spellcheck && pnpm docs:code && tsx scripts/docs.cli.mts --verify"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        40,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            40,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:pre:vitepress"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            40,
+                            27
+                          ],
+                          "type": "t47",
+                          "value": "pnpm --filter ./src/docs prefetch && rimraf src/vitepress && pnpm docs:code && tsx scripts/docs.cli.mts --vitepress && pnpm --filter ./src/vitepress install --no-frozen-lockfile --ignore-scripts"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        41,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            41,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:build:vitepress"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            41,
+                            29
+                          ],
+                          "type": "t48",
+                          "value": "pnpm docs:pre:vitepress && (cd src/vitepress && pnpm run build) && cpy --flat src/docs/landing/ ./src/vitepress/.vitepress/dist/landing"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        42,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            42,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:dev"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            42,
+                            17
+                          ],
+                          "type": "t49",
+                          "value": "pnpm docs:pre:vitepress && concurrently \"pnpm --filter ./src/vitepress dev\" \"tsx scripts/docs.cli.mts --watch --vitepress\""
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        43,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            43,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:dev:docker"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            43,
+                            24
+                          ],
+                          "type": "t50",
+                          "value": "pnpm docs:pre:vitepress && concurrently \"pnpm --filter ./src/vitepress dev:docker\" \"tsx scripts/docs.cli.mts --watch --vitepress\""
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        44,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            44,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:serve"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            44,
+                            19
+                          ],
+                          "type": "t51",
+                          "value": "pnpm docs:build:vitepress && vitepress serve src/vitepress"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        45,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            45,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:spellcheck"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            45,
+                            24
+                          ],
+                          "type": "t52",
+                          "value": "cspell \"src/docs/**/*.md\""
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        46,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            46,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:release-version"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            46,
+                            29
+                          ],
+                          "type": "t53",
+                          "value": "tsx scripts/update-release-version.mts"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        47,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            47,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "docs:verify-version"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            47,
+                            28
+                          ],
+                          "type": "t54",
+                          "value": "tsx scripts/update-release-version.mts --verify"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        48,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            48,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "types:build-config"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            48,
+                            27
+                          ],
+                          "type": "t55",
+                          "value": "tsx scripts/create-types-from-json-schema.mts"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        49,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            49,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "types:verify-config"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            49,
+                            28
+                          ],
+                          "type": "t56",
+                          "value": "tsx scripts/create-types-from-json-schema.mts --verify"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        50,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            50,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "checkCircle"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            50,
+                            20
+                          ],
+                          "type": "t57",
+                          "value": "npx madge --circular ./src"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        51,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            51,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "release"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            51,
+                            16
+                          ],
+                          "type": "t58",
+                          "value": "pnpm build"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        52,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            52,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "prepublishOnly"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            52,
+                            23
+                          ],
+                          "type": "t59",
+                          "value": "cpy '../../README.*' ./ --cwd=. && pnpm docs:release-version && pnpm -w run build"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                54,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    54,
+                    3
+                  ],
+                  "type": "t60",
+                  "value": "repository"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    54,
+                    17
+                  ],
+                  "type": "t61",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        55,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            55,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "type"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            55,
+                            13
+                          ],
+                          "type": "t62",
+                          "value": "git"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        56,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            56,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "url"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            56,
+                            12
+                          ],
+                          "type": "t63",
+                          "value": "https://github.com/mermaid-js/mermaid"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                58,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    58,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "author"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    58,
+                    13
+                  ],
+                  "type": "t64",
+                  "value": "Knut Sveidqvist"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                59,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    59,
+                    3
+                  ],
+                  "type": "t1",
+                  "value": "license"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    59,
+                    14
+                  ],
+                  "type": "t65",
+                  "value": "MIT"
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                60,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    60,
+                    3
+                  ],
+                  "type": "t66",
+                  "value": "standard"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    60,
+                    15
+                  ],
+                  "type": "t67",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        61,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            61,
+                            5
+                          ],
+                          "type": "t4",
+                          "value": "ignore"
+                        },
+                        {
+                          "kind": "ArrayLiteralExpression",
+                          "kindCode": 209,
+                          "pos": [
+                            61,
+                            15
+                          ],
+                          "type": "t4",
+                          "children": [
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                62,
+                                7
+                              ],
+                              "type": "t68",
+                              "value": "**/parser/*.js"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                63,
+                                7
+                              ],
+                              "type": "t69",
+                              "value": "dist/**/*.js"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                64,
+                                7
+                              ],
+                              "type": "t70",
+                              "value": "cypress/**/*.js"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        66,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            66,
+                            5
+                          ],
+                          "type": "t4",
+                          "value": "globals"
+                        },
+                        {
+                          "kind": "ArrayLiteralExpression",
+                          "kindCode": 209,
+                          "pos": [
+                            66,
+                            16
+                          ],
+                          "type": "t4",
+                          "children": [
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                67,
+                                7
+                              ],
+                              "type": "t71",
+                              "value": "page"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                70,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    70,
+                    3
+                  ],
+                  "type": "t72",
+                  "value": "dependencies"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    70,
+                    19
+                  ],
+                  "type": "t73",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        71,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            71,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@braintree/sanitize-url"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            71,
+                            32
+                          ],
+                          "type": "t74",
+                          "value": "^7.0.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        72,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            72,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@mermaid-js/parser"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            72,
+                            27
+                          ],
+                          "type": "t75",
+                          "value": "workspace:^"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        73,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            73,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "cytoscape"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            73,
+                            18
+                          ],
+                          "type": "t76",
+                          "value": "^3.29.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        74,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            74,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "cytoscape-cose-bilkent"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            74,
+                            31
+                          ],
+                          "type": "t77",
+                          "value": "^4.1.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        75,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            75,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "d3"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            75,
+                            11
+                          ],
+                          "type": "t78",
+                          "value": "^7.9.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        76,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            76,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "d3-sankey"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            76,
+                            18
+                          ],
+                          "type": "t79",
+                          "value": "^0.12.3"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        77,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            77,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "dagre-d3-es"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            77,
+                            20
+                          ],
+                          "type": "t80",
+                          "value": "7.0.10"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        78,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            78,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "dayjs"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            78,
+                            14
+                          ],
+                          "type": "t81",
+                          "value": "^1.11.10"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        79,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            79,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "dompurify"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            79,
+                            18
+                          ],
+                          "type": "t82",
+                          "value": "^3.0.11"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        80,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            80,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "katex"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            80,
+                            14
+                          ],
+                          "type": "t83",
+                          "value": "^0.16.9"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        81,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            81,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "khroma"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            81,
+                            15
+                          ],
+                          "type": "t84",
+                          "value": "^2.1.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        82,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            82,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "lodash-es"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            82,
+                            18
+                          ],
+                          "type": "t85",
+                          "value": "^4.17.21"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        83,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            83,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "marked"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            83,
+                            15
+                          ],
+                          "type": "t86",
+                          "value": "^13.0.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        84,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            84,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "roughjs"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            84,
+                            16
+                          ],
+                          "type": "t87",
+                          "value": "^4.6.6"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        85,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            85,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "stylis"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            85,
+                            15
+                          ],
+                          "type": "t88",
+                          "value": "^4.3.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        86,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            86,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "ts-dedent"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            86,
+                            18
+                          ],
+                          "type": "t89",
+                          "value": "^2.2.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        87,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            87,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "uuid"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            87,
+                            13
+                          ],
+                          "type": "t90",
+                          "value": "^9.0.1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                89,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    89,
+                    3
+                  ],
+                  "type": "t91",
+                  "value": "devDependencies"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    89,
+                    22
+                  ],
+                  "type": "t92",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        90,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            90,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@adobe/jsonschema2md"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            90,
+                            29
+                          ],
+                          "type": "t93",
+                          "value": "^8.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        91,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            91,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/cytoscape"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            91,
+                            25
+                          ],
+                          "type": "t94",
+                          "value": "^3.21.4"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        92,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            92,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/d3"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            92,
+                            18
+                          ],
+                          "type": "t95",
+                          "value": "^7.4.3"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        93,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            93,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/d3-sankey"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            93,
+                            25
+                          ],
+                          "type": "t96",
+                          "value": "^0.12.4"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        94,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            94,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/d3-scale"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            94,
+                            24
+                          ],
+                          "type": "t97",
+                          "value": "^4.0.8"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        95,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            95,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/d3-scale-chromatic"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            95,
+                            34
+                          ],
+                          "type": "t98",
+                          "value": "^3.0.3"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        96,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            96,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/d3-selection"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            96,
+                            28
+                          ],
+                          "type": "t99",
+                          "value": "^3.0.10"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        97,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            97,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/d3-shape"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            97,
+                            24
+                          ],
+                          "type": "t100",
+                          "value": "^3.1.6"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        98,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            98,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/dompurify"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            98,
+                            25
+                          ],
+                          "type": "t101",
+                          "value": "^3.0.5"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        99,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            99,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/jsdom"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            99,
+                            21
+                          ],
+                          "type": "t102",
+                          "value": "^21.1.6"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        100,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            100,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/katex"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            100,
+                            21
+                          ],
+                          "type": "t103",
+                          "value": "^0.16.7"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        101,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            101,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/lodash-es"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            101,
+                            25
+                          ],
+                          "type": "t104",
+                          "value": "^4.17.12"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        102,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            102,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/micromatch"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            102,
+                            26
+                          ],
+                          "type": "t105",
+                          "value": "^4.0.6"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        103,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            103,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/prettier"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            103,
+                            24
+                          ],
+                          "type": "t106",
+                          "value": "^3.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        104,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            104,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/stylis"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            104,
+                            22
+                          ],
+                          "type": "t107",
+                          "value": "^4.2.5"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        105,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            105,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "@types/uuid"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            105,
+                            20
+                          ],
+                          "type": "t108",
+                          "value": "^9.0.8"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        106,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            106,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "ajv"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            106,
+                            12
+                          ],
+                          "type": "t109",
+                          "value": "^8.12.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        107,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            107,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "chokidar"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            107,
+                            17
+                          ],
+                          "type": "t110",
+                          "value": "^3.6.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        108,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            108,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "concurrently"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            108,
+                            21
+                          ],
+                          "type": "t111",
+                          "value": "^8.2.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        109,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            109,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "cpy-cli"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            109,
+                            16
+                          ],
+                          "type": "t112",
+                          "value": "^5.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        110,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            110,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "csstree-validator"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            110,
+                            26
+                          ],
+                          "type": "t106",
+                          "value": "^3.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        111,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            111,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "globby"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            111,
+                            15
+                          ],
+                          "type": "t113",
+                          "value": "^14.0.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        112,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            112,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "jison"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            112,
+                            14
+                          ],
+                          "type": "t114",
+                          "value": "^0.4.18"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        113,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            113,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "js-base64"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            113,
+                            18
+                          ],
+                          "type": "t115",
+                          "value": "^3.7.7"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        114,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            114,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "jsdom"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            114,
+                            14
+                          ],
+                          "type": "t116",
+                          "value": "^24.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        115,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            115,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "json-schema-to-typescript"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            115,
+                            34
+                          ],
+                          "type": "t117",
+                          "value": "^13.1.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        116,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            116,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "micromatch"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            116,
+                            19
+                          ],
+                          "type": "t118",
+                          "value": "^4.0.5"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        117,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            117,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "path-browserify"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            117,
+                            24
+                          ],
+                          "type": "t119",
+                          "value": "^1.0.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        118,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            118,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "prettier"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            118,
+                            17
+                          ],
+                          "type": "t120",
+                          "value": "^3.2.5"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        119,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            119,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "remark"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            119,
+                            15
+                          ],
+                          "type": "t121",
+                          "value": "^15.0.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        120,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            120,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "remark-frontmatter"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            120,
+                            27
+                          ],
+                          "type": "t112",
+                          "value": "^5.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        121,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            121,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "remark-gfm"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            121,
+                            19
+                          ],
+                          "type": "t122",
+                          "value": "^4.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        122,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            122,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "rimraf"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            122,
+                            15
+                          ],
+                          "type": "t123",
+                          "value": "^5.0.5"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        123,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            123,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "start-server-and-test"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            123,
+                            30
+                          ],
+                          "type": "t124",
+                          "value": "^2.0.3"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        124,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            124,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "type-fest"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            124,
+                            18
+                          ],
+                          "type": "t125",
+                          "value": "^4.13.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        125,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            125,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "typedoc"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            125,
+                            16
+                          ],
+                          "type": "t126",
+                          "value": "^0.25.12"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        126,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            126,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "typedoc-plugin-markdown"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            126,
+                            32
+                          ],
+                          "type": "t127",
+                          "value": "^3.17.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        127,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            127,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "typescript"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            127,
+                            19
+                          ],
+                          "type": "t128",
+                          "value": "~5.4.3"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        128,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            128,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "unist-util-flatmap"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            128,
+                            27
+                          ],
+                          "type": "t129",
+                          "value": "^1.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        129,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            129,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "unist-util-visit"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            129,
+                            25
+                          ],
+                          "type": "t112",
+                          "value": "^5.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        130,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            130,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "vitepress"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            130,
+                            18
+                          ],
+                          "type": "t119",
+                          "value": "^1.0.1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        131,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            131,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "vitepress-plugin-search"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            131,
+                            32
+                          ],
+                          "type": "t130",
+                          "value": "1.0.4-alpha.22"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                133,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    133,
+                    3
+                  ],
+                  "type": "t4",
+                  "value": "files"
+                },
+                {
+                  "kind": "ArrayLiteralExpression",
+                  "kindCode": 209,
+                  "pos": [
+                    133,
+                    12
+                  ],
+                  "type": "t4",
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        134,
+                        5
+                      ],
+                      "type": "t131",
+                      "value": "dist/"
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        135,
+                        5
+                      ],
+                      "type": "t132",
+                      "value": "README.md"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                137,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    137,
+                    3
+                  ],
+                  "type": "t133",
+                  "value": "publishConfig"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    137,
+                    20
+                  ],
+                  "type": "t134",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        138,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            138,
+                            5
+                          ],
+                          "type": "t1",
+                          "value": "access"
+                        },
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            138,
+                            15
+                          ],
+                          "type": "t135",
+                          "value": "public"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {},
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t3": {
+      "kind": "object",
+      "text": "{ types: string; import: string; default: string; }",
+      "members": {
+        "types": "t1",
+        "import": "t1",
+        "default": "t1"
+      }
+    },
+    "t2": {
+      "kind": "object",
+      "text": "{ \".\": { types: string; import: string; default: string; }; \"./*\": string; }",
+      "members": {
+        ".": "t3",
+        "./*": "t1"
+      }
+    },
+    "t4": {
+      "kind": "array",
+      "text": "string[]",
+      "elementType": "t1"
+    },
+    "t5": {
+      "kind": "object",
+      "text": "{ clean: string; dev: string; \"docs:code\": string; \"docs:build\": string; \"docs:verify\": string; \"docs:pre:vitepress\": string; \"docs:build:vitepress\": string; \"docs:dev\": string; \"docs:dev:docker\": string; ... 8 more ...; prepublishOnly: string; }",
+      "members": {
+        "clean": "t1",
+        "dev": "t1",
+        "docs:code": "t1",
+        "docs:build": "t1",
+        "docs:verify": "t1",
+        "docs:pre:vitepress": "t1",
+        "docs:build:vitepress": "t1",
+        "docs:dev": "t1",
+        "docs:dev:docker": "t1",
+        "docs:serve": "t1",
+        "docs:spellcheck": "t1",
+        "docs:release-version": "t1",
+        "docs:verify-version": "t1",
+        "types:build-config": "t1",
+        "types:verify-config": "t1",
+        "checkCircle": "t1",
+        "release": "t1",
+        "prepublishOnly": "t1"
+      }
+    },
+    "t6": {
+      "kind": "object",
+      "text": "{ type: string; url: string; }",
+      "members": {
+        "type": "t1",
+        "url": "t1"
+      }
+    },
+    "t7": {
+      "kind": "object",
+      "text": "{ ignore: string[]; globals: string[]; }",
+      "members": {
+        "ignore": "t4",
+        "globals": "t4"
+      }
+    },
+    "t8": {
+      "kind": "object",
+      "text": "{ \"@braintree/sanitize-url\": string; \"@mermaid-js/parser\": string; cytoscape: string; \"cytoscape-cose-bilkent\": string; d3: string; \"d3-sankey\": string; \"dagre-d3-es\": string; dayjs: string; dompurify: string; ... 7 more ...; uuid: string; }",
+      "members": {
+        "@braintree/sanitize-url": "t1",
+        "@mermaid-js/parser": "t1",
+        "cytoscape": "t1",
+        "cytoscape-cose-bilkent": "t1",
+        "d3": "t1",
+        "d3-sankey": "t1",
+        "dagre-d3-es": "t1",
+        "dayjs": "t1",
+        "dompurify": "t1",
+        "katex": "t1",
+        "khroma": "t1",
+        "lodash-es": "t1",
+        "marked": "t1",
+        "roughjs": "t1",
+        "stylis": "t1",
+        "ts-dedent": "t1",
+        "uuid": "t1"
+      }
+    },
+    "t9": {
+      "kind": "object",
+      "text": "{ \"@adobe/jsonschema2md\": string; \"@types/cytoscape\": string; \"@types/d3\": string; \"@types/d3-sankey\": string; \"@types/d3-scale\": string; \"@types/d3-scale-chromatic\": string; \"@types/d3-selection\": string; ... 34 more ...; \"vitepress-plugin-search\": string; }",
+      "members": {
+        "@adobe/jsonschema2md": "t1",
+        "@types/cytoscape": "t1",
+        "@types/d3": "t1",
+        "@types/d3-sankey": "t1",
+        "@types/d3-scale": "t1",
+        "@types/d3-scale-chromatic": "t1",
+        "@types/d3-selection": "t1",
+        "@types/d3-shape": "t1",
+        "@types/dompurify": "t1",
+        "@types/jsdom": "t1",
+        "@types/katex": "t1",
+        "@types/lodash-es": "t1",
+        "@types/micromatch": "t1",
+        "@types/prettier": "t1",
+        "@types/stylis": "t1",
+        "@types/uuid": "t1",
+        "ajv": "t1",
+        "chokidar": "t1",
+        "concurrently": "t1",
+        "cpy-cli": "t1",
+        "csstree-validator": "t1",
+        "globby": "t1",
+        "jison": "t1",
+        "js-base64": "t1",
+        "jsdom": "t1",
+        "json-schema-to-typescript": "t1",
+        "micromatch": "t1",
+        "path-browserify": "t1",
+        "prettier": "t1",
+        "remark": "t1",
+        "remark-frontmatter": "t1",
+        "remark-gfm": "t1",
+        "rimraf": "t1",
+        "start-server-and-test": "t1",
+        "type-fest": "t1",
+        "typedoc": "t1",
+        "typedoc-plugin-markdown": "t1",
+        "typescript": "t1",
+        "unist-util-flatmap": "t1",
+        "unist-util-visit": "t1",
+        "vitepress": "t1",
+        "vitepress-plugin-search": "t1"
+      }
+    },
+    "t10": {
+      "kind": "object",
+      "text": "{ access: string; }",
+      "members": {
+        "access": "t1"
+      }
+    },
+    "t0": {
+      "kind": "object",
+      "text": "{ name: string; version: string; description: string; type: string; module: string; types: string; exports: { \".\": { types: string; import: string; default: string; }; \"./*\": string; }; keywords: string[]; scripts: { ...; }; ... 7 more ...; publishConfig: { ...; }; }",
+      "members": {
+        "name": "t1",
+        "version": "t1",
+        "description": "t1",
+        "type": "t1",
+        "module": "t1",
+        "types": "t1",
+        "exports": "t2",
+        "keywords": "t4",
+        "scripts": "t5",
+        "repository": "t6",
+        "author": "t1",
+        "license": "t1",
+        "standard": "t7",
+        "dependencies": "t8",
+        "devDependencies": "t9",
+        "files": "t4",
+        "publishConfig": "t10"
+      }
+    },
+    "t11": {
+      "kind": "stringLiteral",
+      "text": "\"mermaid\"",
+      "value": "mermaid"
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"11.0.0\"",
+      "value": "11.0.0"
+    },
+    "t13": {
+      "kind": "stringLiteral",
+      "text": "\"Markdown-ish syntax for generating flowcharts, mindmaps, sequence diagrams, class diagrams, gantt charts, git graphs and more.\"",
+      "value": "Markdown-ish syntax for generating flowcharts, mindmaps, sequence diagrams, class diagrams, gantt charts, git graphs and more."
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"module\"",
+      "value": "module"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"./dist/mermaid.core.mjs\"",
+      "value": "./dist/mermaid.core.mjs"
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"./dist/mermaid.d.ts\"",
+      "value": "./dist/mermaid.d.ts"
+    },
+    "t18": {
+      "kind": "object",
+      "text": "{ types: string; import: string; default: string; }",
+      "members": {
+        "types": "t1",
+        "import": "t1",
+        "default": "t1"
+      }
+    },
+    "t17": {
+      "kind": "object",
+      "text": "{ \".\": { types: string; import: string; default: string; }; \"./*\": string; }",
+      "members": {
+        ".": "t18",
+        "./*": "t1"
+      }
+    },
+    "t20": {
+      "kind": "object",
+      "text": "{ types: string; import: string; default: string; }",
+      "members": {
+        "types": "t1",
+        "import": "t1",
+        "default": "t1"
+      }
+    },
+    "t19": {
+      "kind": "object",
+      "text": "{ \".\": { types: string; import: string; default: string; }; \"./*\": string; }",
+      "members": {
+        ".": "t20",
+        "./*": "t1"
+      }
+    },
+    "t21": {
+      "kind": "object",
+      "text": "{ types: string; import: string; default: string; }",
+      "members": {
+        "types": "t1",
+        "import": "t1",
+        "default": "t1"
+      }
+    },
+    "t22": {
+      "kind": "object",
+      "text": "{ types: string; import: string; default: string; }",
+      "members": {
+        "types": "t1",
+        "import": "t1",
+        "default": "t1"
+      }
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"./*\"",
+      "value": "./*"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"diagram\"",
+      "value": "diagram"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"markdown\"",
+      "value": "markdown"
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"flowchart\"",
+      "value": "flowchart"
+    },
+    "t27": {
+      "kind": "stringLiteral",
+      "text": "\"sequence diagram\"",
+      "value": "sequence diagram"
+    },
+    "t28": {
+      "kind": "stringLiteral",
+      "text": "\"gantt\"",
+      "value": "gantt"
+    },
+    "t29": {
+      "kind": "stringLiteral",
+      "text": "\"class diagram\"",
+      "value": "class diagram"
+    },
+    "t30": {
+      "kind": "stringLiteral",
+      "text": "\"git graph\"",
+      "value": "git graph"
+    },
+    "t31": {
+      "kind": "stringLiteral",
+      "text": "\"mindmap\"",
+      "value": "mindmap"
+    },
+    "t32": {
+      "kind": "stringLiteral",
+      "text": "\"packet diagram\"",
+      "value": "packet diagram"
+    },
+    "t33": {
+      "kind": "stringLiteral",
+      "text": "\"c4 diagram\"",
+      "value": "c4 diagram"
+    },
+    "t34": {
+      "kind": "stringLiteral",
+      "text": "\"er diagram\"",
+      "value": "er diagram"
+    },
+    "t35": {
+      "kind": "stringLiteral",
+      "text": "\"pie chart\"",
+      "value": "pie chart"
+    },
+    "t36": {
+      "kind": "stringLiteral",
+      "text": "\"pie diagram\"",
+      "value": "pie diagram"
+    },
+    "t37": {
+      "kind": "stringLiteral",
+      "text": "\"quadrant chart\"",
+      "value": "quadrant chart"
+    },
+    "t38": {
+      "kind": "stringLiteral",
+      "text": "\"requirement diagram\"",
+      "value": "requirement diagram"
+    },
+    "t39": {
+      "kind": "stringLiteral",
+      "text": "\"graph\"",
+      "value": "graph"
+    },
+    "t40": {
+      "kind": "object",
+      "text": "{ clean: string; dev: string; \"docs:code\": string; \"docs:build\": string; \"docs:verify\": string; \"docs:pre:vitepress\": string; \"docs:build:vitepress\": string; \"docs:dev\": string; \"docs:dev:docker\": string; ... 8 more ...; prepublishOnly: string; }",
+      "members": {
+        "clean": "t1",
+        "dev": "t1",
+        "docs:code": "t1",
+        "docs:build": "t1",
+        "docs:verify": "t1",
+        "docs:pre:vitepress": "t1",
+        "docs:build:vitepress": "t1",
+        "docs:dev": "t1",
+        "docs:dev:docker": "t1",
+        "docs:serve": "t1",
+        "docs:spellcheck": "t1",
+        "docs:release-version": "t1",
+        "docs:verify-version": "t1",
+        "types:build-config": "t1",
+        "types:verify-config": "t1",
+        "checkCircle": "t1",
+        "release": "t1",
+        "prepublishOnly": "t1"
+      }
+    },
+    "t41": {
+      "kind": "object",
+      "text": "{ clean: string; dev: string; \"docs:code\": string; \"docs:build\": string; \"docs:verify\": string; \"docs:pre:vitepress\": string; \"docs:build:vitepress\": string; \"docs:dev\": string; \"docs:dev:docker\": string; ... 8 more ...; prepublishOnly: string; }",
+      "members": {
+        "clean": "t1",
+        "dev": "t1",
+        "docs:code": "t1",
+        "docs:build": "t1",
+        "docs:verify": "t1",
+        "docs:pre:vitepress": "t1",
+        "docs:build:vitepress": "t1",
+        "docs:dev": "t1",
+        "docs:dev:docker": "t1",
+        "docs:serve": "t1",
+        "docs:spellcheck": "t1",
+        "docs:release-version": "t1",
+        "docs:verify-version": "t1",
+        "types:build-config": "t1",
+        "types:verify-config": "t1",
+        "checkCircle": "t1",
+        "release": "t1",
+        "prepublishOnly": "t1"
+      }
+    },
+    "t42": {
+      "kind": "stringLiteral",
+      "text": "\"rimraf dist\"",
+      "value": "rimraf dist"
+    },
+    "t43": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm -w dev\"",
+      "value": "pnpm -w dev"
+    },
+    "t44": {
+      "kind": "stringLiteral",
+      "text": "\"typedoc src/defaultConfig.ts src/config.ts src/mermaid.ts && prettier --write ./src/docs/config/setup\"",
+      "value": "typedoc src/defaultConfig.ts src/config.ts src/mermaid.ts && prettier --write ./src/docs/config/setup"
+    },
+    "t45": {
+      "kind": "stringLiteral",
+      "text": "\"rimraf ../../docs && pnpm docs:spellcheck && pnpm docs:code && tsx scripts/docs.cli.mts\"",
+      "value": "rimraf ../../docs && pnpm docs:spellcheck && pnpm docs:code && tsx scripts/docs.cli.mts"
+    },
+    "t46": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm docs:spellcheck && pnpm docs:code && tsx scripts/docs.cli.mts --verify\"",
+      "value": "pnpm docs:spellcheck && pnpm docs:code && tsx scripts/docs.cli.mts --verify"
+    },
+    "t47": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm --filter ./src/docs prefetch && rimraf src/vitepress && pnpm docs:code && tsx scripts/docs.cli.mts --vitepress && pnpm --filter ./src/vitepress install --no-frozen-lockfile --ignore-scripts\"",
+      "value": "pnpm --filter ./src/docs prefetch && rimraf src/vitepress && pnpm docs:code && tsx scripts/docs.cli.mts --vitepress && pnpm --filter ./src/vitepress install --no-frozen-lockfile --ignore-scripts"
+    },
+    "t48": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm docs:pre:vitepress && (cd src/vitepress && pnpm run build) && cpy --flat src/docs/landing/ ./src/vitepress/.vitepress/dist/landing\"",
+      "value": "pnpm docs:pre:vitepress && (cd src/vitepress && pnpm run build) && cpy --flat src/docs/landing/ ./src/vitepress/.vitepress/dist/landing"
+    },
+    "t49": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm docs:pre:vitepress && concurrently \\\"pnpm --filter ./src/vitepress dev\\\" \\\"tsx scripts/docs.cli.mts --watch --vitepress\\\"\"",
+      "value": "pnpm docs:pre:vitepress && concurrently \"pnpm --filter ./src/vitepress dev\" \"tsx scripts/docs.cli.mts --watch --vitepress\""
+    },
+    "t50": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm docs:pre:vitepress && concurrently \\\"pnpm --filter ./src/vitepress dev:docker\\\" \\\"tsx scripts/docs.cli.mts --watch --vitepress\\\"\"",
+      "value": "pnpm docs:pre:vitepress && concurrently \"pnpm --filter ./src/vitepress dev:docker\" \"tsx scripts/docs.cli.mts --watch --vitepress\""
+    },
+    "t51": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm docs:build:vitepress && vitepress serve src/vitepress\"",
+      "value": "pnpm docs:build:vitepress && vitepress serve src/vitepress"
+    },
+    "t52": {
+      "kind": "stringLiteral",
+      "text": "\"cspell \\\"src/docs/**/*.md\\\"\"",
+      "value": "cspell \"src/docs/**/*.md\""
+    },
+    "t53": {
+      "kind": "stringLiteral",
+      "text": "\"tsx scripts/update-release-version.mts\"",
+      "value": "tsx scripts/update-release-version.mts"
+    },
+    "t54": {
+      "kind": "stringLiteral",
+      "text": "\"tsx scripts/update-release-version.mts --verify\"",
+      "value": "tsx scripts/update-release-version.mts --verify"
+    },
+    "t55": {
+      "kind": "stringLiteral",
+      "text": "\"tsx scripts/create-types-from-json-schema.mts\"",
+      "value": "tsx scripts/create-types-from-json-schema.mts"
+    },
+    "t56": {
+      "kind": "stringLiteral",
+      "text": "\"tsx scripts/create-types-from-json-schema.mts --verify\"",
+      "value": "tsx scripts/create-types-from-json-schema.mts --verify"
+    },
+    "t57": {
+      "kind": "stringLiteral",
+      "text": "\"npx madge --circular ./src\"",
+      "value": "npx madge --circular ./src"
+    },
+    "t58": {
+      "kind": "stringLiteral",
+      "text": "\"pnpm build\"",
+      "value": "pnpm build"
+    },
+    "t59": {
+      "kind": "stringLiteral",
+      "text": "\"cpy '../../README.*' ./ --cwd=. && pnpm docs:release-version && pnpm -w run build\"",
+      "value": "cpy '../../README.*' ./ --cwd=. && pnpm docs:release-version && pnpm -w run build"
+    },
+    "t60": {
+      "kind": "object",
+      "text": "{ type: string; url: string; }",
+      "members": {
+        "type": "t1",
+        "url": "t1"
+      }
+    },
+    "t61": {
+      "kind": "object",
+      "text": "{ type: string; url: string; }",
+      "members": {
+        "type": "t1",
+        "url": "t1"
+      }
+    },
+    "t62": {
+      "kind": "stringLiteral",
+      "text": "\"git\"",
+      "value": "git"
+    },
+    "t63": {
+      "kind": "stringLiteral",
+      "text": "\"https://github.com/mermaid-js/mermaid\"",
+      "value": "https://github.com/mermaid-js/mermaid"
+    },
+    "t64": {
+      "kind": "stringLiteral",
+      "text": "\"Knut Sveidqvist\"",
+      "value": "Knut Sveidqvist"
+    },
+    "t65": {
+      "kind": "stringLiteral",
+      "text": "\"MIT\"",
+      "value": "MIT"
+    },
+    "t66": {
+      "kind": "object",
+      "text": "{ ignore: string[]; globals: string[]; }",
+      "members": {
+        "ignore": "t4",
+        "globals": "t4"
+      }
+    },
+    "t67": {
+      "kind": "object",
+      "text": "{ ignore: string[]; globals: string[]; }",
+      "members": {
+        "ignore": "t4",
+        "globals": "t4"
+      }
+    },
+    "t68": {
+      "kind": "stringLiteral",
+      "text": "\"**/parser/*.js\"",
+      "value": "**/parser/*.js"
+    },
+    "t69": {
+      "kind": "stringLiteral",
+      "text": "\"dist/**/*.js\"",
+      "value": "dist/**/*.js"
+    },
+    "t70": {
+      "kind": "stringLiteral",
+      "text": "\"cypress/**/*.js\"",
+      "value": "cypress/**/*.js"
+    },
+    "t71": {
+      "kind": "stringLiteral",
+      "text": "\"page\"",
+      "value": "page"
+    },
+    "t72": {
+      "kind": "object",
+      "text": "{ \"@braintree/sanitize-url\": string; \"@mermaid-js/parser\": string; cytoscape: string; \"cytoscape-cose-bilkent\": string; d3: string; \"d3-sankey\": string; \"dagre-d3-es\": string; dayjs: string; dompurify: string; ... 7 more ...; uuid: string; }",
+      "members": {
+        "@braintree/sanitize-url": "t1",
+        "@mermaid-js/parser": "t1",
+        "cytoscape": "t1",
+        "cytoscape-cose-bilkent": "t1",
+        "d3": "t1",
+        "d3-sankey": "t1",
+        "dagre-d3-es": "t1",
+        "dayjs": "t1",
+        "dompurify": "t1",
+        "katex": "t1",
+        "khroma": "t1",
+        "lodash-es": "t1",
+        "marked": "t1",
+        "roughjs": "t1",
+        "stylis": "t1",
+        "ts-dedent": "t1",
+        "uuid": "t1"
+      }
+    },
+    "t73": {
+      "kind": "object",
+      "text": "{ \"@braintree/sanitize-url\": string; \"@mermaid-js/parser\": string; cytoscape: string; \"cytoscape-cose-bilkent\": string; d3: string; \"d3-sankey\": string; \"dagre-d3-es\": string; dayjs: string; dompurify: string; ... 7 more ...; uuid: string; }",
+      "members": {
+        "@braintree/sanitize-url": "t1",
+        "@mermaid-js/parser": "t1",
+        "cytoscape": "t1",
+        "cytoscape-cose-bilkent": "t1",
+        "d3": "t1",
+        "d3-sankey": "t1",
+        "dagre-d3-es": "t1",
+        "dayjs": "t1",
+        "dompurify": "t1",
+        "katex": "t1",
+        "khroma": "t1",
+        "lodash-es": "t1",
+        "marked": "t1",
+        "roughjs": "t1",
+        "stylis": "t1",
+        "ts-dedent": "t1",
+        "uuid": "t1"
+      }
+    },
+    "t74": {
+      "kind": "stringLiteral",
+      "text": "\"^7.0.1\"",
+      "value": "^7.0.1"
+    },
+    "t75": {
+      "kind": "stringLiteral",
+      "text": "\"workspace:^\"",
+      "value": "workspace:^"
+    },
+    "t76": {
+      "kind": "stringLiteral",
+      "text": "\"^3.29.2\"",
+      "value": "^3.29.2"
+    },
+    "t77": {
+      "kind": "stringLiteral",
+      "text": "\"^4.1.0\"",
+      "value": "^4.1.0"
+    },
+    "t78": {
+      "kind": "stringLiteral",
+      "text": "\"^7.9.0\"",
+      "value": "^7.9.0"
+    },
+    "t79": {
+      "kind": "stringLiteral",
+      "text": "\"^0.12.3\"",
+      "value": "^0.12.3"
+    },
+    "t80": {
+      "kind": "stringLiteral",
+      "text": "\"7.0.10\"",
+      "value": "7.0.10"
+    },
+    "t81": {
+      "kind": "stringLiteral",
+      "text": "\"^1.11.10\"",
+      "value": "^1.11.10"
+    },
+    "t82": {
+      "kind": "stringLiteral",
+      "text": "\"^3.0.11\"",
+      "value": "^3.0.11"
+    },
+    "t83": {
+      "kind": "stringLiteral",
+      "text": "\"^0.16.9\"",
+      "value": "^0.16.9"
+    },
+    "t84": {
+      "kind": "stringLiteral",
+      "text": "\"^2.1.0\"",
+      "value": "^2.1.0"
+    },
+    "t85": {
+      "kind": "stringLiteral",
+      "text": "\"^4.17.21\"",
+      "value": "^4.17.21"
+    },
+    "t86": {
+      "kind": "stringLiteral",
+      "text": "\"^13.0.2\"",
+      "value": "^13.0.2"
+    },
+    "t87": {
+      "kind": "stringLiteral",
+      "text": "\"^4.6.6\"",
+      "value": "^4.6.6"
+    },
+    "t88": {
+      "kind": "stringLiteral",
+      "text": "\"^4.3.1\"",
+      "value": "^4.3.1"
+    },
+    "t89": {
+      "kind": "stringLiteral",
+      "text": "\"^2.2.0\"",
+      "value": "^2.2.0"
+    },
+    "t90": {
+      "kind": "stringLiteral",
+      "text": "\"^9.0.1\"",
+      "value": "^9.0.1"
+    },
+    "t91": {
+      "kind": "object",
+      "text": "{ \"@adobe/jsonschema2md\": string; \"@types/cytoscape\": string; \"@types/d3\": string; \"@types/d3-sankey\": string; \"@types/d3-scale\": string; \"@types/d3-scale-chromatic\": string; \"@types/d3-selection\": string; ... 34 more ...; \"vitepress-plugin-search\": string; }",
+      "members": {
+        "@adobe/jsonschema2md": "t1",
+        "@types/cytoscape": "t1",
+        "@types/d3": "t1",
+        "@types/d3-sankey": "t1",
+        "@types/d3-scale": "t1",
+        "@types/d3-scale-chromatic": "t1",
+        "@types/d3-selection": "t1",
+        "@types/d3-shape": "t1",
+        "@types/dompurify": "t1",
+        "@types/jsdom": "t1",
+        "@types/katex": "t1",
+        "@types/lodash-es": "t1",
+        "@types/micromatch": "t1",
+        "@types/prettier": "t1",
+        "@types/stylis": "t1",
+        "@types/uuid": "t1",
+        "ajv": "t1",
+        "chokidar": "t1",
+        "concurrently": "t1",
+        "cpy-cli": "t1",
+        "csstree-validator": "t1",
+        "globby": "t1",
+        "jison": "t1",
+        "js-base64": "t1",
+        "jsdom": "t1",
+        "json-schema-to-typescript": "t1",
+        "micromatch": "t1",
+        "path-browserify": "t1",
+        "prettier": "t1",
+        "remark": "t1",
+        "remark-frontmatter": "t1",
+        "remark-gfm": "t1",
+        "rimraf": "t1",
+        "start-server-and-test": "t1",
+        "type-fest": "t1",
+        "typedoc": "t1",
+        "typedoc-plugin-markdown": "t1",
+        "typescript": "t1",
+        "unist-util-flatmap": "t1",
+        "unist-util-visit": "t1",
+        "vitepress": "t1",
+        "vitepress-plugin-search": "t1"
+      }
+    },
+    "t92": {
+      "kind": "object",
+      "text": "{ \"@adobe/jsonschema2md\": string; \"@types/cytoscape\": string; \"@types/d3\": string; \"@types/d3-sankey\": string; \"@types/d3-scale\": string; \"@types/d3-scale-chromatic\": string; \"@types/d3-selection\": string; ... 34 more ...; \"vitepress-plugin-search\": string; }",
+      "members": {
+        "@adobe/jsonschema2md": "t1",
+        "@types/cytoscape": "t1",
+        "@types/d3": "t1",
+        "@types/d3-sankey": "t1",
+        "@types/d3-scale": "t1",
+        "@types/d3-scale-chromatic": "t1",
+        "@types/d3-selection": "t1",
+        "@types/d3-shape": "t1",
+        "@types/dompurify": "t1",
+        "@types/jsdom": "t1",
+        "@types/katex": "t1",
+        "@types/lodash-es": "t1",
+        "@types/micromatch": "t1",
+        "@types/prettier": "t1",
+        "@types/stylis": "t1",
+        "@types/uuid": "t1",
+        "ajv": "t1",
+        "chokidar": "t1",
+        "concurrently": "t1",
+        "cpy-cli": "t1",
+        "csstree-validator": "t1",
+        "globby": "t1",
+        "jison": "t1",
+        "js-base64": "t1",
+        "jsdom": "t1",
+        "json-schema-to-typescript": "t1",
+        "micromatch": "t1",
+        "path-browserify": "t1",
+        "prettier": "t1",
+        "remark": "t1",
+        "remark-frontmatter": "t1",
+        "remark-gfm": "t1",
+        "rimraf": "t1",
+        "start-server-and-test": "t1",
+        "type-fest": "t1",
+        "typedoc": "t1",
+        "typedoc-plugin-markdown": "t1",
+        "typescript": "t1",
+        "unist-util-flatmap": "t1",
+        "unist-util-visit": "t1",
+        "vitepress": "t1",
+        "vitepress-plugin-search": "t1"
+      }
+    },
+    "t93": {
+      "kind": "stringLiteral",
+      "text": "\"^8.0.0\"",
+      "value": "^8.0.0"
+    },
+    "t94": {
+      "kind": "stringLiteral",
+      "text": "\"^3.21.4\"",
+      "value": "^3.21.4"
+    },
+    "t95": {
+      "kind": "stringLiteral",
+      "text": "\"^7.4.3\"",
+      "value": "^7.4.3"
+    },
+    "t96": {
+      "kind": "stringLiteral",
+      "text": "\"^0.12.4\"",
+      "value": "^0.12.4"
+    },
+    "t97": {
+      "kind": "stringLiteral",
+      "text": "\"^4.0.8\"",
+      "value": "^4.0.8"
+    },
+    "t98": {
+      "kind": "stringLiteral",
+      "text": "\"^3.0.3\"",
+      "value": "^3.0.3"
+    },
+    "t99": {
+      "kind": "stringLiteral",
+      "text": "\"^3.0.10\"",
+      "value": "^3.0.10"
+    },
+    "t100": {
+      "kind": "stringLiteral",
+      "text": "\"^3.1.6\"",
+      "value": "^3.1.6"
+    },
+    "t101": {
+      "kind": "stringLiteral",
+      "text": "\"^3.0.5\"",
+      "value": "^3.0.5"
+    },
+    "t102": {
+      "kind": "stringLiteral",
+      "text": "\"^21.1.6\"",
+      "value": "^21.1.6"
+    },
+    "t103": {
+      "kind": "stringLiteral",
+      "text": "\"^0.16.7\"",
+      "value": "^0.16.7"
+    },
+    "t104": {
+      "kind": "stringLiteral",
+      "text": "\"^4.17.12\"",
+      "value": "^4.17.12"
+    },
+    "t105": {
+      "kind": "stringLiteral",
+      "text": "\"^4.0.6\"",
+      "value": "^4.0.6"
+    },
+    "t106": {
+      "kind": "stringLiteral",
+      "text": "\"^3.0.0\"",
+      "value": "^3.0.0"
+    },
+    "t107": {
+      "kind": "stringLiteral",
+      "text": "\"^4.2.5\"",
+      "value": "^4.2.5"
+    },
+    "t108": {
+      "kind": "stringLiteral",
+      "text": "\"^9.0.8\"",
+      "value": "^9.0.8"
+    },
+    "t109": {
+      "kind": "stringLiteral",
+      "text": "\"^8.12.0\"",
+      "value": "^8.12.0"
+    },
+    "t110": {
+      "kind": "stringLiteral",
+      "text": "\"^3.6.0\"",
+      "value": "^3.6.0"
+    },
+    "t111": {
+      "kind": "stringLiteral",
+      "text": "\"^8.2.2\"",
+      "value": "^8.2.2"
+    },
+    "t112": {
+      "kind": "stringLiteral",
+      "text": "\"^5.0.0\"",
+      "value": "^5.0.0"
+    },
+    "t113": {
+      "kind": "stringLiteral",
+      "text": "\"^14.0.1\"",
+      "value": "^14.0.1"
+    },
+    "t114": {
+      "kind": "stringLiteral",
+      "text": "\"^0.4.18\"",
+      "value": "^0.4.18"
+    },
+    "t115": {
+      "kind": "stringLiteral",
+      "text": "\"^3.7.7\"",
+      "value": "^3.7.7"
+    },
+    "t116": {
+      "kind": "stringLiteral",
+      "text": "\"^24.0.0\"",
+      "value": "^24.0.0"
+    },
+    "t117": {
+      "kind": "stringLiteral",
+      "text": "\"^13.1.2\"",
+      "value": "^13.1.2"
+    },
+    "t118": {
+      "kind": "stringLiteral",
+      "text": "\"^4.0.5\"",
+      "value": "^4.0.5"
+    },
+    "t119": {
+      "kind": "stringLiteral",
+      "text": "\"^1.0.1\"",
+      "value": "^1.0.1"
+    },
+    "t120": {
+      "kind": "stringLiteral",
+      "text": "\"^3.2.5\"",
+      "value": "^3.2.5"
+    },
+    "t121": {
+      "kind": "stringLiteral",
+      "text": "\"^15.0.1\"",
+      "value": "^15.0.1"
+    },
+    "t122": {
+      "kind": "stringLiteral",
+      "text": "\"^4.0.0\"",
+      "value": "^4.0.0"
+    },
+    "t123": {
+      "kind": "stringLiteral",
+      "text": "\"^5.0.5\"",
+      "value": "^5.0.5"
+    },
+    "t124": {
+      "kind": "stringLiteral",
+      "text": "\"^2.0.3\"",
+      "value": "^2.0.3"
+    },
+    "t125": {
+      "kind": "stringLiteral",
+      "text": "\"^4.13.1\"",
+      "value": "^4.13.1"
+    },
+    "t126": {
+      "kind": "stringLiteral",
+      "text": "\"^0.25.12\"",
+      "value": "^0.25.12"
+    },
+    "t127": {
+      "kind": "stringLiteral",
+      "text": "\"^3.17.1\"",
+      "value": "^3.17.1"
+    },
+    "t128": {
+      "kind": "stringLiteral",
+      "text": "\"~5.4.3\"",
+      "value": "~5.4.3"
+    },
+    "t129": {
+      "kind": "stringLiteral",
+      "text": "\"^1.0.0\"",
+      "value": "^1.0.0"
+    },
+    "t130": {
+      "kind": "stringLiteral",
+      "text": "\"1.0.4-alpha.22\"",
+      "value": "1.0.4-alpha.22"
+    },
+    "t131": {
+      "kind": "stringLiteral",
+      "text": "\"dist/\"",
+      "value": "dist/"
+    },
+    "t132": {
+      "kind": "stringLiteral",
+      "text": "\"README.md\"",
+      "value": "README.md"
+    },
+    "t133": {
+      "kind": "object",
+      "text": "{ access: string; }",
+      "members": {
+        "access": "t1"
+      }
+    },
+    "t134": {
+      "kind": "object",
+      "text": "{ access: string; }",
+      "members": {
+        "access": "t1"
+      }
+    },
+    "t135": {
+      "kind": "stringLiteral",
+      "text": "\"public\"",
+      "value": "public"
+    }
+  }
+}

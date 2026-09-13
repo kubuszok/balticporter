@@ -616,3 +616,26 @@ class TerserEmitterSpec extends munit.FunSuite:
     assert(!scala.contains("AstLambda"), "should NOT contain AstLambda (scope)")
     assert(!scala.contains("AstCall"), "should NOT contain AstCall (expression)")
     assert(!scala.contains("AstBinary"), "should NOT contain AstBinary (expression)")
+
+  // -----------------------------------------------------------------------
+  // Write all terser utility files for ssg compilation verification
+  // -----------------------------------------------------------------------
+
+  test("write CompressorFlags, FirstInStatement, NativeObjects to target"):
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+
+    val cfRast = loadRast("/rast/terser/lib/compress/compressor-flags.rast.json")
+    val cfScala = dedicated.TerserEmitter.emitCompressorFlags(cfRast)
+    java.nio.file.Files.writeString(outDir.resolve("CompressorFlags.scala"), cfScala)
+    println(s"[emit] CompressorFlags.scala: ${cfScala.linesIterator.size} lines")
+
+    val fisRast = loadRast("/rast/terser/lib/utils/first_in_statement.rast.json")
+    val fisScala = dedicated.TerserEmitter.emitFirstInStatement(fisRast)
+    java.nio.file.Files.writeString(outDir.resolve("FirstInStatement.scala"), fisScala)
+    println(s"[emit] FirstInStatement.scala: ${fisScala.linesIterator.size} lines")
+
+    val noRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val noScala = dedicated.TerserEmitter.emitNativeObjects(noRast)
+    java.nio.file.Files.writeString(outDir.resolve("NativeObjects.scala"), noScala)
+    println(s"[emit] NativeObjects.scala: ${noScala.linesIterator.size} lines")

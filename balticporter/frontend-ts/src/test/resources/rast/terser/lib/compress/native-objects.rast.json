@@ -3090,7 +3090,7 @@
       "text": "MapConstructor",
       "members": {
         "prototype": "t8",
-        "__@species@1427": "t12"
+        "__@species@1324": "t12"
       }
     },
     "t13": {
@@ -3188,7 +3188,7 @@
       "text": "SetConstructor",
       "members": {
         "prototype": "t2",
-        "__@species@1427": "t25"
+        "__@species@1324": "t25"
       }
     },
     "t26": {
@@ -3774,7 +3774,7 @@
         "arguments": "t1",
         "caller": "t122",
         "name": "t13",
-        "__@hasInstance@56": "t129"
+        "__@hasInstance@48": "t129"
       }
     },
     "t130": {

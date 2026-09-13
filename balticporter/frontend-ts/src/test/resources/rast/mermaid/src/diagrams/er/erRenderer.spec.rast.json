@@ -1,0 +1,607 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/er/erRenderer.spec.ts",
+  "sha256": "66ad88d6eefc3e701305f5e61ac0bd060b252f18186282609c4142f9bf0e4707",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                1,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    1,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        10
+                      ],
+                      "type": "t0",
+                      "text": "generateId",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            28
+          ],
+          "type": "t2",
+          "value": "./erRenderer.js"
+        }
+      ]
+    },
+    {
+      "kind": "ExpressionStatement",
+      "kindCode": 244,
+      "pos": [
+        3,
+        1
+      ],
+      "children": [
+        {
+          "kind": "CallExpression",
+          "kindCode": 213,
+          "pos": [
+            3,
+            1
+          ],
+          "type": "t2",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                3,
+                1
+              ],
+              "type": "t2",
+              "text": "describe"
+            },
+            {
+              "kind": "StringLiteral",
+              "kindCode": 11,
+              "pos": [
+                3,
+                10
+              ],
+              "type": "t3",
+              "value": "erRenderer"
+            },
+            {
+              "kind": "ArrowFunction",
+              "kindCode": 219,
+              "pos": [
+                3,
+                24
+              ],
+              "type": "t4",
+              "children": [
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    3,
+                    30
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        4,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            4,
+                            3
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                4,
+                                3
+                              ],
+                              "type": "t2",
+                              "text": "describe"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                4,
+                                12
+                              ],
+                              "type": "t6",
+                              "value": "generateId"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                4,
+                                26
+                              ],
+                              "type": "t7",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    4,
+                                    32
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        5,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            5,
+                                            5
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                5,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "text": "it"
+                                            },
+                                            {
+                                              "kind": "StringLiteral",
+                                              "kindCode": 11,
+                                              "pos": [
+                                                5,
+                                                8
+                                              ],
+                                              "type": "t8",
+                                              "value": "should be deterministic"
+                                            },
+                                            {
+                                              "kind": "ArrowFunction",
+                                              "kindCode": 219,
+                                              "pos": [
+                                                5,
+                                                35
+                                              ],
+                                              "type": "t9",
+                                              "children": [
+                                                {
+                                                  "kind": "Block",
+                                                  "kindCode": 241,
+                                                  "pos": [
+                                                    5,
+                                                    41
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "VariableStatement",
+                                                      "kindCode": 243,
+                                                      "pos": [
+                                                        6,
+                                                        7
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "VariableDeclarationList",
+                                                          "kindCode": 261,
+                                                          "pos": [
+                                                            6,
+                                                            7
+                                                          ],
+                                                          "children": [
+                                                            {
+                                                              "kind": "VariableDeclaration",
+                                                              "kindCode": 260,
+                                                              "pos": [
+                                                                6,
+                                                                13
+                                                              ],
+                                                              "symbol": "s1",
+                                                              "type": "t1",
+                                                              "flags": [
+                                                                "const"
+                                                              ],
+                                                              "children": [
+                                                                {
+                                                                  "kind": "Identifier",
+                                                                  "kindCode": 80,
+                                                                  "pos": [
+                                                                    6,
+                                                                    13
+                                                                  ],
+                                                                  "type": "t1",
+                                                                  "text": "id1",
+                                                                  "resolvedSymbol": "s1"
+                                                                },
+                                                                {
+                                                                  "kind": "CallExpression",
+                                                                  "kindCode": 213,
+                                                                  "pos": [
+                                                                    6,
+                                                                    19
+                                                                  ],
+                                                                  "type": "t1",
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "Identifier",
+                                                                      "kindCode": 80,
+                                                                      "pos": [
+                                                                        6,
+                                                                        19
+                                                                      ],
+                                                                      "type": "t0",
+                                                                      "text": "generateId",
+                                                                      "resolvedSymbol": "s0"
+                                                                    },
+                                                                    {
+                                                                      "kind": "StringLiteral",
+                                                                      "kindCode": 11,
+                                                                      "pos": [
+                                                                        6,
+                                                                        30
+                                                                      ],
+                                                                      "type": "t10",
+                                                                      "value": "hello world"
+                                                                    },
+                                                                    {
+                                                                      "kind": "StringLiteral",
+                                                                      "kindCode": 11,
+                                                                      "pos": [
+                                                                        6,
+                                                                        45
+                                                                      ],
+                                                                      "type": "t11",
+                                                                      "value": "my-prefix"
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "VariableStatement",
+                                                      "kindCode": 243,
+                                                      "pos": [
+                                                        7,
+                                                        7
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "VariableDeclarationList",
+                                                          "kindCode": 261,
+                                                          "pos": [
+                                                            7,
+                                                            7
+                                                          ],
+                                                          "children": [
+                                                            {
+                                                              "kind": "VariableDeclaration",
+                                                              "kindCode": 260,
+                                                              "pos": [
+                                                                7,
+                                                                13
+                                                              ],
+                                                              "symbol": "s2",
+                                                              "type": "t1",
+                                                              "flags": [
+                                                                "const"
+                                                              ],
+                                                              "children": [
+                                                                {
+                                                                  "kind": "Identifier",
+                                                                  "kindCode": 80,
+                                                                  "pos": [
+                                                                    7,
+                                                                    13
+                                                                  ],
+                                                                  "type": "t1",
+                                                                  "text": "id2",
+                                                                  "resolvedSymbol": "s2"
+                                                                },
+                                                                {
+                                                                  "kind": "CallExpression",
+                                                                  "kindCode": 213,
+                                                                  "pos": [
+                                                                    7,
+                                                                    19
+                                                                  ],
+                                                                  "type": "t1",
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "Identifier",
+                                                                      "kindCode": 80,
+                                                                      "pos": [
+                                                                        7,
+                                                                        19
+                                                                      ],
+                                                                      "type": "t0",
+                                                                      "text": "generateId",
+                                                                      "resolvedSymbol": "s0"
+                                                                    },
+                                                                    {
+                                                                      "kind": "StringLiteral",
+                                                                      "kindCode": 11,
+                                                                      "pos": [
+                                                                        7,
+                                                                        30
+                                                                      ],
+                                                                      "type": "t10",
+                                                                      "value": "hello world"
+                                                                    },
+                                                                    {
+                                                                      "kind": "StringLiteral",
+                                                                      "kindCode": 11,
+                                                                      "pos": [
+                                                                        7,
+                                                                        45
+                                                                      ],
+                                                                      "type": "t11",
+                                                                      "value": "my-prefix"
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "ExpressionStatement",
+                                                      "kindCode": 244,
+                                                      "pos": [
+                                                        9,
+                                                        7
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "CallExpression",
+                                                          "kindCode": 213,
+                                                          "pos": [
+                                                            9,
+                                                            7
+                                                          ],
+                                                          "type": "t2",
+                                                          "children": [
+                                                            {
+                                                              "kind": "PropertyAccessExpression",
+                                                              "kindCode": 211,
+                                                              "pos": [
+                                                                9,
+                                                                7
+                                                              ],
+                                                              "type": "t2",
+                                                              "children": [
+                                                                {
+                                                                  "kind": "CallExpression",
+                                                                  "kindCode": 213,
+                                                                  "pos": [
+                                                                    9,
+                                                                    7
+                                                                  ],
+                                                                  "type": "t2",
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "Identifier",
+                                                                      "kindCode": 80,
+                                                                      "pos": [
+                                                                        9,
+                                                                        7
+                                                                      ],
+                                                                      "type": "t2",
+                                                                      "text": "expect"
+                                                                    },
+                                                                    {
+                                                                      "kind": "Identifier",
+                                                                      "kindCode": 80,
+                                                                      "pos": [
+                                                                        9,
+                                                                        14
+                                                                      ],
+                                                                      "type": "t1",
+                                                                      "text": "id1",
+                                                                      "resolvedSymbol": "s1"
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "kind": "Identifier",
+                                                                  "kindCode": 80,
+                                                                  "pos": [
+                                                                    9,
+                                                                    19
+                                                                  ],
+                                                                  "type": "t2",
+                                                                  "text": "toBe"
+                                                                }
+                                                              ]
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                9,
+                                                                24
+                                                              ],
+                                                              "type": "t1",
+                                                              "text": "id2",
+                                                              "resolvedSymbol": "s2"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "generateId",
+      "flags": []
+    },
+    "s1": {
+      "name": "id1",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s2": {
+      "name": "id2",
+      "flags": [
+        "variable"
+      ]
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(str?: string, prefix?: string) => string",
+      "parameters": [
+        {
+          "name": "str",
+          "type": "t1",
+          "optional": false
+        },
+        {
+          "name": "prefix",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t1"
+    },
+    "t2": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t3": {
+      "kind": "stringLiteral",
+      "text": "\"erRenderer\"",
+      "value": "erRenderer"
+    },
+    "t5": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t4": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t5"
+    },
+    "t6": {
+      "kind": "stringLiteral",
+      "text": "\"generateId\"",
+      "value": "generateId"
+    },
+    "t7": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t5"
+    },
+    "t8": {
+      "kind": "stringLiteral",
+      "text": "\"should be deterministic\"",
+      "value": "should be deterministic"
+    },
+    "t9": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t5"
+    },
+    "t10": {
+      "kind": "stringLiteral",
+      "text": "\"hello world\"",
+      "value": "hello world"
+    },
+    "t11": {
+      "kind": "stringLiteral",
+      "text": "\"my-prefix\"",
+      "value": "my-prefix"
+    }
+  }
+}

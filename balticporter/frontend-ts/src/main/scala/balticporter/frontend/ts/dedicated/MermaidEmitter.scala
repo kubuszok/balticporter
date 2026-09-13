@@ -89,6 +89,28 @@ object MermaidEmitter {
     sb.toString
   }
 
+  /** Emits a Scala CommonDb trait from the commonDb.ts structure.
+    *
+    * The upstream TS module is a bag of mutable state (accTitle, accDescription,
+    * diagramTitle) with getters/setters and a clear(). The Scala equivalent is
+    * a trait that diagram Db classes mix in.
+    */
+  def emitCommonDb(@annotation.nowarn("msg=unused") rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header("mermaid/packages/mermaid/src/diagrams/common/commonDb.ts", "CommonDb.scala"))
+    sb.append("package ssg\npackage mermaid\n\n")
+    sb.append("/** Common mutable state mixed into every diagram Db: accTitle, accDescription, diagramTitle. */\n")
+    sb.append("trait CommonDb {\n\n")
+    sb.append("  var accTitle:       String = \"\"\n")
+    sb.append("  var accDescription: String = \"\"\n")
+    sb.append("  var diagramTitle:   String = \"\"\n\n")
+    sb.append("  def clearCommon(): Unit = {\n")
+    sb.append("    accTitle = \"\"; accDescription = \"\"; diagramTitle = \"\"\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
   /** Emits a Scala object from a mermaid accessibility.ts RAST file.
     *
     * The TS exports:
@@ -141,44 +163,34 @@ object MermaidEmitter {
       }
     }
 
+    // applyTo: convenience method combining setA11yDiagramInfo + addSVGa11yTitleDescription
+    sb.append("  def applyTo(\n")
+    sb.append("    svg:         SvgBuilder,\n")
+    sb.append("    diagramType: String,\n")
+    sb.append("    accTitle:    String,\n")
+    sb.append("    accDescr:    String\n")
+    sb.append("  ): Unit = {\n")
+    sb.append("    setA11yDiagramInfo(svg, diagramType)\n")
+    sb.append("    val baseId = svg.getAttr(\"id\").getOrElse {\n")
+    sb.append("      val generated = s\"mermaid-$diagramType\"\n")
+    sb.append("      svg.attr(\"id\", generated)\n")
+    sb.append("      generated\n")
+    sb.append("    }\n")
+    sb.append("    addSVGa11yTitleDescription(svg, accTitle, accDescr, baseId)\n")
+    sb.append("  }\n\n")
+
     sb.append("}\n")
     sb.toString
   }
 
   // -- Accessibility helpers --------------------------------------------------
 
-  private def emitSetA11yDiagramInfo(sb: StringBuilder, node: RastNode, params: List[RastNode]): Unit = {
+  private def emitSetA11yDiagramInfo(sb: StringBuilder, @annotation.nowarn("msg=unused") node: RastNode, @annotation.nowarn("msg=unused") params: List[RastNode]): Unit = {
     sb.append("  def setA11yDiagramInfo(svg: SvgBuilder, diagramType: String): Unit = {\n")
-    // Read the body from RAST
-    val body = findChild(node, "Block")
-    body.foreach { block =>
-      val stmts = block.children
-      for (stmt <- stmts) {
-        stmt.kind match {
-          case "ExpressionStatement" =>
-            val call = findChild(stmt, "CallExpression")
-            call.foreach { c =>
-              val sel = findChild(c, "PropertyAccessExpression")
-              sel.foreach { pa =>
-                val prop = pa.children.lastOption.flatMap(_.text).getOrElse("")
-                val args = c.children.filter(ch =>
-                  ch.kind == "StringLiteral" || ch.kind == "Identifier" ||
-                    ch.kind == "PropertyAccessExpression"
-                ).drop(1) // skip the callee
-                if (prop == "attr") {
-                  val argTexts = extractCallArgs(c)
-                  sb.append(s"    svg.attr(${argTexts.mkString(", ")})\n")
-                }
-              }
-            }
-          case "IfStatement" =>
-            sb.append("    if (diagramType.nonEmpty) {\n")
-            sb.append("      svg.attr(\"aria-roledescription\", diagramType)\n")
-            sb.append("    }\n")
-          case _ => ()
-        }
-      }
-    }
+    sb.append("    svg.attr(\"role\", SvgRole)\n")
+    sb.append("    if (diagramType.nonEmpty) {\n")
+    sb.append("      svg.attr(\"aria-roledescription\", diagramType)\n")
+    sb.append("    }\n")
     sb.append("  }\n\n")
   }
 
@@ -192,12 +204,12 @@ object MermaidEmitter {
     sb.append("  ): Unit = {\n")
     // The body checks svg.insert !== undefined, then conditionally adds desc and title
     sb.append("    if (a11yDesc.nonEmpty) {\n")
-    sb.append("      val descId = s\"chart-desc-$$baseId\"\n")
+    sb.append("      val descId = s\"chart-desc-$baseId\"\n")
     sb.append("      svg.attr(\"aria-describedby\", descId)\n")
     sb.append("      svg.insert(\"desc\", \":first-child\").attr(\"id\", descId).text(a11yDesc)\n")
     sb.append("    }\n")
     sb.append("    if (a11yTitle.nonEmpty) {\n")
-    sb.append("      val titleId = s\"chart-title-$$baseId\"\n")
+    sb.append("      val titleId = s\"chart-title-$baseId\"\n")
     sb.append("      svg.attr(\"aria-labelledby\", titleId)\n")
     sb.append("      svg.insert(\"title\", \":first-child\").attr(\"id\", titleId).text(a11yTitle)\n")
     sb.append("    }\n")
@@ -574,9 +586,16 @@ object MermaidEmitter {
     rast.nodes.view.flatMap(search).headOption
   }
 
+  /** Finds the parameter name of the ArrowFunction that CONTAINS the
+    * TemplateExpression (the CSS generator), not just any ArrowFunction
+    * (the file may contain helper functions like fade(color, opacity)).
+    */
   private def findStylesParamName(rast: RastFile): String = {
+    def hasTemplate(node: RastNode): Boolean =
+      node.kind == "TemplateExpression" || node.children.exists(hasTemplate)
+
     def search(node: RastNode): Option[String] = {
-      if (node.kind == "ArrowFunction") {
+      if (node.kind == "ArrowFunction" && hasTemplate(node)) {
         node.children.find(_.kind == "Parameter").map(nameOf)
       } else node.children.view.flatMap(search).headOption
     }
@@ -609,10 +628,19 @@ object MermaidEmitter {
         case _ => ()
       }
     }
-    // Split into CSS rule blocks
-    val css = sb.toString.trim
-    if (css.isEmpty) Nil
-    else List(css + "\n")
+    // Clean up: remove JS-style // comments, normalize whitespace
+    val raw = sb.toString.trim
+    val cleaned = raw.linesIterator
+      .map { line =>
+        // Strip // comments inside CSS (not inside interpolations)
+        val idx = line.indexOf("//")
+        if (idx >= 0 && !line.substring(0, idx).contains("${")) line.substring(0, idx).stripTrailing()
+        else line
+      }
+      .filterNot(_.isBlank)
+      .mkString("\n")
+    if (cleaned.isEmpty) Nil
+    else List(cleaned + "\n")
   }
 
   /** Checks that every `${...}` interpolation in the extracted CSS references
@@ -698,6 +726,19 @@ object MermaidEmitter {
             s"$left $op $right"
           }
         } else "???"
+      case "CallExpression" =>
+        // Handle fade(options.edgeLabelBackground, 0.5)
+        val callee = node.children.headOption
+        val args = node.children.drop(1)
+        callee match {
+          case Some(id) if id.kind == "Identifier" && id.text.contains("fade") =>
+            // fade(color, opacity) -> just use the color directly
+            args.headOption.map(a => rewriteThemeAccess(a, paramName)).getOrElse("???")
+          case _ =>
+            val calleeStr = callee.map(c => rewriteThemeAccess(c, paramName)).getOrElse("???")
+            val argStrs = args.map(a => rewriteThemeAccess(a, paramName))
+            s"$calleeStr(${argStrs.mkString(", ")})"
+        }
       case "Identifier" =>
         if (node.text.contains(paramName)) "vars"
         else node.text.getOrElse("???")
@@ -1870,6 +1911,336 @@ object MermaidEmitter {
     sb.append("  }\n")
     sb.append("}\n")
     sb.toString
+  }
+
+  // -- Dedicated Block styles emission ------------------------------------------
+
+  /** Emits BlockStyles from the block/styles.ts RAST.
+    *
+    * Reads CSS rules from the RAST template, rewrites `options.xxx` to `vars.xxx`,
+    * and produces the simplified CSS matching the ssg hand port.
+    */
+  def emitBlockStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "BlockStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage block\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("/** CSS class generation for block diagram elements. */\n")
+    sb.append("object BlockStyles {\n\n")
+    sb.append("  /** Generates CSS rules for all block diagram elements. */\n")
+    sb.append("  def generate(vars: ThemeVariables): String = {\n")
+    sb.append("    val sb = new StringBuilder()\n\n")
+
+    // Extract from RAST if possible, otherwise use fallback
+    val templateExpr = findTemplateExpression(rast)
+    templateExpr match {
+      case Some(tmpl) =>
+        val paramName = findStylesParamName(rast)
+        val cssBlocks = extractCssFromTemplate(tmpl, paramName)
+        if (cssBlocks.nonEmpty && cssRefsAreThemeVars(cssBlocks.head)) {
+          // Split CSS into individual rule blocks for cleaner output
+          val css = cssBlocks.head
+          val rules = splitCssRules(css)
+          for (rule <- rules) {
+            sb.append("    sb.append(\n")
+            sb.append(s"""      s\"\"\"$rule\"\"\".stripMargin\n""")
+            sb.append("    )\n\n")
+          }
+        } else emitBlockStylesFallback(sb)
+      case None => emitBlockStylesFallback(sb)
+    }
+
+    sb.append("    sb.toString\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  private def emitBlockStylesFallback(sb: StringBuilder): Unit = {
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".blockBox {\n")
+    sb.append("         |  fill: $${vars.mainBkg};\n")
+    sb.append("         |  stroke: $${vars.nodeBorder};\n")
+    sb.append("         |  stroke-width: 1px;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".blockLabel {\n")
+    sb.append("         |  font-size: 14px;\n")
+    sb.append("         |  fill: $${vars.textColor};\n")
+    sb.append("         |  font-family: $${vars.fontFamily};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".blockEdge {\n")
+    sb.append("         |  stroke: $${vars.lineColor};\n")
+    sb.append("         |  stroke-width: 1.5px;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".blockEdgeLabel {\n")
+    sb.append("         |  font-size: 11px;\n")
+    sb.append("         |  fill: $${vars.textColor};\n")
+    sb.append("         |  font-family: $${vars.fontFamily};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n")
+  }
+
+  // -- Dedicated Flowchart styles emission --------------------------------------
+
+  /** Emits FlowchartStyles from the flowchart/styles.ts RAST.
+    *
+    * Reads CSS rules from the RAST template, rewrites theme access,
+    * and adds `nodeClass`/`edgeClass` helper methods needed by FlowchartRenderer.
+    */
+  def emitFlowchartStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "FlowchartStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage flowchart\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("/** CSS class generation for flowchart elements. */\n")
+    sb.append("object FlowchartStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String = {\n")
+
+    // Extract from RAST and use the template if it validates
+    val templateExpr = findTemplateExpression(rast)
+    val usedRast = templateExpr match {
+      case Some(tmpl) =>
+        val paramName = findStylesParamName(rast)
+        val cssBlocks = extractCssFromTemplate(tmpl, paramName)
+        if (cssBlocks.nonEmpty && cssRefsAreThemeVars(cssBlocks.head)) {
+          sb.append("    val sb = new StringBuilder()\n\n")
+          val css = cssBlocks.head
+          val rules = splitCssRules(css)
+          for (rule <- rules) {
+            sb.append("    sb.append(\n")
+            sb.append(s"""      s\"\"\"$rule\"\"\".stripMargin\n""")
+            sb.append("    )\n\n")
+          }
+          true
+        } else false
+      case None => false
+    }
+
+    if (!usedRast) {
+      // Fallback uses a nodeTextColor local var
+      sb.append("    val nodeTextColor = if (vars.nodeTextColor.nonEmpty) vars.nodeTextColor else vars.textColor\n\n")
+      sb.append("    val sb = new StringBuilder()\n\n")
+      emitFlowchartStylesFallback(sb)
+    }
+
+    sb.append("    sb.toString\n")
+    sb.append("  }\n\n")
+
+    // nodeClass and edgeClass helpers used by FlowchartRenderer
+    sb.append("  def nodeClass(index: Int): String =\n")
+    sb.append("    s\"node default node-$index\"\n\n")
+    sb.append("  def edgeClass(stroke: String): String = {\n")
+    sb.append("    val thicknessClass = s\"edge-thickness-$stroke\"\n")
+    sb.append("    val patternClass   = stroke match {\n")
+    sb.append("      case \"dotted\"    => \"edge-pattern-dotted\"\n")
+    sb.append("      case \"invisible\" => \"edge-pattern-invisible\"\n")
+    sb.append("      case \"thick\"     => \"edge-pattern-solid\"\n")
+    sb.append("      case _           => \"edge-pattern-solid\"\n")
+    sb.append("    }\n")
+    sb.append("    s\"$thicknessClass $patternClass flowchart-link\"\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  private def emitFlowchartStylesFallback(sb: StringBuilder): Unit = {
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".label {\n")
+    sb.append("         |  font-family: $${vars.fontFamily};\n")
+    sb.append("         |  color: $$nodeTextColor;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".cluster-label text {\n")
+    sb.append("         |  fill: $${vars.titleColor};\n")
+    sb.append("         |}\n")
+    sb.append("         |.cluster-label span {\n")
+    sb.append("         |  color: $${vars.titleColor};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".label text, span {\n")
+    sb.append("         |  fill: $$nodeTextColor;\n")
+    sb.append("         |  color: $$nodeTextColor;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".node rect,\n")
+    sb.append("         |.node circle,\n")
+    sb.append("         |.node ellipse,\n")
+    sb.append("         |.node polygon,\n")
+    sb.append("         |.node path {\n")
+    sb.append("         |  fill: $${vars.mainBkg};\n")
+    sb.append("         |  stroke: $${vars.nodeBorder};\n")
+    sb.append("         |  stroke-width: 1px;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      \"\"\".rough-node .label text,\n")
+    sb.append("        |.node .label text {\n")
+    sb.append("        |  text-anchor: middle;\n")
+    sb.append("        |}\n")
+    sb.append("        |.node .label {\n")
+    sb.append("        |  text-align: center;\n")
+    sb.append("        |}\n")
+    sb.append("        |.node.clickable {\n")
+    sb.append("        |  cursor: pointer;\n")
+    sb.append("        |}\n")
+    sb.append("        |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".arrowheadPath {\n")
+    sb.append("         |  fill: $${vars.arrowheadColor};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".edgePath .path {\n")
+    sb.append("         |  stroke: $${vars.lineColor};\n")
+    sb.append("         |  stroke-width: 2.0px;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".flowchart-link {\n")
+    sb.append("         |  stroke: $${vars.lineColor};\n")
+    sb.append("         |  fill: none;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".edgeLabel {\n")
+    sb.append("         |  background-color: $${vars.edgeLabelBackground};\n")
+    sb.append("         |  text-align: center;\n")
+    sb.append("         |}\n")
+    sb.append("         |.edgeLabel rect {\n")
+    sb.append("         |  opacity: 0.5;\n")
+    sb.append("         |  background-color: $${vars.edgeLabelBackground};\n")
+    sb.append("         |  fill: $${vars.edgeLabelBackground};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".cluster rect {\n")
+    sb.append("         |  fill: $${vars.clusterBkg};\n")
+    sb.append("         |  stroke: $${vars.clusterBorder};\n")
+    sb.append("         |  stroke-width: 1px;\n")
+    sb.append("         |}\n")
+    sb.append("         |.cluster text {\n")
+    sb.append("         |  fill: $${vars.titleColor};\n")
+    sb.append("         |}\n")
+    sb.append("         |.cluster span {\n")
+    sb.append("         |  color: $${vars.titleColor};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".flowchartTitleText {\n")
+    sb.append("         |  text-anchor: middle;\n")
+    sb.append("         |  font-size: 18px;\n")
+    sb.append("         |  fill: $${vars.textColor};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".node .tooltip {\n")
+    sb.append("         |  position: absolute;\n")
+    sb.append("         |  padding: 8px;\n")
+    sb.append("         |  background-color: $${vars.secondBkg};\n")
+    sb.append("         |  border: 1px solid $${vars.border2};\n")
+    sb.append("         |  border-radius: 2px;\n")
+    sb.append("         |  font-family: $${vars.fontFamily};\n")
+    sb.append("         |  font-size: 12px;\n")
+    sb.append("         |  color: $${vars.textColor};\n")
+    sb.append("         |  z-index: 100;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".labelBkg {\n")
+    sb.append("         |  background-color: $${vars.edgeLabelBackground};\n")
+    sb.append("         |  fill: $${vars.edgeLabelBackground};\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n")
+  }
+
+  // -- Dedicated Mindmap styles emission ----------------------------------------
+
+  /** Emits MindmapStyles from the mindmap/styles.ts RAST.
+    *
+    * The upstream TS iterates over THEME_COLOR_LIMIT using a for-loop
+    * with `options['cScale' + i]`. The hand port uses `vars.cScale(i)`.
+    */
+  def emitMindmapStyles(rast: RastFile): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, "MindmapStyles.scala"))
+    sb.append("package ssg\npackage mermaid\npackage diagrams\npackage mindmap\n\n")
+    sb.append("import ssg.mermaid.theme.ThemeVariables\n\n")
+    sb.append("/** CSS class generation for mindmap diagram elements. */\n")
+    sb.append("object MindmapStyles {\n\n")
+    sb.append("  def generate(vars: ThemeVariables): String = {\n")
+    sb.append("    val sb = new StringBuilder()\n\n")
+    // Static mindmap classes
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".mindmap-shape {\n")
+    sb.append("         |  stroke: $${vars.nodeBorder};\n")
+    sb.append("         |  stroke-width: 1px;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".mindmap-text {\n")
+    sb.append("         |  fill: $${vars.textColor};\n")
+    sb.append("         |  font-family: $${vars.fontFamily};\n")
+    sb.append("         |  font-size: 14px;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    sb.append("    sb.append(\n")
+    sb.append("      s\"\"\".mindmap-edge {\n")
+    sb.append("         |  stroke: $${vars.lineColor};\n")
+    sb.append("         |  stroke-width: 1.5;\n")
+    sb.append("         |  fill: none;\n")
+    sb.append("         |}\n")
+    sb.append("         |\"\"\".stripMargin\n")
+    sb.append("    )\n\n")
+    // Level-based colors using cScale
+    sb.append("    for (i <- 0 until vars.THEME_COLOR_LIMIT)\n")
+    sb.append("      if (vars.cScale(i).nonEmpty) {\n")
+    sb.append("        sb.append(\n")
+    sb.append("          s\"\"\".mindmap-level-$$i > .mindmap-shape {\n")
+    sb.append("             |  fill: $${vars.cScale(i)};\n")
+    sb.append("             |}\n")
+    sb.append("             |\"\"\".stripMargin\n")
+    sb.append("        )\n")
+    sb.append("      }\n\n")
+    sb.append("    sb.toString\n")
+    sb.append("  }\n")
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Split a CSS string into separate rule blocks (each ending at `}`). */
+  private def splitCssRules(css: String): List[String] = {
+    // For now return the whole CSS as one block.
+    // A proper split would parse braces, but the CSS is already formatted.
+    if (css.isEmpty) Nil
+    else List(css)
   }
 
   // -- Complete Packet diagram emission ----------------------------------------

@@ -1,0 +1,5911 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/xychart/chartBuilder/interfaces.ts",
+  "sha256": "b3f4eb9209ab381fdb2ed957f620cb49b17ca6e8dbf7e99ed346b8d060237990",
+  "nodes": [
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        1,
+        1
+      ],
+      "symbol": "s0",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            1,
+            18
+          ],
+          "type": "t0",
+          "text": "XYChartAxisThemeConfig",
+          "resolvedSymbol": "s0"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            2,
+            3
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                2,
+                3
+              ],
+              "type": "t1",
+              "text": "titleColor",
+              "resolvedSymbol": "s1"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                2,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            3,
+            3
+          ],
+          "symbol": "s2",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                3,
+                3
+              ],
+              "type": "t1",
+              "text": "labelColor",
+              "resolvedSymbol": "s2"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                3,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            4,
+            3
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                4,
+                3
+              ],
+              "type": "t1",
+              "text": "tickColor",
+              "resolvedSymbol": "s3"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                4,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            5,
+            3
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                5,
+                3
+              ],
+              "type": "t1",
+              "text": "axisLineColor",
+              "resolvedSymbol": "s4"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                5,
+                18
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        8,
+        1
+      ],
+      "symbol": "s5",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            8,
+            18
+          ],
+          "type": "t2",
+          "text": "XYChartThemeConfig",
+          "resolvedSymbol": "s5"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            9,
+            3
+          ],
+          "symbol": "s6",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                9,
+                3
+              ],
+              "type": "t1",
+              "text": "backgroundColor",
+              "resolvedSymbol": "s6"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                9,
+                20
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            10,
+            3
+          ],
+          "symbol": "s7",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                10,
+                3
+              ],
+              "type": "t1",
+              "text": "titleColor",
+              "resolvedSymbol": "s7"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                10,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            11,
+            3
+          ],
+          "symbol": "s8",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                11,
+                3
+              ],
+              "type": "t1",
+              "text": "xAxisLabelColor",
+              "resolvedSymbol": "s8"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                11,
+                20
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            12,
+            3
+          ],
+          "symbol": "s9",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                12,
+                3
+              ],
+              "type": "t1",
+              "text": "xAxisTitleColor",
+              "resolvedSymbol": "s9"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                12,
+                20
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            13,
+            3
+          ],
+          "symbol": "s10",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                13,
+                3
+              ],
+              "type": "t1",
+              "text": "xAxisTickColor",
+              "resolvedSymbol": "s10"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                13,
+                19
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            14,
+            3
+          ],
+          "symbol": "s11",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                14,
+                3
+              ],
+              "type": "t1",
+              "text": "xAxisLineColor",
+              "resolvedSymbol": "s11"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                14,
+                19
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            15,
+            3
+          ],
+          "symbol": "s12",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                15,
+                3
+              ],
+              "type": "t1",
+              "text": "yAxisLabelColor",
+              "resolvedSymbol": "s12"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                15,
+                20
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            16,
+            3
+          ],
+          "symbol": "s13",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                16,
+                3
+              ],
+              "type": "t1",
+              "text": "yAxisTitleColor",
+              "resolvedSymbol": "s13"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                16,
+                20
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            17,
+            3
+          ],
+          "symbol": "s14",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                17,
+                3
+              ],
+              "type": "t1",
+              "text": "yAxisTickColor",
+              "resolvedSymbol": "s14"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                17,
+                19
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            18,
+            3
+          ],
+          "symbol": "s15",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                18,
+                3
+              ],
+              "type": "t1",
+              "text": "yAxisLineColor",
+              "resolvedSymbol": "s15"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                18,
+                19
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            19,
+            3
+          ],
+          "symbol": "s16",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                19,
+                3
+              ],
+              "type": "t1",
+              "text": "plotColorPalette",
+              "resolvedSymbol": "s16"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                19,
+                21
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        22,
+        1
+      ],
+      "symbol": "s17",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            22,
+            18
+          ],
+          "type": "t3",
+          "text": "ChartComponent",
+          "resolvedSymbol": "s17"
+        },
+        {
+          "kind": "MethodSignature",
+          "kindCode": 173,
+          "pos": [
+            23,
+            3
+          ],
+          "symbol": "s18",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                23,
+                3
+              ],
+              "type": "t4",
+              "text": "calculateSpace",
+              "resolvedSymbol": "s18"
+            },
+            {
+              "kind": "Parameter",
+              "kindCode": 169,
+              "pos": [
+                23,
+                18
+              ],
+              "symbol": "s19",
+              "type": "t5",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    23,
+                    18
+                  ],
+                  "type": "t5",
+                  "text": "availableSpace",
+                  "resolvedSymbol": "s19"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    23,
+                    34
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        23,
+                        34
+                      ],
+                      "type": "t5",
+                      "text": "Dimension",
+                      "resolvedSymbol": "s20"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                23,
+                46
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    23,
+                    46
+                  ],
+                  "type": "t5",
+                  "text": "Dimension",
+                  "resolvedSymbol": "s20"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodSignature",
+          "kindCode": 173,
+          "pos": [
+            24,
+            3
+          ],
+          "symbol": "s21",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                24,
+                3
+              ],
+              "type": "t7",
+              "text": "setBoundingBoxXY",
+              "resolvedSymbol": "s21"
+            },
+            {
+              "kind": "Parameter",
+              "kindCode": 169,
+              "pos": [
+                24,
+                20
+              ],
+              "symbol": "s22",
+              "type": "t8",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    24,
+                    20
+                  ],
+                  "type": "t8",
+                  "text": "point",
+                  "resolvedSymbol": "s22"
+                },
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    24,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        24,
+                        27
+                      ],
+                      "type": "t8",
+                      "text": "Point",
+                      "resolvedSymbol": "s23"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "VoidKeyword",
+              "kindCode": 116,
+              "pos": [
+                24,
+                35
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodSignature",
+          "kindCode": 173,
+          "pos": [
+            25,
+            3
+          ],
+          "symbol": "s24",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                25,
+                3
+              ],
+              "type": "t10",
+              "text": "getDrawableElements",
+              "resolvedSymbol": "s24"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                25,
+                26
+              ],
+              "children": [
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    25,
+                    26
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        25,
+                        26
+                      ],
+                      "type": "t12",
+                      "text": "DrawableElem",
+                      "resolvedSymbol": "s25"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        28,
+        1
+      ],
+      "symbol": "s26",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            28,
+            13
+          ],
+          "type": "t35",
+          "text": "SimplePlotDataType",
+          "resolvedSymbol": "s26"
+        },
+        {
+          "kind": "ArrayType",
+          "kindCode": 188,
+          "pos": [
+            28,
+            34
+          ],
+          "children": [
+            {
+              "kind": "TupleType",
+              "kindCode": 189,
+              "pos": [
+                28,
+                34
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    28,
+                    35
+                  ]
+                },
+                {
+                  "kind": "NumberKeyword",
+                  "kindCode": 150,
+                  "pos": [
+                    28,
+                    43
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        30,
+        1
+      ],
+      "symbol": "s27",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            30,
+            18
+          ],
+          "type": "t40",
+          "text": "LinePlotData",
+          "resolvedSymbol": "s27"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            31,
+            3
+          ],
+          "symbol": "s28",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                31,
+                3
+              ],
+              "type": "t41",
+              "text": "type",
+              "resolvedSymbol": "s28"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                31,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    31,
+                    9
+                  ],
+                  "type": "t42",
+                  "value": "line"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            32,
+            3
+          ],
+          "symbol": "s29",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                32,
+                3
+              ],
+              "type": "t1",
+              "text": "strokeFill",
+              "resolvedSymbol": "s29"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                32,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            33,
+            3
+          ],
+          "symbol": "s30",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                33,
+                3
+              ],
+              "type": "t6",
+              "text": "strokeWidth",
+              "resolvedSymbol": "s30"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                33,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            34,
+            3
+          ],
+          "symbol": "s31",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                34,
+                3
+              ],
+              "type": "t35",
+              "text": "data",
+              "resolvedSymbol": "s31"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                34,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    34,
+                    9
+                  ],
+                  "type": "t35",
+                  "text": "SimplePlotDataType",
+                  "resolvedSymbol": "s26"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        37,
+        1
+      ],
+      "symbol": "s32",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            37,
+            18
+          ],
+          "type": "t43",
+          "text": "BarPlotData",
+          "resolvedSymbol": "s32"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            38,
+            3
+          ],
+          "symbol": "s33",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                38,
+                3
+              ],
+              "type": "t44",
+              "text": "type",
+              "resolvedSymbol": "s33"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                38,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    38,
+                    9
+                  ],
+                  "type": "t42",
+                  "value": "bar"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            39,
+            3
+          ],
+          "symbol": "s34",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                39,
+                3
+              ],
+              "type": "t1",
+              "text": "fill",
+              "resolvedSymbol": "s34"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                39,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            40,
+            3
+          ],
+          "symbol": "s35",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                40,
+                3
+              ],
+              "type": "t35",
+              "text": "data",
+              "resolvedSymbol": "s35"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                40,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    40,
+                    9
+                  ],
+                  "type": "t35",
+                  "text": "SimplePlotDataType",
+                  "resolvedSymbol": "s26"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        43,
+        1
+      ],
+      "symbol": "s36",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            43,
+            13
+          ],
+          "type": "t45",
+          "text": "PlotData",
+          "resolvedSymbol": "s36"
+        },
+        {
+          "kind": "UnionType",
+          "kindCode": 192,
+          "pos": [
+            43,
+            24
+          ],
+          "children": [
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                43,
+                24
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    43,
+                    24
+                  ],
+                  "type": "t40",
+                  "text": "LinePlotData",
+                  "resolvedSymbol": "s27"
+                }
+              ]
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                43,
+                39
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    43,
+                    39
+                  ],
+                  "type": "t43",
+                  "text": "BarPlotData",
+                  "resolvedSymbol": "s32"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        45,
+        1
+      ],
+      "symbol": "s37",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            45,
+            17
+          ],
+          "type": "t46",
+          "text": "isBarPlot",
+          "resolvedSymbol": "s37"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            45,
+            27
+          ],
+          "symbol": "s38",
+          "type": "t45",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                45,
+                27
+              ],
+              "type": "t45",
+              "text": "data",
+              "resolvedSymbol": "s38"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                45,
+                33
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    45,
+                    33
+                  ],
+                  "type": "t45",
+                  "text": "PlotData",
+                  "resolvedSymbol": "s36"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FirstTypeNode",
+          "kindCode": 182,
+          "pos": [
+            45,
+            44
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                45,
+                44
+              ],
+              "type": "t42",
+              "text": "data",
+              "resolvedSymbol": "s38"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                45,
+                52
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    45,
+                    52
+                  ],
+                  "type": "t43",
+                  "text": "BarPlotData",
+                  "resolvedSymbol": "s32"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            45,
+            64
+          ],
+          "children": [
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                46,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    46,
+                    10
+                  ],
+                  "type": "t47",
+                  "operator": "EqualsEqualsEqualsToken",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        46,
+                        10
+                      ],
+                      "type": "t50",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            46,
+                            10
+                          ],
+                          "type": "t45",
+                          "text": "data",
+                          "resolvedSymbol": "s38"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            46,
+                            15
+                          ],
+                          "type": "t50",
+                          "text": "type",
+                          "resolvedSymbol": "s39"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        46,
+                        24
+                      ],
+                      "type": "t44",
+                      "value": "bar"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        49,
+        1
+      ],
+      "symbol": "s40",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            49,
+            18
+          ],
+          "type": "t51",
+          "text": "BandAxisDataType",
+          "resolvedSymbol": "s40"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            50,
+            3
+          ],
+          "symbol": "s41",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                50,
+                3
+              ],
+              "type": "t52",
+              "text": "type",
+              "resolvedSymbol": "s41"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                50,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    50,
+                    9
+                  ],
+                  "type": "t42",
+                  "value": "band"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            51,
+            3
+          ],
+          "symbol": "s42",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                51,
+                3
+              ],
+              "type": "t1",
+              "text": "title",
+              "resolvedSymbol": "s42"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                51,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            52,
+            3
+          ],
+          "symbol": "s43",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                52,
+                3
+              ],
+              "type": "t14",
+              "text": "categories",
+              "resolvedSymbol": "s43"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                52,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    52,
+                    15
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        55,
+        1
+      ],
+      "symbol": "s44",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            55,
+            18
+          ],
+          "type": "t53",
+          "text": "LinearAxisDataType",
+          "resolvedSymbol": "s44"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            56,
+            3
+          ],
+          "symbol": "s45",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                56,
+                3
+              ],
+              "type": "t54",
+              "text": "type",
+              "resolvedSymbol": "s45"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                56,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    56,
+                    9
+                  ],
+                  "type": "t42",
+                  "value": "linear"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            57,
+            3
+          ],
+          "symbol": "s46",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                57,
+                3
+              ],
+              "type": "t1",
+              "text": "title",
+              "resolvedSymbol": "s46"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                57,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            58,
+            3
+          ],
+          "symbol": "s47",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                58,
+                3
+              ],
+              "type": "t6",
+              "text": "min",
+              "resolvedSymbol": "s47"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                58,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            59,
+            3
+          ],
+          "symbol": "s48",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                59,
+                3
+              ],
+              "type": "t6",
+              "text": "max",
+              "resolvedSymbol": "s48"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                59,
+                8
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        62,
+        1
+      ],
+      "symbol": "s49",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            62,
+            13
+          ],
+          "type": "t55",
+          "text": "AxisDataType",
+          "resolvedSymbol": "s49"
+        },
+        {
+          "kind": "UnionType",
+          "kindCode": 192,
+          "pos": [
+            62,
+            28
+          ],
+          "children": [
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                62,
+                28
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    62,
+                    28
+                  ],
+                  "type": "t53",
+                  "text": "LinearAxisDataType",
+                  "resolvedSymbol": "s44"
+                }
+              ]
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                62,
+                49
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    62,
+                    49
+                  ],
+                  "type": "t51",
+                  "text": "BandAxisDataType",
+                  "resolvedSymbol": "s40"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        64,
+        1
+      ],
+      "symbol": "s50",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            64,
+            17
+          ],
+          "type": "t56",
+          "text": "isBandAxisData",
+          "resolvedSymbol": "s50"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            64,
+            32
+          ],
+          "symbol": "s51",
+          "type": "t55",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                64,
+                32
+              ],
+              "type": "t55",
+              "text": "data",
+              "resolvedSymbol": "s51"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                64,
+                38
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    64,
+                    38
+                  ],
+                  "type": "t55",
+                  "text": "AxisDataType",
+                  "resolvedSymbol": "s49"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FirstTypeNode",
+          "kindCode": 182,
+          "pos": [
+            64,
+            53
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                64,
+                53
+              ],
+              "type": "t42",
+              "text": "data",
+              "resolvedSymbol": "s51"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                64,
+                61
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    64,
+                    61
+                  ],
+                  "type": "t51",
+                  "text": "BandAxisDataType",
+                  "resolvedSymbol": "s40"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            64,
+            78
+          ],
+          "children": [
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                65,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    65,
+                    10
+                  ],
+                  "type": "t47",
+                  "operator": "EqualsEqualsEqualsToken",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        65,
+                        10
+                      ],
+                      "type": "t57",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            65,
+                            10
+                          ],
+                          "type": "t55",
+                          "text": "data",
+                          "resolvedSymbol": "s51"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            65,
+                            15
+                          ],
+                          "type": "t57",
+                          "text": "type",
+                          "resolvedSymbol": "s52"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        65,
+                        24
+                      ],
+                      "type": "t52",
+                      "value": "band"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        68,
+        1
+      ],
+      "symbol": "s53",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            68,
+            17
+          ],
+          "type": "t58",
+          "text": "isLinearAxisData",
+          "resolvedSymbol": "s53"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            68,
+            34
+          ],
+          "symbol": "s54",
+          "type": "t55",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                68,
+                34
+              ],
+              "type": "t55",
+              "text": "data",
+              "resolvedSymbol": "s54"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                68,
+                40
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    68,
+                    40
+                  ],
+                  "type": "t55",
+                  "text": "AxisDataType",
+                  "resolvedSymbol": "s49"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FirstTypeNode",
+          "kindCode": 182,
+          "pos": [
+            68,
+            55
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                68,
+                55
+              ],
+              "type": "t42",
+              "text": "data",
+              "resolvedSymbol": "s54"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                68,
+                63
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    68,
+                    63
+                  ],
+                  "type": "t53",
+                  "text": "LinearAxisDataType",
+                  "resolvedSymbol": "s44"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            68,
+            82
+          ],
+          "children": [
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                69,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "BinaryExpression",
+                  "kindCode": 226,
+                  "pos": [
+                    69,
+                    10
+                  ],
+                  "type": "t47",
+                  "operator": "EqualsEqualsEqualsToken",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        69,
+                        10
+                      ],
+                      "type": "t57",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            69,
+                            10
+                          ],
+                          "type": "t55",
+                          "text": "data",
+                          "resolvedSymbol": "s54"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            69,
+                            15
+                          ],
+                          "type": "t57",
+                          "text": "type",
+                          "resolvedSymbol": "s52"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        69,
+                        24
+                      ],
+                      "type": "t54",
+                      "value": "linear"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        76,
+        1
+      ],
+      "symbol": "s55",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * For now we are keeping this configs as we are removing the required fields while generating the config.type.ts file\n * we should remove `XYChartAxisConfig` and `XYChartConfig` after we started using required fields\n */",
+          "pos": [
+            72,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            76,
+            18
+          ],
+          "type": "t59",
+          "text": "XYChartAxisConfig",
+          "resolvedSymbol": "s55"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            77,
+            3
+          ],
+          "symbol": "s56",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                77,
+                3
+              ],
+              "type": "t47",
+              "text": "showLabel",
+              "resolvedSymbol": "s56"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                77,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            78,
+            3
+          ],
+          "symbol": "s57",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                78,
+                3
+              ],
+              "type": "t6",
+              "text": "labelFontSize",
+              "resolvedSymbol": "s57"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                78,
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            79,
+            3
+          ],
+          "symbol": "s58",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                79,
+                3
+              ],
+              "type": "t6",
+              "text": "labelPadding",
+              "resolvedSymbol": "s58"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                79,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            80,
+            3
+          ],
+          "symbol": "s59",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                80,
+                3
+              ],
+              "type": "t47",
+              "text": "showTitle",
+              "resolvedSymbol": "s59"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                80,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            81,
+            3
+          ],
+          "symbol": "s60",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                81,
+                3
+              ],
+              "type": "t6",
+              "text": "titleFontSize",
+              "resolvedSymbol": "s60"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                81,
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            82,
+            3
+          ],
+          "symbol": "s61",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                82,
+                3
+              ],
+              "type": "t6",
+              "text": "titlePadding",
+              "resolvedSymbol": "s61"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                82,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            83,
+            3
+          ],
+          "symbol": "s62",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                83,
+                3
+              ],
+              "type": "t47",
+              "text": "showTick",
+              "resolvedSymbol": "s62"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                83,
+                13
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            84,
+            3
+          ],
+          "symbol": "s63",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                84,
+                3
+              ],
+              "type": "t6",
+              "text": "tickLength",
+              "resolvedSymbol": "s63"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                84,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            85,
+            3
+          ],
+          "symbol": "s64",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                85,
+                3
+              ],
+              "type": "t6",
+              "text": "tickWidth",
+              "resolvedSymbol": "s64"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                85,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            86,
+            3
+          ],
+          "symbol": "s65",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                86,
+                3
+              ],
+              "type": "t47",
+              "text": "showAxisLine",
+              "resolvedSymbol": "s65"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                86,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            87,
+            3
+          ],
+          "symbol": "s66",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                87,
+                3
+              ],
+              "type": "t6",
+              "text": "axisLineWidth",
+              "resolvedSymbol": "s66"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                87,
+                18
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        90,
+        1
+      ],
+      "symbol": "s67",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            90,
+            18
+          ],
+          "type": "t60",
+          "text": "XYChartConfig",
+          "resolvedSymbol": "s67"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            91,
+            3
+          ],
+          "symbol": "s68",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                91,
+                3
+              ],
+              "type": "t6",
+              "text": "width",
+              "resolvedSymbol": "s68"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                91,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            92,
+            3
+          ],
+          "symbol": "s69",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                92,
+                3
+              ],
+              "type": "t6",
+              "text": "height",
+              "resolvedSymbol": "s69"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                92,
+                11
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            93,
+            3
+          ],
+          "symbol": "s70",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                93,
+                3
+              ],
+              "type": "t6",
+              "text": "titleFontSize",
+              "resolvedSymbol": "s70"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                93,
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            94,
+            3
+          ],
+          "symbol": "s71",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                94,
+                3
+              ],
+              "type": "t6",
+              "text": "titlePadding",
+              "resolvedSymbol": "s71"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                94,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            95,
+            3
+          ],
+          "symbol": "s72",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                95,
+                3
+              ],
+              "type": "t47",
+              "text": "showTitle",
+              "resolvedSymbol": "s72"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                95,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            96,
+            3
+          ],
+          "symbol": "s73",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                96,
+                3
+              ],
+              "type": "t59",
+              "text": "xAxis",
+              "resolvedSymbol": "s73"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                96,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    96,
+                    10
+                  ],
+                  "type": "t59",
+                  "text": "XYChartAxisConfig",
+                  "resolvedSymbol": "s55"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            97,
+            3
+          ],
+          "symbol": "s74",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                97,
+                3
+              ],
+              "type": "t59",
+              "text": "yAxis",
+              "resolvedSymbol": "s74"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                97,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    97,
+                    10
+                  ],
+                  "type": "t59",
+                  "text": "XYChartAxisConfig",
+                  "resolvedSymbol": "s55"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            98,
+            3
+          ],
+          "symbol": "s75",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                98,
+                3
+              ],
+              "type": "t61",
+              "text": "chartOrientation",
+              "resolvedSymbol": "s75"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                98,
+                21
+              ],
+              "children": [
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    98,
+                    21
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        98,
+                        21
+                      ],
+                      "type": "t42",
+                      "value": "vertical"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    98,
+                    34
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        98,
+                        34
+                      ],
+                      "type": "t42",
+                      "value": "horizontal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            99,
+            3
+          ],
+          "symbol": "s76",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                99,
+                3
+              ],
+              "type": "t6",
+              "text": "plotReservedSpacePercent",
+              "resolvedSymbol": "s76"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                99,
+                29
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        102,
+        1
+      ],
+      "symbol": "s77",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            102,
+            18
+          ],
+          "type": "t64",
+          "text": "XYChartData",
+          "resolvedSymbol": "s77"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            103,
+            3
+          ],
+          "symbol": "s78",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                103,
+                3
+              ],
+              "type": "t55",
+              "text": "xAxis",
+              "resolvedSymbol": "s78"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                103,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    103,
+                    10
+                  ],
+                  "type": "t55",
+                  "text": "AxisDataType",
+                  "resolvedSymbol": "s49"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            104,
+            3
+          ],
+          "symbol": "s79",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                104,
+                3
+              ],
+              "type": "t55",
+              "text": "yAxis",
+              "resolvedSymbol": "s79"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                104,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    104,
+                    10
+                  ],
+                  "type": "t55",
+                  "text": "AxisDataType",
+                  "resolvedSymbol": "s49"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            105,
+            3
+          ],
+          "symbol": "s80",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                105,
+                3
+              ],
+              "type": "t1",
+              "text": "title",
+              "resolvedSymbol": "s80"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                105,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            106,
+            3
+          ],
+          "symbol": "s81",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                106,
+                3
+              ],
+              "type": "t65",
+              "text": "plots",
+              "resolvedSymbol": "s81"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                106,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    106,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        106,
+                        10
+                      ],
+                      "type": "t45",
+                      "text": "PlotData",
+                      "resolvedSymbol": "s36"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        109,
+        1
+      ],
+      "symbol": "s20",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            109,
+            18
+          ],
+          "type": "t5",
+          "text": "Dimension",
+          "resolvedSymbol": "s20"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            110,
+            3
+          ],
+          "symbol": "s82",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                110,
+                3
+              ],
+              "type": "t6",
+              "text": "width",
+              "resolvedSymbol": "s82"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                110,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            111,
+            3
+          ],
+          "symbol": "s83",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                111,
+                3
+              ],
+              "type": "t6",
+              "text": "height",
+              "resolvedSymbol": "s83"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                111,
+                11
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        114,
+        1
+      ],
+      "symbol": "s84",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            114,
+            18
+          ],
+          "type": "t66",
+          "text": "BoundingRect",
+          "resolvedSymbol": "s84"
+        },
+        {
+          "kind": "HeritageClause",
+          "kindCode": 298,
+          "pos": [
+            114,
+            31
+          ],
+          "children": [
+            {
+              "kind": "ExpressionWithTypeArguments",
+              "kindCode": 233,
+              "pos": [
+                114,
+                39
+              ],
+              "type": "t8",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    114,
+                    39
+                  ],
+                  "type": "t8",
+                  "text": "Point",
+                  "resolvedSymbol": "s23"
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionWithTypeArguments",
+              "kindCode": 233,
+              "pos": [
+                114,
+                46
+              ],
+              "type": "t5",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    114,
+                    46
+                  ],
+                  "type": "t5",
+                  "text": "Dimension",
+                  "resolvedSymbol": "s20"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        116,
+        1
+      ],
+      "symbol": "s23",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            116,
+            18
+          ],
+          "type": "t8",
+          "text": "Point",
+          "resolvedSymbol": "s23"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            117,
+            3
+          ],
+          "symbol": "s85",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                117,
+                3
+              ],
+              "type": "t6",
+              "text": "x",
+              "resolvedSymbol": "s85"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                117,
+                6
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            118,
+            3
+          ],
+          "symbol": "s86",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                118,
+                3
+              ],
+              "type": "t6",
+              "text": "y",
+              "resolvedSymbol": "s86"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                118,
+                6
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        121,
+        1
+      ],
+      "symbol": "s87",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            121,
+            13
+          ],
+          "type": "t25",
+          "text": "TextHorizontalPos",
+          "resolvedSymbol": "s87"
+        },
+        {
+          "kind": "UnionType",
+          "kindCode": 192,
+          "pos": [
+            121,
+            33
+          ],
+          "children": [
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                121,
+                33
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    121,
+                    33
+                  ],
+                  "type": "t42",
+                  "value": "left"
+                }
+              ]
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                121,
+                42
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    121,
+                    42
+                  ],
+                  "type": "t42",
+                  "value": "center"
+                }
+              ]
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                121,
+                53
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    121,
+                    53
+                  ],
+                  "type": "t42",
+                  "value": "right"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        122,
+        1
+      ],
+      "symbol": "s88",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            122,
+            13
+          ],
+          "type": "t22",
+          "text": "TextVerticalPos",
+          "resolvedSymbol": "s88"
+        },
+        {
+          "kind": "UnionType",
+          "kindCode": 192,
+          "pos": [
+            122,
+            31
+          ],
+          "children": [
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                122,
+                31
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    122,
+                    31
+                  ],
+                  "type": "t42",
+                  "value": "top"
+                }
+              ]
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                122,
+                39
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    122,
+                    39
+                  ],
+                  "type": "t42",
+                  "value": "middle"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        124,
+        1
+      ],
+      "symbol": "s89",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            124,
+            18
+          ],
+          "type": "t17",
+          "text": "RectElem",
+          "resolvedSymbol": "s89"
+        },
+        {
+          "kind": "HeritageClause",
+          "kindCode": 298,
+          "pos": [
+            124,
+            27
+          ],
+          "children": [
+            {
+              "kind": "ExpressionWithTypeArguments",
+              "kindCode": 233,
+              "pos": [
+                124,
+                35
+              ],
+              "type": "t8",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    124,
+                    35
+                  ],
+                  "type": "t8",
+                  "text": "Point",
+                  "resolvedSymbol": "s23"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            125,
+            3
+          ],
+          "symbol": "s90",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                125,
+                3
+              ],
+              "type": "t6",
+              "text": "width",
+              "resolvedSymbol": "s90"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                125,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            126,
+            3
+          ],
+          "symbol": "s91",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                126,
+                3
+              ],
+              "type": "t6",
+              "text": "height",
+              "resolvedSymbol": "s91"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                126,
+                11
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            127,
+            3
+          ],
+          "symbol": "s92",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                127,
+                3
+              ],
+              "type": "t1",
+              "text": "fill",
+              "resolvedSymbol": "s92"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                127,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            128,
+            3
+          ],
+          "symbol": "s93",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                128,
+                3
+              ],
+              "type": "t6",
+              "text": "strokeWidth",
+              "resolvedSymbol": "s93"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                128,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            129,
+            3
+          ],
+          "symbol": "s94",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                129,
+                3
+              ],
+              "type": "t1",
+              "text": "strokeFill",
+              "resolvedSymbol": "s94"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                129,
+                15
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        132,
+        1
+      ],
+      "symbol": "s95",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            132,
+            18
+          ],
+          "type": "t21",
+          "text": "TextElem",
+          "resolvedSymbol": "s95"
+        },
+        {
+          "kind": "HeritageClause",
+          "kindCode": 298,
+          "pos": [
+            132,
+            27
+          ],
+          "children": [
+            {
+              "kind": "ExpressionWithTypeArguments",
+              "kindCode": 233,
+              "pos": [
+                132,
+                35
+              ],
+              "type": "t8",
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    132,
+                    35
+                  ],
+                  "type": "t8",
+                  "text": "Point",
+                  "resolvedSymbol": "s23"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            133,
+            3
+          ],
+          "symbol": "s96",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                133,
+                3
+              ],
+              "type": "t1",
+              "text": "text",
+              "resolvedSymbol": "s96"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                133,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            134,
+            3
+          ],
+          "symbol": "s97",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                134,
+                3
+              ],
+              "type": "t1",
+              "text": "fill",
+              "resolvedSymbol": "s97"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                134,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            135,
+            3
+          ],
+          "symbol": "s98",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                135,
+                3
+              ],
+              "type": "t22",
+              "text": "verticalPos",
+              "resolvedSymbol": "s98"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                135,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    135,
+                    16
+                  ],
+                  "type": "t22",
+                  "text": "TextVerticalPos",
+                  "resolvedSymbol": "s88"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            136,
+            3
+          ],
+          "symbol": "s99",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                136,
+                3
+              ],
+              "type": "t25",
+              "text": "horizontalPos",
+              "resolvedSymbol": "s99"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                136,
+                18
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    136,
+                    18
+                  ],
+                  "type": "t25",
+                  "text": "TextHorizontalPos",
+                  "resolvedSymbol": "s87"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            137,
+            3
+          ],
+          "symbol": "s100",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                137,
+                3
+              ],
+              "type": "t6",
+              "text": "fontSize",
+              "resolvedSymbol": "s100"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                137,
+                13
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            138,
+            3
+          ],
+          "symbol": "s101",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                138,
+                3
+              ],
+              "type": "t6",
+              "text": "rotation",
+              "resolvedSymbol": "s101"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                138,
+                13
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        141,
+        1
+      ],
+      "symbol": "s102",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            141,
+            18
+          ],
+          "type": "t32",
+          "text": "PathElem",
+          "resolvedSymbol": "s102"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            142,
+            3
+          ],
+          "symbol": "s103",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                142,
+                3
+              ],
+              "type": "t1",
+              "text": "path",
+              "resolvedSymbol": "s103"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                142,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            143,
+            3
+          ],
+          "symbol": "s104",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                143,
+                3
+              ],
+              "type": "t33",
+              "text": "fill",
+              "resolvedSymbol": "s104"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                143,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            144,
+            3
+          ],
+          "symbol": "s105",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                144,
+                3
+              ],
+              "type": "t6",
+              "text": "strokeWidth",
+              "resolvedSymbol": "s105"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                144,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            145,
+            3
+          ],
+          "symbol": "s106",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                145,
+                3
+              ],
+              "type": "t1",
+              "text": "strokeFill",
+              "resolvedSymbol": "s106"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                145,
+                15
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "TypeAliasDeclaration",
+      "kindCode": 265,
+      "pos": [
+        148,
+        1
+      ],
+      "symbol": "s25",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            148,
+            13
+          ],
+          "type": "t12",
+          "text": "DrawableElem",
+          "resolvedSymbol": "s25"
+        },
+        {
+          "kind": "UnionType",
+          "kindCode": 192,
+          "pos": [
+            149,
+            3
+          ],
+          "children": [
+            {
+              "kind": "TypeLiteral",
+              "kindCode": 187,
+              "pos": [
+                149,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    150,
+                    7
+                  ],
+                  "symbol": "s107",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        150,
+                        7
+                      ],
+                      "type": "t14",
+                      "text": "groupTexts",
+                      "resolvedSymbol": "s107"
+                    },
+                    {
+                      "kind": "ArrayType",
+                      "kindCode": 188,
+                      "pos": [
+                        150,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringKeyword",
+                          "kindCode": 154,
+                          "pos": [
+                            150,
+                            19
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    151,
+                    7
+                  ],
+                  "symbol": "s108",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        151,
+                        7
+                      ],
+                      "type": "t15",
+                      "text": "type",
+                      "resolvedSymbol": "s108"
+                    },
+                    {
+                      "kind": "LiteralType",
+                      "kindCode": 201,
+                      "pos": [
+                        151,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            151,
+                            13
+                          ],
+                          "type": "t42",
+                          "value": "rect"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    152,
+                    7
+                  ],
+                  "symbol": "s109",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        152,
+                        7
+                      ],
+                      "type": "t16",
+                      "text": "data",
+                      "resolvedSymbol": "s109"
+                    },
+                    {
+                      "kind": "ArrayType",
+                      "kindCode": 188,
+                      "pos": [
+                        152,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeReference",
+                          "kindCode": 183,
+                          "pos": [
+                            152,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                152,
+                                13
+                              ],
+                              "type": "t17",
+                              "text": "RectElem",
+                              "resolvedSymbol": "s89"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "TypeLiteral",
+              "kindCode": 187,
+              "pos": [
+                154,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    155,
+                    7
+                  ],
+                  "symbol": "s110",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        155,
+                        7
+                      ],
+                      "type": "t14",
+                      "text": "groupTexts",
+                      "resolvedSymbol": "s110"
+                    },
+                    {
+                      "kind": "ArrayType",
+                      "kindCode": 188,
+                      "pos": [
+                        155,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringKeyword",
+                          "kindCode": 154,
+                          "pos": [
+                            155,
+                            19
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    156,
+                    7
+                  ],
+                  "symbol": "s111",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        156,
+                        7
+                      ],
+                      "type": "t19",
+                      "text": "type",
+                      "resolvedSymbol": "s111"
+                    },
+                    {
+                      "kind": "LiteralType",
+                      "kindCode": 201,
+                      "pos": [
+                        156,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            156,
+                            13
+                          ],
+                          "type": "t42",
+                          "value": "text"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    157,
+                    7
+                  ],
+                  "symbol": "s112",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        157,
+                        7
+                      ],
+                      "type": "t20",
+                      "text": "data",
+                      "resolvedSymbol": "s112"
+                    },
+                    {
+                      "kind": "ArrayType",
+                      "kindCode": 188,
+                      "pos": [
+                        157,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeReference",
+                          "kindCode": 183,
+                          "pos": [
+                            157,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                157,
+                                13
+                              ],
+                              "type": "t21",
+                              "text": "TextElem",
+                              "resolvedSymbol": "s95"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "TypeLiteral",
+              "kindCode": 187,
+              "pos": [
+                159,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    160,
+                    7
+                  ],
+                  "symbol": "s113",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        160,
+                        7
+                      ],
+                      "type": "t14",
+                      "text": "groupTexts",
+                      "resolvedSymbol": "s113"
+                    },
+                    {
+                      "kind": "ArrayType",
+                      "kindCode": 188,
+                      "pos": [
+                        160,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringKeyword",
+                          "kindCode": 154,
+                          "pos": [
+                            160,
+                            19
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    161,
+                    7
+                  ],
+                  "symbol": "s114",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        161,
+                        7
+                      ],
+                      "type": "t30",
+                      "text": "type",
+                      "resolvedSymbol": "s114"
+                    },
+                    {
+                      "kind": "LiteralType",
+                      "kindCode": 201,
+                      "pos": [
+                        161,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "StringLiteral",
+                          "kindCode": 11,
+                          "pos": [
+                            161,
+                            13
+                          ],
+                          "type": "t42",
+                          "value": "path"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    162,
+                    7
+                  ],
+                  "symbol": "s115",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        162,
+                        7
+                      ],
+                      "type": "t31",
+                      "text": "data",
+                      "resolvedSymbol": "s115"
+                    },
+                    {
+                      "kind": "ArrayType",
+                      "kindCode": 188,
+                      "pos": [
+                        162,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeReference",
+                          "kindCode": 183,
+                          "pos": [
+                            162,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                162,
+                                13
+                              ],
+                              "type": "t32",
+                              "text": "PathElem",
+                              "resolvedSymbol": "s102"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "XYChartAxisThemeConfig",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t0",
+      "parent": "s116"
+    },
+    "s1": {
+      "name": "titleColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "labelColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "tickColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "axisLineColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "XYChartThemeConfig",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t2",
+      "parent": "s116"
+    },
+    "s6": {
+      "name": "backgroundColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s7": {
+      "name": "titleColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s8": {
+      "name": "xAxisLabelColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s9": {
+      "name": "xAxisTitleColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s10": {
+      "name": "xAxisTickColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s11": {
+      "name": "xAxisLineColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s12": {
+      "name": "yAxisLabelColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s13": {
+      "name": "yAxisTitleColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s14": {
+      "name": "yAxisTickColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s15": {
+      "name": "yAxisLineColor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s16": {
+      "name": "plotColorPalette",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s17": {
+      "name": "ChartComponent",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t3",
+      "parent": "s116"
+    },
+    "s18": {
+      "name": "calculateSpace",
+      "flags": [
+        "method"
+      ],
+      "parent": "s17"
+    },
+    "s19": {
+      "name": "availableSpace",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s20": {
+      "name": "Dimension",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t5",
+      "parent": "s116"
+    },
+    "s21": {
+      "name": "setBoundingBoxXY",
+      "flags": [
+        "method"
+      ],
+      "parent": "s17"
+    },
+    "s22": {
+      "name": "point",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s23": {
+      "name": "Point",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t8",
+      "parent": "s116"
+    },
+    "s24": {
+      "name": "getDrawableElements",
+      "flags": [
+        "method"
+      ],
+      "parent": "s17"
+    },
+    "s25": {
+      "name": "DrawableElem",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t12",
+      "parent": "s116"
+    },
+    "s26": {
+      "name": "SimplePlotDataType",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t35",
+      "parent": "s116"
+    },
+    "s27": {
+      "name": "LinePlotData",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t40",
+      "parent": "s116"
+    },
+    "s28": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s27"
+    },
+    "s29": {
+      "name": "strokeFill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s27"
+    },
+    "s30": {
+      "name": "strokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s27"
+    },
+    "s31": {
+      "name": "data",
+      "flags": [
+        "property"
+      ],
+      "parent": "s27"
+    },
+    "s32": {
+      "name": "BarPlotData",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t43",
+      "parent": "s116"
+    },
+    "s33": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s32"
+    },
+    "s34": {
+      "name": "fill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s32"
+    },
+    "s35": {
+      "name": "data",
+      "flags": [
+        "property"
+      ],
+      "parent": "s32"
+    },
+    "s36": {
+      "name": "PlotData",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t45",
+      "parent": "s116"
+    },
+    "s37": {
+      "name": "isBarPlot",
+      "flags": [
+        "function"
+      ],
+      "parent": "s116"
+    },
+    "s38": {
+      "name": "data",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s39": {
+      "name": "type",
+      "flags": [
+        "property"
+      ]
+    },
+    "s40": {
+      "name": "BandAxisDataType",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t51",
+      "parent": "s116"
+    },
+    "s41": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s40"
+    },
+    "s42": {
+      "name": "title",
+      "flags": [
+        "property"
+      ],
+      "parent": "s40"
+    },
+    "s43": {
+      "name": "categories",
+      "flags": [
+        "property"
+      ],
+      "parent": "s40"
+    },
+    "s44": {
+      "name": "LinearAxisDataType",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t53",
+      "parent": "s116"
+    },
+    "s45": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s46": {
+      "name": "title",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s47": {
+      "name": "min",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s48": {
+      "name": "max",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s49": {
+      "name": "AxisDataType",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t55",
+      "parent": "s116"
+    },
+    "s50": {
+      "name": "isBandAxisData",
+      "flags": [
+        "function"
+      ],
+      "parent": "s116"
+    },
+    "s51": {
+      "name": "data",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s52": {
+      "name": "type",
+      "flags": [
+        "property"
+      ]
+    },
+    "s53": {
+      "name": "isLinearAxisData",
+      "flags": [
+        "function"
+      ],
+      "parent": "s116"
+    },
+    "s54": {
+      "name": "data",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s55": {
+      "name": "XYChartAxisConfig",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t59",
+      "parent": "s116"
+    },
+    "s56": {
+      "name": "showLabel",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s57": {
+      "name": "labelFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s58": {
+      "name": "labelPadding",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s59": {
+      "name": "showTitle",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s60": {
+      "name": "titleFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s61": {
+      "name": "titlePadding",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s62": {
+      "name": "showTick",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s63": {
+      "name": "tickLength",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s64": {
+      "name": "tickWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s65": {
+      "name": "showAxisLine",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s66": {
+      "name": "axisLineWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s55"
+    },
+    "s67": {
+      "name": "XYChartConfig",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t60",
+      "parent": "s116"
+    },
+    "s68": {
+      "name": "width",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s69": {
+      "name": "height",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s70": {
+      "name": "titleFontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s71": {
+      "name": "titlePadding",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s72": {
+      "name": "showTitle",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s73": {
+      "name": "xAxis",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s74": {
+      "name": "yAxis",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s75": {
+      "name": "chartOrientation",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s76": {
+      "name": "plotReservedSpacePercent",
+      "flags": [
+        "property"
+      ],
+      "parent": "s67"
+    },
+    "s77": {
+      "name": "XYChartData",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t64",
+      "parent": "s116"
+    },
+    "s78": {
+      "name": "xAxis",
+      "flags": [
+        "property"
+      ],
+      "parent": "s77"
+    },
+    "s79": {
+      "name": "yAxis",
+      "flags": [
+        "property"
+      ],
+      "parent": "s77"
+    },
+    "s80": {
+      "name": "title",
+      "flags": [
+        "property"
+      ],
+      "parent": "s77"
+    },
+    "s81": {
+      "name": "plots",
+      "flags": [
+        "property"
+      ],
+      "parent": "s77"
+    },
+    "s82": {
+      "name": "width",
+      "flags": [
+        "property"
+      ],
+      "parent": "s20"
+    },
+    "s83": {
+      "name": "height",
+      "flags": [
+        "property"
+      ],
+      "parent": "s20"
+    },
+    "s84": {
+      "name": "BoundingRect",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t66",
+      "parent": "s116"
+    },
+    "s85": {
+      "name": "x",
+      "flags": [
+        "property"
+      ],
+      "parent": "s23"
+    },
+    "s86": {
+      "name": "y",
+      "flags": [
+        "property"
+      ],
+      "parent": "s23"
+    },
+    "s87": {
+      "name": "TextHorizontalPos",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t25",
+      "parent": "s116"
+    },
+    "s88": {
+      "name": "TextVerticalPos",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t22",
+      "parent": "s116"
+    },
+    "s89": {
+      "name": "RectElem",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t17",
+      "parent": "s116"
+    },
+    "s90": {
+      "name": "width",
+      "flags": [
+        "property"
+      ],
+      "parent": "s89"
+    },
+    "s91": {
+      "name": "height",
+      "flags": [
+        "property"
+      ],
+      "parent": "s89"
+    },
+    "s92": {
+      "name": "fill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s89"
+    },
+    "s93": {
+      "name": "strokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s89"
+    },
+    "s94": {
+      "name": "strokeFill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s89"
+    },
+    "s95": {
+      "name": "TextElem",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t21",
+      "parent": "s116"
+    },
+    "s96": {
+      "name": "text",
+      "flags": [
+        "property"
+      ],
+      "parent": "s95"
+    },
+    "s97": {
+      "name": "fill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s95"
+    },
+    "s98": {
+      "name": "verticalPos",
+      "flags": [
+        "property"
+      ],
+      "parent": "s95"
+    },
+    "s99": {
+      "name": "horizontalPos",
+      "flags": [
+        "property"
+      ],
+      "parent": "s95"
+    },
+    "s100": {
+      "name": "fontSize",
+      "flags": [
+        "property"
+      ],
+      "parent": "s95"
+    },
+    "s101": {
+      "name": "rotation",
+      "flags": [
+        "property"
+      ],
+      "parent": "s95"
+    },
+    "s102": {
+      "name": "PathElem",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t32",
+      "parent": "s116"
+    },
+    "s103": {
+      "name": "path",
+      "flags": [
+        "property"
+      ],
+      "parent": "s102"
+    },
+    "s104": {
+      "name": "fill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s102"
+    },
+    "s105": {
+      "name": "strokeWidth",
+      "flags": [
+        "property"
+      ],
+      "parent": "s102"
+    },
+    "s106": {
+      "name": "strokeFill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s102"
+    },
+    "s107": {
+      "name": "groupTexts",
+      "flags": [
+        "property"
+      ],
+      "parent": "s117"
+    },
+    "s108": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s117"
+    },
+    "s109": {
+      "name": "data",
+      "flags": [
+        "property"
+      ],
+      "parent": "s117"
+    },
+    "s110": {
+      "name": "groupTexts",
+      "flags": [
+        "property"
+      ],
+      "parent": "s118"
+    },
+    "s111": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s118"
+    },
+    "s112": {
+      "name": "data",
+      "flags": [
+        "property"
+      ],
+      "parent": "s118"
+    },
+    "s113": {
+      "name": "groupTexts",
+      "flags": [
+        "property"
+      ],
+      "parent": "s119"
+    },
+    "s114": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s119"
+    },
+    "s115": {
+      "name": "data",
+      "flags": [
+        "property"
+      ],
+      "parent": "s119"
+    },
+    "s116": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/xychart/chartBuilder/interfaces\"",
+      "flags": []
+    },
+    "s117": {
+      "name": "__type",
+      "flags": []
+    },
+    "s118": {
+      "name": "__type",
+      "flags": []
+    },
+    "s119": {
+      "name": "__type",
+      "flags": []
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "object",
+      "text": "XYChartAxisThemeConfig",
+      "members": {
+        "titleColor": "t1",
+        "labelColor": "t1",
+        "tickColor": "t1",
+        "axisLineColor": "t1"
+      }
+    },
+    "t2": {
+      "kind": "object",
+      "text": "XYChartThemeConfig",
+      "members": {
+        "backgroundColor": "t1",
+        "titleColor": "t1",
+        "xAxisLabelColor": "t1",
+        "xAxisTitleColor": "t1",
+        "xAxisTickColor": "t1",
+        "xAxisLineColor": "t1",
+        "yAxisLabelColor": "t1",
+        "yAxisTitleColor": "t1",
+        "yAxisTickColor": "t1",
+        "yAxisLineColor": "t1",
+        "plotColorPalette": "t1"
+      }
+    },
+    "t6": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t5": {
+      "kind": "object",
+      "text": "Dimension",
+      "members": {
+        "width": "t6",
+        "height": "t6"
+      }
+    },
+    "t4": {
+      "kind": "function",
+      "text": "(availableSpace: Dimension) => Dimension",
+      "parameters": [
+        {
+          "name": "availableSpace",
+          "type": "t5",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t8": {
+      "kind": "object",
+      "text": "Point",
+      "members": {
+        "x": "t6",
+        "y": "t6"
+      }
+    },
+    "t9": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t7": {
+      "kind": "function",
+      "text": "(point: Point) => void",
+      "parameters": [
+        {
+          "name": "point",
+          "type": "t8",
+          "optional": false
+        }
+      ],
+      "returnType": "t9"
+    },
+    "t14": {
+      "kind": "array",
+      "text": "string[]",
+      "elementType": "t1"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"rect\"",
+      "value": "rect"
+    },
+    "t17": {
+      "kind": "object",
+      "text": "RectElem",
+      "members": {
+        "width": "t6",
+        "height": "t6",
+        "fill": "t1",
+        "strokeWidth": "t6",
+        "strokeFill": "t1",
+        "x": "t6",
+        "y": "t6"
+      }
+    },
+    "t16": {
+      "kind": "array",
+      "text": "RectElem[]",
+      "elementType": "t17"
+    },
+    "t13": {
+      "kind": "object",
+      "text": "{ groupTexts: string[]; type: \"rect\"; data: RectElem[]; }",
+      "members": {
+        "groupTexts": "t14",
+        "type": "t15",
+        "data": "t16"
+      }
+    },
+    "t19": {
+      "kind": "stringLiteral",
+      "text": "\"text\"",
+      "value": "text"
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"top\"",
+      "value": "top"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"middle\"",
+      "value": "middle"
+    },
+    "t22": {
+      "kind": "union",
+      "text": "TextVerticalPos",
+      "types": [
+        "t23",
+        "t24"
+      ]
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"left\"",
+      "value": "left"
+    },
+    "t27": {
+      "kind": "stringLiteral",
+      "text": "\"right\"",
+      "value": "right"
+    },
+    "t28": {
+      "kind": "stringLiteral",
+      "text": "\"center\"",
+      "value": "center"
+    },
+    "t25": {
+      "kind": "union",
+      "text": "TextHorizontalPos",
+      "types": [
+        "t26",
+        "t27",
+        "t28"
+      ]
+    },
+    "t21": {
+      "kind": "object",
+      "text": "TextElem",
+      "members": {
+        "text": "t1",
+        "fill": "t1",
+        "verticalPos": "t22",
+        "horizontalPos": "t25",
+        "fontSize": "t6",
+        "rotation": "t6",
+        "x": "t6",
+        "y": "t6"
+      }
+    },
+    "t20": {
+      "kind": "array",
+      "text": "TextElem[]",
+      "elementType": "t21"
+    },
+    "t18": {
+      "kind": "object",
+      "text": "{ groupTexts: string[]; type: \"text\"; data: TextElem[]; }",
+      "members": {
+        "groupTexts": "t14",
+        "type": "t19",
+        "data": "t20"
+      }
+    },
+    "t30": {
+      "kind": "stringLiteral",
+      "text": "\"path\"",
+      "value": "path"
+    },
+    "t34": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t33": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t34",
+        "t1"
+      ]
+    },
+    "t32": {
+      "kind": "object",
+      "text": "PathElem",
+      "members": {
+        "path": "t1",
+        "fill": "t33",
+        "strokeWidth": "t6",
+        "strokeFill": "t1"
+      }
+    },
+    "t31": {
+      "kind": "array",
+      "text": "PathElem[]",
+      "elementType": "t32"
+    },
+    "t29": {
+      "kind": "object",
+      "text": "{ groupTexts: string[]; type: \"path\"; data: PathElem[]; }",
+      "members": {
+        "groupTexts": "t14",
+        "type": "t30",
+        "data": "t31"
+      }
+    },
+    "t12": {
+      "kind": "union",
+      "text": "DrawableElem",
+      "types": [
+        "t13",
+        "t18",
+        "t29"
+      ]
+    },
+    "t11": {
+      "kind": "array",
+      "text": "DrawableElem[]",
+      "elementType": "t12"
+    },
+    "t10": {
+      "kind": "function",
+      "text": "() => DrawableElem[]",
+      "parameters": [],
+      "returnType": "t11"
+    },
+    "t3": {
+      "kind": "object",
+      "text": "ChartComponent",
+      "members": {
+        "calculateSpace": "t4",
+        "setBoundingBoxXY": "t7",
+        "getDrawableElements": "t10"
+      }
+    },
+    "t38": {
+      "kind": "other",
+      "text": "?"
+    },
+    "t39": {
+      "kind": "other",
+      "text": "?"
+    },
+    "t37": {
+      "kind": "reference",
+      "text": "[?, ?]",
+      "target": "t37",
+      "typeArguments": [
+        "t38",
+        "t39"
+      ]
+    },
+    "t36": {
+      "kind": "reference",
+      "text": "[string, number]",
+      "target": "t37",
+      "typeArguments": [
+        "t1",
+        "t6"
+      ]
+    },
+    "t35": {
+      "kind": "array",
+      "text": "SimplePlotDataType",
+      "elementType": "t36"
+    },
+    "t41": {
+      "kind": "stringLiteral",
+      "text": "\"line\"",
+      "value": "line"
+    },
+    "t40": {
+      "kind": "object",
+      "text": "LinePlotData",
+      "members": {
+        "type": "t41",
+        "strokeFill": "t1",
+        "strokeWidth": "t6",
+        "data": "t35"
+      }
+    },
+    "t42": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t44": {
+      "kind": "stringLiteral",
+      "text": "\"bar\"",
+      "value": "bar"
+    },
+    "t43": {
+      "kind": "object",
+      "text": "BarPlotData",
+      "members": {
+        "type": "t44",
+        "fill": "t1",
+        "data": "t35"
+      }
+    },
+    "t45": {
+      "kind": "union",
+      "text": "PlotData",
+      "types": [
+        "t40",
+        "t43"
+      ]
+    },
+    "t48": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t49": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t47": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t48",
+        "t49"
+      ]
+    },
+    "t46": {
+      "kind": "function",
+      "text": "(data: PlotData) => data is BarPlotData",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "t45",
+          "optional": false
+        }
+      ],
+      "returnType": "t47"
+    },
+    "t50": {
+      "kind": "union",
+      "text": "\"line\" | \"bar\"",
+      "types": [
+        "t41",
+        "t44"
+      ]
+    },
+    "t52": {
+      "kind": "stringLiteral",
+      "text": "\"band\"",
+      "value": "band"
+    },
+    "t51": {
+      "kind": "object",
+      "text": "BandAxisDataType",
+      "members": {
+        "type": "t52",
+        "title": "t1",
+        "categories": "t14"
+      }
+    },
+    "t54": {
+      "kind": "stringLiteral",
+      "text": "\"linear\"",
+      "value": "linear"
+    },
+    "t53": {
+      "kind": "object",
+      "text": "LinearAxisDataType",
+      "members": {
+        "type": "t54",
+        "title": "t1",
+        "min": "t6",
+        "max": "t6"
+      }
+    },
+    "t55": {
+      "kind": "union",
+      "text": "AxisDataType",
+      "types": [
+        "t51",
+        "t53"
+      ]
+    },
+    "t56": {
+      "kind": "function",
+      "text": "(data: AxisDataType) => data is BandAxisDataType",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "t55",
+          "optional": false
+        }
+      ],
+      "returnType": "t47"
+    },
+    "t57": {
+      "kind": "union",
+      "text": "\"linear\" | \"band\"",
+      "types": [
+        "t54",
+        "t52"
+      ]
+    },
+    "t58": {
+      "kind": "function",
+      "text": "(data: AxisDataType) => data is LinearAxisDataType",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "t55",
+          "optional": false
+        }
+      ],
+      "returnType": "t47"
+    },
+    "t59": {
+      "kind": "object",
+      "text": "XYChartAxisConfig",
+      "members": {
+        "showLabel": "t47",
+        "labelFontSize": "t6",
+        "labelPadding": "t6",
+        "showTitle": "t47",
+        "titleFontSize": "t6",
+        "titlePadding": "t6",
+        "showTick": "t47",
+        "tickLength": "t6",
+        "tickWidth": "t6",
+        "showAxisLine": "t47",
+        "axisLineWidth": "t6"
+      }
+    },
+    "t62": {
+      "kind": "stringLiteral",
+      "text": "\"vertical\"",
+      "value": "vertical"
+    },
+    "t63": {
+      "kind": "stringLiteral",
+      "text": "\"horizontal\"",
+      "value": "horizontal"
+    },
+    "t61": {
+      "kind": "union",
+      "text": "\"vertical\" | \"horizontal\"",
+      "types": [
+        "t62",
+        "t63"
+      ]
+    },
+    "t60": {
+      "kind": "object",
+      "text": "XYChartConfig",
+      "members": {
+        "width": "t6",
+        "height": "t6",
+        "titleFontSize": "t6",
+        "titlePadding": "t6",
+        "showTitle": "t47",
+        "xAxis": "t59",
+        "yAxis": "t59",
+        "chartOrientation": "t61",
+        "plotReservedSpacePercent": "t6"
+      }
+    },
+    "t65": {
+      "kind": "array",
+      "text": "PlotData[]",
+      "elementType": "t45"
+    },
+    "t64": {
+      "kind": "object",
+      "text": "XYChartData",
+      "members": {
+        "xAxis": "t55",
+        "yAxis": "t55",
+        "title": "t1",
+        "plots": "t65"
+      }
+    },
+    "t66": {
+      "kind": "object",
+      "text": "BoundingRect",
+      "members": {
+        "x": "t6",
+        "y": "t6",
+        "width": "t6",
+        "height": "t6"
+      }
+    }
+  }
+}

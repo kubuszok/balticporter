@@ -1,0 +1,776 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/er/styles.js",
+  "sha256": "0cfe321357077d723dcd0098ef255e9c51acafb5da5455405347d44bd4eb80e3",
+  "nodes": [
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            1,
+            1
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                1,
+                7
+              ],
+              "symbol": "s0",
+              "type": "t0",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    1,
+                    7
+                  ],
+                  "type": "t0",
+                  "text": "getStyles",
+                  "resolvedSymbol": "s0"
+                },
+                {
+                  "kind": "ArrowFunction",
+                  "kindCode": 219,
+                  "pos": [
+                    1,
+                    19
+                  ],
+                  "type": "t0",
+                  "children": [
+                    {
+                      "kind": "Parameter",
+                      "kindCode": 169,
+                      "pos": [
+                        1,
+                        20
+                      ],
+                      "symbol": "s1",
+                      "type": "t1",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            1,
+                            20
+                          ],
+                          "type": "t1",
+                          "text": "options",
+                          "resolvedSymbol": "s1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateExpression",
+                      "kindCode": 228,
+                      "pos": [
+                        2,
+                        3
+                      ],
+                      "type": "t2",
+                      "children": [
+                        {
+                          "kind": "TemplateHead",
+                          "kindCode": 16,
+                          "pos": [
+                            2,
+                            3
+                          ],
+                          "value": "\n  .entityBox {\n    fill: "
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            4,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                4,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    4,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    4,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "mainBkg"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                4,
+                                28
+                              ],
+                              "value": ";\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            5,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                5,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    5,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    5,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "nodeBorder"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                5,
+                                33
+                              ],
+                              "value": ";\n  }\n\n  .attributeBoxOdd {\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            9,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                9,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    9,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    9,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "attributeBackgroundColorOdd"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                9,
+                                48
+                              ],
+                              "value": ";\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            10,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                10,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    10,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    10,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "nodeBorder"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                10,
+                                33
+                              ],
+                              "value": ";\n  }\n\n  .attributeBoxEven {\n    fill:  "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            14,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                14,
+                                14
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    14,
+                                    14
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    14,
+                                    22
+                                  ],
+                                  "type": "t1",
+                                  "text": "attributeBackgroundColorEven"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                14,
+                                50
+                              ],
+                              "value": ";\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            15,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                15,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    15,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    15,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "nodeBorder"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                15,
+                                33
+                              ],
+                              "value": ";\n  }\n\n  .relationshipLabelBox {\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            19,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                19,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    19,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    19,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "tertiaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                19,
+                                34
+                              ],
+                              "value": ";\n    opacity: 0.7;\n    background-color: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            21,
+                            25
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                21,
+                                25
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    21,
+                                    25
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    21,
+                                    33
+                                  ],
+                                  "type": "t1",
+                                  "text": "tertiaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                21,
+                                46
+                              ],
+                              "value": ";\n      rect {\n        opacity: 0.5;\n      }\n  }\n\n    .relationshipLine {\n      stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            28,
+                            17
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                28,
+                                17
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    28,
+                                    17
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    28,
+                                    25
+                                  ],
+                                  "type": "t1",
+                                  "text": "lineColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                28,
+                                34
+                              ],
+                              "value": ";\n    }\n\n  .entityTitleText {\n    text-anchor: middle;\n    font-size: 18px;\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            34,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                34,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    34,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    34,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "textColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                34,
+                                30
+                              ],
+                              "value": ";\n  }    \n  #MD_PARENT_START {\n    fill: #f5f5f5 !important;\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            38,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                38,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    38,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    38,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "lineColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                38,
+                                32
+                              ],
+                              "value": " !important;\n    stroke-width: 1;\n  }\n  #MD_PARENT_END {\n    fill: #f5f5f5 !important;\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            43,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                43,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    43,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    43,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "lineColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateTail",
+                              "kindCode": 18,
+                              "pos": [
+                                43,
+                                32
+                              ],
+                              "value": " !important;\n    stroke-width: 1;\n  }\n  \n"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        49,
+        1
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            49,
+            16
+          ],
+          "type": "t0",
+          "text": "getStyles",
+          "resolvedSymbol": "s0"
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "getStyles",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s1": {
+      "name": "options",
+      "flags": [
+        "variable"
+      ]
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t2": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(options: any) => string",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    }
+  }
+}

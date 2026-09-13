@@ -1,0 +1,2894 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/sequence/types.ts",
+  "sha256": "9c801feb9785705c7d0fdf458c4db138e004aecdc009e39e0f04c6e243c06144",
+  "nodes": [
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        1,
+        1
+      ],
+      "symbol": "s0",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            1,
+            18
+          ],
+          "type": "t0",
+          "text": "Box",
+          "resolvedSymbol": "s0"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            2,
+            3
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                2,
+                3
+              ],
+              "type": "t1",
+              "text": "name",
+              "resolvedSymbol": "s1"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                2,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            3,
+            3
+          ],
+          "symbol": "s2",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                3,
+                3
+              ],
+              "type": "t2",
+              "text": "wrap",
+              "resolvedSymbol": "s2"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                3,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            4,
+            3
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                4,
+                3
+              ],
+              "type": "t1",
+              "text": "fill",
+              "resolvedSymbol": "s3"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                4,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            5,
+            3
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                5,
+                3
+              ],
+              "type": "t5",
+              "text": "actorKeys",
+              "resolvedSymbol": "s4"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                5,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    5,
+                    14
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        8,
+        1
+      ],
+      "symbol": "s5",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            8,
+            18
+          ],
+          "type": "t6",
+          "text": "Actor",
+          "resolvedSymbol": "s5"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            9,
+            3
+          ],
+          "symbol": "s6",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                9,
+                3
+              ],
+              "type": "t7",
+              "text": "box",
+              "resolvedSymbol": "s6"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                9,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    9,
+                    9
+                  ],
+                  "type": "t0",
+                  "text": "Box",
+                  "resolvedSymbol": "s0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            10,
+            3
+          ],
+          "symbol": "s7",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                10,
+                3
+              ],
+              "type": "t1",
+              "text": "name",
+              "resolvedSymbol": "s7"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                10,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            11,
+            3
+          ],
+          "symbol": "s8",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                11,
+                3
+              ],
+              "type": "t1",
+              "text": "description",
+              "resolvedSymbol": "s8"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                11,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            12,
+            3
+          ],
+          "symbol": "s9",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                12,
+                3
+              ],
+              "type": "t2",
+              "text": "wrap",
+              "resolvedSymbol": "s9"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                12,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            13,
+            3
+          ],
+          "symbol": "s10",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                13,
+                3
+              ],
+              "type": "t9",
+              "text": "prevActor",
+              "resolvedSymbol": "s10"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                13,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            14,
+            3
+          ],
+          "symbol": "s11",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                14,
+                3
+              ],
+              "type": "t9",
+              "text": "nextActor",
+              "resolvedSymbol": "s11"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                14,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            15,
+            3
+          ],
+          "symbol": "s12",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                15,
+                3
+              ],
+              "type": "t10",
+              "text": "links",
+              "resolvedSymbol": "s12"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                15,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    15,
+                    10
+                  ],
+                  "type": "t15",
+                  "text": "Record",
+                  "resolvedSymbol": "s13"
+                },
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    15,
+                    17
+                  ]
+                },
+                {
+                  "kind": "UnknownKeyword",
+                  "kindCode": 159,
+                  "pos": [
+                    15,
+                    25
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            16,
+            3
+          ],
+          "symbol": "s14",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                16,
+                3
+              ],
+              "type": "t10",
+              "text": "properties",
+              "resolvedSymbol": "s14"
+            },
+            {
+              "kind": "TypeReference",
+              "kindCode": 183,
+              "pos": [
+                16,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    16,
+                    15
+                  ],
+                  "type": "t15",
+                  "text": "Record",
+                  "resolvedSymbol": "s13"
+                },
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    16,
+                    22
+                  ]
+                },
+                {
+                  "kind": "UnknownKeyword",
+                  "kindCode": 159,
+                  "pos": [
+                    16,
+                    30
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            17,
+            3
+          ],
+          "symbol": "s15",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                17,
+                3
+              ],
+              "type": "t11",
+              "text": "actorCnt",
+              "resolvedSymbol": "s15"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                17,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "NumberKeyword",
+                  "kindCode": 150,
+                  "pos": [
+                    17,
+                    13
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    17,
+                    22
+                  ],
+                  "children": [
+                    {
+                      "kind": "NullKeyword",
+                      "kindCode": 106,
+                      "pos": [
+                        17,
+                        22
+                      ],
+                      "type": "t12"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            18,
+            3
+          ],
+          "symbol": "s16",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                18,
+                3
+              ],
+              "type": "t14",
+              "text": "rectData",
+              "resolvedSymbol": "s16"
+            },
+            {
+              "kind": "UnknownKeyword",
+              "kindCode": 159,
+              "pos": [
+                18,
+                13
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            19,
+            3
+          ],
+          "symbol": "s17",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                19,
+                3
+              ],
+              "type": "t1",
+              "text": "type",
+              "resolvedSymbol": "s17"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                19,
+                9
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        22,
+        1
+      ],
+      "symbol": "s18",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            22,
+            18
+          ],
+          "type": "t16",
+          "text": "Message",
+          "resolvedSymbol": "s18"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            23,
+            3
+          ],
+          "symbol": "s19",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                23,
+                3
+              ],
+              "type": "t9",
+              "text": "from",
+              "resolvedSymbol": "s19"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                23,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            24,
+            3
+          ],
+          "symbol": "s20",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                24,
+                3
+              ],
+              "type": "t9",
+              "text": "to",
+              "resolvedSymbol": "s20"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                24,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            25,
+            3
+          ],
+          "symbol": "s21",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                25,
+                3
+              ],
+              "type": "t17",
+              "text": "message",
+              "resolvedSymbol": "s21"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                26,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    26,
+                    7
+                  ]
+                },
+                {
+                  "kind": "TypeLiteral",
+                  "kindCode": 187,
+                  "pos": [
+                    27,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "PropertySignature",
+                      "kindCode": 171,
+                      "pos": [
+                        28,
+                        9
+                      ],
+                      "symbol": "s22",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            28,
+                            9
+                          ],
+                          "type": "t13",
+                          "text": "start",
+                          "resolvedSymbol": "s22"
+                        },
+                        {
+                          "kind": "NumberKeyword",
+                          "kindCode": 150,
+                          "pos": [
+                            28,
+                            16
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertySignature",
+                      "kindCode": 171,
+                      "pos": [
+                        29,
+                        9
+                      ],
+                      "symbol": "s23",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            29,
+                            9
+                          ],
+                          "type": "t13",
+                          "text": "step",
+                          "resolvedSymbol": "s23"
+                        },
+                        {
+                          "kind": "NumberKeyword",
+                          "kindCode": 150,
+                          "pos": [
+                            29,
+                            15
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertySignature",
+                      "kindCode": 171,
+                      "pos": [
+                        30,
+                        9
+                      ],
+                      "symbol": "s24",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            30,
+                            9
+                          ],
+                          "type": "t2",
+                          "text": "visible",
+                          "resolvedSymbol": "s24"
+                        },
+                        {
+                          "kind": "BooleanKeyword",
+                          "kindCode": 136,
+                          "pos": [
+                            30,
+                            18
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            32,
+            3
+          ],
+          "symbol": "s25",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                32,
+                3
+              ],
+              "type": "t2",
+              "text": "wrap",
+              "resolvedSymbol": "s25"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                32,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            33,
+            3
+          ],
+          "symbol": "s26",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                33,
+                3
+              ],
+              "type": "t14",
+              "text": "answer",
+              "resolvedSymbol": "s26"
+            },
+            {
+              "kind": "UnknownKeyword",
+              "kindCode": 159,
+              "pos": [
+                33,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            34,
+            3
+          ],
+          "symbol": "s27",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                34,
+                3
+              ],
+              "type": "t19",
+              "text": "type",
+              "resolvedSymbol": "s27"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                34,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            35,
+            3
+          ],
+          "symbol": "s28",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                35,
+                3
+              ],
+              "type": "t20",
+              "text": "activate",
+              "resolvedSymbol": "s28"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                35,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            36,
+            3
+          ],
+          "symbol": "s29",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                36,
+                3
+              ],
+              "type": "t9",
+              "text": "placement",
+              "resolvedSymbol": "s29"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                36,
+                15
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        39,
+        1
+      ],
+      "symbol": "s30",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            39,
+            18
+          ],
+          "type": "t21",
+          "text": "AddMessageParams",
+          "resolvedSymbol": "s30"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            40,
+            3
+          ],
+          "symbol": "s31",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                40,
+                3
+              ],
+              "type": "t1",
+              "text": "from",
+              "resolvedSymbol": "s31"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                40,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            41,
+            3
+          ],
+          "symbol": "s32",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                41,
+                3
+              ],
+              "type": "t1",
+              "text": "to",
+              "resolvedSymbol": "s32"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                41,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            42,
+            3
+          ],
+          "symbol": "s33",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                42,
+                3
+              ],
+              "type": "t1",
+              "text": "msg",
+              "resolvedSymbol": "s33"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                42,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            43,
+            3
+          ],
+          "symbol": "s34",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                43,
+                3
+              ],
+              "type": "t13",
+              "text": "signalType",
+              "resolvedSymbol": "s34"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                43,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            44,
+            3
+          ],
+          "symbol": "s35",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                44,
+                3
+              ],
+              "type": "t22",
+              "text": "type",
+              "resolvedSymbol": "s35"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                45,
+                5
+              ],
+              "children": [
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    45,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        45,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addMessage"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    46,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        46,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "sequenceIndex"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    47,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        47,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addParticipant"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    48,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        48,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "createParticipant"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    49,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        49,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "destroyParticipant"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    50,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        50,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "activeStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    51,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        51,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "activeEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    52,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        52,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addNote"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    53,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        53,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addLinks"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    54,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        54,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addALink"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    55,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        55,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addProperties"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    56,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        56,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "addDetails"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    57,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        57,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "boxStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    58,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        58,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "boxEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    59,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        59,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "loopStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    60,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        60,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "loopEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    61,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        61,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "rectStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    62,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        62,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "rectEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    63,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        63,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "optStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    64,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        64,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "optEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    65,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        65,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "altStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    66,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        66,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "else"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    67,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        67,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "altEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    68,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        68,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "setAccTitle"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    69,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        69,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "parStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    70,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        70,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "parAnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    71,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        71,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "parEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    72,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        72,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "and"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    73,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        73,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "criticalStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    74,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        74,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "criticalOption"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    75,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        75,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "option"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    76,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        76,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "criticalEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    77,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        77,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "breakStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    78,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        78,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "breakEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    79,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        79,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "parOverStart"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    80,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        80,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "parOverEnd"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    81,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        81,
+                        7
+                      ],
+                      "type": "t60",
+                      "value": "parOverAnd"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            83,
+            3
+          ],
+          "symbol": "s36",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                83,
+                3
+              ],
+              "type": "t2",
+              "text": "activate",
+              "resolvedSymbol": "s36"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                83,
+                13
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        86,
+        1
+      ],
+      "symbol": "s37",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            86,
+            18
+          ],
+          "type": "t61",
+          "text": "Note",
+          "resolvedSymbol": "s37"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            87,
+            3
+          ],
+          "symbol": "s38",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                87,
+                3
+              ],
+              "type": "t62",
+              "text": "actor",
+              "resolvedSymbol": "s38"
+            },
+            {
+              "kind": "TypeLiteral",
+              "kindCode": 187,
+              "pos": [
+                87,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "PropertySignature",
+                  "kindCode": 171,
+                  "pos": [
+                    87,
+                    12
+                  ],
+                  "symbol": "s39",
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        87,
+                        12
+                      ],
+                      "type": "t1",
+                      "text": "actor",
+                      "resolvedSymbol": "s39"
+                    },
+                    {
+                      "kind": "StringKeyword",
+                      "kindCode": 154,
+                      "pos": [
+                        87,
+                        19
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            88,
+            3
+          ],
+          "symbol": "s40",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                88,
+                3
+              ],
+              "type": "t9",
+              "text": "placement",
+              "resolvedSymbol": "s40"
+            },
+            {
+              "kind": "IndexedAccessType",
+              "kindCode": 199,
+              "pos": [
+                88,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "TypeReference",
+                  "kindCode": 183,
+                  "pos": [
+                    88,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        88,
+                        14
+                      ],
+                      "type": "t16",
+                      "text": "Message",
+                      "resolvedSymbol": "s18"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    88,
+                    22
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        88,
+                        22
+                      ],
+                      "type": "t60",
+                      "value": "placement"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            89,
+            3
+          ],
+          "symbol": "s41",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                89,
+                3
+              ],
+              "type": "t1",
+              "text": "message",
+              "resolvedSymbol": "s41"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                89,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            90,
+            3
+          ],
+          "symbol": "s42",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                90,
+                3
+              ],
+              "type": "t2",
+              "text": "wrap",
+              "resolvedSymbol": "s42"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                90,
+                9
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Box",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t0",
+      "parent": "s43"
+    },
+    "s1": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "wrap",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "fill",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "actorKeys",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "Actor",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t6",
+      "parent": "s43"
+    },
+    "s6": {
+      "name": "box",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s7": {
+      "name": "name",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s8": {
+      "name": "description",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s9": {
+      "name": "wrap",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s10": {
+      "name": "prevActor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s11": {
+      "name": "nextActor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s12": {
+      "name": "links",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s13": {
+      "name": "Record",
+      "flags": [
+        "typeAlias"
+      ],
+      "declarationType": "t15"
+    },
+    "s14": {
+      "name": "properties",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s15": {
+      "name": "actorCnt",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s16": {
+      "name": "rectData",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s17": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s5"
+    },
+    "s18": {
+      "name": "Message",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t16",
+      "parent": "s43"
+    },
+    "s19": {
+      "name": "from",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s20": {
+      "name": "to",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s21": {
+      "name": "message",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s22": {
+      "name": "start",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s23": {
+      "name": "step",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s24": {
+      "name": "visible",
+      "flags": [
+        "property"
+      ],
+      "parent": "s44"
+    },
+    "s25": {
+      "name": "wrap",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s26": {
+      "name": "answer",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s27": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s28": {
+      "name": "activate",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s29": {
+      "name": "placement",
+      "flags": [
+        "property"
+      ],
+      "parent": "s18"
+    },
+    "s30": {
+      "name": "AddMessageParams",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t21",
+      "parent": "s43"
+    },
+    "s31": {
+      "name": "from",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s32": {
+      "name": "to",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s33": {
+      "name": "msg",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s34": {
+      "name": "signalType",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s35": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s36": {
+      "name": "activate",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s37": {
+      "name": "Note",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t61",
+      "parent": "s43"
+    },
+    "s38": {
+      "name": "actor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s39": {
+      "name": "actor",
+      "flags": [
+        "property"
+      ],
+      "parent": "s45"
+    },
+    "s40": {
+      "name": "placement",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s41": {
+      "name": "message",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s42": {
+      "name": "wrap",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s43": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/sequence/types\"",
+      "flags": []
+    },
+    "s44": {
+      "name": "__type",
+      "flags": []
+    },
+    "s45": {
+      "name": "__type",
+      "flags": []
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t3": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t4": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t2": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t3",
+        "t4"
+      ]
+    },
+    "t5": {
+      "kind": "array",
+      "text": "string[]",
+      "elementType": "t1"
+    },
+    "t0": {
+      "kind": "object",
+      "text": "Box",
+      "members": {
+        "name": "t1",
+        "wrap": "t2",
+        "fill": "t1",
+        "actorKeys": "t5"
+      }
+    },
+    "t8": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t7": {
+      "kind": "union",
+      "text": "Box | undefined",
+      "types": [
+        "t8",
+        "t0"
+      ]
+    },
+    "t9": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t8",
+        "t1"
+      ]
+    },
+    "t10": {
+      "kind": "object",
+      "text": "Record<string, unknown>",
+      "members": {}
+    },
+    "t12": {
+      "kind": "null",
+      "text": "null"
+    },
+    "t13": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t11": {
+      "kind": "union",
+      "text": "number | null",
+      "types": [
+        "t12",
+        "t13"
+      ]
+    },
+    "t14": {
+      "kind": "other",
+      "text": "unknown"
+    },
+    "t6": {
+      "kind": "object",
+      "text": "Actor",
+      "members": {
+        "box": "t7",
+        "name": "t1",
+        "description": "t1",
+        "wrap": "t2",
+        "prevActor": "t9",
+        "nextActor": "t9",
+        "links": "t10",
+        "properties": "t10",
+        "actorCnt": "t11",
+        "rectData": "t14",
+        "type": "t1"
+      }
+    },
+    "t15": {
+      "kind": "object",
+      "text": "Record<K, T>",
+      "members": {}
+    },
+    "t18": {
+      "kind": "object",
+      "text": "{ start: number; step: number; visible: boolean; }",
+      "members": {
+        "start": "t13",
+        "step": "t13",
+        "visible": "t2"
+      }
+    },
+    "t17": {
+      "kind": "union",
+      "text": "string | { start: number; step: number; visible: boolean; }",
+      "types": [
+        "t1",
+        "t18"
+      ]
+    },
+    "t19": {
+      "kind": "union",
+      "text": "number | undefined",
+      "types": [
+        "t8",
+        "t13"
+      ]
+    },
+    "t20": {
+      "kind": "union",
+      "text": "boolean | undefined",
+      "types": [
+        "t8",
+        "t3",
+        "t4"
+      ]
+    },
+    "t16": {
+      "kind": "object",
+      "text": "Message",
+      "members": {
+        "from": "t9",
+        "to": "t9",
+        "message": "t17",
+        "wrap": "t2",
+        "answer": "t14",
+        "type": "t19",
+        "activate": "t20",
+        "placement": "t9"
+      }
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"setAccTitle\"",
+      "value": "setAccTitle"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"option\"",
+      "value": "option"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"addMessage\"",
+      "value": "addMessage"
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"sequenceIndex\"",
+      "value": "sequenceIndex"
+    },
+    "t27": {
+      "kind": "stringLiteral",
+      "text": "\"addParticipant\"",
+      "value": "addParticipant"
+    },
+    "t28": {
+      "kind": "stringLiteral",
+      "text": "\"createParticipant\"",
+      "value": "createParticipant"
+    },
+    "t29": {
+      "kind": "stringLiteral",
+      "text": "\"destroyParticipant\"",
+      "value": "destroyParticipant"
+    },
+    "t30": {
+      "kind": "stringLiteral",
+      "text": "\"activeStart\"",
+      "value": "activeStart"
+    },
+    "t31": {
+      "kind": "stringLiteral",
+      "text": "\"activeEnd\"",
+      "value": "activeEnd"
+    },
+    "t32": {
+      "kind": "stringLiteral",
+      "text": "\"addNote\"",
+      "value": "addNote"
+    },
+    "t33": {
+      "kind": "stringLiteral",
+      "text": "\"addLinks\"",
+      "value": "addLinks"
+    },
+    "t34": {
+      "kind": "stringLiteral",
+      "text": "\"addALink\"",
+      "value": "addALink"
+    },
+    "t35": {
+      "kind": "stringLiteral",
+      "text": "\"addProperties\"",
+      "value": "addProperties"
+    },
+    "t36": {
+      "kind": "stringLiteral",
+      "text": "\"addDetails\"",
+      "value": "addDetails"
+    },
+    "t37": {
+      "kind": "stringLiteral",
+      "text": "\"boxStart\"",
+      "value": "boxStart"
+    },
+    "t38": {
+      "kind": "stringLiteral",
+      "text": "\"boxEnd\"",
+      "value": "boxEnd"
+    },
+    "t39": {
+      "kind": "stringLiteral",
+      "text": "\"loopStart\"",
+      "value": "loopStart"
+    },
+    "t40": {
+      "kind": "stringLiteral",
+      "text": "\"loopEnd\"",
+      "value": "loopEnd"
+    },
+    "t41": {
+      "kind": "stringLiteral",
+      "text": "\"rectStart\"",
+      "value": "rectStart"
+    },
+    "t42": {
+      "kind": "stringLiteral",
+      "text": "\"rectEnd\"",
+      "value": "rectEnd"
+    },
+    "t43": {
+      "kind": "stringLiteral",
+      "text": "\"optStart\"",
+      "value": "optStart"
+    },
+    "t44": {
+      "kind": "stringLiteral",
+      "text": "\"optEnd\"",
+      "value": "optEnd"
+    },
+    "t45": {
+      "kind": "stringLiteral",
+      "text": "\"altStart\"",
+      "value": "altStart"
+    },
+    "t46": {
+      "kind": "stringLiteral",
+      "text": "\"else\"",
+      "value": "else"
+    },
+    "t47": {
+      "kind": "stringLiteral",
+      "text": "\"altEnd\"",
+      "value": "altEnd"
+    },
+    "t48": {
+      "kind": "stringLiteral",
+      "text": "\"parStart\"",
+      "value": "parStart"
+    },
+    "t49": {
+      "kind": "stringLiteral",
+      "text": "\"parAnd\"",
+      "value": "parAnd"
+    },
+    "t50": {
+      "kind": "stringLiteral",
+      "text": "\"parEnd\"",
+      "value": "parEnd"
+    },
+    "t51": {
+      "kind": "stringLiteral",
+      "text": "\"and\"",
+      "value": "and"
+    },
+    "t52": {
+      "kind": "stringLiteral",
+      "text": "\"criticalStart\"",
+      "value": "criticalStart"
+    },
+    "t53": {
+      "kind": "stringLiteral",
+      "text": "\"criticalOption\"",
+      "value": "criticalOption"
+    },
+    "t54": {
+      "kind": "stringLiteral",
+      "text": "\"criticalEnd\"",
+      "value": "criticalEnd"
+    },
+    "t55": {
+      "kind": "stringLiteral",
+      "text": "\"breakStart\"",
+      "value": "breakStart"
+    },
+    "t56": {
+      "kind": "stringLiteral",
+      "text": "\"breakEnd\"",
+      "value": "breakEnd"
+    },
+    "t57": {
+      "kind": "stringLiteral",
+      "text": "\"parOverStart\"",
+      "value": "parOverStart"
+    },
+    "t58": {
+      "kind": "stringLiteral",
+      "text": "\"parOverEnd\"",
+      "value": "parOverEnd"
+    },
+    "t59": {
+      "kind": "stringLiteral",
+      "text": "\"parOverAnd\"",
+      "value": "parOverAnd"
+    },
+    "t22": {
+      "kind": "union",
+      "text": "\"setAccTitle\" | \"option\" | \"addMessage\" | \"sequenceIndex\" | \"addParticipant\" | \"createParticipant\" | \"destroyParticipant\" | \"activeStart\" | \"activeEnd\" | \"addNote\" | \"addLinks\" | ... 25 more ... | \"parOverAnd\"",
+      "types": [
+        "t23",
+        "t24",
+        "t25",
+        "t26",
+        "t27",
+        "t28",
+        "t29",
+        "t30",
+        "t31",
+        "t32",
+        "t33",
+        "t34",
+        "t35",
+        "t36",
+        "t37",
+        "t38",
+        "t39",
+        "t40",
+        "t41",
+        "t42",
+        "t43",
+        "t44",
+        "t45",
+        "t46",
+        "t47",
+        "t48",
+        "t49",
+        "t50",
+        "t51",
+        "t52",
+        "t53",
+        "t54",
+        "t55",
+        "t56",
+        "t57",
+        "t58",
+        "t59"
+      ]
+    },
+    "t21": {
+      "kind": "object",
+      "text": "AddMessageParams",
+      "members": {
+        "from": "t1",
+        "to": "t1",
+        "msg": "t1",
+        "signalType": "t13",
+        "type": "t22",
+        "activate": "t2"
+      }
+    },
+    "t60": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t62": {
+      "kind": "object",
+      "text": "{ actor: string; }",
+      "members": {
+        "actor": "t1"
+      }
+    },
+    "t61": {
+      "kind": "object",
+      "text": "Note",
+      "members": {
+        "actor": "t62",
+        "placement": "t9",
+        "message": "t1",
+        "wrap": "t2"
+      }
+    }
+  }
+}

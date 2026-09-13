@@ -1,0 +1,1909 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/flowchart/types.ts",
+  "sha256": "22de1aba04083e442ccfe68cc69b75de0c81dfcf06107482201a6fc077b03e9f",
+  "nodes": [
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        1,
+        1
+      ],
+      "symbol": "s0",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            1,
+            18
+          ],
+          "type": "t0",
+          "text": "FlowVertex",
+          "resolvedSymbol": "s0"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            2,
+            3
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                2,
+                3
+              ],
+              "type": "t1",
+              "text": "classes",
+              "resolvedSymbol": "s1"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                2,
+                12
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    2,
+                    12
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            3,
+            3
+          ],
+          "symbol": "s2",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                3,
+                3
+              ],
+              "type": "t3",
+              "text": "dir",
+              "resolvedSymbol": "s2"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                3,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            4,
+            3
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                4,
+                3
+              ],
+              "type": "t2",
+              "text": "domId",
+              "resolvedSymbol": "s3"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                4,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            5,
+            3
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                5,
+                3
+              ],
+              "type": "t5",
+              "text": "haveCallback",
+              "resolvedSymbol": "s4"
+            },
+            {
+              "kind": "BooleanKeyword",
+              "kindCode": 136,
+              "pos": [
+                5,
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            6,
+            3
+          ],
+          "symbol": "s5",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                6,
+                3
+              ],
+              "type": "t2",
+              "text": "id",
+              "resolvedSymbol": "s5"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                6,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            7,
+            3
+          ],
+          "symbol": "s6",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                7,
+                3
+              ],
+              "type": "t8",
+              "text": "labelType",
+              "resolvedSymbol": "s6"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                7,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    7,
+                    14
+                  ],
+                  "type": "t10",
+                  "value": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            8,
+            3
+          ],
+          "symbol": "s7",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                8,
+                3
+              ],
+              "type": "t3",
+              "text": "link",
+              "resolvedSymbol": "s7"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                8,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            9,
+            3
+          ],
+          "symbol": "s8",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                9,
+                3
+              ],
+              "type": "t3",
+              "text": "linkTarget",
+              "resolvedSymbol": "s8"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                9,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            10,
+            3
+          ],
+          "symbol": "s9",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                10,
+                3
+              ],
+              "type": "t9",
+              "text": "props",
+              "resolvedSymbol": "s9"
+            },
+            {
+              "kind": "AnyKeyword",
+              "kindCode": 133,
+              "pos": [
+                10,
+                11
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            11,
+            3
+          ],
+          "symbol": "s10",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                11,
+                3
+              ],
+              "type": "t1",
+              "text": "styles",
+              "resolvedSymbol": "s10"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                11,
+                11
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    11,
+                    11
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            12,
+            3
+          ],
+          "symbol": "s11",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                12,
+                3
+              ],
+              "type": "t3",
+              "text": "text",
+              "resolvedSymbol": "s11"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                12,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            13,
+            3
+          ],
+          "symbol": "s12",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                13,
+                3
+              ],
+              "type": "t3",
+              "text": "type",
+              "resolvedSymbol": "s12"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                13,
+                10
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        16,
+        1
+      ],
+      "symbol": "s13",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            16,
+            18
+          ],
+          "type": "t11",
+          "text": "FlowText",
+          "resolvedSymbol": "s13"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            17,
+            3
+          ],
+          "symbol": "s14",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                17,
+                3
+              ],
+              "type": "t2",
+              "text": "text",
+              "resolvedSymbol": "s14"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                17,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            18,
+            3
+          ],
+          "symbol": "s15",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                18,
+                3
+              ],
+              "type": "t8",
+              "text": "type",
+              "resolvedSymbol": "s15"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                18,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    18,
+                    9
+                  ],
+                  "type": "t10",
+                  "value": "text"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        21,
+        1
+      ],
+      "symbol": "s16",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            21,
+            18
+          ],
+          "type": "t12",
+          "text": "FlowEdge",
+          "resolvedSymbol": "s16"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            22,
+            3
+          ],
+          "symbol": "s17",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                22,
+                3
+              ],
+              "type": "t2",
+              "text": "start",
+              "resolvedSymbol": "s17"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                22,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            23,
+            3
+          ],
+          "symbol": "s18",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                23,
+                3
+              ],
+              "type": "t2",
+              "text": "end",
+              "resolvedSymbol": "s18"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                23,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            24,
+            3
+          ],
+          "symbol": "s19",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                24,
+                3
+              ],
+              "type": "t3",
+              "text": "interpolate",
+              "resolvedSymbol": "s19"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                24,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            25,
+            3
+          ],
+          "symbol": "s20",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                25,
+                3
+              ],
+              "type": "t3",
+              "text": "type",
+              "resolvedSymbol": "s20"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                25,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            26,
+            3
+          ],
+          "symbol": "s21",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                26,
+                3
+              ],
+              "type": "t13",
+              "text": "stroke",
+              "resolvedSymbol": "s21"
+            },
+            {
+              "kind": "UnionType",
+              "kindCode": 192,
+              "pos": [
+                26,
+                12
+              ],
+              "children": [
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    26,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        26,
+                        12
+                      ],
+                      "type": "t10",
+                      "value": "normal"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    26,
+                    23
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        26,
+                        23
+                      ],
+                      "type": "t10",
+                      "value": "thick"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    26,
+                    33
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        26,
+                        33
+                      ],
+                      "type": "t10",
+                      "value": "invisible"
+                    }
+                  ]
+                },
+                {
+                  "kind": "LiteralType",
+                  "kindCode": 201,
+                  "pos": [
+                    26,
+                    47
+                  ],
+                  "children": [
+                    {
+                      "kind": "StringLiteral",
+                      "kindCode": 11,
+                      "pos": [
+                        26,
+                        47
+                      ],
+                      "type": "t10",
+                      "value": "dotted"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            27,
+            3
+          ],
+          "symbol": "s22",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                27,
+                3
+              ],
+              "type": "t18",
+              "text": "style",
+              "resolvedSymbol": "s22"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                27,
+                11
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    27,
+                    11
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            28,
+            3
+          ],
+          "symbol": "s23",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                28,
+                3
+              ],
+              "type": "t19",
+              "text": "length",
+              "resolvedSymbol": "s23"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                28,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            29,
+            3
+          ],
+          "symbol": "s24",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                29,
+                3
+              ],
+              "type": "t2",
+              "text": "text",
+              "resolvedSymbol": "s24"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                29,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            30,
+            3
+          ],
+          "symbol": "s25",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                30,
+                3
+              ],
+              "type": "t8",
+              "text": "labelType",
+              "resolvedSymbol": "s25"
+            },
+            {
+              "kind": "LiteralType",
+              "kindCode": 201,
+              "pos": [
+                30,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    30,
+                    14
+                  ],
+                  "type": "t10",
+                  "value": "text"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        33,
+        1
+      ],
+      "symbol": "s26",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            33,
+            18
+          ],
+          "type": "t21",
+          "text": "FlowClass",
+          "resolvedSymbol": "s26"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            34,
+            3
+          ],
+          "symbol": "s27",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                34,
+                3
+              ],
+              "type": "t2",
+              "text": "id",
+              "resolvedSymbol": "s27"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                34,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            35,
+            3
+          ],
+          "symbol": "s28",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                35,
+                3
+              ],
+              "type": "t1",
+              "text": "styles",
+              "resolvedSymbol": "s28"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                35,
+                11
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    35,
+                    11
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            36,
+            3
+          ],
+          "symbol": "s29",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                36,
+                3
+              ],
+              "type": "t1",
+              "text": "textStyles",
+              "resolvedSymbol": "s29"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                36,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    36,
+                    15
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        39,
+        1
+      ],
+      "symbol": "s30",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            39,
+            18
+          ],
+          "type": "t22",
+          "text": "FlowSubGraph",
+          "resolvedSymbol": "s30"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            40,
+            3
+          ],
+          "symbol": "s31",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                40,
+                3
+              ],
+              "type": "t1",
+              "text": "classes",
+              "resolvedSymbol": "s31"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                40,
+                12
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    40,
+                    12
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            41,
+            3
+          ],
+          "symbol": "s32",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                41,
+                3
+              ],
+              "type": "t3",
+              "text": "dir",
+              "resolvedSymbol": "s32"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                41,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            42,
+            3
+          ],
+          "symbol": "s33",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                42,
+                3
+              ],
+              "type": "t2",
+              "text": "id",
+              "resolvedSymbol": "s33"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                42,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            43,
+            3
+          ],
+          "symbol": "s34",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                43,
+                3
+              ],
+              "type": "t2",
+              "text": "labelType",
+              "resolvedSymbol": "s34"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                43,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            44,
+            3
+          ],
+          "symbol": "s35",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                44,
+                3
+              ],
+              "type": "t1",
+              "text": "nodes",
+              "resolvedSymbol": "s35"
+            },
+            {
+              "kind": "ArrayType",
+              "kindCode": 188,
+              "pos": [
+                44,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "StringKeyword",
+                  "kindCode": 154,
+                  "pos": [
+                    44,
+                    10
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            45,
+            3
+          ],
+          "symbol": "s36",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                45,
+                3
+              ],
+              "type": "t2",
+              "text": "title",
+              "resolvedSymbol": "s36"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                45,
+                10
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "InterfaceDeclaration",
+      "kindCode": 264,
+      "pos": [
+        48,
+        1
+      ],
+      "symbol": "s37",
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            48,
+            18
+          ],
+          "type": "t23",
+          "text": "FlowLink",
+          "resolvedSymbol": "s37"
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            49,
+            3
+          ],
+          "symbol": "s38",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                49,
+                3
+              ],
+              "type": "t19",
+              "text": "length",
+              "resolvedSymbol": "s38"
+            },
+            {
+              "kind": "NumberKeyword",
+              "kindCode": 150,
+              "pos": [
+                49,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            50,
+            3
+          ],
+          "symbol": "s39",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                50,
+                3
+              ],
+              "type": "t2",
+              "text": "stroke",
+              "resolvedSymbol": "s39"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                50,
+                11
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            51,
+            3
+          ],
+          "symbol": "s40",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                51,
+                3
+              ],
+              "type": "t2",
+              "text": "type",
+              "resolvedSymbol": "s40"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                51,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "PropertySignature",
+          "kindCode": 171,
+          "pos": [
+            52,
+            3
+          ],
+          "symbol": "s41",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                52,
+                3
+              ],
+              "type": "t3",
+              "text": "text",
+              "resolvedSymbol": "s41"
+            },
+            {
+              "kind": "StringKeyword",
+              "kindCode": 154,
+              "pos": [
+                52,
+                10
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "FlowVertex",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t0",
+      "parent": "s42"
+    },
+    "s1": {
+      "name": "classes",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "dir",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "domId",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "haveCallback",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "id",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s6": {
+      "name": "labelType",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "link",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s8": {
+      "name": "linkTarget",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s9": {
+      "name": "props",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "styles",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s11": {
+      "name": "text",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s12": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s0"
+    },
+    "s13": {
+      "name": "FlowText",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t11",
+      "parent": "s42"
+    },
+    "s14": {
+      "name": "text",
+      "flags": [
+        "property"
+      ],
+      "parent": "s13"
+    },
+    "s15": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s13"
+    },
+    "s16": {
+      "name": "FlowEdge",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t12",
+      "parent": "s42"
+    },
+    "s17": {
+      "name": "start",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s18": {
+      "name": "end",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s19": {
+      "name": "interpolate",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s20": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s21": {
+      "name": "stroke",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s22": {
+      "name": "style",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s23": {
+      "name": "length",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s24": {
+      "name": "text",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s25": {
+      "name": "labelType",
+      "flags": [
+        "property"
+      ],
+      "parent": "s16"
+    },
+    "s26": {
+      "name": "FlowClass",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t21",
+      "parent": "s42"
+    },
+    "s27": {
+      "name": "id",
+      "flags": [
+        "property"
+      ],
+      "parent": "s26"
+    },
+    "s28": {
+      "name": "styles",
+      "flags": [
+        "property"
+      ],
+      "parent": "s26"
+    },
+    "s29": {
+      "name": "textStyles",
+      "flags": [
+        "property"
+      ],
+      "parent": "s26"
+    },
+    "s30": {
+      "name": "FlowSubGraph",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t22",
+      "parent": "s42"
+    },
+    "s31": {
+      "name": "classes",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s32": {
+      "name": "dir",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s33": {
+      "name": "id",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s34": {
+      "name": "labelType",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s35": {
+      "name": "nodes",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s36": {
+      "name": "title",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s37": {
+      "name": "FlowLink",
+      "flags": [
+        "interface"
+      ],
+      "declarationType": "t23",
+      "parent": "s42"
+    },
+    "s38": {
+      "name": "length",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s39": {
+      "name": "stroke",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s40": {
+      "name": "type",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s41": {
+      "name": "text",
+      "flags": [
+        "property"
+      ],
+      "parent": "s37"
+    },
+    "s42": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/flowchart/types\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t2": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t1": {
+      "kind": "array",
+      "text": "string[]",
+      "elementType": "t2"
+    },
+    "t4": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t3": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t4",
+        "t2"
+      ]
+    },
+    "t6": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t7": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t5": {
+      "kind": "union",
+      "text": "boolean | undefined",
+      "types": [
+        "t4",
+        "t6",
+        "t7"
+      ]
+    },
+    "t8": {
+      "kind": "stringLiteral",
+      "text": "\"text\"",
+      "value": "text"
+    },
+    "t9": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t0": {
+      "kind": "object",
+      "text": "FlowVertex",
+      "members": {
+        "classes": "t1",
+        "dir": "t3",
+        "domId": "t2",
+        "haveCallback": "t5",
+        "id": "t2",
+        "labelType": "t8",
+        "link": "t3",
+        "linkTarget": "t3",
+        "props": "t9",
+        "styles": "t1",
+        "text": "t3",
+        "type": "t3"
+      }
+    },
+    "t10": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t11": {
+      "kind": "object",
+      "text": "FlowText",
+      "members": {
+        "text": "t2",
+        "type": "t8"
+      }
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"normal\"",
+      "value": "normal"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"thick\"",
+      "value": "thick"
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"invisible\"",
+      "value": "invisible"
+    },
+    "t17": {
+      "kind": "stringLiteral",
+      "text": "\"dotted\"",
+      "value": "dotted"
+    },
+    "t13": {
+      "kind": "union",
+      "text": "\"normal\" | \"thick\" | \"invisible\" | \"dotted\" | undefined",
+      "types": [
+        "t4",
+        "t14",
+        "t15",
+        "t16",
+        "t17"
+      ]
+    },
+    "t18": {
+      "kind": "union",
+      "text": "string[] | undefined",
+      "types": [
+        "t4",
+        "t1"
+      ]
+    },
+    "t20": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t19": {
+      "kind": "union",
+      "text": "number | undefined",
+      "types": [
+        "t4",
+        "t20"
+      ]
+    },
+    "t12": {
+      "kind": "object",
+      "text": "FlowEdge",
+      "members": {
+        "start": "t2",
+        "end": "t2",
+        "interpolate": "t3",
+        "type": "t3",
+        "stroke": "t13",
+        "style": "t18",
+        "length": "t19",
+        "text": "t2",
+        "labelType": "t8"
+      }
+    },
+    "t21": {
+      "kind": "object",
+      "text": "FlowClass",
+      "members": {
+        "id": "t2",
+        "styles": "t1",
+        "textStyles": "t1"
+      }
+    },
+    "t22": {
+      "kind": "object",
+      "text": "FlowSubGraph",
+      "members": {
+        "classes": "t1",
+        "dir": "t3",
+        "id": "t2",
+        "labelType": "t2",
+        "nodes": "t1",
+        "title": "t2"
+      }
+    },
+    "t23": {
+      "kind": "object",
+      "text": "FlowLink",
+      "members": {
+        "length": "t19",
+        "stroke": "t2",
+        "type": "t2",
+        "text": "t3"
+      }
+    }
+  }
+}

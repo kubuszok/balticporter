@@ -1,0 +1,711 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/interactionDb.ts",
+  "sha256": "b1d95571c30b341dcf1a9bcf2c185e97d5e08f3fd094b01c11e73c13aba62ded",
+  "nodes": [
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            1,
+            1
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                1,
+                5
+              ],
+              "symbol": "s0",
+              "type": "t0",
+              "flags": [
+                "let"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    1,
+                    5
+                  ],
+                  "type": "t0",
+                  "text": "interactionFunctions",
+                  "resolvedSymbol": "s0"
+                },
+                {
+                  "kind": "ArrayType",
+                  "kindCode": 188,
+                  "pos": [
+                    1,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "ParenthesizedType",
+                      "kindCode": 196,
+                      "pos": [
+                        1,
+                        27
+                      ],
+                      "children": [
+                        {
+                          "kind": "FunctionType",
+                          "kindCode": 184,
+                          "pos": [
+                            1,
+                            28
+                          ],
+                          "children": [
+                            {
+                              "kind": "VoidKeyword",
+                              "kindCode": 116,
+                              "pos": [
+                                1,
+                                34
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "ArrayLiteralExpression",
+                  "kindCode": 209,
+                  "pos": [
+                    1,
+                    44
+                  ],
+                  "type": "t3"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        2,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                2,
+                14
+              ],
+              "symbol": "s1",
+              "type": "t5",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    2,
+                    14
+                  ],
+                  "type": "t5",
+                  "text": "addFunction",
+                  "resolvedSymbol": "s1"
+                },
+                {
+                  "kind": "ArrowFunction",
+                  "kindCode": 219,
+                  "pos": [
+                    2,
+                    28
+                  ],
+                  "type": "t5",
+                  "children": [
+                    {
+                      "kind": "Parameter",
+                      "kindCode": 169,
+                      "pos": [
+                        2,
+                        29
+                      ],
+                      "symbol": "s2",
+                      "type": "t6",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            2,
+                            29
+                          ],
+                          "type": "t6",
+                          "text": "func",
+                          "resolvedSymbol": "s2"
+                        },
+                        {
+                          "kind": "FunctionType",
+                          "kindCode": 184,
+                          "pos": [
+                            2,
+                            35
+                          ],
+                          "children": [
+                            {
+                              "kind": "VoidKeyword",
+                              "kindCode": 116,
+                              "pos": [
+                                2,
+                                41
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Block",
+                      "kindCode": 241,
+                      "pos": [
+                        2,
+                        50
+                      ],
+                      "children": [
+                        {
+                          "kind": "ExpressionStatement",
+                          "kindCode": 244,
+                          "pos": [
+                            3,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "CallExpression",
+                              "kindCode": 213,
+                              "pos": [
+                                3,
+                                3
+                              ],
+                              "type": "t7",
+                              "children": [
+                                {
+                                  "kind": "PropertyAccessExpression",
+                                  "kindCode": 211,
+                                  "pos": [
+                                    3,
+                                    3
+                                  ],
+                                  "type": "t8",
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        3,
+                                        3
+                                      ],
+                                      "type": "t0",
+                                      "text": "interactionFunctions",
+                                      "resolvedSymbol": "s0"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        3,
+                                        24
+                                      ],
+                                      "type": "t8",
+                                      "text": "push",
+                                      "resolvedSymbol": "s3"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    3,
+                                    29
+                                  ],
+                                  "type": "t6",
+                                  "text": "func",
+                                  "resolvedSymbol": "s2"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        5,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            5,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                5,
+                14
+              ],
+              "symbol": "s4",
+              "type": "t9",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    5,
+                    14
+                  ],
+                  "type": "t9",
+                  "text": "attachFunctions",
+                  "resolvedSymbol": "s4"
+                },
+                {
+                  "kind": "ArrowFunction",
+                  "kindCode": 219,
+                  "pos": [
+                    5,
+                    32
+                  ],
+                  "type": "t9",
+                  "children": [
+                    {
+                      "kind": "Block",
+                      "kindCode": 241,
+                      "pos": [
+                        5,
+                        38
+                      ],
+                      "children": [
+                        {
+                          "kind": "ExpressionStatement",
+                          "kindCode": 244,
+                          "pos": [
+                            6,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "CallExpression",
+                              "kindCode": 213,
+                              "pos": [
+                                6,
+                                3
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "PropertyAccessExpression",
+                                  "kindCode": 211,
+                                  "pos": [
+                                    6,
+                                    3
+                                  ],
+                                  "type": "t10",
+                                  "children": [
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        6,
+                                        3
+                                      ],
+                                      "type": "t0",
+                                      "text": "interactionFunctions",
+                                      "resolvedSymbol": "s0"
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        6,
+                                        24
+                                      ],
+                                      "type": "t10",
+                                      "text": "forEach",
+                                      "resolvedSymbol": "s5"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ArrowFunction",
+                                  "kindCode": 219,
+                                  "pos": [
+                                    6,
+                                    32
+                                  ],
+                                  "type": "t13",
+                                  "children": [
+                                    {
+                                      "kind": "Parameter",
+                                      "kindCode": 169,
+                                      "pos": [
+                                        6,
+                                        33
+                                      ],
+                                      "symbol": "s6",
+                                      "type": "t1",
+                                      "children": [
+                                        {
+                                          "kind": "Identifier",
+                                          "kindCode": 80,
+                                          "pos": [
+                                            6,
+                                            33
+                                          ],
+                                          "type": "t1",
+                                          "text": "f",
+                                          "resolvedSymbol": "s6"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Block",
+                                      "kindCode": 241,
+                                      "pos": [
+                                        6,
+                                        39
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "ExpressionStatement",
+                                          "kindCode": 244,
+                                          "pos": [
+                                            7,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "CallExpression",
+                                              "kindCode": 213,
+                                              "pos": [
+                                                7,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    7,
+                                                    5
+                                                  ],
+                                                  "type": "t1",
+                                                  "text": "f",
+                                                  "resolvedSymbol": "s6"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "ExpressionStatement",
+                          "kindCode": 244,
+                          "pos": [
+                            9,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "BinaryExpression",
+                              "kindCode": 226,
+                              "pos": [
+                                9,
+                                3
+                              ],
+                              "type": "t3",
+                              "operator": "EqualsToken",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    9,
+                                    3
+                                  ],
+                                  "type": "t0",
+                                  "text": "interactionFunctions",
+                                  "resolvedSymbol": "s0"
+                                },
+                                {
+                                  "kind": "ArrayLiteralExpression",
+                                  "kindCode": 209,
+                                  "pos": [
+                                    9,
+                                    26
+                                  ],
+                                  "type": "t3"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "interactionFunctions",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s1": {
+      "name": "addFunction",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s7"
+    },
+    "s2": {
+      "name": "func",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s3": {
+      "name": "push",
+      "flags": [
+        "method"
+      ],
+      "parent": "s8"
+    },
+    "s4": {
+      "name": "attachFunctions",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s7"
+    },
+    "s5": {
+      "name": "forEach",
+      "flags": [
+        "method"
+      ],
+      "parent": "s8"
+    },
+    "s6": {
+      "name": "f",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s7": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/interactionDb\"",
+      "flags": []
+    },
+    "s8": {
+      "name": "Array",
+      "flags": [
+        "interface",
+        "variable"
+      ],
+      "declarationType": "t14"
+    }
+  },
+  "types": {
+    "t2": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t1": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t2"
+    },
+    "t0": {
+      "kind": "array",
+      "text": "(() => void)[]",
+      "elementType": "t1"
+    },
+    "t4": {
+      "kind": "never",
+      "text": "never"
+    },
+    "t3": {
+      "kind": "array",
+      "text": "never[]",
+      "elementType": "t4"
+    },
+    "t6": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t2"
+    },
+    "t5": {
+      "kind": "function",
+      "text": "(func: () => void) => void",
+      "parameters": [
+        {
+          "name": "func",
+          "type": "t6",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t7": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t8": {
+      "kind": "function",
+      "text": "(...items: (() => void)[]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t0",
+          "optional": false
+        }
+      ],
+      "returnType": "t7"
+    },
+    "t9": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t2"
+    },
+    "t11": {
+      "kind": "function",
+      "text": "(value: () => void, index: number, array: (() => void)[]) => void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t1",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t7",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t0",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t12": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t10": {
+      "kind": "function",
+      "text": "(callbackfn: (value: () => void, index: number, array: (() => void)[]) => void, thisArg?: any) => void",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t11",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t13": {
+      "kind": "function",
+      "text": "(f: () => void) => void",
+      "parameters": [
+        {
+          "name": "f",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t15": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t14": {
+      "kind": "reference",
+      "text": "Array<T>",
+      "target": "t14",
+      "typeArguments": [
+        "t15"
+      ]
+    }
+  }
+}

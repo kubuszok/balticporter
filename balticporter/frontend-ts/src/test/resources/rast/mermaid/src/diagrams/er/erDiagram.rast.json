@@ -1,0 +1,836 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/er/erDiagram.ts",
+  "sha256": "6096c4c35c027cc0d0c7d0b77f35394d1ada9159988d98c31339c0c44f80bc85",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        2,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// @ts-ignore: TODO: Fix ts errors",
+          "pos": [
+            1,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                2,
+                8
+              ],
+              "type": "t0",
+              "text": "erParser",
+              "resolvedSymbol": "s0"
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            22
+          ],
+          "type": "t0",
+          "value": "./parser/erDiagram.jison"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        3,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            3,
+            8
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                3,
+                8
+              ],
+              "type": "t1",
+              "text": "erDb",
+              "resolvedSymbol": "s1"
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            3,
+            18
+          ],
+          "type": "t0",
+          "value": "./erDb.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        4,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            4,
+            8
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                4,
+                8
+              ],
+              "type": "t39",
+              "text": "erRenderer",
+              "resolvedSymbol": "s2"
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            4,
+            24
+          ],
+          "type": "t0",
+          "value": "./erRenderer.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        5,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            5,
+            8
+          ],
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                5,
+                8
+              ],
+              "type": "t42",
+              "text": "erStyles",
+              "resolvedSymbol": "s3"
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            5,
+            22
+          ],
+          "type": "t0",
+          "value": "./styles.js"
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        7,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            7,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                7,
+                14
+              ],
+              "symbol": "s4",
+              "type": "t43",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    7,
+                    14
+                  ],
+                  "type": "t43",
+                  "text": "diagram",
+                  "resolvedSymbol": "s4"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    7,
+                    24
+                  ],
+                  "type": "t44",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        8,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            8,
+                            3
+                          ],
+                          "type": "t0",
+                          "text": "parser",
+                          "resolvedSymbol": "s5"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            8,
+                            11
+                          ],
+                          "type": "t0",
+                          "text": "erParser",
+                          "resolvedSymbol": "s0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        9,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            9,
+                            3
+                          ],
+                          "type": "t1",
+                          "text": "db",
+                          "resolvedSymbol": "s6"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            9,
+                            7
+                          ],
+                          "type": "t1",
+                          "text": "erDb",
+                          "resolvedSymbol": "s1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        10,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            10,
+                            3
+                          ],
+                          "type": "t39",
+                          "text": "renderer",
+                          "resolvedSymbol": "s7"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            10,
+                            13
+                          ],
+                          "type": "t39",
+                          "text": "erRenderer",
+                          "resolvedSymbol": "s2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        11,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            11,
+                            3
+                          ],
+                          "type": "t42",
+                          "text": "styles",
+                          "resolvedSymbol": "s8"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            11,
+                            11
+                          ],
+                          "type": "t42",
+                          "text": "erStyles",
+                          "resolvedSymbol": "s3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "erParser",
+      "flags": []
+    },
+    "s1": {
+      "name": "erDb",
+      "flags": []
+    },
+    "s2": {
+      "name": "erRenderer",
+      "flags": []
+    },
+    "s3": {
+      "name": "erStyles",
+      "flags": []
+    },
+    "s4": {
+      "name": "diagram",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s9"
+    },
+    "s5": {
+      "name": "parser",
+      "flags": [
+        "property"
+      ],
+      "parent": "s10"
+    },
+    "s6": {
+      "name": "db",
+      "flags": [
+        "property"
+      ],
+      "parent": "s10"
+    },
+    "s7": {
+      "name": "renderer",
+      "flags": [
+        "property"
+      ],
+      "parent": "s10"
+    },
+    "s8": {
+      "name": "styles",
+      "flags": [
+        "property"
+      ],
+      "parent": "s10"
+    },
+    "s9": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/er/erDiagram\"",
+      "flags": []
+    },
+    "s10": {
+      "name": "__object",
+      "flags": []
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t3": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t2": {
+      "kind": "object",
+      "text": "{ ZERO_OR_ONE: string; ZERO_OR_MORE: string; ONE_OR_MORE: string; ONLY_ONE: string; MD_PARENT: string; }",
+      "members": {
+        "ZERO_OR_ONE": "t3",
+        "ZERO_OR_MORE": "t3",
+        "ONE_OR_MORE": "t3",
+        "ONLY_ONE": "t3",
+        "MD_PARENT": "t3"
+      }
+    },
+    "t4": {
+      "kind": "object",
+      "text": "{ NON_IDENTIFYING: string; IDENTIFYING: string; }",
+      "members": {
+        "NON_IDENTIFYING": "t3",
+        "IDENTIFYING": "t3"
+      }
+    },
+    "t7": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t10": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t9": {
+      "kind": "union",
+      "text": "number | undefined",
+      "types": [
+        "t7",
+        "t10"
+      ]
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"TB\"",
+      "value": "TB"
+    },
+    "t13": {
+      "kind": "stringLiteral",
+      "text": "\"BT\"",
+      "value": "BT"
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"LR\"",
+      "value": "LR"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"RL\"",
+      "value": "RL"
+    },
+    "t11": {
+      "kind": "union",
+      "text": "\"TB\" | \"BT\" | \"LR\" | \"RL\" | undefined",
+      "types": [
+        "t7",
+        "t12",
+        "t13",
+        "t14",
+        "t15"
+      ]
+    },
+    "t16": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t7",
+        "t3"
+      ]
+    },
+    "t18": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t19": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t17": {
+      "kind": "union",
+      "text": "boolean | undefined",
+      "types": [
+        "t7",
+        "t18",
+        "t19"
+      ]
+    },
+    "t8": {
+      "kind": "object",
+      "text": "ErDiagramConfig",
+      "members": {
+        "titleTopMargin": "t9",
+        "diagramPadding": "t9",
+        "layoutDirection": "t11",
+        "minEntityWidth": "t9",
+        "minEntityHeight": "t9",
+        "entityPadding": "t9",
+        "stroke": "t16",
+        "fill": "t16",
+        "fontSize": "t9",
+        "useWidth": "t9",
+        "useMaxWidth": "t17"
+      }
+    },
+    "t6": {
+      "kind": "union",
+      "text": "ErDiagramConfig | undefined",
+      "types": [
+        "t7",
+        "t8"
+      ]
+    },
+    "t5": {
+      "kind": "function",
+      "text": "() => ErDiagramConfig | undefined",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t21": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t20": {
+      "kind": "function",
+      "text": "(name: string, alias?: string | undefined) => any",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "alias",
+          "type": "t16",
+          "optional": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t23": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t22": {
+      "kind": "function",
+      "text": "(entityName: any, attribs: any) => void",
+      "parameters": [
+        {
+          "name": "entityName",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "attribs",
+          "type": "t21",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t27": {
+      "kind": "other",
+      "text": "K"
+    },
+    "t28": {
+      "kind": "other",
+      "text": "V"
+    },
+    "t26": {
+      "kind": "reference",
+      "text": "Map<K, V>",
+      "target": "t26",
+      "typeArguments": [
+        "t27",
+        "t28"
+      ]
+    },
+    "t25": {
+      "kind": "reference",
+      "text": "Map<any, any>",
+      "target": "t26",
+      "typeArguments": [
+        "t21",
+        "t21"
+      ]
+    },
+    "t24": {
+      "kind": "function",
+      "text": "() => Map<any, any>",
+      "parameters": [],
+      "returnType": "t25"
+    },
+    "t29": {
+      "kind": "function",
+      "text": "(entA: any, rolA: any, entB: any, rSpec: any) => void",
+      "parameters": [
+        {
+          "name": "entA",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "rolA",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "entB",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "rSpec",
+          "type": "t21",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t31": {
+      "kind": "array",
+      "text": "any[]",
+      "elementType": "t21"
+    },
+    "t30": {
+      "kind": "function",
+      "text": "() => any[]",
+      "parameters": [],
+      "returnType": "t31"
+    },
+    "t32": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t23"
+    },
+    "t33": {
+      "kind": "function",
+      "text": "(txt: string) => void",
+      "parameters": [
+        {
+          "name": "txt",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t34": {
+      "kind": "function",
+      "text": "() => string",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t35": {
+      "kind": "function",
+      "text": "(txt: string) => void",
+      "parameters": [
+        {
+          "name": "txt",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t36": {
+      "kind": "function",
+      "text": "() => string",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t37": {
+      "kind": "function",
+      "text": "(txt: string) => void",
+      "parameters": [
+        {
+          "name": "txt",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t38": {
+      "kind": "function",
+      "text": "() => string",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t1": {
+      "kind": "object",
+      "text": "{ Cardinality: { ZERO_OR_ONE: string; ZERO_OR_MORE: string; ONE_OR_MORE: string; ONLY_ONE: string; MD_PARENT: string; }; Identification: { NON_IDENTIFYING: string; IDENTIFYING: string; }; getConfig: () => ErDiagramConfig | undefined; ... 11 more ...; getDiagramTitle: () => string; }",
+      "members": {
+        "Cardinality": "t2",
+        "Identification": "t4",
+        "getConfig": "t5",
+        "addEntity": "t20",
+        "addAttributes": "t22",
+        "getEntities": "t24",
+        "addRelationship": "t29",
+        "getRelationships": "t30",
+        "clear": "t32",
+        "setAccTitle": "t33",
+        "getAccTitle": "t34",
+        "setAccDescription": "t35",
+        "getAccDescription": "t36",
+        "setDiagramTitle": "t37",
+        "getDiagramTitle": "t38"
+      }
+    },
+    "t40": {
+      "kind": "function",
+      "text": "(cnf: any) => void",
+      "parameters": [
+        {
+          "name": "cnf",
+          "type": "t21",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t41": {
+      "kind": "function",
+      "text": "(text: any, id: any, _version: any, diagObj: any) => void",
+      "parameters": [
+        {
+          "name": "text",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "_version",
+          "type": "t21",
+          "optional": false
+        },
+        {
+          "name": "diagObj",
+          "type": "t21",
+          "optional": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t39": {
+      "kind": "object",
+      "text": "{ setConf: (cnf: any) => void; draw: (text: any, id: any, _version: any, diagObj: any) => void; }",
+      "members": {
+        "setConf": "t40",
+        "draw": "t41"
+      }
+    },
+    "t42": {
+      "kind": "function",
+      "text": "(options: any) => string",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t21",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t43": {
+      "kind": "object",
+      "text": "{ parser: any; db: { Cardinality: { ZERO_OR_ONE: string; ZERO_OR_MORE: string; ONE_OR_MORE: string; ONLY_ONE: string; MD_PARENT: string; }; Identification: { NON_IDENTIFYING: string; IDENTIFYING: string; }; ... 12 more ...; getDiagramTitle: () => string; }; renderer: { ...; }; styles: (options: any) => string; }",
+      "members": {
+        "parser": "t0",
+        "db": "t1",
+        "renderer": "t39",
+        "styles": "t42"
+      }
+    },
+    "t44": {
+      "kind": "object",
+      "text": "{ parser: any; db: { Cardinality: { ZERO_OR_ONE: string; ZERO_OR_MORE: string; ONE_OR_MORE: string; ONLY_ONE: string; MD_PARENT: string; }; Identification: { NON_IDENTIFYING: string; IDENTIFYING: string; }; ... 12 more ...; getDiagramTitle: () => string; }; renderer: { ...; }; styles: (options: any) => string; }",
+      "members": {
+        "parser": "t0",
+        "db": "t1",
+        "renderer": "t39",
+        "styles": "t42"
+      }
+    }
+  }
+}

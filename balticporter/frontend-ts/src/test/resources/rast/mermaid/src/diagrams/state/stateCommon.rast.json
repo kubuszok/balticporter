@@ -1,0 +1,4788 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/state/stateCommon.ts",
+  "sha256": "429b64c92af6d05e50f8abab40c32b40101dc23d6c38b904c046c9346683e61c",
+  "nodes": [
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        6,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Constants common to all State Diagram code\n */",
+          "pos": [
+            1,
+            1
+          ]
+        },
+        {
+          "kind": "line",
+          "text": "// default diagram direction",
+          "pos": [
+            5,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            6,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                6,
+                14
+              ],
+              "symbol": "s0",
+              "type": "t0",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    6,
+                    14
+                  ],
+                  "type": "t0",
+                  "text": "DEFAULT_DIAGRAM_DIRECTION",
+                  "resolvedSymbol": "s0"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    6,
+                    42
+                  ],
+                  "type": "t1",
+                  "value": "LR"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        9,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// default direction for any nested documents (composites)",
+          "pos": [
+            8,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            9,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                9,
+                14
+              ],
+              "symbol": "s1",
+              "type": "t2",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    9,
+                    14
+                  ],
+                  "type": "t2",
+                  "text": "DEFAULT_NESTED_DOC_DIR",
+                  "resolvedSymbol": "s1"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    9,
+                    39
+                  ],
+                  "type": "t3",
+                  "value": "TB"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        12,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// parsed statement type for a state",
+          "pos": [
+            11,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            12,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                12,
+                14
+              ],
+              "symbol": "s2",
+              "type": "t4",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    12,
+                    14
+                  ],
+                  "type": "t4",
+                  "text": "STMT_STATE",
+                  "resolvedSymbol": "s2"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    12,
+                    27
+                  ],
+                  "type": "t5",
+                  "value": "state"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        14,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// parsed statement type for a relation",
+          "pos": [
+            13,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            14,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                14,
+                14
+              ],
+              "symbol": "s3",
+              "type": "t6",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    14,
+                    14
+                  ],
+                  "type": "t6",
+                  "text": "STMT_RELATION",
+                  "resolvedSymbol": "s3"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    14,
+                    30
+                  ],
+                  "type": "t7",
+                  "value": "relation"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        16,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// parsed statement type for a classDef",
+          "pos": [
+            15,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            16,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                16,
+                14
+              ],
+              "symbol": "s4",
+              "type": "t8",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    16,
+                    14
+                  ],
+                  "type": "t8",
+                  "text": "STMT_CLASSDEF",
+                  "resolvedSymbol": "s4"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    16,
+                    30
+                  ],
+                  "type": "t9",
+                  "value": "classDef"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        17,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            17,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                17,
+                14
+              ],
+              "symbol": "s5",
+              "type": "t10",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    17,
+                    14
+                  ],
+                  "type": "t10",
+                  "text": "STMT_STYLEDEF",
+                  "resolvedSymbol": "s5"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    17,
+                    30
+                  ],
+                  "type": "t11",
+                  "value": "style"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        19,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// parsed statement type for applyClass",
+          "pos": [
+            18,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            19,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                19,
+                14
+              ],
+              "symbol": "s6",
+              "type": "t12",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    19,
+                    14
+                  ],
+                  "type": "t12",
+                  "text": "STMT_APPLYCLASS",
+                  "resolvedSymbol": "s6"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    19,
+                    32
+                  ],
+                  "type": "t13",
+                  "value": "applyClass"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        21,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            21,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                21,
+                14
+              ],
+              "symbol": "s7",
+              "type": "t14",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    21,
+                    14
+                  ],
+                  "type": "t14",
+                  "text": "DEFAULT_STATE_TYPE",
+                  "resolvedSymbol": "s7"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    21,
+                    35
+                  ],
+                  "type": "t15",
+                  "value": "default"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        22,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            22,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                22,
+                14
+              ],
+              "symbol": "s8",
+              "type": "t16",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    22,
+                    14
+                  ],
+                  "type": "t16",
+                  "text": "DIVIDER_TYPE",
+                  "resolvedSymbol": "s8"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    22,
+                    29
+                  ],
+                  "type": "t17",
+                  "value": "divider"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        25,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// Graph edge settings",
+          "pos": [
+            24,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            25,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                25,
+                14
+              ],
+              "symbol": "s9",
+              "type": "t18",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    25,
+                    14
+                  ],
+                  "type": "t18",
+                  "text": "G_EDGE_STYLE",
+                  "resolvedSymbol": "s9"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    25,
+                    29
+                  ],
+                  "type": "t19",
+                  "value": "fill:none"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        26,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            26,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                26,
+                14
+              ],
+              "symbol": "s10",
+              "type": "t20",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    26,
+                    14
+                  ],
+                  "type": "t20",
+                  "text": "G_EDGE_ARROWHEADSTYLE",
+                  "resolvedSymbol": "s10"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    26,
+                    38
+                  ],
+                  "type": "t21",
+                  "value": "fill: #333"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        27,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            27,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                27,
+                14
+              ],
+              "symbol": "s11",
+              "type": "t22",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    27,
+                    14
+                  ],
+                  "type": "t22",
+                  "text": "G_EDGE_LABELPOS",
+                  "resolvedSymbol": "s11"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    27,
+                    32
+                  ],
+                  "type": "t23",
+                  "value": "c"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        28,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            28,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                28,
+                14
+              ],
+              "symbol": "s12",
+              "type": "t24",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    28,
+                    14
+                  ],
+                  "type": "t24",
+                  "text": "G_EDGE_LABELTYPE",
+                  "resolvedSymbol": "s12"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    28,
+                    33
+                  ],
+                  "type": "t25",
+                  "value": "text"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        29,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            29,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                29,
+                14
+              ],
+              "symbol": "s13",
+              "type": "t26",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    29,
+                    14
+                  ],
+                  "type": "t26",
+                  "text": "G_EDGE_THICKNESS",
+                  "resolvedSymbol": "s13"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    29,
+                    33
+                  ],
+                  "type": "t27",
+                  "value": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        31,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            31,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                31,
+                14
+              ],
+              "symbol": "s14",
+              "type": "t28",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    31,
+                    14
+                  ],
+                  "type": "t28",
+                  "text": "SHAPE_STATE",
+                  "resolvedSymbol": "s14"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    31,
+                    28
+                  ],
+                  "type": "t29",
+                  "value": "rect"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        32,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            32,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                32,
+                14
+              ],
+              "symbol": "s15",
+              "type": "t30",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    32,
+                    14
+                  ],
+                  "type": "t30",
+                  "text": "SHAPE_STATE_WITH_DESC",
+                  "resolvedSymbol": "s15"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    32,
+                    38
+                  ],
+                  "type": "t31",
+                  "value": "rectWithTitle"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        33,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            33,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                33,
+                14
+              ],
+              "symbol": "s16",
+              "type": "t32",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    33,
+                    14
+                  ],
+                  "type": "t32",
+                  "text": "SHAPE_START",
+                  "resolvedSymbol": "s16"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    33,
+                    28
+                  ],
+                  "type": "t33",
+                  "value": "stateStart"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        34,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            34,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                34,
+                14
+              ],
+              "symbol": "s17",
+              "type": "t34",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    34,
+                    14
+                  ],
+                  "type": "t34",
+                  "text": "SHAPE_END",
+                  "resolvedSymbol": "s17"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    34,
+                    26
+                  ],
+                  "type": "t35",
+                  "value": "stateEnd"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        35,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            35,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                35,
+                14
+              ],
+              "symbol": "s18",
+              "type": "t16",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    35,
+                    14
+                  ],
+                  "type": "t16",
+                  "text": "SHAPE_DIVIDER",
+                  "resolvedSymbol": "s18"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    35,
+                    30
+                  ],
+                  "type": "t17",
+                  "value": "divider"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        36,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            36,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                36,
+                14
+              ],
+              "symbol": "s19",
+              "type": "t36",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    36,
+                    14
+                  ],
+                  "type": "t36",
+                  "text": "SHAPE_GROUP",
+                  "resolvedSymbol": "s19"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    36,
+                    28
+                  ],
+                  "type": "t37",
+                  "value": "roundedWithTitle"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        37,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            37,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                37,
+                14
+              ],
+              "symbol": "s20",
+              "type": "t38",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    37,
+                    14
+                  ],
+                  "type": "t38",
+                  "text": "SHAPE_NOTE",
+                  "resolvedSymbol": "s20"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    37,
+                    27
+                  ],
+                  "type": "t39",
+                  "value": "note"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        38,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            38,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                38,
+                14
+              ],
+              "symbol": "s21",
+              "type": "t40",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    38,
+                    14
+                  ],
+                  "type": "t40",
+                  "text": "SHAPE_NOTEGROUP",
+                  "resolvedSymbol": "s21"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    38,
+                    32
+                  ],
+                  "type": "t41",
+                  "value": "noteGroup"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        41,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// CSS classes",
+          "pos": [
+            40,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            41,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                41,
+                14
+              ],
+              "symbol": "s22",
+              "type": "t42",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    41,
+                    14
+                  ],
+                  "type": "t42",
+                  "text": "CSS_DIAGRAM",
+                  "resolvedSymbol": "s22"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    41,
+                    28
+                  ],
+                  "type": "t43",
+                  "value": "statediagram"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        42,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            42,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                42,
+                14
+              ],
+              "symbol": "s23",
+              "type": "t4",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    42,
+                    14
+                  ],
+                  "type": "t4",
+                  "text": "CSS_STATE",
+                  "resolvedSymbol": "s23"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    42,
+                    26
+                  ],
+                  "type": "t5",
+                  "value": "state"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        43,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            43,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                43,
+                14
+              ],
+              "symbol": "s24",
+              "type": "t44",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    43,
+                    14
+                  ],
+                  "type": "t44",
+                  "text": "CSS_DIAGRAM_STATE",
+                  "resolvedSymbol": "s24"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    43,
+                    34
+                  ],
+                  "type": "t45",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        43,
+                        34
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        43,
+                        37
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            43,
+                            37
+                          ],
+                          "type": "t43",
+                          "text": "CSS_DIAGRAM",
+                          "resolvedSymbol": "s22"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            43,
+                            48
+                          ],
+                          "value": "-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        43,
+                        52
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            43,
+                            52
+                          ],
+                          "type": "t5",
+                          "text": "CSS_STATE",
+                          "resolvedSymbol": "s23"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            43,
+                            61
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        44,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            44,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                44,
+                14
+              ],
+              "symbol": "s25",
+              "type": "t46",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    44,
+                    14
+                  ],
+                  "type": "t46",
+                  "text": "CSS_EDGE",
+                  "resolvedSymbol": "s25"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    44,
+                    25
+                  ],
+                  "type": "t47",
+                  "value": "transition"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        45,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            45,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                45,
+                14
+              ],
+              "symbol": "s26",
+              "type": "t38",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    45,
+                    14
+                  ],
+                  "type": "t38",
+                  "text": "CSS_NOTE",
+                  "resolvedSymbol": "s26"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    45,
+                    25
+                  ],
+                  "type": "t39",
+                  "value": "note"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        46,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            46,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                46,
+                14
+              ],
+              "symbol": "s27",
+              "type": "t48",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    46,
+                    14
+                  ],
+                  "type": "t48",
+                  "text": "CSS_NOTE_EDGE",
+                  "resolvedSymbol": "s27"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    46,
+                    30
+                  ],
+                  "type": "t49",
+                  "value": "note-edge"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        47,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            47,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                47,
+                14
+              ],
+              "symbol": "s28",
+              "type": "t50",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    47,
+                    14
+                  ],
+                  "type": "t50",
+                  "text": "CSS_EDGE_NOTE_EDGE",
+                  "resolvedSymbol": "s28"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    47,
+                    35
+                  ],
+                  "type": "t51",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        47,
+                        35
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        47,
+                        38
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            47,
+                            38
+                          ],
+                          "type": "t47",
+                          "text": "CSS_EDGE",
+                          "resolvedSymbol": "s25"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            47,
+                            46
+                          ],
+                          "value": " "
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        47,
+                        50
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            47,
+                            50
+                          ],
+                          "type": "t49",
+                          "text": "CSS_NOTE_EDGE",
+                          "resolvedSymbol": "s27"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            47,
+                            63
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        48,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            48,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                48,
+                14
+              ],
+              "symbol": "s29",
+              "type": "t52",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    48,
+                    14
+                  ],
+                  "type": "t52",
+                  "text": "CSS_DIAGRAM_NOTE",
+                  "resolvedSymbol": "s29"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    48,
+                    33
+                  ],
+                  "type": "t53",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        48,
+                        33
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        48,
+                        36
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            48,
+                            36
+                          ],
+                          "type": "t43",
+                          "text": "CSS_DIAGRAM",
+                          "resolvedSymbol": "s22"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            48,
+                            47
+                          ],
+                          "value": "-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        48,
+                        51
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            48,
+                            51
+                          ],
+                          "type": "t39",
+                          "text": "CSS_NOTE",
+                          "resolvedSymbol": "s26"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            48,
+                            59
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        49,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            49,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                49,
+                14
+              ],
+              "symbol": "s30",
+              "type": "t54",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    49,
+                    14
+                  ],
+                  "type": "t54",
+                  "text": "CSS_CLUSTER",
+                  "resolvedSymbol": "s30"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    49,
+                    28
+                  ],
+                  "type": "t55",
+                  "value": "cluster"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        50,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            50,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                50,
+                14
+              ],
+              "symbol": "s31",
+              "type": "t56",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    50,
+                    14
+                  ],
+                  "type": "t56",
+                  "text": "CSS_DIAGRAM_CLUSTER",
+                  "resolvedSymbol": "s31"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    50,
+                    36
+                  ],
+                  "type": "t57",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        50,
+                        36
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        50,
+                        39
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            50,
+                            39
+                          ],
+                          "type": "t43",
+                          "text": "CSS_DIAGRAM",
+                          "resolvedSymbol": "s22"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            50,
+                            50
+                          ],
+                          "value": "-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        50,
+                        54
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            50,
+                            54
+                          ],
+                          "type": "t55",
+                          "text": "CSS_CLUSTER",
+                          "resolvedSymbol": "s30"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            50,
+                            65
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        51,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            51,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                51,
+                14
+              ],
+              "symbol": "s32",
+              "type": "t58",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    51,
+                    14
+                  ],
+                  "type": "t58",
+                  "text": "CSS_CLUSTER_ALT",
+                  "resolvedSymbol": "s32"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    51,
+                    32
+                  ],
+                  "type": "t59",
+                  "value": "cluster-alt"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        52,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            52,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                52,
+                14
+              ],
+              "symbol": "s33",
+              "type": "t60",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    52,
+                    14
+                  ],
+                  "type": "t60",
+                  "text": "CSS_DIAGRAM_CLUSTER_ALT",
+                  "resolvedSymbol": "s33"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    52,
+                    40
+                  ],
+                  "type": "t61",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        52,
+                        40
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        52,
+                        43
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            52,
+                            43
+                          ],
+                          "type": "t43",
+                          "text": "CSS_DIAGRAM",
+                          "resolvedSymbol": "s22"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            52,
+                            54
+                          ],
+                          "value": "-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        52,
+                        58
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            52,
+                            58
+                          ],
+                          "type": "t59",
+                          "text": "CSS_CLUSTER_ALT",
+                          "resolvedSymbol": "s32"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            52,
+                            73
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        54,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            54,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                54,
+                14
+              ],
+              "symbol": "s34",
+              "type": "t62",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    54,
+                    14
+                  ],
+                  "type": "t62",
+                  "text": "PARENT",
+                  "resolvedSymbol": "s34"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    54,
+                    23
+                  ],
+                  "type": "t63",
+                  "value": "parent"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        55,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            55,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                55,
+                14
+              ],
+              "symbol": "s35",
+              "type": "t38",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    55,
+                    14
+                  ],
+                  "type": "t38",
+                  "text": "NOTE",
+                  "resolvedSymbol": "s35"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    55,
+                    21
+                  ],
+                  "type": "t39",
+                  "value": "note"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        56,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            56,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                56,
+                14
+              ],
+              "symbol": "s36",
+              "type": "t4",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    56,
+                    14
+                  ],
+                  "type": "t4",
+                  "text": "DOMID_STATE",
+                  "resolvedSymbol": "s36"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    56,
+                    28
+                  ],
+                  "type": "t5",
+                  "value": "state"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        57,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            57,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                57,
+                14
+              ],
+              "symbol": "s37",
+              "type": "t64",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    57,
+                    14
+                  ],
+                  "type": "t64",
+                  "text": "DOMID_TYPE_SPACER",
+                  "resolvedSymbol": "s37"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    57,
+                    34
+                  ],
+                  "type": "t65",
+                  "value": "----"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        58,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            58,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                58,
+                14
+              ],
+              "symbol": "s38",
+              "type": "t66",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    58,
+                    14
+                  ],
+                  "type": "t66",
+                  "text": "NOTE_ID",
+                  "resolvedSymbol": "s38"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    58,
+                    24
+                  ],
+                  "type": "t67",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        58,
+                        24
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        58,
+                        27
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            58,
+                            27
+                          ],
+                          "type": "t65",
+                          "text": "DOMID_TYPE_SPACER",
+                          "resolvedSymbol": "s37"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            58,
+                            44
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        58,
+                        47
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            58,
+                            47
+                          ],
+                          "type": "t39",
+                          "text": "NOTE",
+                          "resolvedSymbol": "s35"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            58,
+                            51
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        59,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            59,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                59,
+                14
+              ],
+              "symbol": "s39",
+              "type": "t68",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    59,
+                    14
+                  ],
+                  "type": "t68",
+                  "text": "PARENT_ID",
+                  "resolvedSymbol": "s39"
+                },
+                {
+                  "kind": "TemplateExpression",
+                  "kindCode": 228,
+                  "pos": [
+                    59,
+                    26
+                  ],
+                  "type": "t69",
+                  "children": [
+                    {
+                      "kind": "TemplateHead",
+                      "kindCode": 16,
+                      "pos": [
+                        59,
+                        26
+                      ],
+                      "value": ""
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        59,
+                        29
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            59,
+                            29
+                          ],
+                          "type": "t65",
+                          "text": "DOMID_TYPE_SPACER",
+                          "resolvedSymbol": "s37"
+                        },
+                        {
+                          "kind": "TemplateMiddle",
+                          "kindCode": 17,
+                          "pos": [
+                            59,
+                            46
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateSpan",
+                      "kindCode": 239,
+                      "pos": [
+                        59,
+                        49
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            59,
+                            49
+                          ],
+                          "type": "t63",
+                          "text": "PARENT",
+                          "resolvedSymbol": "s34"
+                        },
+                        {
+                          "kind": "TemplateTail",
+                          "kindCode": 18,
+                          "pos": [
+                            59,
+                            55
+                          ],
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        62,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// --------------------------------------",
+          "pos": [
+            60,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "ObjectLiteralExpression",
+          "kindCode": 210,
+          "pos": [
+            62,
+            16
+          ],
+          "type": "t70",
+          "children": [
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                63,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    63,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "DEFAULT_DIAGRAM_DIRECTION",
+                  "resolvedSymbol": "s40"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                64,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    64,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "DEFAULT_NESTED_DOC_DIR",
+                  "resolvedSymbol": "s41"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                65,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    65,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "STMT_STATE",
+                  "resolvedSymbol": "s42"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                66,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    66,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "STMT_RELATION",
+                  "resolvedSymbol": "s43"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                67,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    67,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "STMT_CLASSDEF",
+                  "resolvedSymbol": "s44"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                68,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    68,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "STMT_STYLEDEF",
+                  "resolvedSymbol": "s45"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                69,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    69,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "STMT_APPLYCLASS",
+                  "resolvedSymbol": "s46"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                70,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    70,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "DEFAULT_STATE_TYPE",
+                  "resolvedSymbol": "s47"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                71,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    71,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "DIVIDER_TYPE",
+                  "resolvedSymbol": "s48"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                72,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    72,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "G_EDGE_STYLE",
+                  "resolvedSymbol": "s49"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                73,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    73,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "G_EDGE_ARROWHEADSTYLE",
+                  "resolvedSymbol": "s50"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                74,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    74,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "G_EDGE_LABELPOS",
+                  "resolvedSymbol": "s51"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                75,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    75,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "G_EDGE_LABELTYPE",
+                  "resolvedSymbol": "s52"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                76,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    76,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "G_EDGE_THICKNESS",
+                  "resolvedSymbol": "s53"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                77,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    77,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_EDGE",
+                  "resolvedSymbol": "s54"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                78,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    78,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_DIAGRAM",
+                  "resolvedSymbol": "s55"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                79,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    79,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_STATE",
+                  "resolvedSymbol": "s56"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                80,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    80,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_STATE_WITH_DESC",
+                  "resolvedSymbol": "s57"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                81,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    81,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_START",
+                  "resolvedSymbol": "s58"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                82,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    82,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_END",
+                  "resolvedSymbol": "s59"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                83,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    83,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_DIVIDER",
+                  "resolvedSymbol": "s60"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                84,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    84,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_GROUP",
+                  "resolvedSymbol": "s61"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                85,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    85,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_NOTE",
+                  "resolvedSymbol": "s62"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                86,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    86,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "SHAPE_NOTEGROUP",
+                  "resolvedSymbol": "s63"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                87,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    87,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_STATE",
+                  "resolvedSymbol": "s64"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                88,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    88,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_DIAGRAM_STATE",
+                  "resolvedSymbol": "s65"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                89,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    89,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_NOTE",
+                  "resolvedSymbol": "s66"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                90,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    90,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_NOTE_EDGE",
+                  "resolvedSymbol": "s67"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                91,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    91,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_EDGE_NOTE_EDGE",
+                  "resolvedSymbol": "s68"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                92,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    92,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_DIAGRAM_NOTE",
+                  "resolvedSymbol": "s69"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                93,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    93,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_CLUSTER",
+                  "resolvedSymbol": "s70"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                94,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    94,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_DIAGRAM_CLUSTER",
+                  "resolvedSymbol": "s71"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                95,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    95,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_CLUSTER_ALT",
+                  "resolvedSymbol": "s72"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                96,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    96,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "CSS_DIAGRAM_CLUSTER_ALT",
+                  "resolvedSymbol": "s73"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                97,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    97,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "PARENT",
+                  "resolvedSymbol": "s74"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                98,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    98,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "NOTE",
+                  "resolvedSymbol": "s75"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                99,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    99,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "DOMID_STATE",
+                  "resolvedSymbol": "s76"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                100,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    100,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "DOMID_TYPE_SPACER",
+                  "resolvedSymbol": "s77"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                101,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    101,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "NOTE_ID",
+                  "resolvedSymbol": "s78"
+                }
+              ]
+            },
+            {
+              "kind": "ShorthandPropertyAssignment",
+              "kindCode": 304,
+              "pos": [
+                102,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    102,
+                    3
+                  ],
+                  "type": "t71",
+                  "text": "PARENT_ID",
+                  "resolvedSymbol": "s79"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "DEFAULT_DIAGRAM_DIRECTION",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s1": {
+      "name": "DEFAULT_NESTED_DOC_DIR",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s2": {
+      "name": "STMT_STATE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s3": {
+      "name": "STMT_RELATION",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s4": {
+      "name": "STMT_CLASSDEF",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s5": {
+      "name": "STMT_STYLEDEF",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s6": {
+      "name": "STMT_APPLYCLASS",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s7": {
+      "name": "DEFAULT_STATE_TYPE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s8": {
+      "name": "DIVIDER_TYPE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s9": {
+      "name": "G_EDGE_STYLE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s10": {
+      "name": "G_EDGE_ARROWHEADSTYLE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s11": {
+      "name": "G_EDGE_LABELPOS",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s12": {
+      "name": "G_EDGE_LABELTYPE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s13": {
+      "name": "G_EDGE_THICKNESS",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s14": {
+      "name": "SHAPE_STATE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s15": {
+      "name": "SHAPE_STATE_WITH_DESC",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s16": {
+      "name": "SHAPE_START",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s17": {
+      "name": "SHAPE_END",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s18": {
+      "name": "SHAPE_DIVIDER",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s19": {
+      "name": "SHAPE_GROUP",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s20": {
+      "name": "SHAPE_NOTE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s21": {
+      "name": "SHAPE_NOTEGROUP",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s22": {
+      "name": "CSS_DIAGRAM",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s23": {
+      "name": "CSS_STATE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s24": {
+      "name": "CSS_DIAGRAM_STATE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s25": {
+      "name": "CSS_EDGE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s26": {
+      "name": "CSS_NOTE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s27": {
+      "name": "CSS_NOTE_EDGE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s28": {
+      "name": "CSS_EDGE_NOTE_EDGE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s29": {
+      "name": "CSS_DIAGRAM_NOTE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s30": {
+      "name": "CSS_CLUSTER",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s31": {
+      "name": "CSS_DIAGRAM_CLUSTER",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s32": {
+      "name": "CSS_CLUSTER_ALT",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s33": {
+      "name": "CSS_DIAGRAM_CLUSTER_ALT",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s34": {
+      "name": "PARENT",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s35": {
+      "name": "NOTE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s36": {
+      "name": "DOMID_STATE",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s37": {
+      "name": "DOMID_TYPE_SPACER",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s38": {
+      "name": "NOTE_ID",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s39": {
+      "name": "PARENT_ID",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s80"
+    },
+    "s40": {
+      "name": "DEFAULT_DIAGRAM_DIRECTION",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s41": {
+      "name": "DEFAULT_NESTED_DOC_DIR",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s42": {
+      "name": "STMT_STATE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s43": {
+      "name": "STMT_RELATION",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s44": {
+      "name": "STMT_CLASSDEF",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s45": {
+      "name": "STMT_STYLEDEF",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s46": {
+      "name": "STMT_APPLYCLASS",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s47": {
+      "name": "DEFAULT_STATE_TYPE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s48": {
+      "name": "DIVIDER_TYPE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s49": {
+      "name": "G_EDGE_STYLE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s50": {
+      "name": "G_EDGE_ARROWHEADSTYLE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s51": {
+      "name": "G_EDGE_LABELPOS",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s52": {
+      "name": "G_EDGE_LABELTYPE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s53": {
+      "name": "G_EDGE_THICKNESS",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s54": {
+      "name": "CSS_EDGE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s55": {
+      "name": "CSS_DIAGRAM",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s56": {
+      "name": "SHAPE_STATE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s57": {
+      "name": "SHAPE_STATE_WITH_DESC",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s58": {
+      "name": "SHAPE_START",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s59": {
+      "name": "SHAPE_END",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s60": {
+      "name": "SHAPE_DIVIDER",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s61": {
+      "name": "SHAPE_GROUP",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s62": {
+      "name": "SHAPE_NOTE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s63": {
+      "name": "SHAPE_NOTEGROUP",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s64": {
+      "name": "CSS_STATE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s65": {
+      "name": "CSS_DIAGRAM_STATE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s66": {
+      "name": "CSS_NOTE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s67": {
+      "name": "CSS_NOTE_EDGE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s68": {
+      "name": "CSS_EDGE_NOTE_EDGE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s69": {
+      "name": "CSS_DIAGRAM_NOTE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s70": {
+      "name": "CSS_CLUSTER",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s71": {
+      "name": "CSS_DIAGRAM_CLUSTER",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s72": {
+      "name": "CSS_CLUSTER_ALT",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s73": {
+      "name": "CSS_DIAGRAM_CLUSTER_ALT",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s74": {
+      "name": "PARENT",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s75": {
+      "name": "NOTE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s76": {
+      "name": "DOMID_STATE",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s77": {
+      "name": "DOMID_TYPE_SPACER",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s78": {
+      "name": "NOTE_ID",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s79": {
+      "name": "PARENT_ID",
+      "flags": [
+        "property"
+      ],
+      "parent": "s81"
+    },
+    "s80": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/state/stateCommon\"",
+      "flags": []
+    },
+    "s81": {
+      "name": "__object",
+      "flags": []
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "stringLiteral",
+      "text": "\"LR\"",
+      "value": "LR"
+    },
+    "t1": {
+      "kind": "stringLiteral",
+      "text": "\"LR\"",
+      "value": "LR"
+    },
+    "t2": {
+      "kind": "stringLiteral",
+      "text": "\"TB\"",
+      "value": "TB"
+    },
+    "t3": {
+      "kind": "stringLiteral",
+      "text": "\"TB\"",
+      "value": "TB"
+    },
+    "t4": {
+      "kind": "stringLiteral",
+      "text": "\"state\"",
+      "value": "state"
+    },
+    "t5": {
+      "kind": "stringLiteral",
+      "text": "\"state\"",
+      "value": "state"
+    },
+    "t6": {
+      "kind": "stringLiteral",
+      "text": "\"relation\"",
+      "value": "relation"
+    },
+    "t7": {
+      "kind": "stringLiteral",
+      "text": "\"relation\"",
+      "value": "relation"
+    },
+    "t8": {
+      "kind": "stringLiteral",
+      "text": "\"classDef\"",
+      "value": "classDef"
+    },
+    "t9": {
+      "kind": "stringLiteral",
+      "text": "\"classDef\"",
+      "value": "classDef"
+    },
+    "t10": {
+      "kind": "stringLiteral",
+      "text": "\"style\"",
+      "value": "style"
+    },
+    "t11": {
+      "kind": "stringLiteral",
+      "text": "\"style\"",
+      "value": "style"
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"applyClass\"",
+      "value": "applyClass"
+    },
+    "t13": {
+      "kind": "stringLiteral",
+      "text": "\"applyClass\"",
+      "value": "applyClass"
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"default\"",
+      "value": "default"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"default\"",
+      "value": "default"
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"divider\"",
+      "value": "divider"
+    },
+    "t17": {
+      "kind": "stringLiteral",
+      "text": "\"divider\"",
+      "value": "divider"
+    },
+    "t18": {
+      "kind": "stringLiteral",
+      "text": "\"fill:none\"",
+      "value": "fill:none"
+    },
+    "t19": {
+      "kind": "stringLiteral",
+      "text": "\"fill:none\"",
+      "value": "fill:none"
+    },
+    "t20": {
+      "kind": "stringLiteral",
+      "text": "\"fill: #333\"",
+      "value": "fill: #333"
+    },
+    "t21": {
+      "kind": "stringLiteral",
+      "text": "\"fill: #333\"",
+      "value": "fill: #333"
+    },
+    "t22": {
+      "kind": "stringLiteral",
+      "text": "\"c\"",
+      "value": "c"
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"c\"",
+      "value": "c"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"text\"",
+      "value": "text"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"text\"",
+      "value": "text"
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"normal\"",
+      "value": "normal"
+    },
+    "t27": {
+      "kind": "stringLiteral",
+      "text": "\"normal\"",
+      "value": "normal"
+    },
+    "t28": {
+      "kind": "stringLiteral",
+      "text": "\"rect\"",
+      "value": "rect"
+    },
+    "t29": {
+      "kind": "stringLiteral",
+      "text": "\"rect\"",
+      "value": "rect"
+    },
+    "t30": {
+      "kind": "stringLiteral",
+      "text": "\"rectWithTitle\"",
+      "value": "rectWithTitle"
+    },
+    "t31": {
+      "kind": "stringLiteral",
+      "text": "\"rectWithTitle\"",
+      "value": "rectWithTitle"
+    },
+    "t32": {
+      "kind": "stringLiteral",
+      "text": "\"stateStart\"",
+      "value": "stateStart"
+    },
+    "t33": {
+      "kind": "stringLiteral",
+      "text": "\"stateStart\"",
+      "value": "stateStart"
+    },
+    "t34": {
+      "kind": "stringLiteral",
+      "text": "\"stateEnd\"",
+      "value": "stateEnd"
+    },
+    "t35": {
+      "kind": "stringLiteral",
+      "text": "\"stateEnd\"",
+      "value": "stateEnd"
+    },
+    "t36": {
+      "kind": "stringLiteral",
+      "text": "\"roundedWithTitle\"",
+      "value": "roundedWithTitle"
+    },
+    "t37": {
+      "kind": "stringLiteral",
+      "text": "\"roundedWithTitle\"",
+      "value": "roundedWithTitle"
+    },
+    "t38": {
+      "kind": "stringLiteral",
+      "text": "\"note\"",
+      "value": "note"
+    },
+    "t39": {
+      "kind": "stringLiteral",
+      "text": "\"note\"",
+      "value": "note"
+    },
+    "t40": {
+      "kind": "stringLiteral",
+      "text": "\"noteGroup\"",
+      "value": "noteGroup"
+    },
+    "t41": {
+      "kind": "stringLiteral",
+      "text": "\"noteGroup\"",
+      "value": "noteGroup"
+    },
+    "t42": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram\"",
+      "value": "statediagram"
+    },
+    "t43": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram\"",
+      "value": "statediagram"
+    },
+    "t44": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-state\"",
+      "value": "statediagram-state"
+    },
+    "t45": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-state\"",
+      "value": "statediagram-state"
+    },
+    "t46": {
+      "kind": "stringLiteral",
+      "text": "\"transition\"",
+      "value": "transition"
+    },
+    "t47": {
+      "kind": "stringLiteral",
+      "text": "\"transition\"",
+      "value": "transition"
+    },
+    "t48": {
+      "kind": "stringLiteral",
+      "text": "\"note-edge\"",
+      "value": "note-edge"
+    },
+    "t49": {
+      "kind": "stringLiteral",
+      "text": "\"note-edge\"",
+      "value": "note-edge"
+    },
+    "t50": {
+      "kind": "stringLiteral",
+      "text": "\"transition note-edge\"",
+      "value": "transition note-edge"
+    },
+    "t51": {
+      "kind": "stringLiteral",
+      "text": "\"transition note-edge\"",
+      "value": "transition note-edge"
+    },
+    "t52": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-note\"",
+      "value": "statediagram-note"
+    },
+    "t53": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-note\"",
+      "value": "statediagram-note"
+    },
+    "t54": {
+      "kind": "stringLiteral",
+      "text": "\"cluster\"",
+      "value": "cluster"
+    },
+    "t55": {
+      "kind": "stringLiteral",
+      "text": "\"cluster\"",
+      "value": "cluster"
+    },
+    "t56": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-cluster\"",
+      "value": "statediagram-cluster"
+    },
+    "t57": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-cluster\"",
+      "value": "statediagram-cluster"
+    },
+    "t58": {
+      "kind": "stringLiteral",
+      "text": "\"cluster-alt\"",
+      "value": "cluster-alt"
+    },
+    "t59": {
+      "kind": "stringLiteral",
+      "text": "\"cluster-alt\"",
+      "value": "cluster-alt"
+    },
+    "t60": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-cluster-alt\"",
+      "value": "statediagram-cluster-alt"
+    },
+    "t61": {
+      "kind": "stringLiteral",
+      "text": "\"statediagram-cluster-alt\"",
+      "value": "statediagram-cluster-alt"
+    },
+    "t62": {
+      "kind": "stringLiteral",
+      "text": "\"parent\"",
+      "value": "parent"
+    },
+    "t63": {
+      "kind": "stringLiteral",
+      "text": "\"parent\"",
+      "value": "parent"
+    },
+    "t64": {
+      "kind": "stringLiteral",
+      "text": "\"----\"",
+      "value": "----"
+    },
+    "t65": {
+      "kind": "stringLiteral",
+      "text": "\"----\"",
+      "value": "----"
+    },
+    "t66": {
+      "kind": "stringLiteral",
+      "text": "\"----note\"",
+      "value": "----note"
+    },
+    "t67": {
+      "kind": "stringLiteral",
+      "text": "\"----note\"",
+      "value": "----note"
+    },
+    "t68": {
+      "kind": "stringLiteral",
+      "text": "\"----parent\"",
+      "value": "----parent"
+    },
+    "t69": {
+      "kind": "stringLiteral",
+      "text": "\"----parent\"",
+      "value": "----parent"
+    },
+    "t71": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t70": {
+      "kind": "object",
+      "text": "{ DEFAULT_DIAGRAM_DIRECTION: string; DEFAULT_NESTED_DOC_DIR: string; STMT_STATE: string; STMT_RELATION: string; STMT_CLASSDEF: string; STMT_STYLEDEF: string; STMT_APPLYCLASS: string; DEFAULT_STATE_TYPE: string; ... 31 more ...; PARENT_ID: string; }",
+      "members": {
+        "DEFAULT_DIAGRAM_DIRECTION": "t71",
+        "DEFAULT_NESTED_DOC_DIR": "t71",
+        "STMT_STATE": "t71",
+        "STMT_RELATION": "t71",
+        "STMT_CLASSDEF": "t71",
+        "STMT_STYLEDEF": "t71",
+        "STMT_APPLYCLASS": "t71",
+        "DEFAULT_STATE_TYPE": "t71",
+        "DIVIDER_TYPE": "t71",
+        "G_EDGE_STYLE": "t71",
+        "G_EDGE_ARROWHEADSTYLE": "t71",
+        "G_EDGE_LABELPOS": "t71",
+        "G_EDGE_LABELTYPE": "t71",
+        "G_EDGE_THICKNESS": "t71",
+        "CSS_EDGE": "t71",
+        "CSS_DIAGRAM": "t71",
+        "SHAPE_STATE": "t71",
+        "SHAPE_STATE_WITH_DESC": "t71",
+        "SHAPE_START": "t71",
+        "SHAPE_END": "t71",
+        "SHAPE_DIVIDER": "t71",
+        "SHAPE_GROUP": "t71",
+        "SHAPE_NOTE": "t71",
+        "SHAPE_NOTEGROUP": "t71",
+        "CSS_STATE": "t71",
+        "CSS_DIAGRAM_STATE": "t71",
+        "CSS_NOTE": "t71",
+        "CSS_NOTE_EDGE": "t71",
+        "CSS_EDGE_NOTE_EDGE": "t71",
+        "CSS_DIAGRAM_NOTE": "t71",
+        "CSS_CLUSTER": "t71",
+        "CSS_DIAGRAM_CLUSTER": "t71",
+        "CSS_CLUSTER_ALT": "t71",
+        "CSS_DIAGRAM_CLUSTER_ALT": "t71",
+        "PARENT": "t71",
+        "NOTE": "t71",
+        "DOMID_STATE": "t71",
+        "DOMID_TYPE_SPACER": "t71",
+        "NOTE_ID": "t71",
+        "PARENT_ID": "t71"
+      }
+    }
+  }
+}

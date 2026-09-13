@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/erDiagram-oldHardcodedValues.ts",
+  "sha256": "adf6a93b5cf98fedb9b9c04f9aad6c9d9424cf8111b2784d6f6ba541921eb06a",
+  "nodes": [
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        6,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "comments": [
+        {
+          "kind": "block",
+          "text": "/**\n * Values that have been hardcoded in src/diagrams/er/styles.js. These can be used by\n *   theme-_._ files to maintain display styles until themes, styles, renderers are revised. --\n *   2022-09-22\n */",
+          "pos": [
+            1,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            6,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                6,
+                14
+              ],
+              "symbol": "s0",
+              "type": "t0",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    6,
+                    14
+                  ],
+                  "type": "t0",
+                  "text": "oldAttributeBackgroundColorOdd",
+                  "resolvedSymbol": "s0"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    6,
+                    47
+                  ],
+                  "type": "t1",
+                  "value": "#ffffff"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        7,
+        1
+      ],
+      "flags": [
+        "ExportKeyword"
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            7,
+            8
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                7,
+                14
+              ],
+              "symbol": "s1",
+              "type": "t2",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    7,
+                    14
+                  ],
+                  "type": "t2",
+                  "text": "oldAttributeBackgroundColorEven",
+                  "resolvedSymbol": "s1"
+                },
+                {
+                  "kind": "StringLiteral",
+                  "kindCode": 11,
+                  "pos": [
+                    7,
+                    48
+                  ],
+                  "type": "t3",
+                  "value": "#f2f2f2"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "oldAttributeBackgroundColorOdd",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s2"
+    },
+    "s1": {
+      "name": "oldAttributeBackgroundColorEven",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s2"
+    },
+    "s2": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/erDiagram-oldHardcodedValues\"",
+      "flags": []
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "stringLiteral",
+      "text": "\"#ffffff\"",
+      "value": "#ffffff"
+    },
+    "t1": {
+      "kind": "stringLiteral",
+      "text": "\"#ffffff\"",
+      "value": "#ffffff"
+    },
+    "t2": {
+      "kind": "stringLiteral",
+      "text": "\"#f2f2f2\"",
+      "value": "#f2f2f2"
+    },
+    "t3": {
+      "kind": "stringLiteral",
+      "text": "\"#f2f2f2\"",
+      "value": "#f2f2f2"
+    }
+  }
+}

@@ -1,0 +1,2147 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/index.js",
+  "sha256": "9bf90c9e56041fd151b11d3fe05eb56531497b0894cf53859b93ca197749cb68",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                1,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    1,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        10
+                      ],
+                      "type": "t0",
+                      "text": "getThemeVariables",
+                      "resolvedSymbol": "s0"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        31
+                      ],
+                      "type": "t0",
+                      "text": "baseThemeVariables",
+                      "resolvedSymbol": "s1"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            57
+          ],
+          "type": "t7",
+          "value": "./theme-base.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        2,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                2,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    2,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        10
+                      ],
+                      "type": "t9",
+                      "text": "getThemeVariables",
+                      "resolvedSymbol": "s2"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        31
+                      ],
+                      "type": "t9",
+                      "text": "darkThemeVariables",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            57
+          ],
+          "type": "t7",
+          "value": "./theme-dark.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        3,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            3,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                3,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    3,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        3,
+                        10
+                      ],
+                      "type": "t17",
+                      "text": "getThemeVariables",
+                      "resolvedSymbol": "s4"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        3,
+                        31
+                      ],
+                      "type": "t17",
+                      "text": "defaultThemeVariables",
+                      "resolvedSymbol": "s5"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            3,
+            60
+          ],
+          "type": "t7",
+          "value": "./theme-default.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        4,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            4,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                4,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    4,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        10
+                      ],
+                      "type": "t21",
+                      "text": "getThemeVariables",
+                      "resolvedSymbol": "s6"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        31
+                      ],
+                      "type": "t21",
+                      "text": "forestThemeVariables",
+                      "resolvedSymbol": "s7"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            4,
+            59
+          ],
+          "type": "t7",
+          "value": "./theme-forest.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        5,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            5,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                5,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    5,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        5,
+                        10
+                      ],
+                      "type": "t27",
+                      "text": "getThemeVariables",
+                      "resolvedSymbol": "s8"
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        5,
+                        31
+                      ],
+                      "type": "t27",
+                      "text": "neutralThemeVariables",
+                      "resolvedSymbol": "s9"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            5,
+            60
+          ],
+          "type": "t7",
+          "value": "./theme-neutral.js"
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        7,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ObjectLiteralExpression",
+          "kindCode": 210,
+          "pos": [
+            7,
+            16
+          ],
+          "type": "t31",
+          "children": [
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                8,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    8,
+                    3
+                  ],
+                  "type": "t37",
+                  "text": "base",
+                  "resolvedSymbol": "s10"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    8,
+                    9
+                  ],
+                  "type": "t38",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        9,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            9,
+                            5
+                          ],
+                          "type": "t0",
+                          "text": "getThemeVariables",
+                          "resolvedSymbol": "s11"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            9,
+                            24
+                          ],
+                          "type": "t0",
+                          "text": "baseThemeVariables",
+                          "resolvedSymbol": "s1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                11,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    11,
+                    3
+                  ],
+                  "type": "t39",
+                  "text": "dark",
+                  "resolvedSymbol": "s12"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    11,
+                    9
+                  ],
+                  "type": "t40",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        12,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            12,
+                            5
+                          ],
+                          "type": "t9",
+                          "text": "getThemeVariables",
+                          "resolvedSymbol": "s13"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            12,
+                            24
+                          ],
+                          "type": "t9",
+                          "text": "darkThemeVariables",
+                          "resolvedSymbol": "s3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                14,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    14,
+                    3
+                  ],
+                  "type": "t41",
+                  "text": "default",
+                  "resolvedSymbol": "s14"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    14,
+                    12
+                  ],
+                  "type": "t42",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        15,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            15,
+                            5
+                          ],
+                          "type": "t17",
+                          "text": "getThemeVariables",
+                          "resolvedSymbol": "s15"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            15,
+                            24
+                          ],
+                          "type": "t17",
+                          "text": "defaultThemeVariables",
+                          "resolvedSymbol": "s5"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                17,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    17,
+                    3
+                  ],
+                  "type": "t43",
+                  "text": "forest",
+                  "resolvedSymbol": "s16"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    17,
+                    11
+                  ],
+                  "type": "t44",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        18,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            18,
+                            5
+                          ],
+                          "type": "t21",
+                          "text": "getThemeVariables",
+                          "resolvedSymbol": "s17"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            18,
+                            24
+                          ],
+                          "type": "t21",
+                          "text": "forestThemeVariables",
+                          "resolvedSymbol": "s7"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "PropertyAssignment",
+              "kindCode": 303,
+              "pos": [
+                20,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    20,
+                    3
+                  ],
+                  "type": "t45",
+                  "text": "neutral",
+                  "resolvedSymbol": "s18"
+                },
+                {
+                  "kind": "ObjectLiteralExpression",
+                  "kindCode": 210,
+                  "pos": [
+                    20,
+                    12
+                  ],
+                  "type": "t46",
+                  "children": [
+                    {
+                      "kind": "PropertyAssignment",
+                      "kindCode": 303,
+                      "pos": [
+                        21,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            21,
+                            5
+                          ],
+                          "type": "t27",
+                          "text": "getThemeVariables",
+                          "resolvedSymbol": "s19"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            21,
+                            24
+                          ],
+                          "type": "t27",
+                          "text": "neutralThemeVariables",
+                          "resolvedSymbol": "s9"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "getThemeVariables",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s20"
+    },
+    "s1": {
+      "name": "baseThemeVariables",
+      "flags": []
+    },
+    "s2": {
+      "name": "getThemeVariables",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s21"
+    },
+    "s3": {
+      "name": "darkThemeVariables",
+      "flags": []
+    },
+    "s4": {
+      "name": "getThemeVariables",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s22"
+    },
+    "s5": {
+      "name": "defaultThemeVariables",
+      "flags": []
+    },
+    "s6": {
+      "name": "getThemeVariables",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s23"
+    },
+    "s7": {
+      "name": "forestThemeVariables",
+      "flags": []
+    },
+    "s8": {
+      "name": "getThemeVariables",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s24"
+    },
+    "s9": {
+      "name": "neutralThemeVariables",
+      "flags": []
+    },
+    "s10": {
+      "name": "base",
+      "flags": [
+        "property"
+      ],
+      "parent": "s25"
+    },
+    "s11": {
+      "name": "getThemeVariables",
+      "flags": [
+        "property"
+      ],
+      "parent": "s26"
+    },
+    "s12": {
+      "name": "dark",
+      "flags": [
+        "property"
+      ],
+      "parent": "s25"
+    },
+    "s13": {
+      "name": "getThemeVariables",
+      "flags": [
+        "property"
+      ],
+      "parent": "s27"
+    },
+    "s14": {
+      "name": "default",
+      "flags": [
+        "property"
+      ],
+      "parent": "s25"
+    },
+    "s15": {
+      "name": "getThemeVariables",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s16": {
+      "name": "forest",
+      "flags": [
+        "property"
+      ],
+      "parent": "s25"
+    },
+    "s17": {
+      "name": "getThemeVariables",
+      "flags": [
+        "property"
+      ],
+      "parent": "s29"
+    },
+    "s18": {
+      "name": "neutral",
+      "flags": [
+        "property"
+      ],
+      "parent": "s25"
+    },
+    "s19": {
+      "name": "getThemeVariables",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s20": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/theme-base\"",
+      "flags": []
+    },
+    "s21": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/theme-dark\"",
+      "flags": []
+    },
+    "s22": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/theme-default\"",
+      "flags": []
+    },
+    "s23": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/theme-forest\"",
+      "flags": []
+    },
+    "s24": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/themes/theme-neutral\"",
+      "flags": []
+    },
+    "s25": {
+      "name": "__object",
+      "flags": []
+    },
+    "s26": {
+      "name": "__object",
+      "flags": []
+    },
+    "s27": {
+      "name": "__object",
+      "flags": []
+    },
+    "s28": {
+      "name": "__object",
+      "flags": []
+    },
+    "s29": {
+      "name": "__object",
+      "flags": []
+    },
+    "s30": {
+      "name": "__object",
+      "flags": []
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t3": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t4": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t6": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t5": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t7": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t8": {
+      "kind": "function",
+      "text": "(overrides: any) => void",
+      "parameters": [
+        {
+          "name": "overrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t2": {
+      "kind": "object",
+      "text": "Theme",
+      "members": {
+        "background": "t3",
+        "primaryColor": "t3",
+        "noteBkgColor": "t3",
+        "noteTextColor": "t3",
+        "THEME_COLOR_LIMIT": "t4",
+        "fontFamily": "t3",
+        "fontSize": "t3",
+        "updateColors": "t5",
+        "primaryTextColor": "t1",
+        "secondaryColor": "t1",
+        "tertiaryColor": "t1",
+        "primaryBorderColor": "t1",
+        "secondaryBorderColor": "t1",
+        "tertiaryBorderColor": "t1",
+        "noteBorderColor": "t1",
+        "secondaryTextColor": "t1",
+        "tertiaryTextColor": "t1",
+        "lineColor": "t1",
+        "arrowheadColor": "t1",
+        "textColor": "t1",
+        "border2": "t1",
+        "nodeBkg": "t1",
+        "mainBkg": "t1",
+        "nodeBorder": "t1",
+        "clusterBkg": "t1",
+        "clusterBorder": "t1",
+        "defaultLinkColor": "t1",
+        "titleColor": "t1",
+        "edgeLabelBackground": "t1",
+        "nodeTextColor": "t1",
+        "actorBorder": "t1",
+        "actorBkg": "t1",
+        "actorTextColor": "t1",
+        "actorLineColor": "t1",
+        "labelBoxBkgColor": "t1",
+        "signalColor": "t1",
+        "signalTextColor": "t1",
+        "labelBoxBorderColor": "t1",
+        "labelTextColor": "t1",
+        "loopTextColor": "t1",
+        "activationBorderColor": "t1",
+        "activationBkgColor": "t1",
+        "sequenceNumberColor": "t1",
+        "sectionBkgColor": "t1",
+        "altSectionBkgColor": "t1",
+        "sectionBkgColor2": "t1",
+        "excludeBkgColor": "t1",
+        "taskBorderColor": "t1",
+        "taskBkgColor": "t1",
+        "activeTaskBorderColor": "t1",
+        "activeTaskBkgColor": "t1",
+        "gridColor": "t1",
+        "doneTaskBkgColor": "t1",
+        "doneTaskBorderColor": "t1",
+        "critBorderColor": "t1",
+        "critBkgColor": "t1",
+        "todayLineColor": "t1",
+        "taskTextColor": "t1",
+        "taskTextOutsideColor": "t1",
+        "taskTextLightColor": "t1",
+        "taskTextDarkColor": "t1",
+        "taskTextClickableColor": "t1",
+        "personBorder": "t1",
+        "personBkg": "t1",
+        "transitionColor": "t1",
+        "transitionLabelColor": "t1",
+        "stateLabelColor": "t1",
+        "stateBkg": "t1",
+        "labelBackgroundColor": "t1",
+        "compositeBackground": "t1",
+        "altBackground": "t1",
+        "compositeTitleBackground": "t1",
+        "compositeBorder": "t1",
+        "innerEndBackground": "t1",
+        "errorBkgColor": "t1",
+        "errorTextColor": "t1",
+        "specialStateColor": "t1",
+        "cScale0": "t1",
+        "cScale1": "t1",
+        "cScale2": "t1",
+        "cScale3": "t1",
+        "cScale4": "t1",
+        "cScale5": "t1",
+        "cScale6": "t1",
+        "cScale7": "t1",
+        "cScale8": "t1",
+        "cScale9": "t1",
+        "cScale10": "t1",
+        "cScale11": "t1",
+        "scaleLabelColor": "t1",
+        "classText": "t1",
+        "fillType0": "t1",
+        "fillType1": "t1",
+        "fillType2": "t1",
+        "fillType3": "t1",
+        "fillType4": "t1",
+        "fillType5": "t1",
+        "fillType6": "t1",
+        "fillType7": "t1",
+        "pie1": "t1",
+        "pie2": "t1",
+        "pie3": "t1",
+        "pie4": "t1",
+        "pie5": "t1",
+        "pie6": "t1",
+        "pie7": "t1",
+        "pie8": "t1",
+        "pie9": "t1",
+        "pie10": "t1",
+        "pie11": "t1",
+        "pie12": "t1",
+        "pieTitleTextSize": "t1",
+        "pieTitleTextColor": "t1",
+        "pieSectionTextSize": "t1",
+        "pieSectionTextColor": "t1",
+        "pieLegendTextSize": "t1",
+        "pieLegendTextColor": "t1",
+        "pieStrokeColor": "t1",
+        "pieStrokeWidth": "t1",
+        "pieOuterStrokeWidth": "t1",
+        "pieOuterStrokeColor": "t1",
+        "pieOpacity": "t1",
+        "quadrant1Fill": "t1",
+        "quadrant2Fill": "t1",
+        "quadrant3Fill": "t1",
+        "quadrant4Fill": "t1",
+        "quadrant1TextFill": "t1",
+        "quadrant2TextFill": "t1",
+        "quadrant3TextFill": "t1",
+        "quadrant4TextFill": "t1",
+        "quadrantPointFill": "t1",
+        "quadrantPointTextFill": "t1",
+        "quadrantXAxisTextFill": "t1",
+        "quadrantYAxisTextFill": "t1",
+        "quadrantInternalBorderStrokeFill": "t1",
+        "quadrantExternalBorderStrokeFill": "t1",
+        "quadrantTitleFill": "t1",
+        "xyChart": "t1",
+        "requirementBackground": "t1",
+        "requirementBorderColor": "t1",
+        "requirementBorderSize": "t1",
+        "requirementTextColor": "t1",
+        "relationColor": "t1",
+        "relationLabelBackground": "t1",
+        "relationLabelColor": "t1",
+        "git0": "t1",
+        "git1": "t1",
+        "git2": "t1",
+        "git3": "t1",
+        "git4": "t1",
+        "git5": "t1",
+        "git6": "t1",
+        "git7": "t1",
+        "gitInv0": "t1",
+        "gitInv1": "t1",
+        "gitInv2": "t1",
+        "gitInv3": "t1",
+        "gitInv4": "t1",
+        "gitInv5": "t1",
+        "gitInv6": "t1",
+        "gitInv7": "t1",
+        "branchLabelColor": "t1",
+        "gitBranchLabel0": "t1",
+        "gitBranchLabel1": "t1",
+        "gitBranchLabel2": "t1",
+        "gitBranchLabel3": "t1",
+        "gitBranchLabel4": "t1",
+        "gitBranchLabel5": "t1",
+        "gitBranchLabel6": "t1",
+        "gitBranchLabel7": "t1",
+        "tagLabelColor": "t1",
+        "tagLabelBackground": "t1",
+        "tagLabelBorder": "t7",
+        "tagLabelFontSize": "t1",
+        "commitLabelColor": "t1",
+        "commitLabelBackground": "t1",
+        "commitLabelFontSize": "t1",
+        "attributeBackgroundColorOdd": "t1",
+        "attributeBackgroundColorEven": "t1",
+        "calculate": "t8"
+      }
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(userOverrides: any) => Theme",
+      "parameters": [
+        {
+          "name": "userOverrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t11": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t13": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t12": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t13",
+        "t3"
+      ]
+    },
+    "t15": {
+      "kind": "object",
+      "text": "{ startByteColor: any; endByteColor: any; labelColor: any; titleColor: any; blockStrokeColor: any; blockFillColor: string; }",
+      "members": {
+        "startByteColor": "t7",
+        "endByteColor": "t7",
+        "labelColor": "t7",
+        "titleColor": "t7",
+        "blockStrokeColor": "t7",
+        "blockFillColor": "t3"
+      }
+    },
+    "t14": {
+      "kind": "union",
+      "text": "{ startByteColor: any; endByteColor: any; labelColor: any; titleColor: any; blockStrokeColor: any; blockFillColor: string; } | undefined",
+      "types": [
+        "t13",
+        "t15"
+      ]
+    },
+    "t16": {
+      "kind": "function",
+      "text": "(overrides: any) => void",
+      "parameters": [
+        {
+          "name": "overrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t10": {
+      "kind": "object",
+      "text": "Theme",
+      "members": {
+        "background": "t3",
+        "primaryColor": "t3",
+        "secondaryColor": "t7",
+        "tertiaryColor": "t7",
+        "primaryBorderColor": "t7",
+        "secondaryBorderColor": "t7",
+        "tertiaryBorderColor": "t7",
+        "primaryTextColor": "t7",
+        "secondaryTextColor": "t7",
+        "tertiaryTextColor": "t7",
+        "lineColor": "t3",
+        "textColor": "t3",
+        "mainBkg": "t3",
+        "secondBkg": "t3",
+        "mainContrastColor": "t3",
+        "darkTextColor": "t7",
+        "border1": "t3",
+        "border2": "t7",
+        "arrowheadColor": "t3",
+        "fontFamily": "t3",
+        "fontSize": "t3",
+        "labelBackground": "t3",
+        "THEME_COLOR_LIMIT": "t4",
+        "nodeBkg": "t3",
+        "nodeBorder": "t3",
+        "clusterBkg": "t3",
+        "clusterBorder": "t3",
+        "defaultLinkColor": "t3",
+        "titleColor": "t3",
+        "edgeLabelBackground": "t3",
+        "actorBorder": "t3",
+        "actorBkg": "t3",
+        "actorTextColor": "t3",
+        "actorLineColor": "t3",
+        "signalColor": "t3",
+        "signalTextColor": "t3",
+        "labelBoxBkgColor": "t3",
+        "labelBoxBorderColor": "t3",
+        "labelTextColor": "t3",
+        "loopTextColor": "t3",
+        "noteBorderColor": "t3",
+        "noteBkgColor": "t3",
+        "noteTextColor": "t3",
+        "activationBorderColor": "t3",
+        "activationBkgColor": "t3",
+        "sequenceNumberColor": "t3",
+        "sectionBkgColor": "t7",
+        "altSectionBkgColor": "t3",
+        "sectionBkgColor2": "t3",
+        "excludeBkgColor": "t7",
+        "taskBorderColor": "t7",
+        "taskBkgColor": "t3",
+        "taskTextColor": "t3",
+        "taskTextLightColor": "t3",
+        "taskTextOutsideColor": "t3",
+        "taskTextClickableColor": "t3",
+        "activeTaskBorderColor": "t7",
+        "activeTaskBkgColor": "t3",
+        "gridColor": "t3",
+        "doneTaskBkgColor": "t3",
+        "doneTaskBorderColor": "t3",
+        "critBorderColor": "t3",
+        "critBkgColor": "t3",
+        "taskTextDarkColor": "t3",
+        "todayLineColor": "t3",
+        "personBorder": "t7",
+        "personBkg": "t3",
+        "labelColor": "t3",
+        "errorBkgColor": "t3",
+        "errorTextColor": "t3",
+        "updateColors": "t11",
+        "transitionColor": "t1",
+        "transitionLabelColor": "t1",
+        "stateLabelColor": "t1",
+        "stateBkg": "t1",
+        "labelBackgroundColor": "t1",
+        "compositeBackground": "t1",
+        "altBackground": "t1",
+        "compositeTitleBackground": "t1",
+        "compositeBorder": "t1",
+        "innerEndBackground": "t7",
+        "specialStateColor": "t12",
+        "fillType0": "t12",
+        "fillType1": "t7",
+        "fillType2": "t7",
+        "fillType3": "t7",
+        "fillType4": "t7",
+        "fillType5": "t7",
+        "fillType6": "t7",
+        "fillType7": "t7",
+        "cScale1": "t1",
+        "cScale2": "t1",
+        "cScale3": "t1",
+        "cScale4": "t1",
+        "cScale5": "t1",
+        "cScale6": "t1",
+        "cScale7": "t1",
+        "cScale8": "t1",
+        "cScale9": "t1",
+        "cScale10": "t1",
+        "cScale11": "t1",
+        "cScale12": "t1",
+        "cScale0": "t1",
+        "scaleLabelColor": "t1",
+        "pieTitleTextSize": "t1",
+        "pieTitleTextColor": "t1",
+        "pieSectionTextSize": "t1",
+        "pieSectionTextColor": "t1",
+        "pieLegendTextSize": "t1",
+        "pieLegendTextColor": "t1",
+        "pieStrokeColor": "t1",
+        "pieStrokeWidth": "t1",
+        "pieOuterStrokeWidth": "t1",
+        "pieOuterStrokeColor": "t1",
+        "pieOpacity": "t1",
+        "quadrant1Fill": "t1",
+        "quadrant2Fill": "t1",
+        "quadrant3Fill": "t1",
+        "quadrant4Fill": "t1",
+        "quadrant1TextFill": "t1",
+        "quadrant2TextFill": "t1",
+        "quadrant3TextFill": "t1",
+        "quadrant4TextFill": "t1",
+        "quadrantPointFill": "t1",
+        "quadrantPointTextFill": "t1",
+        "quadrantXAxisTextFill": "t1",
+        "quadrantYAxisTextFill": "t1",
+        "quadrantInternalBorderStrokeFill": "t1",
+        "quadrantExternalBorderStrokeFill": "t1",
+        "quadrantTitleFill": "t1",
+        "xyChart": "t1",
+        "packet": "t14",
+        "classText": "t7",
+        "requirementBackground": "t1",
+        "requirementBorderColor": "t1",
+        "requirementBorderSize": "t1",
+        "requirementTextColor": "t1",
+        "relationColor": "t1",
+        "relationLabelBackground": "t1",
+        "relationLabelColor": "t1",
+        "git0": "t7",
+        "git1": "t7",
+        "git2": "t7",
+        "git3": "t7",
+        "git4": "t7",
+        "git5": "t7",
+        "git6": "t7",
+        "git7": "t7",
+        "gitInv0": "t1",
+        "gitInv1": "t1",
+        "gitInv2": "t1",
+        "gitInv3": "t1",
+        "gitInv4": "t1",
+        "gitInv5": "t1",
+        "gitInv6": "t1",
+        "gitInv7": "t1",
+        "gitBranchLabel0": "t1",
+        "gitBranchLabel1": "t1",
+        "gitBranchLabel2": "t1",
+        "gitBranchLabel3": "t1",
+        "gitBranchLabel4": "t1",
+        "gitBranchLabel5": "t1",
+        "gitBranchLabel6": "t1",
+        "gitBranchLabel7": "t1",
+        "tagLabelColor": "t1",
+        "tagLabelBackground": "t1",
+        "tagLabelBorder": "t7",
+        "tagLabelFontSize": "t1",
+        "commitLabelColor": "t1",
+        "commitLabelBackground": "t1",
+        "commitLabelFontSize": "t1",
+        "attributeBackgroundColorOdd": "t1",
+        "attributeBackgroundColorEven": "t1",
+        "calculate": "t16"
+      }
+    },
+    "t9": {
+      "kind": "function",
+      "text": "(userOverrides: any) => Theme",
+      "parameters": [
+        {
+          "name": "userOverrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t10"
+    },
+    "t19": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t20": {
+      "kind": "function",
+      "text": "(overrides: any) => void",
+      "parameters": [
+        {
+          "name": "overrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t18": {
+      "kind": "object",
+      "text": "Theme",
+      "members": {
+        "background": "t3",
+        "primaryColor": "t3",
+        "secondaryColor": "t3",
+        "tertiaryColor": "t7",
+        "primaryBorderColor": "t7",
+        "secondaryBorderColor": "t7",
+        "tertiaryBorderColor": "t7",
+        "primaryTextColor": "t7",
+        "secondaryTextColor": "t7",
+        "tertiaryTextColor": "t7",
+        "lineColor": "t3",
+        "textColor": "t3",
+        "mainBkg": "t3",
+        "secondBkg": "t3",
+        "border1": "t3",
+        "border2": "t3",
+        "arrowheadColor": "t3",
+        "fontFamily": "t3",
+        "fontSize": "t3",
+        "labelBackground": "t3",
+        "THEME_COLOR_LIMIT": "t4",
+        "nodeBkg": "t3",
+        "nodeBorder": "t3",
+        "clusterBkg": "t3",
+        "clusterBorder": "t3",
+        "defaultLinkColor": "t3",
+        "titleColor": "t3",
+        "edgeLabelBackground": "t3",
+        "actorBorder": "t3",
+        "actorBkg": "t3",
+        "actorTextColor": "t3",
+        "actorLineColor": "t3",
+        "signalColor": "t3",
+        "signalTextColor": "t3",
+        "labelBoxBkgColor": "t3",
+        "labelBoxBorderColor": "t3",
+        "labelTextColor": "t3",
+        "loopTextColor": "t3",
+        "noteBorderColor": "t3",
+        "noteBkgColor": "t3",
+        "noteTextColor": "t3",
+        "activationBorderColor": "t3",
+        "activationBkgColor": "t3",
+        "sequenceNumberColor": "t3",
+        "sectionBkgColor": "t7",
+        "altSectionBkgColor": "t3",
+        "sectionBkgColor2": "t3",
+        "excludeBkgColor": "t3",
+        "taskBorderColor": "t3",
+        "taskBkgColor": "t3",
+        "taskTextLightColor": "t3",
+        "taskTextColor": "t3",
+        "taskTextDarkColor": "t3",
+        "taskTextOutsideColor": "t3",
+        "taskTextClickableColor": "t3",
+        "activeTaskBorderColor": "t3",
+        "activeTaskBkgColor": "t3",
+        "gridColor": "t3",
+        "doneTaskBkgColor": "t3",
+        "doneTaskBorderColor": "t3",
+        "critBorderColor": "t3",
+        "critBkgColor": "t3",
+        "todayLineColor": "t3",
+        "personBorder": "t7",
+        "personBkg": "t3",
+        "labelColor": "t3",
+        "errorBkgColor": "t3",
+        "errorTextColor": "t3",
+        "updateColors": "t19",
+        "cScale0": "t1",
+        "cScale1": "t1",
+        "cScale2": "t1",
+        "cScale3": "t1",
+        "cScale4": "t1",
+        "cScale5": "t1",
+        "cScale6": "t1",
+        "cScale7": "t1",
+        "cScale8": "t1",
+        "cScale9": "t1",
+        "cScale10": "t1",
+        "cScale11": "t1",
+        "scaleLabelColor": "t1",
+        "cScaleLabel0": "t1",
+        "cScaleLabel3": "t1",
+        "transitionColor": "t1",
+        "transitionLabelColor": "t1",
+        "stateLabelColor": "t1",
+        "stateBkg": "t1",
+        "labelBackgroundColor": "t1",
+        "compositeBackground": "t1",
+        "altBackground": "t1",
+        "compositeTitleBackground": "t1",
+        "compositeBorder": "t1",
+        "innerEndBackground": "t12",
+        "specialStateColor": "t12",
+        "classText": "t7",
+        "fillType0": "t12",
+        "fillType1": "t12",
+        "fillType2": "t7",
+        "fillType3": "t7",
+        "fillType4": "t7",
+        "fillType5": "t7",
+        "fillType6": "t7",
+        "fillType7": "t7",
+        "pie1": "t1",
+        "pie2": "t1",
+        "pie3": "t1",
+        "pie4": "t1",
+        "pie5": "t1",
+        "pie6": "t1",
+        "pie7": "t1",
+        "pie8": "t1",
+        "pie9": "t1",
+        "pie10": "t1",
+        "pie11": "t1",
+        "pie12": "t1",
+        "pieTitleTextSize": "t1",
+        "pieTitleTextColor": "t1",
+        "pieSectionTextSize": "t1",
+        "pieSectionTextColor": "t1",
+        "pieLegendTextSize": "t1",
+        "pieLegendTextColor": "t1",
+        "pieStrokeColor": "t1",
+        "pieStrokeWidth": "t1",
+        "pieOuterStrokeWidth": "t1",
+        "pieOuterStrokeColor": "t1",
+        "pieOpacity": "t1",
+        "quadrant1Fill": "t1",
+        "quadrant2Fill": "t1",
+        "quadrant3Fill": "t1",
+        "quadrant4Fill": "t1",
+        "quadrant1TextFill": "t1",
+        "quadrant2TextFill": "t1",
+        "quadrant3TextFill": "t1",
+        "quadrant4TextFill": "t1",
+        "quadrantPointFill": "t1",
+        "quadrantPointTextFill": "t1",
+        "quadrantXAxisTextFill": "t1",
+        "quadrantYAxisTextFill": "t1",
+        "quadrantInternalBorderStrokeFill": "t1",
+        "quadrantExternalBorderStrokeFill": "t1",
+        "quadrantTitleFill": "t1",
+        "xyChart": "t1",
+        "requirementBackground": "t1",
+        "requirementBorderColor": "t1",
+        "requirementBorderSize": "t1",
+        "requirementTextColor": "t1",
+        "relationColor": "t1",
+        "relationLabelBackground": "t1",
+        "relationLabelColor": "t1",
+        "git0": "t1",
+        "git1": "t1",
+        "git2": "t1",
+        "git3": "t1",
+        "git4": "t1",
+        "git5": "t1",
+        "git6": "t1",
+        "git7": "t1",
+        "gitInv0": "t1",
+        "gitInv1": "t1",
+        "gitInv2": "t1",
+        "gitInv3": "t1",
+        "gitInv4": "t1",
+        "gitInv5": "t1",
+        "gitInv6": "t1",
+        "gitInv7": "t1",
+        "gitBranchLabel0": "t1",
+        "gitBranchLabel1": "t1",
+        "gitBranchLabel2": "t1",
+        "gitBranchLabel3": "t1",
+        "gitBranchLabel4": "t1",
+        "gitBranchLabel5": "t1",
+        "gitBranchLabel6": "t1",
+        "gitBranchLabel7": "t1",
+        "tagLabelColor": "t1",
+        "tagLabelBackground": "t1",
+        "tagLabelBorder": "t7",
+        "tagLabelFontSize": "t1",
+        "commitLabelColor": "t1",
+        "commitLabelBackground": "t1",
+        "commitLabelFontSize": "t1",
+        "attributeBackgroundColorOdd": "t1",
+        "attributeBackgroundColorEven": "t1",
+        "calculate": "t20"
+      }
+    },
+    "t17": {
+      "kind": "function",
+      "text": "(userOverrides: any) => Theme",
+      "parameters": [
+        {
+          "name": "userOverrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t18"
+    },
+    "t23": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t25": {
+      "kind": "object",
+      "text": "{ startByteColor: any; endByteColor: any; labelColor: any; titleColor: any; blockStrokeColor: any; blockFillColor: string; }",
+      "members": {
+        "startByteColor": "t7",
+        "endByteColor": "t7",
+        "labelColor": "t7",
+        "titleColor": "t7",
+        "blockStrokeColor": "t7",
+        "blockFillColor": "t3"
+      }
+    },
+    "t24": {
+      "kind": "union",
+      "text": "{ startByteColor: any; endByteColor: any; labelColor: any; titleColor: any; blockStrokeColor: any; blockFillColor: string; } | undefined",
+      "types": [
+        "t13",
+        "t25"
+      ]
+    },
+    "t26": {
+      "kind": "function",
+      "text": "(overrides: any) => void",
+      "parameters": [
+        {
+          "name": "overrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t22": {
+      "kind": "object",
+      "text": "Theme",
+      "members": {
+        "background": "t3",
+        "primaryColor": "t3",
+        "secondaryColor": "t3",
+        "mainBkg": "t3",
+        "secondBkg": "t3",
+        "lineColor": "t7",
+        "border1": "t3",
+        "border2": "t3",
+        "arrowheadColor": "t3",
+        "fontFamily": "t3",
+        "fontSize": "t3",
+        "tertiaryColor": "t7",
+        "primaryBorderColor": "t7",
+        "secondaryBorderColor": "t7",
+        "tertiaryBorderColor": "t7",
+        "primaryTextColor": "t7",
+        "secondaryTextColor": "t7",
+        "tertiaryTextColor": "t7",
+        "textColor": "t7",
+        "THEME_COLOR_LIMIT": "t4",
+        "nodeBkg": "t3",
+        "nodeBorder": "t3",
+        "clusterBkg": "t3",
+        "clusterBorder": "t3",
+        "defaultLinkColor": "t3",
+        "titleColor": "t3",
+        "edgeLabelBackground": "t3",
+        "actorBorder": "t3",
+        "actorBkg": "t3",
+        "actorTextColor": "t3",
+        "actorLineColor": "t3",
+        "signalColor": "t3",
+        "signalTextColor": "t3",
+        "labelBoxBkgColor": "t3",
+        "labelBoxBorderColor": "t3",
+        "labelTextColor": "t3",
+        "loopTextColor": "t3",
+        "noteBorderColor": "t3",
+        "noteBkgColor": "t3",
+        "noteTextColor": "t3",
+        "activationBorderColor": "t3",
+        "activationBkgColor": "t3",
+        "sequenceNumberColor": "t3",
+        "sectionBkgColor": "t3",
+        "altSectionBkgColor": "t3",
+        "sectionBkgColor2": "t3",
+        "excludeBkgColor": "t3",
+        "taskBorderColor": "t3",
+        "taskBkgColor": "t3",
+        "taskTextLightColor": "t3",
+        "taskTextColor": "t3",
+        "taskTextDarkColor": "t3",
+        "taskTextOutsideColor": "t3",
+        "taskTextClickableColor": "t3",
+        "activeTaskBorderColor": "t3",
+        "activeTaskBkgColor": "t3",
+        "gridColor": "t3",
+        "doneTaskBkgColor": "t3",
+        "doneTaskBorderColor": "t3",
+        "critBorderColor": "t3",
+        "critBkgColor": "t3",
+        "todayLineColor": "t3",
+        "personBorder": "t7",
+        "personBkg": "t3",
+        "labelColor": "t3",
+        "errorBkgColor": "t3",
+        "errorTextColor": "t3",
+        "updateColors": "t23",
+        "cScale0": "t1",
+        "cScale1": "t1",
+        "cScale2": "t1",
+        "cScale3": "t1",
+        "cScale4": "t1",
+        "cScale5": "t1",
+        "cScale6": "t1",
+        "cScale7": "t1",
+        "cScale8": "t1",
+        "cScale9": "t1",
+        "cScale10": "t1",
+        "cScale11": "t1",
+        "scaleLabelColor": "t1",
+        "transitionColor": "t1",
+        "transitionLabelColor": "t1",
+        "stateLabelColor": "t1",
+        "stateBkg": "t1",
+        "labelBackgroundColor": "t1",
+        "compositeBackground": "t1",
+        "altBackground": "t1",
+        "compositeTitleBackground": "t1",
+        "compositeBorder": "t1",
+        "innerEndBackground": "t7",
+        "specialStateColor": "t7",
+        "classText": "t7",
+        "fillType0": "t12",
+        "fillType1": "t12",
+        "fillType2": "t7",
+        "fillType3": "t7",
+        "fillType4": "t7",
+        "fillType5": "t7",
+        "fillType6": "t7",
+        "fillType7": "t7",
+        "pie1": "t1",
+        "pie2": "t1",
+        "pie3": "t1",
+        "pie4": "t1",
+        "pie5": "t1",
+        "pie6": "t1",
+        "pie7": "t1",
+        "pie8": "t1",
+        "pie9": "t1",
+        "pie10": "t1",
+        "pie11": "t1",
+        "pie12": "t1",
+        "pieTitleTextSize": "t1",
+        "pieTitleTextColor": "t1",
+        "pieSectionTextSize": "t1",
+        "pieSectionTextColor": "t1",
+        "pieLegendTextSize": "t1",
+        "pieLegendTextColor": "t1",
+        "pieStrokeColor": "t1",
+        "pieStrokeWidth": "t1",
+        "pieOuterStrokeWidth": "t1",
+        "pieOuterStrokeColor": "t1",
+        "pieOpacity": "t1",
+        "quadrant1Fill": "t1",
+        "quadrant2Fill": "t1",
+        "quadrant3Fill": "t1",
+        "quadrant4Fill": "t1",
+        "quadrant1TextFill": "t1",
+        "quadrant2TextFill": "t1",
+        "quadrant3TextFill": "t1",
+        "quadrant4TextFill": "t1",
+        "quadrantPointFill": "t1",
+        "quadrantPointTextFill": "t1",
+        "quadrantXAxisTextFill": "t1",
+        "quadrantYAxisTextFill": "t1",
+        "quadrantInternalBorderStrokeFill": "t1",
+        "quadrantExternalBorderStrokeFill": "t1",
+        "quadrantTitleFill": "t1",
+        "packet": "t24",
+        "xyChart": "t1",
+        "requirementBackground": "t1",
+        "requirementBorderColor": "t1",
+        "requirementBorderSize": "t1",
+        "requirementTextColor": "t1",
+        "relationColor": "t1",
+        "relationLabelBackground": "t1",
+        "relationLabelColor": "t1",
+        "git0": "t1",
+        "git1": "t1",
+        "git2": "t1",
+        "git3": "t1",
+        "git4": "t1",
+        "git5": "t1",
+        "git6": "t1",
+        "git7": "t1",
+        "gitInv0": "t1",
+        "gitInv1": "t1",
+        "gitInv2": "t1",
+        "gitInv3": "t1",
+        "gitInv4": "t1",
+        "gitInv5": "t1",
+        "gitInv6": "t1",
+        "gitInv7": "t1",
+        "gitBranchLabel0": "t1",
+        "gitBranchLabel1": "t1",
+        "gitBranchLabel2": "t1",
+        "gitBranchLabel3": "t1",
+        "gitBranchLabel4": "t1",
+        "gitBranchLabel5": "t1",
+        "gitBranchLabel6": "t1",
+        "gitBranchLabel7": "t1",
+        "tagLabelColor": "t1",
+        "tagLabelBackground": "t1",
+        "tagLabelBorder": "t7",
+        "tagLabelFontSize": "t1",
+        "commitLabelColor": "t1",
+        "commitLabelBackground": "t1",
+        "commitLabelFontSize": "t1",
+        "attributeBackgroundColorOdd": "t1",
+        "attributeBackgroundColorEven": "t1",
+        "calculate": "t26"
+      }
+    },
+    "t21": {
+      "kind": "function",
+      "text": "(userOverrides: any) => Theme",
+      "parameters": [
+        {
+          "name": "userOverrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t22"
+    },
+    "t29": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t30": {
+      "kind": "function",
+      "text": "(overrides: any) => void",
+      "parameters": [
+        {
+          "name": "overrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t28": {
+      "kind": "object",
+      "text": "Theme",
+      "members": {
+        "primaryColor": "t3",
+        "contrast": "t3",
+        "secondaryColor": "t7",
+        "background": "t3",
+        "tertiaryColor": "t7",
+        "primaryBorderColor": "t7",
+        "secondaryBorderColor": "t7",
+        "tertiaryBorderColor": "t7",
+        "primaryTextColor": "t7",
+        "secondaryTextColor": "t7",
+        "tertiaryTextColor": "t7",
+        "lineColor": "t3",
+        "textColor": "t7",
+        "mainBkg": "t3",
+        "secondBkg": "t3",
+        "border1": "t3",
+        "border2": "t3",
+        "note": "t3",
+        "text": "t3",
+        "critical": "t3",
+        "done": "t3",
+        "arrowheadColor": "t3",
+        "fontFamily": "t3",
+        "fontSize": "t3",
+        "THEME_COLOR_LIMIT": "t4",
+        "nodeBkg": "t3",
+        "nodeBorder": "t3",
+        "clusterBkg": "t3",
+        "clusterBorder": "t3",
+        "defaultLinkColor": "t3",
+        "titleColor": "t3",
+        "edgeLabelBackground": "t3",
+        "actorBorder": "t3",
+        "actorBkg": "t3",
+        "actorTextColor": "t3",
+        "actorLineColor": "t3",
+        "signalColor": "t3",
+        "signalTextColor": "t3",
+        "labelBoxBkgColor": "t3",
+        "labelBoxBorderColor": "t3",
+        "labelTextColor": "t3",
+        "loopTextColor": "t3",
+        "noteBorderColor": "t3",
+        "noteBkgColor": "t3",
+        "noteTextColor": "t3",
+        "activationBorderColor": "t3",
+        "activationBkgColor": "t3",
+        "sequenceNumberColor": "t3",
+        "sectionBkgColor": "t3",
+        "altSectionBkgColor": "t3",
+        "sectionBkgColor2": "t3",
+        "excludeBkgColor": "t3",
+        "taskBorderColor": "t3",
+        "taskBkgColor": "t3",
+        "taskTextLightColor": "t3",
+        "taskTextColor": "t3",
+        "taskTextDarkColor": "t3",
+        "taskTextOutsideColor": "t3",
+        "taskTextClickableColor": "t3",
+        "activeTaskBorderColor": "t3",
+        "activeTaskBkgColor": "t3",
+        "gridColor": "t3",
+        "doneTaskBkgColor": "t3",
+        "doneTaskBorderColor": "t3",
+        "critBkgColor": "t3",
+        "critBorderColor": "t3",
+        "todayLineColor": "t3",
+        "personBorder": "t7",
+        "personBkg": "t3",
+        "labelColor": "t3",
+        "errorBkgColor": "t3",
+        "errorTextColor": "t3",
+        "updateColors": "t29",
+        "cScale0": "t1",
+        "cScale1": "t1",
+        "cScale2": "t1",
+        "cScale3": "t1",
+        "cScale4": "t1",
+        "cScale5": "t1",
+        "cScale6": "t1",
+        "cScale7": "t1",
+        "cScale8": "t1",
+        "cScale9": "t1",
+        "cScale10": "t1",
+        "cScale11": "t1",
+        "scaleLabelColor": "t1",
+        "cScaleLabel0": "t1",
+        "cScaleLabel2": "t1",
+        "transitionColor": "t1",
+        "transitionLabelColor": "t1",
+        "stateLabelColor": "t1",
+        "stateBkg": "t1",
+        "labelBackgroundColor": "t1",
+        "compositeBackground": "t1",
+        "altBackground": "t1",
+        "compositeTitleBackground": "t1",
+        "stateBorder": "t1",
+        "innerEndBackground": "t7",
+        "specialStateColor": "t12",
+        "classText": "t7",
+        "fillType0": "t12",
+        "fillType1": "t7",
+        "fillType2": "t7",
+        "fillType3": "t7",
+        "fillType4": "t7",
+        "fillType5": "t7",
+        "fillType6": "t7",
+        "fillType7": "t7",
+        "pie12": "t7",
+        "pieTitleTextSize": "t1",
+        "pieTitleTextColor": "t1",
+        "pieSectionTextSize": "t1",
+        "pieSectionTextColor": "t1",
+        "pieLegendTextSize": "t1",
+        "pieLegendTextColor": "t1",
+        "pieStrokeColor": "t1",
+        "pieStrokeWidth": "t1",
+        "pieOuterStrokeWidth": "t1",
+        "pieOuterStrokeColor": "t1",
+        "pieOpacity": "t1",
+        "quadrant1Fill": "t1",
+        "quadrant2Fill": "t1",
+        "quadrant3Fill": "t1",
+        "quadrant4Fill": "t1",
+        "quadrant1TextFill": "t1",
+        "quadrant2TextFill": "t1",
+        "quadrant3TextFill": "t1",
+        "quadrant4TextFill": "t1",
+        "quadrantPointFill": "t1",
+        "quadrantPointTextFill": "t1",
+        "quadrantXAxisTextFill": "t1",
+        "quadrantYAxisTextFill": "t1",
+        "quadrantInternalBorderStrokeFill": "t1",
+        "quadrantExternalBorderStrokeFill": "t1",
+        "quadrantTitleFill": "t1",
+        "xyChart": "t1",
+        "requirementBackground": "t1",
+        "requirementBorderColor": "t1",
+        "requirementBorderSize": "t1",
+        "requirementTextColor": "t1",
+        "relationColor": "t1",
+        "relationLabelBackground": "t1",
+        "relationLabelColor": "t1",
+        "git0": "t7",
+        "git1": "t7",
+        "git2": "t7",
+        "git3": "t7",
+        "git4": "t7",
+        "git5": "t7",
+        "git6": "t7",
+        "git7": "t7",
+        "gitInv0": "t1",
+        "gitInv1": "t1",
+        "gitInv2": "t1",
+        "gitInv3": "t1",
+        "gitInv4": "t1",
+        "gitInv5": "t1",
+        "gitInv6": "t1",
+        "gitInv7": "t1",
+        "branchLabelColor": "t1",
+        "gitBranchLabel0": "t1",
+        "gitBranchLabel1": "t12",
+        "gitBranchLabel2": "t1",
+        "gitBranchLabel3": "t12",
+        "gitBranchLabel4": "t1",
+        "gitBranchLabel5": "t1",
+        "gitBranchLabel6": "t1",
+        "gitBranchLabel7": "t1",
+        "tagLabelColor": "t1",
+        "tagLabelBackground": "t1",
+        "tagLabelBorder": "t7",
+        "tagLabelFontSize": "t1",
+        "commitLabelColor": "t1",
+        "commitLabelBackground": "t1",
+        "commitLabelFontSize": "t1",
+        "attributeBackgroundColorOdd": "t1",
+        "attributeBackgroundColorEven": "t1",
+        "calculate": "t30"
+      }
+    },
+    "t27": {
+      "kind": "function",
+      "text": "(userOverrides: any) => Theme",
+      "parameters": [
+        {
+          "name": "userOverrides",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t28"
+    },
+    "t32": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t0"
+      }
+    },
+    "t33": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t9"
+      }
+    },
+    "t34": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t17"
+      }
+    },
+    "t35": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t21"
+      }
+    },
+    "t36": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t27"
+      }
+    },
+    "t31": {
+      "kind": "object",
+      "text": "{ base: { getThemeVariables: (userOverrides: any) => Theme; }; dark: { getThemeVariables: (userOverrides: any) => Theme; }; default: { getThemeVariables: (userOverrides: any) => Theme; }; forest: { ...; }; neutral: { ...; }; }",
+      "members": {
+        "base": "t32",
+        "dark": "t33",
+        "default": "t34",
+        "forest": "t35",
+        "neutral": "t36"
+      }
+    },
+    "t37": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t0"
+      }
+    },
+    "t38": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t0"
+      }
+    },
+    "t39": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t9"
+      }
+    },
+    "t40": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t9"
+      }
+    },
+    "t41": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t17"
+      }
+    },
+    "t42": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t17"
+      }
+    },
+    "t43": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t21"
+      }
+    },
+    "t44": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t21"
+      }
+    },
+    "t45": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t27"
+      }
+    },
+    "t46": {
+      "kind": "object",
+      "text": "{ getThemeVariables: (userOverrides: any) => Theme; }",
+      "members": {
+        "getThemeVariables": "t27"
+      }
+    }
+  }
+}

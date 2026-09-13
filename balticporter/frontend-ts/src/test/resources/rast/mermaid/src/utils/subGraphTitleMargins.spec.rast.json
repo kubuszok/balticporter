@@ -1,0 +1,5462 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/utils/subGraphTitleMargins.spec.ts",
+  "sha256": "540af88d2a4b78fc5cc2fe60b8f205b542ebfab5d77661d66fe3b5990fc4a078",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            1,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                1,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    1,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        1,
+                        10
+                      ],
+                      "type": "t0",
+                      "text": "getSubGraphTitleMargins",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            1,
+            41
+          ],
+          "type": "t20",
+          "value": "./subGraphTitleMargins.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        2,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            2,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamespaceImport",
+              "kindCode": 274,
+              "pos": [
+                2,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    2,
+                    13
+                  ],
+                  "type": "t21",
+                  "text": "configApi",
+                  "resolvedSymbol": "s1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            2,
+            28
+          ],
+          "type": "t20",
+          "value": "../config.js"
+        }
+      ]
+    },
+    {
+      "kind": "ExpressionStatement",
+      "kindCode": 244,
+      "pos": [
+        4,
+        1
+      ],
+      "children": [
+        {
+          "kind": "CallExpression",
+          "kindCode": 213,
+          "pos": [
+            4,
+            1
+          ],
+          "type": "t20",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                4,
+                1
+              ],
+              "type": "t20",
+              "text": "describe"
+            },
+            {
+              "kind": "StringLiteral",
+              "kindCode": 11,
+              "pos": [
+                4,
+                10
+              ],
+              "type": "t393",
+              "value": "getSubGraphTitleMargins"
+            },
+            {
+              "kind": "ArrowFunction",
+              "kindCode": 219,
+              "pos": [
+                4,
+                37
+              ],
+              "type": "t394",
+              "children": [
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    4,
+                    43
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        5,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            5,
+                            3
+                          ],
+                          "type": "t20",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                5,
+                                3
+                              ],
+                              "type": "t20",
+                              "text": "it"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                5,
+                                6
+                              ],
+                              "type": "t395",
+                              "value": "should get subgraph title margins after config has been set"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                5,
+                                69
+                              ],
+                              "type": "t396",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    5,
+                                    75
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableStatement",
+                                      "kindCode": 243,
+                                      "pos": [
+                                        6,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "VariableDeclarationList",
+                                          "kindCode": 261,
+                                          "pos": [
+                                            6,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "VariableDeclaration",
+                                              "kindCode": 260,
+                                              "pos": [
+                                                6,
+                                                11
+                                              ],
+                                              "symbol": "s2",
+                                              "type": "t397",
+                                              "flags": [
+                                                "const"
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    6,
+                                                    11
+                                                  ],
+                                                  "type": "t397",
+                                                  "text": "config_0",
+                                                  "resolvedSymbol": "s2"
+                                                },
+                                                {
+                                                  "kind": "ObjectLiteralExpression",
+                                                  "kindCode": 210,
+                                                  "pos": [
+                                                    6,
+                                                    22
+                                                  ],
+                                                  "type": "t400",
+                                                  "children": [
+                                                    {
+                                                      "kind": "PropertyAssignment",
+                                                      "kindCode": 303,
+                                                      "pos": [
+                                                        7,
+                                                        7
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            7,
+                                                            7
+                                                          ],
+                                                          "type": "t403",
+                                                          "text": "flowchart",
+                                                          "resolvedSymbol": "s3"
+                                                        },
+                                                        {
+                                                          "kind": "ObjectLiteralExpression",
+                                                          "kindCode": 210,
+                                                          "pos": [
+                                                            7,
+                                                            18
+                                                          ],
+                                                          "type": "t405",
+                                                          "children": [
+                                                            {
+                                                              "kind": "PropertyAssignment",
+                                                              "kindCode": 303,
+                                                              "pos": [
+                                                                8,
+                                                                9
+                                                              ],
+                                                              "children": [
+                                                                {
+                                                                  "kind": "Identifier",
+                                                                  "kindCode": 80,
+                                                                  "pos": [
+                                                                    8,
+                                                                    9
+                                                                  ],
+                                                                  "type": "t407",
+                                                                  "text": "subGraphTitleMargin",
+                                                                  "resolvedSymbol": "s4"
+                                                                },
+                                                                {
+                                                                  "kind": "ObjectLiteralExpression",
+                                                                  "kindCode": 210,
+                                                                  "pos": [
+                                                                    8,
+                                                                    30
+                                                                  ],
+                                                                  "type": "t408",
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "PropertyAssignment",
+                                                                      "kindCode": 303,
+                                                                      "pos": [
+                                                                        9,
+                                                                        11
+                                                                      ],
+                                                                      "children": [
+                                                                        {
+                                                                          "kind": "Identifier",
+                                                                          "kindCode": 80,
+                                                                          "pos": [
+                                                                            9,
+                                                                            11
+                                                                          ],
+                                                                          "type": "t5",
+                                                                          "text": "top",
+                                                                          "resolvedSymbol": "s5"
+                                                                        },
+                                                                        {
+                                                                          "kind": "NumericLiteral",
+                                                                          "kindCode": 9,
+                                                                          "pos": [
+                                                                            9,
+                                                                            16
+                                                                          ],
+                                                                          "type": "t409",
+                                                                          "value": 10
+                                                                        }
+                                                                      ]
+                                                                    },
+                                                                    {
+                                                                      "kind": "PropertyAssignment",
+                                                                      "kindCode": 303,
+                                                                      "pos": [
+                                                                        10,
+                                                                        11
+                                                                      ],
+                                                                      "children": [
+                                                                        {
+                                                                          "kind": "Identifier",
+                                                                          "kindCode": 80,
+                                                                          "pos": [
+                                                                            10,
+                                                                            11
+                                                                          ],
+                                                                          "type": "t5",
+                                                                          "text": "bottom",
+                                                                          "resolvedSymbol": "s6"
+                                                                        },
+                                                                        {
+                                                                          "kind": "NumericLiteral",
+                                                                          "kindCode": 9,
+                                                                          "pos": [
+                                                                            10,
+                                                                            19
+                                                                          ],
+                                                                          "type": "t55",
+                                                                          "value": 5
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        15,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            15,
+                                            5
+                                          ],
+                                          "type": "t22",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                15,
+                                                5
+                                              ],
+                                              "type": "t384",
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    15,
+                                                    5
+                                                  ],
+                                                  "type": "t21",
+                                                  "text": "configApi",
+                                                  "resolvedSymbol": "s1"
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    15,
+                                                    15
+                                                  ],
+                                                  "type": "t384",
+                                                  "text": "setSiteConfig",
+                                                  "resolvedSymbol": "s7"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                15,
+                                                29
+                                              ],
+                                              "type": "t397",
+                                              "text": "config_0",
+                                              "resolvedSymbol": "s2"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        16,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            16,
+                                            5
+                                          ],
+                                          "type": "t20",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                16,
+                                                5
+                                              ],
+                                              "type": "t20",
+                                              "children": [
+                                                {
+                                                  "kind": "CallExpression",
+                                                  "kindCode": 213,
+                                                  "pos": [
+                                                    16,
+                                                    5
+                                                  ],
+                                                  "type": "t20",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        16,
+                                                        5
+                                                      ],
+                                                      "type": "t20",
+                                                      "text": "expect"
+                                                    },
+                                                    {
+                                                      "kind": "CallExpression",
+                                                      "kindCode": 213,
+                                                      "pos": [
+                                                        16,
+                                                        12
+                                                      ],
+                                                      "type": "t19",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            16,
+                                                            12
+                                                          ],
+                                                          "type": "t0",
+                                                          "text": "getSubGraphTitleMargins",
+                                                          "resolvedSymbol": "s0"
+                                                        },
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            16,
+                                                            36
+                                                          ],
+                                                          "type": "t397",
+                                                          "text": "config_0",
+                                                          "resolvedSymbol": "s2"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    16,
+                                                    47
+                                                  ],
+                                                  "type": "t20",
+                                                  "text": "toEqual"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "ObjectLiteralExpression",
+                                              "kindCode": 210,
+                                              "pos": [
+                                                16,
+                                                55
+                                              ],
+                                              "type": "t410",
+                                              "children": [
+                                                {
+                                                  "kind": "PropertyAssignment",
+                                                  "kindCode": 303,
+                                                  "pos": [
+                                                    17,
+                                                    7
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        17,
+                                                        7
+                                                      ],
+                                                      "type": "t5",
+                                                      "text": "subGraphTitleTopMargin",
+                                                      "resolvedSymbol": "s8"
+                                                    },
+                                                    {
+                                                      "kind": "NumericLiteral",
+                                                      "kindCode": 9,
+                                                      "pos": [
+                                                        17,
+                                                        31
+                                                      ],
+                                                      "type": "t409",
+                                                      "value": 10
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "PropertyAssignment",
+                                                  "kindCode": 303,
+                                                  "pos": [
+                                                    18,
+                                                    7
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        18,
+                                                        7
+                                                      ],
+                                                      "type": "t5",
+                                                      "text": "subGraphTitleBottomMargin",
+                                                      "resolvedSymbol": "s9"
+                                                    },
+                                                    {
+                                                      "kind": "NumericLiteral",
+                                                      "kindCode": 9,
+                                                      "pos": [
+                                                        18,
+                                                        34
+                                                      ],
+                                                      "type": "t55",
+                                                      "value": 5
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "PropertyAssignment",
+                                                  "kindCode": 303,
+                                                  "pos": [
+                                                    19,
+                                                    7
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        19,
+                                                        7
+                                                      ],
+                                                      "type": "t5",
+                                                      "text": "subGraphTitleTotalMargin",
+                                                      "resolvedSymbol": "s10"
+                                                    },
+                                                    {
+                                                      "kind": "NumericLiteral",
+                                                      "kindCode": 9,
+                                                      "pos": [
+                                                        19,
+                                                        33
+                                                      ],
+                                                      "type": "t411",
+                                                      "value": 15
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "getSubGraphTitleMargins",
+      "flags": []
+    },
+    "s1": {
+      "name": "configApi",
+      "flags": []
+    },
+    "s2": {
+      "name": "config_0",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s3": {
+      "name": "flowchart",
+      "flags": [
+        "property"
+      ],
+      "parent": "s11"
+    },
+    "s4": {
+      "name": "subGraphTitleMargin",
+      "flags": [
+        "property"
+      ],
+      "parent": "s12"
+    },
+    "s5": {
+      "name": "top",
+      "flags": [
+        "property"
+      ],
+      "parent": "s13"
+    },
+    "s6": {
+      "name": "bottom",
+      "flags": [
+        "property"
+      ],
+      "parent": "s13"
+    },
+    "s7": {
+      "name": "setSiteConfig",
+      "flags": [
+        "variable"
+      ],
+      "parent": "s14"
+    },
+    "s8": {
+      "name": "subGraphTitleTopMargin",
+      "flags": [
+        "property"
+      ],
+      "parent": "s15"
+    },
+    "s9": {
+      "name": "subGraphTitleBottomMargin",
+      "flags": [
+        "property"
+      ],
+      "parent": "s15"
+    },
+    "s10": {
+      "name": "subGraphTitleTotalMargin",
+      "flags": [
+        "property"
+      ],
+      "parent": "s15"
+    },
+    "s11": {
+      "name": "__object",
+      "flags": []
+    },
+    "s12": {
+      "name": "__object",
+      "flags": []
+    },
+    "s13": {
+      "name": "__object",
+      "flags": []
+    },
+    "s14": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/config\"",
+      "flags": []
+    },
+    "s15": {
+      "name": "__object",
+      "flags": []
+    }
+  },
+  "types": {
+    "t4": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t5": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t3": {
+      "kind": "union",
+      "text": "number | undefined",
+      "types": [
+        "t4",
+        "t5"
+      ]
+    },
+    "t7": {
+      "kind": "object",
+      "text": "{ top?: number | undefined; bottom?: number | undefined; }",
+      "members": {
+        "top": "t3",
+        "bottom": "t3"
+      }
+    },
+    "t6": {
+      "kind": "union",
+      "text": "{ top?: number | undefined; bottom?: number | undefined; } | undefined",
+      "types": [
+        "t4",
+        "t7"
+      ]
+    },
+    "t9": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t10": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t8": {
+      "kind": "union",
+      "text": "boolean | undefined",
+      "types": [
+        "t4",
+        "t9",
+        "t10"
+      ]
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"basis\"",
+      "value": "basis"
+    },
+    "t13": {
+      "kind": "stringLiteral",
+      "text": "\"linear\"",
+      "value": "linear"
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"cardinal\"",
+      "value": "cardinal"
+    },
+    "t11": {
+      "kind": "union",
+      "text": "\"basis\" | \"linear\" | \"cardinal\" | undefined",
+      "types": [
+        "t4",
+        "t12",
+        "t13",
+        "t14"
+      ]
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"dagre-d3\"",
+      "value": "dagre-d3"
+    },
+    "t17": {
+      "kind": "stringLiteral",
+      "text": "\"dagre-wrapper\"",
+      "value": "dagre-wrapper"
+    },
+    "t18": {
+      "kind": "stringLiteral",
+      "text": "\"elk\"",
+      "value": "elk"
+    },
+    "t15": {
+      "kind": "union",
+      "text": "\"dagre-d3\" | \"dagre-wrapper\" | \"elk\" | undefined",
+      "types": [
+        "t4",
+        "t16",
+        "t17",
+        "t18"
+      ]
+    },
+    "t2": {
+      "kind": "object",
+      "text": "FlowchartDiagramConfig",
+      "members": {
+        "titleTopMargin": "t3",
+        "subGraphTitleMargin": "t6",
+        "arrowMarkerAbsolute": "t8",
+        "diagramPadding": "t3",
+        "htmlLabels": "t8",
+        "nodeSpacing": "t3",
+        "rankSpacing": "t3",
+        "curve": "t11",
+        "padding": "t3",
+        "defaultRenderer": "t15",
+        "wrappingWidth": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t1": {
+      "kind": "object",
+      "text": "{ flowchart: FlowchartDiagramConfig; }",
+      "members": {
+        "flowchart": "t2"
+      }
+    },
+    "t19": {
+      "kind": "object",
+      "text": "{ subGraphTitleTopMargin: number; subGraphTitleBottomMargin: number; subGraphTitleTotalMargin: number; }",
+      "members": {
+        "subGraphTitleTopMargin": "t5",
+        "subGraphTitleBottomMargin": "t5",
+        "subGraphTitleTotalMargin": "t5"
+      }
+    },
+    "t0": {
+      "kind": "function",
+      "text": "({ flowchart, }: { flowchart: FlowchartDiagramConfig; }) => { subGraphTitleTopMargin: number; subGraphTitleBottomMargin: number; subGraphTitleTotalMargin: number; }",
+      "parameters": [
+        {
+          "name": "__0",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t19"
+    },
+    "t20": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"default\"",
+      "value": "default"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"base\"",
+      "value": "base"
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"dark\"",
+      "value": "dark"
+    },
+    "t27": {
+      "kind": "stringLiteral",
+      "text": "\"forest\"",
+      "value": "forest"
+    },
+    "t28": {
+      "kind": "stringLiteral",
+      "text": "\"neutral\"",
+      "value": "neutral"
+    },
+    "t29": {
+      "kind": "stringLiteral",
+      "text": "\"null\"",
+      "value": "null"
+    },
+    "t23": {
+      "kind": "union",
+      "text": "\"default\" | \"base\" | \"dark\" | \"forest\" | \"neutral\" | \"null\" | undefined",
+      "types": [
+        "t4",
+        "t24",
+        "t25",
+        "t26",
+        "t27",
+        "t28",
+        "t29"
+      ]
+    },
+    "t30": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t32": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t31": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t4",
+        "t32"
+      ]
+    },
+    "t34": {
+      "kind": "stringLiteral",
+      "text": "\"classic\"",
+      "value": "classic"
+    },
+    "t35": {
+      "kind": "stringLiteral",
+      "text": "\"handDrawn\"",
+      "value": "handDrawn"
+    },
+    "t33": {
+      "kind": "union",
+      "text": "\"classic\" | \"handDrawn\" | undefined",
+      "types": [
+        "t4",
+        "t34",
+        "t35"
+      ]
+    },
+    "t39": {
+      "kind": "stringLiteral",
+      "text": "\"SIMPLE\"",
+      "value": "SIMPLE"
+    },
+    "t40": {
+      "kind": "stringLiteral",
+      "text": "\"NETWORK_SIMPLEX\"",
+      "value": "NETWORK_SIMPLEX"
+    },
+    "t41": {
+      "kind": "stringLiteral",
+      "text": "\"LINEAR_SEGMENTS\"",
+      "value": "LINEAR_SEGMENTS"
+    },
+    "t42": {
+      "kind": "stringLiteral",
+      "text": "\"BRANDES_KOEPF\"",
+      "value": "BRANDES_KOEPF"
+    },
+    "t38": {
+      "kind": "union",
+      "text": "\"SIMPLE\" | \"NETWORK_SIMPLEX\" | \"LINEAR_SEGMENTS\" | \"BRANDES_KOEPF\" | undefined",
+      "types": [
+        "t4",
+        "t39",
+        "t40",
+        "t41",
+        "t42"
+      ]
+    },
+    "t37": {
+      "kind": "object",
+      "text": "{ mergeEdges?: boolean | undefined; nodePlacementStrategy?: \"SIMPLE\" | \"NETWORK_SIMPLEX\" | \"LINEAR_SEGMENTS\" | \"BRANDES_KOEPF\" | undefined; }",
+      "members": {
+        "mergeEdges": "t8",
+        "nodePlacementStrategy": "t38"
+      }
+    },
+    "t36": {
+      "kind": "union",
+      "text": "{ mergeEdges?: boolean | undefined; nodePlacementStrategy?: \"SIMPLE\" | \"NETWORK_SIMPLEX\" | \"LINEAR_SEGMENTS\" | \"BRANDES_KOEPF\" | undefined; } | undefined",
+      "types": [
+        "t4",
+        "t37"
+      ]
+    },
+    "t44": {
+      "kind": "numberLiteral",
+      "text": "0",
+      "value": 0
+    },
+    "t45": {
+      "kind": "numberLiteral",
+      "text": "2",
+      "value": 2
+    },
+    "t46": {
+      "kind": "numberLiteral",
+      "text": "1",
+      "value": 1
+    },
+    "t47": {
+      "kind": "stringLiteral",
+      "text": "\"trace\"",
+      "value": "trace"
+    },
+    "t48": {
+      "kind": "stringLiteral",
+      "text": "\"debug\"",
+      "value": "debug"
+    },
+    "t49": {
+      "kind": "stringLiteral",
+      "text": "\"info\"",
+      "value": "info"
+    },
+    "t50": {
+      "kind": "stringLiteral",
+      "text": "\"warn\"",
+      "value": "warn"
+    },
+    "t51": {
+      "kind": "stringLiteral",
+      "text": "\"error\"",
+      "value": "error"
+    },
+    "t52": {
+      "kind": "stringLiteral",
+      "text": "\"fatal\"",
+      "value": "fatal"
+    },
+    "t53": {
+      "kind": "numberLiteral",
+      "text": "3",
+      "value": 3
+    },
+    "t54": {
+      "kind": "numberLiteral",
+      "text": "4",
+      "value": 4
+    },
+    "t55": {
+      "kind": "numberLiteral",
+      "text": "5",
+      "value": 5
+    },
+    "t43": {
+      "kind": "union",
+      "text": "0 | 2 | 1 | \"trace\" | \"debug\" | \"info\" | \"warn\" | \"error\" | \"fatal\" | 3 | 4 | 5 | undefined",
+      "types": [
+        "t4",
+        "t44",
+        "t45",
+        "t46",
+        "t47",
+        "t48",
+        "t49",
+        "t50",
+        "t51",
+        "t52",
+        "t53",
+        "t54",
+        "t55"
+      ]
+    },
+    "t57": {
+      "kind": "stringLiteral",
+      "text": "\"strict\"",
+      "value": "strict"
+    },
+    "t58": {
+      "kind": "stringLiteral",
+      "text": "\"loose\"",
+      "value": "loose"
+    },
+    "t59": {
+      "kind": "stringLiteral",
+      "text": "\"antiscript\"",
+      "value": "antiscript"
+    },
+    "t60": {
+      "kind": "stringLiteral",
+      "text": "\"sandbox\"",
+      "value": "sandbox"
+    },
+    "t56": {
+      "kind": "union",
+      "text": "\"strict\" | \"loose\" | \"antiscript\" | \"sandbox\" | undefined",
+      "types": [
+        "t4",
+        "t57",
+        "t58",
+        "t59",
+        "t60"
+      ]
+    },
+    "t62": {
+      "kind": "array",
+      "text": "string[]",
+      "elementType": "t32"
+    },
+    "t61": {
+      "kind": "union",
+      "text": "string[] | undefined",
+      "types": [
+        "t4",
+        "t62"
+      ]
+    },
+    "t63": {
+      "kind": "union",
+      "text": "FlowchartDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t2"
+      ]
+    },
+    "t67": {
+      "kind": "stringLiteral",
+      "text": "\"left\"",
+      "value": "left"
+    },
+    "t68": {
+      "kind": "stringLiteral",
+      "text": "\"right\"",
+      "value": "right"
+    },
+    "t69": {
+      "kind": "stringLiteral",
+      "text": "\"center\"",
+      "value": "center"
+    },
+    "t66": {
+      "kind": "union",
+      "text": "\"left\" | \"right\" | \"center\" | undefined",
+      "types": [
+        "t4",
+        "t67",
+        "t68",
+        "t69"
+      ]
+    },
+    "t70": {
+      "kind": "union",
+      "text": "string | number | undefined",
+      "types": [
+        "t4",
+        "t32",
+        "t5"
+      ]
+    },
+    "t74": {
+      "kind": "union",
+      "text": "CSSFontSize | undefined",
+      "types": [
+        "t4",
+        "t32",
+        "t5"
+      ]
+    },
+    "t73": {
+      "kind": "object",
+      "text": "Partial<FontConfig>",
+      "members": {
+        "fontSize": "t74",
+        "fontFamily": "t31",
+        "fontWeight": "t70"
+      }
+    },
+    "t72": {
+      "kind": "function",
+      "text": "FontCalculator",
+      "parameters": [],
+      "returnType": "t73"
+    },
+    "t71": {
+      "kind": "union",
+      "text": "FontCalculator | undefined",
+      "types": [
+        "t4",
+        "t72"
+      ]
+    },
+    "t65": {
+      "kind": "object",
+      "text": "SequenceDiagramConfig",
+      "members": {
+        "arrowMarkerAbsolute": "t8",
+        "hideUnusedParticipants": "t8",
+        "activationWidth": "t3",
+        "diagramMarginX": "t3",
+        "diagramMarginY": "t3",
+        "actorMargin": "t3",
+        "width": "t3",
+        "height": "t3",
+        "boxMargin": "t3",
+        "boxTextMargin": "t3",
+        "noteMargin": "t3",
+        "messageMargin": "t3",
+        "messageAlign": "t66",
+        "mirrorActors": "t8",
+        "forceMenus": "t8",
+        "bottomMarginAdj": "t3",
+        "rightAngles": "t8",
+        "showSequenceNumbers": "t8",
+        "actorFontSize": "t70",
+        "actorFontFamily": "t31",
+        "actorFontWeight": "t70",
+        "noteFontSize": "t70",
+        "noteFontFamily": "t31",
+        "noteFontWeight": "t70",
+        "noteAlign": "t66",
+        "messageFontSize": "t70",
+        "messageFontFamily": "t31",
+        "messageFontWeight": "t70",
+        "wrap": "t8",
+        "wrapPadding": "t3",
+        "labelBoxWidth": "t3",
+        "labelBoxHeight": "t3",
+        "messageFont": "t71",
+        "noteFont": "t71",
+        "actorFont": "t71",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t64": {
+      "kind": "union",
+      "text": "SequenceDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t65"
+      ]
+    },
+    "t78": {
+      "kind": "stringLiteral",
+      "text": "\"\"",
+      "value": ""
+    },
+    "t79": {
+      "kind": "stringLiteral",
+      "text": "\"compact\"",
+      "value": "compact"
+    },
+    "t77": {
+      "kind": "union",
+      "text": "\"\" | \"compact\" | undefined",
+      "types": [
+        "t4",
+        "t78",
+        "t79"
+      ]
+    },
+    "t81": {
+      "kind": "stringLiteral",
+      "text": "\"monday\"",
+      "value": "monday"
+    },
+    "t82": {
+      "kind": "stringLiteral",
+      "text": "\"tuesday\"",
+      "value": "tuesday"
+    },
+    "t83": {
+      "kind": "stringLiteral",
+      "text": "\"wednesday\"",
+      "value": "wednesday"
+    },
+    "t84": {
+      "kind": "stringLiteral",
+      "text": "\"thursday\"",
+      "value": "thursday"
+    },
+    "t85": {
+      "kind": "stringLiteral",
+      "text": "\"friday\"",
+      "value": "friday"
+    },
+    "t86": {
+      "kind": "stringLiteral",
+      "text": "\"saturday\"",
+      "value": "saturday"
+    },
+    "t87": {
+      "kind": "stringLiteral",
+      "text": "\"sunday\"",
+      "value": "sunday"
+    },
+    "t80": {
+      "kind": "union",
+      "text": "\"monday\" | \"tuesday\" | \"wednesday\" | \"thursday\" | \"friday\" | \"saturday\" | \"sunday\" | undefined",
+      "types": [
+        "t4",
+        "t81",
+        "t82",
+        "t83",
+        "t84",
+        "t85",
+        "t86",
+        "t87"
+      ]
+    },
+    "t76": {
+      "kind": "object",
+      "text": "GanttDiagramConfig",
+      "members": {
+        "titleTopMargin": "t3",
+        "barHeight": "t3",
+        "barGap": "t3",
+        "topPadding": "t3",
+        "rightPadding": "t3",
+        "leftPadding": "t3",
+        "gridLineStartPadding": "t3",
+        "fontSize": "t3",
+        "sectionFontSize": "t70",
+        "numberSectionStyles": "t3",
+        "axisFormat": "t31",
+        "tickInterval": "t31",
+        "topAxis": "t8",
+        "displayMode": "t77",
+        "weekday": "t80",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t75": {
+      "kind": "union",
+      "text": "GanttDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t76"
+      ]
+    },
+    "t89": {
+      "kind": "object",
+      "text": "JourneyDiagramConfig",
+      "members": {
+        "diagramMarginX": "t3",
+        "diagramMarginY": "t3",
+        "leftMargin": "t3",
+        "width": "t3",
+        "height": "t3",
+        "boxMargin": "t3",
+        "boxTextMargin": "t3",
+        "noteMargin": "t3",
+        "messageMargin": "t3",
+        "messageAlign": "t66",
+        "bottomMarginAdj": "t3",
+        "rightAngles": "t8",
+        "taskFontSize": "t70",
+        "taskFontFamily": "t31",
+        "taskMargin": "t3",
+        "activationWidth": "t3",
+        "textPlacement": "t31",
+        "actorColours": "t61",
+        "sectionFills": "t61",
+        "sectionColours": "t61",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t88": {
+      "kind": "union",
+      "text": "JourneyDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t89"
+      ]
+    },
+    "t91": {
+      "kind": "object",
+      "text": "TimelineDiagramConfig",
+      "members": {
+        "diagramMarginX": "t3",
+        "diagramMarginY": "t3",
+        "leftMargin": "t3",
+        "width": "t3",
+        "height": "t3",
+        "padding": "t3",
+        "boxMargin": "t3",
+        "boxTextMargin": "t3",
+        "noteMargin": "t3",
+        "messageMargin": "t3",
+        "messageAlign": "t66",
+        "bottomMarginAdj": "t3",
+        "rightAngles": "t8",
+        "taskFontSize": "t70",
+        "taskFontFamily": "t31",
+        "taskMargin": "t3",
+        "activationWidth": "t3",
+        "textPlacement": "t31",
+        "actorColours": "t61",
+        "sectionFills": "t61",
+        "sectionColours": "t61",
+        "disableMulticolor": "t8",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t90": {
+      "kind": "union",
+      "text": "TimelineDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t91"
+      ]
+    },
+    "t93": {
+      "kind": "object",
+      "text": "ClassDiagramConfig",
+      "members": {
+        "titleTopMargin": "t3",
+        "arrowMarkerAbsolute": "t8",
+        "dividerMargin": "t3",
+        "padding": "t3",
+        "textHeight": "t3",
+        "defaultRenderer": "t15",
+        "nodeSpacing": "t3",
+        "rankSpacing": "t3",
+        "diagramPadding": "t3",
+        "htmlLabels": "t8",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t92": {
+      "kind": "union",
+      "text": "ClassDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t93"
+      ]
+    },
+    "t95": {
+      "kind": "object",
+      "text": "StateDiagramConfig",
+      "members": {
+        "titleTopMargin": "t3",
+        "arrowMarkerAbsolute": "t8",
+        "dividerMargin": "t3",
+        "sizeUnit": "t3",
+        "padding": "t3",
+        "textHeight": "t3",
+        "titleShift": "t3",
+        "noteMargin": "t3",
+        "nodeSpacing": "t3",
+        "rankSpacing": "t3",
+        "forkWidth": "t3",
+        "forkHeight": "t3",
+        "miniPadding": "t3",
+        "fontSizeFactor": "t3",
+        "fontSize": "t3",
+        "labelHeight": "t3",
+        "edgeLengthFactor": "t31",
+        "compositTitleSize": "t3",
+        "radius": "t3",
+        "defaultRenderer": "t15",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t94": {
+      "kind": "union",
+      "text": "StateDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t95"
+      ]
+    },
+    "t99": {
+      "kind": "stringLiteral",
+      "text": "\"TB\"",
+      "value": "TB"
+    },
+    "t100": {
+      "kind": "stringLiteral",
+      "text": "\"BT\"",
+      "value": "BT"
+    },
+    "t101": {
+      "kind": "stringLiteral",
+      "text": "\"LR\"",
+      "value": "LR"
+    },
+    "t102": {
+      "kind": "stringLiteral",
+      "text": "\"RL\"",
+      "value": "RL"
+    },
+    "t98": {
+      "kind": "union",
+      "text": "\"TB\" | \"BT\" | \"LR\" | \"RL\" | undefined",
+      "types": [
+        "t4",
+        "t99",
+        "t100",
+        "t101",
+        "t102"
+      ]
+    },
+    "t97": {
+      "kind": "object",
+      "text": "ErDiagramConfig",
+      "members": {
+        "titleTopMargin": "t3",
+        "diagramPadding": "t3",
+        "layoutDirection": "t98",
+        "minEntityWidth": "t3",
+        "minEntityHeight": "t3",
+        "entityPadding": "t3",
+        "stroke": "t31",
+        "fill": "t31",
+        "fontSize": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t96": {
+      "kind": "union",
+      "text": "ErDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t97"
+      ]
+    },
+    "t104": {
+      "kind": "object",
+      "text": "PieDiagramConfig",
+      "members": {
+        "textPosition": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t103": {
+      "kind": "union",
+      "text": "PieDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t104"
+      ]
+    },
+    "t108": {
+      "kind": "stringLiteral",
+      "text": "\"top\"",
+      "value": "top"
+    },
+    "t109": {
+      "kind": "stringLiteral",
+      "text": "\"bottom\"",
+      "value": "bottom"
+    },
+    "t107": {
+      "kind": "union",
+      "text": "\"top\" | \"bottom\" | undefined",
+      "types": [
+        "t4",
+        "t108",
+        "t109"
+      ]
+    },
+    "t110": {
+      "kind": "union",
+      "text": "\"left\" | \"right\" | undefined",
+      "types": [
+        "t4",
+        "t67",
+        "t68"
+      ]
+    },
+    "t106": {
+      "kind": "object",
+      "text": "QuadrantChartConfig",
+      "members": {
+        "chartWidth": "t3",
+        "chartHeight": "t3",
+        "titleFontSize": "t3",
+        "titlePadding": "t3",
+        "quadrantPadding": "t3",
+        "xAxisLabelPadding": "t3",
+        "yAxisLabelPadding": "t3",
+        "xAxisLabelFontSize": "t3",
+        "yAxisLabelFontSize": "t3",
+        "quadrantLabelFontSize": "t3",
+        "quadrantTextTopPadding": "t3",
+        "pointTextPadding": "t3",
+        "pointLabelFontSize": "t3",
+        "pointRadius": "t3",
+        "xAxisPosition": "t107",
+        "yAxisPosition": "t110",
+        "quadrantInternalBorderStrokeWidth": "t3",
+        "quadrantExternalBorderStrokeWidth": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t105": {
+      "kind": "union",
+      "text": "QuadrantChartConfig | undefined",
+      "types": [
+        "t4",
+        "t106"
+      ]
+    },
+    "t114": {
+      "kind": "object",
+      "text": "XYChartAxisConfig",
+      "members": {
+        "showLabel": "t8",
+        "labelFontSize": "t3",
+        "labelPadding": "t3",
+        "showTitle": "t8",
+        "titleFontSize": "t3",
+        "titlePadding": "t3",
+        "showTick": "t8",
+        "tickLength": "t3",
+        "tickWidth": "t3",
+        "showAxisLine": "t8",
+        "axisLineWidth": "t3"
+      }
+    },
+    "t113": {
+      "kind": "union",
+      "text": "XYChartAxisConfig | undefined",
+      "types": [
+        "t4",
+        "t114"
+      ]
+    },
+    "t116": {
+      "kind": "stringLiteral",
+      "text": "\"vertical\"",
+      "value": "vertical"
+    },
+    "t117": {
+      "kind": "stringLiteral",
+      "text": "\"horizontal\"",
+      "value": "horizontal"
+    },
+    "t115": {
+      "kind": "union",
+      "text": "\"vertical\" | \"horizontal\" | undefined",
+      "types": [
+        "t4",
+        "t116",
+        "t117"
+      ]
+    },
+    "t112": {
+      "kind": "object",
+      "text": "XYChartConfig",
+      "members": {
+        "width": "t3",
+        "height": "t3",
+        "titleFontSize": "t3",
+        "titlePadding": "t3",
+        "showTitle": "t8",
+        "xAxis": "t113",
+        "yAxis": "t113",
+        "chartOrientation": "t115",
+        "plotReservedSpacePercent": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t111": {
+      "kind": "union",
+      "text": "XYChartConfig | undefined",
+      "types": [
+        "t4",
+        "t112"
+      ]
+    },
+    "t119": {
+      "kind": "object",
+      "text": "RequirementDiagramConfig",
+      "members": {
+        "rect_fill": "t31",
+        "text_color": "t31",
+        "rect_border_size": "t31",
+        "rect_border_color": "t31",
+        "rect_min_width": "t3",
+        "rect_min_height": "t3",
+        "fontSize": "t3",
+        "rect_padding": "t3",
+        "line_height": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t118": {
+      "kind": "union",
+      "text": "RequirementDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t119"
+      ]
+    },
+    "t121": {
+      "kind": "object",
+      "text": "MindmapDiagramConfig",
+      "members": {
+        "padding": "t3",
+        "maxNodeWidth": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t120": {
+      "kind": "union",
+      "text": "MindmapDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t121"
+      ]
+    },
+    "t125": {
+      "kind": "object",
+      "text": "NodeLabel",
+      "members": {
+        "width": "t3",
+        "height": "t3",
+        "x": "t3",
+        "y": "t3"
+      }
+    },
+    "t124": {
+      "kind": "union",
+      "text": "NodeLabel | undefined",
+      "types": [
+        "t4",
+        "t125"
+      ]
+    },
+    "t123": {
+      "kind": "object",
+      "text": "GitGraphDiagramConfig",
+      "members": {
+        "titleTopMargin": "t3",
+        "diagramPadding": "t3",
+        "nodeLabel": "t124",
+        "mainBranchName": "t31",
+        "mainBranchOrder": "t3",
+        "showCommitLabel": "t8",
+        "showBranches": "t8",
+        "rotateCommitLabel": "t8",
+        "parallelCommits": "t8",
+        "arrowMarkerAbsolute": "t8",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t122": {
+      "kind": "union",
+      "text": "GitGraphDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t123"
+      ]
+    },
+    "t127": {
+      "kind": "object",
+      "text": "C4DiagramConfig",
+      "members": {
+        "diagramMarginX": "t3",
+        "diagramMarginY": "t3",
+        "c4ShapeMargin": "t3",
+        "c4ShapePadding": "t3",
+        "width": "t3",
+        "height": "t3",
+        "boxMargin": "t3",
+        "c4ShapeInRow": "t3",
+        "nextLinePaddingX": "t3",
+        "c4BoundaryInRow": "t3",
+        "personFontSize": "t70",
+        "personFontFamily": "t31",
+        "personFontWeight": "t70",
+        "external_personFontSize": "t70",
+        "external_personFontFamily": "t31",
+        "external_personFontWeight": "t70",
+        "systemFontSize": "t70",
+        "systemFontFamily": "t31",
+        "systemFontWeight": "t70",
+        "external_systemFontSize": "t70",
+        "external_systemFontFamily": "t31",
+        "external_systemFontWeight": "t70",
+        "system_dbFontSize": "t70",
+        "system_dbFontFamily": "t31",
+        "system_dbFontWeight": "t70",
+        "external_system_dbFontSize": "t70",
+        "external_system_dbFontFamily": "t31",
+        "external_system_dbFontWeight": "t70",
+        "system_queueFontSize": "t70",
+        "system_queueFontFamily": "t31",
+        "system_queueFontWeight": "t70",
+        "external_system_queueFontSize": "t70",
+        "external_system_queueFontFamily": "t31",
+        "external_system_queueFontWeight": "t70",
+        "boundaryFontSize": "t70",
+        "boundaryFontFamily": "t31",
+        "boundaryFontWeight": "t70",
+        "messageFontSize": "t70",
+        "messageFontFamily": "t31",
+        "messageFontWeight": "t70",
+        "containerFontSize": "t70",
+        "containerFontFamily": "t31",
+        "containerFontWeight": "t70",
+        "external_containerFontSize": "t70",
+        "external_containerFontFamily": "t31",
+        "external_containerFontWeight": "t70",
+        "container_dbFontSize": "t70",
+        "container_dbFontFamily": "t31",
+        "container_dbFontWeight": "t70",
+        "external_container_dbFontSize": "t70",
+        "external_container_dbFontFamily": "t31",
+        "external_container_dbFontWeight": "t70",
+        "container_queueFontSize": "t70",
+        "container_queueFontFamily": "t31",
+        "container_queueFontWeight": "t70",
+        "external_container_queueFontSize": "t70",
+        "external_container_queueFontFamily": "t31",
+        "external_container_queueFontWeight": "t70",
+        "componentFontSize": "t70",
+        "componentFontFamily": "t31",
+        "componentFontWeight": "t70",
+        "external_componentFontSize": "t70",
+        "external_componentFontFamily": "t31",
+        "external_componentFontWeight": "t70",
+        "component_dbFontSize": "t70",
+        "component_dbFontFamily": "t31",
+        "component_dbFontWeight": "t70",
+        "external_component_dbFontSize": "t70",
+        "external_component_dbFontFamily": "t31",
+        "external_component_dbFontWeight": "t70",
+        "component_queueFontSize": "t70",
+        "component_queueFontFamily": "t31",
+        "component_queueFontWeight": "t70",
+        "external_component_queueFontSize": "t70",
+        "external_component_queueFontFamily": "t31",
+        "external_component_queueFontWeight": "t70",
+        "wrap": "t8",
+        "wrapPadding": "t3",
+        "person_bg_color": "t31",
+        "person_border_color": "t31",
+        "external_person_bg_color": "t31",
+        "external_person_border_color": "t31",
+        "system_bg_color": "t31",
+        "system_border_color": "t31",
+        "system_db_bg_color": "t31",
+        "system_db_border_color": "t31",
+        "system_queue_bg_color": "t31",
+        "system_queue_border_color": "t31",
+        "external_system_bg_color": "t31",
+        "external_system_border_color": "t31",
+        "external_system_db_bg_color": "t31",
+        "external_system_db_border_color": "t31",
+        "external_system_queue_bg_color": "t31",
+        "external_system_queue_border_color": "t31",
+        "container_bg_color": "t31",
+        "container_border_color": "t31",
+        "container_db_bg_color": "t31",
+        "container_db_border_color": "t31",
+        "container_queue_bg_color": "t31",
+        "container_queue_border_color": "t31",
+        "external_container_bg_color": "t31",
+        "external_container_border_color": "t31",
+        "external_container_db_bg_color": "t31",
+        "external_container_db_border_color": "t31",
+        "external_container_queue_bg_color": "t31",
+        "external_container_queue_border_color": "t31",
+        "component_bg_color": "t31",
+        "component_border_color": "t31",
+        "component_db_bg_color": "t31",
+        "component_db_border_color": "t31",
+        "component_queue_bg_color": "t31",
+        "component_queue_border_color": "t31",
+        "external_component_bg_color": "t31",
+        "external_component_border_color": "t31",
+        "external_component_db_bg_color": "t31",
+        "external_component_db_border_color": "t31",
+        "external_component_queue_bg_color": "t31",
+        "external_component_queue_border_color": "t31",
+        "personFont": "t71",
+        "external_personFont": "t71",
+        "systemFont": "t71",
+        "external_systemFont": "t71",
+        "system_dbFont": "t71",
+        "external_system_dbFont": "t71",
+        "system_queueFont": "t71",
+        "external_system_queueFont": "t71",
+        "containerFont": "t71",
+        "external_containerFont": "t71",
+        "container_dbFont": "t71",
+        "external_container_dbFont": "t71",
+        "container_queueFont": "t71",
+        "external_container_queueFont": "t71",
+        "componentFont": "t71",
+        "external_componentFont": "t71",
+        "component_dbFont": "t71",
+        "external_component_dbFont": "t71",
+        "component_queueFont": "t71",
+        "external_component_queueFont": "t71",
+        "boundaryFont": "t71",
+        "messageFont": "t71",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t126": {
+      "kind": "union",
+      "text": "C4DiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t127"
+      ]
+    },
+    "t131": {
+      "kind": "stringLiteral",
+      "text": "\"justify\"",
+      "value": "justify"
+    },
+    "t130": {
+      "kind": "union",
+      "text": "SankeyNodeAlignment | undefined",
+      "types": [
+        "t4",
+        "t67",
+        "t68",
+        "t69",
+        "t131"
+      ]
+    },
+    "t129": {
+      "kind": "object",
+      "text": "SankeyDiagramConfig",
+      "members": {
+        "width": "t3",
+        "height": "t3",
+        "linkColor": "t31",
+        "nodeAlignment": "t130",
+        "useMaxWidth": "t8",
+        "showValues": "t8",
+        "prefix": "t31",
+        "suffix": "t31",
+        "useWidth": "t3"
+      }
+    },
+    "t128": {
+      "kind": "union",
+      "text": "SankeyDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t129"
+      ]
+    },
+    "t133": {
+      "kind": "object",
+      "text": "PacketDiagramConfig",
+      "members": {
+        "rowHeight": "t3",
+        "bitWidth": "t3",
+        "bitsPerRow": "t3",
+        "showBits": "t8",
+        "paddingX": "t3",
+        "paddingY": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t132": {
+      "kind": "union",
+      "text": "PacketDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t133"
+      ]
+    },
+    "t135": {
+      "kind": "object",
+      "text": "BlockDiagramConfig",
+      "members": {
+        "padding": "t3",
+        "useWidth": "t3",
+        "useMaxWidth": "t8"
+      }
+    },
+    "t134": {
+      "kind": "union",
+      "text": "BlockDiagramConfig | undefined",
+      "types": [
+        "t4",
+        "t135"
+      ]
+    },
+    "t142": {
+      "kind": "null",
+      "text": "null"
+    },
+    "t145": {
+      "kind": "object",
+      "text": "{ [key: string]: string; }",
+      "members": {}
+    },
+    "t144": {
+      "kind": "union",
+      "text": "{ [key: string]: string; } | undefined",
+      "types": [
+        "t4",
+        "t145"
+      ]
+    },
+    "t149": {
+      "kind": "object",
+      "text": "{ [key: string]: [number, number]; }",
+      "members": {}
+    },
+    "t148": {
+      "kind": "union",
+      "text": "{ [key: string]: [number, number]; } | undefined",
+      "types": [
+        "t4",
+        "t149"
+      ]
+    },
+    "t150": {
+      "kind": "function",
+      "text": "() => string",
+      "parameters": [],
+      "returnType": "t32"
+    },
+    "t151": {
+      "kind": "function",
+      "text": "{ (): string; (locales: string | string[], options?: (NumberFormatOptions & DateTimeFormatOptions) | undefined): string; }",
+      "parameters": [],
+      "returnType": "t32"
+    },
+    "t156": {
+      "kind": "other",
+      "text": "?"
+    },
+    "t157": {
+      "kind": "other",
+      "text": "?"
+    },
+    "t155": {
+      "kind": "reference",
+      "text": "[?, ?]",
+      "target": "t155",
+      "typeArguments": [
+        "t156",
+        "t157"
+      ]
+    },
+    "t154": {
+      "kind": "reference",
+      "text": "[number, number]",
+      "target": "t155",
+      "typeArguments": [
+        "t5",
+        "t5"
+      ]
+    },
+    "t153": {
+      "kind": "union",
+      "text": "[number, number] | undefined",
+      "types": [
+        "t4",
+        "t154"
+      ]
+    },
+    "t152": {
+      "kind": "function",
+      "text": "() => [number, number] | undefined",
+      "parameters": [],
+      "returnType": "t153"
+    },
+    "t159": {
+      "kind": "array",
+      "text": "[number, number][]",
+      "elementType": "t154"
+    },
+    "t158": {
+      "kind": "function",
+      "text": "(...items: [number, number][]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t164": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t163": {
+      "kind": "reference",
+      "text": "ConcatArray<T>",
+      "target": "t163",
+      "typeArguments": [
+        "t164"
+      ]
+    },
+    "t162": {
+      "kind": "reference",
+      "text": "ConcatArray<[number, number]>",
+      "target": "t163",
+      "typeArguments": [
+        "t154"
+      ]
+    },
+    "t161": {
+      "kind": "array",
+      "text": "ConcatArray<[number, number]>[]",
+      "elementType": "t162"
+    },
+    "t160": {
+      "kind": "function",
+      "text": "{ (...items: ConcatArray<[number, number]>[]): [number, number][]; (...items: ([number, number] | ConcatArray<[number, number]>)[]): [number, number][]; }",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t161",
+          "optional": false
+        }
+      ],
+      "returnType": "t159"
+    },
+    "t165": {
+      "kind": "function",
+      "text": "(separator?: string | undefined) => string",
+      "parameters": [
+        {
+          "name": "separator",
+          "type": "t31",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t166": {
+      "kind": "function",
+      "text": "() => [number, number][]",
+      "parameters": [],
+      "returnType": "t159"
+    },
+    "t167": {
+      "kind": "function",
+      "text": "() => [number, number] | undefined",
+      "parameters": [],
+      "returnType": "t153"
+    },
+    "t168": {
+      "kind": "function",
+      "text": "(start?: number | undefined, end?: number | undefined) => [number, number][]",
+      "parameters": [
+        {
+          "name": "start",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t159"
+    },
+    "t171": {
+      "kind": "function",
+      "text": "(a: [number, number], b: [number, number]) => number",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "t154",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t170": {
+      "kind": "union",
+      "text": "((a: [number, number], b: [number, number]) => number) | undefined",
+      "types": [
+        "t4",
+        "t171"
+      ]
+    },
+    "t169": {
+      "kind": "function",
+      "text": "(compareFn?: ((a: [number, number], b: [number, number]) => number) | undefined) => RegExpIndicesArray",
+      "parameters": [
+        {
+          "name": "compareFn",
+          "type": "t170",
+          "optional": false
+        }
+      ],
+      "returnType": "t147"
+    },
+    "t172": {
+      "kind": "function",
+      "text": "{ (start: number, deleteCount?: number | undefined): [number, number][]; (start: number, deleteCount: number, ...items: [number, number][]): [number, number][]; }",
+      "parameters": [
+        {
+          "name": "start",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "deleteCount",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t159"
+    },
+    "t173": {
+      "kind": "function",
+      "text": "(...items: [number, number][]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t174": {
+      "kind": "function",
+      "text": "(searchElement: [number, number], fromIndex?: number | undefined) => number",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t175": {
+      "kind": "function",
+      "text": "(searchElement: [number, number], fromIndex?: number | undefined) => number",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t178": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t9",
+        "t10"
+      ]
+    },
+    "t177": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, array: [number, number][]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t176": {
+      "kind": "function",
+      "text": "{ <S extends [number, number]>(predicate: (value: [number, number], index: number, array: [number, number][]) => value is S, thisArg?: any): this is S[]; (predicate: (value: [number, number], index: number, array: [...][]) => unknown, thisArg?: any): boolean; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t177",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t181": {
+      "kind": "other",
+      "text": "unknown"
+    },
+    "t180": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, array: [number, number][]) => unknown",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t181"
+    },
+    "t179": {
+      "kind": "function",
+      "text": "(predicate: (value: [number, number], index: number, array: [number, number][]) => unknown, thisArg?: any) => boolean",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t180",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t184": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t183": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, array: [number, number][]) => void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t182": {
+      "kind": "function",
+      "text": "(callbackfn: (value: [number, number], index: number, array: [number, number][]) => void, thisArg?: any) => void",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t183",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t187": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t186": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, array: [number, number][]) => U",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t187"
+    },
+    "t188": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t187"
+    },
+    "t185": {
+      "kind": "function",
+      "text": "<U>(callbackfn: (value: [number, number], index: number, array: [number, number][]) => U, thisArg?: any) => U[]",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t186",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t188"
+    },
+    "t190": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, array: [number, number][]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t192": {
+      "kind": "other",
+      "text": "S"
+    },
+    "t191": {
+      "kind": "array",
+      "text": "S[]",
+      "elementType": "t192"
+    },
+    "t189": {
+      "kind": "function",
+      "text": "{ <S extends [number, number]>(predicate: (value: [number, number], index: number, array: [number, number][]) => value is S, thisArg?: any): S[]; (predicate: (value: [number, number], index: number, array: [...][]) => unknown, thisArg?: any): [...][]; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t190",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t191"
+    },
+    "t194": {
+      "kind": "function",
+      "text": "(previousValue: [number, number], currentValue: [number, number], currentIndex: number, array: [number, number][]) => [number, number]",
+      "parameters": [
+        {
+          "name": "previousValue",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "currentValue",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t154"
+    },
+    "t193": {
+      "kind": "function",
+      "text": "{ (callbackfn: (previousValue: [number, number], currentValue: [number, number], currentIndex: number, array: [number, number][]) => [number, number]): [number, number]; (callbackfn: (previousValue: [...], currentValue: [...], currentIndex: number, array: [...][]) => [...], initialValue: [...]): [...]; <U>(callbackf...",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t194",
+          "optional": false
+        }
+      ],
+      "returnType": "t154"
+    },
+    "t196": {
+      "kind": "function",
+      "text": "(previousValue: [number, number], currentValue: [number, number], currentIndex: number, array: [number, number][]) => [number, number]",
+      "parameters": [
+        {
+          "name": "previousValue",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "currentValue",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t154"
+    },
+    "t195": {
+      "kind": "function",
+      "text": "{ (callbackfn: (previousValue: [number, number], currentValue: [number, number], currentIndex: number, array: [number, number][]) => [number, number]): [number, number]; (callbackfn: (previousValue: [...], currentValue: [...], currentIndex: number, array: [...][]) => [...], initialValue: [...]): [...]; <U>(callbackf...",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t196",
+          "optional": false
+        }
+      ],
+      "returnType": "t154"
+    },
+    "t198": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, obj: [number, number][]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "obj",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t200": {
+      "kind": "other",
+      "text": "S"
+    },
+    "t199": {
+      "kind": "union",
+      "text": "S | undefined",
+      "types": [
+        "t4",
+        "t200"
+      ]
+    },
+    "t197": {
+      "kind": "function",
+      "text": "{ <S extends [number, number]>(predicate: (value: [number, number], index: number, obj: [number, number][]) => value is S, thisArg?: any): S | undefined; (predicate: (value: [number, number], index: number, obj: [...][]) => unknown, thisArg?: any): [...] | undefined; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t198",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t199"
+    },
+    "t202": {
+      "kind": "function",
+      "text": "(value: [number, number], index: number, obj: [number, number][]) => unknown",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "obj",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t181"
+    },
+    "t201": {
+      "kind": "function",
+      "text": "(predicate: (value: [number, number], index: number, obj: [number, number][]) => unknown, thisArg?: any) => number",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t202",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t203": {
+      "kind": "function",
+      "text": "(value: [number, number], start?: number | undefined, end?: number | undefined) => RegExpIndicesArray",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t147"
+    },
+    "t204": {
+      "kind": "function",
+      "text": "(target: number, start: number, end?: number | undefined) => RegExpIndicesArray",
+      "parameters": [
+        {
+          "name": "target",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t147"
+    },
+    "t208": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t207": {
+      "kind": "reference",
+      "text": "ArrayIterator<T>",
+      "target": "t207",
+      "typeArguments": [
+        "t208"
+      ]
+    },
+    "t209": {
+      "kind": "reference",
+      "text": "[number, [number, number]]",
+      "target": "t155",
+      "typeArguments": [
+        "t5",
+        "t154"
+      ]
+    },
+    "t206": {
+      "kind": "reference",
+      "text": "ArrayIterator<[number, [number, number]]>",
+      "target": "t207",
+      "typeArguments": [
+        "t209"
+      ]
+    },
+    "t205": {
+      "kind": "function",
+      "text": "() => ArrayIterator<[number, [number, number]]>",
+      "parameters": [],
+      "returnType": "t206"
+    },
+    "t211": {
+      "kind": "reference",
+      "text": "ArrayIterator<number>",
+      "target": "t207",
+      "typeArguments": [
+        "t5"
+      ]
+    },
+    "t210": {
+      "kind": "function",
+      "text": "() => ArrayIterator<number>",
+      "parameters": [],
+      "returnType": "t211"
+    },
+    "t213": {
+      "kind": "reference",
+      "text": "ArrayIterator<[number, number]>",
+      "target": "t207",
+      "typeArguments": [
+        "t154"
+      ]
+    },
+    "t212": {
+      "kind": "function",
+      "text": "() => ArrayIterator<[number, number]>",
+      "parameters": [],
+      "returnType": "t213"
+    },
+    "t214": {
+      "kind": "function",
+      "text": "(searchElement: [number, number], fromIndex?: number | undefined) => boolean",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t218": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t219": {
+      "kind": "array",
+      "text": "readonly U[]",
+      "elementType": "t218"
+    },
+    "t217": {
+      "kind": "union",
+      "text": "U | readonly U[]",
+      "types": [
+        "t218",
+        "t219"
+      ]
+    },
+    "t216": {
+      "kind": "function",
+      "text": "(this: This, value: [number, number], index: number, array: [number, number][]) => U | readonly U[]",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t154",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t159",
+          "optional": false
+        }
+      ],
+      "returnType": "t217"
+    },
+    "t221": {
+      "kind": "other",
+      "text": "This"
+    },
+    "t220": {
+      "kind": "union",
+      "text": "This | undefined",
+      "types": [
+        "t4",
+        "t221"
+      ]
+    },
+    "t222": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t218"
+    },
+    "t215": {
+      "kind": "function",
+      "text": "<U, This = undefined>(callback: (this: This, value: [number, number], index: number, array: [number, number][]) => U | readonly U[], thisArg?: This | undefined) => U[]",
+      "parameters": [
+        {
+          "name": "callback",
+          "type": "t216",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t220",
+          "optional": false
+        }
+      ],
+      "returnType": "t222"
+    },
+    "t225": {
+      "kind": "other",
+      "text": "D"
+    },
+    "t224": {
+      "kind": "union",
+      "text": "D | undefined",
+      "types": [
+        "t4",
+        "t225"
+      ]
+    },
+    "t227": {
+      "kind": "other",
+      "text": "FlatArray<A, D>"
+    },
+    "t226": {
+      "kind": "array",
+      "text": "FlatArray<A, D>[]",
+      "elementType": "t227"
+    },
+    "t223": {
+      "kind": "function",
+      "text": "<A, D extends number = 1>(this: A, depth?: D | undefined) => FlatArray<A, D>[]",
+      "parameters": [
+        {
+          "name": "depth",
+          "type": "t224",
+          "optional": false
+        }
+      ],
+      "returnType": "t226"
+    },
+    "t228": {
+      "kind": "function",
+      "text": "(index: number) => [number, number] | undefined",
+      "parameters": [
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        }
+      ],
+      "returnType": "t153"
+    },
+    "t229": {
+      "kind": "function",
+      "text": "() => ArrayIterator<[number, number]>",
+      "parameters": [],
+      "returnType": "t213"
+    },
+    "t230": {
+      "kind": "object",
+      "text": "{ [x: number]: boolean | undefined; length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; pop?: boolean | undefined; push?: boolean | undefined; ... 29 more ...; readonly [Symbol.unscopables]?: boolean | undefined; }",
+      "members": {
+        "length": "t8",
+        "toString": "t8",
+        "toLocaleString": "t8",
+        "pop": "t8",
+        "push": "t8",
+        "concat": "t8",
+        "join": "t8",
+        "reverse": "t8",
+        "shift": "t8",
+        "slice": "t8",
+        "sort": "t8",
+        "splice": "t8",
+        "unshift": "t8",
+        "indexOf": "t8",
+        "lastIndexOf": "t8",
+        "every": "t8",
+        "some": "t8",
+        "forEach": "t8",
+        "map": "t8",
+        "filter": "t8",
+        "reduce": "t8",
+        "reduceRight": "t8",
+        "find": "t8",
+        "findIndex": "t8",
+        "fill": "t8",
+        "copyWithin": "t8",
+        "entries": "t8",
+        "keys": "t8",
+        "values": "t8",
+        "includes": "t8",
+        "flatMap": "t8",
+        "flat": "t8",
+        "at": "t8",
+        "__@iterator@45": "t8",
+        "__@unscopables@47": "t8"
+      }
+    },
+    "t147": {
+      "kind": "object",
+      "text": "RegExpIndicesArray",
+      "members": {
+        "groups": "t148",
+        "length": "t5",
+        "toString": "t150",
+        "toLocaleString": "t151",
+        "pop": "t152",
+        "push": "t158",
+        "concat": "t160",
+        "join": "t165",
+        "reverse": "t166",
+        "shift": "t167",
+        "slice": "t168",
+        "sort": "t169",
+        "splice": "t172",
+        "unshift": "t173",
+        "indexOf": "t174",
+        "lastIndexOf": "t175",
+        "every": "t176",
+        "some": "t179",
+        "forEach": "t182",
+        "map": "t185",
+        "filter": "t189",
+        "reduce": "t193",
+        "reduceRight": "t195",
+        "find": "t197",
+        "findIndex": "t201",
+        "fill": "t203",
+        "copyWithin": "t204",
+        "entries": "t205",
+        "keys": "t210",
+        "values": "t212",
+        "includes": "t214",
+        "flatMap": "t215",
+        "flat": "t223",
+        "at": "t228",
+        "__@iterator@45": "t229",
+        "__@unscopables@47": "t230"
+      }
+    },
+    "t146": {
+      "kind": "union",
+      "text": "RegExpIndicesArray | undefined",
+      "types": [
+        "t4",
+        "t147"
+      ]
+    },
+    "t231": {
+      "kind": "function",
+      "text": "() => string",
+      "parameters": [],
+      "returnType": "t32"
+    },
+    "t232": {
+      "kind": "function",
+      "text": "{ (): string; (locales: string | string[], options?: (NumberFormatOptions & DateTimeFormatOptions) | undefined): string; }",
+      "parameters": [],
+      "returnType": "t32"
+    },
+    "t233": {
+      "kind": "function",
+      "text": "() => string | undefined",
+      "parameters": [],
+      "returnType": "t31"
+    },
+    "t234": {
+      "kind": "function",
+      "text": "(...items: string[]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t237": {
+      "kind": "reference",
+      "text": "ConcatArray<string>",
+      "target": "t163",
+      "typeArguments": [
+        "t32"
+      ]
+    },
+    "t236": {
+      "kind": "array",
+      "text": "ConcatArray<string>[]",
+      "elementType": "t237"
+    },
+    "t235": {
+      "kind": "function",
+      "text": "{ (...items: ConcatArray<string>[]): string[]; (...items: (string | ConcatArray<string>)[]): string[]; }",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t236",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t238": {
+      "kind": "function",
+      "text": "(separator?: string | undefined) => string",
+      "parameters": [
+        {
+          "name": "separator",
+          "type": "t31",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t239": {
+      "kind": "function",
+      "text": "() => string[]",
+      "parameters": [],
+      "returnType": "t62"
+    },
+    "t240": {
+      "kind": "function",
+      "text": "() => string | undefined",
+      "parameters": [],
+      "returnType": "t31"
+    },
+    "t241": {
+      "kind": "function",
+      "text": "(start?: number | undefined, end?: number | undefined) => string[]",
+      "parameters": [
+        {
+          "name": "start",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t244": {
+      "kind": "function",
+      "text": "(a: string, b: string) => number",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t243": {
+      "kind": "union",
+      "text": "((a: string, b: string) => number) | undefined",
+      "types": [
+        "t4",
+        "t244"
+      ]
+    },
+    "t242": {
+      "kind": "function",
+      "text": "(compareFn?: ((a: string, b: string) => number) | undefined) => RegExpExecArray",
+      "parameters": [
+        {
+          "name": "compareFn",
+          "type": "t243",
+          "optional": false
+        }
+      ],
+      "returnType": "t143"
+    },
+    "t245": {
+      "kind": "function",
+      "text": "{ (start: number, deleteCount?: number | undefined): string[]; (start: number, deleteCount: number, ...items: string[]): string[]; }",
+      "parameters": [
+        {
+          "name": "start",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "deleteCount",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t246": {
+      "kind": "function",
+      "text": "(...items: string[]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t247": {
+      "kind": "function",
+      "text": "(searchElement: string, fromIndex?: number | undefined) => number",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t248": {
+      "kind": "function",
+      "text": "(searchElement: string, fromIndex?: number | undefined) => number",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t250": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t249": {
+      "kind": "function",
+      "text": "{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): boolean; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t250",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t252": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => unknown",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t181"
+    },
+    "t251": {
+      "kind": "function",
+      "text": "(predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any) => boolean",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t252",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t254": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t253": {
+      "kind": "function",
+      "text": "(callbackfn: (value: string, index: number, array: string[]) => void, thisArg?: any) => void",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t254",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t257": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t256": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => U",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t257"
+    },
+    "t258": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t257"
+    },
+    "t255": {
+      "kind": "function",
+      "text": "<U>(callbackfn: (value: string, index: number, array: string[]) => U, thisArg?: any) => U[]",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t256",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t258"
+    },
+    "t260": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t262": {
+      "kind": "other",
+      "text": "S"
+    },
+    "t261": {
+      "kind": "array",
+      "text": "S[]",
+      "elementType": "t262"
+    },
+    "t259": {
+      "kind": "function",
+      "text": "{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): string[]; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t260",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t261"
+    },
+    "t264": {
+      "kind": "function",
+      "text": "(previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string",
+      "parameters": [
+        {
+          "name": "previousValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t263": {
+      "kind": "function",
+      "text": "{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t264",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t266": {
+      "kind": "function",
+      "text": "(previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string",
+      "parameters": [
+        {
+          "name": "previousValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t265": {
+      "kind": "function",
+      "text": "{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t266",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t268": {
+      "kind": "function",
+      "text": "(value: string, index: number, obj: string[]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "obj",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t270": {
+      "kind": "other",
+      "text": "S"
+    },
+    "t269": {
+      "kind": "union",
+      "text": "S | undefined",
+      "types": [
+        "t4",
+        "t270"
+      ]
+    },
+    "t267": {
+      "kind": "function",
+      "text": "{ <S extends string>(predicate: (value: string, index: number, obj: string[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string | undefined; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t268",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t269"
+    },
+    "t272": {
+      "kind": "function",
+      "text": "(value: string, index: number, obj: string[]) => unknown",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "obj",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t181"
+    },
+    "t271": {
+      "kind": "function",
+      "text": "(predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any) => number",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t272",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t273": {
+      "kind": "function",
+      "text": "(value: string, start?: number | undefined, end?: number | undefined) => RegExpExecArray",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t143"
+    },
+    "t274": {
+      "kind": "function",
+      "text": "(target: number, start: number, end?: number | undefined) => RegExpExecArray",
+      "parameters": [
+        {
+          "name": "target",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t143"
+    },
+    "t277": {
+      "kind": "reference",
+      "text": "[number, string]",
+      "target": "t155",
+      "typeArguments": [
+        "t5",
+        "t32"
+      ]
+    },
+    "t276": {
+      "kind": "reference",
+      "text": "ArrayIterator<[number, string]>",
+      "target": "t207",
+      "typeArguments": [
+        "t277"
+      ]
+    },
+    "t275": {
+      "kind": "function",
+      "text": "() => ArrayIterator<[number, string]>",
+      "parameters": [],
+      "returnType": "t276"
+    },
+    "t278": {
+      "kind": "function",
+      "text": "() => ArrayIterator<number>",
+      "parameters": [],
+      "returnType": "t211"
+    },
+    "t280": {
+      "kind": "reference",
+      "text": "ArrayIterator<string>",
+      "target": "t207",
+      "typeArguments": [
+        "t32"
+      ]
+    },
+    "t279": {
+      "kind": "function",
+      "text": "() => ArrayIterator<string>",
+      "parameters": [],
+      "returnType": "t280"
+    },
+    "t281": {
+      "kind": "function",
+      "text": "(searchElement: string, fromIndex?: number | undefined) => boolean",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t285": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t286": {
+      "kind": "array",
+      "text": "readonly U[]",
+      "elementType": "t285"
+    },
+    "t284": {
+      "kind": "union",
+      "text": "U | readonly U[]",
+      "types": [
+        "t285",
+        "t286"
+      ]
+    },
+    "t283": {
+      "kind": "function",
+      "text": "(this: This, value: string, index: number, array: string[]) => U | readonly U[]",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t284"
+    },
+    "t288": {
+      "kind": "other",
+      "text": "This"
+    },
+    "t287": {
+      "kind": "union",
+      "text": "This | undefined",
+      "types": [
+        "t4",
+        "t288"
+      ]
+    },
+    "t289": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t285"
+    },
+    "t282": {
+      "kind": "function",
+      "text": "<U, This = undefined>(callback: (this: This, value: string, index: number, array: string[]) => U | readonly U[], thisArg?: This | undefined) => U[]",
+      "parameters": [
+        {
+          "name": "callback",
+          "type": "t283",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t287",
+          "optional": false
+        }
+      ],
+      "returnType": "t289"
+    },
+    "t292": {
+      "kind": "other",
+      "text": "D"
+    },
+    "t291": {
+      "kind": "union",
+      "text": "D | undefined",
+      "types": [
+        "t4",
+        "t292"
+      ]
+    },
+    "t294": {
+      "kind": "other",
+      "text": "FlatArray<A, D>"
+    },
+    "t293": {
+      "kind": "array",
+      "text": "FlatArray<A, D>[]",
+      "elementType": "t294"
+    },
+    "t290": {
+      "kind": "function",
+      "text": "<A, D extends number = 1>(this: A, depth?: D | undefined) => FlatArray<A, D>[]",
+      "parameters": [
+        {
+          "name": "depth",
+          "type": "t291",
+          "optional": false
+        }
+      ],
+      "returnType": "t293"
+    },
+    "t295": {
+      "kind": "function",
+      "text": "(index: number) => string | undefined",
+      "parameters": [
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        }
+      ],
+      "returnType": "t31"
+    },
+    "t296": {
+      "kind": "function",
+      "text": "() => ArrayIterator<string>",
+      "parameters": [],
+      "returnType": "t280"
+    },
+    "t297": {
+      "kind": "object",
+      "text": "{ [x: number]: boolean | undefined; length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; pop?: boolean | undefined; push?: boolean | undefined; ... 29 more ...; readonly [Symbol.unscopables]?: boolean | undefined; }",
+      "members": {
+        "length": "t8",
+        "toString": "t8",
+        "toLocaleString": "t8",
+        "pop": "t8",
+        "push": "t8",
+        "concat": "t8",
+        "join": "t8",
+        "reverse": "t8",
+        "shift": "t8",
+        "slice": "t8",
+        "sort": "t8",
+        "splice": "t8",
+        "unshift": "t8",
+        "indexOf": "t8",
+        "lastIndexOf": "t8",
+        "every": "t8",
+        "some": "t8",
+        "forEach": "t8",
+        "map": "t8",
+        "filter": "t8",
+        "reduce": "t8",
+        "reduceRight": "t8",
+        "find": "t8",
+        "findIndex": "t8",
+        "fill": "t8",
+        "copyWithin": "t8",
+        "entries": "t8",
+        "keys": "t8",
+        "values": "t8",
+        "includes": "t8",
+        "flatMap": "t8",
+        "flat": "t8",
+        "at": "t8",
+        "__@iterator@45": "t8",
+        "__@unscopables@47": "t8"
+      }
+    },
+    "t143": {
+      "kind": "object",
+      "text": "RegExpExecArray",
+      "members": {
+        "0": "t32",
+        "index": "t5",
+        "input": "t32",
+        "groups": "t144",
+        "indices": "t146",
+        "length": "t5",
+        "toString": "t231",
+        "toLocaleString": "t232",
+        "pop": "t233",
+        "push": "t234",
+        "concat": "t235",
+        "join": "t238",
+        "reverse": "t239",
+        "shift": "t240",
+        "slice": "t241",
+        "sort": "t242",
+        "splice": "t245",
+        "unshift": "t246",
+        "indexOf": "t247",
+        "lastIndexOf": "t248",
+        "every": "t249",
+        "some": "t251",
+        "forEach": "t253",
+        "map": "t255",
+        "filter": "t259",
+        "reduce": "t263",
+        "reduceRight": "t265",
+        "find": "t267",
+        "findIndex": "t271",
+        "fill": "t273",
+        "copyWithin": "t274",
+        "entries": "t275",
+        "keys": "t278",
+        "values": "t279",
+        "includes": "t281",
+        "flatMap": "t282",
+        "flat": "t290",
+        "at": "t295",
+        "__@iterator@45": "t296",
+        "__@unscopables@47": "t297"
+      }
+    },
+    "t141": {
+      "kind": "union",
+      "text": "RegExpExecArray | null",
+      "types": [
+        "t142",
+        "t143"
+      ]
+    },
+    "t140": {
+      "kind": "function",
+      "text": "(string: string) => RegExpExecArray | null",
+      "parameters": [
+        {
+          "name": "string",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t141"
+    },
+    "t298": {
+      "kind": "function",
+      "text": "(string: string) => boolean",
+      "parameters": [
+        {
+          "name": "string",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t299": {
+      "kind": "function",
+      "text": "(pattern: string, flags?: string | undefined) => RegExp",
+      "parameters": [
+        {
+          "name": "pattern",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "flags",
+          "type": "t31",
+          "optional": false
+        }
+      ],
+      "returnType": "t139"
+    },
+    "t304": {
+      "kind": "object",
+      "text": "{ [key: string]: string; }",
+      "members": {}
+    },
+    "t303": {
+      "kind": "union",
+      "text": "{ [key: string]: string; } | undefined",
+      "types": [
+        "t4",
+        "t304"
+      ]
+    },
+    "t305": {
+      "kind": "function",
+      "text": "() => string",
+      "parameters": [],
+      "returnType": "t32"
+    },
+    "t306": {
+      "kind": "function",
+      "text": "{ (): string; (locales: string | string[], options?: (NumberFormatOptions & DateTimeFormatOptions) | undefined): string; }",
+      "parameters": [],
+      "returnType": "t32"
+    },
+    "t307": {
+      "kind": "function",
+      "text": "() => string | undefined",
+      "parameters": [],
+      "returnType": "t31"
+    },
+    "t308": {
+      "kind": "function",
+      "text": "(...items: string[]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t309": {
+      "kind": "function",
+      "text": "{ (...items: ConcatArray<string>[]): string[]; (...items: (string | ConcatArray<string>)[]): string[]; }",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t236",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t310": {
+      "kind": "function",
+      "text": "(separator?: string | undefined) => string",
+      "parameters": [
+        {
+          "name": "separator",
+          "type": "t31",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t311": {
+      "kind": "function",
+      "text": "() => string[]",
+      "parameters": [],
+      "returnType": "t62"
+    },
+    "t312": {
+      "kind": "function",
+      "text": "() => string | undefined",
+      "parameters": [],
+      "returnType": "t31"
+    },
+    "t313": {
+      "kind": "function",
+      "text": "(start?: number | undefined, end?: number | undefined) => string[]",
+      "parameters": [
+        {
+          "name": "start",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t316": {
+      "kind": "function",
+      "text": "(a: string, b: string) => number",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t315": {
+      "kind": "union",
+      "text": "((a: string, b: string) => number) | undefined",
+      "types": [
+        "t4",
+        "t316"
+      ]
+    },
+    "t314": {
+      "kind": "function",
+      "text": "(compareFn?: ((a: string, b: string) => number) | undefined) => RegExpMatchArray",
+      "parameters": [
+        {
+          "name": "compareFn",
+          "type": "t315",
+          "optional": false
+        }
+      ],
+      "returnType": "t302"
+    },
+    "t317": {
+      "kind": "function",
+      "text": "{ (start: number, deleteCount?: number | undefined): string[]; (start: number, deleteCount: number, ...items: string[]): string[]; }",
+      "parameters": [
+        {
+          "name": "start",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "deleteCount",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t318": {
+      "kind": "function",
+      "text": "(...items: string[]) => number",
+      "parameters": [
+        {
+          "name": "items",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t319": {
+      "kind": "function",
+      "text": "(searchElement: string, fromIndex?: number | undefined) => number",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t320": {
+      "kind": "function",
+      "text": "(searchElement: string, fromIndex?: number | undefined) => number",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t322": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t321": {
+      "kind": "function",
+      "text": "{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): boolean; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t322",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t324": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => unknown",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t181"
+    },
+    "t323": {
+      "kind": "function",
+      "text": "(predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any) => boolean",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t324",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t326": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t325": {
+      "kind": "function",
+      "text": "(callbackfn: (value: string, index: number, array: string[]) => void, thisArg?: any) => void",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t326",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t329": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t328": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => U",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t329"
+    },
+    "t330": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t329"
+    },
+    "t327": {
+      "kind": "function",
+      "text": "<U>(callbackfn: (value: string, index: number, array: string[]) => U, thisArg?: any) => U[]",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t328",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t330"
+    },
+    "t332": {
+      "kind": "function",
+      "text": "(value: string, index: number, array: string[]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t334": {
+      "kind": "other",
+      "text": "S"
+    },
+    "t333": {
+      "kind": "array",
+      "text": "S[]",
+      "elementType": "t334"
+    },
+    "t331": {
+      "kind": "function",
+      "text": "{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): string[]; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t332",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t333"
+    },
+    "t336": {
+      "kind": "function",
+      "text": "(previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string",
+      "parameters": [
+        {
+          "name": "previousValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t335": {
+      "kind": "function",
+      "text": "{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t336",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t338": {
+      "kind": "function",
+      "text": "(previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string",
+      "parameters": [
+        {
+          "name": "previousValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentValue",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "currentIndex",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t337": {
+      "kind": "function",
+      "text": "{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t338",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t340": {
+      "kind": "function",
+      "text": "(value: string, index: number, obj: string[]) => value is S",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "obj",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t342": {
+      "kind": "other",
+      "text": "S"
+    },
+    "t341": {
+      "kind": "union",
+      "text": "S | undefined",
+      "types": [
+        "t4",
+        "t342"
+      ]
+    },
+    "t339": {
+      "kind": "function",
+      "text": "{ <S extends string>(predicate: (value: string, index: number, obj: string[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string | undefined; }",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t340",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t341"
+    },
+    "t344": {
+      "kind": "function",
+      "text": "(value: string, index: number, obj: string[]) => unknown",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "obj",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t181"
+    },
+    "t343": {
+      "kind": "function",
+      "text": "(predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any) => number",
+      "parameters": [
+        {
+          "name": "predicate",
+          "type": "t344",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t345": {
+      "kind": "function",
+      "text": "(value: string, start?: number | undefined, end?: number | undefined) => RegExpMatchArray",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "t3",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t302"
+    },
+    "t346": {
+      "kind": "function",
+      "text": "(target: number, start: number, end?: number | undefined) => RegExpMatchArray",
+      "parameters": [
+        {
+          "name": "target",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t302"
+    },
+    "t347": {
+      "kind": "function",
+      "text": "() => ArrayIterator<[number, string]>",
+      "parameters": [],
+      "returnType": "t276"
+    },
+    "t348": {
+      "kind": "function",
+      "text": "() => ArrayIterator<number>",
+      "parameters": [],
+      "returnType": "t211"
+    },
+    "t349": {
+      "kind": "function",
+      "text": "() => ArrayIterator<string>",
+      "parameters": [],
+      "returnType": "t280"
+    },
+    "t350": {
+      "kind": "function",
+      "text": "(searchElement: string, fromIndex?: number | undefined) => boolean",
+      "parameters": [
+        {
+          "name": "searchElement",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "fromIndex",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t354": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t355": {
+      "kind": "array",
+      "text": "readonly U[]",
+      "elementType": "t354"
+    },
+    "t353": {
+      "kind": "union",
+      "text": "U | readonly U[]",
+      "types": [
+        "t354",
+        "t355"
+      ]
+    },
+    "t352": {
+      "kind": "function",
+      "text": "(this: This, value: string, index: number, array: string[]) => U | readonly U[]",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t62",
+          "optional": false
+        }
+      ],
+      "returnType": "t353"
+    },
+    "t357": {
+      "kind": "other",
+      "text": "This"
+    },
+    "t356": {
+      "kind": "union",
+      "text": "This | undefined",
+      "types": [
+        "t4",
+        "t357"
+      ]
+    },
+    "t358": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t354"
+    },
+    "t351": {
+      "kind": "function",
+      "text": "<U, This = undefined>(callback: (this: This, value: string, index: number, array: string[]) => U | readonly U[], thisArg?: This | undefined) => U[]",
+      "parameters": [
+        {
+          "name": "callback",
+          "type": "t352",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t356",
+          "optional": false
+        }
+      ],
+      "returnType": "t358"
+    },
+    "t361": {
+      "kind": "other",
+      "text": "D"
+    },
+    "t360": {
+      "kind": "union",
+      "text": "D | undefined",
+      "types": [
+        "t4",
+        "t361"
+      ]
+    },
+    "t363": {
+      "kind": "other",
+      "text": "FlatArray<A, D>"
+    },
+    "t362": {
+      "kind": "array",
+      "text": "FlatArray<A, D>[]",
+      "elementType": "t363"
+    },
+    "t359": {
+      "kind": "function",
+      "text": "<A, D extends number = 1>(this: A, depth?: D | undefined) => FlatArray<A, D>[]",
+      "parameters": [
+        {
+          "name": "depth",
+          "type": "t360",
+          "optional": false
+        }
+      ],
+      "returnType": "t362"
+    },
+    "t364": {
+      "kind": "function",
+      "text": "(index: number) => string | undefined",
+      "parameters": [
+        {
+          "name": "index",
+          "type": "t5",
+          "optional": false
+        }
+      ],
+      "returnType": "t31"
+    },
+    "t365": {
+      "kind": "function",
+      "text": "() => ArrayIterator<string>",
+      "parameters": [],
+      "returnType": "t280"
+    },
+    "t366": {
+      "kind": "object",
+      "text": "{ [x: number]: boolean | undefined; length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; pop?: boolean | undefined; push?: boolean | undefined; ... 29 more ...; readonly [Symbol.unscopables]?: boolean | undefined; }",
+      "members": {
+        "length": "t8",
+        "toString": "t8",
+        "toLocaleString": "t8",
+        "pop": "t8",
+        "push": "t8",
+        "concat": "t8",
+        "join": "t8",
+        "reverse": "t8",
+        "shift": "t8",
+        "slice": "t8",
+        "sort": "t8",
+        "splice": "t8",
+        "unshift": "t8",
+        "indexOf": "t8",
+        "lastIndexOf": "t8",
+        "every": "t8",
+        "some": "t8",
+        "forEach": "t8",
+        "map": "t8",
+        "filter": "t8",
+        "reduce": "t8",
+        "reduceRight": "t8",
+        "find": "t8",
+        "findIndex": "t8",
+        "fill": "t8",
+        "copyWithin": "t8",
+        "entries": "t8",
+        "keys": "t8",
+        "values": "t8",
+        "includes": "t8",
+        "flatMap": "t8",
+        "flat": "t8",
+        "at": "t8",
+        "__@iterator@45": "t8",
+        "__@unscopables@47": "t8"
+      }
+    },
+    "t302": {
+      "kind": "object",
+      "text": "RegExpMatchArray",
+      "members": {
+        "0": "t32",
+        "index": "t3",
+        "input": "t31",
+        "groups": "t303",
+        "indices": "t146",
+        "length": "t5",
+        "toString": "t305",
+        "toLocaleString": "t306",
+        "pop": "t307",
+        "push": "t308",
+        "concat": "t309",
+        "join": "t310",
+        "reverse": "t311",
+        "shift": "t312",
+        "slice": "t313",
+        "sort": "t314",
+        "splice": "t317",
+        "unshift": "t318",
+        "indexOf": "t319",
+        "lastIndexOf": "t320",
+        "every": "t321",
+        "some": "t323",
+        "forEach": "t325",
+        "map": "t327",
+        "filter": "t331",
+        "reduce": "t335",
+        "reduceRight": "t337",
+        "find": "t339",
+        "findIndex": "t343",
+        "fill": "t345",
+        "copyWithin": "t346",
+        "entries": "t347",
+        "keys": "t348",
+        "values": "t349",
+        "includes": "t350",
+        "flatMap": "t351",
+        "flat": "t359",
+        "at": "t364",
+        "__@iterator@45": "t365",
+        "__@unscopables@47": "t366"
+      }
+    },
+    "t301": {
+      "kind": "union",
+      "text": "RegExpMatchArray | null",
+      "types": [
+        "t142",
+        "t302"
+      ]
+    },
+    "t300": {
+      "kind": "function",
+      "text": "(string: string) => RegExpMatchArray | null",
+      "parameters": [
+        {
+          "name": "string",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t301"
+    },
+    "t367": {
+      "kind": "function",
+      "text": "{ (string: string, replaceValue: string): string; (string: string, replacer: (substring: string, ...args: any[]) => string): string; }",
+      "parameters": [
+        {
+          "name": "string",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "replaceValue",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t32"
+    },
+    "t368": {
+      "kind": "function",
+      "text": "(string: string) => number",
+      "parameters": [
+        {
+          "name": "string",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t369": {
+      "kind": "function",
+      "text": "(string: string, limit?: number | undefined) => string[]",
+      "parameters": [
+        {
+          "name": "string",
+          "type": "t32",
+          "optional": false
+        },
+        {
+          "name": "limit",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t62"
+    },
+    "t373": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t372": {
+      "kind": "reference",
+      "text": "RegExpStringIterator<T>",
+      "target": "t372",
+      "typeArguments": [
+        "t373"
+      ]
+    },
+    "t371": {
+      "kind": "reference",
+      "text": "RegExpStringIterator<RegExpMatchArray>",
+      "target": "t372",
+      "typeArguments": [
+        "t302"
+      ]
+    },
+    "t370": {
+      "kind": "function",
+      "text": "(str: string) => RegExpStringIterator<RegExpMatchArray>",
+      "parameters": [
+        {
+          "name": "str",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t371"
+    },
+    "t139": {
+      "kind": "object",
+      "text": "RegExp",
+      "members": {
+        "exec": "t140",
+        "test": "t298",
+        "source": "t32",
+        "global": "t178",
+        "ignoreCase": "t178",
+        "multiline": "t178",
+        "lastIndex": "t5",
+        "compile": "t299",
+        "flags": "t32",
+        "sticky": "t178",
+        "unicode": "t178",
+        "dotAll": "t178",
+        "hasIndices": "t178",
+        "__@match@2038": "t300",
+        "__@replace@2040": "t367",
+        "__@search@2043": "t368",
+        "__@split@2045": "t369",
+        "__@matchAll@2047": "t370"
+      }
+    },
+    "t138": {
+      "kind": "union",
+      "text": "RegExp | undefined",
+      "types": [
+        "t4",
+        "t139"
+      ]
+    },
+    "t375": {
+      "kind": "object",
+      "text": "{ mathMl?: boolean | undefined; svg?: boolean | undefined; svgFilters?: boolean | undefined; html?: boolean | undefined; }",
+      "members": {
+        "mathMl": "t8",
+        "svg": "t8",
+        "svgFilters": "t8",
+        "html": "t8"
+      }
+    },
+    "t374": {
+      "kind": "union",
+      "text": "false | { mathMl?: boolean | undefined; svg?: boolean | undefined; svgFilters?: boolean | undefined; html?: boolean | undefined; } | undefined",
+      "types": [
+        "t4",
+        "t9",
+        "t375"
+      ]
+    },
+    "t379": {
+      "kind": "function",
+      "text": "(tagName: string) => boolean",
+      "parameters": [
+        {
+          "name": "tagName",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t378": {
+      "kind": "union",
+      "text": "RegExp | ((tagName: string) => boolean) | null | undefined",
+      "types": [
+        "t4",
+        "t142",
+        "t139",
+        "t379"
+      ]
+    },
+    "t381": {
+      "kind": "function",
+      "text": "(lcName: string) => boolean",
+      "parameters": [
+        {
+          "name": "lcName",
+          "type": "t32",
+          "optional": false
+        }
+      ],
+      "returnType": "t178"
+    },
+    "t380": {
+      "kind": "union",
+      "text": "RegExp | ((lcName: string) => boolean) | null | undefined",
+      "types": [
+        "t4",
+        "t142",
+        "t139",
+        "t381"
+      ]
+    },
+    "t377": {
+      "kind": "object",
+      "text": "{ tagNameCheck?: RegExp | ((tagName: string) => boolean) | null | undefined; attributeNameCheck?: RegExp | ((lcName: string) => boolean) | null | undefined; allowCustomizedBuiltInElements?: boolean | undefined; }",
+      "members": {
+        "tagNameCheck": "t378",
+        "attributeNameCheck": "t380",
+        "allowCustomizedBuiltInElements": "t8"
+      }
+    },
+    "t376": {
+      "kind": "union",
+      "text": "{ tagNameCheck?: RegExp | ((tagName: string) => boolean) | null | undefined; attributeNameCheck?: RegExp | ((lcName: string) => boolean) | null | undefined; allowCustomizedBuiltInElements?: boolean | undefined; } | undefined",
+      "types": [
+        "t4",
+        "t377"
+      ]
+    },
+    "t137": {
+      "kind": "object",
+      "text": "Config",
+      "members": {
+        "ADD_ATTR": "t61",
+        "ADD_DATA_URI_TAGS": "t61",
+        "ADD_TAGS": "t61",
+        "ADD_URI_SAFE_ATTR": "t61",
+        "ALLOW_ARIA_ATTR": "t8",
+        "ALLOW_DATA_ATTR": "t8",
+        "ALLOW_UNKNOWN_PROTOCOLS": "t8",
+        "ALLOW_SELF_CLOSE_IN_ATTR": "t8",
+        "ALLOWED_ATTR": "t61",
+        "ALLOWED_TAGS": "t61",
+        "ALLOWED_NAMESPACES": "t61",
+        "ALLOWED_URI_REGEXP": "t138",
+        "FORBID_ATTR": "t61",
+        "FORBID_CONTENTS": "t61",
+        "FORBID_TAGS": "t61",
+        "FORCE_BODY": "t8",
+        "IN_PLACE": "t8",
+        "KEEP_CONTENT": "t8",
+        "NAMESPACE": "t31",
+        "PARSER_MEDIA_TYPE": "t31",
+        "RETURN_DOM_FRAGMENT": "t8",
+        "RETURN_DOM_IMPORT": "t8",
+        "RETURN_DOM": "t8",
+        "RETURN_TRUSTED_TYPE": "t8",
+        "SAFE_FOR_TEMPLATES": "t8",
+        "SANITIZE_DOM": "t8",
+        "SANITIZE_NAMED_PROPS": "t8",
+        "USE_PROFILES": "t374",
+        "WHOLE_DOCUMENT": "t8",
+        "CUSTOM_ELEMENT_HANDLING": "t376"
+      }
+    },
+    "t136": {
+      "kind": "union",
+      "text": "Config | undefined",
+      "types": [
+        "t4",
+        "t137"
+      ]
+    },
+    "t22": {
+      "kind": "object",
+      "text": "MermaidConfig",
+      "members": {
+        "theme": "t23",
+        "themeVariables": "t30",
+        "themeCSS": "t31",
+        "look": "t33",
+        "handDrawnSeed": "t3",
+        "layout": "t31",
+        "maxTextSize": "t3",
+        "maxEdges": "t3",
+        "elk": "t36",
+        "darkMode": "t8",
+        "htmlLabels": "t8",
+        "fontFamily": "t31",
+        "altFontFamily": "t31",
+        "logLevel": "t43",
+        "securityLevel": "t56",
+        "startOnLoad": "t8",
+        "arrowMarkerAbsolute": "t8",
+        "secure": "t61",
+        "legacyMathML": "t8",
+        "forceLegacyMathML": "t8",
+        "deterministicIds": "t8",
+        "deterministicIDSeed": "t31",
+        "flowchart": "t63",
+        "sequence": "t64",
+        "gantt": "t75",
+        "journey": "t88",
+        "timeline": "t90",
+        "class": "t92",
+        "state": "t94",
+        "er": "t96",
+        "pie": "t103",
+        "quadrantChart": "t105",
+        "xyChart": "t111",
+        "requirement": "t118",
+        "mindmap": "t120",
+        "gitGraph": "t122",
+        "c4": "t126",
+        "sankey": "t128",
+        "packet": "t132",
+        "block": "t134",
+        "dompurifyConfig": "t136",
+        "wrap": "t8",
+        "fontSize": "t3",
+        "markdownAutoWrap": "t8",
+        "suppressErrorRendering": "t8"
+      }
+    },
+    "t383": {
+      "kind": "array",
+      "text": "MermaidConfig[]",
+      "elementType": "t22"
+    },
+    "t382": {
+      "kind": "function",
+      "text": "(siteCfg: MermaidConfig, _directives: MermaidConfig[]) => MermaidConfig",
+      "parameters": [
+        {
+          "name": "siteCfg",
+          "type": "t22",
+          "optional": false
+        },
+        {
+          "name": "_directives",
+          "type": "t383",
+          "optional": false
+        }
+      ],
+      "returnType": "t22"
+    },
+    "t384": {
+      "kind": "function",
+      "text": "(conf: MermaidConfig) => MermaidConfig",
+      "parameters": [
+        {
+          "name": "conf",
+          "type": "t22",
+          "optional": false
+        }
+      ],
+      "returnType": "t22"
+    },
+    "t385": {
+      "kind": "function",
+      "text": "(conf: MermaidConfig) => void",
+      "parameters": [
+        {
+          "name": "conf",
+          "type": "t22",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t386": {
+      "kind": "function",
+      "text": "(conf: MermaidConfig) => MermaidConfig",
+      "parameters": [
+        {
+          "name": "conf",
+          "type": "t22",
+          "optional": false
+        }
+      ],
+      "returnType": "t22"
+    },
+    "t387": {
+      "kind": "function",
+      "text": "() => MermaidConfig",
+      "parameters": [],
+      "returnType": "t22"
+    },
+    "t388": {
+      "kind": "function",
+      "text": "(conf: MermaidConfig) => MermaidConfig",
+      "parameters": [
+        {
+          "name": "conf",
+          "type": "t22",
+          "optional": false
+        }
+      ],
+      "returnType": "t22"
+    },
+    "t389": {
+      "kind": "function",
+      "text": "() => MermaidConfig",
+      "parameters": [],
+      "returnType": "t22"
+    },
+    "t390": {
+      "kind": "function",
+      "text": "(options: any) => void",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t30",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t391": {
+      "kind": "function",
+      "text": "(directive: MermaidConfig) => void",
+      "parameters": [
+        {
+          "name": "directive",
+          "type": "t22",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t392": {
+      "kind": "function",
+      "text": "(config?: MermaidConfig) => void",
+      "parameters": [
+        {
+          "name": "config",
+          "type": "t22",
+          "optional": false
+        }
+      ],
+      "returnType": "t184"
+    },
+    "t21": {
+      "kind": "object",
+      "text": "typeof import(\"/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/config\", { with: { \"resolution-mode\": \"import\" } })",
+      "members": {
+        "defaultConfig": "t22",
+        "updateCurrentConfig": "t382",
+        "setSiteConfig": "t384",
+        "saveConfigFromInitialize": "t385",
+        "updateSiteConfig": "t386",
+        "getSiteConfig": "t387",
+        "setConfig": "t388",
+        "getConfig": "t389",
+        "sanitize": "t390",
+        "addDirective": "t391",
+        "reset": "t392"
+      }
+    },
+    "t393": {
+      "kind": "stringLiteral",
+      "text": "\"getSubGraphTitleMargins\"",
+      "value": "getSubGraphTitleMargins"
+    },
+    "t394": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t184"
+    },
+    "t395": {
+      "kind": "stringLiteral",
+      "text": "\"should get subgraph title margins after config has been set\"",
+      "value": "should get subgraph title margins after config has been set"
+    },
+    "t396": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t184"
+    },
+    "t399": {
+      "kind": "object",
+      "text": "{ top: number; bottom: number; }",
+      "members": {
+        "top": "t5",
+        "bottom": "t5"
+      }
+    },
+    "t398": {
+      "kind": "object",
+      "text": "{ subGraphTitleMargin: { top: number; bottom: number; }; }",
+      "members": {
+        "subGraphTitleMargin": "t399"
+      }
+    },
+    "t397": {
+      "kind": "object",
+      "text": "{ flowchart: { subGraphTitleMargin: { top: number; bottom: number; }; }; }",
+      "members": {
+        "flowchart": "t398"
+      }
+    },
+    "t402": {
+      "kind": "object",
+      "text": "{ top: number; bottom: number; }",
+      "members": {
+        "top": "t5",
+        "bottom": "t5"
+      }
+    },
+    "t401": {
+      "kind": "object",
+      "text": "{ subGraphTitleMargin: { top: number; bottom: number; }; }",
+      "members": {
+        "subGraphTitleMargin": "t402"
+      }
+    },
+    "t400": {
+      "kind": "object",
+      "text": "{ flowchart: { subGraphTitleMargin: { top: number; bottom: number; }; }; }",
+      "members": {
+        "flowchart": "t401"
+      }
+    },
+    "t404": {
+      "kind": "object",
+      "text": "{ top: number; bottom: number; }",
+      "members": {
+        "top": "t5",
+        "bottom": "t5"
+      }
+    },
+    "t403": {
+      "kind": "object",
+      "text": "{ subGraphTitleMargin: { top: number; bottom: number; }; }",
+      "members": {
+        "subGraphTitleMargin": "t404"
+      }
+    },
+    "t406": {
+      "kind": "object",
+      "text": "{ top: number; bottom: number; }",
+      "members": {
+        "top": "t5",
+        "bottom": "t5"
+      }
+    },
+    "t405": {
+      "kind": "object",
+      "text": "{ subGraphTitleMargin: { top: number; bottom: number; }; }",
+      "members": {
+        "subGraphTitleMargin": "t406"
+      }
+    },
+    "t407": {
+      "kind": "object",
+      "text": "{ top: number; bottom: number; }",
+      "members": {
+        "top": "t5",
+        "bottom": "t5"
+      }
+    },
+    "t408": {
+      "kind": "object",
+      "text": "{ top: number; bottom: number; }",
+      "members": {
+        "top": "t5",
+        "bottom": "t5"
+      }
+    },
+    "t409": {
+      "kind": "numberLiteral",
+      "text": "10",
+      "value": 10
+    },
+    "t410": {
+      "kind": "object",
+      "text": "{ subGraphTitleTopMargin: number; subGraphTitleBottomMargin: number; subGraphTitleTotalMargin: number; }",
+      "members": {
+        "subGraphTitleTopMargin": "t5",
+        "subGraphTitleBottomMargin": "t5",
+        "subGraphTitleTotalMargin": "t5"
+      }
+    },
+    "t411": {
+      "kind": "numberLiteral",
+      "text": "15",
+      "value": 15
+    }
+  }
+}

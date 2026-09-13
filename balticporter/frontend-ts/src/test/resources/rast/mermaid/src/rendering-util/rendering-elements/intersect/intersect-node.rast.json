@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/rendering-util/rendering-elements/intersect/intersect-node.js",
+  "sha256": "987b4083ed045303791310db8054c0e87e3581c69a4c5fd7d2a52d90dc5c55b2",
+  "nodes": [
+    {
+      "kind": "FunctionDeclaration",
+      "kindCode": 262,
+      "pos": [
+        1,
+        1
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            1,
+            10
+          ],
+          "type": "t0",
+          "text": "intersectNode",
+          "resolvedSymbol": "s0"
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            1,
+            24
+          ],
+          "symbol": "s1",
+          "type": "t1",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                1,
+                24
+              ],
+              "type": "t1",
+              "text": "node",
+              "resolvedSymbol": "s1"
+            }
+          ]
+        },
+        {
+          "kind": "Parameter",
+          "kindCode": 169,
+          "pos": [
+            1,
+            30
+          ],
+          "symbol": "s2",
+          "type": "t1",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                1,
+                30
+              ],
+              "type": "t1",
+              "text": "point",
+              "resolvedSymbol": "s2"
+            }
+          ]
+        },
+        {
+          "kind": "Block",
+          "kindCode": 241,
+          "pos": [
+            1,
+            37
+          ],
+          "children": [
+            {
+              "kind": "ReturnStatement",
+              "kindCode": 253,
+              "pos": [
+                2,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "CallExpression",
+                  "kindCode": 213,
+                  "pos": [
+                    2,
+                    10
+                  ],
+                  "type": "t1",
+                  "children": [
+                    {
+                      "kind": "PropertyAccessExpression",
+                      "kindCode": 211,
+                      "pos": [
+                        2,
+                        10
+                      ],
+                      "type": "t1",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            2,
+                            10
+                          ],
+                          "type": "t1",
+                          "text": "node",
+                          "resolvedSymbol": "s1"
+                        },
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            2,
+                            15
+                          ],
+                          "type": "t1",
+                          "text": "intersect"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        2,
+                        25
+                      ],
+                      "type": "t1",
+                      "text": "point",
+                      "resolvedSymbol": "s2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        5,
+        1
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            5,
+            16
+          ],
+          "type": "t0",
+          "text": "intersectNode",
+          "resolvedSymbol": "s0"
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "intersectNode",
+      "flags": [
+        "function"
+      ]
+    },
+    "s1": {
+      "name": "node",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s2": {
+      "name": "point",
+      "flags": [
+        "variable"
+      ]
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(node: any, point: any) => any",
+      "parameters": [
+        {
+          "name": "node",
+          "type": "t1",
+          "optional": false
+        },
+        {
+          "name": "point",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t1"
+    }
+  }
+}

@@ -1,0 +1,2142 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagrams/git/styles.js",
+  "sha256": "eb2b4daf511e93f3480da578db4306c4b339c9ae536813d081135c3ee52ee102",
+  "nodes": [
+    {
+      "kind": "VariableStatement",
+      "kindCode": 243,
+      "pos": [
+        1,
+        1
+      ],
+      "children": [
+        {
+          "kind": "VariableDeclarationList",
+          "kindCode": 261,
+          "pos": [
+            1,
+            1
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclaration",
+              "kindCode": 260,
+              "pos": [
+                1,
+                7
+              ],
+              "symbol": "s0",
+              "type": "t0",
+              "flags": [
+                "const"
+              ],
+              "children": [
+                {
+                  "kind": "Identifier",
+                  "kindCode": 80,
+                  "pos": [
+                    1,
+                    7
+                  ],
+                  "type": "t0",
+                  "text": "getStyles",
+                  "resolvedSymbol": "s0"
+                },
+                {
+                  "kind": "ArrowFunction",
+                  "kindCode": 219,
+                  "pos": [
+                    1,
+                    19
+                  ],
+                  "type": "t0",
+                  "children": [
+                    {
+                      "kind": "Parameter",
+                      "kindCode": 169,
+                      "pos": [
+                        1,
+                        20
+                      ],
+                      "symbol": "s1",
+                      "type": "t1",
+                      "children": [
+                        {
+                          "kind": "Identifier",
+                          "kindCode": 80,
+                          "pos": [
+                            1,
+                            20
+                          ],
+                          "type": "t1",
+                          "text": "options",
+                          "resolvedSymbol": "s1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "TemplateExpression",
+                      "kindCode": 228,
+                      "pos": [
+                        2,
+                        3
+                      ],
+                      "type": "t2",
+                      "children": [
+                        {
+                          "kind": "TemplateHead",
+                          "kindCode": 16,
+                          "pos": [
+                            2,
+                            3
+                          ],
+                          "value": "\n  .commit-id,\n  .commit-msg,\n  .branch-label {\n    fill: lightgrey;\n    color: lightgrey;\n    font-family: 'trebuchet ms', verdana, arial, sans-serif;\n    font-family: var(--mermaid-font-family);\n  }\n  "
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            11,
+                            5
+                          ],
+                          "children": [
+                            {
+                              "kind": "CallExpression",
+                              "kindCode": 213,
+                              "pos": [
+                                11,
+                                5
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "PropertyAccessExpression",
+                                  "kindCode": 211,
+                                  "pos": [
+                                    11,
+                                    5
+                                  ],
+                                  "type": "t3",
+                                  "children": [
+                                    {
+                                      "kind": "CallExpression",
+                                      "kindCode": 213,
+                                      "pos": [
+                                        11,
+                                        5
+                                      ],
+                                      "type": "t6",
+                                      "children": [
+                                        {
+                                          "kind": "PropertyAccessExpression",
+                                          "kindCode": 211,
+                                          "pos": [
+                                            11,
+                                            5
+                                          ],
+                                          "type": "t7",
+                                          "children": [
+                                            {
+                                              "kind": "ArrayLiteralExpression",
+                                              "kindCode": 209,
+                                              "pos": [
+                                                11,
+                                                5
+                                              ],
+                                              "type": "t13",
+                                              "children": [
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    6
+                                                  ],
+                                                  "type": "t14",
+                                                  "value": 0
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    9
+                                                  ],
+                                                  "type": "t15",
+                                                  "value": 1
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    12
+                                                  ],
+                                                  "type": "t16",
+                                                  "value": 2
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    15
+                                                  ],
+                                                  "type": "t17",
+                                                  "value": 3
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    18
+                                                  ],
+                                                  "type": "t18",
+                                                  "value": 4
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    21
+                                                  ],
+                                                  "type": "t19",
+                                                  "value": 5
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    24
+                                                  ],
+                                                  "type": "t20",
+                                                  "value": 6
+                                                },
+                                                {
+                                                  "kind": "NumericLiteral",
+                                                  "kindCode": 9,
+                                                  "pos": [
+                                                    11,
+                                                    27
+                                                  ],
+                                                  "type": "t21",
+                                                  "value": 7
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "Identifier",
+                                              "kindCode": 80,
+                                              "pos": [
+                                                12,
+                                                6
+                                              ],
+                                              "type": "t7",
+                                              "text": "map",
+                                              "resolvedSymbol": "s2"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "ArrowFunction",
+                                          "kindCode": 219,
+                                          "pos": [
+                                            13,
+                                            7
+                                          ],
+                                          "type": "t22",
+                                          "children": [
+                                            {
+                                              "kind": "Parameter",
+                                              "kindCode": 169,
+                                              "pos": [
+                                                13,
+                                                8
+                                              ],
+                                              "symbol": "s3",
+                                              "type": "t9",
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    13,
+                                                    8
+                                                  ],
+                                                  "type": "t9",
+                                                  "text": "i",
+                                                  "resolvedSymbol": "s3"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "TemplateExpression",
+                                              "kindCode": 228,
+                                              "pos": [
+                                                14,
+                                                9
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "TemplateHead",
+                                                  "kindCode": 16,
+                                                  "pos": [
+                                                    14,
+                                                    9
+                                                  ],
+                                                  "value": "\n        .branch-label"
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    15,
+                                                    24
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        15,
+                                                        24
+                                                      ],
+                                                      "type": "t9",
+                                                      "text": "i",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        15,
+                                                        25
+                                                      ],
+                                                      "value": " { fill: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    15,
+                                                    37
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        15,
+                                                        37
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            15,
+                                                            37
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            15,
+                                                            45
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                15,
+                                                                45
+                                                              ],
+                                                              "type": "t23",
+                                                              "value": "gitBranchLabel"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                15,
+                                                                64
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        15,
+                                                        66
+                                                      ],
+                                                      "value": "; }\n        .commit"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    16,
+                                                    18
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        16,
+                                                        18
+                                                      ],
+                                                      "type": "t9",
+                                                      "text": "i",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        16,
+                                                        19
+                                                      ],
+                                                      "value": " { stroke: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    16,
+                                                    33
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        16,
+                                                        33
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            16,
+                                                            33
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            16,
+                                                            41
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                16,
+                                                                41
+                                                              ],
+                                                              "type": "t24",
+                                                              "value": "git"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                16,
+                                                                49
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        16,
+                                                        51
+                                                      ],
+                                                      "value": "; fill: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    16,
+                                                    62
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        16,
+                                                        62
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            16,
+                                                            62
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            16,
+                                                            70
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                16,
+                                                                70
+                                                              ],
+                                                              "type": "t24",
+                                                              "value": "git"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                16,
+                                                                78
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        16,
+                                                        80
+                                                      ],
+                                                      "value": "; }\n        .commit-highlight"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    17,
+                                                    28
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        17,
+                                                        28
+                                                      ],
+                                                      "type": "t9",
+                                                      "text": "i",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        17,
+                                                        29
+                                                      ],
+                                                      "value": " { stroke: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    17,
+                                                    43
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        17,
+                                                        43
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            17,
+                                                            43
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            17,
+                                                            51
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                17,
+                                                                51
+                                                              ],
+                                                              "type": "t25",
+                                                              "value": "gitInv"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                17,
+                                                                62
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        17,
+                                                        64
+                                                      ],
+                                                      "value": "; fill: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    17,
+                                                    75
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        17,
+                                                        75
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            17,
+                                                            75
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            17,
+                                                            83
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                17,
+                                                                83
+                                                              ],
+                                                              "type": "t25",
+                                                              "value": "gitInv"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                17,
+                                                                94
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        17,
+                                                        96
+                                                      ],
+                                                      "value": "; }\n        .label"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    18,
+                                                    17
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        18,
+                                                        17
+                                                      ],
+                                                      "type": "t9",
+                                                      "text": "i",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        18,
+                                                        18
+                                                      ],
+                                                      "value": "  { fill: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    18,
+                                                    31
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        18,
+                                                        31
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            18,
+                                                            31
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            18,
+                                                            39
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                18,
+                                                                39
+                                                              ],
+                                                              "type": "t24",
+                                                              "value": "git"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                18,
+                                                                47
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        18,
+                                                        49
+                                                      ],
+                                                      "value": "; }\n        .arrow"
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    19,
+                                                    17
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        19,
+                                                        17
+                                                      ],
+                                                      "type": "t9",
+                                                      "text": "i",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "TemplateMiddle",
+                                                      "kindCode": 17,
+                                                      "pos": [
+                                                        19,
+                                                        18
+                                                      ],
+                                                      "value": " { stroke: "
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "TemplateSpan",
+                                                  "kindCode": 239,
+                                                  "pos": [
+                                                    19,
+                                                    32
+                                                  ],
+                                                  "children": [
+                                                    {
+                                                      "kind": "ElementAccessExpression",
+                                                      "kindCode": 212,
+                                                      "pos": [
+                                                        19,
+                                                        32
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            19,
+                                                            32
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "options",
+                                                          "resolvedSymbol": "s1"
+                                                        },
+                                                        {
+                                                          "kind": "BinaryExpression",
+                                                          "kindCode": 226,
+                                                          "pos": [
+                                                            19,
+                                                            40
+                                                          ],
+                                                          "type": "t2",
+                                                          "operator": "PlusToken",
+                                                          "children": [
+                                                            {
+                                                              "kind": "StringLiteral",
+                                                              "kindCode": 11,
+                                                              "pos": [
+                                                                19,
+                                                                40
+                                                              ],
+                                                              "type": "t24",
+                                                              "value": "git"
+                                                            },
+                                                            {
+                                                              "kind": "Identifier",
+                                                              "kindCode": 80,
+                                                              "pos": [
+                                                                19,
+                                                                48
+                                                              ],
+                                                              "type": "t9",
+                                                              "text": "i",
+                                                              "resolvedSymbol": "s3"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "TemplateTail",
+                                                      "kindCode": 18,
+                                                      "pos": [
+                                                        19,
+                                                        50
+                                                      ],
+                                                      "value": "; }\n        "
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "Identifier",
+                                      "kindCode": 80,
+                                      "pos": [
+                                        22,
+                                        6
+                                      ],
+                                      "type": "t3",
+                                      "text": "join",
+                                      "resolvedSymbol": "s4"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "StringLiteral",
+                                  "kindCode": 11,
+                                  "pos": [
+                                    22,
+                                    11
+                                  ],
+                                  "type": "t26",
+                                  "value": "\n"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                22,
+                                16
+                              ],
+                              "value": "\n\n  .branch {\n    stroke-width: 1;\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            26,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                26,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    26,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    26,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "lineColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                26,
+                                32
+                              ],
+                              "value": ";\n    stroke-dasharray: 2;\n  }\n  .commit-label { font-size: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            29,
+                            32
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                29,
+                                32
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    29,
+                                    32
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    29,
+                                    40
+                                  ],
+                                  "type": "t1",
+                                  "text": "commitLabelFontSize"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                29,
+                                59
+                              ],
+                              "value": "; fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            29,
+                            70
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                29,
+                                70
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    29,
+                                    70
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    29,
+                                    78
+                                  ],
+                                  "type": "t1",
+                                  "text": "commitLabelColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                29,
+                                94
+                              ],
+                              "value": ";}\n  .commit-label-bkg { font-size: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            30,
+                            36
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                30,
+                                36
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    30,
+                                    36
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    30,
+                                    44
+                                  ],
+                                  "type": "t1",
+                                  "text": "commitLabelFontSize"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                30,
+                                63
+                              ],
+                              "value": "; fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            31,
+                            5
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                31,
+                                5
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    31,
+                                    5
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    31,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "commitLabelBackground"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                32,
+                                3
+                              ],
+                              "value": "; opacity: 0.5; }\n  .tag-label { font-size: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            33,
+                            29
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                33,
+                                29
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    33,
+                                    29
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    33,
+                                    37
+                                  ],
+                                  "type": "t1",
+                                  "text": "tagLabelFontSize"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                33,
+                                53
+                              ],
+                              "value": "; fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            33,
+                            64
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                33,
+                                64
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    33,
+                                    64
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    33,
+                                    72
+                                  ],
+                                  "type": "t1",
+                                  "text": "tagLabelColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                33,
+                                85
+                              ],
+                              "value": ";}\n  .tag-label-bkg { fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            34,
+                            28
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                34,
+                                28
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    34,
+                                    28
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    34,
+                                    36
+                                  ],
+                                  "type": "t1",
+                                  "text": "tagLabelBackground"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                34,
+                                54
+                              ],
+                              "value": "; stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            34,
+                            67
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                34,
+                                67
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    34,
+                                    67
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    34,
+                                    75
+                                  ],
+                                  "type": "t1",
+                                  "text": "tagLabelBorder"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                34,
+                                89
+                              ],
+                              "value": "; }\n  .tag-hole { fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            35,
+                            23
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                35,
+                                23
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    35,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    35,
+                                    31
+                                  ],
+                                  "type": "t1",
+                                  "text": "textColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                35,
+                                40
+                              ],
+                              "value": "; }\n\n  .commit-merge {\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            38,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                38,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    38,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    38,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "primaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                38,
+                                35
+                              ],
+                              "value": ";\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            39,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                39,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    39,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    39,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "primaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                39,
+                                33
+                              ],
+                              "value": ";\n  }\n  .commit-reverse {\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            42,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                42,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    42,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    42,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "primaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                42,
+                                35
+                              ],
+                              "value": ";\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            43,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                43,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    43,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    43,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "primaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                43,
+                                33
+                              ],
+                              "value": ";\n    stroke-width: 3;\n  }\n  .commit-highlight-outer {\n  }\n  .commit-highlight-inner {\n    stroke: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            49,
+                            15
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                49,
+                                15
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    49,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    49,
+                                    23
+                                  ],
+                                  "type": "t1",
+                                  "text": "primaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                49,
+                                35
+                              ],
+                              "value": ";\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            50,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                50,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    50,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    50,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "primaryColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateMiddle",
+                              "kindCode": 17,
+                              "pos": [
+                                50,
+                                33
+                              ],
+                              "value": ";\n  }\n\n  .arrow { stroke-width: 8; stroke-linecap: round; fill: none}\n  .gitTitleText {\n    text-anchor: middle;\n    font-size: 18px;\n    fill: "
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "TemplateSpan",
+                          "kindCode": 239,
+                          "pos": [
+                            57,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "PropertyAccessExpression",
+                              "kindCode": 211,
+                              "pos": [
+                                57,
+                                13
+                              ],
+                              "type": "t1",
+                              "children": [
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    57,
+                                    13
+                                  ],
+                                  "type": "t1",
+                                  "text": "options",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "Identifier",
+                                  "kindCode": 80,
+                                  "pos": [
+                                    57,
+                                    21
+                                  ],
+                                  "type": "t1",
+                                  "text": "textColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "TemplateTail",
+                              "kindCode": 18,
+                              "pos": [
+                                57,
+                                30
+                              ],
+                              "value": ";\n  }\n"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ExportAssignment",
+      "kindCode": 277,
+      "pos": [
+        61,
+        1
+      ],
+      "children": [
+        {
+          "kind": "Identifier",
+          "kindCode": 80,
+          "pos": [
+            61,
+            16
+          ],
+          "type": "t0",
+          "text": "getStyles",
+          "resolvedSymbol": "s0"
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "getStyles",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s1": {
+      "name": "options",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s2": {
+      "name": "map",
+      "flags": [
+        "method"
+      ],
+      "parent": "s5"
+    },
+    "s3": {
+      "name": "i",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s4": {
+      "name": "join",
+      "flags": [
+        "method"
+      ],
+      "parent": "s5"
+    },
+    "s5": {
+      "name": "Array",
+      "flags": [
+        "interface",
+        "variable"
+      ],
+      "declarationType": "t27"
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t2": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(options: any) => string",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t5": {
+      "kind": "undefined",
+      "text": "undefined"
+    },
+    "t4": {
+      "kind": "union",
+      "text": "string | undefined",
+      "types": [
+        "t5",
+        "t2"
+      ]
+    },
+    "t3": {
+      "kind": "function",
+      "text": "(separator?: string | undefined) => string",
+      "parameters": [
+        {
+          "name": "separator",
+          "type": "t4",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t6": {
+      "kind": "array",
+      "text": "string[]",
+      "elementType": "t2"
+    },
+    "t9": {
+      "kind": "number",
+      "text": "number"
+    },
+    "t10": {
+      "kind": "array",
+      "text": "number[]",
+      "elementType": "t9"
+    },
+    "t11": {
+      "kind": "other",
+      "text": "U"
+    },
+    "t8": {
+      "kind": "function",
+      "text": "(value: number, index: number, array: number[]) => U",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t9",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "t9",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "t10",
+          "optional": false
+        }
+      ],
+      "returnType": "t11"
+    },
+    "t12": {
+      "kind": "array",
+      "text": "U[]",
+      "elementType": "t11"
+    },
+    "t7": {
+      "kind": "function",
+      "text": "<U>(callbackfn: (value: number, index: number, array: number[]) => U, thisArg?: any) => U[]",
+      "parameters": [
+        {
+          "name": "callbackfn",
+          "type": "t8",
+          "optional": false
+        },
+        {
+          "name": "thisArg",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t13": {
+      "kind": "array",
+      "text": "number[]",
+      "elementType": "t9"
+    },
+    "t14": {
+      "kind": "numberLiteral",
+      "text": "0",
+      "value": 0
+    },
+    "t15": {
+      "kind": "numberLiteral",
+      "text": "1",
+      "value": 1
+    },
+    "t16": {
+      "kind": "numberLiteral",
+      "text": "2",
+      "value": 2
+    },
+    "t17": {
+      "kind": "numberLiteral",
+      "text": "3",
+      "value": 3
+    },
+    "t18": {
+      "kind": "numberLiteral",
+      "text": "4",
+      "value": 4
+    },
+    "t19": {
+      "kind": "numberLiteral",
+      "text": "5",
+      "value": 5
+    },
+    "t20": {
+      "kind": "numberLiteral",
+      "text": "6",
+      "value": 6
+    },
+    "t21": {
+      "kind": "numberLiteral",
+      "text": "7",
+      "value": 7
+    },
+    "t22": {
+      "kind": "function",
+      "text": "(i: number) => string",
+      "parameters": [
+        {
+          "name": "i",
+          "type": "t9",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t23": {
+      "kind": "stringLiteral",
+      "text": "\"gitBranchLabel\"",
+      "value": "gitBranchLabel"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"git\"",
+      "value": "git"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"gitInv\"",
+      "value": "gitInv"
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"\\n\"",
+      "value": "\n"
+    },
+    "t28": {
+      "kind": "other",
+      "text": "T"
+    },
+    "t27": {
+      "kind": "reference",
+      "text": "Array<T>",
+      "target": "t27",
+      "typeArguments": [
+        "t28"
+      ]
+    }
+  }
+}

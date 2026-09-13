@@ -1,0 +1,1588 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/mermaid/packages/mermaid/src/diagram-api/comments.spec.ts",
+  "sha256": "cda62537a82ef84a01b984455b18bb4d41ec595e98f6f6676ae471dd7a1c867d",
+  "nodes": [
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        3,
+        1
+      ],
+      "comments": [
+        {
+          "kind": "line",
+          "text": "// tests to check that comments are removed",
+          "pos": [
+            1,
+            1
+          ]
+        }
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            3,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                3,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    3,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        3,
+                        10
+                      ],
+                      "type": "t0",
+                      "text": "cleanupComments",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            3,
+            33
+          ],
+          "type": "t2",
+          "value": "./comments.js"
+        }
+      ]
+    },
+    {
+      "kind": "ImportDeclaration",
+      "kindCode": 272,
+      "pos": [
+        4,
+        1
+      ],
+      "children": [
+        {
+          "kind": "ImportClause",
+          "kindCode": 273,
+          "pos": [
+            4,
+            8
+          ],
+          "children": [
+            {
+              "kind": "NamedImports",
+              "kindCode": 275,
+              "pos": [
+                4,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    4,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        10
+                      ],
+                      "type": "t2",
+                      "text": "describe",
+                      "resolvedSymbol": "s1"
+                    }
+                  ]
+                },
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    4,
+                    20
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        20
+                      ],
+                      "type": "t2",
+                      "text": "it",
+                      "resolvedSymbol": "s2"
+                    }
+                  ]
+                },
+                {
+                  "kind": "ImportSpecifier",
+                  "kindCode": 276,
+                  "pos": [
+                    4,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "kind": "Identifier",
+                      "kindCode": 80,
+                      "pos": [
+                        4,
+                        24
+                      ],
+                      "type": "t3",
+                      "text": "expect",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "StringLiteral",
+          "kindCode": 11,
+          "pos": [
+            4,
+            38
+          ],
+          "type": "t2",
+          "value": "vitest"
+        }
+      ]
+    },
+    {
+      "kind": "ExpressionStatement",
+      "kindCode": 244,
+      "pos": [
+        6,
+        1
+      ],
+      "children": [
+        {
+          "kind": "CallExpression",
+          "kindCode": 213,
+          "pos": [
+            6,
+            1
+          ],
+          "type": "t2",
+          "children": [
+            {
+              "kind": "Identifier",
+              "kindCode": 80,
+              "pos": [
+                6,
+                1
+              ],
+              "type": "t2",
+              "text": "describe",
+              "resolvedSymbol": "s1"
+            },
+            {
+              "kind": "StringLiteral",
+              "kindCode": 11,
+              "pos": [
+                6,
+                10
+              ],
+              "type": "t4",
+              "value": "comments"
+            },
+            {
+              "kind": "ArrowFunction",
+              "kindCode": 219,
+              "pos": [
+                6,
+                22
+              ],
+              "type": "t5",
+              "children": [
+                {
+                  "kind": "Block",
+                  "kindCode": 241,
+                  "pos": [
+                    6,
+                    28
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        7,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            7,
+                            3
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                7,
+                                3
+                              ],
+                              "type": "t2",
+                              "text": "it",
+                              "resolvedSymbol": "s2"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                7,
+                                6
+                              ],
+                              "type": "t7",
+                              "value": "should remove comments"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                7,
+                                32
+                              ],
+                              "type": "t8",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    7,
+                                    38
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableStatement",
+                                      "kindCode": 243,
+                                      "pos": [
+                                        8,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "VariableDeclarationList",
+                                          "kindCode": 261,
+                                          "pos": [
+                                            8,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "VariableDeclaration",
+                                              "kindCode": 260,
+                                              "pos": [
+                                                8,
+                                                11
+                                              ],
+                                              "symbol": "s4",
+                                              "type": "t9",
+                                              "flags": [
+                                                "const"
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    8,
+                                                    11
+                                                  ],
+                                                  "type": "t9",
+                                                  "text": "text",
+                                                  "resolvedSymbol": "s4"
+                                                },
+                                                {
+                                                  "kind": "NoSubstitutionTemplateLiteral",
+                                                  "kindCode": 15,
+                                                  "pos": [
+                                                    8,
+                                                    18
+                                                  ],
+                                                  "type": "t10",
+                                                  "value": "\n\n%% This is a comment\n%% This is another comment\ngraph TD\n\tA-->B\n%% This is a comment\n"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        16,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            16,
+                                            5
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                16,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "CallExpression",
+                                                  "kindCode": 213,
+                                                  "pos": [
+                                                    16,
+                                                    5
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        16,
+                                                        5
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "expect",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "CallExpression",
+                                                      "kindCode": 213,
+                                                      "pos": [
+                                                        16,
+                                                        12
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            16,
+                                                            12
+                                                          ],
+                                                          "type": "t0",
+                                                          "text": "cleanupComments",
+                                                          "resolvedSymbol": "s0"
+                                                        },
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            16,
+                                                            28
+                                                          ],
+                                                          "type": "t10",
+                                                          "text": "text",
+                                                          "resolvedSymbol": "s4"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    16,
+                                                    35
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "toMatchInlineSnapshot"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "NoSubstitutionTemplateLiteral",
+                                              "kindCode": 15,
+                                              "pos": [
+                                                16,
+                                                57
+                                              ],
+                                              "type": "t11",
+                                              "value": "\n      \"graph TD\n      \tA-->B\n      \"\n    "
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        23,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            23,
+                            3
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                23,
+                                3
+                              ],
+                              "type": "t2",
+                              "text": "it",
+                              "resolvedSymbol": "s2"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                23,
+                                6
+                              ],
+                              "type": "t12",
+                              "value": "should keep init statements when removing comments"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                23,
+                                60
+                              ],
+                              "type": "t13",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    23,
+                                    66
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableStatement",
+                                      "kindCode": 243,
+                                      "pos": [
+                                        24,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "VariableDeclarationList",
+                                          "kindCode": 261,
+                                          "pos": [
+                                            24,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "VariableDeclaration",
+                                              "kindCode": 260,
+                                              "pos": [
+                                                24,
+                                                11
+                                              ],
+                                              "symbol": "s5",
+                                              "type": "t14",
+                                              "flags": [
+                                                "const"
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    24,
+                                                    11
+                                                  ],
+                                                  "type": "t14",
+                                                  "text": "text",
+                                                  "resolvedSymbol": "s5"
+                                                },
+                                                {
+                                                  "kind": "NoSubstitutionTemplateLiteral",
+                                                  "kindCode": 15,
+                                                  "pos": [
+                                                    24,
+                                                    18
+                                                  ],
+                                                  "type": "t15",
+                                                  "value": "\n%% This is a comment\n\n%% This is another comment\n%%{init: {'theme': 'forest'}}%%\n%%{ init: {'theme': 'space before init'}}%%\n%%{init: {'theme': 'space after ending'}}%%\ngraph TD\n\tA-->B\n\n\tB-->C\n%% This is a comment\n"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        37,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            37,
+                                            5
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                37,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "CallExpression",
+                                                  "kindCode": 213,
+                                                  "pos": [
+                                                    37,
+                                                    5
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        37,
+                                                        5
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "expect",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "CallExpression",
+                                                      "kindCode": 213,
+                                                      "pos": [
+                                                        37,
+                                                        12
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            37,
+                                                            12
+                                                          ],
+                                                          "type": "t0",
+                                                          "text": "cleanupComments",
+                                                          "resolvedSymbol": "s0"
+                                                        },
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            37,
+                                                            28
+                                                          ],
+                                                          "type": "t15",
+                                                          "text": "text",
+                                                          "resolvedSymbol": "s5"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    37,
+                                                    35
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "toMatchInlineSnapshot"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "NoSubstitutionTemplateLiteral",
+                                              "kindCode": 15,
+                                              "pos": [
+                                                37,
+                                                57
+                                              ],
+                                              "type": "t16",
+                                              "value": "\n      \"%%{init: {'theme': 'forest'}}%%\n      %%{ init: {'theme': 'space before init'}}%%\n      %%{init: {'theme': 'space after ending'}}%%\n      graph TD\n      \tA-->B\n\n      \tB-->C\n      \"\n    "
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        49,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            49,
+                            3
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                49,
+                                3
+                              ],
+                              "type": "t2",
+                              "text": "it",
+                              "resolvedSymbol": "s2"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                49,
+                                6
+                              ],
+                              "type": "t17",
+                              "value": "should remove indented comments"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                49,
+                                41
+                              ],
+                              "type": "t18",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    49,
+                                    47
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableStatement",
+                                      "kindCode": 243,
+                                      "pos": [
+                                        50,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "VariableDeclarationList",
+                                          "kindCode": 261,
+                                          "pos": [
+                                            50,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "VariableDeclaration",
+                                              "kindCode": 260,
+                                              "pos": [
+                                                50,
+                                                11
+                                              ],
+                                              "symbol": "s6",
+                                              "type": "t19",
+                                              "flags": [
+                                                "const"
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    50,
+                                                    11
+                                                  ],
+                                                  "type": "t19",
+                                                  "text": "text",
+                                                  "resolvedSymbol": "s6"
+                                                },
+                                                {
+                                                  "kind": "NoSubstitutionTemplateLiteral",
+                                                  "kindCode": 15,
+                                                  "pos": [
+                                                    50,
+                                                    18
+                                                  ],
+                                                  "type": "t20",
+                                                  "value": "\n%% This is a comment\ngraph TD\n\tA-->B\n\t%% This is a comment\n\tC-->D\n"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        57,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            57,
+                                            5
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                57,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "CallExpression",
+                                                  "kindCode": 213,
+                                                  "pos": [
+                                                    57,
+                                                    5
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        57,
+                                                        5
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "expect",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "CallExpression",
+                                                      "kindCode": 213,
+                                                      "pos": [
+                                                        57,
+                                                        12
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            57,
+                                                            12
+                                                          ],
+                                                          "type": "t0",
+                                                          "text": "cleanupComments",
+                                                          "resolvedSymbol": "s0"
+                                                        },
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            57,
+                                                            28
+                                                          ],
+                                                          "type": "t20",
+                                                          "text": "text",
+                                                          "resolvedSymbol": "s6"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    57,
+                                                    35
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "toMatchInlineSnapshot"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "NoSubstitutionTemplateLiteral",
+                                              "kindCode": 15,
+                                              "pos": [
+                                                57,
+                                                57
+                                              ],
+                                              "type": "t21",
+                                              "value": "\n      \"graph TD\n\tA-->B\n\tC-->D\n      \"\n    "
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        65,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            65,
+                            3
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                65,
+                                3
+                              ],
+                              "type": "t2",
+                              "text": "it",
+                              "resolvedSymbol": "s2"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                65,
+                                6
+                              ],
+                              "type": "t22",
+                              "value": "should remove empty newlines from start"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                65,
+                                49
+                              ],
+                              "type": "t23",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    65,
+                                    55
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableStatement",
+                                      "kindCode": 243,
+                                      "pos": [
+                                        66,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "VariableDeclarationList",
+                                          "kindCode": 261,
+                                          "pos": [
+                                            66,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "VariableDeclaration",
+                                              "kindCode": 260,
+                                              "pos": [
+                                                66,
+                                                11
+                                              ],
+                                              "symbol": "s7",
+                                              "type": "t24",
+                                              "flags": [
+                                                "const"
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    66,
+                                                    11
+                                                  ],
+                                                  "type": "t24",
+                                                  "text": "text",
+                                                  "resolvedSymbol": "s7"
+                                                },
+                                                {
+                                                  "kind": "NoSubstitutionTemplateLiteral",
+                                                  "kindCode": 15,
+                                                  "pos": [
+                                                    66,
+                                                    18
+                                                  ],
+                                                  "type": "t25",
+                                                  "value": "\n\n\n\n\n%% This is a comment\ngraph TD\n\tA-->B\n"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        75,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            75,
+                                            5
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                75,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "CallExpression",
+                                                  "kindCode": 213,
+                                                  "pos": [
+                                                    75,
+                                                    5
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        75,
+                                                        5
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "expect",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "CallExpression",
+                                                      "kindCode": 213,
+                                                      "pos": [
+                                                        75,
+                                                        12
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            75,
+                                                            12
+                                                          ],
+                                                          "type": "t0",
+                                                          "text": "cleanupComments",
+                                                          "resolvedSymbol": "s0"
+                                                        },
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            75,
+                                                            28
+                                                          ],
+                                                          "type": "t25",
+                                                          "text": "text",
+                                                          "resolvedSymbol": "s7"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    75,
+                                                    35
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "toMatchInlineSnapshot"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "NoSubstitutionTemplateLiteral",
+                                              "kindCode": 15,
+                                              "pos": [
+                                                75,
+                                                57
+                                              ],
+                                              "type": "t11",
+                                              "value": "\n      \"graph TD\n      \tA-->B\n      \"\n    "
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatement",
+                      "kindCode": 244,
+                      "pos": [
+                        82,
+                        3
+                      ],
+                      "children": [
+                        {
+                          "kind": "CallExpression",
+                          "kindCode": 213,
+                          "pos": [
+                            82,
+                            3
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "Identifier",
+                              "kindCode": 80,
+                              "pos": [
+                                82,
+                                3
+                              ],
+                              "type": "t2",
+                              "text": "it",
+                              "resolvedSymbol": "s2"
+                            },
+                            {
+                              "kind": "StringLiteral",
+                              "kindCode": 11,
+                              "pos": [
+                                82,
+                                6
+                              ],
+                              "type": "t26",
+                              "value": "should remove comments at end of text with no newline"
+                            },
+                            {
+                              "kind": "ArrowFunction",
+                              "kindCode": 219,
+                              "pos": [
+                                82,
+                                63
+                              ],
+                              "type": "t27",
+                              "children": [
+                                {
+                                  "kind": "Block",
+                                  "kindCode": 241,
+                                  "pos": [
+                                    82,
+                                    69
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "VariableStatement",
+                                      "kindCode": 243,
+                                      "pos": [
+                                        83,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "VariableDeclarationList",
+                                          "kindCode": 261,
+                                          "pos": [
+                                            83,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "VariableDeclaration",
+                                              "kindCode": 260,
+                                              "pos": [
+                                                83,
+                                                11
+                                              ],
+                                              "symbol": "s8",
+                                              "type": "t28",
+                                              "flags": [
+                                                "const"
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    83,
+                                                    11
+                                                  ],
+                                                  "type": "t28",
+                                                  "text": "text",
+                                                  "resolvedSymbol": "s8"
+                                                },
+                                                {
+                                                  "kind": "NoSubstitutionTemplateLiteral",
+                                                  "kindCode": 15,
+                                                  "pos": [
+                                                    83,
+                                                    18
+                                                  ],
+                                                  "type": "t29",
+                                                  "value": "\ngraph TD\n\tA-->B\n%% This is a comment"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ExpressionStatement",
+                                      "kindCode": 244,
+                                      "pos": [
+                                        88,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "CallExpression",
+                                          "kindCode": 213,
+                                          "pos": [
+                                            88,
+                                            5
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "PropertyAccessExpression",
+                                              "kindCode": 211,
+                                              "pos": [
+                                                88,
+                                                5
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "CallExpression",
+                                                  "kindCode": 213,
+                                                  "pos": [
+                                                    88,
+                                                    5
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "Identifier",
+                                                      "kindCode": 80,
+                                                      "pos": [
+                                                        88,
+                                                        5
+                                                      ],
+                                                      "type": "t3",
+                                                      "text": "expect",
+                                                      "resolvedSymbol": "s3"
+                                                    },
+                                                    {
+                                                      "kind": "CallExpression",
+                                                      "kindCode": 213,
+                                                      "pos": [
+                                                        88,
+                                                        12
+                                                      ],
+                                                      "type": "t1",
+                                                      "children": [
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            88,
+                                                            12
+                                                          ],
+                                                          "type": "t0",
+                                                          "text": "cleanupComments",
+                                                          "resolvedSymbol": "s0"
+                                                        },
+                                                        {
+                                                          "kind": "Identifier",
+                                                          "kindCode": 80,
+                                                          "pos": [
+                                                            88,
+                                                            28
+                                                          ],
+                                                          "type": "t29",
+                                                          "text": "text",
+                                                          "resolvedSymbol": "s8"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "Identifier",
+                                                  "kindCode": 80,
+                                                  "pos": [
+                                                    88,
+                                                    35
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "toMatchInlineSnapshot"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "NoSubstitutionTemplateLiteral",
+                                              "kindCode": 15,
+                                              "pos": [
+                                                88,
+                                                57
+                                              ],
+                                              "type": "t30",
+                                              "value": "\n      \"graph TD\n\tA-->B\n      \"\n    "
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "cleanupComments",
+      "flags": []
+    },
+    "s1": {
+      "name": "describe",
+      "flags": []
+    },
+    "s2": {
+      "name": "it",
+      "flags": []
+    },
+    "s3": {
+      "name": "expect",
+      "flags": []
+    },
+    "s4": {
+      "name": "text",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s5": {
+      "name": "text",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s6": {
+      "name": "text",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s7": {
+      "name": "text",
+      "flags": [
+        "variable"
+      ]
+    },
+    "s8": {
+      "name": "text",
+      "flags": [
+        "variable"
+      ]
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "string",
+      "text": "string"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "(text: string) => string",
+      "parameters": [
+        {
+          "name": "text",
+          "type": "t1",
+          "optional": false
+        }
+      ],
+      "returnType": "t1"
+    },
+    "t2": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t3": {
+      "kind": "any",
+      "text": "ExpectStatic"
+    },
+    "t4": {
+      "kind": "stringLiteral",
+      "text": "\"comments\"",
+      "value": "comments"
+    },
+    "t6": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t5": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t7": {
+      "kind": "stringLiteral",
+      "text": "\"should remove comments\"",
+      "value": "should remove comments"
+    },
+    "t8": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t9": {
+      "kind": "stringLiteral",
+      "text": "\"\\n\\n%% This is a comment\\n%% This is another comment\\ngraph TD\\n\\tA-->B\\n%% This is a comment\\n\"",
+      "value": "\n\n%% This is a comment\n%% This is another comment\ngraph TD\n\tA-->B\n%% This is a comment\n"
+    },
+    "t10": {
+      "kind": "stringLiteral",
+      "text": "\"\\n\\n%% This is a comment\\n%% This is another comment\\ngraph TD\\n\\tA-->B\\n%% This is a comment\\n\"",
+      "value": "\n\n%% This is a comment\n%% This is another comment\ngraph TD\n\tA-->B\n%% This is a comment\n"
+    },
+    "t11": {
+      "kind": "stringLiteral",
+      "text": "\"\\n      \\\"graph TD\\n      \\tA-->B\\n      \\\"\\n    \"",
+      "value": "\n      \"graph TD\n      \tA-->B\n      \"\n    "
+    },
+    "t12": {
+      "kind": "stringLiteral",
+      "text": "\"should keep init statements when removing comments\"",
+      "value": "should keep init statements when removing comments"
+    },
+    "t13": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t14": {
+      "kind": "stringLiteral",
+      "text": "\"\\n%% This is a comment\\n\\n%% This is another comment\\n%%{init: {'theme': 'forest'}}%%\\n%%{ init: {'theme': 'space before init'}}%%\\n%%{init: {'theme': 'space after ending'}}%%\\ngraph TD\\n\\tA-->B\\n\\n\\tB-->C\\n%% This is a comment\\n\"",
+      "value": "\n%% This is a comment\n\n%% This is another comment\n%%{init: {'theme': 'forest'}}%%\n%%{ init: {'theme': 'space before init'}}%%\n%%{init: {'theme': 'space after ending'}}%%\ngraph TD\n\tA-->B\n\n\tB-->C\n%% This is a comment\n"
+    },
+    "t15": {
+      "kind": "stringLiteral",
+      "text": "\"\\n%% This is a comment\\n\\n%% This is another comment\\n%%{init: {'theme': 'forest'}}%%\\n%%{ init: {'theme': 'space before init'}}%%\\n%%{init: {'theme': 'space after ending'}}%%\\ngraph TD\\n\\tA-->B\\n\\n\\tB-->C\\n%% This is a comment\\n\"",
+      "value": "\n%% This is a comment\n\n%% This is another comment\n%%{init: {'theme': 'forest'}}%%\n%%{ init: {'theme': 'space before init'}}%%\n%%{init: {'theme': 'space after ending'}}%%\ngraph TD\n\tA-->B\n\n\tB-->C\n%% This is a comment\n"
+    },
+    "t16": {
+      "kind": "stringLiteral",
+      "text": "\"\\n      \\\"%%{init: {'theme': 'forest'}}%%\\n      %%{ init: {'theme': 'space before init'}}%%\\n      %%{init: {'theme': 'space after ending'}}%%\\n      graph TD\\n      \\tA-->B\\n\\n      \\tB-->C\\n      \\\"\\n    \"",
+      "value": "\n      \"%%{init: {'theme': 'forest'}}%%\n      %%{ init: {'theme': 'space before init'}}%%\n      %%{init: {'theme': 'space after ending'}}%%\n      graph TD\n      \tA-->B\n\n      \tB-->C\n      \"\n    "
+    },
+    "t17": {
+      "kind": "stringLiteral",
+      "text": "\"should remove indented comments\"",
+      "value": "should remove indented comments"
+    },
+    "t18": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t19": {
+      "kind": "stringLiteral",
+      "text": "\"\\n%% This is a comment\\ngraph TD\\n\\tA-->B\\n\\t%% This is a comment\\n\\tC-->D\\n\"",
+      "value": "\n%% This is a comment\ngraph TD\n\tA-->B\n\t%% This is a comment\n\tC-->D\n"
+    },
+    "t20": {
+      "kind": "stringLiteral",
+      "text": "\"\\n%% This is a comment\\ngraph TD\\n\\tA-->B\\n\\t%% This is a comment\\n\\tC-->D\\n\"",
+      "value": "\n%% This is a comment\ngraph TD\n\tA-->B\n\t%% This is a comment\n\tC-->D\n"
+    },
+    "t21": {
+      "kind": "stringLiteral",
+      "text": "\"\\n      \\\"graph TD\\n\\tA-->B\\n\\tC-->D\\n      \\\"\\n    \"",
+      "value": "\n      \"graph TD\n\tA-->B\n\tC-->D\n      \"\n    "
+    },
+    "t22": {
+      "kind": "stringLiteral",
+      "text": "\"should remove empty newlines from start\"",
+      "value": "should remove empty newlines from start"
+    },
+    "t23": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t24": {
+      "kind": "stringLiteral",
+      "text": "\"\\n\\n\\n\\n\\n%% This is a comment\\ngraph TD\\n\\tA-->B\\n\"",
+      "value": "\n\n\n\n\n%% This is a comment\ngraph TD\n\tA-->B\n"
+    },
+    "t25": {
+      "kind": "stringLiteral",
+      "text": "\"\\n\\n\\n\\n\\n%% This is a comment\\ngraph TD\\n\\tA-->B\\n\"",
+      "value": "\n\n\n\n\n%% This is a comment\ngraph TD\n\tA-->B\n"
+    },
+    "t26": {
+      "kind": "stringLiteral",
+      "text": "\"should remove comments at end of text with no newline\"",
+      "value": "should remove comments at end of text with no newline"
+    },
+    "t27": {
+      "kind": "function",
+      "text": "() => void",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t28": {
+      "kind": "stringLiteral",
+      "text": "\"\\ngraph TD\\n\\tA-->B\\n%% This is a comment\"",
+      "value": "\ngraph TD\n\tA-->B\n%% This is a comment"
+    },
+    "t29": {
+      "kind": "stringLiteral",
+      "text": "\"\\ngraph TD\\n\\tA-->B\\n%% This is a comment\"",
+      "value": "\ngraph TD\n\tA-->B\n%% This is a comment"
+    },
+    "t30": {
+      "kind": "stringLiteral",
+      "text": "\"\\n      \\\"graph TD\\n\\tA-->B\\n      \\\"\\n    \"",
+      "value": "\n      \"graph TD\n\tA-->B\n      \"\n    "
+    }
+  }
+}
