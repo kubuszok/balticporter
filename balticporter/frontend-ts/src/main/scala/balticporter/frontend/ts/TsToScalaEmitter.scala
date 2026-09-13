@@ -152,7 +152,10 @@ object TsToScalaEmitter:
         val pType = if isOptional then
           optionalParams += pName
           s"Option[$rawType] = None"
-        else rawType
+        else
+          // Integer parameter recovery: params used as array indices → Int
+          if rawType == "Double" && body.exists(b => isUsedAsIndex(pName, b)) then "Int"
+          else rawType
         // Handle array destructuring param: [x, y] → tuple
         val hasArrayBinding = p.children.exists(_.kind == "ArrayBindingPattern")
         if hasArrayBinding then
@@ -178,12 +181,15 @@ object TsToScalaEmitter:
         case None => sb.append(s"${indent}  ???\n")
       currentMutatedArrays = Set.empty
       currentOptionalParams = Set.empty
+      declaredVars.clear()
       sb.append(s"$indent}\n\n")
 
     // R7: track which variables are mutated via .push() — they need ArrayBuffer
     private var currentMutatedArrays: Set[String] = Set.empty
     // Track optional params for truthiness checks
     private var currentOptionalParams: Set[String] = Set.empty
+    // Track declared variables in current function scope (for loop var dedup)
+    private val declaredVars: mutable.Set[String] = mutable.Set.empty
 
     private def collectMutatedArrays(body: RastNode): Set[String] =
       val result = mutable.Set.empty[String]
@@ -403,11 +409,16 @@ object TsToScalaEmitter:
           for (d <- decls)
             val n = nameOf(d)
             val isConst = d.flags.contains("const")
-            val kw = if isConst then "val" else "var"
             // For-loop init: the init expr is the last child after the name
             val initExpr = d.children.drop(1).lastOption.map(emitExpr(_, file)).getOrElse("0")
             // R8: for-loop variables are typically Int (used as indices)
-            sb.append(s"$indent$kw $n: Int = $initExpr\n")
+            // Skip re-declaration if variable already declared in this scope
+            if declaredVars.contains(n) then
+              sb.append(s"$indent$n = $initExpr\n")
+            else
+              val kw = if isConst then "val" else "var"
+              sb.append(s"$indent$kw $n: Int = $initExpr\n")
+              declaredVars += n
         else
           emitStatement(initChild, file, indent)
         val cond = emitExpr(children(1), file)
@@ -902,6 +913,17 @@ object TsToScalaEmitter:
           typeNode match
             case Some(tn) => syntaxTypeToScala(tn)
             case None => "Any"
+
+    private def isUsedAsIndex(name: String, body: RastNode): Boolean =
+      var found = false
+      def walk(n: RastNode): Unit =
+        if !found && n.kind == "ElementAccessExpression" && n.children.length >= 2 then
+          val idx = n.children.last
+          if idx.text.contains(name) || idx.children.exists(_.text.contains(name)) then
+            found = true
+        n.children.foreach(walk)
+      walk(body)
+      found
 
     private def isTupleType(rt: RastType, file: RastFile): Boolean =
       if rt.text.startsWith("[") && rt.text.contains(",") then true
