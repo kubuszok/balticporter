@@ -351,3 +351,222 @@ class MermaidEmitterSpec extends munit.FunSuite:
       println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
     }
     println(s"[emit] Total: ${(infoFiles ++ errorFiles).size} diagram files written")
+
+  // -- Complete Pie diagram emission -------------------------------------------
+
+  test("pieStyles.ts -> complete PieStyles with CSS classes"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPieStyles(rast)
+    println("=== PieStyles.scala (complete emitted) ===")
+    println(scala)
+    assert(scala.contains("object PieStyles"), "should emit PieStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains(".pieTitleText") || scala.contains("pieTitleText"),
+      "should contain pieTitleText CSS class")
+    assert(scala.contains(".pieCircle") || scala.contains("pieCircle"),
+      "should contain pieCircle CSS class")
+
+  test("pieRenderer.ts -> PieDb class with sections"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPieDb(rast)
+    println("=== PieDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class PieSection"), "should have PieSection case class")
+    assert(scala.contains("final class PieDb"), "should have PieDb class")
+    assert(scala.contains("val sections"), "should have sections field")
+    assert(scala.contains("var showData"), "should have showData field")
+    assert(scala.contains("def addSection"), "should have addSection method")
+    assert(scala.contains("def total"), "should have total method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("pieRenderer.ts -> PieDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPieDiagram(rast)
+    println("=== PieDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PieDiagram"), "should emit PieDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("def parse(text: String): PieDb"), "should have parse method")
+    assert(scala.contains("def render("), "should have render method")
+    assert(scala.contains("PieParser.parse"), "should delegate to PieParser")
+    assert(scala.contains("PieRenderer.render"), "should delegate to PieRenderer")
+
+  test("pieRenderer.ts -> PieParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPieParser(rast)
+    println("=== PieParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PieParser"), "should emit PieParser object")
+    assert(scala.contains("def parse(input: String): PieDb"), "should have parse method")
+    assert(scala.contains("parsePieHeader"), "should have parsePieHeader")
+    assert(scala.contains("parseSection"), "should have parseSection")
+    assert(scala.contains("readQuotedString"), "should read quoted strings")
+    assert(scala.contains("showData"), "should handle showData")
+    assert(scala.contains("accTitle"), "should handle accTitle")
+
+  test("pieRenderer.ts -> PieRenderer with arcs, labels, and legend"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPieRenderer(rast)
+    println("=== PieRenderer.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PieRenderer"), "should emit PieRenderer object")
+    assert(scala.contains("def render(db: PieDb, config: MermaidConfig)"), "should accept PieDb and MermaidConfig")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("Accessibility.applyTo"), "should apply accessibility")
+    assert(scala.contains("createArcPath"), "should have arc path calculation")
+    assert(scala.contains("math.Pi"), "should use Pi for arc math")
+    assert(scala.contains("defaultPieColor"), "should have default pie colors")
+    assert(scala.contains("legend"), "should render legend")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  // -- Complete Packet diagram emission ----------------------------------------
+
+  test("packet -> PacketDb class with fields"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPacketDb(rast)
+    println("=== PacketDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class PacketField"), "should have PacketField case class")
+    assert(scala.contains("final class PacketDb"), "should have PacketDb class")
+    assert(scala.contains("var bitsPerRow"), "should have bitsPerRow field")
+    assert(scala.contains("def addField"), "should have addField method")
+    assert(scala.contains("def clear()"), "should have clear method")
+    assert(scala.contains("endBit < startBit"), "should validate field ranges")
+
+  test("packet -> PacketDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPacketDiagram(rast)
+    println("=== PacketDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PacketDiagram"), "should emit PacketDiagram object")
+    assert(scala.contains("packet-beta"), "should detect packet-beta keyword")
+    assert(scala.contains("PacketParser.parse"), "should delegate to PacketParser")
+    assert(scala.contains("PacketRenderer.render"), "should delegate to PacketRenderer")
+
+  test("packet -> PacketParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPacketParser(rast)
+    println("=== PacketParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PacketParser"), "should emit PacketParser object")
+    assert(scala.contains("packet-beta"), "should parse packet-beta keyword")
+    assert(scala.contains("tryParseField"), "should have tryParseField method")
+    assert(scala.contains("startBit"), "should parse start bit")
+    assert(scala.contains("endBit"), "should parse end bit")
+
+  test("packet -> PacketRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPacketRenderer(rast)
+    println("=== PacketRenderer.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PacketRenderer"), "should emit PacketRenderer object")
+    assert(scala.contains("def render(db: PacketDb, config: MermaidConfig)"), "should accept PacketDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("packetField"), "should have packetField CSS class")
+    assert(scala.contains("packetFieldLabel"), "should have packetFieldLabel CSS class")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("packet -> PacketStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val scala = dedicated.MermaidEmitter.emitPacketStyles(rast)
+    println("=== PacketStyles.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object PacketStyles"), "should emit PacketStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+
+  // -- Complete Kanban diagram emission ----------------------------------------
+
+  test("kanban -> KanbanDb class"):
+    // Kanban has no RAST file (SSG-native), use any RAST as dummy
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitKanbanDb(rast)
+    println("=== KanbanDb.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class KanbanCard"), "should have KanbanCard case class")
+    assert(scala.contains("final case class KanbanColumn"), "should have KanbanColumn case class")
+    assert(scala.contains("final class KanbanDb"), "should have KanbanDb class")
+    assert(scala.contains("def addColumn"), "should have addColumn method")
+    assert(scala.contains("def addCard"), "should have addCard method")
+    assert(scala.contains("def addCardToLast"), "should have addCardToLast method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("kanban -> KanbanDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitKanbanDiagram(rast)
+    println("=== KanbanDiagram.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object KanbanDiagram"), "should emit KanbanDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("\"kanban\""), "should detect kanban keyword")
+    assert(scala.contains("KanbanParser.parse"), "should delegate to KanbanParser")
+    assert(scala.contains("KanbanRenderer.render"), "should delegate to KanbanRenderer")
+
+  test("kanban -> KanbanParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitKanbanParser(rast)
+    println("=== KanbanParser.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object KanbanParser"), "should emit KanbanParser object")
+    assert(scala.contains("def parse(input: String): KanbanDb"), "should have parse method")
+    assert(scala.contains("\"kanban\""), "should parse kanban keyword")
+    assert(scala.contains("parseIdLabel"), "should have parseIdLabel method")
+    assert(scala.contains("addColumn"), "should create columns")
+    assert(scala.contains("addCardToLast"), "should add cards to last column")
+
+  test("kanban -> KanbanRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitKanbanRenderer(rast)
+    println("=== KanbanRenderer.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object KanbanRenderer"), "should emit KanbanRenderer object")
+    assert(scala.contains("def render(db: KanbanDb, config: MermaidConfig)"), "should accept KanbanDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("kanbanColumn"), "should have kanbanColumn CSS class")
+    assert(scala.contains("kanbanCard"), "should have kanbanCard CSS class")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("kanban -> KanbanStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitKanbanStyles(rast)
+    println("=== KanbanStyles.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("object KanbanStyles"), "should emit KanbanStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("kanbanColumn"), "should have kanbanColumn style")
+    assert(scala.contains("kanbanCard"), "should have kanbanCard style")
+
+  // -- Write complete pie/packet/kanban diagram files ---------------------------
+
+  test("write complete pie, packet, and kanban diagram files"):
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
+    java.nio.file.Files.createDirectories(outDir)
+
+    val pieStylesRast  = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+    val pieRendererRast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val packetStylesRast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val dummyRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+
+    val allFiles = List(
+      ("PieDb",      dedicated.MermaidEmitter.emitPieDb(pieRendererRast)),
+      ("PieDiagram", dedicated.MermaidEmitter.emitPieDiagram(pieRendererRast)),
+      ("PieParser",  dedicated.MermaidEmitter.emitPieParser(pieRendererRast)),
+      ("PieRenderer", dedicated.MermaidEmitter.emitPieRenderer(pieRendererRast)),
+      ("PieStyles",  dedicated.MermaidEmitter.emitPieStyles(pieStylesRast)),
+      ("PacketDb",       dedicated.MermaidEmitter.emitPacketDb(packetStylesRast)),
+      ("PacketDiagram",  dedicated.MermaidEmitter.emitPacketDiagram(packetStylesRast)),
+      ("PacketParser",   dedicated.MermaidEmitter.emitPacketParser(packetStylesRast)),
+      ("PacketRenderer", dedicated.MermaidEmitter.emitPacketRenderer(packetStylesRast)),
+      ("PacketStyles",   dedicated.MermaidEmitter.emitPacketStyles(packetStylesRast)),
+      ("KanbanDb",       dedicated.MermaidEmitter.emitKanbanDb(dummyRast)),
+      ("KanbanDiagram",  dedicated.MermaidEmitter.emitKanbanDiagram(dummyRast)),
+      ("KanbanParser",   dedicated.MermaidEmitter.emitKanbanParser(dummyRast)),
+      ("KanbanRenderer", dedicated.MermaidEmitter.emitKanbanRenderer(dummyRast)),
+      ("KanbanStyles",   dedicated.MermaidEmitter.emitKanbanStyles(dummyRast)),
+    )
+
+    for ((name, source) <- allFiles) {
+      val path = outDir.resolve(s"$name.scala")
+      java.nio.file.Files.writeString(path, source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
+    }
+    println(s"[emit] Total: ${allFiles.size} diagram files written")

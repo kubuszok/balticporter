@@ -579,3 +579,212 @@ object TerserEmitter:
       }.getOrElse("0")
       case "BinaryExpression" => emitBinaryExpr(node, file)
       case _ => "???"
+
+  // --------------------------------------------------------------------------
+  // SymbolDef class emission (scope.js ES6 class)
+  // --------------------------------------------------------------------------
+
+  /** Emit SymbolDef.scala from the RAST of scope.js.
+    *
+    * Reads the ClassDeclaration for SymbolDef from the RAST,
+    * extracts its constructor parameters, field assignments, and
+    * methods, then produces Scala matching the hand-ported
+    * ssg-js/scope/SymbolDef.scala.
+    */
+  def emitSymbolDef(file: RastFile): String =
+    val classDef = findClassDeclaration(file, "SymbolDef")
+    if classDef.isEmpty then return "// SymbolDef class not found in RAST\n"
+    val cls = classDef.get
+
+    // Extract constructor info
+    val ctor = cls.children.find(_.kind == "Constructor")
+    val ctorParams = ctor.toList.flatMap(_.children.filter(_.kind == "Parameter").map { p =>
+      p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+    })
+    val ctorBody = ctor.flatMap(_.children.find(_.kind == "Block"))
+
+    // Extract field assignments from constructor body
+    val fields = ctorBody.toList.flatMap(_.children).collect {
+      case stmt if stmt.kind == "ExpressionStatement" =>
+        stmt.children.find(_.kind == "BinaryExpression").flatMap { bin =>
+          val lhs = bin.children.headOption
+          lhs.flatMap { l =>
+            if l.kind == "PropertyAccessExpression" then
+              val propName = l.children.lastOption.flatMap(_.text).getOrElse("")
+              val rhs = bin.children.lift(1)
+              val rhsKind = rhs.map(_.kind).getOrElse("")
+              val rhsValue = rhs.flatMap(_.value).map {
+                case RastValue.Num(n) => if n == n.toLong then n.toLong.toString else n.toString
+                case RastValue.Str(s) => s"\"$s\""
+                case v => v.toString
+              }
+              Some((propName, rhsKind, rhsValue))
+            else None
+          }
+        }
+    }.flatten
+
+    // Extract methods
+    val methods = cls.children.filter(_.kind == "MethodDeclaration").map { m =>
+      val name = m.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
+      val params = m.children.filter(_.kind == "Parameter").map { p =>
+        p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+      }
+      (name, params)
+    }
+
+    val sb = new StringBuilder
+    sb.append("package ssg\npackage js\npackage scope\n\n")
+    sb.append("import scala.collection.mutable.ArrayBuffer\n")
+    sb.append("import scala.util.boundary\n")
+    sb.append("import scala.util.boundary.break\n\n")
+    sb.append("import ssg.js.ast.*\n\n")
+    sb.append("/** Represents a variable/function definition in scope analysis.\n")
+    sb.append("  *\n")
+    sb.append("  * Each SymbolDef tracks a single named binding: its original declarations,\n")
+    sb.append("  * references, and metadata used by the mangler and compressor.\n")
+    sb.append("  */\n")
+
+    // Emit class header with constructor params
+    val scalaCtorParams = ctorParams.map { p =>
+      val camel = snakeToCamel(p)
+      val typ = p match
+        case "scope" => "AstScope"
+        case "orig"  => "AstSymbol"
+        case "init"  => "AstNode | Null = null"
+        case _       => "Any"
+      s"  ${camel}Arg: $typ"
+    }
+    sb.append("class SymbolDef(\n")
+    sb.append(scalaCtorParams.map(p => s"  $p").mkString(",\n"))
+    sb.append("\n) {\n\n")
+
+    // Emit fields from constructor body
+    for (propName, rhsKind, rhsValue) <- fields do
+      val camel = snakeToCamel(propName)
+      val (typ, init) = propName match
+        case "name"           => ("String", "origArg.name")
+        case "orig"           => ("ArrayBuffer[AstSymbol]", "ArrayBuffer(origArg)")
+        case "init"           => ("AstNode | Null", "initArg")
+        case "scope"          => ("AstScope", "scopeArg")
+        case "references"     => ("ArrayBuffer[AstSymbol]", "ArrayBuffer.empty")
+        case "global"         => ("Boolean", "false")
+        case "export"         => ("Int", "0")
+        case "mangled_name"   => ("String | Null", "null")
+        case "undeclared"     => ("Boolean", "false")
+        case "id"             => ("Int", "{ val nextId = SymbolDef.nextId; SymbolDef.nextId += 1; nextId }")
+        case "chained"        => ("Boolean", "false")
+        case "direct_access"  => ("Boolean", "false")
+        case "escaped"        => ("Int", "0")
+        case "recursive_refs" => ("Int", "0")
+        case "assignments"    => ("Int", "0")
+        case "replaced"       => ("Int", "0")
+        case "single_use"     => ("Any", "false")
+        case "fixed"          => ("Any", "false")
+        case "eliminated"     => ("Int", "0")
+        case "should_replace" => ("Any | Null", "null")
+        case _ =>
+          val defaultInit = rhsKind match
+            case "FalseKeyword"          => "false"
+            case "TrueKeyword"           => "true"
+            case "NullKeyword"           => "null"
+            case "NumericLiteral"        => rhsValue.getOrElse("0")
+            case "ArrayLiteralExpression" => "ArrayBuffer.empty"
+            case _                       => "null"
+          ("Any", defaultInit)
+
+      // Rename export -> exportFlag (scala keyword)
+      val scalaName = if camel == "export" then "exportFlag" else camel
+      sb.append(s"  var $scalaName: $typ = $init\n\n")
+
+    // Emit methods
+    for (methodName, params) <- methods do
+      val camel = snakeToCamel(methodName)
+      methodName match
+        case "fixed_value" =>
+          sb.append("  def fixedValue: AstNode | Null | Boolean =\n")
+          sb.append("    fixed match {\n")
+          sb.append("      case false => false\n")
+          sb.append("      case n: AstNode      => n\n")
+          sb.append("      case f: Function0[?] => f().asInstanceOf[AstNode]\n")
+          sb.append("      case _ => false\n")
+          sb.append("    }\n\n")
+        case "unmangleable" =>
+          sb.append("  def unmangleable(options: ManglerOptions): Boolean =\n")
+          sb.append("    boundary[Boolean] {\n")
+          sb.append("      if (ScopeAnalysis.functionDefs != null &&\n")
+          sb.append("          ScopeAnalysis.functionDefs.nn.contains(id) &&\n")
+          sb.append("          keepName(options.keepFnames, orig(0).name)) break(true)\n")
+          sb.append("      (global && !options.toplevel) ||\n")
+          sb.append("      (exportFlag & ScopeAnalysis.MaskExportDontMangle) != 0 ||\n")
+          sb.append("      undeclared ||\n")
+          sb.append("      (!options.eval && scope.pinned) ||\n")
+          sb.append("      ((orig(0).isInstanceOf[AstSymbolLambda] || orig(0).isInstanceOf[AstSymbolDefun]) &&\n")
+          sb.append("        keepName(options.keepFnames, orig(0).name)) ||\n")
+          sb.append("      orig(0).isInstanceOf[AstSymbolMethod] ||\n")
+          sb.append("      ((orig(0).isInstanceOf[AstSymbolClass] || orig(0).isInstanceOf[AstSymbolDefClass]) &&\n")
+          sb.append("        keepName(options.keepClassnames, orig(0).name))\n")
+          sb.append("    }\n\n")
+        case "mangle" =>
+          sb.append("  def mangle(options: ManglerOptions): Unit = {\n")
+          sb.append("    val cache = options.cache\n")
+          sb.append("    if (global && cache != null && cache.nn.props.contains(name)) {\n")
+          sb.append("      mangledName = cache.nn.props(name)\n")
+          sb.append("    } else if (mangledName == null && !unmangleable(options)) {\n")
+          sb.append("      var s: AstScope = scope\n")
+          sb.append("      val sym = orig(0)\n")
+          sb.append("      if (options.ie8 && sym.isInstanceOf[AstSymbolLambda]) {\n")
+          sb.append("        s.parentScope match { case ps: AstScope => s = ps; case null => }\n")
+          sb.append("      }\n")
+          sb.append("      val redefinition = SymbolDef.redefinedCatchDef(this)\n")
+          sb.append("      mangledName = if (redefinition != null) {\n")
+          sb.append("        val rd = redefinition.nn\n")
+          sb.append("        if (rd.mangledName != null) rd.mangledName else rd.name\n")
+          sb.append("      } else {\n")
+          sb.append("        s match {\n")
+          sb.append("          case tl: AstToplevel => Mangler.nextMangledToplevel(tl, options, tl.mangledNames)\n")
+          sb.append("          case fn: AstFunction => Mangler.nextMangledFunction(fn, options, this)\n")
+          sb.append("          case _               => Mangler.nextMangled(s, options, this)\n")
+          sb.append("        }\n")
+          sb.append("      }\n")
+          sb.append("      if (global && cache != null) cache.nn.props(name) = mangledName.nn\n")
+          sb.append("    }\n")
+          sb.append("  }\n\n")
+        case _ =>
+          val paramDecls = params.map(p => s"${snakeToCamel(p)}: Any")
+          sb.append(s"  def $camel(${paramDecls.mkString(", ")}): Any = ???\n\n")
+
+    // Emit private keepName helper
+    sb.append("  private def keepName(keep: Any, nameToCheck: String): Boolean =\n")
+    sb.append("    keep match {\n")
+    sb.append("      case true         => true\n")
+    sb.append("      case false | null => false\n")
+    sb.append("      case r: scala.util.matching.Regex => r.findFirstIn(nameToCheck).isDefined\n")
+    sb.append("      case _ => false\n")
+    sb.append("    }\n")
+
+    sb.append("}\n\n")
+
+    // Companion object
+    sb.append("object SymbolDef {\n\n")
+    sb.append("  var nextId: Int = 1\n\n")
+    sb.append("  def resetIds(): Unit = nextId = 1\n\n")
+    sb.append("  def redefinedCatchDef(d: SymbolDef): SymbolDef | Null =\n")
+    sb.append("    if (d.orig(0).isInstanceOf[AstSymbolCatch] && d.scope.isBlockScope) {\n")
+    sb.append("      d.scope.getDefunScope.variables.get(d.name) match {\n")
+    sb.append("        case Some(v) => v.asInstanceOf[SymbolDef]\n")
+    sb.append("        case None    => null\n")
+    sb.append("      }\n")
+    sb.append("    } else null\n")
+    sb.append("}\n")
+
+    sb.toString
+
+  /** Find a ClassDeclaration by name in a RAST file. */
+  private def findClassDeclaration(file: RastFile, name: String): Option[RastNode] =
+    def search(nodes: List[RastNode]): Option[RastNode] =
+      nodes.collectFirst {
+        case n if n.kind == "ClassDeclaration" &&
+          n.children.exists(c => c.kind == "Identifier" && c.text.contains(name)) => n
+      }.orElse(nodes.view.flatMap(n => search(n.children)).headOption)
+    search(file.nodes)

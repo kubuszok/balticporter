@@ -210,3 +210,65 @@ class TerserEmitterSpec extends munit.FunSuite:
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
     val classes = dedicated.TerserEmitter.extractClassDeclarations(rast)
     assert(classes.contains("SymbolDef"), "should find SymbolDef class")
+
+  // -----------------------------------------------------------------------
+  // SymbolDef class emission
+  // -----------------------------------------------------------------------
+
+  test("scope.js: emit SymbolDef class"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val scala = dedicated.TerserEmitter.emitSymbolDef(rast)
+    println("=== SymbolDef.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("class SymbolDef"), "should emit SymbolDef class")
+    assert(scala.contains("scopeArg: AstScope"), "should have scope constructor param")
+    assert(scala.contains("origArg: AstSymbol") || scala.contains("orig"), "should have orig constructor param")
+    // Fields
+    assert(scala.contains("var name: String"), "should have name field")
+    assert(scala.contains("var scope: AstScope"), "should have scope field")
+    assert(scala.contains("var global: Boolean"), "should have global field")
+    assert(scala.contains("var mangledName: String | Null"), "should have mangledName field")
+    assert(scala.contains("var undeclared: Boolean"), "should have undeclared field")
+    assert(scala.contains("var id: Int"), "should have id field")
+    assert(scala.contains("var references: ArrayBuffer"), "should have references field")
+    assert(scala.contains("var chained: Boolean"), "should have chained field")
+    assert(scala.contains("var directAccess: Boolean"), "should have directAccess field")
+    assert(scala.contains("var escaped: Int"), "should have escaped field")
+    assert(scala.contains("var recursiveRefs: Int"), "should have recursiveRefs field")
+    assert(scala.contains("var assignments: Int"), "should have assignments field")
+    assert(scala.contains("var replaced: Int"), "should have replaced field")
+    assert(scala.contains("var singleUse: Any"), "should have singleUse field")
+    assert(scala.contains("var fixed: Any"), "should have fixed field")
+    assert(scala.contains("var eliminated: Int"), "should have eliminated field")
+    // Methods
+    assert(scala.contains("def fixedValue"), "should have fixedValue method")
+    assert(scala.contains("def unmangleable"), "should have unmangleable method")
+    assert(scala.contains("def mangle"), "should have mangle method")
+    // Companion object
+    assert(scala.contains("object SymbolDef"), "should have companion object")
+    assert(scala.contains("var nextId: Int"), "should have nextId counter")
+    assert(scala.contains("def resetIds()"), "should have resetIds method")
+    assert(scala.contains("def redefinedCatchDef"), "should have redefinedCatchDef method")
+    // Export keyword -> exportFlag (Scala keyword avoidance)
+    assert(scala.contains("exportFlag"), "should rename export to exportFlag")
+    assert(!scala.contains("var export:"), "should NOT have bare 'export' as field name")
+
+  test("scope.js: emitted SymbolDef matches hand-port structure"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val scala = dedicated.TerserEmitter.emitSymbolDef(rast)
+    // Verify key patterns from hand port
+    assert(scala.contains("ArrayBuffer(origArg)"), "orig should be initialized with constructor param")
+    assert(scala.contains("origArg.name"), "name should come from orig symbol")
+    assert(scala.contains("SymbolDef.nextId"), "id should use companion nextId counter")
+    assert(scala.contains("AstSymbolCatch"), "redefinedCatchDef should check AstSymbolCatch")
+    assert(scala.contains("ManglerOptions"), "unmangleable should take ManglerOptions")
+    assert(scala.contains("keepName"), "should have keepName helper")
+
+  test("scope.js: write emitted SymbolDef to target"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val scala = dedicated.TerserEmitter.emitSymbolDef(rast)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val path = outDir.resolve("SymbolDef.scala")
+    java.nio.file.Files.writeString(path, scala)
+    println(s"[emit] SymbolDef.scala: ${scala.linesIterator.size} lines -> $path")
