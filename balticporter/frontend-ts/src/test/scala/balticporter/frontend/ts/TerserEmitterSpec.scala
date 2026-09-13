@@ -497,3 +497,39 @@ class TerserEmitterSpec extends munit.FunSuite:
     val path = outDir.resolve("AstToken.scala")
     java.nio.file.Files.writeString(path, scala)
     println(s"[emit] AstToken.scala: ${scala.linesIterator.size} lines -> $path")
+
+  // -----------------------------------------------------------------------
+  // AST constants emission
+  // -----------------------------------------------------------------------
+
+  test("ast: emit AstConstants with leaf node classes"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstConstants(dummyRast)
+    println("=== AstConstants.scala (emitted) ===")
+    println(scala)
+    assert(scala.contains("final case class RegExpValue"), "should have RegExpValue")
+    assert(scala.contains("trait AstConstant extends AstNode"), "should have AstConstant trait")
+    assert(scala.contains("class AstString extends AstNode with AstConstant"), "should have AstString")
+    assert(scala.contains("class AstNumber extends AstNode with AstConstant"), "should have AstNumber")
+    assert(scala.contains("class AstBigInt extends AstNode with AstConstant"), "should have AstBigInt")
+    assert(scala.contains("class AstRegExp extends AstNode with AstConstant"), "should have AstRegExp")
+    assert(scala.contains("trait AstAtom extends AstConstant"), "should have AstAtom trait")
+    assert(scala.contains("class AstNull"), "should have AstNull")
+    assert(scala.contains("class AstNaN"), "should have AstNaN")
+    assert(scala.contains("class AstUndefined"), "should have AstUndefined")
+    assert(scala.contains("class AstInfinity"), "should have AstInfinity")
+    assert(scala.contains("class AstHole"), "should have AstHole")
+    assert(scala.contains("trait AstBoolean extends AstAtom"), "should have AstBoolean trait")
+    assert(scala.contains("class AstTrue"), "should have AstTrue")
+    assert(scala.contains("class AstFalse"), "should have AstFalse")
+    assert(scala.contains("var value: Double = 0.0"), "AstNumber should have Double value")
+    assert(scala.contains("var value: RegExpValue"), "AstRegExp should have RegExpValue")
+
+  test("ast: write emitted AstConstants to target"):
+    val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstConstants(dummyRast)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val path = outDir.resolve("AstConstants.scala")
+    java.nio.file.Files.writeString(path, scala)
+    println(s"[emit] AstConstants.scala: ${scala.linesIterator.size} lines -> $path")

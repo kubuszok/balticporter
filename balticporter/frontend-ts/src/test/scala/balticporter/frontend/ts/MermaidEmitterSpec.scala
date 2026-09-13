@@ -712,3 +712,188 @@ class MermaidEmitterSpec extends munit.FunSuite:
       println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
     }
     println(s"[emit] Total: ${allFiles.size} cynefin+treeview diagram files written")
+
+  // -- Complete Wardley diagram emission ----------------------------------------
+
+  test("wardley -> WardleyDb class"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitWardleyDb(rast)
+    assert(scala.contains("final case class WardleyComponent"), "should have WardleyComponent case class")
+    assert(scala.contains("final case class WardleyLink"), "should have WardleyLink case class")
+    assert(scala.contains("final class WardleyDb"), "should have WardleyDb class")
+    assert(scala.contains("def addComponent"), "should have addComponent method")
+    assert(scala.contains("def addLink"), "should have addLink method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("wardley -> WardleyDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitWardleyDiagram(rast)
+    assert(scala.contains("object WardleyDiagram"), "should emit WardleyDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("\"wardley\""), "should detect wardley keyword")
+    assert(scala.contains("WardleyParser.parse"), "should delegate to WardleyParser")
+    assert(scala.contains("WardleyRenderer.render"), "should delegate to WardleyRenderer")
+
+  test("wardley -> WardleyParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitWardleyParser(rast)
+    assert(scala.contains("object WardleyParser"), "should emit WardleyParser object")
+    assert(scala.contains("def parse(input: String): WardleyDb"), "should have parse method")
+    assert(scala.contains("\"wardley\""), "should parse wardley keyword")
+    assert(scala.contains("component"), "should parse component lines")
+    assert(scala.contains("-->"), "should parse dependency links")
+
+  test("wardley -> WardleyRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitWardleyRenderer(rast)
+    assert(scala.contains("object WardleyRenderer"), "should emit WardleyRenderer object")
+    assert(scala.contains("def render(db: WardleyDb, config: MermaidConfig)"), "should accept WardleyDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("wardleyComponent"), "should have wardleyComponent CSS class")
+    assert(scala.contains("wardleyLink"), "should have wardleyLink CSS class")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("wardley -> WardleyStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitWardleyStyles(rast)
+    assert(scala.contains("object WardleyStyles"), "should emit WardleyStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("wardleyTitle"), "should have wardleyTitle style")
+    assert(scala.contains("wardleyComponent"), "should have wardleyComponent style")
+
+  // -- Complete Ishikawa diagram emission ----------------------------------------
+
+  test("ishikawa -> IshikawaDb class"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitIshikawaDb(rast)
+    assert(scala.contains("final case class CauseBranch"), "should have CauseBranch case class")
+    assert(scala.contains("final class IshikawaDb"), "should have IshikawaDb class")
+    assert(scala.contains("def setEffect"), "should have setEffect method")
+    assert(scala.contains("def addBranch"), "should have addBranch method")
+    assert(scala.contains("def addCause"), "should have addCause method")
+    assert(scala.contains("def addCauseToLast"), "should have addCauseToLast method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("ishikawa -> IshikawaDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitIshikawaDiagram(rast)
+    assert(scala.contains("object IshikawaDiagram"), "should emit IshikawaDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("\"ishikawa\""), "should detect ishikawa keyword")
+    assert(scala.contains("IshikawaParser.parse"), "should delegate to IshikawaParser")
+    assert(scala.contains("IshikawaRenderer.render"), "should delegate to IshikawaRenderer")
+
+  test("ishikawa -> IshikawaParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitIshikawaParser(rast)
+    assert(scala.contains("object IshikawaParser"), "should emit IshikawaParser object")
+    assert(scala.contains("def parse(input: String): IshikawaDb"), "should have parse method")
+    assert(scala.contains("\"ishikawa\""), "should parse ishikawa keyword")
+    assert(scala.contains("setEffect"), "should parse effect")
+    assert(scala.contains("addBranch"), "should parse branches")
+    assert(scala.contains("addCauseToLast"), "should add causes to last branch")
+
+  test("ishikawa -> IshikawaRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitIshikawaRenderer(rast)
+    assert(scala.contains("object IshikawaRenderer"), "should emit IshikawaRenderer object")
+    assert(scala.contains("def render(db: IshikawaDb, config: MermaidConfig)"), "should accept IshikawaDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("ishikawaSpine"), "should have ishikawaSpine CSS class")
+    assert(scala.contains("ishikawaBranch"), "should have ishikawaBranch CSS class")
+    assert(scala.contains("fishhead"), "should have arrowhead marker")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("ishikawa -> IshikawaStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitIshikawaStyles(rast)
+    assert(scala.contains("object IshikawaStyles"), "should emit IshikawaStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("ishikawaSpine"), "should have ishikawaSpine style")
+    assert(scala.contains("ishikawaEffect"), "should have ishikawaEffect style")
+    assert(scala.contains("ishikawaBranch"), "should have ishikawaBranch style")
+    assert(scala.contains("ishikawaCause"), "should have ishikawaCause style")
+
+  // -- Complete Venn diagram emission ----------------------------------------
+
+  test("venn -> VennDb class"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitVennDb(rast)
+    assert(scala.contains("final case class VennSet"), "should have VennSet case class")
+    assert(scala.contains("final case class VennIntersection"), "should have VennIntersection case class")
+    assert(scala.contains("final class VennDb"), "should have VennDb class")
+    assert(scala.contains("def addSet"), "should have addSet method")
+    assert(scala.contains("def addIntersection"), "should have addIntersection method")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("venn -> VennDiagram facade"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitVennDiagram(rast)
+    assert(scala.contains("object VennDiagram"), "should emit VennDiagram object")
+    assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
+    assert(scala.contains("\"venn-beta\""), "should detect venn-beta keyword")
+    assert(scala.contains("VennParser.parse"), "should delegate to VennParser")
+    assert(scala.contains("VennRenderer.render"), "should delegate to VennRenderer")
+
+  test("venn -> VennParser"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitVennParser(rast)
+    assert(scala.contains("object VennParser"), "should emit VennParser object")
+    assert(scala.contains("def parse(input: String): VennDb"), "should have parse method")
+    assert(scala.contains("\"venn-beta\""), "should parse venn-beta keyword")
+    assert(scala.contains("tryParseSet"), "should have tryParseSet method")
+    assert(scala.contains("tryParseIntersection"), "should have tryParseIntersection method")
+    assert(scala.contains("Scanner"), "should use Scanner parser")
+
+  test("venn -> VennRenderer"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitVennRenderer(rast)
+    assert(scala.contains("object VennRenderer"), "should emit VennRenderer object")
+    assert(scala.contains("def render(db: VennDb, config: MermaidConfig)"), "should accept VennDb")
+    assert(scala.contains("SvgBuilder.createSvg"), "should create SVG")
+    assert(scala.contains("vennSet"), "should have vennSet CSS class")
+    assert(scala.contains("vennSetLabel"), "should have vennSetLabel CSS class")
+    assert(scala.contains("vennIntersectionLabel"), "should have vennIntersectionLabel CSS class")
+    assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
+
+  test("venn -> VennStyles"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val scala = dedicated.MermaidEmitter.emitVennStyles(rast)
+    assert(scala.contains("object VennStyles"), "should emit VennStyles object")
+    assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
+    assert(scala.contains("vennTitle"), "should have vennTitle style")
+    assert(scala.contains("vennSet"), "should have vennSet style")
+    assert(scala.contains("vennSetLabel"), "should have vennSetLabel style")
+
+  // -- Write wardley, ishikawa, venn diagram files ----------------------------
+
+  test("write complete wardley, ishikawa, and venn diagram files"):
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
+    java.nio.file.Files.createDirectories(outDir)
+
+    val dummyRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+
+    val allFiles = List(
+      ("WardleyDb",       dedicated.MermaidEmitter.emitWardleyDb(dummyRast)),
+      ("WardleyDiagram",  dedicated.MermaidEmitter.emitWardleyDiagram(dummyRast)),
+      ("WardleyParser",   dedicated.MermaidEmitter.emitWardleyParser(dummyRast)),
+      ("WardleyRenderer", dedicated.MermaidEmitter.emitWardleyRenderer(dummyRast)),
+      ("WardleyStyles",   dedicated.MermaidEmitter.emitWardleyStyles(dummyRast)),
+      ("IshikawaDb",       dedicated.MermaidEmitter.emitIshikawaDb(dummyRast)),
+      ("IshikawaDiagram",  dedicated.MermaidEmitter.emitIshikawaDiagram(dummyRast)),
+      ("IshikawaParser",   dedicated.MermaidEmitter.emitIshikawaParser(dummyRast)),
+      ("IshikawaRenderer", dedicated.MermaidEmitter.emitIshikawaRenderer(dummyRast)),
+      ("IshikawaStyles",   dedicated.MermaidEmitter.emitIshikawaStyles(dummyRast)),
+      ("VennDb",       dedicated.MermaidEmitter.emitVennDb(dummyRast)),
+      ("VennDiagram",  dedicated.MermaidEmitter.emitVennDiagram(dummyRast)),
+      ("VennParser",   dedicated.MermaidEmitter.emitVennParser(dummyRast)),
+      ("VennRenderer", dedicated.MermaidEmitter.emitVennRenderer(dummyRast)),
+      ("VennStyles",   dedicated.MermaidEmitter.emitVennStyles(dummyRast)),
+    )
+
+    for ((name, source) <- allFiles) {
+      val path = outDir.resolve(s"$name.scala")
+      java.nio.file.Files.writeString(path, source)
+      println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
+    }
+    println(s"[emit] Total: ${allFiles.size} wardley+ishikawa+venn diagram files written")

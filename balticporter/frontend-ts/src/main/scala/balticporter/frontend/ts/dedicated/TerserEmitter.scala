@@ -1274,6 +1274,65 @@ object TerserEmitter:
     sb.append("}\n")
     sb.toString
 
+  // --------------------------------------------------------------------------
+  // AST constants emission (ast.js constant/atom nodes)
+  // --------------------------------------------------------------------------
+
+  /** Emit AstConstants.scala — literal/constant AST leaf nodes. */
+  def emitAstConstants(file: RastFile): String =
+    val sb = new StringBuilder
+    sb.append("package ssg\npackage js\npackage ast\n\n")
+    sb.append("/** Value holder for regular expressions since Scala has no native RegExp literal. */\n")
+    sb.append("final case class RegExpValue(source: String, flags: String)\n\n")
+    sb.append("/** Base class for all constants. */\n")
+    sb.append("trait AstConstant extends AstNode\n\n")
+    // String/Number/BigInt/RegExp
+    sb.append("class AstString extends AstNode with AstConstant {\n")
+    sb.append("  var value:       String = \"\"\n")
+    sb.append("  var quote:       String = \"\"\n")
+    sb.append("  var annotations: Int    = 0\n")
+    sb.append("  def nodeType: String = \"String\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstNumber extends AstNode with AstConstant {\n")
+    sb.append("  var value: Double = 0.0\n")
+    sb.append("  var raw:   String = \"\"\n")
+    sb.append("  def nodeType: String = \"Number\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstBigInt extends AstNode with AstConstant {\n")
+    sb.append("  var value: String = \"\"\n")
+    sb.append("  var raw:   String = \"\"\n")
+    sb.append("  def nodeType: String = \"BigInt\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstRegExp extends AstNode with AstConstant {\n")
+    sb.append("  var value: RegExpValue = RegExpValue(\"\", \"\")\n")
+    sb.append("  def nodeType: String = \"RegExp\"\n")
+    sb.append("}\n\n")
+    // Atoms
+    sb.append("trait AstAtom extends AstConstant\n\n")
+    sb.append("class AstNull extends AstNode with AstAtom {\n")
+    sb.append("  def nodeType: String = \"Null\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstNaN extends AstNode with AstAtom {\n")
+    sb.append("  def nodeType: String = \"NaN\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstUndefined extends AstNode with AstAtom {\n")
+    sb.append("  def nodeType: String = \"Undefined\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstInfinity extends AstNode with AstAtom {\n")
+    sb.append("  def nodeType: String = \"Infinity\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstHole extends AstNode with AstAtom {\n")
+    sb.append("  def nodeType: String = \"Hole\"\n")
+    sb.append("}\n\n")
+    sb.append("trait AstBoolean extends AstAtom\n\n")
+    sb.append("class AstTrue extends AstNode with AstBoolean {\n")
+    sb.append("  def nodeType: String = \"True\"\n")
+    sb.append("}\n\n")
+    sb.append("class AstFalse extends AstNode with AstBoolean {\n")
+    sb.append("  def nodeType: String = \"False\"\n")
+    sb.append("}\n")
+    sb.toString
+
   /** Find a ClassDeclaration by name in a RAST file. */
   private def findClassDeclaration(file: RastFile, name: String): Option[RastNode] =
     def search(nodes: List[RastNode]): Option[RastNode] =
