@@ -38,13 +38,15 @@ object DefmethodBodyTranslator:
       extractProtoAssignment(node).foreach(result += _)
     result.toList
 
-  /** Translate a DEFMETHOD/prototype body from its RAST Block node to Scala. */
+  /** Translate a DEFMETHOD/prototype body from its RAST Block node to Scala.
+    * @param thisBinding if set, `this.x` becomes `$thisBinding.x` (e.g., "n" in pattern-match arms) */
   def translateBody(
       entry: TerserEmitter.DefmethodEntry,
       hierarchy: List[TerserEmitter.DefnodeClass],
       indent: String = "    ",
+      thisBinding: String = "this",
   ): TranslationResult =
-    val ctx = new BodyContext(entry, hierarchy, indent)
+    val ctx = new BodyContext(entry, hierarchy, indent, thisBinding)
     ctx.translateBlock(entry.bodyNode)
     TranslationResult(
       scalaBody = ctx.result(),
@@ -210,6 +212,7 @@ object DefmethodBodyTranslator:
       @annotation.unused entry: TerserEmitter.DefmethodEntry,
       hierarchy: List[TerserEmitter.DefnodeClass],
       baseIndent: String,
+      thisBinding: String = "this",
   ):
     val sb = new StringBuilder
     val refusals = mutable.ListBuffer.empty[String]
@@ -512,11 +515,11 @@ object DefmethodBodyTranslator:
       val obj = children.head
       val prop = children.last.text.getOrElse("")
 
-      // this.x -> translate known properties
+      // this.x -> translate known properties (using thisBinding for pattern-match context)
       if obj.kind == "ThisKeyword" then
         prop match
-          case "TYPE" => "this.nodeType"
-          case _ => s"this.${snakeToCamel(prop)}"
+          case "TYPE" => s"$thisBinding.nodeType"
+          case _ => s"$thisBinding.${snakeToCamel(prop)}"
       // AST_X.prototype -> skip (handled by prototype extraction)
       else if obj.kind == "PropertyAccessExpression" then
         val objParts = obj.children

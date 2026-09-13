@@ -305,7 +305,7 @@ object TerserCompressEmitter:
 
         for entry <- family do
           val scalaClass = astVarToScalaName(entry.className)
-          val result = DefmethodBodyTranslator.translateBody(entry, hierarchy, "      ")
+          val result = DefmethodBodyTranslator.translateBody(entry, hierarchy, "      ", thisBinding = "n")
           totalRefusals += result.refusalCount
           if result.isComplete then full += 1
           else if result.refusalCount <= 2 then partial += 1
