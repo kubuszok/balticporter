@@ -258,3 +258,12 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
       println()
 
     assert(emitted.contains("hachure"), "should emit hachure")
+
+  test("hachure-fill → dedicated emitter"):
+    val rast = loadRast("/rast/hachure-fill/src/hachure.rast.json")
+    val scala = dedicated.HachureFillEmitter.emit(rast)
+    println("=== HachureFill-dedicated.scala ===")
+    println(scala)
+    assert(scala.contains("object HachureFill"), "should emit HachureFill object")
+    assert(scala.contains("case class Point"), "should emit Point case class")
+    assert(scala.contains("def hachureLines"), "should emit hachureLines method")
