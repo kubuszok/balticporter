@@ -243,15 +243,20 @@ object TerserCompressEmitter:
     * Extracts DEFMETHODs (both direct and IIFE-wrapped) from the RAST,
     * translates each body using DefmethodBodyTranslator, and emits a
     * Scala object with all methods.
+    *
+    * When a type oracle is provided, parameter types and return types are
+    * derived from the hand-ported reference instead of defaulting to `Any`.
     */
   def emitDefmethodModule(
       file: RastFile,
       moduleName: String,
       objectName: String,
       hierarchy: List[TerserEmitter.DefnodeClass],
+      oracle: Option[ReferenceTypeOracle.TypeOracle] = None,
   ): (String, ModuleTranslationSummary) =
     val entries = extractAllDefmethods(file)
     val freeFns = TerserEmitter.extractFreeFunctions(file)
+    val refObj = oracle.map(_ => ReferenceTypeOracle.emitterToReferenceObject.getOrElse(objectName, objectName))
 
     val sb = new StringBuilder
     sb.append(s"package ssg\npackage js\npackage compress\n\n")
@@ -275,6 +280,7 @@ object TerserCompressEmitter:
     for methodName <- sortedMethods do
       val family = byMethod(methodName)
       val scalaMethod = snakeToCamel(methodName)
+      val oracleSig = for o <- oracle; r <- refObj; sig <- o.get(r, scalaMethod) yield sig
       sb.append(s"  // --- $methodName (${family.size} overrides) ---\n\n")
 
       if family.size == 1 then
@@ -287,21 +293,31 @@ object TerserCompressEmitter:
         else if result.refusalCount <= 2 then partial += 1
         else refused += 1
 
-        val paramDecls = entry.params.map(p => s"${snakeToCamel(p)}: Any")
+        val paramDecls = entry.params.map { p =>
+          val camelP = snakeToCamel(p)
+          val tpe = oracleSig.flatMap(_.params.find(_.name == camelP).map(_.tpe)).getOrElse("Any")
+          s"$camelP: $tpe"
+        }
         val paramStr = if paramDecls.isEmpty then s"(node: $scalaClass)" else s"(node: $scalaClass, ${paramDecls.mkString(", ")})"
+        val retType = oracleSig.map(_.returnType).getOrElse("Any")
         val statusComment =
           if result.isComplete then ""
           else s" /* ${result.refusalCount} untranslated: ${result.refusalReasons.take(3).mkString(", ")} */"
 
-        sb.append(s"  def $scalaMethod$paramStr: Any =$statusComment\n")
+        sb.append(s"  def $scalaMethod$paramStr: $retType =$statusComment\n")
         sb.append(result.scalaBody)
         sb.append("\n")
       else
         // Multiple overrides: emit as pattern-match function
         val allParams = family.flatMap(_.params).distinct
-        val paramDecls = allParams.map(p => s"${snakeToCamel(p)}: Any")
+        val paramDecls = allParams.map { p =>
+          val camelP = snakeToCamel(p)
+          val tpe = oracleSig.flatMap(_.params.find(_.name == camelP).map(_.tpe)).getOrElse("Any")
+          s"$camelP: $tpe"
+        }
+        val retType = oracleSig.map(_.returnType).getOrElse("Any")
         val paramStr = if paramDecls.isEmpty then "(node: AstNode)" else s"(node: AstNode, ${paramDecls.mkString(", ")})"
-        sb.append(s"  def $scalaMethod$paramStr: Any = node match {\n")
+        sb.append(s"  def $scalaMethod$paramStr: $retType = node match {\n")
 
         for entry <- family do
           val scalaClass = astVarToScalaName(entry.className)
@@ -326,6 +342,7 @@ object TerserCompressEmitter:
       sb.append("  // --- Free functions ---\n\n")
       for fn <- freeFns do
         val scalaName = snakeToCamel(fn.name)
+        val oracleSig = for o <- oracle; r <- refObj; sig <- o.get(r, scalaName) yield sig
         val fnEntry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
         val result = DefmethodBodyTranslator.translateBody(fnEntry, hierarchy, "    ")
         totalRefusals += result.refusalCount
@@ -333,13 +350,18 @@ object TerserCompressEmitter:
         else if result.refusalCount <= 2 then partial += 1
         else refused += 1
 
-        val paramDecls = fn.params.map(p => s"${snakeToCamel(p)}: Any")
+        val paramDecls = fn.params.map { p =>
+          val camelP = snakeToCamel(p)
+          val tpe = oracleSig.flatMap(_.params.find(_.name == camelP).map(_.tpe)).getOrElse("Any")
+          s"$camelP: $tpe"
+        }
+        val retType = oracleSig.map(_.returnType).getOrElse("Any")
         val paramStr = if paramDecls.isEmpty then "" else s"(${paramDecls.mkString(", ")})"
         val statusComment =
           if result.isComplete then ""
           else s" /* ${result.refusalCount} untranslated: ${result.refusalReasons.take(3).mkString(", ")} */"
 
-        sb.append(s"  def $scalaName$paramStr: Any =$statusComment\n")
+        sb.append(s"  def $scalaName$paramStr: $retType =$statusComment\n")
         sb.append(result.scalaBody)
         sb.append("\n")
 
@@ -367,15 +389,20 @@ object TerserCompressEmitter:
     * Modules like common.js, tighten-body.js, inline.js contain standalone
     * function declarations rather than DEFMETHOD calls. These are translated
     * using the same DefmethodBodyTranslator infrastructure.
+    *
+    * When a type oracle is provided, parameter types and return types are
+    * derived from the hand-ported reference instead of defaulting to `Any`.
     */
   def emitFreeFunctionModule(
       file: RastFile,
       moduleName: String,
       objectName: String,
       hierarchy: List[TerserEmitter.DefnodeClass],
+      oracle: Option[ReferenceTypeOracle.TypeOracle] = None,
   ): (String, ModuleTranslationSummary) =
     val freeFns = TerserEmitter.extractFreeFunctions(file)
     val constants = extractModuleConstants(file)
+    val refObj = oracle.map(_ => ReferenceTypeOracle.emitterToReferenceObject.getOrElse(objectName, objectName))
 
     val sb = new StringBuilder
     sb.append(s"package ssg\npackage js\npackage compress\n\n")
@@ -400,6 +427,7 @@ object TerserCompressEmitter:
     // Emit functions
     for fn <- freeFns do
       val scalaName = snakeToCamel(fn.name)
+      val oracleSig = for o <- oracle; r <- refObj; sig <- o.get(r, scalaName) yield sig
       val fnEntry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
       val result = DefmethodBodyTranslator.translateBody(fnEntry, hierarchy, "    ")
       totalRefusals += result.refusalCount
@@ -407,13 +435,18 @@ object TerserCompressEmitter:
       else if result.refusalCount <= 2 then partial += 1
       else refused += 1
 
-      val paramDecls = fn.params.map(p => s"${snakeToCamel(p)}: Any")
+      val paramDecls = fn.params.map { p =>
+        val camelP = snakeToCamel(p)
+        val tpe = oracleSig.flatMap(_.params.find(_.name == camelP).map(_.tpe)).getOrElse("Any")
+        s"$camelP: $tpe"
+      }
+      val retType = oracleSig.map(_.returnType).getOrElse("Any")
       val paramStr = if paramDecls.isEmpty then "" else s"(${paramDecls.mkString(", ")})"
       val statusComment =
         if result.isComplete then ""
         else s" /* ${result.refusalCount} untranslated: ${result.refusalReasons.take(3).mkString(", ")} */"
 
-      sb.append(s"  def $scalaName$paramStr: Any =$statusComment\n")
+      sb.append(s"  def $scalaName$paramStr: $retType =$statusComment\n")
       sb.append(result.scalaBody)
       sb.append("\n")
 
@@ -458,16 +491,21 @@ object TerserCompressEmitter:
     CompressModule("inline",                 "Inline",              "/rast/terser/lib/compress/inline.rast.json",                  false),
   )
 
-  /** Emit all compress modules, returning summaries. */
+  /** Emit all compress modules, returning summaries.
+    *
+    * When a type oracle is provided, parameter types and return types are
+    * derived from the hand-ported reference instead of defaulting to `Any`.
+    */
   def emitAll(
       loadRast: String => RastFile,
       hierarchy: List[TerserEmitter.DefnodeClass],
+      oracle: Option[ReferenceTypeOracle.TypeOracle] = None,
   ): List[(CompressModule, String, ModuleTranslationSummary)] =
     AllModules.map { mod =>
       val file = loadRast(mod.rastResource)
       val (source, summary) =
-        if mod.isDeFmethod then emitDefmethodModule(file, mod.moduleName, mod.objectName, hierarchy)
-        else emitFreeFunctionModule(file, mod.moduleName, mod.objectName, hierarchy)
+        if mod.isDeFmethod then emitDefmethodModule(file, mod.moduleName, mod.objectName, hierarchy, oracle)
+        else emitFreeFunctionModule(file, mod.moduleName, mod.objectName, hierarchy, oracle)
       (mod, source, summary)
     }
 
