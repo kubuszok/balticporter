@@ -128,7 +128,27 @@ class TsMinterSpec extends munit.FunSuite:
       braceStyle = true,
       errorClassName = "PathDataParseError",
       extraDeclarations = Map(
-        "parser" -> "final class PathDataParseError(message: String) extends RuntimeException(message)",
+        "parser" -> """final class PathDataParseError(message: String) extends RuntimeException(message)
+  private def jsNum(v: Double): String = {
+    if (v.isNaN) { "NaN" }
+    else if (v.isPosInfinity) { "Infinity" }
+    else if (v.isNegInfinity) { "-Infinity" }
+    else if (v == Math.rint(v) && Math.abs(v) < 1e21) {
+      new java.math.BigDecimal(v).toBigInteger.toString
+    } else {
+      java.lang.Double.toString(v)
+    }
+  }""",
+      ),
+      postProcess = Map(
+        "parser" -> List(
+          ("tokens \\+= data\\((\\d+)\\)", "tokens += jsNum(data\\($1\\))"),
+          ("tokens \\+\\+= data", "data.foreach(d => tokens += jsNum(d))"),
+          ("\"\" \\+ data\\((\\d+)\\)", "jsNum(data\\($1\\)) + \",\""),
+          ("ArrayBuffer\\[String \\| Double\\]", "ArrayBuffer[String]"),
+          ("ArrayBuffer\\.empty\\[String \\| Double\\]", "ArrayBuffer.empty[String]"),
+          ("\"\" \\+ _m\\.group\\(1\\)\\.toDouble", "jsNum(_m.group(1).toDouble)"),
+        ),
       ),
     )
     val emitted = TsToScalaEmitter.emit(files, config)

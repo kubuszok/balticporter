@@ -18,6 +18,7 @@ object TsToScalaEmitter:
       braceStyle: Boolean = true,
       errorClassName: String = "RuntimeException",
       extraDeclarations: Map[String, String] = Map.empty,
+      postProcess: Map[String, List[(String, String)]] = Map.empty,
   )
 
   def emit(files: List[RastFile], config: EmitConfig): Map[String, String] =
@@ -26,7 +27,9 @@ object TsToScalaEmitter:
       val fileName = f.path.split('/').last.stripSuffix(".ts")
       if fileName == "index" then None
       else
-        val scala = ctx.emitFile(f, fileName)
+        var scala = ctx.emitFile(f, fileName)
+        for (replacements <- config.postProcess.get(fileName); (pattern, replacement) <- replacements)
+          scala = scala.replaceAll(pattern, replacement)
         Some(fileName -> scala)
     }.toMap
 
@@ -988,10 +991,14 @@ object TsToScalaEmitter:
       node.flags.contains("ExportKeyword")
 
     private def findInitializer(node: RastNode, file: RastFile): String =
-      // Find the first child that isn't an Identifier or type annotation
-      val init = node.children.find(c =>
-        c.kind != "Identifier" && !c.kind.contains("Keyword") &&
-        !c.kind.contains("Type") && c.kind != "Parameter")
+      // VariableDeclaration children: [name, typeAnnotation?, initializer?]
+      // The name is the first child (Identifier or ArrayBindingPattern).
+      // The initializer is the last child that isn't the name or a type annotation.
+      val nonName = node.children.drop(1).filter(c =>
+        !c.kind.contains("Keyword") && !c.kind.endsWith("Type") &&
+        c.kind != "TypeReference" && c.kind != "ArrayType" && c.kind != "TupleType" &&
+        c.kind != "UnionType" && c.kind != "Parameter")
+      val init = nonName.lastOption
       init.map(emitExpr(_, file)).getOrElse {
         // Missing initializer: provide type-appropriate zero value
         val tpe = resolveScalaType(node, file)
