@@ -583,6 +583,45 @@ object TerserCompressEmitter:
     "transparent", "erased", "open", "infix",
   )
 
+  /** Patterns in a translated RAST body that cannot compile in ssg.
+    *
+    * `makeNode` is the JS-style factory; ssg uses `new AstX; x.field = ...`.
+    * `\`val\`` is a JS variable name that clashes with a Scala keyword even
+    * when backtick-escaped in surrounding expressions.  `makeVoid0`,
+    * `stringTemplate`, `regexpSourceFix` are JS helpers with no ssg equivalent.
+    */
+  private val uncompilablePatterns: List[String] = List(
+    "makeNode(",           // JS-style factory — ssg uses `new AstX; x.field = ...`
+    "`val`",               // JS variable shadowing Scala keyword
+    "`def`",               // JS variable shadowing Scala keyword
+    "`type`",              // JS variable shadowing Scala keyword
+    "makeVoid0(",          // JS helper with no ssg equivalent
+    "stringTemplate(",     // JS helper with no ssg equivalent
+    "regexpSourceFix(",    // JS helper with no ssg equivalent
+    "walkAbort",           // JS walk sentinel — ssg uses WalkAbort
+    "walk(",               // JS walk function — ssg uses a different API
+    "Array.empty[Any]",    // JS untyped arrays
+    ".TYPE !=",            // JS-specific property (ssg uses pattern matching)
+    ".TYPE ==",            // JS-specific property (ssg uses pattern matching)
+    "return ()",           // JS `return undefined` translated as `return ()` — should be `null`
+    "compressor.topRetain",// reference to undeclared JS compressor variable
+    "!value &&",           // JS truthy test on nullable — needs pattern match
+    ".getValue()",         // JS dynamic property access — ssg uses pattern matching
+    "key.operator",        // property access without type narrowing
+    "name &&",             // JS truthy test — needs null check
+    "name.definition()",   // unguarded nullable access
+    "node.expressions",    // property access without type narrowing
+    "thing.body",          // property access without type narrowing
+    "ast1.size()",         // JS size() on AST nodes — ssg uses AstSize.size()
+    "ast2.size()",         // JS size() on AST nodes — ssg uses AstSize.size()
+  )
+
+  /** True when a translated body contains JS-API constructs that will not
+    * compile in ssg.  When true, the reference body is kept instead.
+    */
+  private def containsUncompilablePatterns(body: String): Boolean =
+    uncompilablePatterns.exists(body.contains)
+
   // --------------------------------------------------------------------------
   // Parity-derive emission: reference structure + RAST bodies
   // --------------------------------------------------------------------------
@@ -655,9 +694,13 @@ object TerserCompressEmitter:
         val method = methods(methodIdx)
         val camelName = method.name
 
-        // Look up matching RAST body
-        rastBodies.get(camelName) match
-          case Some((translatedBody, refusals)) if !method.isPrivate =>
+        // Look up matching RAST body — only use it when the translation
+        // does not contain un-compilable JS-API patterns.
+        val usableRast = rastBodies.get(camelName).filter { case (body, _) =>
+          !method.isPrivate && !containsUncompilablePatterns(body)
+        }
+        usableRast match
+          case Some((translatedBody, refusals)) =>
             // Emit the signature, stripping any trailing `{` after `=` so
             // the RAST body can provide its own structure.
             val sigEndLineIdx = findSignatureEnd(lines, method.signatureLine)
@@ -838,22 +881,20 @@ object TerserCompressEmitter:
       // Count braces starting from after the `=`
       findMatchingBrace(lines, sigEndLine, eqIdx + 1)
     else if afterEq.nonEmpty then
-      // Body on the same line as `=`
-      if afterEq.contains("{") then
-        // Braced body starting on the same line (e.g., "= value match {" or "= {")
-        findMatchingBrace(lines, sigEndLine, eqIdx + 1)
-      else
-        // Single-expression body — may continue on subsequent lines
-        findExpressionEnd(lines, sigEndLine)
+      // Body on the same line as `=` — use indentation; the first branch
+      // already caught `afterEq` starting with `{`.
+      findExpressionEnd(lines, sigEndLine)
     else
-      // Body starts on next line
+      // Body starts on next line — only treat as brace-delimited when the
+      // next line is literally `{` (the method body itself is one block).
+      // Lines like `if (...) {`, `boundary[T] {`, `value match {` are
+      // expression bodies whose internal braces do not delimit the method;
+      // use indentation for those.
       if sigEndLine + 1 < lines.size then
         val nextLine = lines(sigEndLine + 1).trim
-        if nextLine.startsWith("{") || nextLine.contains("{") then
-          // Braced body starting on next line (e.g., "value match {")
+        if nextLine == "{" then
           findMatchingBrace(lines, sigEndLine + 1, 0)
         else
-          // Non-braced expression body
           findExpressionEnd(lines, sigEndLine + 1)
       else
         sigEndLine

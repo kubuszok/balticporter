@@ -343,9 +343,10 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       assert(source.contains("import scala.collection.mutable.ArrayBuffer"), "should preserve imports")
       assert(source.contains("object Common"), "should preserve object name")
 
-      // At least some methods should be matched from RAST
-      assert(summary.matchedFromRast >= 5,
-        s"Expected >= 5 RAST matches, got ${summary.matchedFromRast}")
+      // At least some methods should be matched from RAST (filtered down
+      // by containsUncompilablePatterns — JS-API bodies are kept as reference)
+      assert(summary.matchedFromRast >= 3,
+        s"Expected >= 3 RAST matches, got ${summary.matchedFromRast}")
 
       // Write to output for inspection
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
