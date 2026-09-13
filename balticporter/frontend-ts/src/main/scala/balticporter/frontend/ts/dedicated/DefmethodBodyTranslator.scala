@@ -332,6 +332,28 @@ object DefmethodBodyTranslator:
         case "SwitchStatement" =>
           translateSwitchStatement(node, indent)
 
+        case "DoStatement" =>
+          val children = node.children
+          if children.size >= 2 then
+            val body = children.head
+            val cond = translateExpr(children(1))
+            sb.append(s"${indent}do {\n")
+            translateStatementBody(body, indent + "  ", false)
+            sb.append(s"$indent} while ($cond)\n")
+          else
+            sb.append(s"$indent??? /* malformed do-while */\n")
+
+        case "FunctionDeclaration" =>
+          val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_fn")
+          val params = node.children.filter(_.kind == "Parameter").map { p =>
+            val pName = p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+            snakeToCamel(pName)
+          }
+          val body = node.children.find(_.kind == "Block")
+          sb.append(s"${indent}def ${snakeToCamel(name)}(${params.map(p => s"$p: Any").mkString(", ")}): Any = {\n")
+          body.foreach(b => translateStatementBody(b, indent + "  ", true))
+          sb.append(s"$indent}\n")
+
         case "BreakStatement" =>
           sb.append(s"$indent// break\n")
 
@@ -449,7 +471,7 @@ object DefmethodBodyTranslator:
 
         case "SpreadElement" =>
           val inner = node.children.headOption.map(translateExpr).getOrElse("???")
-          s"$inner*"
+          s"$inner: _*"
 
         case "TemplateExpression" | "TemplateString" =>
           translateTemplateExpr(node)
@@ -461,8 +483,7 @@ object DefmethodBodyTranslator:
 
         case "TypeOfExpression" =>
           val operand = node.children.headOption.map(translateExpr).getOrElse("???")
-          refuse("TypeOfExpression")
-          s"/* typeof */ $operand.getClass.getSimpleName"
+          s"typeOf($operand)"
 
         case "TypeAssertionExpression" | "AsExpression" =>
           // Type assertions: just pass through the expression
@@ -753,11 +774,38 @@ object DefmethodBodyTranslator:
             parts += s"$${${translateExpr(c)}}"
       s"s\"${parts.mkString}\""
 
-    private def translateForStatement(@annotation.unused node: RastNode, indent: String): Unit =
-      // ForStatement has: init, condition, update, body (some may be missing)
-      // In RAST it depends on the structure
-      refuse("ForStatement")
-      sb.append(s"$indent??? /* for loop */\n")
+    private def translateForStatement(node: RastNode, indent: String): Unit =
+      // ForStatement children: [init?, condition?, update?, body]
+      // After R1 token filtering, children are semantic only
+      val children = node.children
+      // Find components by kind
+      val init = children.find(c => c.kind == "VariableDeclarationList" || c.kind == "FirstStatement" ||
+        (c.kind == "BinaryExpression" && c.operator.contains("EqualsToken")))
+      val body = children.find(_.kind == "Block").orElse(children.lastOption)
+      // Condition and update are harder — they're positioned between init and body
+      val nonInitBody = children.filterNot(c => c == init.orNull || c == body.orNull)
+      val cond = nonInitBody.headOption
+      val update = nonInitBody.lift(1)
+
+      // Emit as: { init; while (cond) { body; update } }
+      sb.append(s"$indent{\n")
+      init.foreach { i =>
+        if i.kind == "VariableDeclarationList" then
+          val decls = i.children.filter(_.kind == "VariableDeclaration")
+          for d <- decls do
+            val name = d.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_i")
+            val initExpr = d.children.find(c => c.kind != "Identifier" && !c.kind.contains("Type"))
+              .map(translateExpr).getOrElse("0")
+            sb.append(s"$indent  var ${snakeToCamel(name)} = $initExpr\n")
+        else
+          sb.append(s"$indent  ${translateExpr(i)}\n")
+      }
+      val condStr = cond.map(translateExpr).getOrElse("true")
+      sb.append(s"$indent  while ($condStr) {\n")
+      body.foreach(b => translateStatementBody(b, indent + "    ", false))
+      update.foreach(u => sb.append(s"$indent    ${translateExpr(u)}\n"))
+      sb.append(s"$indent  }\n")
+      sb.append(s"$indent}\n")
 
     private def translateForInOfStatement(node: RastNode, indent: String): Unit =
       val children = node.children
