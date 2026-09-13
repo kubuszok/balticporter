@@ -533,3 +533,86 @@ class TerserEmitterSpec extends munit.FunSuite:
     val path = outDir.resolve("AstConstants.scala")
     java.nio.file.Files.writeString(path, scala)
     println(s"[emit] AstConstants.scala: ${scala.linesIterator.size} lines -> $path")
+
+  // -----------------------------------------------------------------------
+  // AST hierarchy emission
+  // -----------------------------------------------------------------------
+
+  test("ast: emit AST hierarchy from DEFNODE extraction"):
+    val rast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    println("=== AstHierarchy.scala (emitted, first 80 lines) ===")
+    scala.linesIterator.take(80).foreach(println)
+    // Check structural elements
+    assert(scala.contains("package ssg"), "should have ssg package")
+    assert(scala.contains("import scala.collection.mutable.ArrayBuffer"), "should import ArrayBuffer")
+    // Should NOT contain skipped classes
+    assert(!scala.contains("trait AstNode"), "should NOT emit AstNode (hand-ported)")
+    assert(!scala.contains("trait AstConstant"), "should NOT emit AstConstant (emitted by emitAstConstants)")
+    assert(!scala.contains("class AstString "), "should NOT emit AstString (emitted by emitAstConstants)")
+    assert(!scala.contains("class AstTrue "), "should NOT emit AstTrue (emitted by emitAstConstants)")
+    // Should contain non-skipped classes
+    assert(scala.contains("AstStatement"), "should contain AstStatement")
+    assert(scala.contains("AstBlock"), "should contain AstBlock")
+    assert(scala.contains("AstCall"), "should contain AstCall")
+    assert(scala.contains("AstBinary"), "should contain AstBinary")
+    assert(scala.contains("AstScope"), "should contain AstScope")
+    assert(scala.contains("AstSymbol"), "should contain AstSymbol")
+
+  test("ast: emitted hierarchy contains statement nodes"):
+    val rast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    assert(scala.contains("AstBlock"), "should contain AstBlock")
+    assert(scala.contains("AstIf"), "should contain AstIf")
+    assert(scala.contains("AstWhile"), "should contain AstWhile")
+    assert(scala.contains("AstFor "), "should contain AstFor")
+    assert(scala.contains("AstSwitch"), "should contain AstSwitch")
+    assert(scala.contains("AstTry"), "should contain AstTry")
+    assert(scala.contains("AstReturn"), "should contain AstReturn")
+    assert(scala.contains("AstBreak"), "should contain AstBreak")
+    assert(scala.contains("AstContinue"), "should contain AstContinue")
+    assert(scala.contains("AstDebugger"), "should contain AstDebugger")
+
+  test("ast: emitted hierarchy contains expression nodes"):
+    val rast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    assert(scala.contains("AstBinary"), "should contain AstBinary")
+    assert(scala.contains("AstUnary"), "should contain AstUnary")
+    assert(scala.contains("AstCall"), "should contain AstCall")
+    assert(scala.contains("AstNew"), "should contain AstNew")
+    assert(scala.contains("AstDot"), "should contain AstDot")
+    assert(scala.contains("AstSub"), "should contain AstSub")
+    assert(scala.contains("AstConditional"), "should contain AstConditional")
+    assert(scala.contains("AstArray"), "should contain AstArray")
+    assert(scala.contains("AstObject"), "should contain AstObject")
+    assert(scala.contains("AstSequence"), "should contain AstSequence")
+
+  test("ast: write emitted AST hierarchy to target"):
+    val rast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
+    java.nio.file.Files.createDirectories(outDir)
+    val path = outDir.resolve("AstHierarchy.scala")
+    java.nio.file.Files.writeString(path, scala)
+    println(s"[emit] AstHierarchy.scala: ${scala.linesIterator.size} lines -> $path")
+
+  // -----------------------------------------------------------------------
+  // AST statements emission
+  // -----------------------------------------------------------------------
+
+  test("ast: emit AST statements file"):
+    val rast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scala = dedicated.TerserEmitter.emitAstStatements(rast)
+    println("=== AstStatements.scala (emitted, first 60 lines) ===")
+    scala.linesIterator.take(60).foreach(println)
+    assert(scala.contains("AstStatement"), "should contain AstStatement")
+    assert(scala.contains("AstBlock"), "should contain AstBlock")
+    assert(scala.contains("AstIf"), "should contain AstIf")
+    assert(scala.contains("AstFor "), "should contain AstFor")
+    assert(scala.contains("AstReturn"), "should contain AstReturn")
+    assert(scala.contains("AstBreak"), "should contain AstBreak")
+    // Should NOT contain scope/expression classes
+    assert(!scala.contains("AstToplevel"), "should NOT contain AstToplevel (scope)")
+    assert(!scala.contains("AstLambda"), "should NOT contain AstLambda (scope)")
+    assert(!scala.contains("AstCall"), "should NOT contain AstCall (expression)")
+    assert(!scala.contains("AstBinary"), "should NOT contain AstBinary (expression)")

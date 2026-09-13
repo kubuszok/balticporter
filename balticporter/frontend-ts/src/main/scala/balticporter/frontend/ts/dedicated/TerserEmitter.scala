@@ -1333,6 +1333,191 @@ object TerserEmitter:
     sb.append("}\n")
     sb.toString
 
+  // --------------------------------------------------------------------------
+  // AST hierarchy emission (all non-constant, non-token nodes)
+  // --------------------------------------------------------------------------
+
+  /** DEFNODE names already emitted by emitAstConstants. */
+  private val constantClassNames: Set[String] = Set(
+    "AST_Constant", "AST_String", "AST_Number", "AST_BigInt", "AST_RegExp",
+    "AST_Atom", "AST_Null", "AST_NaN", "AST_Undefined", "AST_Infinity",
+    "AST_Hole", "AST_Boolean", "AST_True", "AST_False"
+  )
+
+  /** DEFNODE names to skip in hierarchy emission (root, token, constants). */
+  private val skipClassNames: Set[String] =
+    constantClassNames ++ Set("AST_Node", "AST_Token")
+
+  /** Convert AST_Xxx to AstXxx preserving the original casing after the prefix. */
+  private def defnodeToScalaName(varName: String): String =
+    if varName.startsWith("AST_") then "Ast" + varName.drop(4)
+    else varName
+
+  /** Check whether cls descends from ancestorName in the DEFNODE hierarchy. */
+  private def isDescendantOf(
+      cls: DefnodeClass,
+      ancestorName: String,
+      byName: Map[String, DefnodeClass]
+  ): Boolean =
+    if cls.varName == ancestorName then true
+    else cls.base match
+      case Some(parent) =>
+        byName.get(parent).exists(p => isDescendantOf(p, ancestorName, byName))
+      case None => false
+
+  /** Infer the Scala property type from a DEFNODE property name and class context.
+    *
+    * Returns (scalaFieldName, scalaType, defaultValue). */
+  private def inferPropertyType(
+      propName: String,
+      className: String
+  ): (String, String, String) =
+    // Strip leading underscore (terser uses _annotations for private-ish props)
+    val baseName = if propName.startsWith("_") then propName.drop(1) else propName
+
+    val scalaName: String = baseName match
+      case "static"  => "isStatic"
+      case "extends" => "superClass"
+      case "object"  => "obj"
+      case "await"   => "isAwait"
+      case "async"   => "isAsync"
+      case other     => snakeToCamel(other)
+
+    // Boolean properties
+    if Set("static", "logical", "optional", "await", "async").contains(baseName) ||
+       baseName.startsWith("is_") ||
+       baseName.startsWith("uses_") then
+      (scalaName, "Boolean", "false")
+    // String properties
+    else if Set("operator", "quote", "raw").contains(baseName) then
+      (scalaName, "String", "\"\"")
+    // Int properties (includes _annotations -> annotations)
+    else if baseName == "annotations" then
+      ("annotations", "Int", "0")
+    else if baseName == "cname" then
+      ("cname", "Int", "-1")
+    // Body is ArrayBuffer only on AST_Block
+    else if baseName == "body" && className == "AST_Block" then
+      ("body", "ArrayBuffer[AstNode]", "ArrayBuffer.empty")
+    // Array properties
+    else if Set("args", "argnames", "elements", "properties", "expressions",
+                "segments", "definitions", "names", "references").contains(baseName) then
+      (scalaName, "ArrayBuffer[AstNode]", "ArrayBuffer.empty")
+    else if Set("imported_names", "exported_names").contains(baseName) then
+      (scalaName, "ArrayBuffer[AstNode] | Null", "null")
+    // Name is String for symbol and label classes
+    else if baseName == "name" &&
+            (className.contains("Symbol") ||
+             className == "AST_Label" || className == "AST_LabelRef") then
+      ("name", "String", "\"\"")
+    // Value is String for directive and template segment
+    else if baseName == "value" &&
+            (className == "AST_Directive" || className == "AST_TemplateSegment") then
+      ("value", "String", "\"\"")
+    // Property as union type for prop access
+    else if baseName == "property" then
+      ("property", "String | AstNode", "\"\"")
+    // Key as union type for object property classes
+    else if baseName == "key" && className != "AST_PrivateIn" then
+      ("key", "String | AstNode", "\"\"")
+    // Scope-related types
+    else if Set("block_scope", "scope", "parent_scope").contains(baseName) then
+      (scalaName, "AstScope | Null", "null")
+    // Definition reference
+    else if baseName == "thedef" then
+      ("thedef", "Any | Null", "null")
+    else if baseName == "mangled_name" then
+      ("mangledName", "String | Null", "null")
+    // Scope data structures
+    else if Set("variables", "globals").contains(baseName) then
+      (scalaName, "mutable.Map[String, Any]", "mutable.LinkedHashMap.empty")
+    else if baseName == "enclosed" then
+      ("enclosed", "ArrayBuffer[Any]", "ArrayBuffer.empty")
+    else if baseName == "mangled_names" then
+      ("mangledNames", "mutable.Set[String]", "mutable.Set.empty")
+    // Default: single node reference
+    else
+      (scalaName, "AstNode | Null", "null")
+
+  /** Emit one class or trait from the DEFNODE hierarchy. */
+  private def emitOneHierarchyClass(
+      sb: StringBuilder,
+      cls: DefnodeClass,
+      byName: Map[String, DefnodeClass]
+  ): Unit =
+    val scalaName = defnodeToScalaName(cls.varName)
+    val parentVarName = cls.base.getOrElse("AST_Node")
+    val parentScala = defnodeToScalaName(parentVarName)
+    val parentIsAbstract = byName.get(parentVarName).exists(_.isAbstract)
+    val parentIsSkipped = skipClassNames.contains(parentVarName)
+
+    // Determine extends clause
+    if cls.isAbstract then
+      sb.append(s"trait $scalaName extends $parentScala")
+    else if parentVarName == "AST_Node" || parentIsSkipped then
+      sb.append(s"class $scalaName extends AstNode")
+    else if parentIsAbstract then
+      sb.append(s"class $scalaName extends AstNode with $parentScala")
+    else
+      sb.append(s"class $scalaName extends $parentScala")
+
+    val needsOverride = !cls.isAbstract && !parentIsAbstract &&
+                        !parentIsSkipped && parentVarName != "AST_Node"
+
+    if cls.selfProps.nonEmpty || !cls.isAbstract then
+      sb.append(" {\n")
+      for prop <- cls.selfProps do
+        val (name, typ, default) = inferPropertyType(prop, cls.varName)
+        sb.append(s"  var $name: $typ = $default\n")
+      if !cls.isAbstract then
+        val keyword = if needsOverride then "override def" else "def"
+        sb.append(s"  $keyword nodeType: String = \"${cls.typeName}\"\n")
+      sb.append("}\n\n")
+    else
+      sb.append("\n\n")
+
+  /** Emit all non-excluded AST node classes as a single Scala file.
+    *
+    * Skips classes already emitted by emitAstConstants, emitAstToken, and
+    * the hand-ported AstNode. */
+  def emitAstHierarchy(file: RastFile): String =
+    val hierarchy = extractHierarchy(file)
+    val classes = hierarchy.filterNot(c => skipClassNames.contains(c.varName))
+    val byName = hierarchy.map(c => c.varName -> c).toMap
+
+    val sb = new StringBuilder
+    sb.append("package ssg\npackage js\npackage ast\n\n")
+    sb.append("import scala.collection.mutable\n")
+    sb.append("import scala.collection.mutable.ArrayBuffer\n\n")
+
+    for cls <- classes do
+      emitOneHierarchyClass(sb, cls, byName)
+
+    sb.toString
+
+  /** Emit statement-related AST nodes as a separate file.
+    *
+    * Includes descendants of AST_Statement but excludes descendants of
+    * AST_Scope (scope/lambda/class nodes belong in their own file). */
+  def emitAstStatements(file: RastFile): String =
+    val hierarchy = extractHierarchy(file)
+    val byName = hierarchy.map(c => c.varName -> c).toMap
+
+    val statementClasses = hierarchy.filter { cls =>
+      isDescendantOf(cls, "AST_Statement", byName) &&
+      !skipClassNames.contains(cls.varName) &&
+      !isDescendantOf(cls, "AST_Scope", byName)
+    }
+
+    val sb = new StringBuilder
+    sb.append("package ssg\npackage js\npackage ast\n\n")
+    sb.append("import scala.collection.mutable.ArrayBuffer\n\n")
+
+    for cls <- statementClasses do
+      emitOneHierarchyClass(sb, cls, byName)
+
+    sb.toString
+
   /** Find a ClassDeclaration by name in a RAST file. */
   private def findClassDeclaration(file: RastFile, name: String): Option[RastNode] =
     def search(nodes: List[RastNode]): Option[RastNode] =
