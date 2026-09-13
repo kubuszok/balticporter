@@ -700,10 +700,10 @@ object TsToScalaEmitter:
           val isOptional = currentOptionalParams.contains(objName)
           // Tuple field access: r._1 instead of r(0) when r has tuple type
           val objType = node.children.head.`type`.flatMap(file.types.get)
-          val isTupleAccess = objType.exists(t => t.text.startsWith("[") && t.text.contains(","))
+          val isTupleAccess = objType.exists(t => isTupleType(t, file))
           // Call returning tuple indexed: rotate(x,y,a)(0) → { val _r = rotate(x,y,a); _r._1 }
           val callReturnsTuple = node.children.head.kind == "CallExpression" && {
-            node.children.head.`type`.flatMap(file.types.get).exists(t => t.text.startsWith("[") && t.text.contains(","))
+            node.children.head.`type`.flatMap(file.types.get).exists(t => isTupleType(t, file))
           }
           if callReturnsTuple && idx.matches("\\d+") then
             val tupleIdx = idx.toInt + 1
@@ -903,6 +903,12 @@ object TsToScalaEmitter:
             case Some(tn) => syntaxTypeToScala(tn)
             case None => "Any"
 
+    private def isTupleType(rt: RastType, file: RastFile): Boolean =
+      if rt.text.startsWith("[") && rt.text.contains(",") then true
+      else if rt.kind == "reference" then
+        rt.target.flatMap(file.types.get).exists(t => isTupleType(t, file))
+      else false
+
     private def rastTypeToScala(rt: RastType, file: RastFile): String =
       rt.kind match
         case "string" => "String"
@@ -1058,6 +1064,8 @@ object TsToScalaEmitter:
       case "EqualsToken" | "FirstAssignment" => "="
       case "PlusEqualsToken" | "FirstCompoundAssignment" => "+="
       case "MinusEqualsToken" => "-="
+      case "AsteriskEqualsToken" => "*="
+      case "SlashEqualsToken" => "/="
       case "AmpersandToken" => "&"
       case "BarToken" => "|"
       case "CaretToken" => "^"
@@ -1078,7 +1086,8 @@ object TsToScalaEmitter:
       def walk(n: RastNode): Unit =
         if n.kind == "BinaryExpression" && n.operator.exists(o =>
           o == "EqualsToken" || o == "FirstAssignment" || o == "PlusEqualsToken" ||
-          o == "MinusEqualsToken" || o == "FirstCompoundAssignment") then
+          o == "MinusEqualsToken" || o == "AsteriskEqualsToken" || o == "SlashEqualsToken" ||
+          o == "FirstCompoundAssignment") then
           n.children.headOption.foreach { lhs =>
             if lhs.kind == "ArrayLiteralExpression" then
               // Destructuring: [x1, y1] = ... — each element is reassigned
