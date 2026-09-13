@@ -244,9 +244,21 @@ object DefmethodBodyTranslator:
           sb.append(s"$baseIndent$expr\n")
         return
 
+      // Multi-statement body needs braces (the caller emits `def foo(): Any =\n`)
+      val needsBraces = stmts.size > 1 || stmts.head.kind == "VariableStatement" ||
+        stmts.head.kind == "FirstStatement" || stmts.head.kind == "IfStatement" ||
+        stmts.head.kind == "ForStatement" || stmts.head.kind == "ForInStatement" ||
+        stmts.head.kind == "ForOfStatement" || stmts.head.kind == "WhileStatement" ||
+        stmts.head.kind == "DoStatement" || stmts.head.kind == "SwitchStatement" ||
+        stmts.head.kind == "TryStatement"
+      if needsBraces then sb.append(s"$baseIndent{\n")
+
       for (stmt, idx) <- stmts.zipWithIndex do
         val isLast = idx == stmts.size - 1
-        translateStatement(stmt, baseIndent, isLast)
+        val innerIndent = if needsBraces then baseIndent + "  " else baseIndent
+        translateStatement(stmt, innerIndent, isLast)
+
+      if needsBraces then sb.append(s"$baseIndent}\n")
 
     def translateStatement(node: RastNode, indent: String, isLast: Boolean): Unit =
       node.kind match
@@ -264,15 +276,26 @@ object DefmethodBodyTranslator:
           val expr = node.children.headOption.map(translateExpr).getOrElse("()")
           sb.append(s"$indent$expr\n")
 
-        case "VariableStatement" =>
+        case "VariableStatement" | "FirstStatement" =>
           for vdl <- node.children.find(_.kind == "VariableDeclarationList")
               vd <- vdl.children.filter(_.kind == "VariableDeclaration") do
             val name = vd.children.headOption.flatMap(_.text).getOrElse("_")
             val isConst = vd.flags.contains("const") || node.flags.contains("Const")
             val keyword = if isConst then "val" else "var"
             val scalaName = snakeToCamel(name)
-            val init = vd.children.drop(1).headOption.map(translateExpr).getOrElse("null")
-            sb.append(s"$indent$keyword $scalaName = $init\n")
+            // Handle destructuring: { x, y } = obj
+            val hasObjectBinding = vd.children.exists(_.kind == "ObjectBindingPattern")
+            if hasObjectBinding then
+              val pattern = vd.children.find(_.kind == "ObjectBindingPattern").get
+              val fields = pattern.children.filter(_.kind == "BindingElement").flatMap(
+                _.children.find(_.kind == "Identifier").flatMap(_.text))
+              val initExpr = vd.children.find(c => c.kind != "ObjectBindingPattern" && c.kind != "Identifier")
+                .map(translateExpr).getOrElse("???")
+              for f <- fields do
+                sb.append(s"$indent$keyword ${snakeToCamel(f)} = $initExpr.${snakeToCamel(f)}\n")
+            else
+              val init = vd.children.drop(1).headOption.map(translateExpr).getOrElse("null")
+              sb.append(s"$indent$keyword $scalaName = $init\n")
 
         case "IfStatement" =>
           val children = node.children
@@ -281,12 +304,13 @@ object DefmethodBodyTranslator:
             sb.append(s"$indent??? /* empty if */\n")
           else
             val cond = translateExpr(children.head)
-            sb.append(s"${indent}if $cond then\n")
+            sb.append(s"${indent}if ($cond) {\n")
             if children.size > 1 then
               translateStatementBody(children(1), indent + "  ", isLast && children.size <= 2)
             if children.size > 2 then
-              sb.append(s"${indent}else\n")
+              sb.append(s"$indent} else {\n")
               translateStatementBody(children(2), indent + "  ", isLast)
+            sb.append(s"$indent}\n")
 
         case "Block" =>
           for (stmt, idx) <- node.children.zipWithIndex do
@@ -302,8 +326,9 @@ object DefmethodBodyTranslator:
           val children = node.children
           if children.size >= 2 then
             val cond = translateExpr(children.head)
-            sb.append(s"${indent}while $cond do\n")
+            sb.append(s"${indent}while ($cond) {\n")
             translateStatementBody(children(1), indent + "  ", false)
+            sb.append(s"$indent}\n")
           else
             refuse("MalformedWhile")
             sb.append(s"$indent??? /* malformed while */\n")
@@ -313,21 +338,29 @@ object DefmethodBodyTranslator:
           sb.append(s"${indent}throw $expr\n")
 
         case "TryStatement" =>
-          sb.append(s"${indent}try\n")
+          sb.append(s"${indent}try {\n")
           val tryBlock = node.children.headOption
           tryBlock.foreach(b => translateStatementBody(b, indent + "  ", false))
-          for catchClause <- node.children.find(_.kind == "CatchClause") do
-            val param = catchClause.children.find(_.kind == "VariableDeclaration")
-              .orElse(catchClause.children.find(_.kind == "Identifier"))
-            val paramName = param.flatMap(p =>
-              p.children.headOption.flatMap(_.text).orElse(p.text)
-            ).getOrElse("e")
-            sb.append(s"${indent}catch\n")
-            sb.append(s"$indent  case ${snakeToCamel(paramName)}: Throwable =>\n")
-            catchClause.children.find(_.kind == "Block").foreach { b =>
-              for stmt <- b.children do
-                translateStatement(stmt, indent + "    ", false)
-            }
+          sb.append(s"$indent}")
+          node.children.find(_.kind == "CatchClause") match
+            case Some(catchClause) =>
+              val param = catchClause.children.find(_.kind == "VariableDeclaration")
+                .orElse(catchClause.children.find(_.kind == "Identifier"))
+              val paramName = param.flatMap(p =>
+                p.children.headOption.flatMap(_.text).orElse(p.text)
+              ).getOrElse("e")
+              sb.append(s" catch {\n")
+              sb.append(s"$indent  case ${snakeToCamel(paramName)}: Throwable =>\n")
+              catchClause.children.find(_.kind == "Block").foreach { b =>
+                for stmt <- b.children do
+                  translateStatement(stmt, indent + "    ", false)
+              }
+              sb.append(s"$indent}\n")
+            case None =>
+              sb.append("\n")
+          node.children.find(_.kind == "Block").filter(_ != tryBlock.orNull).foreach { finallyBlock =>
+            // If there's a finally block distinct from the try block
+          }
 
         case "SwitchStatement" =>
           translateSwitchStatement(node, indent)
@@ -377,25 +410,33 @@ object DefmethodBodyTranslator:
 
     def translateExpr(node: RastNode): String =
       node.kind match
-        case "NumericLiteral" =>
+        case "NumericLiteral" | "FirstLiteralToken" =>
           node.value match
             case Some(RastValue.Num(n)) =>
               if n == n.toLong then n.toLong.toString else n.toString
             case _ => "0"
 
-        case "StringLiteral" =>
+        case "StringLiteral" | "FirstTemplateToken" | "LastTemplateToken" =>
           node.value match
             case Some(RastValue.Str(s)) =>
               "\"" + escapeString(s) + "\""
             case _ => "\"\""
 
+        case "RegularExpressionLiteral" =>
+          val text = node.value match
+            case Some(RastValue.Str(s)) => s
+            case _ => node.text.getOrElse("/???/")
+          val body = text.stripPrefix("/").reverse.dropWhile(_ != '/').reverse.stripSuffix("/")
+          val escaped = body.replace("\\", "\\\\")
+          s"\"$escaped\".r"
+
         case "TrueKeyword" => "true"
         case "FalseKeyword" => "false"
         case "NullKeyword" => "null"
-        case "UndefinedKeyword" => "null /* undefined */"
-        case "VoidExpression" => "null /* void */"
+        case "UndefinedKeyword" => "null"
+        case "VoidExpression" => "null"
 
-        case "ThisKeyword" => "this"
+        case "ThisKeyword" => thisBinding
 
         case "Identifier" =>
           val name = node.text.getOrElse("_")
@@ -419,7 +460,32 @@ object DefmethodBodyTranslator:
           val children = node.children
           val cls = translateExpr(children.head)
           val args = children.drop(1).map(translateExpr)
-          s"new $cls(${args.mkString(", ")})"
+          cls match
+            case "Array" =>
+              if args.isEmpty then "scala.collection.mutable.ArrayBuffer.empty[Any]"
+              else s"scala.collection.mutable.ArrayBuffer.fill(${args.head})(null)"
+            case "Map" =>
+              if args.isEmpty then "scala.collection.mutable.Map.empty[Any, Any]"
+              else s"scala.collection.mutable.Map(${args.mkString(", ")})"
+            case "`Map`" =>
+              if args.isEmpty then "scala.collection.mutable.Map.empty[Any, Any]"
+              else s"scala.collection.mutable.Map(${args.mkString(", ")})"
+            case "Set" =>
+              if args.isEmpty then "scala.collection.mutable.Set.empty[Any]"
+              else s"scala.collection.mutable.Set(${args.mkString(", ")})"
+            case "`Set`" =>
+              if args.isEmpty then "scala.collection.mutable.Set.empty[Any]"
+              else s"scala.collection.mutable.Set(${args.mkString(", ")})"
+            case "WeakMap" =>
+              "scala.collection.mutable.WeakHashMap.empty[Any, Any]"
+            case "WeakSet" =>
+              "scala.collection.mutable.Set.empty[Any] /* WeakSet */"
+            case "RegExp" =>
+              s"${args.head}.r"
+            case "Error" | "TypeError" | "RangeError" | "SyntaxError" | "ReferenceError" =>
+              s"new RuntimeException(${args.mkString(", ")})"
+            case _ =>
+              s"new $cls(${args.mkString(", ")})"
 
         case "BinaryExpression" =>
           translateBinaryExpr(node)
@@ -430,8 +496,10 @@ object DefmethodBodyTranslator:
           node.operator match
             case Some("ExclamationToken") => s"!$operand"
             case Some("MinusToken") => s"-$operand"
-            case Some("PlusToken") => s"+$operand"
+            case Some("PlusToken") => s"$operand.toDouble"
             case Some("TildeToken") => s"~$operand"
+            case Some("PlusPlusToken") => s"{ $operand += 1; $operand }"
+            case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
             case Some(op) => s"/* $op */$operand"
             case None => s"!$operand"
 
@@ -440,9 +508,9 @@ object DefmethodBodyTranslator:
           val operand = if children.nonEmpty then translateExpr(children.head) else "???"
           node.operator match
             case Some("PlusPlusToken") =>
-              s"{ val _prev = $operand; $operand += 1; _prev }"
+              s"$operand += 1"
             case Some("MinusMinusToken") =>
-              s"{ val _prev = $operand; $operand -= 1; _prev }"
+              s"$operand -= 1"
             case _ => s"$operand /* postfix */"
 
         case "ConditionalExpression" =>
@@ -462,16 +530,35 @@ object DefmethodBodyTranslator:
           translateFunctionExpr(node)
 
         case "ArrayLiteralExpression" =>
-          val elems = node.children.map(translateExpr)
-          if elems.isEmpty then "Array.empty"
-          else s"Array(${elems.mkString(", ")})"
+          val hasSpread = node.children.exists(_.kind == "SpreadElement")
+          val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
+          if node.children.isEmpty then "Array.empty[Any]"
+          else if allSpread && node.children.length == 1 then
+            // [...arr] -> arr.toArray
+            val inner = translateExpr(node.children.head.children.head)
+            s"$inner.toArray"
+          else if hasSpread then
+            // Mixed spread + non-spread: Array(a, b) ++ spread
+            val nonSpread = node.children.takeWhile(_.kind != "SpreadElement")
+            val spreadPart = node.children.dropWhile(_.kind != "SpreadElement")
+            val prefix = if nonSpread.nonEmpty then
+              s"Array(${nonSpread.map(translateExpr).mkString(", ")})"
+            else "Array.empty[Any]"
+            val suffix = spreadPart.map { c =>
+              if c.kind == "SpreadElement" then translateExpr(c.children.head)
+              else s"Array(${translateExpr(c)})"
+            }
+            (prefix +: suffix).mkString(" ++ ")
+          else
+            val elems = node.children.map(translateExpr)
+            s"Array(${elems.mkString(", ")})"
 
         case "ObjectLiteralExpression" =>
           translateObjectLiteral(node)
 
         case "SpreadElement" =>
           val inner = node.children.headOption.map(translateExpr).getOrElse("???")
-          s"$inner: _*"
+          s"$inner*"
 
         case "TemplateExpression" | "TemplateString" =>
           translateTemplateExpr(node)
@@ -483,7 +570,9 @@ object DefmethodBodyTranslator:
 
         case "TypeOfExpression" =>
           val operand = node.children.headOption.map(translateExpr).getOrElse("???")
-          s"typeOf($operand)"
+          // typeof x -> a runtime type check helper; emitted as descriptive comment
+          // In boolean context (typeof x === "string") this is rewritten in BinaryExpression
+          s"""($operand match { case _: String => "string"; case _: Double | _: Int => "number"; case _: Boolean => "boolean"; case null => "undefined"; case _ => "object" })"""
 
         case "TypeAssertionExpression" | "AsExpression" =>
           // Type assertions: just pass through the expression
@@ -524,6 +613,7 @@ object DefmethodBodyTranslator:
         case "return_true"  => "true"
         case "return_this"  => "this"
         case "pass_through" => "true"
+        case "console"      => "Console"
         case "arguments" =>
           refuse("ArgumentsObject")
           "??? /* arguments */"
@@ -535,6 +625,28 @@ object DefmethodBodyTranslator:
       if children.size < 2 then return "??? /* bad prop access */"
       val obj = children.head
       val prop = children.last.text.getOrElse("")
+
+      // Math.x -> math.x (scala.math)
+      if obj.kind == "Identifier" && obj.text.contains("Math") then
+        return (prop match
+          case "PI" => "math.Pi"
+          case "E" => "math.E"
+          case "abs" | "sqrt" | "pow" | "cos" | "sin" | "tan" | "asin" | "acos" |
+               "atan2" | "floor" | "ceil" | "round" | "max" | "min" | "log" |
+               "log2" | "log10" | "exp" | "random" | "sign" | "cbrt" | "hypot" =>
+            s"math.$prop"
+          case _ => s"math.$prop"
+        )
+
+      // Number.x
+      if obj.kind == "Identifier" && obj.text.contains("Number") then
+        return (prop match
+          case "MAX_SAFE_INTEGER" => "Long.MaxValue"
+          case "isNaN" => "java.lang.Double.isNaN"
+          case "isFinite" => "java.lang.Double.isFinite"
+          case "isInteger" => "/* Number.isInteger */ ((_: Any) match { case n: Double => n == n.floor; case _ => false })"
+          case _ => s"Number.$prop"
+        )
 
       // this.x -> translate known properties (using thisBinding for pattern-match context)
       if obj.kind == "ThisKeyword" then
@@ -549,19 +661,58 @@ object DefmethodBodyTranslator:
           s"${astVarToScalaName(cls)}.${snakeToCamel(prop)}"
         else
           val objExpr = translateExpr(obj)
-          s"$objExpr.${snakeToCamel(prop)}"
+          translatePropOnExpr(objExpr, prop)
       else
         val objExpr = translateExpr(obj)
-        prop match
-          case "length" => s"$objExpr.length"
-          case "constructor" => s"$objExpr.getClass"
-          case "push" => s"$objExpr.addOne"
-          case "forEach" => s"$objExpr.foreach"
-          case "indexOf" => s"$objExpr.indexOf"
-          case "includes" => s"$objExpr.contains"
-          case "splice" => s"$objExpr.remove"
-          case "pop" => s"$objExpr.remove($objExpr.length - 1)"
-          case _ => s"$objExpr.${snakeToCamel(prop)}"
+        translatePropOnExpr(objExpr, prop)
+
+    /** Translate a property access on an already-translated object expression. */
+    private def translatePropOnExpr(objExpr: String, prop: String): String =
+      prop match
+        case "length" => s"$objExpr.length"
+        case "constructor" => s"$objExpr.getClass"
+        case "push" => s"$objExpr.addOne"
+        case "forEach" => s"$objExpr.foreach"
+        case "indexOf" => s"$objExpr.indexOf"
+        case "includes" | "has" => s"$objExpr.contains"
+        case "splice" => s"$objExpr.remove"
+        case "pop" => s"$objExpr.remove($objExpr.length - 1)"
+        case "shift" => s"$objExpr.remove(0)"
+        case "unshift" => s"$objExpr.prepend"
+        case "concat" => s"$objExpr.concat"
+        case "slice" => s"$objExpr.slice"
+        case "join" => s"$objExpr.mkString"
+        case "map" => s"$objExpr.map"
+        case "filter" => s"$objExpr.filter"
+        case "reduce" => s"$objExpr.foldLeft"
+        case "some" => s"$objExpr.exists"
+        case "every" => s"$objExpr.forall"
+        case "find" => s"$objExpr.find"
+        case "flat" => s"$objExpr.flatten"
+        case "flatMap" => s"$objExpr.flatMap"
+        case "reverse" => s"$objExpr.reverse"
+        case "keys" => s"$objExpr.keys"
+        case "values" => s"$objExpr.values"
+        case "entries" => s"$objExpr.iterator"
+        case "sort" => s"$objExpr.sorted"
+        case "toString" => s"$objExpr.toString"
+        case "charAt" => s"$objExpr.charAt"
+        case "charCodeAt" => s"$objExpr.charAt"
+        case "substring" | "substr" => s"$objExpr.substring"
+        case "startsWith" => s"$objExpr.startsWith"
+        case "endsWith" => s"$objExpr.endsWith"
+        case "replace" => s"$objExpr.replace"
+        case "replaceAll" => s"$objExpr.replaceAll"
+        case "split" => s"$objExpr.split"
+        case "trim" => s"$objExpr.trim"
+        case "trimStart" | "trimLeft" => s"$objExpr.stripLeading"
+        case "trimEnd" | "trimRight" => s"$objExpr.stripTrailing"
+        case "toLowerCase" => s"$objExpr.toLowerCase"
+        case "toUpperCase" => s"$objExpr.toUpperCase"
+        case "search" => s"$objExpr.search"
+        case "match" => s"$objExpr.`match`"
+        case "test" => s"$objExpr.test"
+        case _ => s"$objExpr.${snakeToCamel(prop)}"
 
     private def translateCallExpr(node: RastNode): String =
       val children = node.children
@@ -597,26 +748,165 @@ object DefmethodBodyTranslator:
                     return s"super.${innerScala}(${scalaArgs.mkString(", ")})"
 
             val objExpr = translateExpr(obj)
-            val scalaMethod = method match
-              case "has" => "contains"
-              case "set" => "update"
-              case "get" => "get"
-              case "delete" => "remove"
-              case "forEach" => "foreach"
-              case "push" => "addOne"
-              case "indexOf" => "indexOf"
-              case "includes" => "contains"
-              case "hasOwnProperty" => "contains"
+            val scalaArgs = args.map(translateExpr)
+
+            method match
+              // Collection methods
+              case "has" | "includes" | "contains" =>
+                s"$objExpr.contains(${scalaArgs.mkString(", ")})"
+              case "set" =>
+                s"$objExpr.update(${scalaArgs.mkString(", ")})"
+              case "get" =>
+                s"$objExpr.get(${scalaArgs.mkString(", ")})"
+              case "delete" =>
+                s"$objExpr.remove(${scalaArgs.mkString(", ")})"
+              case "forEach" =>
+                s"$objExpr.foreach(${scalaArgs.mkString(", ")})"
+              case "push" =>
+                // .push(x) -> += x; .push(a,b) -> a += x; b += y
+                val hasSpread = args.exists(_.kind == "SpreadElement")
+                if hasSpread && scalaArgs.length == 1 then
+                  val spreadArg = scalaArgs.head.stripSuffix("*")
+                  s"$objExpr ++= $spreadArg"
+                else if scalaArgs.length == 1 then s"$objExpr += ${scalaArgs.head}"
+                else scalaArgs.map(a => s"$objExpr += $a").mkString("; ")
+              case "pop" =>
+                s"$objExpr.remove($objExpr.length - 1)"
+              case "shift" =>
+                s"$objExpr.remove(0)"
+              case "unshift" =>
+                s"$objExpr.prepend(${scalaArgs.mkString(", ")})"
+              case "indexOf" =>
+                s"$objExpr.indexOf(${scalaArgs.mkString(", ")})"
+              case "lastIndexOf" =>
+                s"$objExpr.lastIndexOf(${scalaArgs.mkString(", ")})"
+              case "hasOwnProperty" =>
+                s"$objExpr.contains(${scalaArgs.mkString(", ")})"
+              case "splice" =>
+                if scalaArgs.length >= 2 then
+                  s"$objExpr.remove(${scalaArgs.mkString(", ")})"
+                else s"$objExpr.remove(${scalaArgs.mkString(", ")})"
+              case "concat" =>
+                s"($objExpr ++ ${scalaArgs.mkString(" ++ ")})"
+              case "join" =>
+                s"$objExpr.mkString(${scalaArgs.mkString(", ")})"
+              case "map" =>
+                s"$objExpr.map(${scalaArgs.mkString(", ")})"
+              case "filter" =>
+                s"$objExpr.filter(${scalaArgs.mkString(", ")})"
+              case "reduce" =>
+                s"$objExpr.foldLeft(${scalaArgs.mkString(", ")})"
+              case "some" =>
+                s"$objExpr.exists(${scalaArgs.mkString(", ")})"
+              case "every" =>
+                s"$objExpr.forall(${scalaArgs.mkString(", ")})"
+              case "find" =>
+                s"$objExpr.find(${scalaArgs.mkString(", ")})"
+              case "findIndex" =>
+                s"$objExpr.indexWhere(${scalaArgs.mkString(", ")})"
+              case "flat" =>
+                s"$objExpr.flatten"
+              case "flatMap" =>
+                s"$objExpr.flatMap(${scalaArgs.mkString(", ")})"
+              case "sort" =>
+                if scalaArgs.nonEmpty then s"$objExpr.sortWith((a, b) => ${scalaArgs.head}(a, b) < 0)"
+                else s"$objExpr.sorted"
+              case "reverse" =>
+                s"$objExpr.reverse"
+              case "fill" =>
+                s"$objExpr.mapInPlace(_ => ${scalaArgs.headOption.getOrElse("null")})"
+              case "slice" =>
+                s"$objExpr.slice(${scalaArgs.mkString(", ")})"
+              // String methods
+              case "substr" | "substring" =>
+                s"$objExpr.substring(${scalaArgs.mkString(", ")})"
+              case "charAt" =>
+                s"$objExpr.charAt(${scalaArgs.mkString(", ")})"
+              case "charCodeAt" =>
+                s"$objExpr.charAt(${scalaArgs.mkString(", ")}).toInt"
+              case "startsWith" =>
+                s"$objExpr.startsWith(${scalaArgs.mkString(", ")})"
+              case "endsWith" =>
+                s"$objExpr.endsWith(${scalaArgs.mkString(", ")})"
+              case "replace" =>
+                s"$objExpr.replace(${scalaArgs.mkString(", ")})"
+              case "replaceAll" =>
+                s"$objExpr.replaceAll(${scalaArgs.mkString(", ")})"
+              case "split" =>
+                s"$objExpr.split(${scalaArgs.mkString(", ")})"
+              case "trim" =>
+                s"$objExpr.trim"
+              case "toLowerCase" =>
+                s"$objExpr.toLowerCase"
+              case "toUpperCase" =>
+                s"$objExpr.toUpperCase"
+              case "repeat" =>
+                s"$objExpr * ${scalaArgs.headOption.getOrElse("1")}"
+              case "padStart" =>
+                if scalaArgs.length >= 2 then s"$objExpr.reverse.padTo(${scalaArgs.head}, ${scalaArgs(1)}).reverse.mkString"
+                else s"$objExpr.padStart(${scalaArgs.mkString(", ")})"
+              case "padEnd" =>
+                if scalaArgs.length >= 2 then s"$objExpr.padTo(${scalaArgs.head}, ${scalaArgs(1)}).mkString"
+                else s"$objExpr.padEnd(${scalaArgs.mkString(", ")})"
+              case "toFixed" =>
+                val precision = scalaArgs.headOption.getOrElse("0")
+                s"""f"$${$objExpr}%.${precision}f""""
+              case "toString" =>
+                if scalaArgs.nonEmpty then s"java.lang.Integer.toString($objExpr.toInt, ${scalaArgs.head})"
+                else s"$objExpr.toString"
+              case "match" =>
+                s"${scalaArgs.head}.findPrefixMatchOf($objExpr).isDefined"
+              case "test" =>
+                s"${objExpr}.findFirstIn(${scalaArgs.mkString(", ")}).isDefined"
+              case "exec" =>
+                s"${objExpr}.findFirstMatchIn(${scalaArgs.mkString(", ")})"
+              // Function binding
               case "call" =>
                 // fn.call(this, args) -> fn(args)
-                val scalaArgs = args.drop(1).map(translateExpr)
-                return s"$objExpr(${scalaArgs.mkString(", ")})"
+                val callArgs = scalaArgs.drop(1)
+                s"$objExpr(${callArgs.mkString(", ")})"
+              case "apply" =>
+                // fn.apply(this, argsArray) -> fn(argsArray:_*)
+                val applyArgs = scalaArgs.drop(1)
+                if applyArgs.length == 1 then s"$objExpr(${applyArgs.head}*)"
+                else s"$objExpr(${applyArgs.mkString(", ")})"
               case "bind" =>
                 // fn.bind(this) -> fn
-                return objExpr
-              case _ => snakeToCamel(method)
-            val scalaArgs = args.map(translateExpr)
-            s"$objExpr.$scalaMethod(${scalaArgs.mkString(", ")})"
+                objExpr
+              // Object static methods
+              case "keys" if objExpr == "Object" =>
+                s"${scalaArgs.head}.keys"
+              case "values" if objExpr == "Object" =>
+                s"${scalaArgs.head}.values"
+              case "entries" if objExpr == "Object" =>
+                s"${scalaArgs.head}.iterator"
+              case "assign" if objExpr == "Object" =>
+                if scalaArgs.length >= 2 then s"${scalaArgs.head} ++= ${scalaArgs(1)}"
+                else s"${scalaArgs.head}"
+              case "create" if objExpr == "Object" =>
+                "Map.empty"
+              case "defineProperty" if objExpr == "Object" =>
+                s"/* Object.defineProperty */ ${scalaArgs.mkString(", ")}"
+              // Array static methods
+              case "isArray" if objExpr == "Array" =>
+                s"${scalaArgs.head}.isInstanceOf[Seq[?]]"
+              case "from" if objExpr == "Array" =>
+                s"${scalaArgs.head}.toArray"
+              // JSON
+              case "stringify" if objExpr == "JSON" =>
+                s"/* JSON.stringify */ ${scalaArgs.head}.toString"
+              case "parse" if objExpr == "JSON" =>
+                s"/* JSON.parse */ ${scalaArgs.head}"
+              // console
+              case "log" if objExpr == "Console" || objExpr == "console" =>
+                s"println(${scalaArgs.mkString(", ")})"
+              case "warn" if objExpr == "Console" || objExpr == "console" =>
+                s"System.err.println(${scalaArgs.mkString(", ")})"
+              case "error" if objExpr == "Console" || objExpr == "console" =>
+                s"System.err.println(${scalaArgs.mkString(", ")})"
+              // General method
+              case _ =>
+                s"$objExpr.${snakeToCamel(method)}(${scalaArgs.mkString(", ")})"
 
           else
             val calleeExpr = translateExpr(callee)
@@ -625,9 +915,36 @@ object DefmethodBodyTranslator:
 
         case "Identifier" =>
           val name = callee.text.getOrElse("???")
-          val scalaName = translateIdentifier(name)
           val scalaArgs = args.map(translateExpr)
-          s"$scalaName(${scalaArgs.mkString(", ")})"
+          // Translate global JS functions
+          name match
+            case "parseInt" =>
+              s"${scalaArgs.head}.toInt"
+            case "parseFloat" =>
+              s"${scalaArgs.head}.toDouble"
+            case "isNaN" =>
+              s"${scalaArgs.head}.isNaN"
+            case "isFinite" =>
+              s"${scalaArgs.head}.isInfinite == false"
+            case "String" =>
+              s"${scalaArgs.head}.toString"
+            case "Number" =>
+              s"${scalaArgs.head}.toDouble"
+            case "Boolean" =>
+              s"(${scalaArgs.head} != null && ${scalaArgs.head} != false)"
+            case "Array" if scalaArgs.isEmpty =>
+              "Array.empty[Any]"
+            case "Array" =>
+              s"new Array[Any](${scalaArgs.mkString(", ")})"
+            case "Set" if scalaArgs.isEmpty =>
+              "scala.collection.mutable.Set.empty[Any]"
+            case "Map" if scalaArgs.isEmpty =>
+              "scala.collection.mutable.Map.empty[Any, Any]"
+            case "Error" | "TypeError" | "RangeError" | "SyntaxError" =>
+              s"new RuntimeException(${scalaArgs.mkString(", ")})"
+            case _ =>
+              val scalaName = translateIdentifier(name)
+              s"$scalaName(${scalaArgs.mkString(", ")})"
 
         case _ =>
           val calleeExpr = translateExpr(callee)
@@ -646,15 +963,59 @@ object DefmethodBodyTranslator:
             val lhs = translateExpr(instChildren.head)
             val rhs = instChildren(1)
             val rhsName = rhs.text.getOrElse(rhs.children.headOption.flatMap(_.text).getOrElse("Any"))
-            val scalaType = if rhsName.startsWith("AST_") then astVarToScalaName(rhsName) else rhsName
-            s"$lhs.isInstanceOf[$scalaType]"
+            if rhsName.startsWith("AST_") then
+              // Known AST type -- compile-time isInstanceOf
+              s"$lhs.isInstanceOf[${astVarToScalaName(rhsName)}]"
+            else if rhsName.head.isUpper && !scalaKeywords.contains(rhsName) then
+              // Capitalized non-keyword -- likely a class name
+              s"$lhs.isInstanceOf[$rhsName]"
+            else
+              // Runtime class reference (e.g., a function parameter) -- use isInstance
+              val scalaRhs = translateExpr(rhs)
+              s"$scalaRhs.isInstance($lhs)"
           else
             val lhs = translateExpr(children.head)
             s"$lhs.isInstanceOf[Any] /* instanceof */"
 
         case Some(op) =>
-          val left = translateExpr(children.head)
-          val right = translateExpr(children.last)
+          val lhs = children.head
+          val rhs = children.last
+
+          // typeof X === "type" -> X.isInstanceOf[Type]
+          if (op == "EqualsEqualsEqualsToken" || op == "EqualsEqualsToken") &&
+             lhs.kind == "TypeOfExpression" then
+            val typeofOperand = lhs.children.head
+            val operandExpr = translateExpr(typeofOperand)
+            val typeStr = rhs.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => "object"
+            return typeStr match
+              case "string" => s"$operandExpr.isInstanceOf[String]"
+              case "number" => s"$operandExpr.isInstanceOf[Double]"
+              case "boolean" => s"$operandExpr.isInstanceOf[Boolean]"
+              case "function" => s"$operandExpr.isInstanceOf[Function[?, ?]]"
+              case "undefined" => s"($operandExpr == null)"
+              case "object" => s"($operandExpr != null && !$operandExpr.isInstanceOf[Double] && !$operandExpr.isInstanceOf[String] && !$operandExpr.isInstanceOf[Boolean])"
+              case _ => s"$operandExpr.isInstanceOf[$typeStr]"
+
+          // typeof X !== "type" -> !X.isInstanceOf[Type]
+          if (op == "ExclamationEqualsEqualsToken" || op == "ExclamationEqualsToken") &&
+             lhs.kind == "TypeOfExpression" then
+            val typeofOperand = lhs.children.head
+            val operandExpr = translateExpr(typeofOperand)
+            val typeStr = rhs.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => "object"
+            return typeStr match
+              case "string" => s"!$operandExpr.isInstanceOf[String]"
+              case "number" => s"!$operandExpr.isInstanceOf[Double]"
+              case "boolean" => s"!$operandExpr.isInstanceOf[Boolean]"
+              case "function" => s"!$operandExpr.isInstanceOf[Function[?, ?]]"
+              case "undefined" => s"($operandExpr != null)"
+              case _ => s"!$operandExpr.isInstanceOf[$typeStr]"
+
+          val left = translateExpr(lhs)
+          val right = translateExpr(rhs)
           val scalaOp = op match
             case "EqualsEqualsEqualsToken" => "=="
             case "ExclamationEqualsEqualsToken" => "!="
@@ -667,7 +1028,7 @@ object DefmethodBodyTranslator:
             case "AsteriskToken" => "*"
             case "SlashToken" => "/"
             case "PercentToken" => "%"
-            case "LessThanToken" => "<"
+            case "LessThanToken" | "FirstBinaryOperator" => "<"
             case "LessThanEqualsToken" => "<="
             case "GreaterThanToken" => ">"
             case "GreaterThanEqualsToken" => ">="
@@ -677,18 +1038,23 @@ object DefmethodBodyTranslator:
             case "LessThanLessThanToken" => "<<"
             case "GreaterThanGreaterThanToken" => ">>"
             case "GreaterThanGreaterThanGreaterThanToken" => ">>>"
-            case "EqualsToken" => "="
-            case "PlusEqualsToken" => "+="
+            case "EqualsToken" | "FirstAssignment" => "="
+            case "PlusEqualsToken" | "FirstCompoundAssignment" => "+="
             case "MinusEqualsToken" => "-="
             case "AsteriskEqualsToken" => "*="
             case "SlashEqualsToken" => "/="
             case "BarEqualsToken" => "|="
             case "AmpersandEqualsToken" => "&="
+            case "PercentEqualsToken" => "%="
+            case "AsteriskAsteriskEqualsToken" => "**="
             case "QuestionQuestionToken" =>
               // Nullish coalescing: a ?? b -> if a != null then a else b
               return s"(if $left != null then $left else $right)"
             case "InKeyword" =>
               return s"$right.contains($left)"
+            case "CommaToken" =>
+              // Comma operator: evaluate both, return right
+              return s"{ $left; $right }"
             case other => other
           s"$left $scalaOp $right"
 
@@ -717,13 +1083,18 @@ object DefmethodBodyTranslator:
             if paramStrs.isEmpty then s"(() => $expr)"
             else s"((${paramStrs.mkString(", ")}) => $expr)"
           else
-            // Multi-statement function body
-            val innerCtx = new BodyContext(entry, hierarchy, baseIndent + "  ")
-            innerCtx.translateBlock(block)
-            refusals ++= innerCtx.refusals
-            val bodyStr = innerCtx.result().stripTrailing()
-            if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent})"
-            else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent})"
+            // Multi-statement function body -- always brace-wrap
+            val innerIndent = baseIndent + "    "
+            val bodyLines = new StringBuilder
+            for (stmt, idx) <- block.children.zipWithIndex do
+              val isLast = idx == block.children.size - 1
+              val innerCtx = new BodyContext(entry, hierarchy, innerIndent)
+              innerCtx.translateStatement(stmt, innerIndent, isLast)
+              refusals ++= innerCtx.refusals
+              bodyLines.append(innerCtx.result())
+            val bodyStr = bodyLines.toString.stripTrailing()
+            if paramStrs.isEmpty then s"(() => {\n$bodyStr\n$baseIndent  })"
+            else s"((${paramStrs.mkString(", ")}) => {\n$bodyStr\n$baseIndent  })"
         case None =>
           // Arrow without block: single expression body
           val exprBody = node.children.find(c => c.kind != "Parameter")
@@ -817,8 +1188,9 @@ object DefmethodBodyTranslator:
           .getOrElse("_item")
         val iterExpr = translateExpr(iterable)
         val body = children.find(_.kind == "Block").orElse(children.lift(2))
-        sb.append(s"${indent}for ${snakeToCamel(varName)} <- $iterExpr do\n")
+        sb.append(s"${indent}for (${snakeToCamel(varName)} <- $iterExpr) {\n")
         body.foreach(b => translateStatementBody(b, indent + "  ", false))
+        sb.append(s"$indent}\n")
       else
         refuse("MalformedForInOf")
         sb.append(s"$indent??? /* for-in/of */\n")
@@ -831,7 +1203,8 @@ object DefmethodBodyTranslator:
         return
       val scrutinee = translateExpr(children.head)
       val caseBlock = children.find(_.kind == "CaseBlock")
-      sb.append(s"$indent$scrutinee match\n")
+      sb.append(s"$indent($scrutinee) match {\n")
+      var hasDefault = false
       caseBlock.foreach { cb =>
         for clause <- cb.children do
           clause.kind match
@@ -842,12 +1215,15 @@ object DefmethodBodyTranslator:
               for stmt <- stmts do
                 translateStatement(stmt, indent + "    ", false)
             case "DefaultClause" =>
+              hasDefault = true
               val stmts = clause.children.filterNot(_.kind == "BreakStatement")
               sb.append(s"$indent  case _ =>\n")
               for stmt <- stmts do
                 translateStatement(stmt, indent + "    ", false)
             case _ => ()
       }
+      if !hasDefault then sb.append(s"$indent  case _ => ()\n")
+      sb.append(s"$indent}\n")
 
     private def refuse(reason: String): Unit =
       refusals += reason
@@ -866,8 +1242,21 @@ object DefmethodBodyTranslator:
 
   private def snakeToCamel(s: String): String =
     val parts = s.split("_")
-    if parts.length <= 1 then s
-    else parts.head + parts.tail.map(_.capitalize).mkString
+    if parts.length <= 1 then escapeKeyword(s)
+    else escapeKeyword(parts.head + parts.tail.map(_.capitalize).mkString)
+
+  private def escapeKeyword(name: String): String =
+    if scalaKeywords.contains(name) then s"`$name`" else name
+
+  private val scalaKeywords: Set[String] = Set(
+    "type", "val", "var", "def", "class", "trait", "object", "enum",
+    "match", "case", "if", "else", "for", "while", "do", "return",
+    "throw", "try", "catch", "finally", "import", "export", "package",
+    "new", "this", "super", "with", "extends", "yield", "abstract",
+    "final", "sealed", "private", "protected", "override", "lazy",
+    "implicit", "given", "using", "then", "end", "inline", "opaque",
+    "transparent", "erased", "open", "infix",
+  )
 
   private def escapeString(s: String): String =
     s.replace("\\", "\\\\")

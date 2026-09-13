@@ -530,5 +530,16 @@ object TerserCompressEmitter:
 
   private def snakeToCamel(s: String): String =
     val parts = s.split("_")
-    if parts.length <= 1 then s
+    val result = if parts.length <= 1 then s
     else parts.head + parts.tail.map(_.capitalize).mkString
+    if scalaKeywords.contains(result) then s"`$result`" else result
+
+  private val scalaKeywords: Set[String] = Set(
+    "type", "val", "var", "def", "class", "trait", "object", "enum",
+    "match", "case", "if", "else", "for", "while", "do", "return",
+    "throw", "try", "catch", "finally", "import", "export", "package",
+    "new", "this", "super", "with", "extends", "yield", "abstract",
+    "final", "sealed", "private", "protected", "override", "lazy",
+    "implicit", "given", "using", "then", "end", "inline", "opaque",
+    "transparent", "erased", "open", "infix",
+  )
