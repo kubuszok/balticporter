@@ -614,6 +614,31 @@ object TerserCompressEmitter:
     "thing.body",          // property access without type narrowing
     "ast1.size()",         // JS size() on AST nodes — ssg uses AstSize.size()
     "ast2.size()",         // JS size() on AST nodes — ssg uses AstSize.size()
+    "this.",               // DEFMETHOD `this` binding — in ssg these are object methods with `node` param
+    "foldLeft(",           // JS reduce pattern — ssg uses different collection ops
+    "foldRight(",          // JS reduceRight pattern
+    ".join(",              // JS array join — ssg uses mkString
+    "RegExp",              // JS RegExp — ssg uses scala.util.matching.Regex
+    "Number(",             // JS Number() — ssg uses .toDouble
+    "MAP(",                // JS MAP macro — ssg-specific
+    "DEFMETHOD(",          // JS DEFMETHOD — not in Scala
+    "node.operator",       // AstNode doesn't have operator — needs type narrowing
+    "node.expression",     // AstNode doesn't have expression — needs type narrowing
+    "node.optional",       // AstNode doesn't have optional — needs type narrowing
+    "node.left",           // AstNode doesn't have left — needs type narrowing
+    "node.right",          // AstNode doesn't have right — needs type narrowing
+    "node.value",          // AstNode doesn't have value — needs type narrowing
+    "node.body",           // AstNode doesn't have body — needs type narrowing
+    "node.condition",      // AstNode doesn't have condition — needs type narrowing
+    "node.definitions",    // AstNode doesn't have definitions — needs type narrowing
+    "node.property",       // AstNode doesn't have property — needs type narrowing
+    "node.consequent",     // AstNode doesn't have consequent — needs type narrowing
+    "node.alternative",    // AstNode doesn't have alternative — needs type narrowing
+    "node.argnames",       // AstNode doesn't have argnames — needs type narrowing
+    "node.args",           // AstNode doesn't have args — needs type narrowing
+    "isNullishShortcircuited(", // references undefined helper
+    "isConstantExpression",    // references undefined method on object
+    "hasFlag(",            // references undefined helper
   )
 
   /** True when a translated body contains JS-API constructs that will not
@@ -667,6 +692,26 @@ object TerserCompressEmitter:
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
     val lines = referenceSource.split("\n", -1).toList
+
+    // Modules where body interleaving causes more errors than it fixes:
+    // use reference bodies for ALL methods (the RAST structure was validated,
+    // but findBodyEnd can't handle all Scala method boundary patterns)
+    val skipRastModules = Set("Inference", "ReduceVars")
+    val refObjectName = lines.find(_.matches("^(object|class)\\s+.*\\{.*$"))
+      .flatMap("""^(object|class)\s+(\w+)""".r.findFirstMatchIn(_).map(_.group(2)))
+      .getOrElse("")
+    if skipRastModules.contains(refObjectName) then
+      val nMethods = findMethodBoundaries(lines).size
+      val summary = ParityEmitSummary(
+        moduleName = refObjectName,
+        objectName = refObjectName,
+        totalMethods = nMethods,
+        matchedFromRast = 0,
+        keptFromReference = nMethods,
+        refusalCount = 0,
+        matchDetails = Nil,
+      )
+      return (referenceSource, summary)
 
     // Extract RAST functions and build name map: camelCase -> translated body
     val rastBodies = buildRastBodyMap(rastFile, hierarchy, isDeFmethod)
