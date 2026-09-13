@@ -27,6 +27,10 @@ object TsToScalaEmitter:
       /** Map from TS type alias name to field names for tuple element access.
         * `Point` → Map(0 → "x", 1 → "y") means `p[0]` → `p.x`. */
       tupleFieldOverrides: Map[String, Map[Int, String]] = Map.empty,
+      /** Mutable tuple types: emitted as `case class` with `var` fields. */
+      mutableTupleTypes: Set[String] = Set.empty,
+      /** Type alias → case class definition string (emitted at package level). */
+      typeAliasDefinitions: Map[String, String] = Map.empty,
   )
 
   def emit(files: List[RastFile], config: EmitConfig): Map[String, String] =
@@ -670,6 +674,17 @@ object TsToScalaEmitter:
             case s if s.endsWith(".concat") =>
               val obj = s.stripSuffix(".concat")
               s"($obj ++ ${args.mkString(", ")})"
+            case s if s.endsWith(".splice") =>
+              val obj = s.stripSuffix(".splice")
+              if args.length == 2 then
+                s"{ val _removed = $obj.take(${args(0)} + ${args(1)}); $obj.remove(${args.mkString(", ")}); _removed }"
+              else s"$obj.splice(${args.mkString(", ")})"
+            case s if s.endsWith(".sort") =>
+              val obj = s.stripSuffix(".sort")
+              s"$obj.sortInPlaceWith((a, b) => ${args.head}(a, b) < 0)"
+            case s if s.endsWith(".filter") =>
+              val obj = s.stripSuffix(".filter")
+              s"$obj.filter(${args.mkString(", ")})"
             case s if s.endsWith(".toFixed") =>
               val obj = s.stripSuffix(".toFixed")
               val precision = args.headOption.getOrElse("0")
@@ -754,12 +769,15 @@ object TsToScalaEmitter:
           // Check for field override (Point.x instead of ._1)
           val objTypeText = objType.map(_.text).getOrElse("")
           val fieldOverride = config.tupleFieldOverrides.find { case (typeName, _) =>
-            objTypeText.contains(typeName) || typeAliasMap.values.exists(_ == typeName) && isTupleAccess
+            objTypeText.contains(typeName) || typeAliasMap.get(objTypeText).contains(typeName)
           }.flatMap(_._2.get(if idx.matches("\\d+") then idx.toInt else -1))
+          // Also check: if we have a tupleTypeOverride for the obj type, treat as named type access
+          val hasNamedType = config.tupleTypeOverrides.values.exists(v => objTypeText.contains(v)) ||
+            config.tupleFieldOverrides.keys.exists(k => objTypeText.contains(k))
           if callReturnsTuple && idx.matches("\\d+") then
             val accessor = fieldOverride.getOrElse(s"_${idx.toInt + 1}")
             s"{ val _r = $obj; _r.$accessor }"
-          else if isTupleAccess && idx.matches("\\d+") then
+          else if (isTupleAccess || hasNamedType || fieldOverride.isDefined) && idx.matches("\\d+") then
             val accessor = fieldOverride.getOrElse(s"_${idx.toInt + 1}")
             s"$obj.$accessor"
           else if isOptional then
@@ -1016,10 +1034,13 @@ object TsToScalaEmitter:
         case "numberLiteral" => "Int"
         case "booleanLiteral" => "Boolean"
         case "reference" =>
+          // Check tupleTypeOverrides FIRST — a named type alias takes precedence
+          val refText = rt.text.takeWhile(c => c != '<' && c != '[').trim
+          config.tupleTypeOverrides.get(refText) match
+            case Some(scalaName) => return scalaName
+            case None => ()
           val targetType = rt.target.flatMap(file.types.get)
           val target = targetType.map(_.text).getOrElse("Any")
-          // Tuple types: [number, number] → (Double, Double)
-          // Check both the reference text AND the target text for tuple patterns
           val isTuple = (rt.text.startsWith("[") && rt.text.contains(",")) ||
             (target.startsWith("[") && target.contains(",")) ||
             targetType.exists(t => t.kind == "reference" && t.text.startsWith("["))

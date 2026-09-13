@@ -221,23 +221,6 @@ class TsMinterSpec extends munit.FunSuite:
     assert(emitted.nonEmpty, "should emit at least one file")
 
   test("hachure-fill → emitted Scala source"):
-    val files = List(
-      "/rast/hachure-fill/src/hachure.rast.json",
-    ).map(loadRast)
-
-    val config = TsToScalaEmitter.EmitConfig(
-      packageName = "ssg.graphs.commons.rough.fillers",
-      imports = List("scala.collection.mutable.ArrayBuffer"),
-      braceStyle = true,
-    )
-    val emitted = TsToScalaEmitter.emit(files, config)
-    for ((name, source) <- emitted)
-      println(s"=== hf_$name.scala ===")
-      println(source)
-      println()
-    assert(emitted.nonEmpty, "should emit at least one file")
-
-  test("hachure-fill → emitted Scala source"):
     val files = List(loadRast("/rast/hachure-fill/src/hachure.rast.json"))
 
     val config = TsToScalaEmitter.EmitConfig(
@@ -248,6 +231,18 @@ class TsMinterSpec extends munit.FunSuite:
         "scala.util.boundary.break",
       ),
       braceStyle = true,
+      tupleTypeOverrides = Map("Point" -> "Point", "Line" -> "Line"),
+      tupleFieldOverrides = Map(
+        "Point" -> Map(0 -> "x", 1 -> "y"),
+        "Line" -> Map(0 -> "p1", 1 -> "p2"),
+      ),
+      mutableTupleTypes = Set("Point"),
+      typeAliasDefinitions = Map(
+        "Point" -> "final case class Point(var x: Double, var y: Double)",
+        "Line" -> "final case class Line(p1: Point, p2: Point)",
+        "EdgeEntry" -> "final case class EdgeEntry(ymin: Double, ymax: Double, var x: Double, islope: Double)",
+        "ActiveEdgeEntry" -> "final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)",
+      ),
       extraDeclarations = Map(
         "hachure" -> """final case class Point(var x: Double, var y: Double)
 final case class Line(p1: Point, p2: Point)
