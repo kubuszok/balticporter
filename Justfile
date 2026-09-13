@@ -5818,3 +5818,46 @@ sge-suite-check:
     echo "-- by file (top) --"
     cut -f2 "$REPORT/run-latest/errors-by-family.tsv" | sed -E 's#.*/sge/src/test/##' | sort | uniq -c | sort -rn | head -15
     headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
+# ts-export-mermaid / ts-export-terser — RAST export for the TS/JS frontend.
+#
+# Each recipe runs the TS exporter (`balticporter/frontend-ts/exporter`) against the upstream
+# source checkout under `../ssg/original-src/`. Mermaid is a TS project with its own tsconfig;
+# terser is pure JS and needs a generated tsconfig with `allowJs`.
+#
+# Output goes to `balticporter/frontend-ts/src/test/resources/rast/<lib>/` — the same directory
+# the emitter specs read fixtures from. A1 re-exports everything; these recipes make that
+# reproducible.
+# ---------------------------------------------------------------------------------------------
+
+[doc("export mermaid RAST from ../ssg/original-src/mermaid via the TS exporter")]
+ts-export-mermaid:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    EXPORTER="$ROOT/balticporter/frontend-ts/exporter"
+    MERMAID_SRC="$(cd ../ssg/original-src/mermaid/packages/mermaid && pwd)"
+    RAST_OUT="$ROOT/balticporter/frontend-ts/src/test/resources/rast/mermaid"
+    echo "-- ts-export-mermaid: $MERMAID_SRC -> $RAST_OUT --"
+    node "$EXPORTER/dist/export.js" \
+      --project "$MERMAID_SRC/tsconfig.json" \
+      --out "$RAST_OUT"
+
+[doc("export terser RAST from ../ssg/original-src/terser via the TS exporter (allowJs)")]
+ts-export-terser:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    EXPORTER="$ROOT/balticporter/frontend-ts/exporter"
+    TERSER_SRC="$(cd ../ssg/original-src/terser && pwd)"
+    RAST_OUT="$ROOT/balticporter/frontend-ts/src/test/resources/rast/terser"
+    # Terser is pure JS — generate a tsconfig with allowJs in the terser checkout
+    # so the include paths resolve relative to it.
+    TSCONFIG="$TERSER_SRC/.bp-tsconfig.json"
+    printf '%s\n' '{"compilerOptions":{"target":"ES2022","module":"nodenext","allowJs":true,"checkJs":false,"strict":false,"noEmit":true,"skipLibCheck":true,"esModuleInterop":true,"resolveJsonModule":true},"include":["lib/**/*.js","tools/domprops.js"]}' > "$TSCONFIG"
+    echo "-- ts-export-terser: $TERSER_SRC -> $RAST_OUT --"
+    node "$EXPORTER/dist/export.js" \
+      --project "$TSCONFIG" \
+      --out "$RAST_OUT"
+    rm -f "$TSCONFIG"
