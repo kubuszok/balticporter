@@ -1,6 +1,7 @@
 package balticporter.frontend.ts.dedicated
 
 import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import java.nio.file.{Files, Path}
 import scala.collection.mutable
 
 /** Emits complete compress module Scala files with translated method bodies.
@@ -581,3 +582,395 @@ object TerserCompressEmitter:
     "implicit", "given", "using", "then", "end", "inline", "opaque",
     "transparent", "erased", "open", "infix",
   )
+
+  // --------------------------------------------------------------------------
+  // Parity-derive emission: reference structure + RAST bodies
+  // --------------------------------------------------------------------------
+
+  /** Summary of parity-derive emission for one module. */
+  final case class ParityEmitSummary(
+      moduleName: String,
+      objectName: String,
+      totalMethods: Int,
+      matchedFromRast: Int,
+      keptFromReference: Int,
+      refusalCount: Int,
+      matchDetails: List[(String, String)],
+  )
+
+  /** A parsed method from the reference file. */
+  final case class ParsedMethod(
+      name: String,
+      signatureLine: Int,
+      bodyStartLine: Int,
+      bodyEndLine: Int,
+      isPrivate: Boolean,
+  )
+
+  /** Emit a compress module using parity-derive: the reference file's structure
+    * (package, imports, object name, method signatures, types) with RAST-translated
+    * bodies where a match is found.
+    *
+    * For methods where no RAST body matches, the reference body is kept as-is.
+    * This produces code that compiles in ssg because the structure matches the
+    * hand-ported reference exactly.
+    *
+    * @param rastFile the RAST for this compress module
+    * @param referencePath path to the hand-ported .scala file
+    * @param hierarchy the AST class hierarchy for body translation
+    * @param isDeFmethod true for DEFMETHOD modules, false for free-function modules
+    */
+  def emitWithParity(
+      rastFile: RastFile,
+      referencePath: Path,
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      isDeFmethod: Boolean = false,
+  ): (String, ParityEmitSummary) =
+    val referenceSource = new String(Files.readAllBytes(referencePath))
+    val lines = referenceSource.split("\n", -1).toList
+
+    // Extract RAST functions and build name map: camelCase -> translated body
+    val rastBodies = buildRastBodyMap(rastFile, hierarchy, isDeFmethod)
+
+    // Find all method boundaries in the reference file
+    val methods = findMethodBoundaries(lines)
+
+    // Determine the reference file's object name for the summary
+    val objectName = lines.find(_.matches("^(object|class)\\s+.*\\{.*$"))
+      .flatMap("""^(object|class)\s+(\w+)""".r.findFirstMatchIn(_).map(_.group(2)))
+      .getOrElse("Unknown")
+
+    val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
+
+    // Build the output by replacing method bodies where we have RAST matches
+    val sb = new StringBuilder
+    val matchDetails = mutable.ListBuffer.empty[(String, String)]
+    var totalRefusals = 0
+
+    var lineIdx = 0
+    var methodIdx = 0
+
+    while lineIdx < lines.size do
+      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
+        val method = methods(methodIdx)
+        val camelName = method.name
+
+        // Look up matching RAST body
+        rastBodies.get(camelName) match
+          case Some((translatedBody, refusals)) if !method.isPrivate =>
+            // Emit the signature, stripping any trailing `{` after `=` so
+            // the RAST body can provide its own structure.
+            val sigEndLineIdx = findSignatureEnd(lines, method.signatureLine)
+            for i <- method.signatureLine to sigEndLineIdx do
+              val line = lines(i)
+              if i == sigEndLineIdx then
+                val eqIdx = findEqualsInSignature(line)
+                if eqIdx >= 0 then
+                  // Emit up to and including `=`, stripping trailing `{` and whitespace
+                  sb.append(line.substring(0, eqIdx + 1))
+                  sb.append("\n")
+                else
+                  sb.append(line)
+                  sb.append("\n")
+              else
+                sb.append(line)
+                sb.append("\n")
+
+            // Emit translated RAST body
+            sb.append(translatedBody)
+
+            // Skip original body lines
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((camelName, "rast"))
+            totalRefusals += refusals
+
+          case _ =>
+            // No RAST match or private method: keep original
+            for i <- method.signatureLine to method.bodyEndLine do
+              sb.append(lines(i))
+              sb.append("\n")
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((camelName, "reference"))
+
+        methodIdx += 1
+      else
+        sb.append(lines(lineIdx))
+        sb.append("\n")
+        lineIdx += 1
+
+    val matched = matchDetails.count(_._2 == "rast")
+    val kept = matchDetails.count(_._2 == "reference")
+
+    val summary = ParityEmitSummary(
+      moduleName = moduleName,
+      objectName = objectName,
+      totalMethods = methods.size,
+      matchedFromRast = matched,
+      keptFromReference = kept,
+      refusalCount = totalRefusals,
+      matchDetails = matchDetails.toList,
+    )
+
+    (sb.toString, summary)
+
+  /** Build a map from camelCase method name to (translated body text, refusal count).
+    *
+    * Extracts both DEFMETHOD entries and free functions from the RAST, translates
+    * each body, and builds the lookup map using the snakeToCamel conversion.
+    */
+  private def buildRastBodyMap(
+      rastFile: RastFile,
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      isDeFmethod: Boolean,
+  ): Map[String, (String, Int)] =
+    val result = mutable.Map.empty[String, (String, Int)]
+
+    if isDeFmethod then
+      val entries = extractAllDefmethods(rastFile)
+      for entry <- entries do
+        val camelName = snakeToCamel(entry.methodName)
+        val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
+        // For DEFMETHOD modules, use className.methodName as key too
+        result(camelName) = (translated.scalaBody, translated.refusalCount)
+
+    val freeFns = TerserEmitter.extractFreeFunctions(rastFile)
+    for fn <- freeFns do
+      val camelName = snakeToCamel(fn.name)
+      val fnEntry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+      val translated = DefmethodBodyTranslator.translateBody(fnEntry, hierarchy, "    ")
+      result(camelName) = (translated.scalaBody, translated.refusalCount)
+
+    result.toMap
+
+  /** Find method boundaries in a reference Scala file.
+    *
+    * Returns a list of ParsedMethod entries describing each method's line range.
+    * The signatureLine is the first line of the def, bodyStartLine is the first
+    * line of the body (after the `=`), and bodyEndLine is the last line of the
+    * body (inclusive).
+    */
+  def findMethodBoundaries(lines: List[String]): List[ParsedMethod] =
+    val result = mutable.ListBuffer.empty[ParsedMethod]
+    val defPattern = """^\s{2}(private\s+)?def\s+(`?\w+`?)""".r
+    var i = 0
+
+    while i < lines.size do
+      defPattern.findFirstMatchIn(lines(i)) match
+        case Some(m) =>
+          val isPrivate = m.group(1) != null
+          val name = m.group(2).stripPrefix("`").stripSuffix("`")
+
+          // Find the end of the signature (the line containing `=`)
+          val sigEndLine = findSignatureEnd(lines, i)
+
+          // Find the end of the method body
+          val bodyEndLine = findBodyEnd(lines, sigEndLine)
+
+          // Body starts on the line after the signature end, or on the same
+          // line if the `=` has code after it
+          val bodyStartLine =
+            val sigLine = lines(sigEndLine)
+            val eqIdx = findEqualsInSignature(sigLine)
+            val afterEq = if eqIdx >= 0 then sigLine.substring(eqIdx + 1).trim else ""
+            if afterEq.nonEmpty && afterEq != "{" then sigEndLine
+            else sigEndLine + 1
+
+          result += ParsedMethod(name, i, bodyStartLine, bodyEndLine, isPrivate)
+          i = bodyEndLine + 1
+
+        case None =>
+          i += 1
+
+    result.toList
+
+  /** Find the line where the method signature ends (the line containing `=`).
+    *
+    * Handles multi-line signatures by tracking parenthesis depth.
+    */
+  private def findSignatureEnd(lines: List[String], startLine: Int): Int =
+    var depth = 0
+    var i = startLine
+    while i < lines.size do
+      val line = lines(i)
+      for ch <- line do
+        ch match
+          case '(' | '[' => depth += 1
+          case ')' | ']' => depth -= 1
+          case _ => ()
+      // The signature ends on the line where parens are balanced and we find `=`
+      if depth <= 0 && findEqualsInSignature(line) >= 0 then
+        return i
+      i += 1
+    // Fallback: return start line
+    startLine
+
+  /** Find the position of the `=` that ends a method signature.
+    *
+    * Scans from right to left for a standalone `=` preceded by whitespace.
+    * Rejects `==`, `!=`, `<=`, `>=`, and `=>`. Handles both `def f(): T = {`
+    * (at end) and `def f(): T = expr` (in middle).
+    */
+  private def findEqualsInSignature(line: String): Int =
+    var i = line.length - 1
+    while i >= 1 do
+      if line(i) == '=' then
+        val prev = line(i - 1)
+        val next = if i + 1 < line.length then line(i + 1) else ' '
+        // Must be preceded by whitespace; not part of ==, !=, <=, >=, or =>
+        if (prev == ' ' || prev == '\t') && next != '>' && next != '=' then
+          return i
+      i -= 1
+    -1
+
+  /** Find the last line of a method body, given the line where the signature
+    * ends (containing `=`).
+    *
+    * For braced bodies, counts braces to find the matching close. For non-braced
+    * bodies, finds the end by indentation.
+    */
+  private def findBodyEnd(lines: List[String], sigEndLine: Int): Int =
+    val sigLine = lines(sigEndLine)
+    val eqIdx = findEqualsInSignature(sigLine)
+    val afterEq = if eqIdx >= 0 then sigLine.substring(eqIdx + 1).trim else ""
+
+    // Check if this is a braced body
+    if afterEq == "{" || afterEq.startsWith("{") then
+      // Count braces starting from after the `=`
+      findMatchingBrace(lines, sigEndLine, eqIdx + 1)
+    else if afterEq.nonEmpty then
+      // Single-expression body on the same line as `=`
+      // But it might continue on subsequent lines (multi-line expression)
+      findExpressionEnd(lines, sigEndLine)
+    else
+      // Body starts on next line
+      if sigEndLine + 1 < lines.size then
+        val nextLine = lines(sigEndLine + 1).trim
+        if nextLine.startsWith("{") then
+          // Braced body starting on next line
+          findMatchingBrace(lines, sigEndLine + 1, 0)
+        else
+          // Non-braced expression body
+          findExpressionEnd(lines, sigEndLine + 1)
+      else
+        sigEndLine
+
+  /** Find the matching closing brace, starting from a given position in the file.
+    */
+  private def findMatchingBrace(lines: List[String], startLine: Int, startCol: Int): Int =
+    var depth = 0
+    var i = startLine
+    var foundFirstBrace = false
+    while i < lines.size do
+      val line = lines(i)
+      val startJ = if i == startLine then startCol else 0
+      var j = startJ
+      while j < line.length do
+        val ch = line(j)
+        // Skip string literals (simplistic: assume no multi-line strings in method bodies)
+        if ch == '"' then
+          j += 1
+          while j < line.length && line(j) != '"' do
+            if line(j) == '\\' then j += 1
+            j += 1
+        else if ch == '\'' then
+          j += 1
+          while j < line.length && line(j) != '\'' do
+            if line(j) == '\\' then j += 1
+            j += 1
+        else if ch == '{' then
+          depth += 1
+          foundFirstBrace = true
+        else if ch == '}' then
+          depth -= 1
+          if foundFirstBrace && depth == 0 then
+            return i
+        j += 1
+      i += 1
+    // Fallback
+    if startLine < lines.size - 1 then lines.size - 1 else startLine
+
+  /** Find the end of a non-braced expression body.
+    *
+    * The expression continues as long as subsequent lines are indented more than
+    * the base indentation level (2 spaces for top-level methods). An empty line
+    * does not end the expression if the next non-empty line is still indented.
+    */
+  private def findExpressionEnd(lines: List[String], startLine: Int): Int =
+    val baseIndent = 2 // top-level methods in an object
+    var lastContentLine = startLine
+    var i = startLine + 1
+
+    while i < lines.size do
+      val line = lines(i)
+      if line.trim.isEmpty then
+        // Empty line - check if the next non-empty line continues the expression
+        var nextNonEmpty = i + 1
+        while nextNonEmpty < lines.size && lines(nextNonEmpty).trim.isEmpty do
+          nextNonEmpty += 1
+        if nextNonEmpty < lines.size then
+          val nextLine = lines(nextNonEmpty)
+          val nextIndent = nextLine.takeWhile(_ == ' ').length
+          if nextIndent > baseIndent && !nextLine.trim.startsWith("def ") &&
+             !nextLine.trim.startsWith("private def ") &&
+             !nextLine.trim.startsWith("//") &&
+             !nextLine.trim.startsWith("/*") &&
+             !nextLine.trim.startsWith("val ") &&
+             !nextLine.trim.startsWith("var ") &&
+             !nextLine.trim.startsWith("class ") &&
+             !nextLine.trim.startsWith("object ") &&
+             nextLine.trim != "}" then
+            i = nextNonEmpty
+            // continue
+          else
+            return lastContentLine
+        else
+          return lastContentLine
+      else
+        val indent = line.takeWhile(_ == ' ').length
+        if indent <= baseIndent then
+          // We've reached a line at the base level or less - method body ended
+          return lastContentLine
+        else
+          lastContentLine = i
+          i += 1
+
+    lastContentLine
+
+  /** Emit all compress modules using parity-derive.
+    *
+    * @param loadRast function to load a RAST file from a resource path
+    * @param hierarchy the AST class hierarchy
+    * @param referenceRoot path to the compress module directory in ssg-js
+    */
+  def emitAllWithParity(
+      loadRast: String => RastFile,
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      referenceRoot: Path,
+  ): List[(CompressModule, String, ParityEmitSummary)] =
+    AllModules.flatMap { mod =>
+      val refFileName = ReferenceTypeOracle.emitterToReferenceObject
+        .getOrElse(mod.objectName, mod.objectName) + ".scala"
+      val refPath = referenceRoot.resolve(refFileName)
+      if Files.exists(refPath) then
+        val file = loadRast(mod.rastResource)
+        val (source, summary) = emitWithParity(file, refPath, hierarchy, mod.isDeFmethod)
+        Some((mod, source, summary))
+      else None
+    }
+
+  /** Format a parity summary table for console output. */
+  def formatParitySummaryTable(summaries: List[ParityEmitSummary]): String =
+    val sb = new StringBuilder
+    sb.append(f"${"Module"}%-25s ${"Total"}%6s ${"RAST"}%6s ${"Ref"}%6s ${"Refusals"}%9s\n")
+    sb.append("-" * 55)
+    sb.append("\n")
+    var tTotal = 0; var tRast = 0; var tRef = 0; var tRefusals = 0
+    for s <- summaries do
+      sb.append(f"${s.moduleName}%-25s ${s.totalMethods}%6d ${s.matchedFromRast}%6d ${s.keptFromReference}%6d ${s.refusalCount}%9d\n")
+      tTotal += s.totalMethods; tRast += s.matchedFromRast; tRef += s.keptFromReference; tRefusals += s.refusalCount
+    sb.append("-" * 55)
+    sb.append("\n")
+    sb.append(f"${"TOTAL"}%-25s ${tTotal}%6d ${tRast}%6d ${tRef}%6d ${tRefusals}%9d\n")
+    val pctRast = if tTotal > 0 then (tRast * 100.0 / tTotal) else 0.0
+    sb.append(f"\nRAST-derived bodies: $tRast/$tTotal (${pctRast}%.1f%%)\n")
+    sb.toString

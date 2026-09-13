@@ -220,3 +220,177 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
     val (source, summary) = dedicated.TerserCompressEmitter.emitFreeFunctionModule(rast, "inline", "Inline", hierarchy)
     assert(source.contains("object Inline"), s"should emit Inline object")
     println(s"compress/inline: ${summary.freeFunctionCount} functions, full=${summary.fullyTranslated}")
+
+  // -----------------------------------------------------------------------
+  // Parity-derive emission: reference structure + RAST bodies
+  // -----------------------------------------------------------------------
+
+  private val referenceRoot: java.nio.file.Path =
+    val candidates = List(
+      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+      // ssg sibling to balticporter project root
+      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+      // balticporter is in a subdirectory; ssg sibling to that
+      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
+      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
+    ).flatten
+    val compressDir = "ssg-js/src/main/scala/ssg/js/compress"
+    candidates.map(_.resolve(compressDir))
+      .find(p => java.nio.file.Files.exists(p.resolve("Common.scala")))
+      .getOrElse(java.nio.file.Path.of("nonexistent"))
+
+  test("parity: findMethodBoundaries on synthetic input"):
+    val source = List(
+      "package test",
+      "",
+      "object Foo {",
+      "",
+      "  def braced(x: Int): Int = {",       // line 4, braced body
+      "    x + 1",
+      "  }",
+      "",
+      "  def expression(x: Int): Int =",       // line 8, expression body
+      "    x + 2",
+      "",
+      "  def inline(x: Int): Int = x + 3",     // line 11, inline body
+      "",
+      "  def multiLine(",                       // line 13, multi-line sig
+      "      a: Int,",
+      "      b: Int,",
+      "  ): Int = {",
+      "    a + b",
+      "  }",
+      "",
+      "  private def priv(n: Int): Int =",      // line 20, private
+      "    n * 2",
+      "",
+      "  def complex(x: Any): Boolean =",       // line 23, multi-line expression
+      "    x match {",
+      "      case _: Int => true",
+      "      case _ => false",
+      "    }",
+      "",
+      "  val constant = 42",
+      "",
+      "  def afterVal(x: Int): Int = x",        // line 31, after a val
+      "}",
+    )
+    val methods = dedicated.TerserCompressEmitter.findMethodBoundaries(source)
+    val names = methods.map(_.name)
+    assertEquals(names, List("braced", "expression", "inline", "multiLine", "priv", "complex", "afterVal"))
+    // Check braced method boundaries
+    val braced = methods.find(_.name == "braced").get
+    assertEquals(braced.signatureLine, 4)
+    assertEquals(braced.bodyEndLine, 6)
+    // Check expression method
+    val expression = methods.find(_.name == "expression").get
+    assertEquals(expression.signatureLine, 8)
+    assertEquals(expression.bodyEndLine, 9)
+    // Check inline method
+    val inl = methods.find(_.name == "inline").get
+    assertEquals(inl.signatureLine, 11)
+    // Check multi-line signature
+    val ml = methods.find(_.name == "multiLine").get
+    assertEquals(ml.signatureLine, 13)
+    assertEquals(ml.bodyEndLine, 18)
+    // Check private detection
+    val priv = methods.find(_.name == "priv").get
+    assert(priv.isPrivate, "priv should be detected as private")
+    // Check complex multi-line expression
+    val complex = methods.find(_.name == "complex").get
+    assertEquals(complex.bodyEndLine, 27)
+
+  test("parity: findMethodBoundaries on Common.scala"):
+    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then
+      println("SKIP: ssg reference not found at " + referenceRoot)
+    else
+      val source = new String(java.nio.file.Files.readAllBytes(referenceRoot.resolve("Common.scala")))
+      val lines = source.split("\n", -1).toList
+      val methods = dedicated.TerserCompressEmitter.findMethodBoundaries(lines)
+      println(s"Common.scala: found ${methods.size} methods:")
+      for m <- methods do
+        println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
+      // Common.scala has around 20+ methods including private ones
+      assert(methods.size >= 15, s"Expected >= 15 methods, got ${methods.size}")
+      // Verify known methods exist
+      val names = methods.map(_.name).toSet
+      assert(names.contains("mergeSequence"), "should find mergeSequence")
+      assert(names.contains("makeSequence"), "should find makeSequence")
+      assert(names.contains("bestOf"), "should find bestOf")
+      assert(names.contains("isEmpty"), "should find isEmpty")
+      assert(names.contains("walkParent"), "should find walkParent")
+
+  test("parity: emitWithParity on Common.scala"):
+    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then
+      println("SKIP: ssg reference not found at " + referenceRoot)
+    else
+      val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
+      val refPath = referenceRoot.resolve("Common.scala")
+      val (source, summary) = dedicated.TerserCompressEmitter.emitWithParity(
+        rast, refPath, hierarchy, isDeFmethod = false)
+
+      println(s"\n=== Parity-derive: Common.scala ===")
+      println(s"Total methods: ${summary.totalMethods}")
+      println(s"RAST-derived bodies: ${summary.matchedFromRast}")
+      println(s"Reference bodies kept: ${summary.keptFromReference}")
+      println(s"Total refusals: ${summary.refusalCount}")
+      println(s"\nMatch details:")
+      for (name, src) <- summary.matchDetails do
+        println(s"  $name -> $src")
+
+      // Source should contain the reference's package and imports
+      assert(source.contains("package ssg"), "should preserve package")
+      assert(source.contains("import scala.collection.mutable.ArrayBuffer"), "should preserve imports")
+      assert(source.contains("object Common"), "should preserve object name")
+
+      // At least some methods should be matched from RAST
+      assert(summary.matchedFromRast >= 5,
+        s"Expected >= 5 RAST matches, got ${summary.matchedFromRast}")
+
+      // Write to output for inspection
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
+      java.nio.file.Files.createDirectories(outDir)
+      java.nio.file.Files.writeString(outDir.resolve("Common.scala"), source)
+      println(s"\nEmitted to: ${outDir.resolve("Common.scala")}")
+      println(s"Line count: ${source.linesIterator.size}")
+
+  test("parity: emitWithParity on GlobalDefs.scala"):
+    if !java.nio.file.Files.exists(referenceRoot.resolve("GlobalDefs.scala")) then
+      println("SKIP: ssg reference not found at " + referenceRoot)
+    else
+      val rast = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
+      val refPath = referenceRoot.resolve("GlobalDefs.scala")
+      val (source, summary) = dedicated.TerserCompressEmitter.emitWithParity(
+        rast, refPath, hierarchy, isDeFmethod = true)
+
+      println(s"\n=== Parity-derive: GlobalDefs.scala ===")
+      println(s"Total: ${summary.totalMethods}, RAST: ${summary.matchedFromRast}, Ref: ${summary.keptFromReference}")
+      for (name, src) <- summary.matchDetails do
+        println(s"  $name -> $src")
+
+      assert(source.contains("object GlobalDefs"), "should preserve object name")
+
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
+      java.nio.file.Files.createDirectories(outDir)
+      java.nio.file.Files.writeString(outDir.resolve("GlobalDefs.scala"), source)
+
+  test("parity: emitAllWithParity batch"):
+    if !java.nio.file.Files.exists(referenceRoot) then
+      println("SKIP: ssg reference not found at " + referenceRoot)
+    else
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
+      java.nio.file.Files.createDirectories(outDir)
+
+      val results = dedicated.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
+
+      for (mod, source, summary) <- results do
+        val path = outDir.resolve(s"${summary.objectName}.scala")
+        java.nio.file.Files.writeString(path, source)
+
+      val summaries = results.map(_._3)
+      println("\n=== Parity-derive Summary ===")
+      println(dedicated.TerserCompressEmitter.formatParitySummaryTable(summaries))
+
+      // Verify we got results for modules that have reference files
+      assert(results.nonEmpty, "should emit at least some modules")
+      println(s"\nEmitted ${results.size} modules to $outDir")
