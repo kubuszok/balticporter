@@ -18,10 +18,10 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
     val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
     val dts = dedicated.AstDtsGenerator.generate(hierarchy)
     // Should contain class declarations
-    assert(dts.contains("declare class AST_Node"), "Should declare AST_Node")
-    assert(dts.contains("declare class AST_Statement"), "Should declare AST_Statement")
-    assert(dts.contains("declare class AST_For"), "Should declare AST_For")
-    assert(dts.contains("declare class AST_Token"), "Should declare AST_Token")
+    assert(dts.contains("export declare class AST_Node"), "Should declare AST_Node")
+    assert(dts.contains("export declare class AST_Statement"), "Should declare AST_Statement")
+    assert(dts.contains("export declare class AST_For"), "Should declare AST_For")
+    assert(dts.contains("export declare class AST_Token"), "Should declare AST_Token")
     // Should have the extends chain
     assert(dts.contains("extends AST_Node"), "Should have extends AST_Node")
 
@@ -84,7 +84,7 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
     val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
     val dts = dedicated.AstDtsGenerator.generate(hierarchy)
-    assert(dts.contains("declare class SymbolDef"), "Should have SymbolDef declaration")
+    assert(dts.contains("export declare class SymbolDef"), "Should have SymbolDef declaration")
     assert(dts.contains("name: string;"), "SymbolDef should have name: string")
 
   test("countTypedFields counts all selfProps"):
@@ -104,7 +104,7 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
       hierarchy,
       dedicated.AstDtsGenerator.commonDefmethodDecls,
     )
-    assert(dts.contains("interface AST_Node"), "Should have AST_Node interface augmentation")
+    assert(dts.contains("export interface AST_Node"), "Should have AST_Node interface augmentation")
     assert(dts.contains("equivalent_to(node: AST_Node): boolean;"),
       "Should declare equivalent_to")
     assert(dts.contains("figure_out_scope(options: any): void;"),
@@ -119,7 +119,7 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
       hierarchy,
       dedicated.AstDtsGenerator.commonDefmethodDecls,
     )
-    assert(dts.contains("interface AST_Scope"), "Should have AST_Scope interface augmentation")
+    assert(dts.contains("export interface AST_Scope"), "Should have AST_Scope interface augmentation")
     assert(dts.contains("def_variable(symbol: AST_Symbol, init: AST_Node | null): SymbolDef;"),
       "Should declare def_variable")
 

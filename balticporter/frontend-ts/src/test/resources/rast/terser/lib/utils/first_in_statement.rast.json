@@ -63,7 +63,7 @@
                         3,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t81",
                       "text": "AST_Conditional",
                       "resolvedSymbol": "s1"
                     }
@@ -84,7 +84,7 @@
                         4,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t91",
                       "text": "AST_Chain",
                       "resolvedSymbol": "s2"
                     }
@@ -105,7 +105,7 @@
                         5,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t101",
                       "text": "AST_Dot",
                       "resolvedSymbol": "s3"
                     }
@@ -126,7 +126,7 @@
                         6,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t112",
                       "text": "AST_Object",
                       "resolvedSymbol": "s4"
                     }
@@ -147,7 +147,7 @@
                         7,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t122",
                       "text": "AST_Sequence",
                       "resolvedSymbol": "s5"
                     }
@@ -168,7 +168,7 @@
                         8,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t132",
                       "text": "AST_Statement",
                       "resolvedSymbol": "s6"
                     }
@@ -189,7 +189,7 @@
                         9,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t138",
                       "text": "AST_Sub",
                       "resolvedSymbol": "s7"
                     }
@@ -210,7 +210,7 @@
                         10,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t148",
                       "text": "AST_UnaryPostfix",
                       "resolvedSymbol": "s8"
                     }
@@ -231,7 +231,7 @@
                         11,
                         5
                       ],
-                      "type": "t0",
+                      "type": "t158",
                       "text": "AST_PrefixedTemplateString",
                       "resolvedSymbol": "s9"
                     }
@@ -248,7 +248,7 @@
             12,
             8
           ],
-          "type": "t1",
+          "type": "t168",
           "value": "../ast.js"
         }
       ]
@@ -295,7 +295,7 @@
             17,
             10
           ],
-          "type": "t2",
+          "type": "t169",
           "text": "first_in_statement",
           "resolvedSymbol": "s10"
         },
@@ -307,7 +307,7 @@
             29
           ],
           "symbol": "s11",
-          "type": "t0",
+          "type": "t12",
           "children": [
             {
               "kind": "Identifier",
@@ -316,7 +316,7 @@
                 17,
                 29
               ],
-              "type": "t0",
+              "type": "t12",
               "text": "stack",
               "resolvedSymbol": "s11"
             }
@@ -354,7 +354,7 @@
                         9
                       ],
                       "symbol": "s12",
-                      "type": "t0",
+                      "type": "t12",
                       "flags": [
                         "let"
                       ],
@@ -366,7 +366,7 @@
                             18,
                             9
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "text": "node",
                           "resolvedSymbol": "s12"
                         },
@@ -377,7 +377,7 @@
                             18,
                             16
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "children": [
                             {
                               "kind": "PropertyAccessExpression",
@@ -386,7 +386,7 @@
                                 18,
                                 16
                               ],
-                              "type": "t0",
+                              "type": "t12",
                               "children": [
                                 {
                                   "kind": "Identifier",
@@ -395,7 +395,7 @@
                                     18,
                                     16
                                   ],
-                                  "type": "t0",
+                                  "type": "t12",
                                   "text": "stack",
                                   "resolvedSymbol": "s11"
                                 },
@@ -406,7 +406,7 @@
                                     18,
                                     22
                                   ],
-                                  "type": "t0",
+                                  "type": "t12",
                                   "text": "parent"
                                 }
                               ]
@@ -418,7 +418,7 @@
                                 18,
                                 29
                               ],
-                              "type": "t6",
+                              "type": "t173",
                               "operator": "MinusToken",
                               "children": [
                                 {
@@ -428,7 +428,7 @@
                                     18,
                                     30
                                   ],
-                                  "type": "t7",
+                                  "type": "t174",
                                   "value": 1
                                 }
                               ]
@@ -465,7 +465,7 @@
                         14
                       ],
                       "symbol": "s13",
-                      "type": "t8",
+                      "type": "t5",
                       "flags": [
                         "let"
                       ],
@@ -477,7 +477,7 @@
                             19,
                             14
                           ],
-                          "type": "t8",
+                          "type": "t5",
                           "text": "i",
                           "resolvedSymbol": "s13"
                         },
@@ -488,7 +488,7 @@
                             19,
                             18
                           ],
-                          "type": "t9",
+                          "type": "t30",
                           "value": 0
                         }
                       ]
@@ -501,7 +501,7 @@
                         21
                       ],
                       "symbol": "s14",
-                      "type": "t10",
+                      "type": "t175",
                       "flags": [
                         "let"
                       ],
@@ -513,7 +513,7 @@
                             19,
                             21
                           ],
-                          "type": "t10",
+                          "type": "t175",
                           "text": "p",
                           "resolvedSymbol": "s14"
                         }
@@ -528,7 +528,7 @@
                     19,
                     24
                   ],
-                  "type": "t0",
+                  "type": "t12",
                   "operator": "EqualsToken",
                   "children": [
                     {
@@ -538,7 +538,7 @@
                         19,
                         24
                       ],
-                      "type": "t10",
+                      "type": "t175",
                       "text": "p",
                       "resolvedSymbol": "s14"
                     },
@@ -549,7 +549,7 @@
                         19,
                         28
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "children": [
                         {
                           "kind": "PropertyAccessExpression",
@@ -558,7 +558,7 @@
                             19,
                             28
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -567,7 +567,7 @@
                                 19,
                                 28
                               ],
-                              "type": "t0",
+                              "type": "t12",
                               "text": "stack",
                               "resolvedSymbol": "s11"
                             },
@@ -578,7 +578,7 @@
                                 19,
                                 34
                               ],
-                              "type": "t0",
+                              "type": "t12",
                               "text": "parent"
                             }
                           ]
@@ -590,7 +590,7 @@
                             19,
                             41
                           ],
-                          "type": "t8",
+                          "type": "t5",
                           "text": "i",
                           "resolvedSymbol": "s13"
                         }
@@ -605,7 +605,7 @@
                     19,
                     45
                   ],
-                  "type": "t8",
+                  "type": "t5",
                   "operator": "PlusPlusToken",
                   "children": [
                     {
@@ -615,7 +615,7 @@
                         19,
                         45
                       ],
-                      "type": "t8",
+                      "type": "t5",
                       "text": "i",
                       "resolvedSymbol": "s13"
                     }
@@ -644,7 +644,7 @@
                             20,
                             13
                           ],
-                          "type": "t11",
+                          "type": "t6",
                           "operator": "AmpersandAmpersandToken",
                           "children": [
                             {
@@ -654,7 +654,7 @@
                                 20,
                                 13
                               ],
-                              "type": "t11",
+                              "type": "t6",
                               "operator": "InstanceOfKeyword",
                               "children": [
                                 {
@@ -664,7 +664,7 @@
                                     20,
                                     13
                                   ],
-                                  "type": "t0",
+                                  "type": "t12",
                                   "text": "p",
                                   "resolvedSymbol": "s14"
                                 },
@@ -683,7 +683,7 @@
                                     20,
                                     26
                                   ],
-                                  "type": "t0",
+                                  "type": "t132",
                                   "text": "AST_Statement",
                                   "resolvedSymbol": "s6"
                                 }
@@ -696,7 +696,7 @@
                                 20,
                                 43
                               ],
-                              "type": "t11",
+                              "type": "t6",
                               "operator": "EqualsEqualsEqualsToken",
                               "children": [
                                 {
@@ -706,7 +706,7 @@
                                     20,
                                     43
                                   ],
-                                  "type": "t0",
+                                  "type": "t168",
                                   "children": [
                                     {
                                       "kind": "Identifier",
@@ -715,7 +715,7 @@
                                         20,
                                         43
                                       ],
-                                      "type": "t0",
+                                      "type": "t133",
                                       "text": "p",
                                       "resolvedSymbol": "s14"
                                     },
@@ -726,7 +726,7 @@
                                         20,
                                         45
                                       ],
-                                      "type": "t0",
+                                      "type": "t168",
                                       "text": "body"
                                     }
                                   ]
@@ -738,7 +738,7 @@
                                     20,
                                     54
                                   ],
-                                  "type": "t0",
+                                  "type": "t12",
                                   "text": "node",
                                   "resolvedSymbol": "s12"
                                 }
@@ -761,7 +761,7 @@
                                 21,
                                 20
                               ],
-                              "type": "t13",
+                              "type": "t8",
                               "value": true
                             }
                           ]
@@ -783,7 +783,7 @@
                             22,
                             13
                           ],
-                          "type": "t11",
+                          "type": "t6",
                           "operator": "BarBarToken",
                           "children": [
                             {
@@ -793,7 +793,7 @@
                                 22,
                                 13
                               ],
-                              "type": "t11",
+                              "type": "t6",
                               "operator": "BarBarToken",
                               "children": [
                                 {
@@ -803,7 +803,7 @@
                                     22,
                                     13
                                   ],
-                                  "type": "t11",
+                                  "type": "t6",
                                   "operator": "BarBarToken",
                                   "children": [
                                     {
@@ -813,7 +813,7 @@
                                         22,
                                         13
                                       ],
-                                      "type": "t11",
+                                      "type": "t6",
                                       "operator": "BarBarToken",
                                       "children": [
                                         {
@@ -823,7 +823,7 @@
                                             22,
                                             13
                                           ],
-                                          "type": "t11",
+                                          "type": "t6",
                                           "operator": "BarBarToken",
                                           "children": [
                                             {
@@ -833,7 +833,7 @@
                                                 22,
                                                 13
                                               ],
-                                              "type": "t11",
+                                              "type": "t6",
                                               "operator": "BarBarToken",
                                               "children": [
                                                 {
@@ -843,7 +843,7 @@
                                                     22,
                                                     13
                                                   ],
-                                                  "type": "t11",
+                                                  "type": "t6",
                                                   "operator": "BarBarToken",
                                                   "children": [
                                                     {
@@ -853,7 +853,7 @@
                                                         22,
                                                         13
                                                       ],
-                                                      "type": "t11",
+                                                      "type": "t6",
                                                       "operator": "BarBarToken",
                                                       "children": [
                                                         {
@@ -863,7 +863,7 @@
                                                             22,
                                                             13
                                                           ],
-                                                          "type": "t11",
+                                                          "type": "t6",
                                                           "children": [
                                                             {
                                                               "kind": "BinaryExpression",
@@ -872,7 +872,7 @@
                                                                 22,
                                                                 14
                                                               ],
-                                                              "type": "t11",
+                                                              "type": "t6",
                                                               "operator": "AmpersandAmpersandToken",
                                                               "children": [
                                                                 {
@@ -882,7 +882,7 @@
                                                                     22,
                                                                     14
                                                                   ],
-                                                                  "type": "t11",
+                                                                  "type": "t6",
                                                                   "operator": "InstanceOfKeyword",
                                                                   "children": [
                                                                     {
@@ -892,7 +892,7 @@
                                                                         22,
                                                                         14
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t12",
                                                                       "text": "p",
                                                                       "resolvedSymbol": "s14"
                                                                     },
@@ -911,7 +911,7 @@
                                                                         22,
                                                                         27
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t122",
                                                                       "text": "AST_Sequence",
                                                                       "resolvedSymbol": "s5"
                                                                     }
@@ -924,7 +924,7 @@
                                                                     22,
                                                                     43
                                                                   ],
-                                                                  "type": "t11",
+                                                                  "type": "t6",
                                                                   "operator": "EqualsEqualsEqualsToken",
                                                                   "children": [
                                                                     {
@@ -934,7 +934,7 @@
                                                                         22,
                                                                         43
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t3",
                                                                       "children": [
                                                                         {
                                                                           "kind": "PropertyAccessExpression",
@@ -943,7 +943,7 @@
                                                                             22,
                                                                             43
                                                                           ],
-                                                                          "type": "t0",
+                                                                          "type": "t66",
                                                                           "children": [
                                                                             {
                                                                               "kind": "Identifier",
@@ -952,7 +952,7 @@
                                                                                 22,
                                                                                 43
                                                                               ],
-                                                                              "type": "t0",
+                                                                              "type": "t123",
                                                                               "text": "p",
                                                                               "resolvedSymbol": "s14"
                                                                             },
@@ -963,8 +963,9 @@
                                                                                 22,
                                                                                 45
                                                                               ],
-                                                                              "type": "t0",
-                                                                              "text": "expressions"
+                                                                              "type": "t66",
+                                                                              "text": "expressions",
+                                                                              "resolvedSymbol": "s15"
                                                                             }
                                                                           ]
                                                                         },
@@ -975,7 +976,7 @@
                                                                             22,
                                                                             57
                                                                           ],
-                                                                          "type": "t9",
+                                                                          "type": "t30",
                                                                           "value": 0
                                                                         }
                                                                       ]
@@ -987,7 +988,7 @@
                                                                         22,
                                                                         64
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t12",
                                                                       "text": "node",
                                                                       "resolvedSymbol": "s12"
                                                                     }
@@ -1004,7 +1005,7 @@
                                                             23,
                                                             13
                                                           ],
-                                                          "type": "t11",
+                                                          "type": "t6",
                                                           "children": [
                                                             {
                                                               "kind": "BinaryExpression",
@@ -1013,7 +1014,7 @@
                                                                 23,
                                                                 14
                                                               ],
-                                                              "type": "t11",
+                                                              "type": "t6",
                                                               "operator": "AmpersandAmpersandToken",
                                                               "children": [
                                                                 {
@@ -1023,7 +1024,7 @@
                                                                     23,
                                                                     14
                                                                   ],
-                                                                  "type": "t11",
+                                                                  "type": "t6",
                                                                   "operator": "EqualsEqualsEqualsToken",
                                                                   "children": [
                                                                     {
@@ -1033,7 +1034,7 @@
                                                                         23,
                                                                         14
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t12",
                                                                       "children": [
                                                                         {
                                                                           "kind": "Identifier",
@@ -1042,7 +1043,7 @@
                                                                             23,
                                                                             14
                                                                           ],
-                                                                          "type": "t0",
+                                                                          "type": "t12",
                                                                           "text": "p",
                                                                           "resolvedSymbol": "s14"
                                                                         },
@@ -1053,7 +1054,7 @@
                                                                             23,
                                                                             16
                                                                           ],
-                                                                          "type": "t0",
+                                                                          "type": "t12",
                                                                           "text": "TYPE"
                                                                         }
                                                                       ]
@@ -1065,7 +1066,7 @@
                                                                         23,
                                                                         25
                                                                       ],
-                                                                      "type": "t14",
+                                                                      "type": "t176",
                                                                       "value": "Call"
                                                                     }
                                                                   ]
@@ -1077,7 +1078,7 @@
                                                                     23,
                                                                     35
                                                                   ],
-                                                                  "type": "t11",
+                                                                  "type": "t6",
                                                                   "operator": "EqualsEqualsEqualsToken",
                                                                   "children": [
                                                                     {
@@ -1087,7 +1088,7 @@
                                                                         23,
                                                                         35
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t12",
                                                                       "children": [
                                                                         {
                                                                           "kind": "Identifier",
@@ -1096,7 +1097,7 @@
                                                                             23,
                                                                             35
                                                                           ],
-                                                                          "type": "t0",
+                                                                          "type": "t12",
                                                                           "text": "p",
                                                                           "resolvedSymbol": "s14"
                                                                         },
@@ -1107,7 +1108,7 @@
                                                                             23,
                                                                             37
                                                                           ],
-                                                                          "type": "t0",
+                                                                          "type": "t12",
                                                                           "text": "expression"
                                                                         }
                                                                       ]
@@ -1119,7 +1120,7 @@
                                                                         23,
                                                                         52
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t12",
                                                                       "text": "node",
                                                                       "resolvedSymbol": "s12"
                                                                     }
@@ -1138,7 +1139,7 @@
                                                         24,
                                                         13
                                                       ],
-                                                      "type": "t11",
+                                                      "type": "t6",
                                                       "children": [
                                                         {
                                                           "kind": "BinaryExpression",
@@ -1147,7 +1148,7 @@
                                                             24,
                                                             14
                                                           ],
-                                                          "type": "t11",
+                                                          "type": "t6",
                                                           "operator": "AmpersandAmpersandToken",
                                                           "children": [
                                                             {
@@ -1157,7 +1158,7 @@
                                                                 24,
                                                                 14
                                                               ],
-                                                              "type": "t11",
+                                                              "type": "t6",
                                                               "operator": "InstanceOfKeyword",
                                                               "children": [
                                                                 {
@@ -1167,7 +1168,7 @@
                                                                     24,
                                                                     14
                                                                   ],
-                                                                  "type": "t0",
+                                                                  "type": "t12",
                                                                   "text": "p",
                                                                   "resolvedSymbol": "s14"
                                                                 },
@@ -1186,7 +1187,7 @@
                                                                     24,
                                                                     27
                                                                   ],
-                                                                  "type": "t0",
+                                                                  "type": "t158",
                                                                   "text": "AST_PrefixedTemplateString",
                                                                   "resolvedSymbol": "s9"
                                                                 }
@@ -1199,7 +1200,7 @@
                                                                 24,
                                                                 57
                                                               ],
-                                                              "type": "t11",
+                                                              "type": "t6",
                                                               "operator": "EqualsEqualsEqualsToken",
                                                               "children": [
                                                                 {
@@ -1209,7 +1210,7 @@
                                                                     24,
                                                                     57
                                                                   ],
-                                                                  "type": "t0",
+                                                                  "type": "t3",
                                                                   "children": [
                                                                     {
                                                                       "kind": "Identifier",
@@ -1218,7 +1219,7 @@
                                                                         24,
                                                                         57
                                                                       ],
-                                                                      "type": "t0",
+                                                                      "type": "t159",
                                                                       "text": "p",
                                                                       "resolvedSymbol": "s14"
                                                                     },
@@ -1229,8 +1230,9 @@
                                                                         24,
                                                                         59
                                                                       ],
-                                                                      "type": "t0",
-                                                                      "text": "prefix"
+                                                                      "type": "t3",
+                                                                      "text": "prefix",
+                                                                      "resolvedSymbol": "s16"
                                                                     }
                                                                   ]
                                                                 },
@@ -1241,7 +1243,7 @@
                                                                     24,
                                                                     70
                                                                   ],
-                                                                  "type": "t0",
+                                                                  "type": "t12",
                                                                   "text": "node",
                                                                   "resolvedSymbol": "s12"
                                                                 }
@@ -1260,7 +1262,7 @@
                                                     25,
                                                     13
                                                   ],
-                                                  "type": "t11",
+                                                  "type": "t6",
                                                   "children": [
                                                     {
                                                       "kind": "BinaryExpression",
@@ -1269,7 +1271,7 @@
                                                         25,
                                                         14
                                                       ],
-                                                      "type": "t11",
+                                                      "type": "t6",
                                                       "operator": "AmpersandAmpersandToken",
                                                       "children": [
                                                         {
@@ -1279,7 +1281,7 @@
                                                             25,
                                                             14
                                                           ],
-                                                          "type": "t11",
+                                                          "type": "t6",
                                                           "operator": "InstanceOfKeyword",
                                                           "children": [
                                                             {
@@ -1289,7 +1291,7 @@
                                                                 25,
                                                                 14
                                                               ],
-                                                              "type": "t0",
+                                                              "type": "t12",
                                                               "text": "p",
                                                               "resolvedSymbol": "s14"
                                                             },
@@ -1308,7 +1310,7 @@
                                                                 25,
                                                                 27
                                                               ],
-                                                              "type": "t0",
+                                                              "type": "t101",
                                                               "text": "AST_Dot",
                                                               "resolvedSymbol": "s3"
                                                             }
@@ -1321,7 +1323,7 @@
                                                             25,
                                                             38
                                                           ],
-                                                          "type": "t11",
+                                                          "type": "t6",
                                                           "operator": "EqualsEqualsEqualsToken",
                                                           "children": [
                                                             {
@@ -1331,7 +1333,7 @@
                                                                 25,
                                                                 38
                                                               ],
-                                                              "type": "t0",
+                                                              "type": "t3",
                                                               "children": [
                                                                 {
                                                                   "kind": "Identifier",
@@ -1340,7 +1342,7 @@
                                                                     25,
                                                                     38
                                                                   ],
-                                                                  "type": "t0",
+                                                                  "type": "t102",
                                                                   "text": "p",
                                                                   "resolvedSymbol": "s14"
                                                                 },
@@ -1351,8 +1353,9 @@
                                                                     25,
                                                                     40
                                                                   ],
-                                                                  "type": "t0",
-                                                                  "text": "expression"
+                                                                  "type": "t3",
+                                                                  "text": "expression",
+                                                                  "resolvedSymbol": "s17"
                                                                 }
                                                               ]
                                                             },
@@ -1363,7 +1366,7 @@
                                                                 25,
                                                                 55
                                                               ],
-                                                              "type": "t0",
+                                                              "type": "t12",
                                                               "text": "node",
                                                               "resolvedSymbol": "s12"
                                                             }
@@ -1382,7 +1385,7 @@
                                                 26,
                                                 13
                                               ],
-                                              "type": "t11",
+                                              "type": "t6",
                                               "children": [
                                                 {
                                                   "kind": "BinaryExpression",
@@ -1391,7 +1394,7 @@
                                                     26,
                                                     14
                                                   ],
-                                                  "type": "t11",
+                                                  "type": "t6",
                                                   "operator": "AmpersandAmpersandToken",
                                                   "children": [
                                                     {
@@ -1401,7 +1404,7 @@
                                                         26,
                                                         14
                                                       ],
-                                                      "type": "t11",
+                                                      "type": "t6",
                                                       "operator": "InstanceOfKeyword",
                                                       "children": [
                                                         {
@@ -1411,7 +1414,7 @@
                                                             26,
                                                             14
                                                           ],
-                                                          "type": "t0",
+                                                          "type": "t12",
                                                           "text": "p",
                                                           "resolvedSymbol": "s14"
                                                         },
@@ -1430,7 +1433,7 @@
                                                             26,
                                                             27
                                                           ],
-                                                          "type": "t0",
+                                                          "type": "t138",
                                                           "text": "AST_Sub",
                                                           "resolvedSymbol": "s7"
                                                         }
@@ -1443,7 +1446,7 @@
                                                         26,
                                                         38
                                                       ],
-                                                      "type": "t11",
+                                                      "type": "t6",
                                                       "operator": "EqualsEqualsEqualsToken",
                                                       "children": [
                                                         {
@@ -1453,7 +1456,7 @@
                                                             26,
                                                             38
                                                           ],
-                                                          "type": "t0",
+                                                          "type": "t3",
                                                           "children": [
                                                             {
                                                               "kind": "Identifier",
@@ -1462,7 +1465,7 @@
                                                                 26,
                                                                 38
                                                               ],
-                                                              "type": "t0",
+                                                              "type": "t139",
                                                               "text": "p",
                                                               "resolvedSymbol": "s14"
                                                             },
@@ -1473,8 +1476,9 @@
                                                                 26,
                                                                 40
                                                               ],
-                                                              "type": "t0",
-                                                              "text": "expression"
+                                                              "type": "t3",
+                                                              "text": "expression",
+                                                              "resolvedSymbol": "s18"
                                                             }
                                                           ]
                                                         },
@@ -1485,7 +1489,7 @@
                                                             26,
                                                             55
                                                           ],
-                                                          "type": "t0",
+                                                          "type": "t12",
                                                           "text": "node",
                                                           "resolvedSymbol": "s12"
                                                         }
@@ -1504,7 +1508,7 @@
                                             27,
                                             13
                                           ],
-                                          "type": "t11",
+                                          "type": "t6",
                                           "children": [
                                             {
                                               "kind": "BinaryExpression",
@@ -1513,7 +1517,7 @@
                                                 27,
                                                 14
                                               ],
-                                              "type": "t11",
+                                              "type": "t6",
                                               "operator": "AmpersandAmpersandToken",
                                               "children": [
                                                 {
@@ -1523,7 +1527,7 @@
                                                     27,
                                                     14
                                                   ],
-                                                  "type": "t11",
+                                                  "type": "t6",
                                                   "operator": "InstanceOfKeyword",
                                                   "children": [
                                                     {
@@ -1533,7 +1537,7 @@
                                                         27,
                                                         14
                                                       ],
-                                                      "type": "t0",
+                                                      "type": "t12",
                                                       "text": "p",
                                                       "resolvedSymbol": "s14"
                                                     },
@@ -1552,7 +1556,7 @@
                                                         27,
                                                         27
                                                       ],
-                                                      "type": "t0",
+                                                      "type": "t91",
                                                       "text": "AST_Chain",
                                                       "resolvedSymbol": "s2"
                                                     }
@@ -1565,7 +1569,7 @@
                                                     27,
                                                     40
                                                   ],
-                                                  "type": "t11",
+                                                  "type": "t6",
                                                   "operator": "EqualsEqualsEqualsToken",
                                                   "children": [
                                                     {
@@ -1575,7 +1579,7 @@
                                                         27,
                                                         40
                                                       ],
-                                                      "type": "t0",
+                                                      "type": "t3",
                                                       "children": [
                                                         {
                                                           "kind": "Identifier",
@@ -1584,7 +1588,7 @@
                                                             27,
                                                             40
                                                           ],
-                                                          "type": "t0",
+                                                          "type": "t92",
                                                           "text": "p",
                                                           "resolvedSymbol": "s14"
                                                         },
@@ -1595,8 +1599,9 @@
                                                             27,
                                                             42
                                                           ],
-                                                          "type": "t0",
-                                                          "text": "expression"
+                                                          "type": "t3",
+                                                          "text": "expression",
+                                                          "resolvedSymbol": "s19"
                                                         }
                                                       ]
                                                     },
@@ -1607,7 +1612,7 @@
                                                         27,
                                                         57
                                                       ],
-                                                      "type": "t0",
+                                                      "type": "t12",
                                                       "text": "node",
                                                       "resolvedSymbol": "s12"
                                                     }
@@ -1626,7 +1631,7 @@
                                         28,
                                         13
                                       ],
-                                      "type": "t11",
+                                      "type": "t6",
                                       "children": [
                                         {
                                           "kind": "BinaryExpression",
@@ -1635,7 +1640,7 @@
                                             28,
                                             14
                                           ],
-                                          "type": "t11",
+                                          "type": "t6",
                                           "operator": "AmpersandAmpersandToken",
                                           "children": [
                                             {
@@ -1645,7 +1650,7 @@
                                                 28,
                                                 14
                                               ],
-                                              "type": "t11",
+                                              "type": "t6",
                                               "operator": "InstanceOfKeyword",
                                               "children": [
                                                 {
@@ -1655,7 +1660,7 @@
                                                     28,
                                                     14
                                                   ],
-                                                  "type": "t0",
+                                                  "type": "t12",
                                                   "text": "p",
                                                   "resolvedSymbol": "s14"
                                                 },
@@ -1674,7 +1679,7 @@
                                                     28,
                                                     27
                                                   ],
-                                                  "type": "t0",
+                                                  "type": "t81",
                                                   "text": "AST_Conditional",
                                                   "resolvedSymbol": "s1"
                                                 }
@@ -1687,7 +1692,7 @@
                                                 28,
                                                 46
                                               ],
-                                              "type": "t11",
+                                              "type": "t6",
                                               "operator": "EqualsEqualsEqualsToken",
                                               "children": [
                                                 {
@@ -1697,7 +1702,7 @@
                                                     28,
                                                     46
                                                   ],
-                                                  "type": "t0",
+                                                  "type": "t3",
                                                   "children": [
                                                     {
                                                       "kind": "Identifier",
@@ -1706,7 +1711,7 @@
                                                         28,
                                                         46
                                                       ],
-                                                      "type": "t0",
+                                                      "type": "t82",
                                                       "text": "p",
                                                       "resolvedSymbol": "s14"
                                                     },
@@ -1717,8 +1722,9 @@
                                                         28,
                                                         48
                                                       ],
-                                                      "type": "t0",
-                                                      "text": "condition"
+                                                      "type": "t3",
+                                                      "text": "condition",
+                                                      "resolvedSymbol": "s20"
                                                     }
                                                   ]
                                                 },
@@ -1729,7 +1735,7 @@
                                                     28,
                                                     62
                                                   ],
-                                                  "type": "t0",
+                                                  "type": "t12",
                                                   "text": "node",
                                                   "resolvedSymbol": "s12"
                                                 }
@@ -1748,7 +1754,7 @@
                                     29,
                                     13
                                   ],
-                                  "type": "t11",
+                                  "type": "t6",
                                   "children": [
                                     {
                                       "kind": "BinaryExpression",
@@ -1757,7 +1763,7 @@
                                         29,
                                         14
                                       ],
-                                      "type": "t11",
+                                      "type": "t6",
                                       "operator": "AmpersandAmpersandToken",
                                       "children": [
                                         {
@@ -1767,7 +1773,7 @@
                                             29,
                                             14
                                           ],
-                                          "type": "t11",
+                                          "type": "t6",
                                           "operator": "InstanceOfKeyword",
                                           "children": [
                                             {
@@ -1777,7 +1783,7 @@
                                                 29,
                                                 14
                                               ],
-                                              "type": "t0",
+                                              "type": "t12",
                                               "text": "p",
                                               "resolvedSymbol": "s14"
                                             },
@@ -1809,7 +1815,7 @@
                                             29,
                                             41
                                           ],
-                                          "type": "t11",
+                                          "type": "t6",
                                           "operator": "EqualsEqualsEqualsToken",
                                           "children": [
                                             {
@@ -1819,7 +1825,7 @@
                                                 29,
                                                 41
                                               ],
-                                              "type": "t0",
+                                              "type": "t3",
                                               "children": [
                                                 {
                                                   "kind": "Identifier",
@@ -1828,7 +1834,7 @@
                                                     29,
                                                     41
                                                   ],
-                                                  "type": "t0",
+                                                  "type": "t1",
                                                   "text": "p",
                                                   "resolvedSymbol": "s14"
                                                 },
@@ -1839,8 +1845,9 @@
                                                     29,
                                                     43
                                                   ],
-                                                  "type": "t0",
-                                                  "text": "left"
+                                                  "type": "t3",
+                                                  "text": "left",
+                                                  "resolvedSymbol": "s21"
                                                 }
                                               ]
                                             },
@@ -1851,7 +1858,7 @@
                                                 29,
                                                 52
                                               ],
-                                              "type": "t0",
+                                              "type": "t12",
                                               "text": "node",
                                               "resolvedSymbol": "s12"
                                             }
@@ -1870,7 +1877,7 @@
                                 30,
                                 13
                               ],
-                              "type": "t11",
+                              "type": "t6",
                               "children": [
                                 {
                                   "kind": "BinaryExpression",
@@ -1879,7 +1886,7 @@
                                     30,
                                     14
                                   ],
-                                  "type": "t11",
+                                  "type": "t6",
                                   "operator": "AmpersandAmpersandToken",
                                   "children": [
                                     {
@@ -1889,7 +1896,7 @@
                                         30,
                                         14
                                       ],
-                                      "type": "t11",
+                                      "type": "t6",
                                       "operator": "InstanceOfKeyword",
                                       "children": [
                                         {
@@ -1899,7 +1906,7 @@
                                             30,
                                             14
                                           ],
-                                          "type": "t0",
+                                          "type": "t12",
                                           "text": "p",
                                           "resolvedSymbol": "s14"
                                         },
@@ -1918,7 +1925,7 @@
                                             30,
                                             27
                                           ],
-                                          "type": "t0",
+                                          "type": "t148",
                                           "text": "AST_UnaryPostfix",
                                           "resolvedSymbol": "s8"
                                         }
@@ -1931,7 +1938,7 @@
                                         30,
                                         47
                                       ],
-                                      "type": "t11",
+                                      "type": "t6",
                                       "operator": "EqualsEqualsEqualsToken",
                                       "children": [
                                         {
@@ -1941,7 +1948,7 @@
                                             30,
                                             47
                                           ],
-                                          "type": "t0",
+                                          "type": "t3",
                                           "children": [
                                             {
                                               "kind": "Identifier",
@@ -1950,7 +1957,7 @@
                                                 30,
                                                 47
                                               ],
-                                              "type": "t0",
+                                              "type": "t149",
                                               "text": "p",
                                               "resolvedSymbol": "s14"
                                             },
@@ -1961,8 +1968,9 @@
                                                 30,
                                                 49
                                               ],
-                                              "type": "t0",
-                                              "text": "expression"
+                                              "type": "t3",
+                                              "text": "expression",
+                                              "resolvedSymbol": "s22"
                                             }
                                           ]
                                         },
@@ -1973,7 +1981,7 @@
                                             30,
                                             64
                                           ],
-                                          "type": "t0",
+                                          "type": "t12",
                                           "text": "node",
                                           "resolvedSymbol": "s12"
                                         }
@@ -2008,7 +2016,7 @@
                                     32,
                                     13
                                   ],
-                                  "type": "t0",
+                                  "type": "t12",
                                   "operator": "EqualsToken",
                                   "children": [
                                     {
@@ -2018,7 +2026,7 @@
                                         32,
                                         13
                                       ],
-                                      "type": "t0",
+                                      "type": "t12",
                                       "text": "node",
                                       "resolvedSymbol": "s12"
                                     },
@@ -2029,7 +2037,7 @@
                                         32,
                                         20
                                       ],
-                                      "type": "t0",
+                                      "type": "t12",
                                       "text": "p",
                                       "resolvedSymbol": "s14"
                                     }
@@ -2062,7 +2070,7 @@
                                     34,
                                     20
                                   ],
-                                  "type": "t12",
+                                  "type": "t7",
                                   "value": false
                                 }
                               ]
@@ -2086,7 +2094,7 @@
         40,
         1
       ],
-      "symbol": "s15",
+      "symbol": "s23",
       "comments": [
         {
           "kind": "line",
@@ -2105,9 +2113,9 @@
             40,
             10
           ],
-          "type": "t15",
+          "type": "t177",
           "text": "left_is_object",
-          "resolvedSymbol": "s15"
+          "resolvedSymbol": "s23"
         },
         {
           "kind": "Parameter",
@@ -2116,8 +2124,8 @@
             40,
             25
           ],
-          "symbol": "s16",
-          "type": "t0",
+          "symbol": "s24",
+          "type": "t12",
           "children": [
             {
               "kind": "Identifier",
@@ -2126,9 +2134,9 @@
                 40,
                 25
               ],
-              "type": "t0",
+              "type": "t12",
               "text": "node",
-              "resolvedSymbol": "s16"
+              "resolvedSymbol": "s24"
             }
           ]
         },
@@ -2155,7 +2163,7 @@
                     41,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -2165,9 +2173,9 @@
                         41,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -2184,7 +2192,7 @@
                         41,
                         25
                       ],
-                      "type": "t0",
+                      "type": "t112",
                       "text": "AST_Object",
                       "resolvedSymbol": "s4"
                     }
@@ -2205,7 +2213,7 @@
                         41,
                         44
                       ],
-                      "type": "t13",
+                      "type": "t8",
                       "value": true
                     }
                   ]
@@ -2227,7 +2235,7 @@
                     42,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -2237,9 +2245,9 @@
                         42,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -2256,7 +2264,7 @@
                         42,
                         25
                       ],
-                      "type": "t0",
+                      "type": "t122",
                       "text": "AST_Sequence",
                       "resolvedSymbol": "s5"
                     }
@@ -2277,7 +2285,7 @@
                         42,
                         46
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2286,9 +2294,9 @@
                             42,
                             46
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "ElementAccessExpression",
@@ -2297,7 +2305,7 @@
                             42,
                             61
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "PropertyAccessExpression",
@@ -2306,7 +2314,7 @@
                                 42,
                                 61
                               ],
-                              "type": "t0",
+                              "type": "t66",
                               "children": [
                                 {
                                   "kind": "Identifier",
@@ -2315,9 +2323,9 @@
                                     42,
                                     61
                                   ],
-                                  "type": "t0",
+                                  "type": "t123",
                                   "text": "node",
-                                  "resolvedSymbol": "s16"
+                                  "resolvedSymbol": "s24"
                                 },
                                 {
                                   "kind": "Identifier",
@@ -2326,8 +2334,9 @@
                                     42,
                                     66
                                   ],
-                                  "type": "t0",
-                                  "text": "expressions"
+                                  "type": "t66",
+                                  "text": "expressions",
+                                  "resolvedSymbol": "s15"
                                 }
                               ]
                             },
@@ -2338,7 +2347,7 @@
                                 42,
                                 78
                               ],
-                              "type": "t9",
+                              "type": "t30",
                               "value": 0
                             }
                           ]
@@ -2364,7 +2373,7 @@
                     43,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "EqualsEqualsEqualsToken",
                   "children": [
                     {
@@ -2374,7 +2383,7 @@
                         43,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2383,9 +2392,9 @@
                             43,
                             9
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "text": "node",
-                          "resolvedSymbol": "s16"
+                          "resolvedSymbol": "s24"
                         },
                         {
                           "kind": "Identifier",
@@ -2394,7 +2403,7 @@
                             43,
                             14
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "text": "TYPE"
                         }
                       ]
@@ -2406,7 +2415,7 @@
                         43,
                         23
                       ],
-                      "type": "t14",
+                      "type": "t176",
                       "value": "Call"
                     }
                   ]
@@ -2426,7 +2435,7 @@
                         43,
                         38
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2435,9 +2444,9 @@
                             43,
                             38
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -2446,7 +2455,7 @@
                             43,
                             53
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -2455,9 +2464,9 @@
                                 43,
                                 53
                               ],
-                              "type": "t0",
+                              "type": "t12",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -2466,7 +2475,7 @@
                                 43,
                                 58
                               ],
-                              "type": "t0",
+                              "type": "t12",
                               "text": "expression"
                             }
                           ]
@@ -2492,7 +2501,7 @@
                     44,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -2502,9 +2511,9 @@
                         44,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -2521,7 +2530,7 @@
                         44,
                         25
                       ],
-                      "type": "t0",
+                      "type": "t158",
                       "text": "AST_PrefixedTemplateString",
                       "resolvedSymbol": "s9"
                     }
@@ -2542,7 +2551,7 @@
                         44,
                         60
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2551,9 +2560,9 @@
                             44,
                             60
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -2562,7 +2571,7 @@
                             44,
                             75
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -2571,9 +2580,9 @@
                                 44,
                                 75
                               ],
-                              "type": "t0",
+                              "type": "t159",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -2582,8 +2591,9 @@
                                 44,
                                 80
                               ],
-                              "type": "t0",
-                              "text": "prefix"
+                              "type": "t3",
+                              "text": "prefix",
+                              "resolvedSymbol": "s16"
                             }
                           ]
                         }
@@ -2608,7 +2618,7 @@
                     45,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "BarBarToken",
                   "children": [
                     {
@@ -2618,7 +2628,7 @@
                         45,
                         9
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "operator": "InstanceOfKeyword",
                       "children": [
                         {
@@ -2628,9 +2638,9 @@
                             45,
                             9
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "text": "node",
-                          "resolvedSymbol": "s16"
+                          "resolvedSymbol": "s24"
                         },
                         {
                           "kind": "InstanceOfKeyword",
@@ -2647,7 +2657,7 @@
                             45,
                             25
                           ],
-                          "type": "t0",
+                          "type": "t101",
                           "text": "AST_Dot",
                           "resolvedSymbol": "s3"
                         }
@@ -2660,7 +2670,7 @@
                         45,
                         36
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "operator": "InstanceOfKeyword",
                       "children": [
                         {
@@ -2670,9 +2680,9 @@
                             45,
                             36
                           ],
-                          "type": "t0",
+                          "type": "t12",
                           "text": "node",
-                          "resolvedSymbol": "s16"
+                          "resolvedSymbol": "s24"
                         },
                         {
                           "kind": "InstanceOfKeyword",
@@ -2689,7 +2699,7 @@
                             45,
                             52
                           ],
-                          "type": "t0",
+                          "type": "t138",
                           "text": "AST_Sub",
                           "resolvedSymbol": "s7"
                         }
@@ -2712,7 +2722,7 @@
                         45,
                         68
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2721,9 +2731,9 @@
                             45,
                             68
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -2732,7 +2742,7 @@
                             45,
                             83
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -2741,9 +2751,9 @@
                                 45,
                                 83
                               ],
-                              "type": "t0",
+                              "type": "t178",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -2752,8 +2762,9 @@
                                 45,
                                 88
                               ],
-                              "type": "t0",
-                              "text": "expression"
+                              "type": "t3",
+                              "text": "expression",
+                              "resolvedSymbol": "s17"
                             }
                           ]
                         }
@@ -2778,7 +2789,7 @@
                     46,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -2788,9 +2799,9 @@
                         46,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -2807,7 +2818,7 @@
                         46,
                         25
                       ],
-                      "type": "t0",
+                      "type": "t91",
                       "text": "AST_Chain",
                       "resolvedSymbol": "s2"
                     }
@@ -2828,7 +2839,7 @@
                         46,
                         43
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2837,9 +2848,9 @@
                             46,
                             43
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -2848,7 +2859,7 @@
                             46,
                             58
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -2857,9 +2868,9 @@
                                 46,
                                 58
                               ],
-                              "type": "t0",
+                              "type": "t92",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -2868,8 +2879,9 @@
                                 46,
                                 63
                               ],
-                              "type": "t0",
-                              "text": "expression"
+                              "type": "t3",
+                              "text": "expression",
+                              "resolvedSymbol": "s19"
                             }
                           ]
                         }
@@ -2894,7 +2906,7 @@
                     47,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -2904,9 +2916,9 @@
                         47,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -2923,7 +2935,7 @@
                         47,
                         25
                       ],
-                      "type": "t0",
+                      "type": "t81",
                       "text": "AST_Conditional",
                       "resolvedSymbol": "s1"
                     }
@@ -2944,7 +2956,7 @@
                         47,
                         49
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -2953,9 +2965,9 @@
                             47,
                             49
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -2964,7 +2976,7 @@
                             47,
                             64
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -2973,9 +2985,9 @@
                                 47,
                                 64
                               ],
-                              "type": "t0",
+                              "type": "t82",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -2984,8 +2996,9 @@
                                 47,
                                 69
                               ],
-                              "type": "t0",
-                              "text": "condition"
+                              "type": "t3",
+                              "text": "condition",
+                              "resolvedSymbol": "s20"
                             }
                           ]
                         }
@@ -3010,7 +3023,7 @@
                     48,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -3020,9 +3033,9 @@
                         48,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -3060,7 +3073,7 @@
                         48,
                         44
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -3069,9 +3082,9 @@
                             48,
                             44
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -3080,7 +3093,7 @@
                             48,
                             59
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -3089,9 +3102,9 @@
                                 48,
                                 59
                               ],
-                              "type": "t0",
+                              "type": "t1",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -3100,8 +3113,9 @@
                                 48,
                                 64
                               ],
-                              "type": "t0",
-                              "text": "left"
+                              "type": "t3",
+                              "text": "left",
+                              "resolvedSymbol": "s21"
                             }
                           ]
                         }
@@ -3126,7 +3140,7 @@
                     49,
                     9
                   ],
-                  "type": "t11",
+                  "type": "t6",
                   "operator": "InstanceOfKeyword",
                   "children": [
                     {
@@ -3136,9 +3150,9 @@
                         49,
                         9
                       ],
-                      "type": "t0",
+                      "type": "t12",
                       "text": "node",
-                      "resolvedSymbol": "s16"
+                      "resolvedSymbol": "s24"
                     },
                     {
                       "kind": "InstanceOfKeyword",
@@ -3155,7 +3169,7 @@
                         49,
                         25
                       ],
-                      "type": "t0",
+                      "type": "t148",
                       "text": "AST_UnaryPostfix",
                       "resolvedSymbol": "s8"
                     }
@@ -3176,7 +3190,7 @@
                         49,
                         50
                       ],
-                      "type": "t11",
+                      "type": "t6",
                       "children": [
                         {
                           "kind": "Identifier",
@@ -3185,9 +3199,9 @@
                             49,
                             50
                           ],
-                          "type": "t15",
+                          "type": "t177",
                           "text": "left_is_object",
-                          "resolvedSymbol": "s15"
+                          "resolvedSymbol": "s23"
                         },
                         {
                           "kind": "PropertyAccessExpression",
@@ -3196,7 +3210,7 @@
                             49,
                             65
                           ],
-                          "type": "t0",
+                          "type": "t3",
                           "children": [
                             {
                               "kind": "Identifier",
@@ -3205,9 +3219,9 @@
                                 49,
                                 65
                               ],
-                              "type": "t0",
+                              "type": "t149",
                               "text": "node",
-                              "resolvedSymbol": "s16"
+                              "resolvedSymbol": "s24"
                             },
                             {
                               "kind": "Identifier",
@@ -3216,8 +3230,9 @@
                                 49,
                                 70
                               ],
-                              "type": "t0",
-                              "text": "expression"
+                              "type": "t3",
+                              "text": "expression",
+                              "resolvedSymbol": "s22"
                             }
                           ]
                         }
@@ -3242,7 +3257,7 @@
                     50,
                     12
                   ],
-                  "type": "t12",
+                  "type": "t7",
                   "value": false
                 }
               ]
@@ -3282,9 +3297,9 @@
                     53,
                     10
                   ],
-                  "type": "t2",
+                  "type": "t169",
                   "text": "first_in_statement",
-                  "resolvedSymbol": "s17"
+                  "resolvedSymbol": "s25"
                 }
               ]
             },
@@ -3303,9 +3318,9 @@
                     53,
                     30
                   ],
-                  "type": "t15",
+                  "type": "t177",
                   "text": "left_is_object",
-                  "resolvedSymbol": "s18"
+                  "resolvedSymbol": "s26"
                 }
               ]
             }
@@ -3317,43 +3332,53 @@
   "symbols": {
     "s0": {
       "name": "AST_Binary",
-      "flags": []
+      "flags": [],
+      "declarationType": "t1"
     },
     "s1": {
       "name": "AST_Conditional",
-      "flags": []
+      "flags": [],
+      "declarationType": "t82"
     },
     "s2": {
       "name": "AST_Chain",
-      "flags": []
+      "flags": [],
+      "declarationType": "t92"
     },
     "s3": {
       "name": "AST_Dot",
-      "flags": []
+      "flags": [],
+      "declarationType": "t102"
     },
     "s4": {
       "name": "AST_Object",
-      "flags": []
+      "flags": [],
+      "declarationType": "t113"
     },
     "s5": {
       "name": "AST_Sequence",
-      "flags": []
+      "flags": [],
+      "declarationType": "t123"
     },
     "s6": {
       "name": "AST_Statement",
-      "flags": []
+      "flags": [],
+      "declarationType": "t133"
     },
     "s7": {
       "name": "AST_Sub",
-      "flags": []
+      "flags": [],
+      "declarationType": "t139"
     },
     "s8": {
       "name": "AST_UnaryPostfix",
-      "flags": []
+      "flags": [],
+      "declarationType": "t149"
     },
     "s9": {
       "name": "AST_PrefixedTemplateString",
-      "flags": []
+      "flags": [],
+      "declarationType": "t159"
     },
     "s10": {
       "name": "first_in_statement",
@@ -3386,128 +3411,2559 @@
       ]
     },
     "s15": {
+      "name": "expressions",
+      "flags": [
+        "property"
+      ],
+      "parent": "s27"
+    },
+    "s16": {
+      "name": "prefix",
+      "flags": [
+        "property"
+      ],
+      "parent": "s28"
+    },
+    "s17": {
+      "name": "expression",
+      "flags": [
+        "property"
+      ],
+      "parent": "s29"
+    },
+    "s18": {
+      "name": "expression",
+      "flags": [
+        "property"
+      ],
+      "parent": "s29"
+    },
+    "s19": {
+      "name": "expression",
+      "flags": [
+        "property"
+      ],
+      "parent": "s30"
+    },
+    "s20": {
+      "name": "condition",
+      "flags": [
+        "property"
+      ],
+      "parent": "s31"
+    },
+    "s21": {
+      "name": "left",
+      "flags": [
+        "property"
+      ],
+      "parent": "s32"
+    },
+    "s22": {
+      "name": "expression",
+      "flags": [
+        "property"
+      ],
+      "parent": "s33"
+    },
+    "s23": {
       "name": "left_is_object",
       "flags": [
         "function"
       ]
     },
-    "s16": {
+    "s24": {
       "name": "node",
       "flags": [
         "variable"
       ]
     },
-    "s17": {
+    "s25": {
       "name": "first_in_statement",
       "flags": [],
-      "parent": "s19"
+      "parent": "s34"
     },
-    "s18": {
+    "s26": {
       "name": "left_is_object",
       "flags": [],
-      "parent": "s19"
+      "parent": "s34"
     },
-    "s19": {
+    "s27": {
+      "name": "AST_Sequence",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t123",
+      "parent": "s35"
+    },
+    "s28": {
+      "name": "AST_PrefixedTemplateString",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t159",
+      "parent": "s35"
+    },
+    "s29": {
+      "name": "AST_PropAccess",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t179",
+      "parent": "s35"
+    },
+    "s30": {
+      "name": "AST_Chain",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t92",
+      "parent": "s35"
+    },
+    "s31": {
+      "name": "AST_Conditional",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t82",
+      "parent": "s35"
+    },
+    "s32": {
+      "name": "AST_Binary",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t1",
+      "parent": "s35"
+    },
+    "s33": {
+      "name": "AST_Unary",
+      "flags": [
+        "class"
+      ],
+      "declarationType": "t184",
+      "parent": "s35"
+    },
+    "s34": {
       "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/terser/lib/utils/first_in_statement\"",
+      "flags": []
+    },
+    "s35": {
+      "name": "\"/Users/dev/Workspaces/kubuszok/ssg/original-src/terser/lib/ast\"",
       "flags": []
     }
   },
   "types": {
-    "t0": {
-      "kind": "any",
-      "text": "any"
+    "t2": {
+      "kind": "string",
+      "text": "string"
     },
-    "t1": {
-      "kind": "any",
-      "text": "any"
+    "t5": {
+      "kind": "number",
+      "text": "number"
     },
-    "t4": {
+    "t7": {
       "kind": "booleanLiteral",
       "text": "false",
       "value": false
     },
-    "t5": {
+    "t8": {
       "kind": "booleanLiteral",
       "text": "true",
       "value": true
     },
-    "t3": {
+    "t6": {
       "kind": "union",
       "text": "boolean",
       "types": [
-        "t4",
-        "t5"
+        "t7",
+        "t8"
       ]
     },
-    "t2": {
+    "t9": {
+      "kind": "array",
+      "text": "AST_Token[]",
+      "elementType": "t4"
+    },
+    "t4": {
+      "kind": "object",
+      "text": "AST_Token",
+      "members": {
+        "type": "t2",
+        "value": "t2",
+        "line": "t5",
+        "col": "t5",
+        "pos": "t5",
+        "nlb": "t6",
+        "quote": "t2",
+        "comments_before": "t9",
+        "comments_after": "t9",
+        "file": "t2"
+      }
+    },
+    "t12": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t11": {
+      "kind": "array",
+      "text": "any[]",
+      "elementType": "t12"
+    },
+    "t10": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t13": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t14": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t15": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t16": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t17": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t18": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t20": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t19": {
+      "kind": "function",
+      "text": "(options: any) => void",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t20"
+    },
+    "t21": {
+      "kind": "function",
+      "text": "(node: AST_Node) => boolean",
+      "parameters": [
+        {
+          "name": "node",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t22": {
+      "kind": "function",
+      "text": "(other: AST_Node) => boolean",
+      "parameters": [
+        {
+          "name": "other",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t23": {
+      "kind": "function",
+      "text": "(info: any) => number",
+      "parameters": [
+        {
+          "name": "info",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t24": {
+      "kind": "function",
+      "text": "(compressor: any, stack: any) => number",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "stack",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t25": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t26": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t27": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t30": {
+      "kind": "numberLiteral",
+      "text": "0",
+      "value": 0
+    },
+    "t29": {
+      "kind": "union",
+      "text": "boolean | 0",
+      "types": [
+        "t7",
+        "t8",
+        "t30"
+      ]
+    },
+    "t28": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t31": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t32": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t33": {
+      "kind": "function",
+      "text": "(compressor: any, ignore_side_effects: any) => any",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "ignore_side_effects",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t38": {
+      "kind": "other",
+      "text": "K"
+    },
+    "t39": {
+      "kind": "other",
+      "text": "V"
+    },
+    "t37": {
+      "kind": "reference",
+      "text": "Map<K, V>",
+      "target": "t37",
+      "typeArguments": [
+        "t38",
+        "t39"
+      ]
+    },
+    "t43": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t44": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t45": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t46": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t47": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t48": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t49": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t50": {
+      "kind": "function",
+      "text": "(output: any) => void",
+      "parameters": [
+        {
+          "name": "output",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t20"
+    },
+    "t51": {
+      "kind": "function",
+      "text": "(output: any) => void",
+      "parameters": [
+        {
+          "name": "output",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t20"
+    },
+    "t52": {
+      "kind": "function",
+      "text": "(output: any) => boolean",
+      "parameters": [
+        {
+          "name": "output",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t53": {
+      "kind": "function",
+      "text": "(output: any) => void",
+      "parameters": [
+        {
+          "name": "output",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t20"
+    },
+    "t42": {
+      "kind": "object",
+      "text": "AST_Symbol",
+      "members": {
+        "scope": "t35",
+        "name": "t2",
+        "thedef": "t40",
+        "$propdoc": "t43",
+        "$documentation": "t44",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "_walk": "t16",
+        "walk": "t17",
+        "_children_backwards": "t18",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t45",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t46",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t49",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t41": {
+      "kind": "array",
+      "text": "AST_Symbol[]",
+      "elementType": "t42"
+    },
+    "t40": {
+      "kind": "object",
+      "text": "SymbolDef",
+      "members": {
+        "name": "t2",
+        "orig": "t41",
+        "init": "t3",
+        "scope": "t35",
+        "references": "t41",
+        "global": "t6",
+        "export": "t5",
+        "mangled_name": "t2",
+        "undeclared": "t6",
+        "id": "t5",
+        "chained": "t6",
+        "direct_access": "t6",
+        "escaped": "t5",
+        "recursive_refs": "t5",
+        "assignments": "t5",
+        "replaced": "t5",
+        "single_use": "t12",
+        "fixed": "t12",
+        "eliminated": "t5",
+        "should_replace": "t12"
+      }
+    },
+    "t36": {
+      "kind": "reference",
+      "text": "Map<string, SymbolDef>",
+      "target": "t37",
+      "typeArguments": [
+        "t2",
+        "t40"
+      ]
+    },
+    "t54": {
+      "kind": "array",
+      "text": "SymbolDef[]",
+      "elementType": "t40"
+    },
+    "t55": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t56": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t57": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t58": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t59": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t60": {
+      "kind": "function",
+      "text": "(symbol: AST_Symbol, init: AST_Node) => SymbolDef",
+      "parameters": [
+        {
+          "name": "symbol",
+          "type": "t42",
+          "optional": false
+        },
+        {
+          "name": "init",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t40"
+    },
+    "t61": {
+      "kind": "function",
+      "text": "(symbol: AST_Symbol, init: AST_Node) => SymbolDef",
+      "parameters": [
+        {
+          "name": "symbol",
+          "type": "t42",
+          "optional": false
+        },
+        {
+          "name": "init",
+          "type": "t3",
+          "optional": false
+        }
+      ],
+      "returnType": "t40"
+    },
+    "t63": {
+      "kind": "union",
+      "text": "string | AST_Symbol",
+      "types": [
+        "t2",
+        "t42"
+      ]
+    },
+    "t62": {
+      "kind": "function",
+      "text": "(name: string | AST_Symbol) => SymbolDef",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "t63",
+          "optional": false
+        }
+      ],
+      "returnType": "t40"
+    },
+    "t64": {
+      "kind": "function",
+      "text": "(options: any, ext: any) => string",
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "ext",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t65": {
+      "kind": "function",
+      "text": "() => boolean",
+      "parameters": [],
+      "returnType": "t6"
+    },
+    "t66": {
+      "kind": "array",
+      "text": "AST_Node[]",
+      "elementType": "t3"
+    },
+    "t67": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t68": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t69": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t70": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t71": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t35": {
+      "kind": "object",
+      "text": "AST_Scope",
+      "members": {
+        "variables": "t36",
+        "uses_with": "t6",
+        "uses_eval": "t6",
+        "parent_scope": "t35",
+        "enclosed": "t54",
+        "cname": "t5",
+        "$documentation": "t55",
+        "$propdoc": "t56",
+        "get_defun_scope": "t57",
+        "clone": "t58",
+        "pinned": "t59",
+        "def_variable": "t60",
+        "def_function": "t61",
+        "find_variable": "t62",
+        "next_mangled": "t64",
+        "is_block_scope": "t65",
+        "body": "t66",
+        "block_scope": "t35",
+        "_walk": "t67",
+        "_children_backwards": "t68",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t69",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t70",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t71",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t34": {
+      "kind": "function",
+      "text": "(scope: AST_Scope) => boolean",
+      "parameters": [
+        {
+          "name": "scope",
+          "type": "t35",
+          "optional": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t72": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t73": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t3": {
+      "kind": "object",
+      "text": "AST_Node",
+      "members": {
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "$documentation": "t14",
+        "$propdoc": "t15",
+        "_walk": "t16",
+        "walk": "t17",
+        "_children_backwards": "t18",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t28",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t72",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t73",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t74": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t75": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t76": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t77": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t78": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t79": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t80": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t1": {
+      "kind": "object",
+      "text": "AST_Binary",
+      "members": {
+        "operator": "t2",
+        "left": "t3",
+        "right": "t3",
+        "$documentation": "t74",
+        "$propdoc": "t75",
+        "_walk": "t76",
+        "_children_backwards": "t77",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t78",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t79",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t80",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t0": {
+      "kind": "object",
+      "text": "typeof AST_Binary",
+      "members": {
+        "prototype": "t1"
+      }
+    },
+    "t83": {
+      "kind": "stringLiteral",
+      "text": "\"Conditional\"",
+      "value": "Conditional"
+    },
+    "t84": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t85": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t86": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t87": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t88": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t89": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t90": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t82": {
+      "kind": "object",
+      "text": "AST_Conditional",
+      "members": {
+        "TYPE": "t83",
+        "condition": "t3",
+        "consequent": "t3",
+        "alternative": "t3",
+        "$documentation": "t84",
+        "$propdoc": "t85",
+        "_walk": "t86",
+        "_children_backwards": "t87",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t88",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t89",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t90",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t81": {
+      "kind": "object",
+      "text": "typeof AST_Conditional",
+      "members": {
+        "prototype": "t82"
+      }
+    },
+    "t93": {
+      "kind": "stringLiteral",
+      "text": "\"Chain\"",
+      "value": "Chain"
+    },
+    "t94": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t95": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t96": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t97": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t98": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t99": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t100": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t92": {
+      "kind": "object",
+      "text": "AST_Chain",
+      "members": {
+        "TYPE": "t93",
+        "expression": "t3",
+        "$documentation": "t94",
+        "$propdoc": "t95",
+        "_walk": "t96",
+        "_children_backwards": "t97",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t98",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t99",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t100",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t91": {
+      "kind": "object",
+      "text": "typeof AST_Chain",
+      "members": {
+        "prototype": "t92"
+      }
+    },
+    "t103": {
+      "kind": "stringLiteral",
+      "text": "\"Dot\"",
+      "value": "Dot"
+    },
+    "t104": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t105": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t106": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t107": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t108": {
+      "kind": "union",
+      "text": "string | AST_Node",
+      "types": [
+        "t2",
+        "t3"
+      ]
+    },
+    "t109": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t110": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t111": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t102": {
+      "kind": "object",
+      "text": "AST_Dot",
+      "members": {
+        "TYPE": "t103",
+        "quote": "t2",
+        "$documentation": "t104",
+        "$propdoc": "t105",
+        "_walk": "t106",
+        "_children_backwards": "t107",
+        "expression": "t3",
+        "property": "t108",
+        "optional": "t6",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t109",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t110",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t111",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t101": {
+      "kind": "object",
+      "text": "typeof AST_Dot",
+      "members": {
+        "prototype": "t102"
+      }
+    },
+    "t114": {
+      "kind": "stringLiteral",
+      "text": "\"Object\"",
+      "value": "Object"
+    },
+    "t115": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t116": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t117": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t118": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t119": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t120": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t121": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t113": {
+      "kind": "object",
+      "text": "AST_Object",
+      "members": {
+        "TYPE": "t114",
+        "properties": "t66",
+        "$documentation": "t115",
+        "$propdoc": "t116",
+        "_walk": "t117",
+        "_children_backwards": "t118",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t119",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t120",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t121",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t112": {
+      "kind": "object",
+      "text": "typeof AST_Object",
+      "members": {
+        "prototype": "t113"
+      }
+    },
+    "t124": {
+      "kind": "stringLiteral",
+      "text": "\"Sequence\"",
+      "value": "Sequence"
+    },
+    "t125": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t126": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t127": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t128": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t129": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t130": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t131": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t123": {
+      "kind": "object",
+      "text": "AST_Sequence",
+      "members": {
+        "TYPE": "t124",
+        "expressions": "t66",
+        "$documentation": "t125",
+        "$propdoc": "t126",
+        "_walk": "t127",
+        "_children_backwards": "t128",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t129",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t130",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t131",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t122": {
+      "kind": "object",
+      "text": "typeof AST_Sequence",
+      "members": {
+        "prototype": "t123"
+      }
+    },
+    "t134": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t135": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t136": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t137": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t133": {
+      "kind": "object",
+      "text": "AST_Statement",
+      "members": {
+        "$documentation": "t134",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "$propdoc": "t15",
+        "_walk": "t16",
+        "walk": "t17",
+        "_children_backwards": "t18",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t135",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t136",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t137",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t132": {
+      "kind": "object",
+      "text": "typeof AST_Statement",
+      "members": {
+        "prototype": "t133"
+      }
+    },
+    "t140": {
+      "kind": "stringLiteral",
+      "text": "\"Sub\"",
+      "value": "Sub"
+    },
+    "t141": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t142": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t143": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t144": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t145": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t146": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t147": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t139": {
+      "kind": "object",
+      "text": "AST_Sub",
+      "members": {
+        "TYPE": "t140",
+        "$documentation": "t141",
+        "_walk": "t142",
+        "_children_backwards": "t143",
+        "expression": "t3",
+        "property": "t108",
+        "optional": "t6",
+        "$propdoc": "t144",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t145",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t146",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t147",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t138": {
+      "kind": "object",
+      "text": "typeof AST_Sub",
+      "members": {
+        "prototype": "t139"
+      }
+    },
+    "t150": {
+      "kind": "stringLiteral",
+      "text": "\"UnaryPostfix\"",
+      "value": "UnaryPostfix"
+    },
+    "t151": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t152": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t153": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t154": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t155": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t156": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t157": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t149": {
+      "kind": "object",
+      "text": "AST_UnaryPostfix",
+      "members": {
+        "TYPE": "t150",
+        "$documentation": "t151",
+        "operator": "t2",
+        "expression": "t3",
+        "$propdoc": "t152",
+        "_walk": "t153",
+        "_children_backwards": "t154",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t155",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t156",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t157",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t148": {
+      "kind": "object",
+      "text": "typeof AST_UnaryPostfix",
+      "members": {
+        "prototype": "t149"
+      }
+    },
+    "t160": {
+      "kind": "stringLiteral",
+      "text": "\"PrefixedTemplateString\"",
+      "value": "PrefixedTemplateString"
+    },
+    "t161": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t162": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t163": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t164": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t165": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t166": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t167": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t159": {
+      "kind": "object",
+      "text": "AST_PrefixedTemplateString",
+      "members": {
+        "TYPE": "t160",
+        "template_string": "t3",
+        "prefix": "t3",
+        "$documentation": "t161",
+        "$propdoc": "t162",
+        "_walk": "t163",
+        "_children_backwards": "t164",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t165",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t166",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t167",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t158": {
+      "kind": "object",
+      "text": "typeof AST_PrefixedTemplateString",
+      "members": {
+        "prototype": "t159"
+      }
+    },
+    "t168": {
+      "kind": "any",
+      "text": "any"
+    },
+    "t171": {
+      "kind": "booleanLiteral",
+      "text": "false",
+      "value": false
+    },
+    "t172": {
+      "kind": "booleanLiteral",
+      "text": "true",
+      "value": true
+    },
+    "t170": {
+      "kind": "union",
+      "text": "boolean",
+      "types": [
+        "t171",
+        "t172"
+      ]
+    },
+    "t169": {
       "kind": "function",
       "text": "(stack: any) => boolean",
       "parameters": [
         {
           "name": "stack",
-          "type": "t0",
+          "type": "t12",
           "optional": false
         }
       ],
-      "returnType": "t3"
+      "returnType": "t170"
     },
-    "t6": {
+    "t173": {
       "kind": "numberLiteral",
       "text": "-1",
       "value": -1
     },
-    "t7": {
+    "t174": {
       "kind": "numberLiteral",
       "text": "1",
       "value": 1
     },
-    "t8": {
-      "kind": "number",
-      "text": "number"
-    },
-    "t9": {
-      "kind": "numberLiteral",
-      "text": "0",
-      "value": 0
-    },
-    "t10": {
+    "t175": {
       "kind": "any",
       "text": "any"
     },
-    "t12": {
-      "kind": "booleanLiteral",
-      "text": "false",
-      "value": false
-    },
-    "t13": {
-      "kind": "booleanLiteral",
-      "text": "true",
-      "value": true
-    },
-    "t11": {
-      "kind": "union",
-      "text": "boolean",
-      "types": [
-        "t12",
-        "t13"
-      ]
-    },
-    "t14": {
+    "t176": {
       "kind": "stringLiteral",
       "text": "\"Call\"",
       "value": "Call"
     },
-    "t15": {
+    "t177": {
       "kind": "function",
       "text": "(node: any) => boolean",
       "parameters": [
         {
           "name": "node",
-          "type": "t0",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t170"
+    },
+    "t178": {
+      "kind": "union",
+      "text": "AST_Dot | AST_Sub",
+      "types": [
+        "t102",
+        "t139"
+      ]
+    },
+    "t180": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t181": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t182": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
           "optional": false
         }
       ],
       "returnType": "t3"
+    },
+    "t183": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t179": {
+      "kind": "object",
+      "text": "AST_PropAccess",
+      "members": {
+        "expression": "t3",
+        "property": "t108",
+        "optional": "t6",
+        "$documentation": "t180",
+        "$propdoc": "t144",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "_walk": "t16",
+        "walk": "t17",
+        "_children_backwards": "t18",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t181",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t182",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t183",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
+    },
+    "t185": {
+      "kind": "function",
+      "text": "(...args: any[]) => any",
+      "parameters": [
+        {
+          "name": "args",
+          "type": "t11",
+          "optional": false
+        }
+      ],
+      "returnType": "t12"
+    },
+    "t186": {
+      "kind": "function",
+      "text": "(compressor: any) => boolean | 0",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t29"
+    },
+    "t187": {
+      "kind": "function",
+      "text": "(compressor: any, first_in_statement: any) => AST_Node",
+      "parameters": [
+        {
+          "name": "compressor",
+          "type": "t12",
+          "optional": false
+        },
+        {
+          "name": "first_in_statement",
+          "type": "t12",
+          "optional": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t188": {
+      "kind": "function",
+      "text": "() => AST_Node",
+      "parameters": [],
+      "returnType": "t3"
+    },
+    "t184": {
+      "kind": "object",
+      "text": "AST_Unary",
+      "members": {
+        "operator": "t2",
+        "expression": "t3",
+        "$documentation": "t185",
+        "$propdoc": "t152",
+        "_walk": "t153",
+        "_children_backwards": "t154",
+        "start": "t4",
+        "end": "t4",
+        "_clone": "t10",
+        "clone": "t13",
+        "walk": "t17",
+        "figure_out_scope": "t19",
+        "equivalent_to": "t21",
+        "shallow_cmp": "t22",
+        "_size": "t23",
+        "size": "t24",
+        "is_string": "t25",
+        "is_number": "t26",
+        "is_boolean": "t27",
+        "is_nullish": "t186",
+        "has_side_effects": "t31",
+        "may_throw_on_access": "t32",
+        "_eval": "t33",
+        "is_constant_expression": "t34",
+        "drop_side_effect_free": "t187",
+        "may_throw": "t47",
+        "_dot_throw": "t48",
+        "aborts": "t188",
+        "_do_print": "t50",
+        "print": "t51",
+        "needs_parens": "t52",
+        "add_source_map": "t53"
+      }
     }
   }
 }

@@ -130,8 +130,8 @@ object AstDtsGenerator:
     sb.append("// Auto-generated from DEFNODE hierarchy and reference port types.\n")
     sb.append("// Do not edit — regenerate with AstDtsGenerator.generate().\n\n")
 
-    // Token class
-    sb.append("declare class AST_Token {\n")
+    // Token class — exported so import { AST_Token } from "./ast" resolves
+    sb.append("export declare class AST_Token {\n")
     sb.append("  type: string;\n")
     sb.append("  value: string;\n")
     sb.append("  line: number;\n")
@@ -145,7 +145,7 @@ object AstDtsGenerator:
     sb.append("}\n\n")
 
     // SymbolDef forward declaration
-    sb.append("declare class SymbolDef {\n")
+    sb.append("export declare class SymbolDef {\n")
     sb.append("  name: string;\n")
     sb.append("  orig: AST_Symbol[];\n")
     sb.append("  init: AST_Node | null;\n")
@@ -172,15 +172,52 @@ object AstDtsGenerator:
     for cls <- hierarchy do
       emitClassDecl(sb, cls, byName)
 
-    // Emit DEFMETHOD augmentations
+    // Emit DEFMETHOD augmentations (module-level interface merging)
     for (className, methods) <- defmethodFamilies do
       if methods.nonEmpty then
         sb.append(s"// DEFMETHOD augmentations for $className\n")
-        sb.append(s"interface $className {\n")
+        sb.append(s"export interface $className {\n")
         for m <- methods do
           val paramStr = m.params.map(p => s"${p.name}: ${p.tsType}").mkString(", ")
           sb.append(s"  ${m.methodName}($paramStr): ${m.returnType};\n")
         sb.append("}\n\n")
+
+    // Non-class exports from ast.js: walkers, annotations, utilities
+    sb.append("// Walker classes and functions\n")
+    sb.append("export declare class TreeWalker {\n")
+    sb.append("  constructor(callback: (node: AST_Node, descend: () => void) => any);\n")
+    sb.append("  directives: Record<string, any>;\n")
+    sb.append("  find_parent(type: any): AST_Node | undefined;\n")
+    sb.append("  find_scope(): AST_Scope | undefined;\n")
+    sb.append("  has_directive(dir: string): boolean;\n")
+    sb.append("  loopcontrol_target(node: AST_Node): AST_Node | undefined;\n")
+    sb.append("  parent(n?: number): AST_Node | undefined;\n")
+    sb.append("  pop(): void;\n")
+    sb.append("  push(node: AST_Node): void;\n")
+    sb.append("  self(): AST_Node;\n")
+    sb.append("  stack: AST_Node[];\n")
+    sb.append("}\n\n")
+
+    sb.append("export declare class TreeTransformer extends TreeWalker {\n")
+    sb.append("  constructor(\n")
+    sb.append("    before: (node: AST_Node, descend: (node: AST_Node, tw: TreeTransformer) => void, in_list: boolean) => AST_Node | undefined,\n")
+    sb.append("    after?: (node: AST_Node, in_list: boolean) => AST_Node | undefined,\n")
+    sb.append("  );\n")
+    sb.append("  before: any;\n")
+    sb.append("  after: any;\n")
+    sb.append("}\n\n")
+
+    sb.append("export declare function walk(node: AST_Node, visitor: (node: AST_Node) => any): void;\n")
+    sb.append("export declare function walk_abort(node: AST_Node, visitor: (node: AST_Node) => any): boolean;\n")
+    sb.append("export declare function walk_body(node: AST_Node, visitor: TreeWalker): void;\n")
+    sb.append("export declare function walk_parent(node: AST_Node, cb: (node: AST_Node, info: any) => any, initial_stack?: AST_Node[]): void;\n\n")
+
+    sb.append("// Annotation constants\n")
+    sb.append("export declare const _INLINE: number;\n")
+    sb.append("export declare const _NOINLINE: number;\n")
+    sb.append("export declare const _PURE: number;\n")
+    sb.append("export declare const _KEY: number;\n")
+    sb.append("export declare const _MANGLEPROP: number;\n")
 
     sb.toString
 
@@ -194,10 +231,7 @@ object AstDtsGenerator:
       case Some(parent) if byName.contains(parent) => s" extends $parent"
       case _ => ""
 
-    if cls.isAbstract then
-      sb.append(s"declare class ${cls.varName}$extendsClause {\n")
-    else
-      sb.append(s"declare class ${cls.varName}$extendsClause {\n")
+    sb.append(s"export declare class ${cls.varName}$extendsClause {\n")
 
     // TYPE constant
     if !cls.isAbstract then
