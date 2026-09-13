@@ -496,9 +496,24 @@ object TsToScalaEmitter:
         case "NullKeyword" => "null"
 
         case "BinaryExpression" =>
-          val op = node.operator.map(tsOpToScala).getOrElse("???")
-          val right = emitExpr(node.children.last, file)
           val lhs = node.children.head
+          val right = emitExpr(node.children.last, file)
+          // typeof X === "number" → map.contains(key)
+          val isTypeofCheck = lhs.kind == "TypeOfExpression" && node.operator.exists(o =>
+            o == "EqualsEqualsEqualsToken" || o == "EqualsEqualsToken")
+          if isTypeofCheck then
+            val typeofOperand = lhs.children.head
+            val typeStr = node.children.last.value match
+              case Some(RastValue.Str(s)) => s
+              case _ => "object"
+            if typeStr == "number" && typeofOperand.kind == "ElementAccessExpression" then
+              val mapExpr = emitExpr(typeofOperand.children.head, file)
+              val keyExpr = emitExpr(typeofOperand.children.last, file)
+              return s"$mapExpr.contains($keyExpr)"
+            else
+              val operandExpr = emitExpr(typeofOperand, file)
+              return s"$operandExpr.isInstanceOf[${typeStr.capitalize}]"
+          val op = node.operator.map(tsOpToScala).getOrElse("???")
           // Destructuring: [a, b] = expr → a = expr(0); b = expr(1)
           if op == "=" && lhs.kind == "ArrayLiteralExpression" then
             val names = lhs.children.map(c => emitExpr(c, file))
