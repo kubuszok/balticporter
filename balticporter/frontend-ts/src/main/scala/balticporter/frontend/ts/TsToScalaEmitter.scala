@@ -21,6 +21,12 @@ object TsToScalaEmitter:
       postProcess: Map[String, List[(String, String)]] = Map.empty,
       skipIndex: Boolean = true,
       fileNameMap: Map[String, String] = Map.empty,
+      /** Map from TS type alias name to Scala type name. `Point` → `Point` means
+        * the emitter uses `Point` wherever the TS type alias appears. */
+      tupleTypeOverrides: Map[String, String] = Map.empty,
+      /** Map from TS type alias name to field names for tuple element access.
+        * `Point` → Map(0 → "x", 1 → "y") means `p[0]` → `p.x`. */
+      tupleFieldOverrides: Map[String, Map[Int, String]] = Map.empty,
   )
 
   def emit(files: List[RastFile], config: EmitConfig): Map[String, String] =
@@ -57,25 +63,30 @@ object TsToScalaEmitter:
         n.kind == "FirstStatement" || n.kind == "VariableStatement")
       val typeAliases = file.nodes.filter(_.kind == "TypeAliasDeclaration")
 
+      // Seed type alias map with project-specific overrides
+      for ((name, scalaType) <- config.tupleTypeOverrides)
+        typeAliasMap(name) = scalaType
+
       // Resolve type aliases FIRST so they're available during emission
       for (ta <- typeAliases)
         val taName = nameOf(ta)
-        // Try RAST type field first, then inspect children (UnionType, etc.)
-        val tpe = ta.`type`.flatMap(file.types.get).map(rastTypeToScala(_, file)).getOrElse {
-          val unionChild = ta.children.find(_.kind == "UnionType")
-          unionChild match
-            case Some(u) =>
-              val memberKinds = u.children.map(_.kind)
-              // All numeric literals → Int
-              if memberKinds.forall(k => k == "LiteralType" || k == "NumericLiteral") then "Int"
-              // All string literals → String
-              else if memberKinds.forall(k => k == "LiteralType" || k == "StringLiteral") then "String"
-              else "Any"
-            case None =>
-              // Single type child
-              ta.children.find(c => c.kind != "Identifier").map(syntaxTypeToScala).getOrElse("Any")
-        }
-        typeAliasMap(taName) = tpe
+        if !config.tupleTypeOverrides.contains(taName) then
+          // Try RAST type field first, then inspect children (UnionType, etc.)
+          val tpe = ta.`type`.flatMap(file.types.get).map(rastTypeToScala(_, file)).getOrElse {
+            val unionChild = ta.children.find(_.kind == "UnionType")
+            unionChild match
+              case Some(u) =>
+                val memberKinds = u.children.map(_.kind)
+                // All numeric literals → Int
+                if memberKinds.forall(k => k == "LiteralType" || k == "NumericLiteral") then "Int"
+                // All string literals → String
+                else if memberKinds.forall(k => k == "LiteralType" || k == "StringLiteral") then "String"
+                else "Any"
+              case None =>
+                // Single type child
+                ta.children.find(c => c.kind != "Identifier").map(syntaxTypeToScala).getOrElse("Any")
+          }
+          typeAliasMap(taName) = tpe
 
       // Emit exported interfaces as case classes
       for (iface <- interfaces)
@@ -423,15 +434,24 @@ object TsToScalaEmitter:
           emitStatement(initChild, file, indent)
         val cond = emitExpr(children(1), file)
         sb.append(s"${indent}while ($cond) {\n")
-        emitStatement(children(3), file, indent + "  ")
-        // update
+        // Emit the body block's statements WITHOUT the outer braces
+        val bodyNode = children(3)
+        if bodyNode.kind == "Block" then
+          bodyNode.children.foreach(c => emitStatement(c, file, indent + "  "))
+        else
+          emitStatement(bodyNode, file, indent + "  ")
+        // update (inside the while body)
         val update = emitExpr(children(2), file)
         sb.append(s"${indent}  $update\n")
         sb.append(s"$indent}\n")
       else if children.length >= 3 then
         val cond = emitExpr(children(0), file)
         sb.append(s"${indent}while ($cond) {\n")
-        emitStatement(children(2), file, indent + "  ")
+        val bodyNode = children(2)
+        if bodyNode.kind == "Block" then
+          bodyNode.children.foreach(c => emitStatement(c, file, indent + "  "))
+        else
+          emitStatement(bodyNode, file, indent + "  ")
         val update = emitExpr(children(1), file)
         sb.append(s"${indent}  $update\n")
         sb.append(s"$indent}\n")
@@ -603,8 +623,8 @@ object TsToScalaEmitter:
         case "PostfixUnaryExpression" =>
           val operand = emitExpr(node.children.head, file)
           node.operator match
-            case Some("PlusPlusToken") => s"{ $operand += 1; $operand }"
-            case Some("MinusMinusToken") => s"{ $operand -= 1; $operand }"
+            case Some("PlusPlusToken") => s"$operand += 1"
+            case Some("MinusMinusToken") => s"$operand -= 1"
             case _ => s"$operand"
 
         case "CallExpression" =>
@@ -731,12 +751,17 @@ object TsToScalaEmitter:
           val callReturnsTuple = node.children.head.kind == "CallExpression" && {
             node.children.head.`type`.flatMap(file.types.get).exists(t => isTupleType(t, file))
           }
+          // Check for field override (Point.x instead of ._1)
+          val objTypeText = objType.map(_.text).getOrElse("")
+          val fieldOverride = config.tupleFieldOverrides.find { case (typeName, _) =>
+            objTypeText.contains(typeName) || typeAliasMap.values.exists(_ == typeName) && isTupleAccess
+          }.flatMap(_._2.get(if idx.matches("\\d+") then idx.toInt else -1))
           if callReturnsTuple && idx.matches("\\d+") then
-            val tupleIdx = idx.toInt + 1
-            s"{ val _r = $obj; _r._$tupleIdx }"
+            val accessor = fieldOverride.getOrElse(s"_${idx.toInt + 1}")
+            s"{ val _r = $obj; _r.$accessor }"
           else if isTupleAccess && idx.matches("\\d+") then
-            val tupleIdx = idx.toInt + 1
-            s"$obj._$tupleIdx"
+            val accessor = fieldOverride.getOrElse(s"_${idx.toInt + 1}")
+            s"$obj.$accessor"
           else if isOptional then
             s"$obj.get($idx)"
           else s"$obj($idx)"
@@ -748,13 +773,24 @@ object TsToScalaEmitter:
           }
           val hasSpread = node.children.exists(_.kind == "SpreadElement")
           val allSpread = node.children.nonEmpty && node.children.forall(_.kind == "SpreadElement")
+          // Check if the array literal's type matches a tuple type override (e.g., Point)
+          val tupleOverrideName = node.`type`.flatMap(file.types.get).flatMap { t =>
+            config.tupleTypeOverrides.find { case (_, scalaName) =>
+              t.text.contains(scalaName) || typeAliasMap.values.exists(_ == scalaName) &&
+                (t.text.startsWith("[") && t.text.contains(","))
+            }.map(_._2)
+          }.orElse {
+            if isTuple then config.tupleTypeOverrides.values.headOption else None
+          }
           if node.children.isEmpty then "Vector.empty"
           else if allSpread && node.children.length == 1 then
             emitExpr(node.children.head.children.head, file)
           else if isTuple then
             val elems = node.children.map(c =>
               if c.kind == "SpreadElement" then emitExpr(c.children.head, file) else emitExpr(c, file))
-            s"(${elems.mkString(", ")})"
+            val constructor = tupleOverrideName.getOrElse("")
+            if constructor.nonEmpty then s"$constructor(${elems.mkString(", ")})"
+            else s"(${elems.mkString(", ")})"
           else if hasSpread then
             // Mixed spread + non-spread: Vector(a, b) ++ spread
             val nonSpread = node.children.takeWhile(_.kind != "SpreadElement")

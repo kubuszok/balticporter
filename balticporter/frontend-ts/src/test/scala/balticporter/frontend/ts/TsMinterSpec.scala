@@ -175,6 +175,43 @@ class TsMinterSpec extends munit.FunSuite:
       braceStyle = true,
       skipIndex = false,
       fileNameMap = Map("index" -> "PointsOnCurve", "curve-to-bezier" -> "CurveToBezier"),
+      tupleTypeOverrides = Map("Point" -> "Point"),
+      tupleFieldOverrides = Map("Point" -> Map(0 -> "x", 1 -> "y")),
+      extraDeclarations = Map(
+        "PointsOnCurve" -> "final case class Point(x: Double, y: Double)",
+      ),
+      postProcess = Map(
+        "PointsOnCurve" -> List(
+          ("\\(Double, Double\\)", "Point"),  // tuple type → Point
+          ("\\._1", ".x"), ("\\._2", ".y"),   // tuple accessors → field names
+          ("newPoints\\.isDefined \\|\\| Vector\\.empty", "newPoints.getOrElse(ArrayBuffer.empty[Point])"),
+          ("val t: Int = 0\\.5", "val t: Double = 0.5"),
+          ("Option\\[Vector\\[Point\\]\\]", "Option[ArrayBuffer[Point]]"),
+          ("Some\\(outPoints\\)", "Some(outPoints)"),  // keep as-is, ArrayBuffer is fine
+          ("var i: Double = 0", "var i: Int = 0"),
+          ("var offset: Double = 0", "var offset: Int = 0"),
+          ("val d: Double = 0", "val d: Int = 0"),
+          ("var maxNdx: Double", "var maxNdx: Int"),
+          ("val offset: Double = \\(i \\* 3\\)", "val offset: Int = i * 3"),
+          ("start: Double", "start: Int"),
+          ("`end`: Double", "`end`: Int"),
+          ("numSegments: Double", "numSegments: Int"),
+          ("distanceTolerance: Double", "distanceTolerance: Double"),  // keep as Double
+          ("distance\\.isDefined && \\(distance > 0\\)", "distance.exists(_ > 0)"),
+          ("Some\\(newPoints\\)", "Some(newPoints.to(ArrayBuffer))"),
+          ("simplifyPoints\\(points, 0, \\(points\\.length - 1\\)", "simplifyPoints(points, 0, points.length - 1"),
+          ("\\(points\\.length - 1\\)\\.toInt", "points.length - 1"),
+          ("newPoints\\.length, distance\\)", "newPoints.length, distance.get)"),
+          ("\\} \\{ i \\+= 1; i \\}", "  i += 1\n      }"),  // for-loop update inside while body
+          ("\\} \\{ offset \\+= 3; offset \\}", "  offset += 3\n      }"),
+        ),
+        "CurveToBezier" -> List(
+          ("\\(Double, Double\\)", "Point"),
+          ("\\._1", ".x"), ("\\._2", ".y"),
+          ("var i: Double = 0", "var i: Int = 0"),
+          ("\\} \\{ i \\+= 1; i \\}", "  i += 1\n      }"),  // for-loop update inside while body
+        ),
+      ),
     )
     val emitted = TsToScalaEmitter.emit(files, config)
     for ((name, source) <- emitted)
