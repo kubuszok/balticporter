@@ -810,6 +810,450 @@ object MermaidEmitter {
     case other => other
   }
 
+  // -- Renderer emission (D3 -> SvgBuilder) -----------------------------------
+
+  /** A single call in a D3 method chain, linearized from the nested RAST.
+    *
+    * Example chain: `g.append('path').attr('class', 'x').attr('d', '...')`
+    * becomes: `ChainLink("append", List("path")), ChainLink("attr", ...), ...`
+    */
+  private final case class ChainLink(method: String, args: List[RastNode])
+
+  /** Emits a Scala renderer object from a mermaid diagram renderer RAST file.
+    *
+    * The TS pattern is a D3-based `draw` function that:
+    *   - Calls `selectSvgElement(id)` to create an SVG
+    *   - Uses method chaining: `svg.append('g').attr(...).style(...).text(...)`
+    *   - Calls `configureSvgSize`
+    *
+    * The Scala pattern (from the hand port) is:
+    *   - `SvgBuilder.createSvg(viewBox)` creates the root
+    *   - Method chaining on SvgBuilder: `.append(...)`, `.attr(...)`, `.style(...)`, `.text(...)`
+    *   - `svg.build().toMarkup()` produces the final SVG string
+    */
+  def emitRenderer(rast: RastFile, objectName: String, pkg: String): String = {
+    val sb = new StringBuilder
+    sb.append(header(rast.path, s"$objectName.scala"))
+    sb.append(s"package ssg\npackage mermaid\npackage diagrams\npackage $pkg\n\n")
+    sb.append("import ssg.graphs.commons.svg.SvgBuilder\n\n")
+    sb.append(s"object $objectName {\n\n")
+
+    // Find the draw function
+    val drawFn = findDrawFunction(rast)
+    drawFn match {
+      case Some(fn) =>
+        val params = fn.children.filter(_.kind == "Parameter")
+        val body = fn.children.find(_.kind == "Block")
+
+        // Emit the render method
+        sb.append(s"  def render(")
+        // Map TS params to Scala types
+        val paramDecls = params.map { p =>
+          val pName = nameOf(p)
+          val pType = inferParamType(p, rast)
+          s"$pName: $pType"
+        }
+        sb.append(paramDecls.mkString(", "))
+        sb.append(s"): String = {\n")
+
+        body.foreach { block =>
+          emitRendererBody(sb, block, rast, "    ")
+        }
+
+        sb.append("  }\n")
+      case None =>
+        sb.append("  // No draw function found in RAST\n")
+        sb.append("  def render(): String = ???\n")
+    }
+
+    sb.append("}\n")
+    sb.toString
+  }
+
+  /** Find the `draw` arrow function in a renderer RAST file. */
+  private def findDrawFunction(rast: RastFile): Option[RastNode] = {
+    for (node <- rast.nodes) {
+      if (node.kind == "VariableStatement") {
+        val declLists = findChildren(node, "VariableDeclarationList")
+        val decls = if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
+                    else findChildren(node, "VariableDeclaration")
+        for (d <- decls) {
+          val name = nameOf(d)
+          if (name == "draw") {
+            val arrowFn = findChild(d, "ArrowFunction")
+            if (arrowFn.isDefined) return arrowFn
+            val funcExpr = findChild(d, "FunctionExpression")
+            if (funcExpr.isDefined) return funcExpr
+          }
+        }
+      }
+    }
+    None
+  }
+
+  /** Emit the body of a renderer's draw/render function.
+    *
+    * Walks each statement in the block, recognizing these patterns:
+    *   1. `const svg = selectSvgElement(id)` -> `val svg = SvgBuilder.createSvg(viewBox)`
+    *   2. `configureSvgSize(svg, h, w, flag)` -> ignored (sizing is per-platform)
+    *   3. `log.debug(...)` -> ignored
+    *   4. `const g = svg.append('g')` -> `val g = svg.append("g")`
+    *   5. D3 method chains -> linearized SvgBuilder calls
+    *   6. Variable declarations with initializers
+    */
+  private def emitRendererBody(sb: StringBuilder, block: RastNode, rast: RastFile, indent: String): Unit = {
+    // Track which variables hold SvgBuilder instances
+    val svgVars = mutable.Set.empty[String]
+
+    for (stmt <- block.children) {
+      stmt.kind match {
+        case "VariableStatement" =>
+          emitRendererVarStatement(sb, stmt, rast, indent, svgVars)
+        case "ExpressionStatement" =>
+          stmt.children.headOption.foreach { expr =>
+            emitRendererExprStatement(sb, expr, rast, indent, svgVars)
+          }
+        case _ =>
+          emitBlock(sb, stmt, rast, indent)
+      }
+    }
+
+    // End with svg.build().toMarkup() if we found an svg variable
+    if (svgVars.contains("svg")) {
+      sb.append(s"\n${indent}svg.build().toMarkup()\n")
+    }
+  }
+
+  /** Emit a variable statement inside a renderer body. */
+  private def emitRendererVarStatement(sb: StringBuilder, stmt: RastNode, rast: RastFile,
+                                       indent: String, svgVars: mutable.Set[String]): Unit = {
+    val declLists = findChildren(stmt, "VariableDeclarationList")
+    val decls = if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
+                else findChildren(stmt, "VariableDeclaration")
+    for (d <- decls) {
+      val name = nameOf(d)
+      val init = d.children.find(c => c.kind != "Identifier" && c.kind != "TypeReference" &&
+        c.kind != "StringKeyword" && c.kind != "NumberKeyword" && c.kind != "BooleanKeyword")
+
+      init match {
+        case Some(call) if call.kind == "CallExpression" =>
+          val callee = call.children.headOption
+          val args = call.children.drop(1)
+
+          callee match {
+            // selectSvgElement(id) -> SvgBuilder.createSvg(viewBox)
+            case Some(id) if id.kind == "Identifier" && id.text.contains("selectSvgElement") =>
+              svgVars += name
+              sb.append(s"${indent}val $name = SvgBuilder.createSvg(\"0 0 800 600\")\n")
+
+            // obj.append('tag') -> val name = obj.append("tag")
+            case Some(pa) if pa.kind == "PropertyAccessExpression" =>
+              val methodName = pa.children.lastOption.flatMap(_.text).getOrElse("")
+              val receiver = pa.children.headOption.flatMap(_.text).getOrElse("")
+              if (methodName == "append" && svgVars.contains(receiver)) {
+                svgVars += name
+                val tag = args.headOption.flatMap(_.value).collect {
+                  case RastValue.Str(s) => s
+                }.getOrElse("g")
+                sb.append(s"${indent}val $name = $receiver.append(\"$tag\")\n")
+              } else {
+                // Check if this is a D3 chain that assigns to a variable
+                val chain = linearizeChain(call)
+                if (chain.nonEmpty && svgVars.exists(v => isReceiverInChain(call, v))) {
+                  svgVars += name
+                  emitD3Chain(sb, call, rast, indent, svgVars, Some(name))
+                } else {
+                  sb.append(s"${indent}val $name = ${emitExpr(call, rast)}\n")
+                }
+              }
+            case _ =>
+              sb.append(s"${indent}val $name = ${emitExpr(call, rast)}\n")
+          }
+
+        case Some(other) =>
+          val kw = if (d.flags.contains("const")) "val" else "var"
+          sb.append(s"$indent$kw $name = ${emitExpr(other, rast)}\n")
+
+        case None => ()
+      }
+    }
+  }
+
+  /** Emit an expression statement inside a renderer body. */
+  private def emitRendererExprStatement(sb: StringBuilder, expr: RastNode, rast: RastFile,
+                                        indent: String, svgVars: mutable.Set[String]): Unit = {
+    expr.kind match {
+      case "CallExpression" =>
+        val callee = expr.children.headOption
+
+        callee match {
+          // log.debug(...) -> skip
+          case Some(pa) if pa.kind == "PropertyAccessExpression" =>
+            val receiver = pa.children.headOption.flatMap(_.text).getOrElse("")
+            val method = pa.children.lastOption.flatMap(_.text).getOrElse("")
+            if (receiver == "log") {
+              // Skip logging calls
+              ()
+            } else if (method == "configureSvgSize" || (callee.exists(_.text.contains("configureSvgSize")))) {
+              // Skip configureSvgSize calls
+              ()
+            } else {
+              // Check if this is a D3 method chain
+              emitD3Chain(sb, expr, rast, indent, svgVars, None)
+            }
+
+          // configureSvgSize(...) -> skip
+          case Some(id) if id.kind == "Identifier" && id.text.contains("configureSvgSize") =>
+            () // skip
+
+          case _ =>
+            sb.append(s"$indent${emitExpr(expr, rast)}\n")
+        }
+
+      case _ =>
+        sb.append(s"$indent${emitExpr(expr, rast)}\n")
+    }
+  }
+
+  /** Linearize a nested D3 method chain into a flat list of ChainLinks.
+    *
+    * The RAST for `g.append('path').attr('class', 'x').attr('d', '...')`
+    * is a deeply nested structure where each `.method(args)` wraps the
+    * previous call as the receiver:
+    *
+    * {{{
+    * CallExpression(.attr('d', '...'))
+    *   PropertyAccessExpression
+    *     CallExpression(.attr('class', 'x'))      <- receiver
+    *       PropertyAccessExpression
+    *         CallExpression(g.append('path'))      <- receiver
+    *           PropertyAccessExpression
+    *             Identifier: g
+    *             Identifier: append
+    *           StringLiteral: 'path'
+    *         Identifier: attr
+    *       ...
+    *     Identifier: attr
+    *   ...
+    * }}}
+    *
+    * Returns: (rootReceiver, List[ChainLink]) where rootReceiver is the
+    * initial identifier (e.g. "g") and each ChainLink is a method call.
+    */
+  private def linearizeChain(call: RastNode): List[(String, ChainLink)] = {
+    val result = mutable.ListBuffer.empty[(String, ChainLink)]
+
+    def walk(node: RastNode): Option[String] = {
+      if (node.kind != "CallExpression") {
+        // Base case: identifier
+        return node.text
+      }
+
+      val callee = node.children.headOption
+      val args = node.children.drop(1)
+
+      callee match {
+        case Some(pa) if pa.kind == "PropertyAccessExpression" =>
+          val method = pa.children.lastOption.flatMap(_.text).getOrElse("")
+          val receiver = pa.children.headOption
+
+          receiver match {
+            case Some(r) =>
+              val rootName = walk(r)
+              rootName.foreach { root =>
+                result += ((root, ChainLink(method, args)))
+              }
+              rootName
+            case None => None
+          }
+
+        // Direct function call (not a method chain)
+        case Some(id) if id.kind == "Identifier" =>
+          None
+
+        case _ => None
+      }
+    }
+
+    walk(call)
+    result.toList
+  }
+
+  /** Check if a variable name is the root receiver of a chain. */
+  private def isReceiverInChain(call: RastNode, varName: String): Boolean = {
+    def findRoot(node: RastNode): Option[String] = {
+      if (node.kind == "Identifier") return node.text
+      if (node.kind == "CallExpression") {
+        val callee = node.children.headOption
+        callee match {
+          case Some(pa) if pa.kind == "PropertyAccessExpression" =>
+            pa.children.headOption.flatMap(findRoot)
+          case _ => None
+        }
+      } else None
+    }
+    findRoot(call).contains(varName)
+  }
+
+  /** Emit a D3 method chain as linearized SvgBuilder calls.
+    *
+    * For: `g.append('path').attr('class', 'error-icon').attr('d', '...')`
+    * Emits:
+    * {{{
+    * val path = g.append("path")
+    * path.attr("class", "error-icon")
+    * path.attr("d", "...")
+    * }}}
+    *
+    * When the chain starts with `.append(tag)`, a local variable is created
+    * for the new element. Subsequent `.attr()`, `.style()`, `.text()` calls
+    * are emitted as statements on that variable.
+    */
+  private def emitD3Chain(sb: StringBuilder, call: RastNode, rast: RastFile,
+                          indent: String, svgVars: mutable.Set[String],
+                          assignTo: Option[String]): Unit = {
+    val chain = linearizeChain(call)
+    if (chain.isEmpty) {
+      // Not a D3 chain, emit as-is
+      sb.append(s"$indent${emitExpr(call, rast)}\n")
+      return
+    }
+
+    val rootReceiver = chain.head._1
+    val links = chain.map(_._2)
+
+    // Separate the chain: first .append() creates a new element,
+    // subsequent calls modify it
+    var currentVar = rootReceiver
+    var appendIdx = -1
+
+    for (i <- links.indices) {
+      val link = links(i)
+      link.method match {
+        case "append" if i == 0 =>
+          // First .append creates a new child
+          val tag = link.args.headOption.flatMap(_.value).collect {
+            case RastValue.Str(s) => s
+          }.getOrElse("g")
+          val varName = assignTo.getOrElse(tagToVarName(tag, svgVars))
+          svgVars += varName
+          sb.append(s"${indent}val $varName = $currentVar.append(\"$tag\")\n")
+          currentVar = varName
+          appendIdx = i
+
+        case "append" =>
+          // Subsequent .append creates a nested child
+          val tag = link.args.headOption.flatMap(_.value).collect {
+            case RastValue.Str(s) => s
+          }.getOrElse("g")
+          val varName = tagToVarName(tag, svgVars)
+          svgVars += varName
+          sb.append(s"${indent}val $varName = $currentVar.append(\"$tag\")\n")
+          currentVar = varName
+
+        case "attr" =>
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          sb.append(s"$indent$currentVar.attr(${argStrs.mkString(", ")})\n")
+
+        case "style" =>
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          sb.append(s"$indent$currentVar.style(${argStrs.mkString(", ")})\n")
+
+        case "text" =>
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          sb.append(s"$indent$currentVar.text(${argStrs.mkString(", ")})\n")
+
+        case "classed" =>
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          val classStr = if (argStrs.size == 1) s"${argStrs.head}, true" else argStrs.mkString(", ")
+          sb.append(s"$indent$currentVar.classed($classStr)\n")
+
+        case "html" =>
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          sb.append(s"$indent$currentVar.html(${argStrs.mkString(", ")})\n")
+
+        case "insert" =>
+          val tag = link.args.headOption.flatMap(_.value).collect {
+            case RastValue.Str(s) => s
+          }.getOrElse("g")
+          val varName = tagToVarName(tag, svgVars)
+          svgVars += varName
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          sb.append(s"${indent}val $varName = $currentVar.insert(${argStrs.mkString(", ")})\n")
+          currentVar = varName
+
+        case other =>
+          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          sb.append(s"$indent$currentVar.$other(${argStrs.mkString(", ")})\n")
+      }
+    }
+
+    // If no append was found, we're just calling methods on the root
+    if (appendIdx < 0 && links.nonEmpty && assignTo.isEmpty) {
+      // Already emitted above
+      ()
+    }
+  }
+
+  /** Emit a renderer argument, handling special cases. */
+  private def emitRendererArg(node: RastNode, rast: RastFile): String = {
+    node.kind match {
+      case "StringLiteral" =>
+        node.value match {
+          case Some(RastValue.Str(s)) => s"\"${escapeScala(s)}\""
+          case _ => "\"\""
+        }
+      case "NumericLiteral" =>
+        node.value match {
+          case Some(RastValue.Num(n)) =>
+            if (n == n.toLong) n.toLong.toString else n.toString
+          case _ => "0"
+        }
+      case "TrueKeyword" => "true"
+      case "FalseKeyword" => "false"
+      case "TemplateExpression" =>
+        emitTemplateExpression(node, rast)
+      case _ =>
+        emitExpr(node, rast)
+    }
+  }
+
+  /** Generate a variable name from an SVG tag name.
+    *
+    * For `append('text')` -> `textEl`, `append('g')` -> `group`,
+    * `append('path')` -> `pathEl`, etc.
+    */
+  private def tagToVarName(tag: String, existing: mutable.Set[String]): String = {
+    val base = tag match {
+      case "g"              => "group"
+      case "text"           => "textEl"
+      case "tspan"          => "tspan"
+      case "rect"           => "rect"
+      case "circle"         => "circle"
+      case "line"           => "lineEl"
+      case "path"           => "pathEl"
+      case "polygon"        => "polygon"
+      case "polyline"       => "polyline"
+      case "image"          => "imageEl"
+      case "svg"            => "svgEl"
+      case "defs"           => "defs"
+      case "style"          => "styleEl"
+      case "use"            => "useEl"
+      case "marker"         => "marker"
+      case "clipPath"       => "clipPath"
+      case "foreignObject"  => "foreignObj"
+      case "title"          => "titleEl"
+      case "desc"           => "descEl"
+      case other            => other + "El"
+    }
+    if (!existing.contains(base)) base
+    else {
+      var i = 2
+      while (existing.contains(s"$base$i")) i += 1
+      s"$base$i"
+    }
+  }
+
   @annotation.nowarn("msg=unused")
   private def header(tsPath: String, scalaFile: String): String = {
     s"""/*

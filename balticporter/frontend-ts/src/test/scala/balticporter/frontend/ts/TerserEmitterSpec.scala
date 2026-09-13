@@ -111,3 +111,102 @@ class TerserEmitterSpec extends munit.FunSuite:
     assert(scala.contains("AstConditional"), "should reference AstConditional")
     assert(scala.contains("AstSequence"), "should reference AstSequence")
     assert(scala.contains("boundary"), "should use boundary for control flow")
+
+  // -----------------------------------------------------------------------
+  // DEFMETHOD extraction (scope.js)
+  // -----------------------------------------------------------------------
+
+  test("scope.js: extract DEFMETHOD entries"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    assert(entries.nonEmpty, "should find DEFMETHOD entries")
+    // scope.js has 36 DEFMETHOD calls (including return_false/return_true/return_this references)
+    assert(entries.size >= 35, s"Expected >= 35 DEFMETHOD entries, got ${entries.size}")
+
+  test("scope.js: first DEFMETHOD is figure_out_scope on AST_Scope"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val first = entries.head
+    assert(first.className == "AST_Scope", s"Expected AST_Scope, got ${first.className}")
+    assert(first.methodName == "figure_out_scope", s"Expected figure_out_scope, got ${first.methodName}")
+    assert(first.params.nonEmpty, "figure_out_scope should have parameters")
+
+  test("scope.js: DEFMETHOD entries include def_global on AST_Toplevel"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val defGlobal = entries.find(e => e.methodName == "def_global" && e.className == "AST_Toplevel")
+    assert(defGlobal.isDefined, "should find def_global on AST_Toplevel")
+
+  test("scope.js: DEFMETHOD entries include is_block_scope on multiple classes"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val blockScopes = entries.filter(_.methodName == "is_block_scope")
+    assert(blockScopes.size >= 8, s"Expected >= 8 is_block_scope entries, got ${blockScopes.size}")
+    val classNames = blockScopes.map(_.className).toSet
+    assert(classNames.contains("AST_Node"), "AST_Node should have is_block_scope")
+    assert(classNames.contains("AST_Block"), "AST_Block should have is_block_scope")
+    assert(classNames.contains("AST_Scope"), "AST_Scope should have is_block_scope")
+
+  test("scope.js: groupByClass groups correctly"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val grouped = dedicated.TerserEmitter.groupByClass(entries)
+    assert(grouped.contains("AST_Scope"), "should have AST_Scope group")
+    assert(grouped.contains("AST_Toplevel"), "should have AST_Toplevel group")
+    assert(grouped.contains("AST_Symbol"), "should have AST_Symbol group")
+    // AST_Scope should have the most methods
+    val scopeMethods = grouped("AST_Scope")
+    assert(scopeMethods.size >= 8, s"AST_Scope should have >= 8 methods, got ${scopeMethods.size}")
+
+  test("scope.js: defmethodSummary is readable"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val summary = dedicated.TerserEmitter.defmethodSummary(entries)
+    println("=== DEFMETHOD Summary ===")
+    println(summary)
+    assert(summary.contains("DEFMETHOD summary"), "should have summary header")
+    assert(summary.contains("AST_Scope"), "should mention AST_Scope")
+    assert(summary.contains("figure_out_scope"), "should mention figure_out_scope")
+
+  test("scope.js: merge DEFMETHOD entries into hierarchy"):
+    val astRast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scopeRast = loadRast("/rast/terser/lib/scope.rast.json")
+    val hierarchy = dedicated.TerserEmitter.extractHierarchy(astRast)
+    val defmethods = dedicated.TerserEmitter.extractDefmethods(scopeRast)
+    val merged = dedicated.TerserEmitter.mergeDefmethods(hierarchy, defmethods)
+    // Find AST_Scope and verify it has merged methods
+    val scopeEntry = merged.find(_._1.varName == "AST_Scope")
+    assert(scopeEntry.isDefined, "AST_Scope should be in merged result")
+    val (cls, methods) = scopeEntry.get
+    assert(methods.nonEmpty, "AST_Scope should have DEFMETHOD entries after merge")
+    val methodNames = methods.map(_.methodName)
+    assert(methodNames.contains("figure_out_scope"), "should include figure_out_scope")
+    assert(methodNames.contains("init_scope_vars"), "should include init_scope_vars")
+    assert(methodNames.contains("find_variable"), "should include find_variable")
+
+  test("scope.js: emit merged AstScope class"):
+    val astRast = loadRast("/rast/terser/lib/ast.rast.json")
+    val scopeRast = loadRast("/rast/terser/lib/scope.rast.json")
+    val hierarchy = dedicated.TerserEmitter.extractHierarchy(astRast)
+    val defmethods = dedicated.TerserEmitter.extractDefmethods(scopeRast)
+    val merged = dedicated.TerserEmitter.mergeDefmethods(hierarchy, defmethods)
+    val scopeEntry = merged.find(_._1.varName == "AST_Scope").get
+    val scala = dedicated.TerserEmitter.emitMergedClass(scopeEntry._1, scopeEntry._2)
+    println("=== AstScope (merged) ===")
+    println(scala)
+    assert(scala.contains("AstScope"), "should emit AstScope")
+    assert(scala.contains("DEFMETHOD additions"), "should have DEFMETHOD section")
+    assert(scala.contains("figureOutScope"), "should have figureOutScope method (camelCase)")
+    assert(scala.contains("initScopeVars"), "should have initScopeVars method (camelCase)")
+
+  test("scope.js: extract free functions"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val funcs = dedicated.TerserEmitter.extractFreeFunctions(rast)
+    assert(funcs.nonEmpty, "should find free functions")
+    val names = funcs.map(_.name)
+    assert(names.contains("redefined_catch_def"), "should find redefined_catch_def")
+
+  test("scope.js: extract class declarations"):
+    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val classes = dedicated.TerserEmitter.extractClassDeclarations(rast)
+    assert(classes.contains("SymbolDef"), "should find SymbolDef class")

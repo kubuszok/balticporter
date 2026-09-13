@@ -228,8 +228,259 @@ object TerserEmitter:
     sb.toString
 
   // --------------------------------------------------------------------------
+  // DEFMETHOD extraction and merging
+  // --------------------------------------------------------------------------
+
+  /** A method added to a DEFNODE class via DEFMETHOD after definition. */
+  final case class DefmethodEntry(
+      className: String,   // e.g. "AST_Scope"
+      methodName: String,  // e.g. "figure_out_scope"
+      params: List[String],
+      bodyNode: RastNode,
+  )
+
+  /** Extract all DEFMETHOD calls from a Terser source file RAST.
+    *
+    * The JS pattern is:
+    * {{{
+    * AST_Scope.DEFMETHOD("figure_out_scope", function(options, { parent_scope = undefined } = {}) {
+    *   // body
+    * });
+    * }}}
+    *
+    * In RAST this appears as:
+    * {{{
+    * ExpressionStatement
+    *   CallExpression
+    *     PropertyAccessExpression
+    *       Identifier: "AST_Scope"
+    *       Identifier: "DEFMETHOD"
+    *     StringLiteral: "figure_out_scope"
+    *     FunctionExpression
+    *       Parameter...
+    *       Block (body)
+    * }}}
+    */
+  def extractDefmethods(file: RastFile): List[DefmethodEntry] =
+    val result = mutable.ListBuffer.empty[DefmethodEntry]
+
+    for node <- file.nodes do
+      extractDefmethodFromStatement(node).foreach(result += _)
+
+    result.toList
+
+  /** Group DEFMETHOD entries by their target class name.
+    *
+    * Returns a map from class name (e.g. "AST_Scope") to the list of
+    * methods that should be added to that class.
+    */
+  def groupByClass(entries: List[DefmethodEntry]): Map[String, List[DefmethodEntry]] =
+    entries.groupBy(_.className)
+
+  /** Produce a summary of DEFMETHOD entries for diagnostics. */
+  def defmethodSummary(entries: List[DefmethodEntry]): String =
+    val sb = new StringBuilder
+    val grouped = groupByClass(entries)
+    val sortedClasses = grouped.keys.toList.sorted
+
+    sb.append(s"DEFMETHOD summary: ${entries.size} methods across ${grouped.size} classes\n")
+    sb.append("=" * 60)
+    sb.append("\n")
+
+    for cls <- sortedClasses do
+      val methods = grouped(cls)
+      sb.append(s"\n$cls (${methods.size} methods):\n")
+      for m <- methods do
+        val paramStr = if m.params.isEmpty then "()" else s"(${m.params.mkString(", ")})"
+        sb.append(s"  - ${m.methodName}$paramStr\n")
+
+    sb.toString
+
+  /** Merge DEFMETHOD entries into a hierarchy of DEFNODE classes.
+    *
+    * Takes the DEFNODE hierarchy from ast.js and the DEFMETHOD entries
+    * from scope.js/output.js/etc, and produces the merged class list
+    * with all methods included.
+    *
+    * Returns a list of (DefnodeClass, List[DefmethodEntry]) where each
+    * class has its DEFNODE methods plus any DEFMETHODs found in the source.
+    */
+  def mergeDefmethods(
+      hierarchy: List[DefnodeClass],
+      defmethods: List[DefmethodEntry]
+  ): List[(DefnodeClass, List[DefmethodEntry])] =
+    val grouped = groupByClass(defmethods)
+
+    hierarchy.map { cls =>
+      val methods = grouped.getOrElse(cls.varName, Nil)
+      (cls, methods)
+    }
+
+  /** Emit a merged class as Scala, including both DEFNODE methods and DEFMETHODs.
+    *
+    * Uses the hand-ported ssg-js naming conventions:
+    *   - AST_Scope -> AstScope
+    *   - snake_case methods -> camelCase
+    *   - function params -> Scala types
+    */
+  def emitMergedClass(
+      cls: DefnodeClass,
+      defmethods: List[DefmethodEntry],
+      pkg: String = "ssg.js"
+  ): String =
+    val sb = new StringBuilder
+    val scalaName = astVarToScalaName(cls.varName)
+    val baseScala = cls.base.map(astVarToScalaName)
+    val kind = if cls.isAbstract then "trait" else "class"
+
+    sb.append(s"// $scalaName — merged from DEFNODE + ${defmethods.size} DEFMETHOD(s)\n")
+
+    // Emit class header
+    val extendsClause = baseScala.map(b => s" extends $b").getOrElse("")
+    if cls.selfProps.nonEmpty then
+      val propDecls = cls.selfProps.map { p =>
+        val camel = snakeToCamel(p)
+        s"var $camel: Any /* = null */"
+      }
+      sb.append(s"$kind $scalaName(\n")
+      sb.append(propDecls.map("  " + _).mkString(",\n"))
+      sb.append(s"\n)$extendsClause {\n")
+    else
+      sb.append(s"$kind $scalaName$extendsClause {\n")
+
+    // DEFNODE methods (inline from ast.js)
+    if cls.methods.nonEmpty then
+      sb.append(s"\n  // --- DEFNODE methods ---\n")
+      for m <- cls.methods do
+        val camel = snakeToCamel(m)
+        sb.append(s"  def $camel: Any = ???\n")
+
+    // DEFMETHOD methods (from scope.js etc)
+    if defmethods.nonEmpty then
+      sb.append(s"\n  // --- DEFMETHOD additions ---\n")
+      for dm <- defmethods do
+        val camel = snakeToCamel(dm.methodName)
+        val paramStr = if dm.params.isEmpty then ""
+        else
+          val decls = dm.params.map(p => s"${snakeToCamel(p)}: Any")
+          s"(${decls.mkString(", ")})"
+        sb.append(s"  def $camel$paramStr: Any = {\n")
+        sb.append(s"    ??? // body from DEFMETHOD\n")
+        sb.append(s"  }\n")
+
+    sb.append("}\n")
+    sb.toString
+
+  /** Convert AST_VarName to Scala PascalCase (e.g. AST_Scope -> AstScope). */
+  private def astVarToScalaName(varName: String): String =
+    varName.split("_").map { part =>
+      if part == "AST" then "Ast"
+      else part.head.toUpper + part.tail.toLowerCase
+    }.mkString
+
+  // --------------------------------------------------------------------------
+  // Free function extraction
+  // --------------------------------------------------------------------------
+
+  /** A standalone function from a DEFMETHOD file. */
+  final case class FreeFunction(
+      name: String,
+      params: List[String],
+      bodyNode: RastNode,
+  )
+
+  /** Extract standalone function declarations from a file.
+    *
+    * Files like scope.js contain both DEFMETHOD calls and standalone functions
+    * (e.g. `function redefined_catch_def`, `function next_mangled`). These
+    * need to be emitted as companion utility functions.
+    */
+  def extractFreeFunctions(file: RastFile): List[FreeFunction] =
+    val result = mutable.ListBuffer.empty[FreeFunction]
+
+    for node <- file.nodes do
+      if node.kind == "FunctionDeclaration" then
+        val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
+        if name.nonEmpty then
+          val params = node.children.filter(_.kind == "Parameter").map { p =>
+            p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+          }
+          val body = node.children.find(_.kind == "Block").getOrElse(
+            RastNode("Block", 0, (0, 0))
+          )
+          result += FreeFunction(name, params, body)
+
+    result.toList
+
+  /** Extract class declarations from a file.
+    *
+    * Files like scope.js may contain ES6 class declarations (e.g. SymbolDef)
+    * alongside DEFMETHOD calls.
+    */
+  def extractClassDeclarations(file: RastFile): List[String] =
+    file.nodes.collect {
+      case node if node.kind == "ClassDeclaration" =>
+        node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
+    }
+
+  // --------------------------------------------------------------------------
   // Private helpers
   // --------------------------------------------------------------------------
+
+  /** Extract a DEFMETHOD entry from an ExpressionStatement node.
+    *
+    * Handles two forms:
+    *   1. `AST_X.DEFMETHOD("name", function(...) { body })` — explicit function
+    *   2. `AST_X.DEFMETHOD("name", return_false)` — identifier reference to a
+    *      utility function (return_false, return_true, return_this)
+    */
+  private def extractDefmethodFromStatement(node: RastNode): Option[DefmethodEntry] =
+    if node.kind != "ExpressionStatement" then return None
+    val call = node.children.find(_.kind == "CallExpression")
+    call.flatMap { c =>
+      val callee = c.children.headOption
+      callee match
+        case Some(pa) if pa.kind == "PropertyAccessExpression" =>
+          val className = pa.children.headOption.flatMap(_.text).getOrElse("")
+          val methodId = pa.children.lastOption.flatMap(_.text).getOrElse("")
+          if methodId != "DEFMETHOD" || className.isEmpty then return None
+
+          val args = c.children.tail
+          val methodName = args.headOption.flatMap(_.value).collect {
+            case RastValue.Str(s) => s
+          }.getOrElse("?")
+
+          // The function body can be:
+          // 1. A FunctionExpression or ArrowFunction with params and block
+          // 2. An Identifier reference (return_false, return_true, return_this)
+          val funcExpr = args.find(_.kind == "FunctionExpression")
+            .orElse(args.find(_.kind == "ArrowFunction"))
+
+          funcExpr match
+            case Some(fn) =>
+              val params = fn.children.filter(_.kind == "Parameter").map { p =>
+                p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+              }
+              val body = fn.children.find(_.kind == "Block").getOrElse(
+                RastNode("Block", 0, (0, 0))
+              )
+              Some(DefmethodEntry(className, methodName, params, body))
+
+            case None =>
+              // Check for identifier reference (return_false, return_true, etc.)
+              val identRef = args.find(_.kind == "Identifier")
+              identRef.map { id =>
+                val refName = id.text.getOrElse("")
+                // Synthesize a body node that captures the reference
+                val syntheticBody = RastNode("Block", 0, (0, 0), children = List(
+                  RastNode("ReturnStatement", 0, (0, 0), children = List(
+                    RastNode("Identifier", 0, (0, 0), text = Some(refName))
+                  ))
+                ))
+                DefmethodEntry(className, methodName, Nil, syntheticBody)
+              }
+        case _ => None
+    }
 
   private def extractDefnodeFromStatement(node: RastNode): Option[DefnodeClass] =
     if node.kind != "VariableStatement" then return None
