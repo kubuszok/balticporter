@@ -101,7 +101,7 @@ object MermaidDbEmitter {
 
     // State variables as fields
     for (v <- analysis.stateVars) {
-      sb.append(s"  var ${padField(v.name, analysis.stateVars)}: ${v.scalaType} = ${v.initExpr}\n")
+      sb.append(s"  var ${padField(safeName(v.name), analysis.stateVars)}: ${v.scalaType} = ${v.initExpr}\n")
     }
     if (analysis.stateVars.nonEmpty) sb.append("\n")
 
@@ -378,7 +378,7 @@ object MermaidDbEmitter {
 
   @annotation.nowarn("msg=unused")
   private def emitMethod(sb: StringBuilder, m: DbMethod, analysis: ModuleAnalysis): Unit = {
-    val paramStr = m.params.map { case (n, t) => s"$n: $t" }.mkString(", ")
+    val paramStr = m.params.map { case (n, t) => s"${safeName(n)}: $t" }.mkString(", ")
     val retStr = if (m.returnType == "Unit") ": Unit" else s": ${m.returnType}"
 
     if (m.body.size == 1 && !m.body.head.contains("\n")) {
@@ -403,7 +403,7 @@ object MermaidDbEmitter {
 
     // Reset all state vars
     for (v <- analysis.stateVars) {
-      sb.append(s"    ${v.name} = ${v.defaultExpr}\n")
+      sb.append(s"    ${safeName(v.name)} = ${v.defaultExpr}\n")
     }
 
     // Reset common fields
@@ -428,10 +428,12 @@ object MermaidDbEmitter {
       case "Identifier" =>
         val name = node.text.getOrElse("$unknown")
         // Module-level state becomes a field reference
-        if (stateNames.contains(name)) name
+        if (stateNames.contains(name)) safeName(name)
         // commonDb references are translated
         else if (name == "commonClear") "/* commonClear */"
-        else name
+        else if (name == "undefined") "null"
+        else if (name == "null") "null"
+        else safeName(name)
 
       case "StringLiteral" =>
         node.value match {
@@ -611,8 +613,46 @@ object MermaidDbEmitter {
         val operand = node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
         s"$operand /* typeof */"
 
-      case "AsExpression" =>
-        // Type assertion: just emit the expression
+      case "AsExpression" | "SatisfiesExpression" | "NonNullExpression" =>
+        // Type assertion / satisfies / non-null assertion: just emit the expression
+        node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+
+      case "PostfixUnaryExpression" =>
+        val operand = node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+        val op = node.operator.getOrElse("")
+        op match {
+          case "PlusPlusToken" => s"{ val _p = $operand; $operand += 1; _p }"
+          case "MinusMinusToken" => s"{ val _p = $operand; $operand -= 1; _p }"
+          case _ => s"$operand /* postfix $op */"
+        }
+
+      case "SpreadElement" =>
+        val operand = node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+        s"$operand*"
+
+      case "VoidExpression" =>
+        node.children.headOption.foreach(c => emitExprSimple(c, rast, stateNames))
+        "()"
+
+      case "RegularExpressionLiteral" =>
+        node.value match {
+          case Some(RastValue.Str(s)) =>
+            // Convert /pattern/flags to Scala regex
+            val body = if (s.startsWith("/")) {
+              val lastSlash = s.lastIndexOf('/')
+              if (lastSlash > 0) s.substring(1, lastSlash) else s.substring(1)
+            } else s
+            val escaped = body.replace("\\", "\\\\").replace("\"", "\\\"")
+            s"\"$escaped\".r"
+          case _ => "\"\".r"
+        }
+
+      case "DeleteExpression" =>
+        val operand = node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+        s"/* delete */ $operand"
+
+      case "AwaitExpression" =>
+        // Async/await - just emit the expression
         node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
 
       case _ =>
@@ -643,7 +683,7 @@ object MermaidDbEmitter {
         case "VariableStatement" =>
           val decls = extractVarDecls(stmt)
           for (d <- decls) {
-            val name = nameOf(d)
+            val name = safeName(nameOf(d))
             val isConst = d.flags.contains("const")
             val kw = if (isConst) "val" else "var"
             val init = d.children.find(c =>
@@ -657,15 +697,41 @@ object MermaidDbEmitter {
         case "IfStatement" =>
           lines ++= emitIfLines(stmt, rast, stateNames)
 
-        case "ForStatement" | "ForOfStatement" | "ForInStatement" =>
-          lines += s"// TODO: ${stmt.kind}"
+        case "ForOfStatement" =>
+          lines ++= emitForOfLines(stmt, rast, stateNames)
+
+        case "ForInStatement" =>
+          lines ++= emitForInLines(stmt, rast, stateNames)
+
+        case "ForStatement" =>
+          lines ++= emitForLines(stmt, rast, stateNames)
 
         case "ThrowStatement" =>
           val expr = stmt.children.headOption.map(e => emitExprSimple(e, rast, stateNames)).getOrElse("???")
           lines += s"throw $expr"
 
         case "SwitchStatement" =>
-          lines += s"// TODO: switch"
+          lines ++= emitSwitchLines(stmt, rast, stateNames)
+
+        case "WhileStatement" =>
+          val ch = stmt.children
+          if (ch.size >= 2) {
+            val cond = emitExprSimple(ch(0), rast, stateNames)
+            lines += s"while ($cond) {"
+            if (ch(1).kind == "Block") {
+              for (line <- emitBlockLines(ch(1), rast, stateNames))
+                lines += s"  $line"
+            } else {
+              lines += s"  ${emitExprSimple(ch(1), rast, stateNames)}"
+            }
+            lines += "}"
+          }
+
+        case "BreakStatement" =>
+          lines += "// break"
+
+        case "ContinueStatement" =>
+          lines += "// continue"
 
         case _ =>
           lines += s"// TODO: ${stmt.kind}"
@@ -1032,6 +1098,180 @@ object MermaidDbEmitter {
 
   private def escapeInterpolation(s: String): String =
     s.replace("$", "$$").replace("\"", "\\\"")
+
+  /** Emits a for-of loop as a Scala for comprehension. */
+  private def emitForOfLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
+    val lines = mutable.ListBuffer.empty[String]
+    val ch = node.children
+    // ForOfStatement: children are [VariableDeclarationList|Identifier, expression, Block]
+    if (ch.size >= 3) {
+      val bindingNode = ch(0)
+      val iterableExpr = emitExprSimple(ch(1), rast, stateNames)
+      val body = ch(2)
+
+      val varName = if (bindingNode.kind == "VariableDeclarationList") {
+        val decls = bindingNode.children.filter(_.kind == "VariableDeclaration")
+        decls.headOption.map(d => safeName(nameOf(d))).getOrElse("item")
+      } else safeName(nameOf(bindingNode))
+
+      lines += s"for ($varName <- $iterableExpr) {"
+      if (body.kind == "Block") {
+        for (line <- emitBlockLines(body, rast, stateNames))
+          lines += s"  $line"
+      } else {
+        lines += s"  ${emitExprSimple(body, rast, stateNames)}"
+      }
+      lines += "}"
+    } else if (ch.size == 2) {
+      // Simplified: binding + body with implicit iterable
+      lines += s"// for-of (simplified)"
+    }
+    lines.toList
+  }
+
+  /** Emits a for-in loop as a Scala for comprehension over keys. */
+  private def emitForInLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
+    val lines = mutable.ListBuffer.empty[String]
+    val ch = node.children
+    if (ch.size >= 3) {
+      val bindingNode = ch(0)
+      val objExpr = emitExprSimple(ch(1), rast, stateNames)
+      val body = ch(2)
+
+      val varName = if (bindingNode.kind == "VariableDeclarationList") {
+        val decls = bindingNode.children.filter(_.kind == "VariableDeclaration")
+        decls.headOption.map(d => safeName(nameOf(d))).getOrElse("key")
+      } else safeName(nameOf(bindingNode))
+
+      lines += s"for ($varName <- $objExpr.keys) {"
+      if (body.kind == "Block") {
+        for (line <- emitBlockLines(body, rast, stateNames))
+          lines += s"  $line"
+      } else {
+        lines += s"  ${emitExprSimple(body, rast, stateNames)}"
+      }
+      lines += "}"
+    }
+    lines.toList
+  }
+
+  /** Emits a C-style for loop as a Scala while loop. */
+  private def emitForLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
+    val lines = mutable.ListBuffer.empty[String]
+    val ch = node.children
+    // ForStatement children: [init, condition, increment, body]
+    // Some may be missing (EmptyStatement/null)
+    if (ch.size >= 4) {
+      val init = ch(0)
+      val cond = ch(1)
+      val incr = ch(2)
+      val body = ch(3)
+
+      // Init
+      if (init.kind == "VariableDeclarationList") {
+        val decls = init.children.filter(_.kind == "VariableDeclaration")
+        for (d <- decls) {
+          val name = safeName(nameOf(d))
+          val initVal = d.children.find(c =>
+            c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference"
+          ).map(i => emitExprSimple(i, rast, stateNames)).getOrElse("0")
+          lines += s"var $name = $initVal"
+        }
+      } else if (init.kind != "EmptyStatement" && init.kind != "OmittedExpression") {
+        lines += emitExprSimple(init, rast, stateNames)
+      }
+
+      // Condition
+      val condStr = if (cond.kind == "EmptyStatement" || cond.kind == "OmittedExpression") "true"
+        else emitExprSimple(cond, rast, stateNames)
+
+      lines += s"while ($condStr) {"
+
+      // Body
+      if (body.kind == "Block") {
+        for (line <- emitBlockLines(body, rast, stateNames))
+          lines += s"  $line"
+      } else {
+        lines += s"  ${emitExprSimple(body, rast, stateNames)}"
+      }
+
+      // Increment
+      if (incr.kind != "EmptyStatement" && incr.kind != "OmittedExpression") {
+        lines += s"  ${emitExprSimple(incr, rast, stateNames)}"
+      }
+
+      lines += "}"
+    } else {
+      lines += "// TODO: for (insufficient children)"
+    }
+    lines.toList
+  }
+
+  /** Emits a switch statement as a Scala match expression. */
+  private def emitSwitchLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
+    val lines = mutable.ListBuffer.empty[String]
+    val ch = node.children
+    if (ch.size >= 2) {
+      val selector = emitExprSimple(ch(0), rast, stateNames)
+      val caseBlock = ch(1) // CaseBlock
+
+      lines += s"$selector match {"
+      for (clause <- caseBlock.children) {
+        clause.kind match {
+          case "CaseClause" =>
+            val caseExpr = clause.children.headOption
+              .map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+            // If it's a string or numeric literal, use it directly; otherwise wrap in backticks
+            val casePattern = caseExpr match {
+              case s if s.startsWith("\"") => s
+              case s if s.headOption.exists(c => c.isDigit || c == '-') => s
+              case s => s"`$s`"
+            }
+            lines += s"  case $casePattern =>"
+            // Remaining children are statement list
+            for (stmt <- clause.children.drop(1)) {
+              if (stmt.kind == "BreakStatement") {
+                // Skip break - Scala match doesn't need it
+              } else {
+                val stmtLines = emitBlockLines(
+                  RastNode(kind = "Block", kindCode = 0, pos = (0, 0), children = List(stmt)),
+                  rast, stateNames,
+                )
+                for (l <- stmtLines) lines += s"    $l"
+              }
+            }
+          case "DefaultClause" =>
+            lines += "  case _ =>"
+            for (stmt <- clause.children) {
+              if (stmt.kind == "BreakStatement") {
+                // Skip
+              } else {
+                val stmtLines = emitBlockLines(
+                  RastNode(kind = "Block", kindCode = 0, pos = (0, 0), children = List(stmt)),
+                  rast, stateNames,
+                )
+                for (l <- stmtLines) lines += s"    $l"
+              }
+            }
+          case _ => ()
+        }
+      }
+      lines += "}"
+    }
+    lines.toList
+  }
+
+  /** Escapes Scala reserved words used as identifiers. */
+  private def safeName(name: String): String = {
+    val reserved = Set("type", "class", "object", "trait", "val", "var", "def",
+      "import", "package", "match", "case", "if", "else", "while", "for",
+      "do", "return", "throw", "try", "catch", "finally", "yield", "new",
+      "extends", "with", "super", "this", "abstract", "final", "sealed",
+      "private", "protected", "override", "implicit", "lazy", "forSome",
+      "macro", "true", "false", "null")
+    if (reserved.contains(name)) s"`$name`"
+    else name
+  }
 
   private def tsOpToScala(op: String): String = op match {
     case "EqualsEqualsEqualsToken" => "=="

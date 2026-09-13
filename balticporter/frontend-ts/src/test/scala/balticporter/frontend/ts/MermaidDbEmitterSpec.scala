@@ -65,11 +65,84 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   test("mindmapDb.ts -> MindmapDb class from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/mindmapDb.rast.json")
     val scala = dedicated.MermaidDbEmitter.emitDb(rast, "MindmapDb", "mindmap")
-    println("=== MindmapDb.scala (RAST-based) ===")
-    println(scala)
     assert(scala.contains("final class MindmapDb"), "should emit MindmapDb class")
     assert(scala.contains("def clear()"), "should have clear method")
     assert(scala.contains("nodes") || scala.contains("var nodes"), "should have nodes field")
+    // B2: switch should be emitted as match, not TODO
+    assert(!scala.contains("// TODO: switch"), "switch should be emitted as match")
+    assert(scala.contains("match {"), "should emit match expression")
+    // Reserved keyword `type` should be escaped
+    assert(scala.contains("`type`"), "reserved keyword type should be backtick-escaped")
+
+  // -- B2: QuadrantDb (complex with setters and axis labels) ----------------
+
+  test("quadrantDb.ts -> QuadrantDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/quadrant-chart/quadrantDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "QuadrantDb", "quadrant")
+    assert(scala.contains("final class QuadrantDb"), "should emit QuadrantDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  // -- B2: BlockDb (complex with arrays, for loops) -------------------------
+
+  test("blockDB.ts -> BlockDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/block/blockDB.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "BlockDb", "block")
+    assert(scala.contains("final class BlockDb"), "should emit BlockDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+    // for-of should not be TODO anymore
+    assert(!scala.contains("// TODO: ForOfStatement"), "for-of should be emitted")
+
+  // -- B2: XyChartDb (axis labels, data series) ----------------------------
+
+  test("xychartDb.ts -> XyChartDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/xychart/xychartDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "XyChartDb", "xychart")
+    assert(scala.contains("final class XyChartDb"), "should emit XyChartDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  // -- B5: JS-based Dbs ---------------------------------------------------
+
+  test("erDb.js -> ErDb class from RAST (JS source)"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/er/erDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "ErDb", "er")
+    assert(scala.contains("final class ErDb"), "should emit ErDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("c4Db.ts -> C4Db class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/c4/c4Db.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "C4Db", "c4")
+    assert(scala.contains("final class C4Db"), "should emit C4Db class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("stateDb.ts -> StateDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/state/stateDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "StateDb", "state")
+    assert(scala.contains("final class StateDb"), "should emit StateDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("journeyDb.ts -> JourneyDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/user-journey/journeyDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "JourneyDb", "journey")
+    assert(scala.contains("final class JourneyDb"), "should emit JourneyDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("timelineDb.ts -> TimelineDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/timeline/timelineDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "TimelineDb", "timeline")
+    assert(scala.contains("final class TimelineDb"), "should emit TimelineDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("requirementDb.ts -> RequirementDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/requirement/requirementDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "RequirementDb", "requirement")
+    assert(scala.contains("final class RequirementDb"), "should emit RequirementDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
+
+  test("gitGraphAst.js -> GitDb class from RAST (JS source)"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/git/gitGraphAst.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "GitDb", "git")
+    assert(scala.contains("final class GitDb"), "should emit GitDb class")
+    assert(scala.contains("def clear()"), "should have clear method")
 
   // -- Write all emitted files to target/emitted-mermaid for inspection ------
 
@@ -78,11 +151,24 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
     java.nio.file.Files.createDirectories(outDir)
 
     val files = List(
+      // B1: T0 Dbs
       ("/rast/mermaid/src/diagrams/info/infoDb.rast.json", "InfoDb", "info"),
       ("/rast/mermaid/src/diagrams/packet/db.rast.json", "PacketDb", "packet"),
       ("/rast/mermaid/src/diagrams/pie/pieDb.rast.json", "PieDb", "pie"),
       ("/rast/mermaid/src/diagrams/sankey/sankeyDB.rast.json", "SankeyDb", "sankey"),
+      // B2: T1 Dbs
       ("/rast/mermaid/src/diagrams/mindmap/mindmapDb.rast.json", "MindmapDb", "mindmap"),
+      ("/rast/mermaid/src/diagrams/quadrant-chart/quadrantDb.rast.json", "QuadrantDb", "quadrant"),
+      ("/rast/mermaid/src/diagrams/block/blockDB.rast.json", "BlockDb", "block"),
+      ("/rast/mermaid/src/diagrams/xychart/xychartDb.rast.json", "XyChartDb", "xychart"),
+      // B5: JS-based Dbs
+      ("/rast/mermaid/src/diagrams/er/erDb.rast.json", "ErDb", "er"),
+      ("/rast/mermaid/src/diagrams/c4/c4Db.rast.json", "C4Db", "c4"),
+      ("/rast/mermaid/src/diagrams/state/stateDb.rast.json", "StateDb", "state"),
+      ("/rast/mermaid/src/diagrams/user-journey/journeyDb.rast.json", "JourneyDb", "journey"),
+      ("/rast/mermaid/src/diagrams/timeline/timelineDb.rast.json", "TimelineDb", "timeline"),
+      ("/rast/mermaid/src/diagrams/requirement/requirementDb.rast.json", "RequirementDb", "requirement"),
+      ("/rast/mermaid/src/diagrams/git/gitGraphAst.rast.json", "GitDb", "git"),
     )
 
     for ((rastPath, className, pkg) <- files) {
