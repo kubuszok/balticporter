@@ -415,7 +415,25 @@ object DartSassEmitter:
         // And the original Dart name as-is (for exact match)
         if fn.name != scalaName then
           result.getOrElseUpdate(fn.name, mutable.ListBuffer.empty) += bodyPair
+        // Register under known hand-port name aliases
+        dartSassNameAliases.get(fn.name).foreach { alias =>
+          result.getOrElseUpdate(alias, mutable.ListBuffer.empty) += bodyPair
+        }
+        dartSassNameAliases.get(scalaName).foreach { alias =>
+          result.getOrElseUpdate(alias, mutable.ListBuffer.empty) += bodyPair
+        }
       }
+
+    // Also extract TopLevelVariableDeclaration initializer expressions as bodies
+    // (for factory-pattern vars like `final _ceil = _singleArgumentMathFunc(...)`)
+    extractTopLevelVarInitializers(rastFile).foreach { case (name, bodyPair) =>
+      val scalaName = dartToCamelCase(name)
+      result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += bodyPair
+      if name.startsWith("_") then
+        result.getOrElseUpdate("_" + scalaName, mutable.ListBuffer.empty) += bodyPair
+      if name != scalaName then
+        result.getOrElseUpdate(name, mutable.ListBuffer.empty) += bodyPair
+    }
 
     result.map { case (k, v) => k -> v.toList }.toMap
 
@@ -672,6 +690,101 @@ object DartSassEmitter:
   // --------------------------------------------------------------------------
   // Helpers
   // --------------------------------------------------------------------------
+
+  /** Known hand-port name renames: Dart upstream name → ssg-sass reference name.
+    * Both the original Dart name and the camelCase version should be tried. */
+  private val dartSassNameAliases: Map[String, String] = Map(
+    // SerializeVisitor renames (Dart → ssg-sass Scala)
+    "writeNumberToString" -> "numberToString",
+    "writeNumber" -> "numberToString",
+    "removeExponent" -> "removeExponent",
+    "writeIndentation" -> "writeIndent",
+    "writeLineFeed" -> "writeLine",
+    "isInvisible" -> "isNodeInvisible",
+    "separatorString" -> "commaSeparator",
+    "visitChildren" -> "writeChildrenIn",
+    "writeFoldedValue" -> "writeFoldedCustomPropertyValue",
+    "writeReindentedValue" -> "writeReindentedCustomPropertyValue",
+    "writeCombinators" -> "writeComplexSelectorTo",
+    "writeMapElement" -> "formatMap",
+    "writeTimes" -> "writeSelectorListTo",
+    "writeCalculationUnits" -> "appendCalculationUnits",
+    // Also with underscore prefix forms
+    "_writeNumberToString" -> "numberToString",
+    "_writeNumber" -> "numberToString",
+    "_removeExponent" -> "removeExponent",
+    "_writeIndentation" -> "writeIndent",
+    "_writeLineFeed" -> "writeLine",
+    "_isInvisible" -> "isNodeInvisible",
+    "_separatorString" -> "commaSeparator",
+    "_visitChildren" -> "writeChildrenIn",
+    "_writeFoldedValue" -> "writeFoldedCustomPropertyValue",
+    "_writeReindentedValue" -> "writeReindentedCustomPropertyValue",
+    "_writeCombinators" -> "writeComplexSelectorTo",
+    "_writeMapElement" -> "formatMap",
+    "_writeTimes" -> "writeSelectorListTo",
+    "_writeCalculationUnits" -> "appendCalculationUnits",
+    "_indent" -> "writeIndent",
+    // EvaluateVisitor renames
+    "runUserDefinedCallable" -> "_runUserDefinedCallable",
+    "visitEachRule" -> "_visitEachRule",
+    "visitForRule" -> "_visitForRule",
+    "visitWhileRule" -> "_visitWhileRule",
+    // Environment renames
+    "scope" -> "scoped",
+    // SelectorParser renames
+    "selectorSequence" -> "_selectorSequence",
+    "complexSelector" -> "_complexSelector",
+    "compoundSelector" -> "_compoundSelector",
+    "simpleSelector" -> "_simpleSelector",
+    "pseudoSelector" -> "_pseudoSelector",
+    "attributeSelector" -> "_attributeSelector",
+  )
+
+  /** Extract TopLevelVariableDeclaration initializer expressions as body pairs.
+    *
+    * For factory-pattern vars like `final _ceil = _singleArgumentMathFunc("ceil", ...)`,
+    * the initializer expression is extracted and translated as a one-line body.
+    */
+  private def extractTopLevelVarInitializers(file: RastFile): List[(String, (String, Int))] =
+    val result = mutable.ListBuffer.empty[(String, (String, Int))]
+    val symbolMap = file.symbols
+
+    def nameFromSymbol(node: RastNode): String =
+      node.symbol.flatMap(symbolMap.get).map(_.name).getOrElse("")
+
+    for node <- file.nodes do
+      val kind = node.kind.stripSuffix("Impl")
+      if kind == "TopLevelVariableDeclaration" then
+        val vdlChildren = node.children
+          .find(_.kind.contains("VariableDeclarationList"))
+          .map(_.children)
+          .getOrElse(node.children)
+        for vd <- vdlChildren.filter(_.kind.contains("VariableDeclaration")) do
+          val varName = nameFromSymbol(vd)
+          if varName.nonEmpty then
+            // Check if this is NOT already handled by extractAllFunctions
+            // (i.e., the initializer is not a FunctionExpression/ArrowFunction)
+            val hasFnInit = vd.children.exists(c =>
+              c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
+            if !hasFnInit then
+              // Extract the initializer expression (method invocation, etc.)
+              val initExpr = vd.children.find(c =>
+                c.kind.contains("MethodInvocation") || c.kind.contains("InstanceCreation") ||
+                c.kind.contains("PrefixedIdentifier") || c.kind.contains("SimpleIdentifier") ||
+                c.kind.contains("ListLiteral") || c.kind.contains("MapLiteral") ||
+                c.kind.contains("SetOrMapLiteral") || c.kind.contains("ConditionalExpression"))
+              initExpr.foreach { expr =>
+                val normalizedExpr = DefmethodBodyTranslator.normalizeNodeTree(expr)
+                val syntheticBody = RastNode("Block", 0, (0, 0), children = List(
+                  RastNode("ReturnStatement", 0, (0, 0), children = List(normalizedExpr))
+                ))
+                val entry = TerserEmitter.DefmethodEntry("_free_", varName, Nil, syntheticBody)
+                val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+                result += ((varName, (translated.scalaBody, translated.refusalCount)))
+              }
+
+    result.toList
 
   def dartToCamelCase(s: String): String =
     val stripped = s.stripPrefix("_") // Dart private prefix
