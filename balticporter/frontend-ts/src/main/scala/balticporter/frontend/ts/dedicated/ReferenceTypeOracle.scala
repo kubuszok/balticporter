@@ -277,13 +277,23 @@ object ReferenceTypeOracle:
     "CompressorFlags"    -> "CompressorFlags.scala",
     "NativeObjects"      -> "NativeObjects.scala",
     "CompressorOptions"  -> "CompressorOptions.scala",
-    // Non-compress modules
-    "ScopeAnalysis"      -> "ScopeAnalysis.scala",
-    "OutputStream"       -> "OutputStream.scala",
-    "AstSize"            -> "AstSize.scala",
-    "AstEquivalent"      -> "AstEquivalent.scala",
-    "PropMangler"        -> "PropMangler.scala",
-    "Mangler"            -> "Mangler.scala",
+    // Non-compress modules (sub-paths from ssg-js root)
+    "ScopeAnalysis"      -> "scope/ScopeAnalysis.scala",
+    "OutputStream"       -> "output/OutputStream.scala",
+    "AstSize"            -> "ast/AstSize.scala",
+    "AstEquivalent"      -> "ast/AstEquivalent.scala",
+    "PropMangler"        -> "scope/PropMangler.scala",
+    "Mangler"            -> "scope/Mangler.scala",
+    // Additional non-compress modules
+    "FirstInStatement"   -> "output/FirstInStatement.scala",
+    "JsNumber"           -> "output/JsNumber.scala",
+    "OutputOptions"      -> "output/OutputOptions.scala",
+    "SymbolDef"          -> "scope/SymbolDef.scala",
+    "DomProps"           -> "scope/DomProps.scala",
+    "Parser"             -> "parse/Parser.scala",
+    "Tokenizer"          -> "parse/Tokenizer.scala",
+    "Token"              -> "parse/Token.scala",
+    "Precedence"         -> "parse/Precedence.scala",
   )
 
   // -------------------------------------------------------------------------
@@ -300,11 +310,17 @@ object ReferenceTypeOracle:
 
     for (objName, fileName) <- referenceObjectToFile do
       val filePath = referenceRoot.resolve(fileName)
-      if java.nio.file.Files.exists(filePath) then
-        val source = new String(java.nio.file.Files.readAllBytes(filePath))
+      // Also try resolving relative to parent (for non-compress modules in sibling dirs)
+      val altPath = referenceRoot.getParent.resolve(fileName)
+      val resolved = if java.nio.file.Files.exists(filePath) then Some(filePath)
+        else if java.nio.file.Files.exists(altPath) then Some(altPath)
+        else None
+      resolved.foreach { fp =>
+        val source = new String(java.nio.file.Files.readAllBytes(fp))
         val sigs = parseFile(objName, source)
         for (_, sig) <- sigs do
           allMethods((objName, sig.methodName)) = sig
+      }
 
     TypeOracle(allMethods.toMap)
 

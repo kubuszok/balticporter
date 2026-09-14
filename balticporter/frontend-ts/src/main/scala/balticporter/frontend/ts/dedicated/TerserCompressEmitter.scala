@@ -681,11 +681,7 @@ object TerserCompressEmitter:
     * Remaining: constructs with no mechanical Scala equivalent.
     */
   private val uncompilablePatterns: List[String] = List(
-    "stringTemplate(",     // JS helper with no ssg equivalent
-    "regexpSourceFix(",    // JS helper with no ssg equivalent
-    "compressor.topRetain",// reference to undeclared JS compressor variable
-    "DEFMETHOD(",          // JS DEFMETHOD — not in Scala
-    "isNullishShortcircuited(", // references undefined helper — oracle needed
+    "DEFMETHOD(",          // JS DEFMETHOD — meta-programming, genuinely uncompilable
   )
 
   /** True when a translated body contains JS-API constructs that will not
@@ -789,7 +785,7 @@ object TerserCompressEmitter:
         // Look up matching RAST body — only use it when the translation
         // does not contain un-compilable JS-API patterns.
         val usableRast = rastBodies.get(camelName).filter { case (body, _) =>
-          !method.isPrivate && !containsUncompilablePatterns(body)
+          !containsUncompilablePatterns(body)
         }
         usableRast match
           case Some((translatedBody, refusals)) =>
@@ -865,8 +861,17 @@ object TerserCompressEmitter:
       for entry <- entries do
         val camelName = snakeToCamel(entry.methodName)
         val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-        // For DEFMETHOD modules, use className.methodName as key too
         result(camelName) = (translated.scalaBody, translated.refusalCount)
+        // Also store under methodName+ClassName alias for hand-ports that
+        // inlined DEFMETHOD dispatch: AST_Block.optimize → optimizeBlock
+        if entry.className.startsWith("AST_") then
+          val classShort = entry.className.drop(4) // "AST_Block" → "Block"
+          val aliasName = camelName + classShort
+          result(aliasName) = (translated.scalaBody, translated.refusalCount)
+          // Also lowercase first: optimizeBlock, not optimizeblock
+          val lowerAlias = camelName + classShort.head.toUpper + classShort.tail
+          if lowerAlias != aliasName then
+            result(lowerAlias) = (translated.scalaBody, translated.refusalCount)
 
     val freeFns = TerserEmitter.extractFreeFunctions(rastFile)
     for fn <- freeFns do

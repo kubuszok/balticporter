@@ -460,7 +460,13 @@ object DefmethodBodyTranslator:
         case "UndefinedKeyword" => "null"
         case "VoidExpression" => "null"
 
+        case "BooleanLiteral" =>
+          node.value match
+            case Some(RastValue.Bool(b)) => b.toString
+            case _ => node.text.getOrElse("false")
+
         case "ThisKeyword" => thisBinding
+        case "SuperExpression" => "super"
 
         case "Identifier" =>
           val name = node.text.getOrElse("_")
@@ -617,8 +623,51 @@ object DefmethodBodyTranslator:
           "/* comma */"
 
         case "NonNullExpression" =>
-          // TS `expr!` - just pass through
+          // TS `expr!` or Dart `expr!` — just pass through
           node.children.headOption.map(translateExpr).getOrElse("???")
+
+        // Dart-specific expressions (after kind normalization, these remain)
+        case "CascadeExpression" =>
+          val children = node.children
+          if children.isEmpty then "??? /* empty cascade */"
+          else
+            val target = translateExpr(children.head)
+            val cascades = children.tail.map(translateExpr)
+            if cascades.isEmpty then target
+            else s"{ val $$t = $target; ${cascades.map(c => s"$$t.$c").mkString("; ")}; $$t }"
+
+        case "NamedExpression" =>
+          val label = node.children.find(_.kind.contains("Label"))
+            .flatMap(_.children.find(_.kind.contains("Identifier")).flatMap(_.text))
+            .orElse(node.children.headOption.flatMap(_.text))
+            .getOrElse("_")
+          val value = node.children.lastOption.map(translateExpr).getOrElse("???")
+          s"$label = $value"
+
+        case "SwitchExpression" =>
+          val children = node.children
+          if children.isEmpty then "??? /* empty switch */"
+          else
+            val scrutinee = translateExpr(children.head)
+            val cases = children.tail
+            val caseStrs = cases.map { c =>
+              val pat = if c.children.nonEmpty then translateExpr(c.children.head) else "_"
+              val body = if c.children.size > 1 then translateExpr(c.children.last) else "???"
+              s"case $pat => $body"
+            }
+            s"($scrutinee match { ${caseStrs.mkString("; ")} })"
+
+        case "IfNullExpression" =>
+          val children = node.children
+          if children.size >= 2 then
+            val left = translateExpr(children.head)
+            val right = translateExpr(children.last)
+            s"(if $left != null then $left else $right)"
+          else "???"
+
+        // Skip type annotations, labels, comments — they don't produce code
+        case "TypeReference" | "FormalParameterList" | "Label" | "Comment" |
+             "ConstructorName" | "ArgumentList" | "NamedType" => ""
 
         case other =>
           refuse(s"UnhandledExpr:$other")
@@ -1472,6 +1521,126 @@ object DefmethodBodyTranslator:
     "SpaceNode"            -> "SpaceNode",
   )
 
-  /** Combined API lookup: terser + katex. */
+  /** Dart-sass-specific API name mapping. */
+  private val dartApiLookup: Map[String, String] = Map(
+    "assertString"         -> "assertString",
+    "assertNumber"         -> "assertNumber",
+    "assertColor"          -> "assertColor",
+    "assertMap"            -> "assertMap",
+    "assertFunction"       -> "assertFunction",
+    "assertCalculation"    -> "assertCalculation",
+    "asList"               -> "asList",
+    "asPlain"              -> "asPlain",
+    "sassIndexToListIndex" -> "sassIndexToListIndex",
+    "sassIndexToStringIndex" -> "sassIndexToStringIndex",
+    "withListContents"     -> "withListContents",
+    "changeSeparator"      -> "changeSeparator",
+    "sassTrue"             -> "SassBoolean.sassTrue",
+    "sassFalse"            -> "SassBoolean.sassFalse",
+    "sassNull"             -> "SassNull.sassNull",
+  )
+
+  /** Combined API lookup: terser + katex + dart. */
   private val combinedApiLookup: Map[String, String] =
-    terserApiLookup ++ katexApiLookup
+    terserApiLookup ++ katexApiLookup ++ dartApiLookup
+
+  /** Dart RAST node kind → TS RAST node kind mapping.
+    * Normalizes Dart analyzer AST kinds to the TS kinds the body translator handles. */
+  private val dartKindMap: Map[String, String] = Map(
+    "MethodInvocation"          -> "CallExpression",
+    "FunctionExpressionInvocation" -> "CallExpression",
+    "PrefixedIdentifier"        -> "PropertyAccessExpression",
+    "PropertyAccess"            -> "PropertyAccessExpression",
+    "InstanceCreationExpression" -> "NewExpression",
+    "IndexExpression"           -> "ElementAccessExpression",
+    "SimpleIdentifier"          -> "Identifier",
+    "SimpleStringLiteral"       -> "StringLiteral",
+    "AdjacentStrings"           -> "StringLiteral",
+    "IntegerLiteral"            -> "NumericLiteral",
+    "DoubleLiteral"             -> "NumericLiteral",
+    "NullLiteral"               -> "NullKeyword",
+    "ListLiteral"               -> "ArrayLiteralExpression",
+    "SetOrMapLiteral"           -> "ObjectLiteralExpression",
+    "MapLiteralEntry"           -> "PropertyAssignment",
+    "ThrowExpression"           -> "ThrowStatement",
+    "AsExpression"              -> "AsExpression",
+    "PrefixExpression"          -> "PrefixUnaryExpression",
+    "PostfixExpression"         -> "PostfixUnaryExpression",
+    "AssignmentExpression"      -> "BinaryExpression",
+    "ParenthesizedExpression"   -> "ParenthesizedExpression",
+    "FunctionExpression"        -> "FunctionExpression",
+    "AwaitExpression"           -> "AwaitExpression",
+    "ConditionalExpression"     -> "ConditionalExpression",
+    "StringInterpolation"       -> "TemplateExpression",
+    "InterpolationString"       -> "TemplateHead",
+    "InterpolationExpression"   -> "TemplateExpression",
+    "SuperExpression"           -> "SuperExpression",
+    "ThisExpression"            -> "ThisKeyword",
+    "ExpressionStatement"       -> "ExpressionStatement",
+    "ReturnStatement"           -> "ReturnStatement",
+    "VariableDeclarationStatement" -> "VariableStatement",
+    "VariableDeclarationList"   -> "VariableDeclarationList",
+    "VariableDeclaration"       -> "VariableDeclaration",
+    "IfStatement"               -> "IfStatement",
+    "ForStatement"              -> "ForStatement",
+    "WhileStatement"            -> "WhileStatement",
+    "DoStatement"               -> "DoStatement",
+    "SwitchStatement"           -> "SwitchStatement",
+    "SwitchCase"                -> "CaseClause",
+    "SwitchDefault"             -> "DefaultClause",
+    "SwitchPatternCase"         -> "CaseClause",
+    "TryStatement"              -> "TryStatement",
+    "CatchClause"               -> "CatchClause",
+    "Block"                     -> "Block",
+    "BlockFunctionBody"         -> "Block",
+    "BreakStatement"            -> "BreakStatement",
+    "ContinueStatement"         -> "ContinueStatement",
+    "EmptyStatement"            -> "EmptyStatement",
+    "FunctionDeclaration"       -> "FunctionDeclaration",
+    "MethodDeclaration"         -> "FunctionDeclaration",
+    "SpreadElement"             -> "SpreadElement",
+    "FormalParameterList"       -> "FormalParameterList",
+    "SimpleFormalParameter"     -> "Parameter",
+    "DefaultFormalParameter"    -> "Parameter",
+    "FieldFormalParameter"      -> "Parameter",
+    "NamedType"                 -> "TypeReference",
+    "ArgumentList"              -> "ArgumentList",
+    "ConstructorName"           -> "ConstructorName",
+    "Label"                     -> "Label",
+    "Comment"                   -> "Comment",
+  )
+
+  /** Normalize a RAST node kind, stripping `Impl` suffix and mapping
+    * Dart-specific names to their TS equivalents. */
+  def normalizeKind(kind: String): String =
+    val base = if kind.endsWith("Impl") then kind.stripSuffix("Impl") else kind
+    dartKindMap.getOrElse(base, base)
+
+  /** Recursively normalize all node kinds in a RAST tree.
+    * Dart nodes get their kinds mapped to TS equivalents, and
+    * ArgumentList nodes get unwrapped so call args appear as direct children. */
+  def normalizeNodeTree(node: RastNode): RastNode =
+    val nKind = normalizeKind(node.kind)
+    val normalizedChildren = node.children.map(normalizeNodeTree)
+    // Unwrap ArgumentList: in Dart, call args are inside an ArgumentList node.
+    // In TS, they're direct children of the CallExpression. Flatten them.
+    val children = if nKind == "CallExpression" then
+      normalizedChildren.flatMap { c =>
+        if c.kind == "ArgumentList" then c.children
+        else List(c)
+      }
+    else if nKind == "NewExpression" then
+      // Dart InstanceCreationExpression has [ConstructorName, ArgumentList]
+      // Normalize to [className, ...args]
+      val ctorName = normalizedChildren.find(_.kind == "ConstructorName")
+      val argList = normalizedChildren.find(_.kind == "ArgumentList")
+      val classNode = ctorName.flatMap { cn =>
+        val typeName = cn.children.find(_.kind == "TypeReference")
+        val clsIdent = typeName.flatMap(_.children.find(_.kind == "Identifier"))
+        clsIdent.orElse(cn.children.find(_.kind == "Identifier"))
+      }.getOrElse(normalizedChildren.headOption.getOrElse(node))
+      val args = argList.map(_.children).getOrElse(Nil)
+      classNode :: args
+    else
+      normalizedChildren
+    node.copy(kind = nKind, children = children)

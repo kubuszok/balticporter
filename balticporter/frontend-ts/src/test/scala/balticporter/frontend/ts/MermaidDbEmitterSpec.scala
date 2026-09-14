@@ -144,6 +144,26 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
     assert(scala.contains("final class GitDb"), "should emit GitDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
+  test("classDb.ts -> ClassDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/class/classDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "ClassDb", "class_")
+    assert(scala.contains("class ClassDb"), "should emit ClassDb class")
+
+  test("flowDb.ts -> FlowDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/flowDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "FlowDb", "flowchart")
+    assert(scala.contains("class FlowDb"), "should emit FlowDb class")
+
+  test("ganttDb.ts -> GanttDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/gantt/ganttDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "GanttDb", "gantt")
+    assert(scala.contains("class GanttDb"), "should emit GanttDb class")
+
+  test("sequenceDb.ts -> SequenceDb class from RAST"):
+    val rast = loadRast("/rast/mermaid/src/diagrams/sequence/sequenceDb.rast.json")
+    val scala = dedicated.MermaidDbEmitter.emitDb(rast, "SequenceDb", "sequence")
+    assert(scala.contains("class SequenceDb"), "should emit SequenceDb class")
+
   // -- Write all emitted files to target/emitted-mermaid for inspection ------
 
   test("write RAST-based Db files to target/emitted-mermaid"):
@@ -169,6 +189,11 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
       ("/rast/mermaid/src/diagrams/timeline/timelineDb.rast.json", "TimelineDb", "timeline"),
       ("/rast/mermaid/src/diagrams/requirement/requirementDb.rast.json", "RequirementDb", "requirement"),
       ("/rast/mermaid/src/diagrams/git/gitGraphAst.rast.json", "GitDb", "git"),
+      // B6: extended Dbs
+      ("/rast/mermaid/src/diagrams/class/classDb.rast.json", "ClassDb", "class_"),
+      ("/rast/mermaid/src/diagrams/flowchart/flowDb.rast.json", "FlowDb", "flowchart"),
+      ("/rast/mermaid/src/diagrams/gantt/ganttDb.rast.json", "GanttDb", "gantt"),
+      ("/rast/mermaid/src/diagrams/sequence/sequenceDb.rast.json", "SequenceDb", "sequence"),
     )
 
     for ((rastPath, className, pkg) <- files) {
