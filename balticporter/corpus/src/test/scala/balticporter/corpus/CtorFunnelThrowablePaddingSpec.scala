@@ -2,10 +2,10 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
-/** A padded super-call slot is `null` because the NARROWER overload java called left it `null` —
-  * true of every JDK `Throwable` position except one. */
+/** A padded super-call slot is `null` because the NARROWER overload java called left it `null` — true of every JDK `Throwable` position except one.
+  */
 class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
 
   private val src =
@@ -46,20 +46,17 @@ class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
   private val out     = new TirEmitter(program).emit
 
   test("`super(cause)` on a JDK throwable computes the message the JDK would have") {
-    assert(clue(out).contains(
-      "def this(c: java.lang.Throwable) = {\n    this(java.util.Objects.toString(c, null), c)"))
+    assert(clue(out).contains("def this(c: java.lang.Throwable) = {\n    this(java.util.Objects.toString(c, null), c)"))
   }
 
   test("`super(message)` on the same class still pads the CAUSE with null") {
     // the padded slot is the Throwable, not the String: `Throwable(String)` really does leave the
     // cause unset, so this position is exactly what it always was.
-    assert(clue(out).contains(
-      "def this(m: java.lang.String) = {\n    this(m, (null: java.lang.Throwable))"))
+    assert(clue(out).contains("def this(m: java.lang.String) = {\n    this(m, (null: java.lang.Throwable))"))
   }
 
   test("a re-readable cause need not be an ident — a field read is named in both slots") {
-    assert(clue(out).contains(
-      "this(java.util.Objects.toString(h.cause, null), h.cause)"))
+    assert(clue(out).contains("this(java.util.Objects.toString(h.cause, null), h.cause)"))
   }
 
   test("an EFFECTFUL cause is REFUSED, not evaluated twice — and it is reported") {
@@ -80,8 +77,7 @@ class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
     // `Ported` is here too, and that is the pre-existing whole-program constraint, not this rule:
     // `Derived` reaches it with an argument-free `extends`, so `Plans` withholds ITS promotion and
     // both classes fall back to `this()`. Exactly the same list before and after the padding fix.
-    assertEquals(OmissionCheck.droppedSuperArgs(program).map(_.owner).distinct,
-                 List("demo.Ported", "demo.Derived"))
+    assertEquals(OmissionCheck.droppedSuperArgs(program).map(_.owner).distinct, List("demo.Ported", "demo.Derived"))
   }
 
   test("`droppedSuperArgs` never fires for the padded JDK calls — the ARGUMENTS all reach a slot") {

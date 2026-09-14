@@ -1,8 +1,8 @@
 package balticporter.corpus.mermaid
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{ RastFile, RastNode, RastValue }
 import scala.annotation.nowarn
 
 /** RAST-based emitter for Mermaid diagram detector modules.
@@ -20,15 +20,19 @@ object MermaidDetectorEmitter {
 
   /** Emits a Scala detector object from a RAST file.
     *
-    * @param rast        the parsed RAST file
-    * @param objectName  e.g. "InfoDetector"
-    * @param pkg         e.g. "info"
-    * @return the complete Scala source
+    * @param rast
+    *   the parsed RAST file
+    * @param objectName
+    *   e.g. "InfoDetector"
+    * @param pkg
+    *   e.g. "info"
+    * @return
+    *   the complete Scala source
     */
   def emitDetector(
-      rast: RastFile,
-      objectName: String,
-      pkg: String,
+    rast:       RastFile,
+    objectName: String,
+    pkg:        String
   ): String = {
     val sb = new StringBuilder
     sb.append(header(rast.path, s"$objectName.scala"))
@@ -36,7 +40,7 @@ object MermaidDetectorEmitter {
 
     // Extract the detector regex pattern
     val regexPattern = findDetectorRegex(rast)
-    val id = findDetectorId(rast)
+    val id           = findDetectorId(rast)
 
     sb.append(s"/** Detector for the $pkg diagram type. */\n")
     sb.append(s"object $objectName {\n\n")
@@ -90,31 +94,28 @@ object MermaidDetectorEmitter {
     }.headOption
 
   /** Recursively finds RegularExpressionLiteral nodes. */
-  private def findRegexLiteral(node: RastNode): List[String] = {
+  private def findRegexLiteral(node: RastNode): List[String] =
     if (node.kind == "RegularExpressionLiteral") {
       node.value match {
         case Some(RastValue.Str(s)) => List(s)
-        case _ => Nil
+        case _                      => Nil
       }
     } else {
       node.children.flatMap(findRegexLiteral)
     }
-  }
 
   /** Recursively finds StringLiteral values. */
-  private def findStringLiteral(node: RastNode): List[String] = {
+  private def findStringLiteral(node: RastNode): List[String] =
     if (node.kind == "StringLiteral") {
       node.value match {
         case Some(RastValue.Str(s)) => List(s)
-        case _ => Nil
+        case _                      => Nil
       }
     } else {
       node.children.flatMap(findStringLiteral)
     }
-  }
 
-  /** Converts a TS regex pattern to a Scala regex string.
-    * e.g. `/^\s*info/` -> `"^\\s*info".r`
+  /** Converts a TS regex pattern to a Scala regex string. e.g. `/^\s*info/` -> `"^\\s*info".r`
     */
   private def tsRegexToScalaPattern(regex: String): String = {
     // Strip leading / and trailing /flags

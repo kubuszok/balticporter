@@ -1,14 +1,12 @@
 package balticporter.corpus.mermaid
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
 import balticporter.frontend.ts.RastFile
 
-/** RAST-based emitters for B9 mermaid diagram modules:
-  * quadrant, xychart, journey, timeline, c4, git.
+/** RAST-based emitters for B9 mermaid diagram modules: quadrant, xychart, journey, timeline, c4, git.
   *
-  * Each emitter produces complete Db, Diagram, Parser, Renderer, and Styles
-  * files matching the ssg-mermaid hand-port conventions.
+  * Each emitter produces complete Db, Diagram, Parser, Renderer, and Styles files matching the ssg-mermaid hand-port conventions.
   */
 object MermaidB9Emitter {
 
@@ -105,10 +103,18 @@ object MermaidB9Emitter {
     sb.append("        if (trimmed.toLowerCase.startsWith(\"title \"))         db.title = trimmed.substring(6).trim\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"x-axis \"))   parseXAxis(trimmed.substring(7).trim, db)\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"y-axis \"))   parseYAxis(trimmed.substring(7).trim, db)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"quadrant-1 \")) db.setQuadrantLabel(1, trimmed.substring(11).trim)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"quadrant-2 \")) db.setQuadrantLabel(2, trimmed.substring(11).trim)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"quadrant-3 \")) db.setQuadrantLabel(3, trimmed.substring(11).trim)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"quadrant-4 \")) db.setQuadrantLabel(4, trimmed.substring(11).trim)\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"quadrant-1 \")) db.setQuadrantLabel(1, trimmed.substring(11).trim)\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"quadrant-2 \")) db.setQuadrantLabel(2, trimmed.substring(11).trim)\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"quadrant-3 \")) db.setQuadrantLabel(3, trimmed.substring(11).trim)\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"quadrant-4 \")) db.setQuadrantLabel(4, trimmed.substring(11).trim)\n"
+    )
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))   parseAccTitle(trimmed, db)\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))   parseAccDescr(trimmed, db)\n")
     sb.append("        else parseDataPoint(trimmed, db)\n")
@@ -118,12 +124,16 @@ object MermaidB9Emitter {
     sb.append("  }\n\n")
     sb.append("  private def parseXAxis(text: String, db: QuadrantDb): Unit = {\n")
     sb.append("    val arrow = text.indexOf(\"-->\")\n")
-    sb.append("    if (arrow >= 0) { db.xAxisLeftLabel = text.substring(0, arrow).trim; db.xAxisRightLabel = text.substring(arrow + 3).trim }\n")
+    sb.append(
+      "    if (arrow >= 0) { db.xAxisLeftLabel = text.substring(0, arrow).trim; db.xAxisRightLabel = text.substring(arrow + 3).trim }\n"
+    )
     sb.append("    else db.xAxisLeftLabel = text\n")
     sb.append("  }\n\n")
     sb.append("  private def parseYAxis(text: String, db: QuadrantDb): Unit = {\n")
     sb.append("    val arrow = text.indexOf(\"-->\")\n")
-    sb.append("    if (arrow >= 0) { db.yAxisBottomLabel = text.substring(0, arrow).trim; db.yAxisTopLabel = text.substring(arrow + 3).trim }\n")
+    sb.append(
+      "    if (arrow >= 0) { db.yAxisBottomLabel = text.substring(0, arrow).trim; db.yAxisTopLabel = text.substring(arrow + 3).trim }\n"
+    )
     sb.append("    else db.yAxisBottomLabel = text\n")
     sb.append("  }\n\n")
     sb.append("  private def parseDataPoint(text: String, db: QuadrantDb): Unit = {\n")
@@ -181,7 +191,9 @@ object MermaidB9Emitter {
     // Title
     sb.append("    var titleOffset = 0.0\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"quadrantTitleText\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"quadrantTitleText\", true).text(db.title)\n"
+    )
     sb.append("      titleOffset = 30.0\n")
     sb.append("    }\n\n")
     // Chart area
@@ -193,26 +205,50 @@ object MermaidB9Emitter {
     sb.append("    val quadrantPositions = Array((0.0, 0.0), (halfSize, 0.0), (0.0, halfSize), (halfSize, halfSize))\n")
     sb.append("    for (i <- 0 until 4) {\n")
     sb.append("      val (qx, qy) = quadrantPositions(i)\n")
-    sb.append("      chartGroup.append(\"rect\").attr(\"x\", qx).attr(\"y\", qy).attr(\"width\", halfSize).attr(\"height\", halfSize).style(\"fill\", QuadrantColors(i)).style(\"stroke\", \"#ccc\").classed(\"quadrantArea\", true)\n")
+    sb.append(
+      "      chartGroup.append(\"rect\").attr(\"x\", qx).attr(\"y\", qy).attr(\"width\", halfSize).attr(\"height\", halfSize).style(\"fill\", QuadrantColors(i)).style(\"stroke\", \"#ccc\").classed(\"quadrantArea\", true)\n"
+    )
     sb.append("      if (db.quadrantLabels(i).nonEmpty)\n")
-    sb.append("        chartGroup.append(\"text\").attr(\"x\", qx + halfSize / 2.0).attr(\"y\", qy + halfSize / 2.0).attr(\"text-anchor\", \"middle\").attr(\"dominant-baseline\", \"central\").classed(\"quadrantLabel\", true).text(db.quadrantLabels(i))\n")
+    sb.append(
+      "        chartGroup.append(\"text\").attr(\"x\", qx + halfSize / 2.0).attr(\"y\", qy + halfSize / 2.0).attr(\"text-anchor\", \"middle\").attr(\"dominant-baseline\", \"central\").classed(\"quadrantLabel\", true).text(db.quadrantLabels(i))\n"
+    )
     sb.append("    }\n\n")
     // Axes
-    sb.append("    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", ChartSize).attr(\"x2\", ChartSize).attr(\"y2\", ChartSize).classed(\"quadrantAxis\", true)\n")
-    sb.append("    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", 0).attr(\"x2\", 0).attr(\"y2\", ChartSize).classed(\"quadrantAxis\", true)\n")
-    sb.append("    chartGroup.append(\"line\").attr(\"x1\", halfSize).attr(\"y1\", 0).attr(\"x2\", halfSize).attr(\"y2\", ChartSize).style(\"stroke\", \"#999\").style(\"stroke-dasharray\", \"5,5\")\n")
-    sb.append("    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", halfSize).attr(\"x2\", ChartSize).attr(\"y2\", halfSize).style(\"stroke\", \"#999\").style(\"stroke-dasharray\", \"5,5\")\n\n")
+    sb.append(
+      "    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", ChartSize).attr(\"x2\", ChartSize).attr(\"y2\", ChartSize).classed(\"quadrantAxis\", true)\n"
+    )
+    sb.append(
+      "    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", 0).attr(\"x2\", 0).attr(\"y2\", ChartSize).classed(\"quadrantAxis\", true)\n"
+    )
+    sb.append(
+      "    chartGroup.append(\"line\").attr(\"x1\", halfSize).attr(\"y1\", 0).attr(\"x2\", halfSize).attr(\"y2\", ChartSize).style(\"stroke\", \"#999\").style(\"stroke-dasharray\", \"5,5\")\n"
+    )
+    sb.append(
+      "    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", halfSize).attr(\"x2\", ChartSize).attr(\"y2\", halfSize).style(\"stroke\", \"#999\").style(\"stroke-dasharray\", \"5,5\")\n\n"
+    )
     // Axis labels
-    sb.append("    if (db.xAxisLeftLabel.nonEmpty)   mainGroup.append(\"text\").attr(\"x\", chartX).attr(\"y\", chartY + ChartSize + 30).attr(\"text-anchor\", \"start\").classed(\"quadrantAxisLabel\", true).text(db.xAxisLeftLabel)\n")
-    sb.append("    if (db.xAxisRightLabel.nonEmpty)  mainGroup.append(\"text\").attr(\"x\", chartX + ChartSize).attr(\"y\", chartY + ChartSize + 30).attr(\"text-anchor\", \"end\").classed(\"quadrantAxisLabel\", true).text(db.xAxisRightLabel)\n")
-    sb.append("    if (db.yAxisBottomLabel.nonEmpty) mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + ChartSize).attr(\"text-anchor\", \"end\").classed(\"quadrantAxisLabel\", true).text(db.yAxisBottomLabel)\n")
-    sb.append("    if (db.yAxisTopLabel.nonEmpty)    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + 10).attr(\"text-anchor\", \"end\").classed(\"quadrantAxisLabel\", true).text(db.yAxisTopLabel)\n\n")
+    sb.append(
+      "    if (db.xAxisLeftLabel.nonEmpty)   mainGroup.append(\"text\").attr(\"x\", chartX).attr(\"y\", chartY + ChartSize + 30).attr(\"text-anchor\", \"start\").classed(\"quadrantAxisLabel\", true).text(db.xAxisLeftLabel)\n"
+    )
+    sb.append(
+      "    if (db.xAxisRightLabel.nonEmpty)  mainGroup.append(\"text\").attr(\"x\", chartX + ChartSize).attr(\"y\", chartY + ChartSize + 30).attr(\"text-anchor\", \"end\").classed(\"quadrantAxisLabel\", true).text(db.xAxisRightLabel)\n"
+    )
+    sb.append(
+      "    if (db.yAxisBottomLabel.nonEmpty) mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + ChartSize).attr(\"text-anchor\", \"end\").classed(\"quadrantAxisLabel\", true).text(db.yAxisBottomLabel)\n"
+    )
+    sb.append(
+      "    if (db.yAxisTopLabel.nonEmpty)    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + 10).attr(\"text-anchor\", \"end\").classed(\"quadrantAxisLabel\", true).text(db.yAxisTopLabel)\n\n"
+    )
     // Data points
     sb.append("    for (point <- db.points) {\n")
     sb.append("      val px = point.x * ChartSize\n")
     sb.append("      val py = (1.0 - point.y) * ChartSize\n")
-    sb.append("      chartGroup.append(\"circle\").attr(\"cx\", px).attr(\"cy\", py).attr(\"r\", 6).classed(\"quadrantPoint\", true)\n")
-    sb.append("      chartGroup.append(\"text\").attr(\"x\", px + 10).attr(\"y\", py + 4).attr(\"text-anchor\", \"start\").classed(\"quadrantPointLabel\", true).text(point.label)\n")
+    sb.append(
+      "      chartGroup.append(\"circle\").attr(\"cx\", px).attr(\"cy\", py).attr(\"r\", 6).classed(\"quadrantPoint\", true)\n"
+    )
+    sb.append(
+      "      chartGroup.append(\"text\").attr(\"x\", px + 10).attr(\"y\", py + 4).attr(\"text-anchor\", \"start\").classed(\"quadrantPointLabel\", true).text(point.label)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n")
@@ -228,13 +264,23 @@ object MermaidB9Emitter {
     sb.append("object QuadrantStyles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String = {\n")
     sb.append("    val sb = new StringBuilder()\n")
-    sb.append("    sb.append(s\"\"\".quadrantTitleText { text-anchor: middle; font-size: 18px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".quadrantLabel { font-size: 14px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; opacity: 0.5; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".quadrantAxisLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".quadrantTitleText { text-anchor: middle; font-size: 18px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".quadrantLabel { font-size: 14px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; opacity: 0.5; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".quadrantAxisLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".quadrantAxis { stroke: $${vars.lineColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.append(\"\"\".quadrantArea { stroke-width: 1px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".quadrantPoint { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".quadrantPointLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".quadrantPoint { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".quadrantPointLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.toString\n")
     sb.append("  }\n")
     sb.append("}\n")
@@ -325,8 +371,12 @@ object MermaidB9Emitter {
     sb.append("        if (trimmed.toLowerCase.startsWith(\"title \"))    db.title = trimmed.substring(6).trim\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"x-axis\")) parseXAxis(trimmed, db)\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"y-axis\")) parseYAxis(trimmed, db)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"bar \"))  parseSeriesData(trimmed.substring(4).trim, \"bar\", db)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"line \")) parseSeriesData(trimmed.substring(5).trim, \"line\", db)\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"bar \"))  parseSeriesData(trimmed.substring(4).trim, \"bar\", db)\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"line \")) parseSeriesData(trimmed.substring(5).trim, \"line\", db)\n"
+    )
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  parseAccTitle(trimmed, db)\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  parseAccDescr(trimmed, db)\n")
     sb.append("      }\n")
@@ -339,8 +389,12 @@ object MermaidB9Emitter {
     sb.append("    if (bracketIdx >= 0) {\n")
     sb.append("      if (bracketIdx > 0) db.xAxisLabel = rest.substring(0, bracketIdx).trim\n")
     sb.append("      val endBracket = rest.indexOf(']', bracketIdx)\n")
-    sb.append("      val cats = if (endBracket > bracketIdx) rest.substring(bracketIdx + 1, endBracket) else rest.substring(bracketIdx + 1)\n")
-    sb.append("      db.xAxisCategories ++= cats.split(\",\").map(_.trim.stripPrefix(\"\\\"\").stripSuffix(\"\\\"\")).filter(_.nonEmpty)\n")
+    sb.append(
+      "      val cats = if (endBracket > bracketIdx) rest.substring(bracketIdx + 1, endBracket) else rest.substring(bracketIdx + 1)\n"
+    )
+    sb.append(
+      "      db.xAxisCategories ++= cats.split(\",\").map(_.trim.stripPrefix(\"\\\"\").stripSuffix(\"\\\"\")).filter(_.nonEmpty)\n"
+    )
     sb.append("    } else {\n")
     sb.append("      val arrow = rest.indexOf(\"-->\")\n")
     sb.append("      if (arrow >= 0) { db.xAxisLabel = rest.substring(0, arrow).trim }\n")
@@ -363,7 +417,9 @@ object MermaidB9Emitter {
     sb.append("    val dataStr = if (bracketIdx >= 0 && endBracket > bracketIdx) text.substring(bracketIdx + 1, endBracket)\n")
     sb.append("                  else if (bracketIdx >= 0) text.substring(bracketIdx + 1)\n")
     sb.append("                  else text\n")
-    sb.append("    val data = dataStr.split(\",\").flatMap { s => try { Some(s.trim.toDouble) } catch { case _: Exception => None } }.toSeq\n")
+    sb.append(
+      "    val data = dataStr.split(\",\").flatMap { s => try { Some(s.trim.toDouble) } catch { case _: Exception => None } }.toSeq\n"
+    )
     sb.append("    if (seriesType == \"bar\") db.addBarData(name, data) else db.addLineData(name, data)\n")
     sb.append("  }\n\n")
     sb.append("  private def parseAccTitle(text: String, db: XyChartDb): Unit = {\n")
@@ -409,7 +465,9 @@ object MermaidB9Emitter {
     // Title
     sb.append("    var titleOffset = 0.0\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"xyChartTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"xyChartTitle\", true).text(db.title)\n"
+    )
     sb.append("      titleOffset = 30.0\n")
     sb.append("    }\n\n")
     // Chart area
@@ -417,22 +475,36 @@ object MermaidB9Emitter {
     sb.append("    val chartGroup = mainGroup.append(\"g\").attr(\"transform\", s\"translate($chartX, $chartY)\")\n\n")
     // Y axis
     sb.append("    val maxVal = { val m = db.maxValue; if (m > 0) m else 100.0 }\n")
-    sb.append("    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", 0).attr(\"x2\", 0).attr(\"y2\", ChartHeight).classed(\"xyChartAxis\", true)\n")
+    sb.append(
+      "    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", 0).attr(\"x2\", 0).attr(\"y2\", ChartHeight).classed(\"xyChartAxis\", true)\n"
+    )
     sb.append("    for (t <- 0 to 5) {\n")
     sb.append("      val y = ChartHeight - (t.toDouble / 5.0) * ChartHeight\n")
     sb.append("      val v = (t.toDouble / 5.0) * maxVal\n")
-    sb.append("      chartGroup.append(\"line\").attr(\"x1\", -5).attr(\"y1\", y).attr(\"x2\", ChartWidth).attr(\"y2\", y).style(\"stroke\", \"#eee\").style(\"stroke-width\", \"0.5\")\n")
-    sb.append("      chartGroup.append(\"text\").attr(\"x\", -10).attr(\"y\", y + 4).attr(\"text-anchor\", \"end\").classed(\"xyChartTickLabel\", true).text(f\"$v%.0f\")\n")
+    sb.append(
+      "      chartGroup.append(\"line\").attr(\"x1\", -5).attr(\"y1\", y).attr(\"x2\", ChartWidth).attr(\"y2\", y).style(\"stroke\", \"#eee\").style(\"stroke-width\", \"0.5\")\n"
+    )
+    sb.append(
+      "      chartGroup.append(\"text\").attr(\"x\", -10).attr(\"y\", y + 4).attr(\"text-anchor\", \"end\").classed(\"xyChartTickLabel\", true).text(f\"$v%.0f\")\n"
+    )
     sb.append("    }\n\n")
     // X axis
-    sb.append("    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", ChartHeight).attr(\"x2\", ChartWidth).attr(\"y2\", ChartHeight).classed(\"xyChartAxis\", true)\n\n")
+    sb.append(
+      "    chartGroup.append(\"line\").attr(\"x1\", 0).attr(\"y1\", ChartHeight).attr(\"x2\", ChartWidth).attr(\"y2\", ChartHeight).classed(\"xyChartAxis\", true)\n\n"
+    )
     // Axis labels
-    sb.append("    if (db.xAxisLabel.nonEmpty) mainGroup.append(\"text\").attr(\"x\", chartX + ChartWidth / 2.0).attr(\"y\", chartY + ChartHeight + 45).attr(\"text-anchor\", \"middle\").classed(\"xyChartAxisLabel\", true).text(db.xAxisLabel)\n")
-    sb.append("    if (db.yAxisLabel.nonEmpty) mainGroup.append(\"text\").attr(\"x\", 20).attr(\"y\", chartY + ChartHeight / 2.0).attr(\"text-anchor\", \"middle\").attr(\"transform\", s\"rotate(-90, 20, ${chartY + ChartHeight / 2.0})\").classed(\"xyChartAxisLabel\", true).text(db.yAxisLabel)\n\n")
+    sb.append(
+      "    if (db.xAxisLabel.nonEmpty) mainGroup.append(\"text\").attr(\"x\", chartX + ChartWidth / 2.0).attr(\"y\", chartY + ChartHeight + 45).attr(\"text-anchor\", \"middle\").classed(\"xyChartAxisLabel\", true).text(db.xAxisLabel)\n"
+    )
+    sb.append(
+      "    if (db.yAxisLabel.nonEmpty) mainGroup.append(\"text\").attr(\"x\", 20).attr(\"y\", chartY + ChartHeight / 2.0).attr(\"text-anchor\", \"middle\").attr(\"transform\", s\"rotate(-90, 20, ${chartY + ChartHeight / 2.0})\").classed(\"xyChartAxisLabel\", true).text(db.yAxisLabel)\n\n"
+    )
     // Data
     sb.append("    val n       = db.dataPointCount.max(1)\n")
     sb.append("    val barW    = (ChartWidth / n) - BarGap\n")
-    sb.append("    val colors  = Array(\"#4e79a7\", \"#f28e2c\", \"#e15759\", \"#76b7b2\", \"#59a14f\", \"#edc949\", \"#af7aa1\", \"#ff9da7\", \"#9c755f\", \"#bab0ab\")\n\n")
+    sb.append(
+      "    val colors  = Array(\"#4e79a7\", \"#f28e2c\", \"#e15759\", \"#76b7b2\", \"#59a14f\", \"#edc949\", \"#af7aa1\", \"#ff9da7\", \"#9c755f\", \"#bab0ab\")\n\n"
+    )
     sb.append("    for ((series, sIdx) <- db.dataSeries.zipWithIndex) {\n")
     sb.append("      val color = colors(sIdx % colors.length)\n")
     sb.append("      series.seriesType match {\n")
@@ -440,7 +512,9 @@ object MermaidB9Emitter {
     sb.append("          for ((v, dIdx) <- series.data.zipWithIndex) {\n")
     sb.append("            val h = (v / maxVal) * ChartHeight\n")
     sb.append("            val x = dIdx * (barW + BarGap) + BarGap / 2\n")
-    sb.append("            chartGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", ChartHeight - h).attr(\"width\", barW).attr(\"height\", h).style(\"fill\", color).classed(\"xyChartBar\", true)\n")
+    sb.append(
+      "            chartGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", ChartHeight - h).attr(\"width\", barW).attr(\"height\", h).style(\"fill\", color).classed(\"xyChartBar\", true)\n"
+    )
     sb.append("          }\n")
     sb.append("        case \"line\" =>\n")
     sb.append("          val points = series.data.zipWithIndex.map { case (v, dIdx) =>\n")
@@ -448,11 +522,15 @@ object MermaidB9Emitter {
     sb.append("            val y = ChartHeight - (v / maxVal) * ChartHeight\n")
     sb.append("            s\"$x,$y\"\n")
     sb.append("          }.mkString(\" \")\n")
-    sb.append("          chartGroup.append(\"polyline\").attr(\"points\", points).style(\"fill\", \"none\").style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"xyChartLine\", true)\n")
+    sb.append(
+      "          chartGroup.append(\"polyline\").attr(\"points\", points).style(\"fill\", \"none\").style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"xyChartLine\", true)\n"
+    )
     sb.append("          for ((v, dIdx) <- series.data.zipWithIndex) {\n")
     sb.append("            val x = dIdx * (barW + BarGap) + barW / 2 + BarGap / 2\n")
     sb.append("            val y = ChartHeight - (v / maxVal) * ChartHeight\n")
-    sb.append("            chartGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", y).attr(\"r\", 4).style(\"fill\", color).classed(\"xyChartLinePoint\", true)\n")
+    sb.append(
+      "            chartGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", y).attr(\"r\", 4).style(\"fill\", color).classed(\"xyChartLinePoint\", true)\n"
+    )
     sb.append("          }\n")
     sb.append("        case _ => ()\n")
     sb.append("      }\n")
@@ -461,7 +539,9 @@ object MermaidB9Emitter {
     sb.append("    if (db.xAxisCategories.nonEmpty) {\n")
     sb.append("      for ((cat, idx) <- db.xAxisCategories.zipWithIndex) {\n")
     sb.append("        val x = idx * (barW + BarGap) + barW / 2 + BarGap / 2\n")
-    sb.append("        chartGroup.append(\"text\").attr(\"x\", x).attr(\"y\", ChartHeight + 15).attr(\"text-anchor\", \"middle\").classed(\"xyChartTickLabel\", true).text(cat)\n")
+    sb.append(
+      "        chartGroup.append(\"text\").attr(\"x\", x).attr(\"y\", ChartHeight + 15).attr(\"text-anchor\", \"middle\").classed(\"xyChartTickLabel\", true).text(cat)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -478,10 +558,16 @@ object MermaidB9Emitter {
     sb.append("object XyChartStyles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String = {\n")
     sb.append("    val sb = new StringBuilder()\n")
-    sb.append("    sb.append(s\"\"\".xyChartTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".xyChartTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".xyChartAxis { stroke: $${vars.lineColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".xyChartAxisLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".xyChartTickLabel { font-size: 10px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".xyChartAxisLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".xyChartTickLabel { font-size: 10px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(\"\"\".xyChartBar { stroke-width: 0; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.append(\"\"\".xyChartLine { stroke-width: 2px; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.append(\"\"\".xyChartLinePoint { stroke-width: 1px; }\n\"\"\".stripMargin)\n")
@@ -501,9 +587,13 @@ object MermaidB9Emitter {
     sb.append("package ssg\npackage mermaid\npackage diagrams\npackage journey\n\n")
     sb.append("import scala.collection.mutable\n\n")
     sb.append("/** A task in the user journey. */\n")
-    sb.append("final case class JourneyTask(\n  name: String,\n  var score: Int = 3,\n  actors: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty,\n  var section: String = \"\",\n  var order: Int = 0\n)\n\n")
+    sb.append(
+      "final case class JourneyTask(\n  name: String,\n  var score: Int = 3,\n  actors: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty,\n  var section: String = \"\",\n  var order: Int = 0\n)\n\n"
+    )
     sb.append("/** A section in the user journey. */\n")
-    sb.append("final case class JourneySection(name: String, tasks: mutable.ArrayBuffer[JourneyTask] = mutable.ArrayBuffer.empty)\n\n")
+    sb.append(
+      "final case class JourneySection(name: String, tasks: mutable.ArrayBuffer[JourneyTask] = mutable.ArrayBuffer.empty)\n\n"
+    )
     sb.append("/** Mutable database for user journey diagram data. */\n")
     sb.append("final class JourneyDb {\n\n")
     sb.append("  val tasks:    mutable.ArrayBuffer[JourneyTask]    = mutable.ArrayBuffer.empty\n")
@@ -573,8 +663,12 @@ object MermaidB9Emitter {
     sb.append("      if (trimmed.nonEmpty && !trimmed.startsWith(\"%%\")) {\n")
     sb.append("        if (trimmed.toLowerCase.startsWith(\"title \"))    db.title = trimmed.substring(6).trim\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"section \")) db.addSection(trimmed.substring(8).trim)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n"
+    )
     sb.append("        else parseTask(trimmed, db)\n")
     sb.append("      }\n")
     sb.append("    }\n")
@@ -585,7 +679,9 @@ object MermaidB9Emitter {
     sb.append("    if (colon >= 0) {\n")
     sb.append("      val name = text.substring(0, colon).trim\n")
     sb.append("      val rest = text.substring(colon + 1).trim.split(\",\").map(_.trim)\n")
-    sb.append("      val score = rest.headOption.flatMap(s => try Some(s.toInt) catch { case _: Exception => None }).getOrElse(3)\n")
+    sb.append(
+      "      val score = rest.headOption.flatMap(s => try Some(s.toInt) catch { case _: Exception => None }).getOrElse(3)\n"
+    )
     sb.append("      val taskActors = rest.drop(1)\n")
     sb.append("      db.addTask(name, score, taskActors)\n")
     sb.append("    }\n")
@@ -612,7 +708,9 @@ object MermaidB9Emitter {
     sb.append("    val maxTasksInSection = if (db.sections.nonEmpty) db.sections.map(_.tasks.length).max else db.tasks.length\n")
     sb.append("    val chartWidth  = SectionLabelWidth + maxTasksInSection * (TaskBoxWidth + TaskGap) + DiagramPadding * 2\n")
     sb.append("    val numSections = math.max(db.sections.length, 1)\n")
-    sb.append("    val chartHeight = DiagramPadding + (if (db.title.nonEmpty) 40 else 0) + 30 + numSections * SectionHeight + DiagramPadding\n\n")
+    sb.append(
+      "    val chartHeight = DiagramPadding + (if (db.title.nonEmpty) 40 else 0) + 30 + numSections * SectionHeight + DiagramPadding\n\n"
+    )
     sb.append("    val viewBox = s\"0 0 $chartWidth $chartHeight\"\n")
     sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
     sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n")
@@ -627,14 +725,20 @@ object MermaidB9Emitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    var y = DiagramPadding\n\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", chartWidth / 2.0).attr(\"y\", y + 20).attr(\"text-anchor\", \"middle\").classed(\"journeyTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", chartWidth / 2.0).attr(\"y\", y + 20).attr(\"text-anchor\", \"middle\").classed(\"journeyTitle\", true).text(db.title)\n"
+    )
     sb.append("      y += 40\n")
     sb.append("    }\n\n")
     // Sections and tasks
     sb.append("    if (db.sections.nonEmpty) {\n")
     sb.append("      for ((section, sectionIdx) <- db.sections.zipWithIndex) {\n")
-    sb.append("        mainGroup.append(\"rect\").attr(\"x\", 0).attr(\"y\", y).attr(\"width\", chartWidth).attr(\"height\", SectionHeight).classed(s\"section-$${sectionIdx % 2}\", true)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", 10).attr(\"y\", y + SectionHeight / 2.0 + 5).classed(\"journeySection\", true).text(section.name)\n")
+    sb.append(
+      "        mainGroup.append(\"rect\").attr(\"x\", 0).attr(\"y\", y).attr(\"width\", chartWidth).attr(\"height\", SectionHeight).classed(s\"section-$${sectionIdx % 2}\", true)\n"
+    )
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", 10).attr(\"y\", y + SectionHeight / 2.0 + 5).classed(\"journeySection\", true).text(section.name)\n"
+    )
     sb.append("        var taskX = SectionLabelWidth\n")
     sb.append("        for (task <- section.tasks) {\n")
     sb.append("          renderTask(mainGroup, task, taskX, y + 10, themeVars)\n")
@@ -644,24 +748,40 @@ object MermaidB9Emitter {
     sb.append("      }\n")
     sb.append("    } else {\n")
     sb.append("      var taskX = SectionLabelWidth\n")
-    sb.append("      for (task <- db.tasks) { renderTask(mainGroup, task, taskX, y + 10, themeVars); taskX += TaskBoxWidth + TaskGap }\n")
+    sb.append(
+      "      for (task <- db.tasks) { renderTask(mainGroup, task, taskX, y + 10, themeVars); taskX += TaskBoxWidth + TaskGap }\n"
+    )
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n\n")
     // renderTask
-    sb.append("  private def renderTask(parent: SvgBuilder, task: JourneyTask, x: Double, y: Double, themeVars: ssg.mermaid.theme.ThemeVariables): Unit = {\n")
+    sb.append(
+      "  private def renderTask(parent: SvgBuilder, task: JourneyTask, x: Double, y: Double, themeVars: ssg.mermaid.theme.ThemeVariables): Unit = {\n"
+    )
     sb.append("    val fillColor = scoreColor(task.score, themeVars)\n")
     sb.append("    val taskGroup = parent.append(\"g\").attr(\"transform\", s\"translate($x, $y)\")\n")
-    sb.append("    taskGroup.append(\"rect\").attr(\"width\", TaskBoxWidth).attr(\"height\", TaskBoxHeight).attr(\"rx\", 5).attr(\"ry\", 5).classed(\"journeyTask\", true).style(\"fill\", fillColor)\n")
-    sb.append("    taskGroup.append(\"text\").attr(\"x\", TaskBoxWidth / 2.0).attr(\"y\", 20).attr(\"text-anchor\", \"middle\").classed(\"journeyTaskText\", true).text(task.name)\n")
-    sb.append("    taskGroup.append(\"text\").attr(\"x\", TaskBoxWidth / 2.0).attr(\"y\", 40).attr(\"text-anchor\", \"middle\").attr(\"font-size\", \"12\").classed(\"journeyScore\", true).text(s\"$${task.score}/5\")\n")
+    sb.append(
+      "    taskGroup.append(\"rect\").attr(\"width\", TaskBoxWidth).attr(\"height\", TaskBoxHeight).attr(\"rx\", 5).attr(\"ry\", 5).classed(\"journeyTask\", true).style(\"fill\", fillColor)\n"
+    )
+    sb.append(
+      "    taskGroup.append(\"text\").attr(\"x\", TaskBoxWidth / 2.0).attr(\"y\", 20).attr(\"text-anchor\", \"middle\").classed(\"journeyTaskText\", true).text(task.name)\n"
+    )
+    sb.append(
+      "    taskGroup.append(\"text\").attr(\"x\", TaskBoxWidth / 2.0).attr(\"y\", 40).attr(\"text-anchor\", \"middle\").attr(\"font-size\", \"12\").classed(\"journeyScore\", true).text(s\"$${task.score}/5\")\n"
+    )
     sb.append("    if (task.actors.nonEmpty)\n")
-    sb.append("      taskGroup.append(\"text\").attr(\"x\", TaskBoxWidth / 2.0).attr(\"y\", TaskBoxHeight + 15).attr(\"text-anchor\", \"middle\").attr(\"font-size\", \"10\").classed(\"journeyActor\", true).text(task.actors.mkString(\", \"))\n")
+    sb.append(
+      "      taskGroup.append(\"text\").attr(\"x\", TaskBoxWidth / 2.0).attr(\"y\", TaskBoxHeight + 15).attr(\"text-anchor\", \"middle\").attr(\"font-size\", \"10\").classed(\"journeyActor\", true).text(task.actors.mkString(\", \"))\n"
+    )
     sb.append("  }\n\n")
     sb.append("  private def scoreColor(score: Int, themeVars: ssg.mermaid.theme.ThemeVariables): String = {\n")
     sb.append("    val idx = (score - 1).max(0).min(7)\n")
-    sb.append("    val c = idx match { case 0 => themeVars.fillType0; case 1 => themeVars.fillType1; case 2 => themeVars.fillType2; case 3 => themeVars.fillType3; case 4 => themeVars.fillType4; case _ => themeVars.fillType5 }\n")
-    sb.append("    if (c.nonEmpty) c else score match { case 1 => \"#ff6b6b\"; case 2 => \"#ffa07a\"; case 3 => \"#ffd700\"; case 4 => \"#90ee90\"; case 5 => \"#5cb85c\"; case _ => \"#ffd700\" }\n")
+    sb.append(
+      "    val c = idx match { case 0 => themeVars.fillType0; case 1 => themeVars.fillType1; case 2 => themeVars.fillType2; case 3 => themeVars.fillType3; case 4 => themeVars.fillType4; case _ => themeVars.fillType5 }\n"
+    )
+    sb.append(
+      "    if (c.nonEmpty) c else score match { case 1 => \"#ff6b6b\"; case 2 => \"#ffa07a\"; case 3 => \"#ffd700\"; case 4 => \"#90ee90\"; case 5 => \"#5cb85c\"; case _ => \"#ffd700\" }\n"
+    )
     sb.append("  }\n")
     sb.append("}\n")
     sb.toString
@@ -675,12 +795,20 @@ object MermaidB9Emitter {
     sb.append("object JourneyStyles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String = {\n")
     sb.append("    val sb = new StringBuilder()\n")
-    sb.append("    sb.append(s\"\"\".journeyTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".journeySection { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".journeyTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".journeySection { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".journeyTask { stroke: $${vars.lineColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".journeyTaskText { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".journeyTaskText { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".journeyScore { fill: $${vars.textColor}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".journeyActor { fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".journeyActor { fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    for (i <- 0 until 8) sb.append(s\"\"\".section-$$i { fill: $${vars.fillType(i)}; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.toString\n")
     sb.append("  }\n")
@@ -698,9 +826,13 @@ object MermaidB9Emitter {
     sb.append("package ssg\npackage mermaid\npackage diagrams\npackage timeline\n\n")
     sb.append("import scala.collection.mutable\n\n")
     sb.append("/** A timeline period with events. */\n")
-    sb.append("final case class TimelinePeriod(title: String, events: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty, var section: String = \"\")\n\n")
+    sb.append(
+      "final case class TimelinePeriod(title: String, events: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty, var section: String = \"\")\n\n"
+    )
     sb.append("/** A section in the timeline. */\n")
-    sb.append("final case class TimelineSection(name: String, periods: mutable.ArrayBuffer[TimelinePeriod] = mutable.ArrayBuffer.empty)\n\n")
+    sb.append(
+      "final case class TimelineSection(name: String, periods: mutable.ArrayBuffer[TimelinePeriod] = mutable.ArrayBuffer.empty)\n\n"
+    )
     sb.append("/** Mutable database for timeline diagram data. */\n")
     sb.append("final class TimelineDb {\n\n")
     sb.append("  val periods:  mutable.ArrayBuffer[TimelinePeriod]  = mutable.ArrayBuffer.empty\n")
@@ -711,11 +843,15 @@ object MermaidB9Emitter {
     sb.append("  private var currentSection: String = \"\"\n\n")
     sb.append("  def addSection(name: String): Unit = { currentSection = name; sections += TimelineSection(name = name) }\n\n")
     sb.append("  def addPeriod(periodTitle: String, events: Array[String]): Unit = {\n")
-    sb.append("    val period = TimelinePeriod(title = periodTitle, events = mutable.ArrayBuffer.from(events), section = currentSection)\n")
+    sb.append(
+      "    val period = TimelinePeriod(title = periodTitle, events = mutable.ArrayBuffer.from(events), section = currentSection)\n"
+    )
     sb.append("    periods += period; sections.lastOption.foreach(_.periods += period)\n")
     sb.append("  }\n\n")
     sb.append("  def addEvent(event: String): Unit = periods.lastOption.foreach(_.events += event)\n\n")
-    sb.append("  def clear(): Unit = { periods.clear(); sections.clear(); currentSection = \"\"; title = \"\"; accTitle = \"\"; accDescription = \"\" }\n")
+    sb.append(
+      "  def clear(): Unit = { periods.clear(); sections.clear(); currentSection = \"\"; title = \"\"; accTitle = \"\"; accDescription = \"\" }\n"
+    )
     sb.append("}\n")
     sb.toString
   }
@@ -726,7 +862,9 @@ object MermaidB9Emitter {
     sb.append("package ssg\npackage mermaid\npackage diagrams\npackage timeline\n\n")
     sb.append("import ssg.mermaid.MermaidConfig\n\n")
     sb.append("object TimelineDiagram {\n\n")
-    sb.append("  def detect(text: String): Boolean = text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"timeline\")\n\n")
+    sb.append(
+      "  def detect(text: String): Boolean = text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"timeline\")\n\n"
+    )
     sb.append("  def parse(text: String): TimelineDb = TimelineParser.parse(text)\n\n")
     sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig()): String = {\n")
     sb.append("    val db = parse(text)\n")
@@ -757,8 +895,12 @@ object MermaidB9Emitter {
     sb.append("        val indent = line.length - line.stripLeading().length\n")
     sb.append("        if (trimmed.toLowerCase.startsWith(\"title \"))   db.title = trimmed.substring(6).trim\n")
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"section \")) db.addSection(trimmed.substring(8).trim)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n"
+    )
     sb.append("        else if (indent >= 4) db.addEvent(trimmed)\n")
     sb.append("        else {\n")
     sb.append("          val colon = trimmed.indexOf(':')\n")
@@ -808,20 +950,30 @@ object MermaidB9Emitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n\n")
     // Title
     sb.append("    if (db.title.nonEmpty)\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"timelineTitle\", true).text(db.title)\n\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"timelineTitle\", true).text(db.title)\n\n"
+    )
     // Timeline line
     sb.append("    val lineY = TimelineY\n")
-    sb.append("    mainGroup.append(\"line\").attr(\"x1\", Padding).attr(\"y1\", lineY).attr(\"x2\", svgWidth - Padding).attr(\"y2\", lineY).classed(\"timelineLine\", true)\n\n")
+    sb.append(
+      "    mainGroup.append(\"line\").attr(\"x1\", Padding).attr(\"y1\", lineY).attr(\"x2\", svgWidth - Padding).attr(\"y2\", lineY).classed(\"timelineLine\", true)\n\n"
+    )
     // Periods
     sb.append("    for ((period, idx) <- db.periods.zipWithIndex) {\n")
     sb.append("      val x      = Padding + idx * (PeriodWidth + PeriodGap) + PeriodWidth / 2\n")
     sb.append("      val above  = idx % 2 == 0\n")
-    sb.append("      mainGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", lineY).attr(\"r\", 8).classed(\"timelineMarker\", true)\n")
+    sb.append(
+      "      mainGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", lineY).attr(\"r\", 8).classed(\"timelineMarker\", true)\n"
+    )
     sb.append("      val titleY = if (above) lineY - 30 else lineY + 30\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", titleY).attr(\"text-anchor\", \"middle\").classed(\"timelinePeriodTitle\", true).text(period.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", titleY).attr(\"text-anchor\", \"middle\").classed(\"timelinePeriodTitle\", true).text(period.title)\n"
+    )
     sb.append("      for ((event, eIdx) <- period.events.zipWithIndex) {\n")
     sb.append("        val eventY = if (above) lineY - 50 - eIdx * EventHeight else lineY + 50 + eIdx * EventHeight\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", eventY).attr(\"text-anchor\", \"middle\").classed(\"timelineEvent\", true).text(event)\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", eventY).attr(\"text-anchor\", \"middle\").classed(\"timelineEvent\", true).text(event)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -838,11 +990,19 @@ object MermaidB9Emitter {
     sb.append("object TimelineStyles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String = {\n")
     sb.append("    val sb = new StringBuilder()\n")
-    sb.append("    sb.append(s\"\"\".timelineTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".timelineTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".timelineLine { stroke: $${vars.lineColor}; stroke-width: 2px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".timelineMarker { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 2px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".timelinePeriodTitle { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".timelineEvent { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".timelineMarker { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 2px; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".timelinePeriodTitle { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".timelineEvent { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.toString\n")
     sb.append("  }\n")
     sb.append("}\n")
@@ -860,7 +1020,9 @@ object MermaidB9Emitter {
     sb.append("import scala.collection.mutable\n\n")
     sb.append("/** A C4 entity (person, system, container, component). */\n")
     sb.append("final case class C4Entity(alias: String, label: String, entityType: String, description: String = \"\",\n")
-    sb.append("  technology: String = \"\", link: String = \"\", sprite: String = \"\", tags: String = \"\", parentBoundary: String = \"global\")\n\n")
+    sb.append(
+      "  technology: String = \"\", link: String = \"\", sprite: String = \"\", tags: String = \"\", parentBoundary: String = \"global\")\n\n"
+    )
     sb.append("/** A C4 relationship. */\n")
     sb.append("final case class C4Relationship(from: String, to: String, label: String, technology: String = \"\",\n")
     sb.append("  description: String = \"\", relType: String = \"Rel\")\n\n")
@@ -877,9 +1039,13 @@ object MermaidB9Emitter {
     sb.append("  var accDescription: String = \"\"\n")
     sb.append("  var c4Type:         String = \"C4Context\"\n\n")
     sb.append("  private val boundaryStack: mutable.Stack[String] = mutable.Stack.empty\n\n")
-    sb.append("  def addEntity(alias: String, label: String, entityType: String, description: String = \"\", technology: String = \"\"): Unit =\n")
+    sb.append(
+      "  def addEntity(alias: String, label: String, entityType: String, description: String = \"\", technology: String = \"\"): Unit =\n"
+    )
     sb.append("    entities += C4Entity(alias, label, entityType, description, technology, parentBoundary = currentBoundary)\n\n")
-    sb.append("  def addRelationship(from: String, to: String, label: String, technology: String = \"\", relType: String = \"Rel\"): Unit =\n")
+    sb.append(
+      "  def addRelationship(from: String, to: String, label: String, technology: String = \"\", relType: String = \"Rel\"): Unit =\n"
+    )
     sb.append("    relationships += C4Relationship(from, to, label, technology, relType = relType)\n\n")
     sb.append("  def pushBoundary(alias: String, label: String, boundaryType: String): Unit = {\n")
     sb.append("    boundaries += C4Boundary(alias, label, boundaryType, parentBoundary = currentBoundary)\n")
@@ -903,7 +1069,9 @@ object MermaidB9Emitter {
     sb.append("object C4Diagram {\n\n")
     sb.append("  def detect(text: String): Boolean = {\n")
     sb.append("    val firstLine = text.trim.split(\"[\\n\\r]\", 2)(0).trim\n")
-    sb.append("    firstLine.startsWith(\"C4Context\") || firstLine.startsWith(\"C4Container\") || firstLine.startsWith(\"C4Component\") || firstLine.startsWith(\"C4Dynamic\") || firstLine.startsWith(\"C4Deployment\")\n")
+    sb.append(
+      "    firstLine.startsWith(\"C4Context\") || firstLine.startsWith(\"C4Container\") || firstLine.startsWith(\"C4Component\") || firstLine.startsWith(\"C4Dynamic\") || firstLine.startsWith(\"C4Deployment\")\n"
+    )
     sb.append("  }\n\n")
     sb.append("  def parse(text: String): C4Db = C4Parser.parse(text)\n\n")
     sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig()): String = {\n")
@@ -934,14 +1102,28 @@ object MermaidB9Emitter {
     sb.append("      val trimmed = lines(i).trim; i += 1\n")
     sb.append("      if (trimmed.nonEmpty && !trimmed.startsWith(\"%%\")) {\n")
     sb.append("        if (trimmed.toLowerCase.startsWith(\"title \"))   db.title = trimmed.substring(6).trim\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n")
-    sb.append("        else if (trimmed.startsWith(\"Person(\") || trimmed.startsWith(\"Person_Ext(\"))   parseEntity(trimmed, \"person\", db)\n")
-    sb.append("        else if (trimmed.startsWith(\"System(\") || trimmed.startsWith(\"System_Ext(\"))   parseEntity(trimmed, \"system\", db)\n")
-    sb.append("        else if (trimmed.startsWith(\"Container(\") || trimmed.startsWith(\"Container_Ext(\")) parseEntity(trimmed, \"container\", db)\n")
-    sb.append("        else if (trimmed.startsWith(\"Component(\") || trimmed.startsWith(\"Component_Ext(\")) parseEntity(trimmed, \"component\", db)\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n"
+    )
+    sb.append(
+      "        else if (trimmed.startsWith(\"Person(\") || trimmed.startsWith(\"Person_Ext(\"))   parseEntity(trimmed, \"person\", db)\n"
+    )
+    sb.append(
+      "        else if (trimmed.startsWith(\"System(\") || trimmed.startsWith(\"System_Ext(\"))   parseEntity(trimmed, \"system\", db)\n"
+    )
+    sb.append(
+      "        else if (trimmed.startsWith(\"Container(\") || trimmed.startsWith(\"Container_Ext(\")) parseEntity(trimmed, \"container\", db)\n"
+    )
+    sb.append(
+      "        else if (trimmed.startsWith(\"Component(\") || trimmed.startsWith(\"Component_Ext(\")) parseEntity(trimmed, \"component\", db)\n"
+    )
     sb.append("        else if (trimmed.startsWith(\"Rel(\") || trimmed.startsWith(\"BiRel(\"))  parseRelationship(trimmed, db)\n")
-    sb.append("        else if (trimmed.matches(\"(Enterprise|System|Container)_Boundary\\\\(.*\")) parseBoundaryStart(trimmed, db)\n")
+    sb.append(
+      "        else if (trimmed.matches(\"(Enterprise|System|Container)_Boundary\\\\(.*\")) parseBoundaryStart(trimmed, db)\n"
+    )
     sb.append("        else if (trimmed == \"}\") db.popBoundary()\n")
     sb.append("      }\n")
     sb.append("    }\n")
@@ -949,12 +1131,16 @@ object MermaidB9Emitter {
     sb.append("  }\n\n")
     sb.append("  private def parseEntity(text: String, entityType: String, db: C4Db): Unit = {\n")
     sb.append("    val args = extractArgs(text)\n")
-    sb.append("    if (args.length >= 2) db.addEntity(args(0), args(1), entityType, if (args.length > 2) args(2) else \"\", if (args.length > 3) args(3) else \"\")\n")
+    sb.append(
+      "    if (args.length >= 2) db.addEntity(args(0), args(1), entityType, if (args.length > 2) args(2) else \"\", if (args.length > 3) args(3) else \"\")\n"
+    )
     sb.append("  }\n\n")
     sb.append("  private def parseRelationship(text: String, db: C4Db): Unit = {\n")
     sb.append("    val relType = text.takeWhile(_ != '(')\n")
     sb.append("    val args    = extractArgs(text)\n")
-    sb.append("    if (args.length >= 3) db.addRelationship(args(0), args(1), args(2), if (args.length > 3) args(3) else \"\", relType)\n")
+    sb.append(
+      "    if (args.length >= 3) db.addRelationship(args(0), args(1), args(2), if (args.length > 3) args(3) else \"\", relType)\n"
+    )
     sb.append("  }\n\n")
     sb.append("  private def parseBoundaryStart(text: String, db: C4Db): Unit = {\n")
     sb.append("    val bType = text.takeWhile(_ != '(').replace(\"_Boundary\", \"\").toLowerCase\n")
@@ -1005,7 +1191,9 @@ object MermaidB9Emitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    var startY = Padding\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"c4Title\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"c4Title\", true).text(db.title)\n"
+    )
     sb.append("      startY += 40\n")
     sb.append("    }\n\n")
     // Entities
@@ -1016,25 +1204,43 @@ object MermaidB9Emitter {
     sb.append("      positions(entity.alias) = (x + BoxWidth / 2, y + BoxHeight / 2)\n")
     sb.append("      val isPerson = entity.entityType.contains(\"person\")\n")
     sb.append("      if (isPerson) {\n")
-    sb.append("        mainGroup.append(\"circle\").attr(\"cx\", x + BoxWidth / 2).attr(\"cy\", y + 25).attr(\"r\", 20).classed(\"c4Person\", true)\n")
-    sb.append("        mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y + 50).attr(\"width\", BoxWidth).attr(\"height\", BoxHeight - 50).attr(\"rx\", 4).attr(\"ry\", 4).classed(\"c4Box\", true)\n")
+    sb.append(
+      "        mainGroup.append(\"circle\").attr(\"cx\", x + BoxWidth / 2).attr(\"cy\", y + 25).attr(\"r\", 20).classed(\"c4Person\", true)\n"
+    )
+    sb.append(
+      "        mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y + 50).attr(\"width\", BoxWidth).attr(\"height\", BoxHeight - 50).attr(\"rx\", 4).attr(\"ry\", 4).classed(\"c4Box\", true)\n"
+    )
     sb.append("      } else {\n")
-    sb.append("        mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", BoxWidth).attr(\"height\", BoxHeight).attr(\"rx\", 4).attr(\"ry\", 4).classed(\"c4Box\", true)\n")
+    sb.append(
+      "        mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", BoxWidth).attr(\"height\", BoxHeight).attr(\"rx\", 4).attr(\"ry\", 4).classed(\"c4Box\", true)\n"
+    )
     sb.append("      }\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + BoxWidth / 2).attr(\"y\", y + (if (isPerson) 75 else 30)).attr(\"text-anchor\", \"middle\").classed(\"c4Label\", true).text(entity.label)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x + BoxWidth / 2).attr(\"y\", y + (if (isPerson) 75 else 30)).attr(\"text-anchor\", \"middle\").classed(\"c4Label\", true).text(entity.label)\n"
+    )
     sb.append("      if (entity.technology.nonEmpty)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", x + BoxWidth / 2).attr(\"y\", y + (if (isPerson) 90 else 50)).attr(\"text-anchor\", \"middle\").classed(\"c4Technology\", true).text(s\"[${entity.technology}]\")\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", x + BoxWidth / 2).attr(\"y\", y + (if (isPerson) 90 else 50)).attr(\"text-anchor\", \"middle\").classed(\"c4Technology\", true).text(s\"[${entity.technology}]\")\n"
+    )
     sb.append("      if (entity.description.nonEmpty)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", x + BoxWidth / 2).attr(\"y\", y + (if (isPerson) 105 else 70)).attr(\"text-anchor\", \"middle\").classed(\"c4Description\", true).text(entity.description)\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", x + BoxWidth / 2).attr(\"y\", y + (if (isPerson) 105 else 70)).attr(\"text-anchor\", \"middle\").classed(\"c4Description\", true).text(entity.description)\n"
+    )
     sb.append("    }\n\n")
     // Relationships
     sb.append("    for (rel <- db.relationships) {\n")
     sb.append("      for ((fx, fy) <- positions.get(rel.from); (tx, ty) <- positions.get(rel.to)) {\n")
-    sb.append("        mainGroup.append(\"line\").attr(\"x1\", fx).attr(\"y1\", fy).attr(\"x2\", tx).attr(\"y2\", ty).classed(\"c4Rel\", true)\n")
+    sb.append(
+      "        mainGroup.append(\"line\").attr(\"x1\", fx).attr(\"y1\", fy).attr(\"x2\", tx).attr(\"y2\", ty).classed(\"c4Rel\", true)\n"
+    )
     sb.append("        val mx = (fx + tx) / 2; val my = (fy + ty) / 2\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", mx).attr(\"y\", my - 5).attr(\"text-anchor\", \"middle\").classed(\"c4RelLabel\", true).text(rel.label)\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", mx).attr(\"y\", my - 5).attr(\"text-anchor\", \"middle\").classed(\"c4RelLabel\", true).text(rel.label)\n"
+    )
     sb.append("        if (rel.technology.nonEmpty)\n")
-    sb.append("          mainGroup.append(\"text\").attr(\"x\", mx).attr(\"y\", my + 10).attr(\"text-anchor\", \"middle\").classed(\"c4RelTech\", true).text(s\"[${rel.technology}]\")\n")
+    sb.append(
+      "          mainGroup.append(\"text\").attr(\"x\", mx).attr(\"y\", my + 10).attr(\"text-anchor\", \"middle\").classed(\"c4RelTech\", true).text(s\"[${rel.technology}]\")\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -1051,15 +1257,33 @@ object MermaidB9Emitter {
     sb.append("object C4Styles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String = {\n")
     sb.append("    val sb = new StringBuilder()\n")
-    sb.append("    sb.append(s\"\"\".c4Title { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4Box { fill: $${vars.mainBkg}; stroke: $${vars.nodeBorder}; stroke-width: 1px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4Person { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4Label { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4Technology { font-size: 11px; fill: $${vars.textColor}; font-style: italic; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4Description { font-size: 11px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4Rel { stroke: $${vars.lineColor}; stroke-width: 1px; stroke-dasharray: 5,5; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4RelLabel { font-size: 11px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".c4RelTech { font-size: 10px; fill: $${vars.textColor}; font-style: italic; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".c4Title { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4Box { fill: $${vars.mainBkg}; stroke: $${vars.nodeBorder}; stroke-width: 1px; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4Person { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4Label { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4Technology { font-size: 11px; fill: $${vars.textColor}; font-style: italic; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4Description { font-size: 11px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4Rel { stroke: $${vars.lineColor}; stroke-width: 1px; stroke-dasharray: 5,5; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4RelLabel { font-size: 11px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
+    sb.append(
+      "    sb.append(s\"\"\".c4RelTech { font-size: 10px; fill: $${vars.textColor}; font-style: italic; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.toString\n")
     sb.append("  }\n")
     sb.append("}\n")
@@ -1106,7 +1330,9 @@ object MermaidB9Emitter {
     sb.append("    branches(mainBranchName) = GitBranch(mainBranchName, branchCount)\n")
     sb.append("    branchCount += 1\n")
     sb.append("  }\n\n")
-    sb.append("  def commit(id: String = \"\", message: String = \"\", tag: Option[String] = None, commitType: CommitType = CommitType.Normal): String = {\n")
+    sb.append(
+      "  def commit(id: String = \"\", message: String = \"\", tag: Option[String] = None, commitType: CommitType = CommitType.Normal): String = {\n"
+    )
     sb.append("    commitCount += 1\n")
     sb.append("    val cid = if (id.nonEmpty) id else s\"$commitCount-${shortHash(commitCount)}\"\n")
     sb.append("    val parent = branchHeads.get(currentBranch)\n")
@@ -1120,10 +1346,14 @@ object MermaidB9Emitter {
     sb.append("  }\n\n")
     sb.append("  def checkout(name: String): Unit = currentBranch = name\n\n")
     sb.append("  def merge(branchName: String, id: String = \"\", message: String = \"\", tag: Option[String] = None): Unit = {\n")
-    sb.append("    val cid = commit(id, if (message.nonEmpty) message else s\"merged branch $branchName into $currentBranch\", tag, CommitType.Merge)\n")
+    sb.append(
+      "    val cid = commit(id, if (message.nonEmpty) message else s\"merged branch $branchName into $currentBranch\", tag, CommitType.Merge)\n"
+    )
     sb.append("    commits.get(cid).foreach(_.secondParent = branchHeads.get(branchName))\n")
     sb.append("  }\n\n")
-    sb.append("  def clear(): Unit = { commits.clear(); branches.clear(); branchHeads.clear(); commitCount = 0; branchCount = 0; currentBranch = \"main\"; direction = \"LR\"; title = \"\"; accTitle = \"\"; accDescription = \"\" }\n\n")
+    sb.append(
+      "  def clear(): Unit = { commits.clear(); branches.clear(); branchHeads.clear(); commitCount = 0; branchCount = 0; currentBranch = \"main\"; direction = \"LR\"; title = \"\"; accTitle = \"\"; accDescription = \"\" }\n\n"
+    )
     sb.append("  private def shortHash(n: Int): String = f\"$n%07x\"\n")
     sb.append("}\n")
     sb.toString
@@ -1169,11 +1399,19 @@ object MermaidB9Emitter {
     sb.append("      val trimmed = lines(i).trim; i += 1\n")
     sb.append("      if (trimmed.nonEmpty && !trimmed.startsWith(\"%%\")) {\n")
     sb.append("        if (trimmed.toLowerCase.startsWith(\"commit\")) parseCommit(trimmed, db)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"branch \")) db.branch(trimmed.substring(7).trim.stripPrefix(\"\\\"\").stripSuffix(\"\\\"\"))\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"checkout \")) db.checkout(trimmed.substring(9).trim.stripPrefix(\"\\\"\").stripSuffix(\"\\\"\"))\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"branch \")) db.branch(trimmed.substring(7).trim.stripPrefix(\"\\\"\").stripSuffix(\"\\\"\"))\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"checkout \")) db.checkout(trimmed.substring(9).trim.stripPrefix(\"\\\"\").stripSuffix(\"\\\"\"))\n"
+    )
     sb.append("        else if (trimmed.toLowerCase.startsWith(\"merge \")) parseMerge(trimmed, db)\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n")
-    sb.append("        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n")
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"acctitle\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accTitle = trimmed.substring(c + 1).trim }\n"
+    )
+    sb.append(
+      "        else if (trimmed.toLowerCase.startsWith(\"accdescr\"))  { val c = trimmed.indexOf(':'); if (c >= 0) db.accDescription = trimmed.substring(c + 1).trim }\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n")
     sb.append("    db\n")
@@ -1217,7 +1455,9 @@ object MermaidB9Emitter {
     sb.append("  private val CommitSpacing: Double = 60.0\n")
     sb.append("  private val BranchSpacing: Double = 40.0\n")
     sb.append("  private val Padding:       Double = 40.0\n\n")
-    sb.append("  private val BranchColors: Array[String] = Array(\"#4e79a7\", \"#f28e2c\", \"#e15759\", \"#76b7b2\", \"#59a14f\", \"#edc949\", \"#af7aa1\", \"#ff9da7\")\n\n")
+    sb.append(
+      "  private val BranchColors: Array[String] = Array(\"#4e79a7\", \"#f28e2c\", \"#e15759\", \"#76b7b2\", \"#59a14f\", \"#edc949\", \"#af7aa1\", \"#ff9da7\")\n\n"
+    )
     sb.append("  def render(db: GitDb, config: MermaidConfig): String = {\n")
     sb.append("    val isVertical = db.direction == \"TB\" || db.direction == \"BT\"\n")
     sb.append("    val commitList = db.commits.values.toVector.sortBy(_.order)\n")
@@ -1226,9 +1466,13 @@ object MermaidB9Emitter {
     sb.append("    val commitCount = commitList.size.max(1)\n")
     sb.append("    val branchCount = branchList.size.max(1)\n")
     sb.append("    val (svgWidth, svgHeight) = if (isVertical)\n")
-    sb.append("      (branchCount * BranchSpacing + Padding * 3, commitCount * CommitSpacing + Padding * 3 + (if (db.title.nonEmpty) 40 else 0))\n")
+    sb.append(
+      "      (branchCount * BranchSpacing + Padding * 3, commitCount * CommitSpacing + Padding * 3 + (if (db.title.nonEmpty) 40 else 0))\n"
+    )
     sb.append("    else\n")
-    sb.append("      (commitCount * CommitSpacing + Padding * 3, branchCount * BranchSpacing + Padding * 3 + (if (db.title.nonEmpty) 40 else 0))\n\n")
+    sb.append(
+      "      (commitCount * CommitSpacing + Padding * 3, branchCount * BranchSpacing + Padding * 3 + (if (db.title.nonEmpty) 40 else 0))\n\n"
+    )
     sb.append("    val viewBox = s\"0 0 $svgWidth $svgHeight\"\n")
     sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
     sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n")
@@ -1243,26 +1487,38 @@ object MermaidB9Emitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    var titleOffset = 0.0\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"gitTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2.0).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"gitTitle\", true).text(db.title)\n"
+    )
     sb.append("      titleOffset = 40.0\n")
     sb.append("    }\n\n")
     // Branch labels
     sb.append("    for ((br, idx) <- branchList.zipWithIndex) {\n")
     sb.append("      val color = BranchColors(idx % BranchColors.length)\n")
-    sb.append("      if (isVertical) mainGroup.append(\"text\").attr(\"x\", Padding + idx * BranchSpacing).attr(\"y\", Padding + titleOffset - 10).attr(\"text-anchor\", \"middle\").style(\"fill\", color).classed(\"gitBranchLabel\", true).text(br.name)\n")
-    sb.append("      else mainGroup.append(\"text\").attr(\"x\", Padding - 5).attr(\"y\", Padding + titleOffset + idx * BranchSpacing + 4).attr(\"text-anchor\", \"end\").style(\"fill\", color).classed(\"gitBranchLabel\", true).text(br.name)\n")
+    sb.append(
+      "      if (isVertical) mainGroup.append(\"text\").attr(\"x\", Padding + idx * BranchSpacing).attr(\"y\", Padding + titleOffset - 10).attr(\"text-anchor\", \"middle\").style(\"fill\", color).classed(\"gitBranchLabel\", true).text(br.name)\n"
+    )
+    sb.append(
+      "      else mainGroup.append(\"text\").attr(\"x\", Padding - 5).attr(\"y\", Padding + titleOffset + idx * BranchSpacing + 4).attr(\"text-anchor\", \"end\").style(\"fill\", color).classed(\"gitBranchLabel\", true).text(br.name)\n"
+    )
     sb.append("    }\n\n")
     // Branch lines
     sb.append("    for ((br, idx) <- branchList.zipWithIndex) {\n")
     sb.append("      val color = BranchColors(idx % BranchColors.length)\n")
-    sb.append("      if (isVertical) mainGroup.append(\"line\").attr(\"x1\", Padding + idx * BranchSpacing).attr(\"y1\", Padding + titleOffset).attr(\"x2\", Padding + idx * BranchSpacing).attr(\"y2\", svgHeight - Padding).style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"gitBranchLine\", true)\n")
-    sb.append("      else mainGroup.append(\"line\").attr(\"x1\", Padding).attr(\"y1\", Padding + titleOffset + idx * BranchSpacing).attr(\"x2\", svgWidth - Padding).attr(\"y2\", Padding + titleOffset + idx * BranchSpacing).style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"gitBranchLine\", true)\n")
+    sb.append(
+      "      if (isVertical) mainGroup.append(\"line\").attr(\"x1\", Padding + idx * BranchSpacing).attr(\"y1\", Padding + titleOffset).attr(\"x2\", Padding + idx * BranchSpacing).attr(\"y2\", svgHeight - Padding).style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"gitBranchLine\", true)\n"
+    )
+    sb.append(
+      "      else mainGroup.append(\"line\").attr(\"x1\", Padding).attr(\"y1\", Padding + titleOffset + idx * BranchSpacing).attr(\"x2\", svgWidth - Padding).attr(\"y2\", Padding + titleOffset + idx * BranchSpacing).style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"gitBranchLine\", true)\n"
+    )
     sb.append("    }\n\n")
     // Commits
     sb.append("    for ((c, cIdx) <- commitList.zipWithIndex) {\n")
     sb.append("      val bIdx  = branchIndex.getOrElse(c.branch, 0)\n")
     sb.append("      val color = BranchColors(bIdx % BranchColors.length)\n")
-    sb.append("      val (cx, cy) = if (isVertical) (Padding + bIdx * BranchSpacing, Padding + titleOffset + cIdx * CommitSpacing)\n")
+    sb.append(
+      "      val (cx, cy) = if (isVertical) (Padding + bIdx * BranchSpacing, Padding + titleOffset + cIdx * CommitSpacing)\n"
+    )
     sb.append("        else (Padding + cIdx * CommitSpacing, Padding + titleOffset + bIdx * BranchSpacing)\n\n")
     // Parent line
     sb.append("      c.parent.foreach { pid =>\n")
@@ -1270,9 +1526,13 @@ object MermaidB9Emitter {
     sb.append("        if (pidx >= 0) {\n")
     sb.append("          val p = commitList(pidx)\n")
     sb.append("          val pbIdx = branchIndex.getOrElse(p.branch, 0)\n")
-    sb.append("          val (px, py) = if (isVertical) (Padding + pbIdx * BranchSpacing, Padding + titleOffset + pidx * CommitSpacing)\n")
+    sb.append(
+      "          val (px, py) = if (isVertical) (Padding + pbIdx * BranchSpacing, Padding + titleOffset + pidx * CommitSpacing)\n"
+    )
     sb.append("            else (Padding + pidx * CommitSpacing, Padding + titleOffset + pbIdx * BranchSpacing)\n")
-    sb.append("          mainGroup.append(\"line\").attr(\"x1\", px).attr(\"y1\", py).attr(\"x2\", cx).attr(\"y2\", cy).style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"gitCommitLine\", true)\n")
+    sb.append(
+      "          mainGroup.append(\"line\").attr(\"x1\", px).attr(\"y1\", py).attr(\"x2\", cx).attr(\"y2\", cy).style(\"stroke\", color).style(\"stroke-width\", \"2\").classed(\"gitCommitLine\", true)\n"
+    )
     sb.append("        }\n")
     sb.append("      }\n")
     // Second parent
@@ -1281,24 +1541,42 @@ object MermaidB9Emitter {
     sb.append("        if (pidx >= 0) {\n")
     sb.append("          val p = commitList(pidx)\n")
     sb.append("          val pbIdx = branchIndex.getOrElse(p.branch, 0)\n")
-    sb.append("          val (px, py) = if (isVertical) (Padding + pbIdx * BranchSpacing, Padding + titleOffset + pidx * CommitSpacing)\n")
+    sb.append(
+      "          val (px, py) = if (isVertical) (Padding + pbIdx * BranchSpacing, Padding + titleOffset + pidx * CommitSpacing)\n"
+    )
     sb.append("            else (Padding + pidx * CommitSpacing, Padding + titleOffset + pbIdx * BranchSpacing)\n")
-    sb.append("          mainGroup.append(\"line\").attr(\"x1\", px).attr(\"y1\", py).attr(\"x2\", cx).attr(\"y2\", cy).style(\"stroke\", color).style(\"stroke-width\", \"1\").style(\"stroke-dasharray\", \"5,5\").classed(\"gitMergeLine\", true)\n")
+    sb.append(
+      "          mainGroup.append(\"line\").attr(\"x1\", px).attr(\"y1\", py).attr(\"x2\", cx).attr(\"y2\", cy).style(\"stroke\", color).style(\"stroke-width\", \"1\").style(\"stroke-dasharray\", \"5,5\").classed(\"gitMergeLine\", true)\n"
+    )
     sb.append("        }\n")
     sb.append("      }\n\n")
     // Commit circle
     sb.append("      val r = if (c.commitType == CommitType.Merge) CommitRadius * 1.2 else CommitRadius\n")
-    sb.append("      mainGroup.append(\"circle\").attr(\"cx\", cx).attr(\"cy\", cy).attr(\"r\", r).style(\"fill\", color).classed(\"gitCommit\", true)\n")
+    sb.append(
+      "      mainGroup.append(\"circle\").attr(\"cx\", cx).attr(\"cy\", cy).attr(\"r\", r).style(\"fill\", color).classed(\"gitCommit\", true)\n"
+    )
     sb.append("      if (c.commitType == CommitType.Reverse)\n")
-    sb.append("        mainGroup.append(\"line\").attr(\"x1\", cx - 5).attr(\"y1\", cy - 5).attr(\"x2\", cx + 5).attr(\"y2\", cy + 5).style(\"stroke\", \"white\").style(\"stroke-width\", \"2\")\n")
+    sb.append(
+      "        mainGroup.append(\"line\").attr(\"x1\", cx - 5).attr(\"y1\", cy - 5).attr(\"x2\", cx + 5).attr(\"y2\", cy + 5).style(\"stroke\", \"white\").style(\"stroke-width\", \"2\")\n"
+    )
     sb.append("      if (c.commitType == CommitType.Highlight)\n")
-    sb.append("        mainGroup.append(\"circle\").attr(\"cx\", cx).attr(\"cy\", cy).attr(\"r\", r + 4).style(\"fill\", \"none\").style(\"stroke\", color).style(\"stroke-width\", \"2\")\n\n")
+    sb.append(
+      "        mainGroup.append(\"circle\").attr(\"cx\", cx).attr(\"cy\", cy).attr(\"r\", r + 4).style(\"fill\", \"none\").style(\"stroke\", color).style(\"stroke-width\", \"2\")\n\n"
+    )
     // Labels
-    sb.append("      if (isVertical) mainGroup.append(\"text\").attr(\"x\", cx + CommitRadius + 5).attr(\"y\", cy + 4).attr(\"text-anchor\", \"start\").classed(\"gitCommitLabel\", true).text(c.message)\n")
-    sb.append("      else mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy - CommitRadius - 5).attr(\"text-anchor\", \"middle\").classed(\"gitCommitLabel\", true).text(c.message)\n")
+    sb.append(
+      "      if (isVertical) mainGroup.append(\"text\").attr(\"x\", cx + CommitRadius + 5).attr(\"y\", cy + 4).attr(\"text-anchor\", \"start\").classed(\"gitCommitLabel\", true).text(c.message)\n"
+    )
+    sb.append(
+      "      else mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy - CommitRadius - 5).attr(\"text-anchor\", \"middle\").classed(\"gitCommitLabel\", true).text(c.message)\n"
+    )
     sb.append("      c.tag.foreach { t =>\n")
-    sb.append("        if (isVertical) mainGroup.append(\"text\").attr(\"x\", cx - CommitRadius - 5).attr(\"y\", cy + 4).attr(\"text-anchor\", \"end\").classed(\"gitTagLabel\", true).text(t)\n")
-    sb.append("        else mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy + CommitRadius + 15).attr(\"text-anchor\", \"middle\").classed(\"gitTagLabel\", true).text(t)\n")
+    sb.append(
+      "        if (isVertical) mainGroup.append(\"text\").attr(\"x\", cx - CommitRadius - 5).attr(\"y\", cy + 4).attr(\"text-anchor\", \"end\").classed(\"gitTagLabel\", true).text(t)\n"
+    )
+    sb.append(
+      "        else mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy + CommitRadius + 15).attr(\"text-anchor\", \"middle\").classed(\"gitTagLabel\", true).text(t)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -1315,14 +1593,20 @@ object MermaidB9Emitter {
     sb.append("object GitStyles {\n\n")
     sb.append("  def generate(vars: ThemeVariables): String = {\n")
     sb.append("    val sb = new StringBuilder()\n")
-    sb.append("    sb.append(s\"\"\".gitTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".gitTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".gitBranchLabel { font-size: 12px; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.append(s\"\"\".gitBranchLine { stroke-width: 2px; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.append(s\"\"\".gitCommit { stroke: $${vars.primaryBorderColor}; stroke-width: 2px; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".gitCommitLabel { font-size: 10px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".gitCommitLabel { font-size: 10px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.append(s\"\"\".gitCommitLine { stroke-width: 2px; }\n\"\"\".stripMargin)\n")
     sb.append("    sb.append(s\"\"\".gitMergeLine { stroke-width: 1px; stroke-dasharray: 5,5; }\n\"\"\".stripMargin)\n")
-    sb.append("    sb.append(s\"\"\".gitTagLabel { font-size: 10px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; font-weight: bold; }\n\"\"\".stripMargin)\n")
+    sb.append(
+      "    sb.append(s\"\"\".gitTagLabel { font-size: 10px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; font-weight: bold; }\n\"\"\".stripMargin)\n"
+    )
     sb.append("    sb.toString\n")
     sb.append("  }\n")
     sb.append("}\n")

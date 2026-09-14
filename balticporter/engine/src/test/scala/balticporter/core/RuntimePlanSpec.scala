@@ -4,9 +4,8 @@ import java.nio.file.Files
 import balticporter.tir.Phase
 import balticporter.transform.CollectionsTransform
 
-/** The derivation that makes runtime delivery impossible to forget: a run reads its requirement
-  * off the PHASES it ran, and the same plan drives the build dependency, the vendored sources and
-  * the emitter's external-parent table. Nothing here is passed in by a caller.
+/** The derivation that makes runtime delivery impossible to forget: a run reads its requirement off the PHASES it ran, and the same plan drives the build dependency, the vendored sources and the
+  * emitter's external-parent table. Nothing here is passed in by a caller.
   */
 class RuntimePlanSpec extends munit.FunSuite:
 
@@ -62,8 +61,7 @@ class RuntimePlanSpec extends munit.FunSuite:
       assertEquals(n, 11)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
-    finally
-      Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete)
+    finally Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete)
   }
 
   test("CollectionsTransform's legacy accessors still answer, off the published sources") {
@@ -71,7 +69,7 @@ class RuntimePlanSpec extends munit.FunSuite:
     assertEquals(CollectionsTransform.runtimeSources.keySet, CollectionsTransform.runtimeTypes)
     assertEquals(
       CollectionsTransform.runtimeSources(CollectionsTransform.JavaIteratorFqn),
-      RuntimeArtifact.sourceOf(CollectionsTransform.JavaIteratorFqn),
+      RuntimeArtifact.sourceOf(CollectionsTransform.JavaIteratorFqn)
     )
     // a SUBSET, not an equality. `externalConcrete` needs an entry only for a type that can be a
     // PARENT, and `JavaCollections` is an `object` of statics that never is — so it correctly has no

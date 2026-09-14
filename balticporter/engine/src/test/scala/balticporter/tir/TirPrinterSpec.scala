@@ -2,9 +2,9 @@ package balticporter.tir
 
 import TypeRepr.*
 
-/** The printer's own gate. A pretty-printer with no test is a pretty-printer that quietly stops
-  * descending — the same defect shape CLAUDE.md §3 records for hand-rolled traversals, and one
-  * that is invisible precisely because the output still *looks* fine. */
+/** The printer's own gate. A pretty-printer with no test is a pretty-printer that quietly stops descending — the same defect shape CLAUDE.md §3 records for hand-rolled traversals, and one that is
+  * invisible precisely because the output still *looks* fine.
+  */
 class TirPrinterSpec extends munit.FunSuite:
 
   given Program = TinyProgram.program
@@ -60,9 +60,9 @@ class TirPrinterSpec extends munit.FunSuite:
     val a = TirPrinter.digest(TinyProgram.foo)
     assertEquals(a, TirPrinter.digest(TinyProgram.foo))
     // same shape, different initialiser
-    val changed = TinyProgram.foo.copy(body = List(
-      TinyProgram.countDef.copy(rhs = Some(Tree.Literal(Constant.IntC(7), TinyProgram.tInt, TinyProgram.O))),
-      TinyProgram.addDef))
+    val changed = TinyProgram.foo.copy(
+      body = List(TinyProgram.countDef.copy(rhs = Some(Tree.Literal(Constant.IntC(7), TinyProgram.tInt, TinyProgram.O))), TinyProgram.addDef)
+    )
     assertNotEquals(a, TirPrinter.digest(changed))
   }
 
@@ -85,8 +85,7 @@ class TirPrinterSpec extends munit.FunSuite:
   test("types print in surface syntax, once") {
     val wildcardList = AppliedType(TypeRef(NoPrefix, TinyProgram.BASE), List(TypeBounds(NoType, TinyProgram.tInt)))
     assertEquals(TirPrinter.tpe(wildcardList, TirPrinter.Style.canonical), "p.Base[? <: scala.Int]")
-    assertEquals(TirPrinter.tpe(AndType(TinyProgram.tBase, TinyProgram.tInt), TirPrinter.Style.canonical),
-                 "(p.Base & scala.Int)")
+    assertEquals(TirPrinter.tpe(AndType(TinyProgram.tBase, TinyProgram.tInt), TirPrinter.Style.canonical), "(p.Base & scala.Int)")
     assertEquals(TirPrinter.tpe(ByNameType(TinyProgram.tInt), TirPrinter.Style.canonical), "=> scala.Int")
   }
 

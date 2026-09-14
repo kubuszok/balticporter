@@ -2,10 +2,10 @@ package balticporter.corpus
 
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{ExternalUsage, PortabilityCheck, UsageKind}
+import balticporter.tir.{ ExternalUsage, PortabilityCheck, UsageKind }
 
-/** `ExternalUsage` — every external symbol referenced (`owner#name`), its kind and origin, held as
-  * an artifact rather than kept only where `PortabilityCheck`'s 34 rules matched and discarded. */
+/** `ExternalUsage` — every external symbol referenced (`owner#name`), its kind and origin, held as an artifact rather than kept only where `PortabilityCheck`'s 34 rules matched and discarded.
+  */
 class ExternalSurfaceSpec extends PortSuite:
 
   private val src =
@@ -24,9 +24,8 @@ class ExternalSurfaceSpec extends PortSuite:
 
   test("an external member is enumerated with its owner, its usage kinds and its site count") {
     val rows = ExternalUsage.external(program)
-    val max  = rows.find(_.member.contains("java.lang.Math#max")).getOrElse(fail(
-      s"java.lang.Math#max is not in the surface: ${rows.flatMap(_.member).sorted.mkString(", ")}"))
-    assertEquals(clue(max.sites), 2)                       // `big` and `again`
+    val max  = rows.find(_.member.contains("java.lang.Math#max")).getOrElse(fail(s"java.lang.Math#max is not in the surface: ${rows.flatMap(_.member).sorted.mkString(", ")}"))
+    assertEquals(clue(max.sites), 2) // `big` and `again`
     assert(clue(max.kinds).contains(UsageKind.Call))
     assert(clue(max.firstOrigin.javaPath).nonEmpty)
   }
@@ -65,7 +64,8 @@ class ExternalSurfaceSpec extends PortSuite:
         |class Providers {
         |  void load() { ServiceLoader.load(CharSequence.class); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val vs = PortabilityCheck.check(spi).map(_.api).distinct
     assert(clue(vs).contains("java.util.ServiceLoader"))
   }

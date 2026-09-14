@@ -4,20 +4,19 @@ import scala.meta.*
 
 /** Skeleton comparison between engine output and the accepted hand port.
   *
-  * Compares kind + name + arity, nested via owner paths. Divergences are classified as
-  * `SkeletonEqual`, `Idiom` (getter/setter collapse, mutability, static placement),
-  * `HandAdditions`, or `Diff`. */
+  * Compares kind + name + arity, nested via owner paths. Divergences are classified as `SkeletonEqual`, `Idiom` (getter/setter collapse, mutability, static placement), `HandAdditions`, or `Diff`.
+  */
 object SkeletonDiff:
 
   final case class Member(path: String, kind: String, name: String, arity: Int):
-    def key: String = s"$path|$kind|$name/$arity"
+    def key:               String = s"$path|$kind|$name/$arity"
     override def toString: String = s"$path: $kind $name/$arity"
 
   def parseSkeleton(source: String, label: String): Either[String, List[Member]] =
     val input = Input.VirtualFile(label, source)
     dialects.Scala3(input).parse[Source] match
       case Parsed.Success(tree) => Right(collect(tree))
-      case e: Parsed.Error      => Left(s"$label: ${e.message}")
+      case e: Parsed.Error => Left(s"$label: ${e.message}")
 
   private def collect(tree: Tree): List[Member] =
     val out = List.newBuilder[Member]
@@ -66,7 +65,7 @@ object SkeletonDiff:
       case d: Decl.Var =>
         d.pats.foreach { case p: Pat.Var => out += Member(path, "var", p.name.value, 0); case _ => () }
       case _: Defn.Type | _: Decl.Type => ()
-      case other => other.children.foreach(walk(_, path))
+      case other                       => other.children.foreach(walk(_, path))
     walk(tree, "")
     out.result().sortBy(_.key)
 
@@ -77,15 +76,15 @@ object SkeletonDiff:
     case SkeletonEqual, Idiom, HandAdditions, Diff
 
   final case class Result(
-      status: Status,
-      missingInHand: List[Member],  // engine has, hand port lacks
-      extraInHand: List[Member],    // hand port has, engine lacks
-      explained: List[String],
+    status:        Status,
+    missingInHand: List[Member], // engine has, hand port lacks
+    extraInHand:   List[Member], // hand port has, engine lacks
+    explained:     List[String]
   ):
     /** Stable fingerprint of the post-idiom diff. Ledger entries pin this. */
     def fingerprint: String =
       val text = (missingInHand.map("−" + _.key) ++ extraInHand.map("+" + _.key)).sorted.mkString("\n")
-      val d = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes("UTF-8"))
+      val d    = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes("UTF-8"))
       d.take(6).map(b => f"$b%02x").mkString
 
   /** Apply per-file rename mappings to engine members before comparison. */
@@ -100,26 +99,25 @@ object SkeletonDiff:
 
   def compare(engine: List[Member], hand: List[Member]): Result =
     val engineKeys = engine.map(_.key).toSet
-    val handKeys = hand.map(_.key).toSet
-    var missing = engine.filterNot(m => handKeys.contains(m.key))
-    var extra = hand.filterNot(m => engineKeys.contains(m.key))
-    val explained = List.newBuilder[String]
+    val handKeys   = hand.map(_.key).toSet
+    var missing    = engine.filterNot(m => handKeys.contains(m.key))
+    var extra      = hand.filterNot(m => engineKeys.contains(m.key))
+    val explained  = List.newBuilder[String]
 
     // Idiom: getter/setter collapse
     def propName(n: String, prefix: String): Option[String] =
-      if n.length > prefix.length && n.startsWith(prefix) then
-        Some(n(prefix.length).toLower.toString + n.drop(prefix.length + 1))
+      if n.length > prefix.length && n.startsWith(prefix) then Some(n(prefix.length).toLower.toString + n.drop(prefix.length + 1))
       else None
     def handHasProp(path: String, p: String): Boolean =
       hand.exists(h => h.path == path && (h.name == p || h.name == p + "_="))
     val (getterLike, restMissing) = missing.partition { m =>
       m.kind == "def" && m.arity == 0 &&
-        List("get", "is").flatMap(propName(m.name, _)).exists(handHasProp(m.path, _))
+      List("get", "is").flatMap(propName(m.name, _)).exists(handHasProp(m.path, _))
     }
     getterLike.foreach(g => explained += s"getter-collapse: ${g.name}")
     val (setterLike, restMissing2) = restMissing.partition { m =>
       m.kind == "def" && m.arity == 1 &&
-        propName(m.name, "set").exists(handHasProp(m.path, _))
+      propName(m.name, "set").exists(handHasProp(m.path, _))
     }
     setterLike.foreach(s => explained += s"setter-collapse: ${s.name}")
     missing = restMissing2
@@ -130,10 +128,10 @@ object SkeletonDiff:
     extra = extra.filterNot(h => explainedProps.contains(h.name))
 
     // Idiom: property-kind drift (val/var/param on the other side)
-    val propKinds = Set("val", "var", "param")
+    val propKinds                = Set("val", "var", "param")
     val (varToVal, restMissing3) = missing.partition { m =>
       propKinds.contains(m.kind) &&
-        extra.exists(h => h.path == m.path && h.name == m.name && propKinds.contains(h.kind))
+      extra.exists(h => h.path == m.path && h.name == m.name && propKinds.contains(h.kind))
     }
     varToVal.foreach(v => explained += s"mutability: ${v.name}")
     missing = restMissing3
@@ -155,9 +153,7 @@ object SkeletonDiff:
     extra = extra.filterNot(_.kind == "param")
 
     val status =
-      if missing.isEmpty && extra.isEmpty then
-        if explained.result().isEmpty then Status.SkeletonEqual else Status.Idiom
-      else if missing.isEmpty then
-        Status.HandAdditions
+      if missing.isEmpty && extra.isEmpty then if explained.result().isEmpty then Status.SkeletonEqual else Status.Idiom
+      else if missing.isEmpty then Status.HandAdditions
       else Status.Diff
     Result(status, missing, extra, explained.result())

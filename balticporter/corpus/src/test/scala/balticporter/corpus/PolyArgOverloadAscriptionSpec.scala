@@ -2,12 +2,12 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A LAMBDA AT AN OVERLOADED SLOT — the one shape where leaving a poly expression bare is not the
-  * faithful emission. */
+/** A LAMBDA AT AN OVERLOADED SLOT — the one shape where leaving a poly expression bare is not the faithful emission.
+  */
 class PolyArgOverloadAscriptionSpec extends PortSuite:
 
-  /** the positive and its in-statement negative together: `tagLine` is overloaded at arity 2 and
-    * `tagIndent` is not, and the java calls them from one expression. */
+  /** the positive and its in-statement negative together: `tagLine` is overloaded at arity 2 and `tagIndent` is not, and the java calls them from one expression.
+    */
   private val src =
     """package demo;
       |class Appender {
@@ -51,7 +51,8 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
         |  void run(int id, Runnable body)      { }
         |}
         |class Uses { void go(Sink s) { s.run("a", () -> { }); } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // two alternatives of arity 2, and both take a `Runnable` at index 1 — the lambda discriminates
     // nothing, so scala has one expected type for it whichever alternative wins. Asserted at the
     // CALL, since both declarations name `Runnable` in the same output.
@@ -73,7 +74,8 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
         |  static final Key<Xform> K = null;
         |  void go(Store st) { st.set(K, s -> s); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the alternatives AGREE at index 1 — both formals spell `T` — so the index-local comparison
     // declines, and scala still has no expected type there: it must resolve the overload before it
     // can solve `T`, and it resolves by typing the arguments. Java solved `T` from the KEY first.
@@ -94,7 +96,8 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
         |  static final Key<Xform> K = null;
         |  void go(Store st, boolean flag) { st.set(K, flag ? s -> s : s -> s + "!"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // JLS 15.25 — java pushes the target THROUGH the conditional and types each branch against it,
     // so one branch names the target for both and the ascription goes on the `if`. Two ascriptions,
     // one per branch, would write the same type twice and leave the conditional's own type inferred.
@@ -116,7 +119,8 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
         |  static final Key<Xform> K = null;
         |  void go(Store st) { st.set(K, s -> s); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // one alternative, so scala solves `T` from the sibling exactly as java does and SAM-converts
     // the bare literal. The overload conjunct is what keeps this case out, which is why the slot's
     // shape is a DISJUNCT under it rather than a rule of its own.
@@ -134,7 +138,8 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
         |  void tick() { }
         |  void go(Sink s) { s.accept("a", this::tick); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // a reference is a poly expression too, and `TirEmitter.samAscribed` is the one mechanism that
     // answers for it — the STATIC form renders as a bare qualified name, where an ascription applies
     // a nilary method rather than converting it. Two mechanisms for one question is F8's finding.
@@ -149,7 +154,8 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
         |  void accept(String name, Runnable body) { }
         |}
         |class Uses { void go(Sink s) { s.accept("a", (Runnable) () -> { }); } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `polyArgsUncast` keeps what java wrote, so the term is ALREADY a `Tree.Typed` when this runs;
     // a second ascription would be one layer of nothing over java's own disambiguation.
     assertNotEmits(p, "java.lang.Runnable): java.lang.Runnable")

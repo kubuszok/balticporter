@@ -1,11 +1,11 @@
 package balticporter.corpus.liqp
 
-/** DECISION D-liqp-1b's rewrite — the generated parser's references INTO the ported library, moved
-  * to the namespace the port emits before javac reads them. */
+/** DECISION D-liqp-1b's rewrite — the generated parser's references INTO the ported library, moved to the namespace the port emits before javac reads them.
+  */
 class LiqpParserRewriteSpec extends munit.FunSuite:
 
-  private def rewrite(s: String): String = LiqpClasspath.rewriteReferences(s)._1
-  private def counts(s: String): (Int, Int) =
+  private def rewrite(s: String): String     = LiqpClasspath.rewriteReferences(s)._1
+  private def counts(s: String):  (Int, Int) =
     val (_, pkg, enums) = LiqpClasspath.rewriteReferences(s)
     (pkg, enums)
 
@@ -22,10 +22,10 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
 
   test("a prefix is not a structural fact — nothing that merely CONTAINS the name moves") {
     for src <- List(
-        "int liqpCount = 0;",            // an identifier starting with it
-        "String myliqp = \"x\";",        // …and one ending with it
-        "other.liqp.Thing t;",           // a qualified name where it is not the ROOT
-        "obj.liqp.field = 1;",           // …the same, through a value
+        "int liqpCount = 0;", // an identifier starting with it
+        "String myliqp = \"x\";", // …and one ending with it
+        "other.liqp.Thing t;", // a qualified name where it is not the ROOT
+        "obj.liqp.field = 1;" // …the same, through a value
       )
     do assertEquals(rewrite(src), src, s"rewrote: $src")
   }
@@ -39,10 +39,12 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
   test("an ENUM CONSTANT becomes valueOf — the form the emitted Scala can actually link") {
     assertEquals(
       rewrite("private TemplateParser.ErrorMode m = TemplateParser.ErrorMode.LAX;"),
-      "private TemplateParser.ErrorMode m = TemplateParser.ErrorMode.valueOf(\"LAX\");")
+      "private TemplateParser.ErrorMode m = TemplateParser.ErrorMode.valueOf(\"LAX\");"
+    )
     assertEquals(
       rewrite("return errorMode == TemplateParser.ErrorMode.STRICT;"),
-      "return errorMode == TemplateParser.ErrorMode.valueOf(\"STRICT\");")
+      "return errorMode == TemplateParser.ErrorMode.valueOf(\"STRICT\");"
+    )
   }
 
   test("the enum TYPE in a declaration position is left alone — only a CONSTANT selector moves") {
@@ -54,7 +56,7 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
   test("`valueOf` and `values` are already the forwarder form and are not re-wrapped") {
     for src <- List(
         "TemplateParser.ErrorMode.valueOf(name)",
-        "TemplateParser.ErrorMode.values()",
+        "TemplateParser.ErrorMode.values()"
       )
     do assertEquals(rewrite(src), src, s"rewrote: $src")
   }
@@ -63,7 +65,7 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
     for src <- List(
         "Flavor.LIQUID",
         "SomeOther.ErrorMode.LAX",
-        "Integer.MAX_VALUE",
+        "Integer.MAX_VALUE"
       )
     do assertEquals(rewrite(src), src, s"rewrote: $src")
   }
@@ -88,8 +90,7 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
 
   test("the rewrite POLICY is part of the cache key — parser classes depend on it") {
     assert(LiqpClasspath.rewritePolicy.contains("ssg.liquid"), LiqpClasspath.rewritePolicy)
-    assert(LiqpClasspath.rewritePolicy.contains("TemplateParser.ErrorMode"),
-      LiqpClasspath.rewritePolicy)
+    assert(LiqpClasspath.rewritePolicy.contains("TemplateParser.ErrorMode"), LiqpClasspath.rewritePolicy)
   }
 
   // -----------------------------------------------------------------------------------------
@@ -105,10 +106,14 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
     root
 
   test("the GENERATED SOURCES are part of the cache key — same tree, same digest") {
-    val a = tree("liquid/parser/v4/LiquidParser.java" -> "class LiquidParser {}",
-                 "liquid/parser/v4/LiquidLexer.java"  -> "class LiquidLexer {}")
-    val b = tree("liquid/parser/v4/LiquidParser.java" -> "class LiquidParser {}",
-                 "liquid/parser/v4/LiquidLexer.java"  -> "class LiquidLexer {}")
+    val a = tree(
+      "liquid/parser/v4/LiquidParser.java" -> "class LiquidParser {}",
+      "liquid/parser/v4/LiquidLexer.java" -> "class LiquidLexer {}"
+    )
+    val b = tree(
+      "liquid/parser/v4/LiquidParser.java" -> "class LiquidParser {}",
+      "liquid/parser/v4/LiquidLexer.java" -> "class LiquidLexer {}"
+    )
     assertEquals(LiqpClasspath.generatedDigest(a), LiqpClasspath.generatedDigest(b))
   }
 
@@ -120,8 +125,10 @@ class LiqpParserRewriteSpec extends munit.FunSuite:
 
   test("…and so does the FILE SET — a new rule producing a new file is a different key") {
     val a = tree("liquid/parser/v4/LiquidParser.java" -> "class LiquidParser {}")
-    val b = tree("liquid/parser/v4/LiquidParser.java"  -> "class LiquidParser {}",
-                 "liquid/parser/v4/LiquidVisitor.java" -> "class LiquidVisitor {}")
+    val b = tree(
+      "liquid/parser/v4/LiquidParser.java" -> "class LiquidParser {}",
+      "liquid/parser/v4/LiquidVisitor.java" -> "class LiquidVisitor {}"
+    )
     assertNotEquals(LiqpClasspath.generatedDigest(a), LiqpClasspath.generatedDigest(b))
   }
 

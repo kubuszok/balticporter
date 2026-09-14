@@ -2,9 +2,9 @@ package balticporter.tir
 
 /** Reference-typed `switch` selectors where `null` falls out instead of throwing NPE.
   *
-  * Walks the tree independently of the emitter; disagrees when the emitter missed a guard.
-  * A switch whose java writes `case null ->` (SE21) is excluded. Findings are §1(a) engine
-  * gaps. // CLAUDE.md §4.4 */
+  * Walks the tree independently of the emitter; disagrees when the emitter missed a guard. A switch whose java writes `case null ->` (SE21) is excluded. Findings are §1(a) engine gaps. // CLAUDE.md
+  * §4.4
+  */
 object SwitchNullCheck:
 
   val Name = "switch-null"
@@ -28,10 +28,9 @@ object SwitchNullCheck:
       s"switch on `$selector`, a reference type: java throws NullPointerException on a null " +
         "selector (JLS 14.11) and this `match` falls out to the default arm instead — no error, " +
         "no moved count, and the exceptional path became a silent no-op"
-    def render: String = s"$issue $owner: switch($selector)  (${origin.javaPath}:${origin.line})"
+    def render: String              = s"$issue $owner: switch($selector)  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
-        origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   /** @param guarded which switches the emitter guarded, keyed by [[Tree.Match.id]]. */
   def check(program: Program, units: List[Tree.ClassDef], guarded: Tree.Match => Boolean): List[Finding] =
@@ -40,10 +39,9 @@ object SwitchNullCheck:
 
   private def inUnit(u: Tree.ClassDef, guarded: Tree.Match => Boolean)(using program: Program): List[Finding] =
     val ownerOf = collection.mutable.Map.empty[Origin, String]
-    val claim = (s: SymId, t: Option[Term]) =>
-      t.foreach(x => matchOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
-    val owners = new Phase:
-      def name: String = "switch-null/owner"
+    val claim   = (s: SymId, t: Option[Term]) => t.foreach(x => matchOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
+    val owners  = new Phase:
+      def name:                                                    String      = "switch-null/owner"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { claim(d.symbol, d.rhs); d }
       override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef = { claim(v.symbol, v.rhs); v }
     StandardTraversal.mapClassDef(owners, u)
@@ -52,8 +50,7 @@ object SwitchNullCheck:
     StandardTraversal.scanClassDef(u, ()) { (_, t) =>
       t match
         case m: Tree.Match if nullable(m.scrutinee.tpe) && !writesNull(m) && !guarded(m) =>
-          out += Finding(Issue.NullFallsOut, ownerOf.getOrElse(m.origin, fqn(u.symbol)),
-            typeName(m.scrutinee.tpe), m.origin)
+          out += Finding(Issue.NullFallsOut, ownerOf.getOrElse(m.origin, fqn(u.symbol)), typeName(m.scrutinee.tpe), m.origin)
         case _ => ()
       ()
     }
@@ -79,7 +76,7 @@ object SwitchNullCheck:
     StandardTraversal.scanTerm(t, Set.empty[Origin]) { (acc, x) =>
       x match
         case m: Tree.Match => acc + m.origin
-        case _             => acc
+        case _ => acc
     }
 
   private def fqn(s: SymId)(using program: Program): String =
@@ -91,8 +88,12 @@ object SwitchNullCheck:
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

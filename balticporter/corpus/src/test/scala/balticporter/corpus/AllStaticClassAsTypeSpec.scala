@@ -45,19 +45,23 @@ class AllStaticClassAsTypeSpec extends munit.FunSuite:
   test("a constant holder NOBODY names as a type still collapses to an object") {
     val out = emit(unnamed)
     assert(clue(out).contains("object Align"))
-    assert(!out.contains("class Align"),
-      "the collapse must survive this fix — de-collapsing every constant holder is not the goal")
+    assert(
+      !out.contains("class Align"),
+      "the collapse must survive this fix — de-collapsing every constant holder is not the goal"
+    )
   }
 
   test("a CLASS LITERAL alone keeps it a class — the half a declaration type cannot see") {
     // `ext(KHRMaterialsUnlit.class, …)` infers the callee's `T` and declares nothing, so no
     // symbol's `info` mentions the type. `Ext.class` still requires the name to BE a type.
-    val out = emit(named +
-      """package demo;
-        |class LiteralOnly {
-        |  Object which() { return Ext.class; }
-        |}
-        |""".stripMargin)
+    val out = emit(
+      named +
+        """package demo;
+          |class LiteralOnly {
+          |  Object which() { return Ext.class; }
+          |}
+          |""".stripMargin
+    )
     assert(clue(out).contains("class Ext"))
   }
 
@@ -67,15 +71,16 @@ class AllStaticClassAsTypeSpec extends munit.FunSuite:
     // core, 29 of its 31 constant holders and 36 members of emitted text, for a question none of
     // them answers — and it still compiled, which is what makes this worth pinning rather than
     // leaving to a count.
-    val out = emit(unnamed +
-      """package demo;
-        |class Reader {
-        |  int read() { return Align.center | Align.top; }
-        |}
-        |""".stripMargin)
+    val out = emit(
+      unnamed +
+        """package demo;
+          |class Reader {
+          |  int read() { return Align.center | Align.top; }
+          |}
+          |""".stripMargin
+    )
     assert(clue(out).contains("object Align"))
-    assert(!out.contains("class Align"),
-      "a static ACCESS is not a type position; counting it de-collapses every constant holder")
+    assert(!out.contains("class Align"), "a static ACCESS is not a type position; counting it de-collapses every constant holder")
   }
 
   test("the type's OWN unit does not count as naming it") {

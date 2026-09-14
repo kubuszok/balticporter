@@ -10,11 +10,13 @@ class SrcMapSpec extends munit.FunSuite:
   test("the Java source root is DERIVED from the unit, not read from a flag") {
     assertEquals(
       SrcMap.sourceRootOf("a.b.c.utils.Grid", "/anywhere/at/all/upstream/src/a/b/c/utils/Grid.java"),
-      Some("/anywhere/at/all/upstream/src/"))
+      Some("/anywhere/at/all/upstream/src/")
+    )
     // …so the recorded path is the same from any checkout, with no script involved
     assertEquals(
       SrcMap.relativise("/anywhere/at/all/upstream/src/a/b/c/utils/Grid.java", Some("/anywhere/at/all/upstream/src/")),
-      "a/b/c/utils/Grid.java")
+      "a/b/c/utils/Grid.java"
+    )
   }
 
   test("a nested unit's root comes from its TOP-LEVEL name") {
@@ -29,13 +31,15 @@ class SrcMapSpec extends munit.FunSuite:
 
   // --- resolution ---------------------------------------------------------------------------
 
-  private val idx = SrcMap.Index.of(List(
-    e("p.Foo", "p.Foo", "class", 1, 40),
-    e("p.Foo", "p.Foo#a()", "def", 3, 6, jl = 10),
-    e("p.Foo", "p.Foo$Inner", "class", 8, 20, jl = 30),
-    e("p.Foo", "p.Foo$Inner#b()", "def", 10, 14, jl = 33),
-    e("p.Bar", "p.Bar", "class", 1, 9, "p/Bar.java"),
-  ))
+  private val idx = SrcMap.Index.of(
+    List(
+      e("p.Foo", "p.Foo", "class", 1, 40),
+      e("p.Foo", "p.Foo#a()", "def", 3, 6, jl = 10),
+      e("p.Foo", "p.Foo$Inner", "class", 8, 20, jl = 30),
+      e("p.Foo", "p.Foo$Inner#b()", "def", 10, 14, jl = 33),
+      e("p.Bar", "p.Bar", "class", 1, 9, "p/Bar.java")
+    )
+  )
 
   test("a compiler path resolves by the LONGEST matching suffix, so the output root is irrelevant") {
     assertEquals(idx.unitForFile("port/src_managed/main/scala/p/Foo.scala"), Some("p.Foo"))
@@ -46,10 +50,10 @@ class SrcMapSpec extends munit.FunSuite:
 
   test("a stack frame's runtime class resolves to the FILE its bytes were emitted into") {
     assertEquals(idx.unitForClass("p.Foo"), Some("p.Foo"))
-    assertEquals(idx.unitForClass("p.Foo$"), Some("p.Foo"))               // companion
-    assertEquals(idx.unitForClass("p.Foo$Inner"), Some("p.Foo"))          // nested type
-    assertEquals(idx.unitForClass("p.Foo$$anonfun$3"), Some("p.Foo"))     // lambda
-    assertEquals(idx.unitForClass("p.Foobar"), scala.None)                // cuts only at separators
+    assertEquals(idx.unitForClass("p.Foo$"), Some("p.Foo")) // companion
+    assertEquals(idx.unitForClass("p.Foo$Inner"), Some("p.Foo")) // nested type
+    assertEquals(idx.unitForClass("p.Foo$$anonfun$3"), Some("p.Foo")) // lambda
+    assertEquals(idx.unitForClass("p.Foobar"), scala.None) // cuts only at separators
   }
 
   test("a line resolves to the INNERMOST member containing it") {

@@ -1,21 +1,26 @@
 package balticporter.core
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** The vendored runtime text and the PUBLISHED runtime module must be the same bytes. */
 class RuntimeArtifactSpec extends munit.FunSuite:
 
-  /** the real module's source directory, written into the test resources by build.sbt so the
-    * check does not depend on where the suite is run from. */
+  /** the real module's source directory, written into the test resources by build.sbt so the check does not depend on where the suite is run from.
+    */
   private val runtimeSourceDir: Path =
     val is = Option(getClass.getClassLoader.getResourceAsStream("balticporter/runtime-source-dir.txt"))
       .getOrElse(fail("balticporter/runtime-source-dir.txt is missing — core's Test resourceGenerator did not run"))
-    val s = try new String(is.readAllBytes(), "UTF-8").trim finally is.close()
+    val s = try new String(is.readAllBytes(), "UTF-8").trim
+    finally is.close()
     Path.of(s)
 
   private def published: Map[String, String] =
-    Files.walk(runtimeSourceDir).iterator().asScala.toList
+    Files
+      .walk(runtimeSourceDir)
+      .iterator()
+      .asScala
+      .toList
       // `package.scala` declares no type — it carries the module's admission rule (what may be
       // added to the runtime at all) and is deliberately not a vendorable unit.
       .filter(p => p.getFileName.toString.endsWith(".scala") && p.getFileName.toString != "package.scala")
@@ -45,7 +50,7 @@ class RuntimeArtifactSpec extends munit.FunSuite:
       assert(
         src.contains(s"trait $simple") || src.contains(s"class $simple") ||
           src.contains(s"object $simple") || src.contains(s"type $simple"),
-        s"$fqn: no declaration of $simple in the vendored text",
+        s"$fqn: no declaration of $simple in the vendored text"
       )
     }
   }

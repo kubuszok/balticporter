@@ -3,9 +3,9 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** Two emitter seams that had no spec at all, pinned THROUGH THE PIPELINE — a java snippet in, the
-  * emitted Scala asserted. Both are §4.4's defect class (valid Scala meaning something else), and
-  * both were built from a failure found by running a ported test suite rather than by compiling. */
+/** Two emitter seams that had no spec at all, pinned THROUGH THE PIPELINE — a java snippet in, the emitted Scala asserted. Both are §4.4's defect class (valid Scala meaning something else), and both
+  * were built from a failure found by running a ported test suite rather than by compiling.
+  */
 class EmitterBindingAndReturnSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------

@@ -5,8 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 
 /** [[MemberRenamer]] — a component renamed whole, or not at all.
   *
-  * The assertions that matter are the negatives: a half-applied rename compiles, moves no count and
-  * breaks a contract in somebody else's repository (DESIGN.md §8.5).
+  * The assertions that matter are the negatives: a half-applied rename compiles, moves no count and breaks a contract in somebody else's repository (DESIGN.md §8.5).
   */
 class MemberRenamerSpec extends munit.FunSuite:
 
@@ -16,13 +15,15 @@ class MemberRenamerSpec extends munit.FunSuite:
   private def fqns(p: Program, ids: Iterable[SymId]): Set[String] =
     ids.flatMap(p.symbolOf).map(_.name).toSet
 
-  private def run(java: String, requests: Program => List[MemberRenamer.Request],
-                  onCollision: MemberRenamer.OnCollision = MemberRenamer.OnCollision.Refuse,
-                  baseUnits: Program => Set[SymId] = _ => Set.empty)
-      : (Program, Program, List[MemberRenamer.Refusal], DecisionLog) =
-    val p   = SpoonTir.fromSource(java)
-    val g   = OverrideGraph.build(p, baseUnits = baseUnits(p))
-    val log = new DecisionLog
+  private def run(
+    java:        String,
+    requests:    Program => List[MemberRenamer.Request],
+    onCollision: MemberRenamer.OnCollision = MemberRenamer.OnCollision.Refuse,
+    baseUnits:   Program => Set[SymId] = _ => Set.empty
+  ): (Program, Program, List[MemberRenamer.Refusal], DecisionLog) =
+    val p               = SpoonTir.fromSource(java)
+    val g               = OverrideGraph.build(p, baseUnits = baseUnits(p))
+    val log             = new DecisionLog
     val (out, refusals) = MemberRenamer.rename(p, g, requests(p), onCollision, log)
     (p, out.rebuilt(xref = Xref.build(out.units)), refusals, log)
 
@@ -49,8 +50,7 @@ class MemberRenamerSpec extends munit.FunSuite:
     """
 
   test("a rename moves the WHOLE component and every reference with it, in one table rewrite") {
-    val (p, out, refusals, log) = run(musicSrc,
-      pr => List(MemberRenamer.Request(sym(pr, "Music#setLooping"), "looping_=", cfg("Music#looping"), "Music#looping")))
+    val (p, out, refusals, log) = run(musicSrc, pr => List(MemberRenamer.Request(sym(pr, "Music#setLooping"), "looping_=", cfg("Music#looping"), "Music#looping")))
     assertEquals(refusals, Nil)
     // every declaration of the component
     assertEquals(out.symbolOf(sym(p, "Music#setLooping")).get.name, "looping_=")
@@ -67,8 +67,7 @@ class MemberRenamerSpec extends munit.FunSuite:
   }
 
   test("`fullName` follows the rename, cut at the `#` separator (§4.56)") {
-    val (p, out, _, _) = run(musicSrc,
-      pr => List(MemberRenamer.Request(sym(pr, "Music#setLooping"), "looping_=", cfg("k"), "k")))
+    val (p, out, _, _) = run(musicSrc, pr => List(MemberRenamer.Request(sym(pr, "Music#setLooping"), "looping_=", cfg("k"), "k")))
     assertEquals(out.symbolOf(sym(p, "Music#setLooping")).get.fullName, "Music#looping_=")
     assertEquals(out.symbolOf(sym(p, "NoopMusic#setLooping")).get.fullName, "NoopMusic#looping_=")
   }
@@ -81,7 +80,8 @@ class MemberRenamerSpec extends munit.FunSuite:
         public int compare(String a, String b) { return 0; }
       }
       """,
-      pr => List(MemberRenamer.Request(sym(pr, "ByName#compare"), "cmp", cfg("ByName#compare"), "ByName#compare")))
+      pr => List(MemberRenamer.Request(sym(pr, "ByName#compare"), "cmp", cfg("ByName#compare"), "ByName#compare"))
+    )
     assertEquals(refusals.size, 1)
     assert(clue(refusals.head.why).contains("java.util.Comparator"))
     assertEquals(refusals.head.anchors.map(_._1), Set("java.util.Comparator"))
@@ -96,12 +96,14 @@ class MemberRenamerSpec extends munit.FunSuite:
       class Widget { public int getWidth() { return 1; } }
       class Sorted implements Comparator<String> { public int compare(String a, String b) { return 0; } }
       """,
-      pr => List(
-        // `Widget#getWidth` is renameable on its own; `Sorted#compare` is anchored, and the first
-        // must go down with it because they share a group.
-        MemberRenamer.Request(sym(pr, "Widget#getWidth"), "width", cfg("k"), "one-property"),
-        MemberRenamer.Request(sym(pr, "Sorted#compare"), "cmp", cfg("k"), "one-property"),
-      ))
+      pr =>
+        List(
+          // `Widget#getWidth` is renameable on its own; `Sorted#compare` is anchored, and the first
+          // must go down with it because they share a group.
+          MemberRenamer.Request(sym(pr, "Widget#getWidth"), "width", cfg("k"), "one-property"),
+          MemberRenamer.Request(sym(pr, "Sorted#compare"), "cmp", cfg("k"), "one-property")
+        )
+    )
     assertEquals(refusals.size, 2)
     assert(clue(refusals.map(_.why)).exists(_.contains("another request in group")))
     assertEquals(out.symbolOf(sym(p, "Widget#getWidth")).get.name, "getWidth", "nothing may be half-applied")
@@ -116,7 +118,8 @@ class MemberRenamerSpec extends munit.FunSuite:
       class Base { String tag() { return "t"; } }
       class Sub extends Base { String label() { return "l"; } }
       """,
-      pr => List(MemberRenamer.Request(sym(pr, "Base#tag"), "label", cfg("Base#tag"), "Base#tag")))
+      pr => List(MemberRenamer.Request(sym(pr, "Base#tag"), "label", cfg("Base#tag"), "Base#tag"))
+    )
     assertEquals(refusals.size, 1)
     assert(clue(refusals.head.why).contains("Sub#label"))
     assertEquals(out.symbolOf(sym(p, "Base#tag")).get.name, "tag")
@@ -126,7 +129,8 @@ class MemberRenamerSpec extends munit.FunSuite:
     val (_, _, refusals, _) = run(
       """class Thing { private int width; public int getWidth() { return width; } }""",
       pr => List(MemberRenamer.Request(sym(pr, "Thing#getWidth"), "width", cfg("k"), "k")),
-      MemberRenamer.OnCollision.Refuse)
+      MemberRenamer.OnCollision.Refuse
+    )
     assertEquals(refusals.size, 1)
     assert(clue(refusals.head.why).contains("Thing#width"))
   }
@@ -135,7 +139,8 @@ class MemberRenamerSpec extends munit.FunSuite:
     val (p, out, refusals, _) = run(
       """class Thing { private int width; public int getWidth() { return width; } }""",
       pr => List(MemberRenamer.Request(sym(pr, "Thing#getWidth"), "width", cfg("k"), "k")),
-      MemberRenamer.OnCollision.DeferToEmitter)
+      MemberRenamer.OnCollision.DeferToEmitter
+    )
     assertEquals(refusals, Nil)
     assertEquals(out.symbolOf(sym(p, "Thing#getWidth")).get.name, "width")
     // …and the emitter's own §4.55 pass does exactly what was deferred to it.
@@ -148,7 +153,8 @@ class MemberRenamerSpec extends munit.FunSuite:
     val (_, _, refusals, _) = run(
       """class Thing { public int width() { return 1; } public int getWidth() { return 2; } }""",
       pr => List(MemberRenamer.Request(sym(pr, "Thing#getWidth"), "width", cfg("k"), "k")),
-      MemberRenamer.OnCollision.DeferToEmitter)
+      MemberRenamer.OnCollision.DeferToEmitter
+    )
     assertEquals(refusals.size, 1)
     assert(clue(refusals.head.why).contains("not a member the emitter"))
   }
@@ -157,7 +163,8 @@ class MemberRenamerSpec extends munit.FunSuite:
     val (_, _, refusals, _) = run(
       """class Thing { static int width = 1; public int getWidth() { return 2; } }""",
       pr => List(MemberRenamer.Request(sym(pr, "Thing#getWidth"), "width", cfg("k"), "k")),
-      MemberRenamer.OnCollision.DeferToEmitter)
+      MemberRenamer.OnCollision.DeferToEmitter
+    )
     assertEquals(refusals.size, 1)
   }
 
@@ -165,7 +172,8 @@ class MemberRenamerSpec extends munit.FunSuite:
     val (p, out, refusals, _) = run(
       """class Thing { public int width() { return 1; } public int getWidth() { return 2; } }""",
       pr => List(MemberRenamer.Request(sym(pr, "Thing#getWidth"), "width", cfg("k"), "k")),
-      MemberRenamer.OnCollision.SuffixUntilFree)
+      MemberRenamer.OnCollision.SuffixUntilFree
+    )
     assertEquals(refusals, Nil)
     assertEquals(out.symbolOf(sym(p, "Thing#getWidth")).get.name, "width$")
   }
@@ -176,10 +184,12 @@ class MemberRenamerSpec extends munit.FunSuite:
       interface I { void m(); }
       class C implements I { public void m() {} }
       """,
-      pr => List(
-        MemberRenamer.Request(sym(pr, "I#m"), "a", cfg("k1"), "g1"),
-        MemberRenamer.Request(sym(pr, "C#m"), "b", cfg("k2"), "g2"),
-      ))
+      pr =>
+        List(
+          MemberRenamer.Request(sym(pr, "I#m"), "a", cfg("k1"), "g1"),
+          MemberRenamer.Request(sym(pr, "C#m"), "b", cfg("k2"), "g2")
+        )
+    )
     assertEquals(refusals.size, 2)
     assert(refusals.exists(_.why.contains("a symbol has one name")))
     assertEquals(out.symbolOf(sym(p, "I#m")).get.name, "m")
@@ -191,10 +201,12 @@ class MemberRenamerSpec extends munit.FunSuite:
       interface I { void m(); }
       class C implements I { public void m() {} }
       """,
-      pr => List(
-        MemberRenamer.Request(sym(pr, "I#m"), "go", cfg("k1"), "g1"),
-        MemberRenamer.Request(sym(pr, "C#m"), "go", cfg("k2"), "g2"),
-      ))
+      pr =>
+        List(
+          MemberRenamer.Request(sym(pr, "I#m"), "go", cfg("k1"), "g1"),
+          MemberRenamer.Request(sym(pr, "C#m"), "go", cfg("k2"), "g2")
+        )
+    )
     assertEquals(refusals, Nil)
     assertEquals(out.symbolOf(sym(p, "I#m")).get.name, "go")
     assertEquals(out.symbolOf(sym(p, "C#m")).get.name, "go")
@@ -212,13 +224,15 @@ class MemberRenamerSpec extends munit.FunSuite:
       class C implements I { public void m() {} public void go() {} }
       class Anchored implements Comparator<String> { public int compare(String a, String b) { return 0; } }
       """,
-      pr => List(
-        MemberRenamer.Request(sym(pr, "I#m"), "go", cfg("k1"), "k1", "survivor"),
-        MemberRenamer.Request(sym(pr, "C#m"), "go", cfg("k2"), "k2", "doomed"),
-        // …and this is what takes group `doomed` down: an anchored component, refused whole.
-        MemberRenamer.Request(sym(pr, "Anchored#compare"), "cmp", cfg("k3"), "k3", "doomed"),
-      ),
-      MemberRenamer.OnCollision.SuffixUntilFree)
+      pr =>
+        List(
+          MemberRenamer.Request(sym(pr, "I#m"), "go", cfg("k1"), "k1", "survivor"),
+          MemberRenamer.Request(sym(pr, "C#m"), "go", cfg("k2"), "k2", "doomed"),
+          // …and this is what takes group `doomed` down: an anchored component, refused whole.
+          MemberRenamer.Request(sym(pr, "Anchored#compare"), "cmp", cfg("k3"), "k3", "doomed")
+        ),
+      MemberRenamer.OnCollision.SuffixUntilFree
+    )
     assertEquals(refusals.map(_.request.key).toSet, Set("k2", "k3"))
     // the survivor keeps the answer the suffix search gave it, for EVERY declaration of its
     // component — one name, or the component is split across two
@@ -233,18 +247,23 @@ class MemberRenamerSpec extends munit.FunSuite:
       """class Thing { void go(String s) { s.length(); } }""",
       // found STRUCTURALLY: an interned external is a symbol with no unit above it (§4.56), which is
       // the same test `Program.owned` makes — never by spelling its name.
-      pr => List(MemberRenamer.Request(
-        pr.symbols.all.find(s => !pr.owns(s.id) && s.name == "length").map(_.id)
-          .getOrElse(fail("the frontend interned no external `length`")),
-        "len", cfg("k"), "k")))
+      pr =>
+        List(
+          MemberRenamer.Request(
+            pr.symbols.all.find(s => !pr.owns(s.id) && s.name == "length").map(_.id).getOrElse(fail("the frontend interned no external `length`")),
+            "len",
+            cfg("k"),
+            "k"
+          )
+        )
+    )
     assertEquals(refusals.size, 1)
     assert(clue(refusals.head.why).contains("REFERENCES and does not DECLARE"))
   }
 
   test("an empty request list is a no-op that returns the SAME program") {
-    val p = SpoonTir.fromSource("""class Thing { int x; }""")
-    val (out, refusals) = MemberRenamer.rename(p, OverrideGraph.build(p), Nil,
-      MemberRenamer.OnCollision.Refuse, new DecisionLog)
+    val p               = SpoonTir.fromSource("""class Thing { int x; }""")
+    val (out, refusals) = MemberRenamer.rename(p, OverrideGraph.build(p), Nil, MemberRenamer.OnCollision.Refuse, new DecisionLog)
     assert(out eq p)
     assertEquals(refusals, Nil)
   }
@@ -255,22 +274,24 @@ class MemberRenamerSpec extends munit.FunSuite:
       interface Layer { int getDepth(); }
       class MyLayer implements Layer { public int getDepth() { return 1; } }
       """
-    val p    = SpoonTir.fromSource(src)
-    val base = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "Layer")).get.symbol
-    val g    = OverrideGraph.build(p, baseUnits = Set(base))
-    val (out, refusals) = MemberRenamer.rename(p, g,
+    val p               = SpoonTir.fromSource(src)
+    val base            = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "Layer")).get.symbol
+    val g               = OverrideGraph.build(p, baseUnits = Set(base))
+    val (out, refusals) = MemberRenamer.rename(
+      p,
+      g,
       List(MemberRenamer.Request(sym(p, "MyLayer#getDepth"), "depth", cfg("k"), "k")),
-      MemberRenamer.OnCollision.Refuse, new DecisionLog)
+      MemberRenamer.OnCollision.Refuse,
+      new DecisionLog
+    )
     assertEquals(refusals.size, 1)
     assert(clue(refusals.head.why).contains("resolution root"))
     assertEquals(out.symbolOf(sym(p, "MyLayer#getDepth")).get.name, "getDepth")
   }
 
   test("renaming reaches an ANONYMOUS body's implementation — the 156-site blind spot") {
-    val (p, out, _, log) = run(musicSrc,
-      pr => List(MemberRenamer.Request(sym(pr, "Music#isLooping"), "looping", cfg("k"), "k")))
-    val text = emitted(out)
-    assertEquals(text.linesIterator.count(_.contains("isLooping")), 0,
-      s"an anonymous-class implementation kept the old name:\n$text")
+    val (p, out, _, log) = run(musicSrc, pr => List(MemberRenamer.Request(sym(pr, "Music#isLooping"), "looping", cfg("k"), "k")))
+    val text             = emitted(out)
+    assertEquals(text.linesIterator.count(_.contains("isLooping")), 0, s"an anonymous-class implementation kept the old name:\n$text")
     assertEquals(log.of(Decision.Kind.RenamedMember).size, 3)
   }

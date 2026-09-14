@@ -1,35 +1,29 @@
 package balticporter.corpus.terser
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue}
+import balticporter.frontend.ts.{ RastFile, RastNode, RastType, RastValue }
 import scala.collection.mutable
 
 /** Dedicated RAST-to-Scala emitter for Terser.
   *
   * Handles three categories of Terser source files:
   *
-  *  1. DEFNODE hierarchy extraction (ast.js) -- recognizes the
-  *     `DEFNODE(type, props, ctor, methods, base)` call pattern and produces a
-  *     hierarchy summary (class name, fields, parent, methods list). The actual
-  *     Scala class emission uses the hand-ported ssg-js AST types as reference.
+  *   1. DEFNODE hierarchy extraction (ast.js) -- recognizes the `DEFNODE(type, props, ctor, methods, base)` call pattern and produces a hierarchy summary (class name, fields, parent, methods list).
+  *      The actual Scala class emission uses the hand-ported ssg-js AST types as reference.
+  *   2. Pure utility files (compressor-flags.js, utils/first_in_statement.js, utils/index.js) -- constants, pure functions, data tables.
+  *   3. Non-DEFNODE module files (native-objects.js, equivalent-to.js) -- functions that reference the AST hierarchy without modifying it.
   *
-  *  2. Pure utility files (compressor-flags.js, utils/first_in_statement.js,
-  *     utils/index.js) -- constants, pure functions, data tables.
-  *
-  *  3. Non-DEFNODE module files (native-objects.js, equivalent-to.js) --
-  *     functions that reference the AST hierarchy without modifying it.
-  *
-  * Files that use DEFMETHOD (scope.js, output.js, compress/index.js) extend
-  * DEFNODE classes with additional methods. These require the full AST hierarchy
-  * to be in place first and are not addressed here. */
+  * Files that use DEFMETHOD (scope.js, output.js, compress/index.js) extend DEFNODE classes with additional methods. These require the full AST hierarchy to be in place first and are not addressed
+  * here.
+  */
 object TerserEmitter:
 
   // --------------------------------------------------------------------------
   // DEFNODE hierarchy extraction
   // --------------------------------------------------------------------------
 
-  export _root_.balticporter.frontend.ts.dedicated.{DefnodeClass, DefmethodEntry, FreeFunction}
+  export _root_.balticporter.frontend.ts.dedicated.{ DefmethodEntry, DefnodeClass, FreeFunction }
 
   /** Extract the DEFNODE class hierarchy from a Terser ast.js RAST file. */
   def extractHierarchy(file: RastFile): List[DefnodeClass] =
@@ -41,33 +35,31 @@ object TerserEmitter:
         case None      => ()
 
     // Mark abstract classes (those that have subclasses)
-    val names = classes.map(_.varName).toSet
+    val names   = classes.map(_.varName).toSet
     val parents = classes.flatMap(_.base).toSet
-    for cls <- classes do
-      cls.isAbstract = parents.contains(cls.varName)
+    for cls <- classes do cls.isAbstract = parents.contains(cls.varName)
 
     classes.toList
 
   /** Produce a human-readable hierarchy summary from extracted DEFNODE classes. */
   def hierarchySummary(classes: List[DefnodeClass]): String =
-    val sb = new StringBuilder
-    val byName = classes.map(c => c.varName -> c).toMap
+    val sb       = new StringBuilder
+    val byName   = classes.map(c => c.varName -> c).toMap
     val children = mutable.Map.empty[String, mutable.ListBuffer[String]]
     for cls <- classes do
       val parent = cls.base.getOrElse("(root)")
       children.getOrElseUpdate(parent, mutable.ListBuffer.empty) += cls.varName
 
     def printTree(name: String, indent: Int): Unit =
-      val cls = byName.get(name)
-      val prefix = "  " * indent
-      val kind = if cls.exists(_.isAbstract) then "trait" else "class"
-      val props = cls.map(_.selfProps).getOrElse(Nil)
-      val propsStr = if props.isEmpty then "" else s" (${props.mkString(", ")})"
-      val methods = cls.map(_.methods).getOrElse(Nil)
+      val cls       = byName.get(name)
+      val prefix    = "  " * indent
+      val kind      = if cls.exists(_.isAbstract) then "trait" else "class"
+      val props     = cls.map(_.selfProps).getOrElse(Nil)
+      val propsStr  = if props.isEmpty then "" else s" (${props.mkString(", ")})"
+      val methods   = cls.map(_.methods).getOrElse(Nil)
       val methodStr = if methods.isEmpty then "" else s" [${methods.size} methods]"
       sb.append(s"$prefix$kind $name$propsStr$methodStr\n")
-      for kids <- children.get(name); kid <- kids do
-        printTree(kid, indent + 1)
+      for kids <- children.get(name); kid <- kids do printTree(kid, indent + 1)
 
     // Find roots (classes whose base is not in our set or is themselves)
     val roots = classes.filter(c => c.base.isEmpty || c.base.contains(c.varName))
@@ -90,10 +82,12 @@ object TerserEmitter:
     for node <- file.nodes do
       node.kind match
         case "VariableStatement" =>
-          for vdl <- node.children.find(_.kind == "VariableDeclarationList")
-              vd <- vdl.children.filter(_.kind == "VariableDeclaration") do
-            val name = nameOf(vd)
-            val isConst = vd.flags.contains("const")
+          for
+            vdl <- node.children.find(_.kind == "VariableDeclarationList")
+            vd <- vdl.children.filter(_.kind == "VariableDeclaration")
+          do
+            val name       = nameOf(vd)
+            val isConst    = vd.flags.contains("const")
             val isExported = node.flags.contains("ExportKeyword")
             // Check if this is a value (number/binary) or an arrow function
             val rhs = vd.children.drop(1) // skip the identifier
@@ -101,16 +95,20 @@ object TerserEmitter:
               case Some(lit) if lit.kind == "NumericLiteral" =>
                 val value = lit.value match
                   case Some(RastValue.Num(n)) => formatInt(n)
-                  case _ => lit.children.headOption.flatMap(_.value).map {
-                    case RastValue.Num(n) => formatInt(n)
-                    case v => v.toString
-                  }.getOrElse("0")
+                  case _                      =>
+                    lit.children.headOption
+                      .flatMap(_.value)
+                      .map {
+                        case RastValue.Num(n) => formatInt(n)
+                        case v                => v.toString
+                      }
+                      .getOrElse("0")
                 val scalaName = camelToScreamingSnake(name)
                 sb.append(s"  val $scalaName: Int = $value\n\n")
               case Some(bin) if bin.kind == "BinaryExpression" =>
                 // CLEAR_BETWEEN_PASSES = SQUEEZED | OPTIMIZED | TOP
                 val scalaName = camelToScreamingSnake(name)
-                val expr = emitBinaryExpr(bin, file)
+                val expr      = emitBinaryExpr(bin, file)
                 sb.append(s"  val $scalaName: Int = $expr\n\n")
               case Some(arrow) if arrow.kind == "ArrowFunction" =>
                 // Arrow functions: has_flag, set_flag, clear_flag
@@ -249,23 +247,21 @@ object TerserEmitter:
   def extractDefmethods(file: RastFile): List[DefmethodEntry] =
     val result = mutable.ListBuffer.empty[DefmethodEntry]
 
-    for node <- file.nodes do
-      extractDefmethodFromStatement(node).foreach(result += _)
+    for node <- file.nodes do extractDefmethodFromStatement(node).foreach(result += _)
 
     result.toList
 
   /** Group DEFMETHOD entries by their target class name.
     *
-    * Returns a map from class name (e.g. "AST_Scope") to the list of
-    * methods that should be added to that class.
+    * Returns a map from class name (e.g. "AST_Scope") to the list of methods that should be added to that class.
     */
   def groupByClass(entries: List[DefmethodEntry]): Map[String, List[DefmethodEntry]] =
     entries.groupBy(_.className)
 
   /** Produce a summary of DEFMETHOD entries for diagnostics. */
   def defmethodSummary(entries: List[DefmethodEntry]): String =
-    val sb = new StringBuilder
-    val grouped = groupByClass(entries)
+    val sb            = new StringBuilder
+    val grouped       = groupByClass(entries)
     val sortedClasses = grouped.keys.toList.sorted
 
     sb.append(s"DEFMETHOD summary: ${entries.size} methods across ${grouped.size} classes\n")
@@ -283,16 +279,13 @@ object TerserEmitter:
 
   /** Merge DEFMETHOD entries into a hierarchy of DEFNODE classes.
     *
-    * Takes the DEFNODE hierarchy from ast.js and the DEFMETHOD entries
-    * from scope.js/output.js/etc, and produces the merged class list
-    * with all methods included.
+    * Takes the DEFNODE hierarchy from ast.js and the DEFMETHOD entries from scope.js/output.js/etc, and produces the merged class list with all methods included.
     *
-    * Returns a list of (DefnodeClass, List[DefmethodEntry]) where each
-    * class has its DEFNODE methods plus any DEFMETHODs found in the source.
+    * Returns a list of (DefnodeClass, List[DefmethodEntry]) where each class has its DEFNODE methods plus any DEFMETHODs found in the source.
     */
   def mergeDefmethods(
-      hierarchy: List[DefnodeClass],
-      defmethods: List[DefmethodEntry]
+    hierarchy:  List[DefnodeClass],
+    defmethods: List[DefmethodEntry]
   ): List[(DefnodeClass, List[DefmethodEntry])] =
     val grouped = groupByClass(defmethods)
 
@@ -309,14 +302,14 @@ object TerserEmitter:
     *   - function params -> Scala types
     */
   def emitMergedClass(
-      cls: DefnodeClass,
-      defmethods: List[DefmethodEntry],
-      pkg: String = "ssg.js"
+    cls:        DefnodeClass,
+    defmethods: List[DefmethodEntry],
+    pkg:        String = "ssg.js"
   ): String =
-    val sb = new StringBuilder
+    val sb        = new StringBuilder
     val scalaName = astVarToScalaName(cls.varName)
     val baseScala = cls.base.map(astVarToScalaName)
-    val kind = if cls.isAbstract then "trait" else "class"
+    val kind      = if cls.isAbstract then "trait" else "class"
 
     sb.append(s"// $scalaName — merged from DEFNODE + ${defmethods.size} DEFMETHOD(s)\n")
 
@@ -330,8 +323,7 @@ object TerserEmitter:
       sb.append(s"$kind $scalaName(\n")
       sb.append(propDecls.map("  " + _).mkString(",\n"))
       sb.append(s"\n)$extendsClause {\n")
-    else
-      sb.append(s"$kind $scalaName$extendsClause {\n")
+    else sb.append(s"$kind $scalaName$extendsClause {\n")
 
     // DEFNODE methods (inline from ast.js)
     if cls.methods.nonEmpty then
@@ -344,7 +336,7 @@ object TerserEmitter:
     if defmethods.nonEmpty then
       sb.append(s"\n  // --- DEFMETHOD additions ---\n")
       for dm <- defmethods do
-        val camel = snakeToCamel(dm.methodName)
+        val camel    = snakeToCamel(dm.methodName)
         val paramStr = if dm.params.isEmpty then ""
         else
           val decls = dm.params.map(p => s"${snakeToCamel(p)}: Any")
@@ -358,10 +350,13 @@ object TerserEmitter:
 
   /** Convert AST_VarName to Scala PascalCase (e.g. AST_Scope -> AstScope). */
   private def astVarToScalaName(varName: String): String =
-    varName.split("_").map { part =>
-      if part == "AST" then "Ast"
-      else part.head.toUpper + part.tail.toLowerCase
-    }.mkString
+    varName
+      .split("_")
+      .map { part =>
+        if part == "AST" then "Ast"
+        else part.head.toUpper + part.tail.toLowerCase
+      }
+      .mkString
 
   // --------------------------------------------------------------------------
   // Free function extraction
@@ -369,9 +364,7 @@ object TerserEmitter:
 
   /** Extract standalone function declarations from a file.
     *
-    * Files like scope.js contain both DEFMETHOD calls and standalone functions
-    * (e.g. `function redefined_catch_def`, `function next_mangled`). These
-    * need to be emitted as companion utility functions.
+    * Files like scope.js contain both DEFMETHOD calls and standalone functions (e.g. `function redefined_catch_def`, `function next_mangled`). These need to be emitted as companion utility functions.
     */
   def extractFreeFunctions(file: RastFile): List[FreeFunction] =
     val result = mutable.ListBuffer.empty[FreeFunction]
@@ -383,17 +376,18 @@ object TerserEmitter:
           val params = node.children.filter(_.kind == "Parameter").map { p =>
             p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
           }
-          val body = node.children.find(_.kind == "Block").getOrElse(
-            RastNode("Block", 0, (0, 0))
-          )
+          val body = node.children
+            .find(_.kind == "Block")
+            .getOrElse(
+              RastNode("Block", 0, (0, 0))
+            )
           result += FreeFunction(name, params, body)
 
     result.toList
 
   /** Extract class declarations from a file.
     *
-    * Files like scope.js may contain ES6 class declarations (e.g. SymbolDef)
-    * alongside DEFMETHOD calls.
+    * Files like scope.js may contain ES6 class declarations (e.g. SymbolDef) alongside DEFMETHOD calls.
     */
   def extractClassDeclarations(file: RastFile): List[String] =
     file.nodes.collect {
@@ -409,8 +403,7 @@ object TerserEmitter:
     *
     * Handles two forms:
     *   1. `AST_X.DEFMETHOD("name", function(...) { body })` — explicit function
-    *   2. `AST_X.DEFMETHOD("name", return_false)` — identifier reference to a
-    *      utility function (return_false, return_true, return_this)
+    *   2. `AST_X.DEFMETHOD("name", return_false)` — identifier reference to a utility function (return_false, return_true, return_this)
     */
   private def extractDefmethodFromStatement(node: RastNode): Option[DefmethodEntry] =
     if node.kind != "ExpressionStatement" then return None
@@ -420,28 +413,32 @@ object TerserEmitter:
       callee match
         case Some(pa) if pa.kind == "PropertyAccessExpression" =>
           val className = pa.children.headOption.flatMap(_.text).getOrElse("")
-          val methodId = pa.children.lastOption.flatMap(_.text).getOrElse("")
+          val methodId  = pa.children.lastOption.flatMap(_.text).getOrElse("")
           if methodId != "DEFMETHOD" || className.isEmpty then return None
 
-          val args = c.children.tail
-          val methodName = args.headOption.flatMap(_.value).collect {
-            case RastValue.Str(s) => s
-          }.getOrElse("?")
+          val args       = c.children.tail
+          val methodName = args.headOption
+            .flatMap(_.value)
+            .collect { case RastValue.Str(s) =>
+              s
+            }
+            .getOrElse("?")
 
           // The function body can be:
           // 1. A FunctionExpression or ArrowFunction with params and block
           // 2. An Identifier reference (return_false, return_true, return_this)
-          val funcExpr = args.find(_.kind == "FunctionExpression")
-            .orElse(args.find(_.kind == "ArrowFunction"))
+          val funcExpr = args.find(_.kind == "FunctionExpression").orElse(args.find(_.kind == "ArrowFunction"))
 
           funcExpr match
             case Some(fn) =>
               val params = fn.children.filter(_.kind == "Parameter").map { p =>
                 p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
               }
-              val body = fn.children.find(_.kind == "Block").getOrElse(
-                RastNode("Block", 0, (0, 0))
-              )
+              val body = fn.children
+                .find(_.kind == "Block")
+                .getOrElse(
+                  RastNode("Block", 0, (0, 0))
+                )
               Some(DefmethodEntry(className, methodName, params, body))
 
             case None =>
@@ -450,11 +447,20 @@ object TerserEmitter:
               identRef.map { id =>
                 val refName = id.text.getOrElse("")
                 // Synthesize a body node that captures the reference
-                val syntheticBody = RastNode("Block", 0, (0, 0), children = List(
-                  RastNode("ReturnStatement", 0, (0, 0), children = List(
-                    RastNode("Identifier", 0, (0, 0), text = Some(refName))
-                  ))
-                ))
+                val syntheticBody = RastNode(
+                  "Block",
+                  0,
+                  (0, 0),
+                  children = List(
+                    RastNode("ReturnStatement",
+                             0,
+                             (0, 0),
+                             children = List(
+                               RastNode("Identifier", 0, (0, 0), text = Some(refName))
+                             )
+                    )
+                  )
+                )
                 DefmethodEntry(className, methodName, Nil, syntheticBody)
               }
         case _ => None
@@ -469,25 +475,31 @@ object TerserEmitter:
         if children.size < 2 then None
         else
           val ident = children.head
-          val rhs = children(1)
+          val rhs   = children(1)
           if rhs.kind != "CallExpression" then None
           else
             val callChildren = rhs.children
             if callChildren.isEmpty || callChildren.head.text.getOrElse("") != "DEFNODE" then None
             else
               val varName = ident.text.getOrElse("?")
-              val args = callChildren.tail // skip DEFNODE identifier
+              val args    = callChildren.tail // skip DEFNODE identifier
 
-              val typeName = args.headOption.flatMap(_.value).collect {
-                case RastValue.Str(s) => s
-              }.getOrElse("?")
+              val typeName = args.headOption
+                .flatMap(_.value)
+                .collect { case RastValue.Str(s) =>
+                  s
+                }
+                .getOrElse("?")
 
-              val selfProps = args.lift(1).flatMap(_.value).collect {
-                case RastValue.Str(s) => s.split("\\s+").toList.filter(_.nonEmpty)
-              }.getOrElse(Nil)
+              val selfProps = args
+                .lift(1)
+                .flatMap(_.value)
+                .collect { case RastValue.Str(s) =>
+                  s.split("\\s+").toList.filter(_.nonEmpty)
+                }
+                .getOrElse(Nil)
 
-              val base = if args.size >= 5 then
-                args(4).text
+              val base = if args.size >= 5 then args(4).text
               else if varName == "AST_Node" then None // self-referential
               else Some("AST_Node")
 
@@ -496,8 +508,8 @@ object TerserEmitter:
                 if methodArg.kind == "ObjectLiteralExpression" then
                   methodArg.children.flatMap { prop =>
                     if prop.kind == "PropertyAssignment" || prop.kind == "MethodDeclaration" ||
-                       prop.kind == "ShorthandPropertyAssignment" then
-                      prop.children.headOption.flatMap(_.text)
+                      prop.kind == "ShorthandPropertyAssignment"
+                    then prop.children.headOption.flatMap(_.text)
                     else None
                   }
                 else Nil
@@ -512,7 +524,7 @@ object TerserEmitter:
 
   private def formatInt(d: Double): String =
     val n = d.toLong
-    if n >= 0 && n <= 0xFFFF then s"0x${n.toHexString.toUpperCase}"
+    if n >= 0 && n <= 0xffff then s"0x${n.toHexString.toUpperCase}"
     else n.toString
 
   private def camelToScreamingSnake(s: String): String =
@@ -536,27 +548,30 @@ object TerserEmitter:
       case Some(op) =>
         val children = node.children
         if children.size >= 2 then
-          val left = emitSimpleExpr(children(0), file)
-          val right = emitSimpleExpr(children(1), file)
+          val left    = emitSimpleExpr(children(0), file)
+          val right   = emitSimpleExpr(children(1), file)
           val scalaOp = op match
-            case "BarToken" => "|"
+            case "BarToken"       => "|"
             case "AmpersandToken" => "&"
-            case "CaretToken" => "^"
-            case "TildeToken" => "~"
-            case other => other
+            case "CaretToken"     => "^"
+            case "TildeToken"     => "~"
+            case other            => other
           s"$left $scalaOp $right"
         else "???"
       case None => "???"
 
   private def emitSimpleExpr(node: RastNode, file: RastFile): String =
     node.kind match
-      case "Identifier" => camelToScreamingSnake(node.text.getOrElse("?"))
-      case "NumericLiteral" => node.value.map {
-        case RastValue.Num(n) => formatInt(n)
-        case v => v.toString
-      }.getOrElse("0")
+      case "Identifier"     => camelToScreamingSnake(node.text.getOrElse("?"))
+      case "NumericLiteral" =>
+        node.value
+          .map {
+            case RastValue.Num(n) => formatInt(n)
+            case v                => v.toString
+          }
+          .getOrElse("0")
       case "BinaryExpression" => emitBinaryExpr(node, file)
-      case _ => "???"
+      case _                  => "???"
 
   // --------------------------------------------------------------------------
   // SymbolDef class emission (scope.js ES6 class)
@@ -564,9 +579,7 @@ object TerserEmitter:
 
   /** Emit SymbolDef.scala from the RAST of scope.js.
     *
-    * Reads the ClassDeclaration for SymbolDef from the RAST,
-    * extracts its constructor parameters, field assignments, and
-    * methods, then produces Scala matching the hand-ported
+    * Reads the ClassDeclaration for SymbolDef from the RAST, extracts its constructor parameters, field assignments, and methods, then produces Scala matching the hand-ported
     * ssg-js/scope/SymbolDef.scala.
     */
   def emitSymbolDef(file: RastFile): String =
@@ -575,36 +588,39 @@ object TerserEmitter:
     val cls = classDef.get
 
     // Extract constructor info
-    val ctor = cls.children.find(_.kind == "Constructor")
+    val ctor       = cls.children.find(_.kind == "Constructor")
     val ctorParams = ctor.toList.flatMap(_.children.filter(_.kind == "Parameter").map { p =>
       p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
     })
     val ctorBody = ctor.flatMap(_.children.find(_.kind == "Block"))
 
     // Extract field assignments from constructor body
-    val fields = ctorBody.toList.flatMap(_.children).collect {
-      case stmt if stmt.kind == "ExpressionStatement" =>
-        stmt.children.find(_.kind == "BinaryExpression").flatMap { bin =>
-          val lhs = bin.children.headOption
-          lhs.flatMap { l =>
-            if l.kind == "PropertyAccessExpression" then
-              val propName = l.children.lastOption.flatMap(_.text).getOrElse("")
-              val rhs = bin.children.lift(1)
-              val rhsKind = rhs.map(_.kind).getOrElse("")
-              val rhsValue = rhs.flatMap(_.value).map {
-                case RastValue.Num(n) => if n == n.toLong then n.toLong.toString else n.toString
-                case RastValue.Str(s) => s"\"$s\""
-                case v => v.toString
-              }
-              Some((propName, rhsKind, rhsValue))
-            else None
+    val fields = ctorBody.toList
+      .flatMap(_.children)
+      .collect {
+        case stmt if stmt.kind == "ExpressionStatement" =>
+          stmt.children.find(_.kind == "BinaryExpression").flatMap { bin =>
+            val lhs = bin.children.headOption
+            lhs.flatMap { l =>
+              if l.kind == "PropertyAccessExpression" then
+                val propName = l.children.lastOption.flatMap(_.text).getOrElse("")
+                val rhs      = bin.children.lift(1)
+                val rhsKind  = rhs.map(_.kind).getOrElse("")
+                val rhsValue = rhs.flatMap(_.value).map {
+                  case RastValue.Num(n) => if n == n.toLong then n.toLong.toString else n.toString
+                  case RastValue.Str(s) => s"\"$s\""
+                  case v                => v.toString
+                }
+                Some((propName, rhsKind, rhsValue))
+              else None
+            }
           }
-        }
-    }.flatten
+      }
+      .flatten
 
     // Extract methods
     val methods = cls.children.filter(_.kind == "MethodDeclaration").map { m =>
-      val name = m.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
+      val name   = m.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("?")
       val params = m.children.filter(_.kind == "Parameter").map { p =>
         p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
       }
@@ -626,7 +642,7 @@ object TerserEmitter:
     // Emit class header with constructor params
     val scalaCtorParams = ctorParams.map { p =>
       val camel = snakeToCamel(p)
-      val typ = p match
+      val typ   = p match
         case "scope" => "AstScope"
         case "orig"  => "AstSymbol"
         case "init"  => "AstNode | Null = null"
@@ -639,7 +655,7 @@ object TerserEmitter:
 
     // Emit fields from constructor body
     for (propName, rhsKind, rhsValue) <- fields do
-      val camel = snakeToCamel(propName)
+      val camel       = snakeToCamel(propName)
       val (typ, init) = propName match
         case "name"           => ("String", "origArg.name")
         case "orig"           => ("ArrayBuffer[AstSymbol]", "ArrayBuffer(origArg)")
@@ -661,14 +677,14 @@ object TerserEmitter:
         case "fixed"          => ("Any", "false")
         case "eliminated"     => ("Int", "0")
         case "should_replace" => ("Any | Null", "null")
-        case _ =>
+        case _                =>
           val defaultInit = rhsKind match
-            case "FalseKeyword"          => "false"
-            case "TrueKeyword"           => "true"
-            case "NullKeyword"           => "null"
-            case "NumericLiteral"        => rhsValue.getOrElse("0")
+            case "FalseKeyword"           => "false"
+            case "TrueKeyword"            => "true"
+            case "NullKeyword"            => "null"
+            case "NumericLiteral"         => rhsValue.getOrElse("0")
             case "ArrayLiteralExpression" => "ArrayBuffer.empty"
-            case _                       => "null"
+            case _                        => "null"
           ("Any", defaultInit)
 
       // Rename export -> exportFlag (scala keyword)
@@ -764,9 +780,8 @@ object TerserEmitter:
 
   /** Emit NativeObjects.scala — static lookup tables for pure native JS methods/fns/values.
     *
-    * The upstream TS uses `make_nested_lookup` to build predicate functions from object literals.
-    * The hand-port converts these to `Map[String, Set[String]]` with helper methods.
-    * Since this is pure data, we emit it template-style rather than parsing the RAST.
+    * The upstream TS uses `make_nested_lookup` to build predicate functions from object literals. The hand-port converts these to `Map[String, Set[String]]` with helper methods. Since this is pure
+    * data, we emit it template-style rather than parsing the RAST.
     */
   def emitNativeObjects(file: RastFile): String =
     val sb = new StringBuilder
@@ -1098,7 +1113,9 @@ object TerserEmitter:
     sb.append("/** Reads an inline source map embedded as a trailing data-URI comment. */\n")
     sb.append("object InlineSourceMap {\n\n")
     sb.append("  private val InlineMapRegex: Regex =\n")
-    sb.append("    new Regex(\"\"\"(?:^|[^.])//# sourceMappingURL=data:application/json(;[\\w=-]*)?;base64,([+/0-9A-Za-z]*=*)\\s*$\"\"\")\n\n")
+    sb.append(
+      "    new Regex(\"\"\"(?:^|[^.])//# sourceMappingURL=data:application/json(;[\\w=-]*)?;base64,([+/0-9A-Za-z]*=*)\\s*$\"\"\")\n\n"
+    )
     sb.append("  def readSourceMap(code: String): String | Null =\n")
     sb.append("    InlineMapRegex.findFirstMatchIn(code) match {\n")
     sb.append("      case Some(m) => Base64.decode(m.group(2))\n")
@@ -1317,9 +1334,20 @@ object TerserEmitter:
 
   /** DEFNODE names already emitted by emitAstConstants. */
   private val constantClassNames: Set[String] = Set(
-    "AST_Constant", "AST_String", "AST_Number", "AST_BigInt", "AST_RegExp",
-    "AST_Atom", "AST_Null", "AST_NaN", "AST_Undefined", "AST_Infinity",
-    "AST_Hole", "AST_Boolean", "AST_True", "AST_False"
+    "AST_Constant",
+    "AST_String",
+    "AST_Number",
+    "AST_BigInt",
+    "AST_RegExp",
+    "AST_Atom",
+    "AST_Null",
+    "AST_NaN",
+    "AST_Undefined",
+    "AST_Infinity",
+    "AST_Hole",
+    "AST_Boolean",
+    "AST_True",
+    "AST_False"
   )
 
   /** DEFNODE names to skip in hierarchy emission (root, token, constants). */
@@ -1333,22 +1361,24 @@ object TerserEmitter:
 
   /** Check whether cls descends from ancestorName in the DEFNODE hierarchy. */
   private def isDescendantOf(
-      cls: DefnodeClass,
-      ancestorName: String,
-      byName: Map[String, DefnodeClass]
+    cls:          DefnodeClass,
+    ancestorName: String,
+    byName:       Map[String, DefnodeClass]
   ): Boolean =
     if cls.varName == ancestorName then true
-    else cls.base match
-      case Some(parent) =>
-        byName.get(parent).exists(p => isDescendantOf(p, ancestorName, byName))
-      case None => false
+    else
+      cls.base match
+        case Some(parent) =>
+          byName.get(parent).exists(p => isDescendantOf(p, ancestorName, byName))
+        case None => false
 
   /** Infer the Scala property type from a DEFNODE property name and class context.
     *
-    * Returns (scalaFieldName, scalaType, defaultValue). */
+    * Returns (scalaFieldName, scalaType, defaultValue).
+    */
   private def inferPropertyType(
-      propName: String,
-      className: String
+    propName:  String,
+    className: String
   ): (String, String, String) =
     // Strip leading underscore (terser uses _annotations for private-ish props)
     val baseName = if propName.startsWith("_") then propName.drop(1) else propName
@@ -1363,84 +1393,65 @@ object TerserEmitter:
 
     // Boolean properties
     if Set("static", "logical", "optional", "await", "async").contains(baseName) ||
-       baseName.startsWith("is_") ||
-       baseName.startsWith("uses_") then
-      (scalaName, "Boolean", "false")
+      baseName.startsWith("is_") ||
+      baseName.startsWith("uses_")
+    then (scalaName, "Boolean", "false")
     // String properties
-    else if Set("operator", "quote", "raw").contains(baseName) then
-      (scalaName, "String", "\"\"")
+    else if Set("operator", "quote", "raw").contains(baseName) then (scalaName, "String", "\"\"")
     // Int properties (includes _annotations -> annotations)
-    else if baseName == "annotations" then
-      ("annotations", "Int", "0")
-    else if baseName == "cname" then
-      ("cname", "Int", "-1")
+    else if baseName == "annotations" then ("annotations", "Int", "0")
+    else if baseName == "cname" then ("cname", "Int", "-1")
     // Body is ArrayBuffer only on AST_Block
-    else if baseName == "body" && className == "AST_Block" then
-      ("body", "ArrayBuffer[AstNode]", "ArrayBuffer.empty")
+    else if baseName == "body" && className == "AST_Block" then ("body", "ArrayBuffer[AstNode]", "ArrayBuffer.empty")
     // Array properties
-    else if Set("args", "argnames", "elements", "properties", "expressions",
-                "segments", "definitions", "names", "references").contains(baseName) then
+    else if Set("args", "argnames", "elements", "properties", "expressions", "segments", "definitions", "names", "references").contains(baseName) then
       (scalaName, "ArrayBuffer[AstNode]", "ArrayBuffer.empty")
-    else if Set("imported_names", "exported_names").contains(baseName) then
-      (scalaName, "ArrayBuffer[AstNode] | Null", "null")
+    else if Set("imported_names", "exported_names").contains(baseName) then (scalaName, "ArrayBuffer[AstNode] | Null", "null")
     // Name is String for symbol and label classes
     else if baseName == "name" &&
-            (className.contains("Symbol") ||
-             className == "AST_Label" || className == "AST_LabelRef") then
-      ("name", "String", "\"\"")
+      (className.contains("Symbol") ||
+        className == "AST_Label" || className == "AST_LabelRef")
+    then ("name", "String", "\"\"")
     // Value is String for directive and template segment
     else if baseName == "value" &&
-            (className == "AST_Directive" || className == "AST_TemplateSegment") then
-      ("value", "String", "\"\"")
+      (className == "AST_Directive" || className == "AST_TemplateSegment")
+    then ("value", "String", "\"\"")
     // Property as union type for prop access
-    else if baseName == "property" then
-      ("property", "String | AstNode", "\"\"")
+    else if baseName == "property" then ("property", "String | AstNode", "\"\"")
     // Key as union type for object property classes
-    else if baseName == "key" && className != "AST_PrivateIn" then
-      ("key", "String | AstNode", "\"\"")
+    else if baseName == "key" && className != "AST_PrivateIn" then ("key", "String | AstNode", "\"\"")
     // Scope-related types
-    else if Set("block_scope", "scope", "parent_scope").contains(baseName) then
-      (scalaName, "AstScope | Null", "null")
+    else if Set("block_scope", "scope", "parent_scope").contains(baseName) then (scalaName, "AstScope | Null", "null")
     // Definition reference
-    else if baseName == "thedef" then
-      ("thedef", "Any | Null", "null")
-    else if baseName == "mangled_name" then
-      ("mangledName", "String | Null", "null")
+    else if baseName == "thedef" then ("thedef", "Any | Null", "null")
+    else if baseName == "mangled_name" then ("mangledName", "String | Null", "null")
     // Scope data structures
-    else if Set("variables", "globals").contains(baseName) then
-      (scalaName, "mutable.Map[String, Any]", "mutable.LinkedHashMap.empty")
-    else if baseName == "enclosed" then
-      ("enclosed", "ArrayBuffer[Any]", "ArrayBuffer.empty")
-    else if baseName == "mangled_names" then
-      ("mangledNames", "mutable.Set[String]", "mutable.Set.empty")
+    else if Set("variables", "globals").contains(baseName) then (scalaName, "mutable.Map[String, Any]", "mutable.LinkedHashMap.empty")
+    else if baseName == "enclosed" then ("enclosed", "ArrayBuffer[Any]", "ArrayBuffer.empty")
+    else if baseName == "mangled_names" then ("mangledNames", "mutable.Set[String]", "mutable.Set.empty")
     // Default: single node reference
-    else
-      (scalaName, "AstNode | Null", "null")
+    else (scalaName, "AstNode | Null", "null")
 
   /** Emit one class or trait from the DEFNODE hierarchy. */
   private def emitOneHierarchyClass(
-      sb: StringBuilder,
-      cls: DefnodeClass,
-      byName: Map[String, DefnodeClass]
+    sb:     StringBuilder,
+    cls:    DefnodeClass,
+    byName: Map[String, DefnodeClass]
   ): Unit =
-    val scalaName = defnodeToScalaName(cls.varName)
-    val parentVarName = cls.base.getOrElse("AST_Node")
-    val parentScala = defnodeToScalaName(parentVarName)
+    val scalaName        = defnodeToScalaName(cls.varName)
+    val parentVarName    = cls.base.getOrElse("AST_Node")
+    val parentScala      = defnodeToScalaName(parentVarName)
     val parentIsAbstract = byName.get(parentVarName).exists(_.isAbstract)
-    val parentIsSkipped = skipClassNames.contains(parentVarName)
+    val parentIsSkipped  = skipClassNames.contains(parentVarName)
 
     // Determine extends clause
-    if cls.isAbstract then
-      sb.append(s"trait $scalaName extends $parentScala")
-    else if parentVarName == "AST_Node" || parentIsSkipped then
-      sb.append(s"class $scalaName extends AstNode")
-    else if parentIsAbstract then
-      sb.append(s"class $scalaName extends AstNode with $parentScala")
-    else
-      sb.append(s"class $scalaName extends $parentScala")
+    if cls.isAbstract then sb.append(s"trait $scalaName extends $parentScala")
+    else if parentVarName == "AST_Node" || parentIsSkipped then sb.append(s"class $scalaName extends AstNode")
+    else if parentIsAbstract then sb.append(s"class $scalaName extends AstNode with $parentScala")
+    else sb.append(s"class $scalaName extends $parentScala")
 
     val needsOverride = !cls.isAbstract && !parentIsAbstract &&
-                        !parentIsSkipped && parentVarName != "AST_Node"
+      !parentIsSkipped && parentVarName != "AST_Node"
 
     if cls.selfProps.nonEmpty || !cls.isAbstract then
       sb.append(" {\n")
@@ -1451,35 +1462,33 @@ object TerserEmitter:
         val keyword = if needsOverride then "override def" else "def"
         sb.append(s"  $keyword nodeType: String = \"${cls.typeName}\"\n")
       sb.append("}\n\n")
-    else
-      sb.append("\n\n")
+    else sb.append("\n\n")
 
   /** Emit all non-excluded AST node classes as a single Scala file.
     *
-    * Skips classes already emitted by emitAstConstants, emitAstToken, and
-    * the hand-ported AstNode. */
+    * Skips classes already emitted by emitAstConstants, emitAstToken, and the hand-ported AstNode.
+    */
   def emitAstHierarchy(file: RastFile): String =
     val hierarchy = extractHierarchy(file)
-    val classes = hierarchy.filterNot(c => skipClassNames.contains(c.varName))
-    val byName = hierarchy.map(c => c.varName -> c).toMap
+    val classes   = hierarchy.filterNot(c => skipClassNames.contains(c.varName))
+    val byName    = hierarchy.map(c => c.varName -> c).toMap
 
     val sb = new StringBuilder
     sb.append("package ssg\npackage js\npackage ast\n\n")
     sb.append("import scala.collection.mutable\n")
     sb.append("import scala.collection.mutable.ArrayBuffer\n\n")
 
-    for cls <- classes do
-      emitOneHierarchyClass(sb, cls, byName)
+    for cls <- classes do emitOneHierarchyClass(sb, cls, byName)
 
     sb.toString
 
   /** Emit statement-related AST nodes as a separate file.
     *
-    * Includes descendants of AST_Statement but excludes descendants of
-    * AST_Scope (scope/lambda/class nodes belong in their own file). */
+    * Includes descendants of AST_Statement but excludes descendants of AST_Scope (scope/lambda/class nodes belong in their own file).
+    */
   def emitAstStatements(file: RastFile): String =
     val hierarchy = extractHierarchy(file)
-    val byName = hierarchy.map(c => c.varName -> c).toMap
+    val byName    = hierarchy.map(c => c.varName -> c).toMap
 
     val statementClasses = hierarchy.filter { cls =>
       isDescendantOf(cls, "AST_Statement", byName) &&
@@ -1491,16 +1500,19 @@ object TerserEmitter:
     sb.append("package ssg\npackage js\npackage ast\n\n")
     sb.append("import scala.collection.mutable.ArrayBuffer\n\n")
 
-    for cls <- statementClasses do
-      emitOneHierarchyClass(sb, cls, byName)
+    for cls <- statementClasses do emitOneHierarchyClass(sb, cls, byName)
 
     sb.toString
 
   /** Find a ClassDeclaration by name in a RAST file. */
   private def findClassDeclaration(file: RastFile, name: String): Option[RastNode] =
     def search(nodes: List[RastNode]): Option[RastNode] =
-      nodes.collectFirst {
-        case n if n.kind == "ClassDeclaration" &&
-          n.children.exists(c => c.kind == "Identifier" && c.text.contains(name)) => n
-      }.orElse(nodes.view.flatMap(n => search(n.children)).headOption)
+      nodes
+        .collectFirst {
+          case n
+              if n.kind == "ClassDeclaration" &&
+                n.children.exists(c => c.kind == "Identifier" && c.text.contains(name)) =>
+            n
+        }
+        .orElse(nodes.view.flatMap(n => search(n.children)).headOption)
     search(file.nodes)

@@ -1,29 +1,28 @@
 package balticporter.tir
 
-/** ONE place a POLICY KEY becomes a SYMBOL — and the only place a phase is allowed to learn what a
-  * key names. Replaces eighteen engine sites that each built or matched a member key with their own
-  * string test. TWO STAGES: `dropMethods` names a member the frontend removed BEFORE minting its
-  * symbol, so [[MemberIndex]] (what the frontend SAW) is stage one, the symbol table stage two.
-  * Every refusal is a DIFFERENT instruction (CLAUDE.md §4.45) — collapsing any two would mislead. */
+/** ONE place a POLICY KEY becomes a SYMBOL — and the only place a phase is allowed to learn what a key names. Replaces eighteen engine sites that each built or matched a member key with their own
+  * string test. TWO STAGES: `dropMethods` names a member the frontend removed BEFORE minting its symbol, so [[MemberIndex]] (what the frontend SAW) is stage one, the symbol table stage two. Every
+  * refusal is a DIFFERENT instruction (CLAUDE.md §4.45) — collapsing any two would mislead.
+  */
 
-/** @param run what the RUN knows about itself — which units it EMITS, and which of a merged
-  *            phase's keys THIS manifest contributed ([[RunScope]]). Defaulted to
-  *            [[RunScope.whole]], the truth for a base port and every spec. */
+/** @param run
+  *   what the RUN knows about itself — which units it EMITS, and which of a merged phase's keys THIS manifest contributed ([[RunScope]]). Defaulted to [[RunScope.whole]], the truth for a base port
+  *   and every spec.
+  */
 final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunScope = RunScope.whole):
 
   private val log = collection.mutable.ListBuffer.empty[PolicyBinder.Record]
 
   private var plan: ResolutionPlan = ResolutionPlan.empty
 
-  /** WHAT THE PORT SELECTED at each location, bound — see [[ResolutionPlan]]. Rides on the binder
-    * (the only place a phase may learn what a key names) rather than a pipeline parameter: a
-    * consulting phase already implements `PolicyBound`, so the seam costs no wiring to forget.
-    * `ResolutionPlan.empty` until the run attaches one — the truth for a spec or bare harness. */
+  /** WHAT THE PORT SELECTED at each location, bound — see [[ResolutionPlan]]. Rides on the binder (the only place a phase may learn what a key names) rather than a pipeline parameter: a consulting
+    * phase already implements `PolicyBound`, so the seam costs no wiring to forget. `ResolutionPlan.empty` until the run attaches one — the truth for a spec or bare harness.
+    */
   def resolutions: ResolutionPlan = plan
 
-  /** attach the run's plan. Called ONCE, by the layer that holds the manifest and the vocabulary —
-    * the plan is built FROM this binder (every key is bound through it), so the two cannot be
-    * constructed together and this is the seam where they meet. */
+  /** attach the run's plan. Called ONCE, by the layer that holds the manifest and the vocabulary — the plan is built FROM this binder (every key is bound through it), so the two cannot be constructed
+    * together and this is the seam where they meet.
+    */
   def resolving(p: ResolutionPlan): PolicyBinder = { plan = p; this }
 
   /** every binding this run asked for, with WHO asked — the never-fired report, unified. */
@@ -34,9 +33,9 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
 
   /** the records ONE phase's binds produced — what its own never-fired report is derived from.
     *
-    * A phase reads this instead of keeping a private `var report`, and the difference is not
-    * bookkeeping: a report built here is complete the moment the keys are bound, so a phase that
-    * never ran reports the same thing a phase that ran and matched nothing does. Both are true. */
+    * A phase reads this instead of keeping a private `var report`, and the difference is not bookkeeping: a report built here is complete the moment the keys are bound, so a phase that never ran
+    * reports the same thing a phase that ran and matched nothing does. Both are true.
+    */
   def recordsFor(phase: String): List[PolicyBinder.Record] = log.toList.filter(_.phase == phase)
 
   // -------------------------------------------------------------------------
@@ -44,82 +43,89 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
   // -------------------------------------------------------------------------
 
   /** bind a TYPE FQN. No descriptor is involved and none is wanted — a type key is a type key. */
-  def bindType(phase: String, setting: String, entry: String,
-               need: Ownership = Ownership.Owned): Binding[SymId] =
-    record(phase, setting, entry, {
+  def bindType(phase: String, setting: String, entry: String, need: Ownership = Ownership.Owned): Binding[SymId] =
+    record(
+      phase,
+      setting,
+      entry,
       if entry.isEmpty then Binding.Unbound(entry, NotBound.Malformed("an empty type name names nothing"))
-      else if entry.contains('#') then
-        Binding.Unbound(entry, NotBound.Malformed("a `#` makes this a MEMBER key; use the member seam"))
+      else if entry.contains('#') then Binding.Unbound(entry, NotBound.Malformed("a `#` makes this a MEMBER key; use the member seam"))
       else
         val hits = program.symbols.all.iterator.filter(_.fullName == entry).toList
         hits.filter(s => need.admits(program, s.id)) match
           case Nil if hits.isEmpty => Binding.Unbound(entry, NotBound.NeverMatched)
           case Nil                 => Binding.Unbound(entry, NotBound.ExternalOnly(entry))
           case s :: _              => Binding.Bound(entry, s.id, hits.size)
-    })
+    )
 
   // -------------------------------------------------------------------------
   // members
   // -------------------------------------------------------------------------
 
-  /** bind a member key to everything it NAMES — one overload for a precise key, every overload for
-    * a bare one. Returns [[PolicyBinder.Hit]], not `Set[SymId]`: a DROPPED member's key FIRED with
-    * no symbol to hand back, and a `Set` would misread that as "matched nothing". A caller wanting
-    * symbols asks `hit.sym`. */
-  def bindMembers(phase: String, setting: String, entry: String,
-                  need: Ownership = Ownership.Owned): Binding[List[PolicyBinder.Hit]] =
+  /** bind a member key to everything it NAMES — one overload for a precise key, every overload for a bare one. Returns [[PolicyBinder.Hit]], not `Set[SymId]`: a DROPPED member's key FIRED with no
+    * symbol to hand back, and a `Set` would misread that as "matched nothing". A caller wanting symbols asks `hit.sym`.
+    */
+  def bindMembers(phase: String, setting: String, entry: String, need: Ownership = Ownership.Owned): Binding[List[PolicyBinder.Hit]] =
     record(phase, setting, entry, resolve(entry, need).map(_._2))
 
-  /** bind a member key to EXACTLY ONE overload. A key naming two is `Ambiguous`, and the finding
-    * LISTS the candidates rendered with their descriptors — because the message is the string an
-    * agent edits (§4.575). */
-  def bindMember(phase: String, setting: String, entry: String,
-                 need: Ownership = Ownership.Owned): Binding[PolicyBinder.Hit] =
-    record(phase, setting, entry, resolve(entry, need).flatMap { (_, hits) =>
-      hits match
-        case List(one) => Binding.Bound(entry, one, 1)
-        case many      => Binding.Unbound(entry, NotBound.Ambiguous(candidates(many)))
-    })
+  /** bind a member key to EXACTLY ONE overload. A key naming two is `Ambiguous`, and the finding LISTS the candidates rendered with their descriptors — because the message is the string an agent
+    * edits (§4.575).
+    */
+  def bindMember(phase: String, setting: String, entry: String, need: Ownership = Ownership.Owned): Binding[PolicyBinder.Hit] =
+    record(
+      phase,
+      setting,
+      entry,
+      resolve(entry, need).flatMap { (_, hits) =>
+        hits match
+          case List(one) => Binding.Bound(entry, one, 1)
+          case many      => Binding.Unbound(entry, NotBound.Ambiguous(candidates(many)))
+      }
+    )
 
-  /** the candidate list an [[NotBound.Ambiguous]] refusal names — rendered keys, and the QUALIFIED
-    * signature beside each only where the rendered keys cannot tell two candidates apart (two
-    * overloads whose simple parameter names collide across packages, `Descriptor.matches` admits
-    * this and equality did not). Conditional, so every already-written message stays byte-identical. */
+  /** the candidate list an [[NotBound.Ambiguous]] refusal names — rendered keys, and the QUALIFIED signature beside each only where the rendered keys cannot tell two candidates apart (two overloads
+    * whose simple parameter names collide across packages, `Descriptor.matches` admits this and equality did not). Conditional, so every already-written message stays byte-identical.
+    */
   private def candidates(hits: List[PolicyBinder.Hit]): List[String] =
     val rendered = hits.map(_.key.render)
     if rendered.distinct.sizeIs == rendered.size then rendered.sorted
-    else hits.map { h =>
-      h.key.render + h.sym.flatMap(program.symbolOf).map(s => s"  [${s.fullName}]").getOrElse("")
-    }.sorted
+    else
+      hits.map { h =>
+        h.key.render + h.sym.flatMap(program.symbolOf).map(s => s"  [${s.fullName}]").getOrElse("")
+      }.sorted
 
-  /** bind a key to the symbol a CALL SITE names — exactly one overload, like [[bindMember]], but a
-    * call site always names a real `SymId` even for a DROPPED member (`SpoonTir.methodSym` interns
-    * from the reference). On a dropped-only match this falls through to the symbol table instead of
-    * returning empty, suppressing `SyntheticTarget` on that path only; the returned [[Hit]] still
-    * carries `dropped = true` (`ENGINE-LIMITS.md` D7: a dependent calling a base's dropped member). */
-  def bindCallee(phase: String, setting: String, entry: String,
-                 need: Ownership = Ownership.Either): Binding[PolicyBinder.Hit] =
-    record(phase, setting, entry, resolve(entry, need, callSite = true).flatMap { (_, hits) =>
-      hits match
-        case List(one) => Binding.Bound(entry, one, 1)
-        case many      => Binding.Unbound(entry, NotBound.Ambiguous(candidates(many)))
-    })
+  /** bind a key to the symbol a CALL SITE names — exactly one overload, like [[bindMember]], but a call site always names a real `SymId` even for a DROPPED member (`SpoonTir.methodSym` interns from
+    * the reference). On a dropped-only match this falls through to the symbol table instead of returning empty, suppressing `SyntheticTarget` on that path only; the returned [[Hit]] still carries
+    * `dropped = true` (`ENGINE-LIMITS.md` D7: a dependent calling a base's dropped member).
+    */
+  def bindCallee(phase: String, setting: String, entry: String, need: Ownership = Ownership.Either): Binding[PolicyBinder.Hit] =
+    record(
+      phase,
+      setting,
+      entry,
+      resolve(entry, need, callSite = true).flatMap { (_, hits) =>
+        hits match
+          case List(one) => Binding.Bound(entry, one, 1)
+          case many      => Binding.Unbound(entry, NotBound.Ambiguous(candidates(many)))
+      }
+    )
 
-  /** bind a SCOPE entry — a package, a type or a member prefix. It names a REGION, so the answer is
-    * only "did anything in this program fall inside it", and the failure that matters is
-    * [[NotBound.ExternalOnly]]: an entry naming a JDK type matches the interned external perfectly,
-    * the phase then does exactly nothing, and the entry counts as having fired. */
+  /** bind a SCOPE entry — a package, a type or a member prefix. It names a REGION, so the answer is only "did anything in this program fall inside it", and the failure that matters is
+    * [[NotBound.ExternalOnly]]: an entry naming a JDK type matches the interned external perfectly, the phase then does exactly nothing, and the entry counts as having fired.
+    */
   def bindScope(phase: String, setting: String, entry: String): Binding[Unit] =
-    record(phase, setting, entry, {
-      if entry.isEmpty then
-        Binding.Unbound(entry, NotBound.Malformed("an empty scope entry names nothing — a stray comma"))
+    record(
+      phase,
+      setting,
+      entry,
+      if entry.isEmpty then Binding.Unbound(entry, NotBound.Malformed("an empty scope entry names nothing — a stray comma"))
       else
         val hits = program.symbols.all.iterator.filter(s => RuleScope.covers(s.fullName, entry)).toList
         hits.partition(s => program.owns(s.id)) match
-          case (Nil, Nil)  => Binding.Unbound(entry, NotBound.NeverMatched)
-          case (Nil, _)    => Binding.Unbound(entry, NotBound.ExternalOnly(entry))
-          case (owned, _)  => Binding.Bound(entry, (), owned.size)
-    })
+          case (Nil, Nil) => Binding.Unbound(entry, NotBound.NeverMatched)
+          case (Nil, _)   => Binding.Unbound(entry, NotBound.ExternalOnly(entry))
+          case (owned, _) => Binding.Bound(entry, (), owned.size)
+    )
 
   // -------------------------------------------------------------------------
   // internals
@@ -127,12 +133,11 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
 
   /** the shared two-stage lookup: parse, ask the INDEX, then ask the PROGRAM.
     *
-    * `callSite` is [[bindCallee]]'s one difference and is documented there: it asks for the symbol
-    * a REFERENCE names, which exists for a dropped member where the declaration's does not. */
-  private def resolve(entry: String, need: Ownership,
-                      callSite: Boolean = false): Binding[(MemberKey, List[PolicyBinder.Hit])] =
+    * `callSite` is [[bindCallee]]'s one difference and is documented there: it asks for the symbol a REFERENCE names, which exists for a dropped member where the declaration's does not.
+    */
+  private def resolve(entry: String, need: Ownership, callSite: Boolean = false): Binding[(MemberKey, List[PolicyBinder.Hit])] =
     MemberKey.parse(entry) match
-      case Left(m) => Binding.Unbound(entry, NotBound.Malformed(m.what))
+      case Left(m)    => Binding.Unbound(entry, NotBound.Malformed(m.what))
       case Right(key) =>
         // STAGE 1 — what the frontend saw, dropped members included.
         val seen = index.matching(key).map((k, f) => PolicyBinder.Hit(k, f.sym, f.dropped))
@@ -146,12 +151,12 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
           // ENGINE minted after the frontend ran.
           val syms = program.symbols.all.iterator.filter { s =>
             s.name == key.name && program.symbolOf(s.owner).exists(_.fullName == key.owner) &&
-              // …through `Descriptor.matches` and never `contains`: this grammar is SIMPLE names and
-              // every report a key is copied out of shows the QUALIFIED ones, an external member's
-              // `Symbol.fullName` being its interning key (`@8#identityHashCode(java.lang.Object)`).
-              // Compared by equality that key matched nothing, which two ports document and neither
-              // could fix from their side.
-              key.descriptor.forall(d => s.descriptor.exists(d.matches))
+            // …through `Descriptor.matches` and never `contains`: this grammar is SIMPLE names and
+            // every report a key is copied out of shows the QUALIFIED ones, an external member's
+            // `Symbol.fullName` being its interning key (`@8#identityHashCode(java.lang.Object)`).
+            // Compared by equality that key matched nothing, which two ports document and neither
+            // could fix from their side.
+            key.descriptor.forall(d => s.descriptor.exists(d.matches))
           }.toList
           val (owned, external) = syms.partition(s => program.owns(s.id))
           // `dropped` is carried from STAGE 1's answer: on the call-site fall-through the index
@@ -164,20 +169,17 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
           // this partition it says the wrong thing about every field in every parsed type.
           val (ownedExecs, ownedOther) = owned.partition(s => PolicyBinder.isExecutable(s.info))
           if syms.isEmpty then Binding.Unbound(entry, NotBound.NeverMatched)
-          else if ownedOther.nonEmpty || (owned.nonEmpty && !index.types.contains(key.owner)) then
-            Binding.Bound(entry, (key, hits(owned)), owned.size)
+          else if ownedOther.nonEmpty || (owned.nonEmpty && !index.types.contains(key.owner)) then Binding.Bound(entry, (key, hits(owned)), owned.size)
           // …unless STAGE 1 already recorded this very member as DROPPED, in which case the
           // structural test is answering about the frontend's own reference-side interning rather
           // than about anything the engine minted. See [[bindCallee]].
-          else if ownedExecs.nonEmpty && droppedOnly then
-            Binding.Bound(entry, (key, hits(ownedExecs)), ownedExecs.size)
+          else if ownedExecs.nonEmpty && droppedOnly then Binding.Bound(entry, (key, hits(ownedExecs)), ownedExecs.size)
           else if ownedExecs.nonEmpty then
             // The frontend WALKED this owner and did not record this executable, yet the program has
             // it and owns it: the ENGINE minted it. A key naming one is not a typo and must not read
             // as one — policy has no standing to address a member the engine created.
             Binding.Unbound(entry, NotBound.SyntheticTarget(ownedExecs.map(_.fullName).sorted.head))
-          else if need.admitsExternal then
-            Binding.Bound(entry, (key, hits(external)), external.size)
+          else if need.admitsExternal then Binding.Bound(entry, (key, hits(external)), external.size)
           else Binding.Unbound(entry, NotBound.ExternalOnly(key.owner))
 
   private def record[A](phase: String, setting: String, entry: String, b: Binding[A]): Binding[A] =
@@ -197,9 +199,9 @@ object PolicyBinder:
   /** one binding, with the `(phase, setting)` that asked for it — the never-fired report's row. */
   final case class Record(phase: String, setting: String, entry: String, binding: Binding[Unit])
 
-/** May a policy key name a symbol this program does not DECLARE? `Owned` is the default for every
-  * rewriting seam (a scope naming `java.util.List` would otherwise silently no-op). `External` is
-  * for a rule whose entire subject is external members (e.g. `Class#forName`). */
+/** May a policy key name a symbol this program does not DECLARE? `Owned` is the default for every rewriting seam (a scope naming `java.util.List` would otherwise silently no-op). `External` is for a
+  * rule whose entire subject is external members (e.g. `Class#forName`).
+  */
 enum Ownership:
   case Owned, External, Either
 
@@ -210,22 +212,26 @@ enum Ownership:
 
   def admitsExternal: Boolean = this != Owned
 
-/** Why a declared key did not bind. Every case is a DIFFERENT instruction to its reader — see
-  * [[PolicyBinder]] for why collapsing any two of them costs an investigation. */
+/** Why a declared key did not bind. Every case is a DIFFERENT instruction to its reader — see [[PolicyBinder]] for why collapsing any two of them costs an investigation.
+  */
 enum NotBound:
-  /** nothing anywhere in the program or the index has this name — a typo, or policy left behind by
-    * an upstream rename. */
+  /** nothing anywhere in the program or the index has this name — a typo, or policy left behind by an upstream rename.
+    */
   case NeverMatched
-  /** the key names several overloads and the seam needs exactly one. Carries the candidates,
-    * rendered with their descriptors, because that is the string its author will paste. */
+
+  /** the key names several overloads and the seam needs exactly one. Carries the candidates, rendered with their descriptors, because that is the string its author will paste.
+    */
   case Ambiguous(candidates: List[String])
-  /** it matched — but only an INTERNED EXTERNAL, which for a rule that rewrites declarations is a
-    * documented no-op that counts as having fired. */
+
+  /** it matched — but only an INTERNED EXTERNAL, which for a rule that rewrites declarations is a documented no-op that counts as having fired.
+    */
   case ExternalOnly(fqn: String)
+
   /** the key is not in the grammar and could never have matched anything. */
   case Malformed(what: String)
-  /** it names a member the ENGINE minted, which is in neither of the two places a policy key may
-    * legitimately name. Not a typo — the opposite of one. */
+
+  /** it names a member the ENGINE minted, which is in neither of the two places a policy key may legitimately name. Not a typo — the opposite of one.
+    */
   case SyntheticTarget(fqn: String)
 
   def label: String = this match
@@ -244,7 +250,7 @@ enum NotBound:
     case ExternalOnly(fqn) =>
       s"`$fqn` is a symbol this program REFERENCES and does not DECLARE, so there is no declaration " +
         "to rewrite and no body to leave alone: the entry matched and the rule did nothing"
-    case Malformed(what) => what
+    case Malformed(what)      => what
     case SyntheticTarget(fqn) =>
       s"`$fqn` is a member the ENGINE minted, not one the frontend read out of Java — policy has no " +
         "standing to address it, and the fix (if it should be addressable at all) is in the engine"
@@ -252,11 +258,12 @@ enum NotBound:
 /** The result of binding one declared key. */
 enum Binding[+A]:
   case Bound(entry: String, value: A, matched: Int)
-  /** `reason` and not `why`, so the accessor below — which is what a caller holding a
-    * `Binding[A]` can actually reach — keeps the readable name. */
+
+  /** `reason` and not `why`, so the accessor below — which is what a caller holding a `Binding[A]` can actually reach — keeps the readable name.
+    */
   case Unbound(entry: String, reason: NotBound)
 
-  def isBound: Boolean   = this.isInstanceOf[Binding.Bound[?]]
+  def isBound:   Boolean = this.isInstanceOf[Binding.Bound[?]]
   def isUnbound: Boolean = !isBound
 
   def toOption: Option[A] = this match

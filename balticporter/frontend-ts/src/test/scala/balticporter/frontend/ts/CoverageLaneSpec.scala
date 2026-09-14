@@ -13,7 +13,7 @@ class CoverageLaneSpec extends munit.FunSuite:
     ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0),
     ParityDerive.BodyEntry("methodD", "reference", "uncompilable-pattern:stringTemplate(", 0),
     ParityDerive.BodyEntry("methodE", "reference", "", 0),
-    ParityDerive.BodyEntry("methodF", "rast", "", 2),
+    ParityDerive.BodyEntry("methodF", "rast", "", 2)
   )
 
   test("analyze: correct counts"):
@@ -22,8 +22,7 @@ class CoverageLaneSpec extends munit.FunSuite:
     assertEquals(report.totalMethods, 6)
     assertEquals(report.rastDerived, 3)
     assertEquals(report.referenceDerived, 3)
-    assert(report.rastPercent > 49.0 && report.rastPercent < 51.0,
-      s"Expected ~50%, got ${report.rastPercent}")
+    assert(report.rastPercent > 49.0 && report.rastPercent < 51.0, s"Expected ~50%, got ${report.rastPercent}")
 
   test("analyze: byReason breakdown"):
     val report = CoverageLane.analyze(sampleBodies, "TestModule")
@@ -40,7 +39,7 @@ class CoverageLaneSpec extends munit.FunSuite:
   test("formatReport: table output"):
     val reports = List(
       CoverageLane.analyze(sampleBodies, "ModuleA"),
-      CoverageLane.analyze(sampleBodies.take(3), "ModuleB"),
+      CoverageLane.analyze(sampleBodies.take(3), "ModuleB")
     )
     val output = CoverageLane.formatReport(reports)
     assert(output.contains("ModuleA"), "should contain ModuleA")
@@ -51,25 +50,24 @@ class CoverageLaneSpec extends munit.FunSuite:
     val baseline = List(
       ParityDerive.BodyEntry("methodA", "rast", "", 0),
       ParityDerive.BodyEntry("methodB", "rast", "", 0),
-      ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0),
+      ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0)
     )
     val current = List(
       ParityDerive.BodyEntry("methodA", "rast", "", 0),
       ParityDerive.BodyEntry("methodB", "reference", "uncompilable-pattern:x", 0),
-      ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0),
+      ParityDerive.BodyEntry("methodC", "reference", "no-rast-symbol", 0)
     )
     val regressions = CoverageLane.checkRegressions(baseline, current)
     assertEquals(regressions, List("methodB"))
 
   test("checkRegressions: no regression when stable"):
-    val bodies = sampleBodies
+    val bodies      = sampleBodies
     val regressions = CoverageLane.checkRegressions(bodies, bodies)
     assertEquals(regressions, Nil)
 
   test("formatBodiesTsv: roundtrip"):
     val tsv = CoverageLane.formatBodiesTsv(sampleBodies)
-    assert(tsv.startsWith("method_name\tsource\twhy\trefusal_count"),
-      "should start with header")
+    assert(tsv.startsWith("method_name\tsource\twhy\trefusal_count"), "should start with header")
     val parsed = CoverageLane.parseBodiesTsv(tsv)
     assertEquals(parsed.size, sampleBodies.size)
     assertEquals(parsed.head.methodName, "methodA")
@@ -96,14 +94,14 @@ class CoverageLaneSpec extends munit.FunSuite:
 
   test("formatVerdictsTsv: roundtrip"):
     val verdicts = BodyVerdicts.autoClassify(sampleBodies)
-    val tsv = BodyVerdicts.formatVerdictsTsv(verdicts)
+    val tsv      = BodyVerdicts.formatVerdictsTsv(verdicts)
     assert(tsv.startsWith("member\tstatus\tevidence\tcategory"))
     val parsed = BodyVerdicts.parseVerdictsTsv(tsv)
     assertEquals(parsed.size, verdicts.size)
 
   test("formatSummary: produces readable output"):
     val verdicts = BodyVerdicts.autoClassify(sampleBodies)
-    val summary = BodyVerdicts.formatSummary(verdicts)
+    val summary  = BodyVerdicts.formatSummary(verdicts)
     assert(summary.contains("Body verdicts: 3"))
     assert(summary.contains("structural"))
     assert(summary.contains("justified"))
@@ -135,20 +133,21 @@ class CoverageLaneSpec extends munit.FunSuite:
         Some(Rast.readFile(json))
       catch
         case _: Exception =>
-          try { stream.close() } catch { case _: Exception => () }
+          try stream.close()
+          catch { case _: Exception => () }
           None
 
   test("integration: coverage report for Terser Common"):
-    val refOpt = loadReference("/reference/terser/compress/Common.scala")
+    val refOpt  = loadReference("/reference/terser/compress/Common.scala")
     val rastOpt = loadRast("/rast/terser/lib/compress/common.rast.json")
     (refOpt, rastOpt) match
       case (Some(ref), Some(rast)) =>
-        val fns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
+        val fns     = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
         val bodyMap = scala.collection.mutable.Map.empty[String, List[(String, Int)]]
         for fn <- fns do
-          val entry = dedicated.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+          val entry      = dedicated.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
           val translated = dedicated.DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-          val key = snakeToCamel(fn.name)
+          val key        = snakeToCamel(fn.name)
           bodyMap(key) = bodyMap.getOrElse(key, Nil) :+ (translated.scalaBody, translated.refusalCount)
 
         val result = ParityDerive.derive(ref, bodyMap.toMap)

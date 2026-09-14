@@ -1,9 +1,9 @@
 package balticporter.runtime
 
-import scala.collection.mutable.{ArrayBuffer, Buffer, Set as MSet}
+import scala.collection.mutable.{ ArrayBuffer, Buffer, Set as MSet }
 
-/** `JavaCollection`'s BEHAVIOUR — the shim a port's `Collection`/`AbstractCollection` slots become,
-  * and the four factories `CollectionsTransform.coerce` reaches for. */
+/** `JavaCollection`'s BEHAVIOUR — the shim a port's `Collection`/`AbstractCollection` slots become, and the four factories `CollectionsTransform.coerce` reaches for.
+  */
 class JavaCollectionSpec extends munit.FunSuite:
 
   private def coll(xs: String*): JavaCollection[String] = JavaCollection.from(ArrayBuffer.from(xs))
@@ -17,9 +17,9 @@ class JavaCollectionSpec extends munit.FunSuite:
     // hazard from the other side, so it is deliberately backed by the ORIGINAL buffer.
     val b: Buffer[String] = ArrayBuffer("a")
     val c = JavaCollection.from(b)
-    b += "b"                       // written through the buffer …
-    assertEquals(c.size(), 2)      // … seen through the shim
-    c.add("z")                     // and back the other way
+    b += "b" // written through the buffer …
+    assertEquals(c.size(), 2) // … seen through the shim
+    c.add("z") // and back the other way
     assertEquals(b.toList, List("a", "b", "z"))
     assert(c.remove("a"))
     assertEquals(b.toList, List("b", "z"))
@@ -41,10 +41,10 @@ class JavaCollectionSpec extends munit.FunSuite:
   test("fromSet is LIVE, and `add` answers whether the set CHANGED") {
     val s: MSet[String] = MSet("a")
     val c = JavaCollection.fromSet(s)
-    assert(!c.add("a"))                 // already present — a `List` would answer true
+    assert(!c.add("a")) // already present — a `List` would answer true
     assert(c.add("b"))
     assertEquals(s.toList.sorted, List("a", "b"))
-    s += "c"                            // live in the other direction
+    s += "c" // live in the other direction
     assertEquals(c.size(), 3)
     assert(c.remove("c"))
     assertEquals(s.toList.sorted, List("a", "b"))
@@ -60,14 +60,14 @@ class JavaCollectionSpec extends munit.FunSuite:
     assertEquals(s.size, 0)
   }
 
-  /** the asymmetric pair `JavaCollectionsSpec` uses, for the same reason: only an asymmetric
-    * `equals` can show WHICH side a containment test asks. */
-  private final class Accepting:
+  /** the asymmetric pair `JavaCollectionsSpec` uses, for the same reason: only an asymmetric `equals` can show WHICH side a containment test asks.
+    */
+  final private class Accepting:
     override def equals(o: Any): Boolean = o.isInstanceOf[Rejecting]
-    override def hashCode: Int           = 1
-  private final class Rejecting:
+    override def hashCode:       Int     = 1
+  final private class Rejecting:
     override def equals(o: Any): Boolean = false
-    override def hashCode: Int           = 1
+    override def hashCode:       Int     = 1
 
   // -------------------------------------------------------------------------------------------
   // the read-only wrappers — and that they really do reject
@@ -89,7 +89,7 @@ class JavaCollectionSpec extends munit.FunSuite:
     // would not type-check at the call site at all.
     class Base
     class Sub extends Base
-    val subs: JavaCollection[Sub]  = JavaCollection.from(ArrayBuffer(new Sub))
+    val subs:  JavaCollection[Sub]  = JavaCollection.from(ArrayBuffer(new Sub))
     val bases: JavaCollection[Base] = JavaCollection.unmodifiable[Base](subs)
     assertEquals(bases.size(), 1)
     intercept[UnsupportedOperationException](bases.add(new Base))
@@ -111,7 +111,7 @@ class JavaCollectionSpec extends munit.FunSuite:
     // abstract would demand code the source never contained (ENGINE-LIMITS K5).
     val c = new JavaCollection[String]:
       def iterator(): JavaIterator[String] = JavaIterator.from(Iterator("a"))
-      def size(): Int                      = 1
+      def size():     Int                  = 1
     intercept[UnsupportedOperationException](c.add("b"))
     // …while `contains`/`isEmpty` are CONCRETE, which is `AbstractCollection`'s own split.
     assert(c.contains("a"))
@@ -214,8 +214,7 @@ class JavaCollectionSpec extends munit.FunSuite:
   test("toArray(T[]) allocates a NEW array of the same component type when the caller's is short") {
     val out = coll("a", "b", "c").toArray(new Array[String](1))
     assertEquals(out.toList, List("a", "b", "c"))
-    if PlatformArrays.reifiesComponentType then
-      assertEquals(out.getClass.getComponentType, classOf[String])
+    if PlatformArrays.reifiesComponentType then assertEquals(out.getClass.getComponentType, classOf[String])
   }
 
   // -------------------------------------------------------------------------------------------

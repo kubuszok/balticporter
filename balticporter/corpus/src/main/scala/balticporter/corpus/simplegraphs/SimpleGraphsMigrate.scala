@@ -4,11 +4,10 @@ import balticporter.runner.PortConfig
 
 import java.nio.file.Path
 
-/** Migrate **simple-graphs** (`src/main/java`, 29 types — a dependency-free graph library).
-  * The whole port is `.../ports/simplegraphs/main.conf` — read that, not this file; this `main`
-  * only names it and gives the run its report identity (also DESIGN.md §5.7's config-front-door
-  * acceptance proof). Exercises a package rename, a standalone BASE port with no resolution
-  * roots, `java.util.function`/`stream`, and extending `AbstractCollection`. */
+/** Migrate **simple-graphs** (`src/main/java`, 29 types — a dependency-free graph library). The whole port is `.../ports/simplegraphs/main.conf` — read that, not this file; this `main` only names it
+  * and gives the run its report identity (also DESIGN.md §5.7's config-front-door acceptance proof). Exercises a package rename, a standalone BASE port with no resolution roots,
+  * `java.util.function`/`stream`, and extending `AbstractCollection`.
+  */
 object SimpleGraphsMigrate:
 
   def main(args: Array[String]): Unit =

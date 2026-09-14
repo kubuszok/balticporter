@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** Java's array covariance (JLS 10.10) asked at the RENDERING, because java's own erasure can write
-  * both sides of the slot as one type — `ENGINE-LIMITS.md` G13.5, which is §0's rule read at a slot. */
+/** Java's array covariance (JLS 10.10) asked at the RENDERING, because java's own erasure can write both sides of the slot as one type — `ENGINE-LIMITS.md` G13.5, which is §0's rule read at a slot.
+  */
 class ArrayCovarianceRenderedSpec extends PortSuite:
 
   test("an ERASE-EQUAL array slot still takes java's covariance cast") {
@@ -16,7 +16,8 @@ class ArrayCovarianceRenderedSpec extends PortSuite:
         |    return universe.length;
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // java's two array types ERASE TO ONE, so the java-name comparison sees nothing at all; the
     // emitted term is the only side carrying a rendering the compiler will see.
     assertEmitsMatch(p, """universe: scala\.Array\[java\.lang\.Enum\[\?\]\] = .*asInstanceOf\[scala\.Array\[java\.lang\.Enum\[\?\]\]\]""")
@@ -29,7 +30,8 @@ class ArrayCovarianceRenderedSpec extends PortSuite:
         |  static String[] names() { return null; }
         |  static int go() { Object[] xs = names(); return xs.length; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // this is the cell `arrayCovSlot` always answered; the rendered test must not change it.
     assertEmitsMatch(p, """xs: scala\.Array\[java\.lang\.Object\] = .*asInstanceOf\[scala\.Array\[java\.lang\.Object\]\]""")
   }
@@ -41,7 +43,8 @@ class ArrayCovarianceRenderedSpec extends PortSuite:
         |  static String[] names() { return null; }
         |  static int go() { String[] xs = names(); return xs.length; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the predicate declines by arithmetic here, which is what keeps it from putting a no-op
     // `asInstanceOf` on every array initialiser in every port — the over-approximation §5 has no
     // instrument for.
@@ -55,7 +58,8 @@ class ArrayCovarianceRenderedSpec extends PortSuite:
         |  static String name() { return null; }
         |  static int go() { CharSequence s = name(); return s.length(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `String` really is a `CharSequence` in scala too, so java's own widening needs no cast and one
     // here would be text for nothing.
     assertNotEmits(p, "demo.Plain.name().asInstanceOf[java.lang.CharSequence]")

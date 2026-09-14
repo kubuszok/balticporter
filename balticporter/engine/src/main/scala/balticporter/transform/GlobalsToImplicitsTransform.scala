@@ -1,218 +1,256 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
+import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource }
 import balticporter.tir.*
 
-/** GLOBALS → CONTEXT: a Java class whose `static` state is an ambient CONTEXT becomes a value
-  * threaded through the program as a Scala 3 `using` parameter, found by a five-edge closure over
-  * [[ContextNeed]] and rewritten through [[ContextHolder]]'s member map. A class/field initialiser
-  * is a BOUNDARY; a framework-constructed class takes [[ContextHolder.selfSupplied]] instead of a
-  * clause. CLAUDE.md §1(b), §1.5; `ENGINE-LIMITS.md` CT4, CT6, CT7, CT8, CT9. */
+/** GLOBALS → CONTEXT: a Java class whose `static` state is an ambient CONTEXT becomes a value threaded through the program as a Scala 3 `using` parameter, found by a five-edge closure over
+  * [[ContextNeed]] and rewritten through [[ContextHolder]]'s member map. A class/field initialiser is a BOUNDARY; a framework-constructed class takes [[ContextHolder.selfSupplied]] instead of a
+  * clause. CLAUDE.md §1(b), §1.5; `ENGINE-LIMITS.md` CT4, CT6, CT7, CT8, CT9.
+  */
 final class GlobalsToImplicitsTransform(
-    val holders: List[ContextHolder] = Nil,
-    /** the per-declaration half of a holder the BASE declares; empty in a base. ENGINE-LIMITS CT8 */
-    val extensions: List[ContextHolderExtension] = Nil,
-    /** Adds `(using GivenType[T])` to a class's constructors, `T` its own type parameter at a given
-      * index. Keyed on the class's upstream FQN; value is the given type FQN, optionally suffixed
-      * `:N` for the type-parameter index (0-based, default 0). Propagates to subclass constructors
-      * through `extends`. Empty map is the no-op. */
-    val requiredGivens: Map[String, String] = Map.empty,
-) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
+  val holders: List[ContextHolder] = Nil,
+  /** the per-declaration half of a holder the BASE declares; empty in a base. ENGINE-LIMITS CT8 */
+  val extensions: List[ContextHolderExtension] = Nil,
+  /** Adds `(using GivenType[T])` to a class's constructors, `T` its own type parameter at a given index. Keyed on the class's upstream FQN; value is the given type FQN, optionally suffixed `:N` for
+    * the type-parameter index (0-based, default 0). Propagates to subclass constructors through `extends`. Empty map is the no-op.
+    */
+  val requiredGivens: Map[String, String] = Map.empty
+) extends Phase,
+      Rewrite,
+      PolicySource,
+      MergeablePolicy,
+      PolicyBound:
 
   import GlobalsToImplicitsTransform.*
 
   def name = "globals->implicits"
 
-  /** counts every place threading stopped: a reflectively-constructed declaration, a hand-written
-    * caller no key can add a clause to, a residual global. */
+  /** counts every place threading stopped: a reflectively-constructed declaration, a hand-written caller no key can add a clause to, a residual global.
+    */
   def accountedBy: Set[String] = Set(ContextSeamCheck.Name)
 
   /** policy keys are written in the UPSTREAM namespace; package rename runs LAST (§4.56). */
   override def runsBefore: Set[String] = Set("package-rename")
-  /** a call a port SUBSTITUTED is never a global read: the threading closure must see the calls
-    * as they will be emitted, or a class whose only read was the replaced call keeps a clause
-    * nothing supplies (`PROGRESS.md` §13.31 step 2; the merged instance sits at the EARLIEST
-    * declared slot, so declaration order alone cannot place it). */
+
+  /** a call a port SUBSTITUTED is never a global read: the threading closure must see the calls as they will be emitted, or a class whose only read was the replaced call keeps a clause nothing
+    * supplies (`PROGRESS.md` §13.31 step 2; the merged instance sits at the EARLIEST declared slot, so declaration order alone cannot place it).
+    */
   override def runsAfter: Set[String] = Set("call-site-substitution")
 
-  /** the holders this instance runs, each with its extensions folded in. A dangling extension —
-    * naming a holder nothing in the chain declares — folds into nothing; see [[danglingFindings]]. */
+  /** the holders this instance runs, each with its extensions folded in. A dangling extension — naming a holder nothing in the chain declares — folds into nothing; see [[danglingFindings]].
+    */
   lazy val effectiveHolders: List[ContextHolder] =
     holders.map(h => extensions.filter(_.holder == h.holder).foldLeft(h)(_ extendedBy _))
 
   private lazy val dangling: List[ContextHolderExtension] =
     extensions.filterNot(e => holders.exists(_.holder == e.holder))
 
-  /** the effective policy, sorted and rendered — two modules that agree must compare equal (§1.5).
-    * Read off [[effectiveHolders]] so a holder stated inline and one stated as holder+extension
-    * fingerprint the same. */
+  /** the effective policy, sorted and rendered — two modules that agree must compare equal (§1.5). Read off [[effectiveHolders]] so a holder stated inline and one stated as holder+extension
+    * fingerprint the same.
+    */
   def surfaceFingerprint: String =
-    val rg = if requiredGivens.isEmpty then "" else
-      "|rg=" + requiredGivens.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
+    val rg = if requiredGivens.isEmpty then "" else "|rg=" + requiredGivens.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
     (effectiveHolders.map(_.fingerprint) ++ dangling.map(_.fingerprint)).sorted.mkString(";") + rg
 
-  /** every shared-surface SUBJECT this instance's policy is keyed on — holder FQNs (of holders and
-    * of extensions), every per-declaration key, every promotion and every scope entry, through
-    * [[MergeablePolicy.subjectOf]]. A dependent naming one of the base's own DECLARATIONS re-shapes
-    * a surface it does not own; naming its own types is the point. */
+  /** every shared-surface SUBJECT this instance's policy is keyed on — holder FQNs (of holders and of extensions), every per-declaration key, every promotion and every scope entry, through
+    * [[MergeablePolicy.subjectOf]]. A dependent naming one of the base's own DECLARATIONS re-shapes a surface it does not own; naming its own types is the point.
+    */
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
-      (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
-       h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.forceThread ++ h.scope.entries))
-    val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
+      Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
+        h.cache.keySet ++ h.through.keySet ++ h.capture.keySet ++ h.promoteToClass ++ h.forceThread ++ h.scope.entries
+    )
+    val fromExts   = extensions.flatMap(e => Set(e.holder) ++ e.keys)
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
 
-  /** THE MERGE CONTRACT (DESIGN.md §8.13); division is `ContextHolder.sharedSurface`. Holders
-    * UNION by FQN, adding a one-side-only holder; a holder BOTH sides declare must AGREE on shared
-    * surface or the merge refuses; `sites`/`selfSupplied` UNION, refusing same-key-different-value.
-    * `added` is every subject the later instance holds that this one did not — what `SurfaceFold`
-    * screens against `governs`. */
+  /** THE MERGE CONTRACT (DESIGN.md §8.13); division is `ContextHolder.sharedSurface`. Holders UNION by FQN, adding a one-side-only holder; a holder BOTH sides declare must AGREE on shared surface or
+    * the merge refuses; `sites`/`selfSupplied` UNION, refusing same-key-different-value. `added` is every subject the later instance holds that this one did not — what `SurfaceFold` screens against
+    * `governs`.
+    */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: GlobalsToImplicitsTransform =>
-      val mine   = holders.map(h => h.holder -> h).toMap
-      val theirs = o.holders.map(h => h.holder -> h).toMap
+      val mine         = holders.map(h => h.holder -> h).toMap
+      val theirs       = o.holders.map(h => h.holder -> h).toMap
       val surfaceClash = (mine.keySet & theirs.keySet).toList.sorted
         .filter(k => mine(k).sharedSurface != theirs(k).sharedSurface)
-        .map(k => s"""both modules declare the holder "$k" and its SHARED SURFACE differs — """ +
-          s""""${mine(k).sharedSurface}" against "${theirs(k).sharedSurface}". The context type, """ +
-          "the member map, the attachment mode, the read shape, the boundary default, the " +
-          "promotions and the scope are all facts about the SIGNATURES this policy emits, so two " +
-          "answers is a choice and not a composition. A dependent adds `sites`/`selfSupplied` " +
-          "entries for its OWN declarations and inherits the rest")
+        .map(k =>
+          s"""both modules declare the holder "$k" and its SHARED SURFACE differs — """ +
+            s""""${mine(k).sharedSurface}" against "${theirs(k).sharedSurface}". The context type, """ +
+            "the member map, the attachment mode, the read shape, the boundary default, the " +
+            "promotions and the scope are all facts about the SIGNATURES this policy emits, so two " +
+            "answers is a choice and not a composition. A dependent adds `sites`/`selfSupplied` " +
+            "entries for its OWN declarations and inherits the rest"
+        )
       val siteClash = for
-        k         <- (mine.keySet & theirs.keySet).toList.sorted
-        (key, v)  <- theirs(k).sites.toList.sortBy(_._1)
-        v2        <- mine(k).sites.get(key)
+        k <- (mine.keySet & theirs.keySet).toList.sorted
+        (key, v) <- theirs(k).sites.toList.sortBy(_._1)
+        v2 <- mine(k).sites.get(key)
         if v2 != v
       yield s"""both modules give the site "$key" a policy, "${v2.token}" and "${v.token}""""
       val selfClash = for
-        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        k <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).selfSupplied.toList.sorted
-        v2       <- mine(k).selfSupplied.get(key)
+        v2 <- mine(k).selfSupplied.get(key)
         if v2 != v
       yield s"""both modules make "$key" self-supplied, from "$v2" and from "$v""""
       // a retained member's NAME is emitted surface: two names for one type's retained context
       // means whichever `selfSupplied` expression names one compiles against only one port.
       val retainClash = for
-        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        k <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).retain.toList.sorted
-        v2       <- mine(k).retain.get(key)
+        v2 <- mine(k).retain.get(key)
         if v2 != v
       yield s"""both modules RETAIN the context on "$key", as "$v2" and as "$v""""
       // same reason for a CACHED accessor's name.
       val cacheClash = for
-        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        k <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).cache.toList.sorted
-        v2       <- mine(k).cache.get(key)
+        v2 <- mine(k).cache.get(key)
         if v2 != v
       yield s"""both modules CACHE the context on "$key", as "$v2" and as "$v""""
       // and for the member a type reads the holder THROUGH: two members is two emitted bodies.
       val throughClash = for
-        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        k <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).through.toList.sorted
-        v2       <- mine(k).through.get(key)
+        v2 <- mine(k).through.get(key)
         if v2 != v
       yield s"""both modules read the holder THROUGH a member on "$key", "$v2" and "$v""""
       val captureClash = for
-        k        <- (mine.keySet & theirs.keySet).toList.sorted
+        k <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).capture.toList.sorted
-        v2       <- mine(k).capture.get(key)
+        v2 <- mine(k).capture.get(key)
         if v2 != v
       yield s"""both modules CAPTURE a value on "$key", "$v2" and "$v""""
       val givenClash = for
         (k, v) <- o.requiredGivens.toList.sorted
-        v2     <- requiredGivens.get(k)
+        v2 <- requiredGivens.get(k)
         if v2 != v
       yield s"""both modules require a given on "$k", "$v2" and "$v""""
       (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash ++ throughClash ++ captureClash ++ givenClash) match
         case Nil =>
           val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
             (mine.get(k), theirs.get(k)) match
-              case (Some(a), Some(b)) => a.copy(sites = a.sites ++ b.sites,
-                                                selfSupplied = a.selfSupplied ++ b.selfSupplied,
-                                                retain = a.retain ++ b.retain,
-                                                cache = a.cache ++ b.cache,
-                                                through = a.through ++ b.through,
-                                                capture = a.capture ++ b.capture)
-              case (Some(a), None)    => a
-              case (None, Some(b))    => b
-              case (None, None)       => sys.error("unreachable: a key from the union of two maps")
+              case (Some(a), Some(b)) =>
+                a.copy(
+                  sites = a.sites ++ b.sites,
+                  selfSupplied = a.selfSupplied ++ b.selfSupplied,
+                  retain = a.retain ++ b.retain,
+                  cache = a.cache ++ b.cache,
+                  through = a.through ++ b.through,
+                  capture = a.capture ++ b.capture
+                )
+              case (Some(a), None) => a
+              case (None, Some(b)) => b
+              case (None, None)    => sys.error("unreachable: a key from the union of two maps")
           }
-          Right(MergeablePolicy.Merged(
-            new GlobalsToImplicitsTransform(merged, (extensions ++ o.extensions).distinct,
-              requiredGivens ++ o.requiredGivens),
-            o.subjects -- subjects))
-        case whys => Left(whys.mkString("; ") +
-          " — two answers for one key is a threading whose outcome depends on which manifest was read")
+          Right(
+            MergeablePolicy.Merged(
+              new GlobalsToImplicitsTransform(merged, (extensions ++ o.extensions).distinct, requiredGivens ++ o.requiredGivens),
+              o.subjects -- subjects
+            )
+          )
+        case whys =>
+          Left(
+            whys.mkString("; ") +
+              " — two answers for one key is a threading whose outcome depends on which manifest was read"
+          )
     case other =>
       Left(s"`${other.name}` is not a `GlobalsToImplicitsTransform`, so there is no policy to compose")
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
-  private var records: List[PolicyBinder.Record]                  = Nil
-  private var malformed: List[PolicyFinding]                      = Nil
+  private var records:      List[PolicyBinder.Record]             = Nil
+  private var malformed:    List[PolicyFinding]                   = Nil
   private var boundStatics: Map[String, Map[String, List[SymId]]] = Map.empty
-  private var boundHolder: Map[String, SymId]                     = Map.empty
+  private var boundHolder:  Map[String, SymId]                    = Map.empty
   private var boundPromote: Map[String, Set[SymId]]               = Map.empty
   private var boundForce:   Map[String, Set[SymId]]               = Map.empty
-  /** `sites` entries resolved per holder: key -> symbols named. Used for the CT6 dead-binding
-    * report and as a `lazy-init` entry's candidate subjects. */
-  private var boundSites: Map[String, Map[String, List[SymId]]]   = Map.empty
+
+  /** `sites` entries resolved per holder: key -> symbols named. Used for the CT6 dead-binding report and as a `lazy-init` entry's candidate subjects.
+    */
+  private var boundSites: Map[String, Map[String, List[SymId]]] = Map.empty
+
   /** `selfSupplied` entries resolved per holder: TYPE symbol -> its policy key (§4.575). */
-  private var boundSelf: Map[String, Map[SymId, String]]          = Map.empty
+  private var boundSelf: Map[String, Map[SymId, String]] = Map.empty
+
   /** `retain` entries resolved per holder: TYPE symbol -> the policy key that named it. */
-  private var boundRetain: Map[String, Map[SymId, String]]        = Map.empty
+  private var boundRetain: Map[String, Map[SymId, String]] = Map.empty
+
   /** `cache` entries resolved per holder: TYPE symbol -> the policy key that named it. */
-  private var boundCache: Map[String, Map[SymId, String]]         = Map.empty
+  private var boundCache: Map[String, Map[SymId, String]] = Map.empty
+
   /** `through` entries resolved per holder: TYPE symbol -> the policy key that named it. */
-  private var boundThrough: Map[String, Map[SymId, String]]       = Map.empty
+  private var boundThrough: Map[String, Map[SymId, String]] = Map.empty
+
   /** `capture` entries resolved per holder: TYPE symbol -> the policy key that named it. */
-  private var boundCapture: Map[String, Map[SymId, String]]       = Map.empty
+  private var boundCapture: Map[String, Map[SymId, String]] = Map.empty
+
   /** `requiredGivens` entries resolved to the class symbol — class SymId -> given type FQN. */
-  private var boundGivens: Map[SymId, String]                     = Map.empty
+  private var boundGivens: Map[SymId, String] = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
     val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
     def malformedEntry(h: ContextHolder, setting: String, key: String, what: String): Unit =
-      bad += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.$setting",
-        key, PolicyIssue.Malformed, what)
+      bad += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.$setting", key, PolicyIssue.Malformed, what)
 
     effectiveHolders.foreach { h =>
       // the HOLDER is a TYPE key; naming a member here is a different mistake with a different fix.
-      binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.holder", h.holder)
-        .toOption.foreach(s => boundHolder = boundHolder.updated(h.holder, s))
+      binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.holder", h.holder).toOption.foreach(s => boundHolder = boundHolder.updated(h.holder, s))
 
       if h.members.isEmpty then
-        malformedEntry(h, "members", h.holder, "no field is mapped onto the context, so every read " +
-          "would be un-mappable and the phase would thread nothing — the §1(b) silent no-op this " +
-          "engine refuses. Map at least one static onto a path on the context type")
+        malformedEntry(
+          h,
+          "members",
+          h.holder,
+          "no field is mapped onto the context, so every read " +
+            "would be un-mappable and the phase would thread nothing — the §1(b) silent no-op this " +
+            "engine refuses. Map at least one static onto a path on the context type"
+        )
 
       // class attachment: the constructor region (DESIGN.md §8.2) owns its emission — ENGINE-LIMITS CT4
 
       h.context match
         case ContextType.Minted(fqn) =>
-          h.members.filter((_, p) => p.contains('.')).toList.sorted.foreach((f, p) =>
-            malformedEntry(h, "members", MemberKey(h.holder, f).render, s"`$p` is a two-hop PATH and the context " +
-              s"type is MINTED — the engine synthesises `$fqn`'s own members and has no intermediate " +
-              "type to hang a second hop off. Map this field onto a single member, or `inject` a " +
-              "context type you wrote, which is where a service path belongs"))
+          h.members
+            .filter((_, p) => p.contains('.'))
+            .toList
+            .sorted
+            .foreach((f, p) =>
+              malformedEntry(
+                h,
+                "members",
+                MemberKey(h.holder, f).render,
+                s"`$p` is a two-hop PATH and the context " +
+                  s"type is MINTED — the engine synthesises `$fqn`'s own members and has no intermediate " +
+                  "type to hang a second hop off. Map this field onto a single member, or `inject` a " +
+                  "context type you wrote, which is where a service path belongs"
+              )
+            )
           if h.reader == ContextReader.Apply then
-            malformedEntry(h, "reader", fqn, "`apply` reads through an `inline def apply()(using T): T` " +
-              "on the context's companion, which a MINTED type does not declare. Use `summon`, or " +
-              "`inject` a context type that declares the sugar")
+            malformedEntry(
+              h,
+              "reader",
+              fqn,
+              "`apply` reads through an `inline def apply()(using T): T` " +
+                "on the context's companion, which a MINTED type does not declare. Use `summon`, or " +
+                "`inject` a context type that declares the sugar"
+            )
         case ContextType.Injected(_) => ()
 
       // A member key names a static ON THE HOLDER. Bare on purpose — a field has no parameter list.
-      boundStatics = boundStatics.updated(h.holder, h.members.keys.map { f =>
-        val key = MemberKey(h.holder, f).render
-        f -> binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.members", key)
-          .toOption.getOrElse(Nil).flatMap(_.sym)
-      }.toMap)
+      boundStatics = boundStatics.updated(
+        h.holder,
+        h.members.keys.map { f =>
+          val key = MemberKey(h.holder, f).render
+          f -> binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.members", key).toOption.getOrElse(Nil).flatMap(_.sym)
+        }.toMap
+      )
 
-      boundSites = boundSites.updated(h.holder, h.sites.keys.toList.sorted.flatMap(k =>
-        binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites", k)
-          .toOption.map(hits => k -> hits.flatMap(_.sym))).toMap)
+      boundSites = boundSites.updated(
+        h.holder,
+        h.sites.keys.toList.sorted.flatMap(k => binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites", k).toOption.map(hits => k -> hits.flatMap(_.sym))).toMap
+      )
 
       // THE THIRD ANSWER's keys are TYPE keys (`ENGINE-LIMITS.md` CT7): the shape is a class a
       // framework CONSTRUCTS, so what a port names here is a type. A member key would be a different
@@ -220,14 +258,20 @@ final class GlobalsToImplicitsTransform(
       // reports the `#` form as malformed rather than guessing which was meant.
       h.selfSupplied.toList.sorted.foreach { (t, src) =>
         if src.trim.isEmpty then
-          malformedEntry(h, "selfSupplied", t, "the entry names a type and supplies no expression, " +
-            "so the type would take neither a constructor clause nor a `given` member and every " +
-            "`summon` in its body would be a compile error at a line the port never wrote. Give " +
-            "the expression that yields the context — a call into a fixture this port hand-wrote")
+          malformedEntry(
+            h,
+            "selfSupplied",
+            t,
+            "the entry names a type and supplies no expression, " +
+              "so the type would take neither a constructor clause nor a `given` member and every " +
+              "`summon` in its body would be a compile error at a line the port never wrote. Give " +
+              "the expression that yields the context — a call into a fixture this port hand-wrote"
+          )
       }
-      boundSelf = boundSelf.updated(h.holder, h.selfSupplied.keys.toList.sorted.flatMap(t =>
-        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied", t)
-          .toOption.map(_ -> t)).toMap)
+      boundSelf = boundSelf.updated(
+        h.holder,
+        h.selfSupplied.keys.toList.sorted.flatMap(t => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied", t).toOption.map(_ -> t)).toMap
+      )
 
       // …and `retain`'s keys are TYPE keys for the same reason, with the VALUE screened here rather
       // than at emission: it is spliced into a `val <name>:` header, so anything that is not a plain
@@ -235,105 +279,152 @@ final class GlobalsToImplicitsTransform(
       // never wrote, which is the one shape §4.45 says a policy must not produce.
       h.retain.toList.sorted.foreach { (t, nm) =>
         if !isPlainIdentifier(nm) then
-          malformedEntry(h, "retain", t, s"`$nm` is not a plain identifier, and this value is spliced " +
-            "into the header of the `val` this type will carry — anything else is a SYNTAX error in " +
-            "the emitted file, at a line the port never wrote. Give the MEMBER NAME the retained " +
-            "context should be readable under (the reference hand port spells its own like a field)")
+          malformedEntry(
+            h,
+            "retain",
+            t,
+            s"`$nm` is not a plain identifier, and this value is spliced " +
+              "into the header of the `val` this type will carry — anything else is a SYNTAX error in " +
+              "the emitted file, at a line the port never wrote. Give the MEMBER NAME the retained " +
+              "context should be readable under (the reference hand port spells its own like a field)"
+          )
       }
-      boundRetain = boundRetain.updated(h.holder, h.retain.toList.sorted.flatMap((t, nm) =>
-        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain", t)
-          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
+      boundRetain = boundRetain.updated(
+        h.holder,
+        h.retain.toList.sorted.flatMap((t, nm) => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain", t).toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap
+      )
 
       // …and `cache`'s, screened the same way and for the same reason one key over: the name is
       // spliced into a `def <name>:` header AND into the private holder's, so anything that is not
       // a plain identifier is a SYNTAX error in the emitted file at a line the port never wrote.
       h.cache.toList.sorted.foreach { (t, nm) =>
         if !isPlainIdentifier(nm) then
-          malformedEntry(h, "cache", t, s"`$nm` is not a plain identifier, and this value is spliced " +
-            "into the headers of the accessor and of the private holder this type will carry — " +
-            "anything else is a SYNTAX error in the emitted file, at a line the port never wrote. " +
-            "Give the MEMBER NAME the cached context should be readable under")
+          malformedEntry(
+            h,
+            "cache",
+            t,
+            s"`$nm` is not a plain identifier, and this value is spliced " +
+              "into the headers of the accessor and of the private holder this type will carry — " +
+              "anything else is a SYNTAX error in the emitted file, at a line the port never wrote. " +
+              "Give the MEMBER NAME the cached context should be readable under"
+          )
       }
-      boundCache = boundCache.updated(h.holder, h.cache.toList.sorted.flatMap((t, nm) =>
-        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache", t)
-          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
+      boundCache = boundCache.updated(
+        h.holder,
+        h.cache.toList.sorted.flatMap((t, nm) => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache", t).toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap
+      )
 
       // …and `through`'s: the value is a MEMBER NAME of the keyed type, looked up at run time; it is
       // never spliced, so only its shape is screened here.
       h.through.toList.sorted.foreach { (t, nm) =>
         if !isPlainIdentifier(nm) then
-          malformedEntry(h, "through", t, s"`$nm` is not a plain identifier. Give the NAME of the member " +
-            "(a field, or a constructor parameter the class stores) whose type is a mapped static's " +
-            "— the one this type reads the holder through instead of taking a clause")
+          malformedEntry(
+            h,
+            "through",
+            t,
+            s"`$nm` is not a plain identifier. Give the NAME of the member " +
+              "(a field, or a constructor parameter the class stores) whose type is a mapped static's " +
+              "— the one this type reads the holder through instead of taking a clause"
+          )
       }
-      boundThrough = boundThrough.updated(h.holder, h.through.toList.sorted.flatMap((t, nm) =>
-        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through", t)
-          .toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t)).toMap)
+      boundThrough = boundThrough.updated(
+        h.holder,
+        h.through.toList.sorted
+          .flatMap((t, nm) => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through", t).toOption.filter(_ => isPlainIdentifier(nm)).map(_ -> t))
+          .toMap
+      )
       // …and `capture`'s: `<static>.<method>() as <param> = <default>`; the static is a mapped
       // field of the holder, the default is spliced as the field's initialiser.
       h.capture.toList.sorted.foreach { (t, v) =>
         CaptureSpec.parse(v) match
           case scala.None =>
-            malformedEntry(h, "capture", t, s"`$v` is not `<static>.<method>() as <param> = <default>` — " +
-              "the holder's mapped static field, the nullary method on it whose VALUE is captured, the " +
-              "name of the field and companion-apply parameter that carry it, and the field's default")
+            malformedEntry(
+              h,
+              "capture",
+              t,
+              s"`$v` is not `<static>.<method>() as <param> = <default>` — " +
+                "the holder's mapped static field, the nullary method on it whose VALUE is captured, the " +
+                "name of the field and companion-apply parameter that carry it, and the field's default"
+            )
           case Some(spec) if !h.members.contains(spec.static) =>
-            malformedEntry(h, "capture", t, s"`${spec.static}` is not a mapped static of this holder " +
-              s"(`members` maps ${h.members.keys.toList.sorted.mkString(", ")})")
+            malformedEntry(
+              h,
+              "capture",
+              t,
+              s"`${spec.static}` is not a mapped static of this holder " +
+                s"(`members` maps ${h.members.keys.toList.sorted.mkString(", ")})"
+            )
           case Some(spec) if !isPlainIdentifier(spec.param) =>
-            malformedEntry(h, "capture", t, s"`${spec.param}` is not a plain identifier, and it is spliced " +
-              "into a `var` header and a parameter list")
+            malformedEntry(
+              h,
+              "capture",
+              t,
+              s"`${spec.param}` is not a plain identifier, and it is spliced " +
+                "into a `var` header and a parameter list"
+            )
           case Some(_) => ()
       }
-      boundCapture = boundCapture.updated(h.holder, h.capture.toList.sorted.flatMap((t, v) =>
-        CaptureSpec.parse(v).filter(sp => h.members.contains(sp.static) && isPlainIdentifier(sp.param))
-          .flatMap(_ => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", t)
-            .toOption).map(_ -> t)).toMap)
-      boundPromote = boundPromote.updated(h.holder, h.promoteToClass.flatMap(t =>
-        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t)
-          .toOption))
-      boundForce = boundForce.updated(h.holder, h.forceThread.flatMap(t =>
-        binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.forceThread", t)
-          .toOption))
+      boundCapture = boundCapture.updated(
+        h.holder,
+        h.capture.toList.sorted
+          .flatMap((t, v) =>
+            CaptureSpec
+              .parse(v)
+              .filter(sp => h.members.contains(sp.static) && isPlainIdentifier(sp.param))
+              .flatMap(_ => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", t).toOption)
+              .map(_ -> t)
+          )
+          .toMap
+      )
+      boundPromote = boundPromote.updated(
+        h.holder,
+        h.promoteToClass.flatMap(t => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.promoteToClass", t).toOption)
+      )
+      boundForce = boundForce.updated(
+        h.holder,
+        h.forceThread.flatMap(t => binder.bindType(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.forceThread", t).toOption)
+      )
 
-      h.scope.entries.foreach(e =>
-        binder.bindScope(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.scope", e))
+      h.scope.entries.foreach(e => binder.bindScope(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.scope", e))
     }
     requiredGivens.foreach { (cls, givenFqn) =>
-      binder.bindType(name, s"GlobalsToImplicitsTransform.requiredGivens", cls)
-        .toOption.foreach(s => boundGivens = boundGivens.updated(s, givenFqn))
+      binder.bindType(name, s"GlobalsToImplicitsTransform.requiredGivens", cls).toOption.foreach(s => boundGivens = boundGivens.updated(s, givenFqn))
     }
     malformed = bad.toList
-    records   = binder.recordsFor(name)
+    records = binder.recordsFor(name)
 
   /** the never-fired half plus this phase's own malformed entries and counted refusals. */
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++
       PolicyReport(malformed ++ danglingFindings ++ refusals.toList ++ deadSites.toList)
 
-  /** an extension naming a holder nothing in the chain declares — `PolicyBinder` cannot see this,
-    * since the extension's own keys bind against a program that has them; it is the HOLDER
-    * that's missing. ENGINE-LIMITS CT8 */
+  /** an extension naming a holder nothing in the chain declares — `PolicyBinder` cannot see this, since the extension's own keys bind against a program that has them; it is the HOLDER that's missing.
+    * ENGINE-LIMITS CT8
+    */
   private def danglingFindings: List[PolicyFinding] = dangling.map { e =>
-    PolicyFinding(name, "GlobalsToImplicitsTransform(extensions)", e.holder, PolicyIssue.Malformed,
+    PolicyFinding(
+      name,
+      "GlobalsToImplicitsTransform(extensions)",
+      e.holder,
+      PolicyIssue.Malformed,
       "this module extends a holder that neither it nor any of its bases declares, so every entry " +
         "in the extension names a site of a threading that is not happening. An extension carries " +
         "the PER-DECLARATION half of a holder the shared surface already states (§1.5); declare " +
-        "the holder in the base manifest, or fix the FQN if it was meant to name a different one")
+        "the holder in the base manifest, or fix the FQN if it was meant to name a different one"
+    )
   }
 
-  /** a name the emitter may splice into a `val <nm>:` header. Deliberately NOT scala's full
-    * identifier grammar — a backquoted or operator name would be legal scala and an awful member to
-    * put on a ported surface, and a port that wants one can say so when the case exists. */
+  /** a name the emitter may splice into a `val <nm>:` header. Deliberately NOT scala's full identifier grammar — a backquoted or operator name would be legal scala and an awful member to put on a
+    * ported surface, and a port that wants one can say so when the case exists.
+    */
   private def isPlainIdentifier(nm: String): Boolean =
     nm.nonEmpty && (nm.head.isLetter || nm.head == '_') && nm.forall(c => c.isLetterOrDigit || c == '_')
 
   private val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
 
-  /** a bound `sites` entry that selected no site — `bindMembers` asks whether the program declares
-    * the member, not whether the run ever reaches it, so this reports the residue that binding alone
-    * cannot see. Only entries whose binding succeeded are reported, so a truly absent member is
-    * reported once, by the binder, and not twice. ENGINE-LIMITS CT6 */
+  /** a bound `sites` entry that selected no site — `bindMembers` asks whether the program declares the member, not whether the run ever reaches it, so this reports the residue that binding alone
+    * cannot see. Only entries whose binding succeeded are reported, so a truly absent member is reported once, by the binder, and not twice. ENGINE-LIMITS CT6
+    */
   private val deadSites = collection.mutable.ListBuffer.empty[PolicyFinding]
 
   private def recordDeadSites(h: ContextHolder, fired: Set[String]): Unit =
@@ -352,17 +443,22 @@ final class GlobalsToImplicitsTransform(
             "and `refuse` decide how a READ is spelled at a boundary; an UNSUPPLIABLE USE — a " +
             "declaration that constructs or calls something threaded — has no read to spell, and " +
             "its exit is `lazy-init` or moving the use into a declaration the closure can reach"
-      deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites",
-        k, PolicyIssue.NeverMatched, s"$what. Delete the entry, or fix the key if it was meant to " +
-          "name a different member")
+      deadSites += PolicyFinding(
+        name,
+        s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites",
+        k,
+        PolicyIssue.NeverMatched,
+        s"$what. Delete the entry, or fix the key if it was meant to " +
+          "name a different member"
+      )
     }
 
   // ---- the seams, recorded as the run makes them --------------------------------------------
 
   private val seamLog = collection.mutable.ListBuffer.empty[ContextSeamCheck.Finding]
 
-  /** every seam this run drew, restricted to the units it actually emits — a dependent's `Program`
-    * holds its base's units too, and a seam inside one of those is the base's finding. ENGINE-LIMITS D2 */
+  /** every seam this run drew, restricted to the units it actually emits — a dependent's `Program` holds its base's units too, and a seam inside one of those is the base's finding. ENGINE-LIMITS D2
+    */
   def seams(program: Program, units: List[Tree.ClassDef]): List[ContextSeamCheck.Finding] =
     val own = units.map(_.symbol).toSet
     def unitOf(s: SymId, fuel: Int = 64): SymId =
@@ -383,14 +479,12 @@ final class GlobalsToImplicitsTransform(
     if boundGivens.isEmpty then afterHolders
     else applyRequiredGivens(afterHolders)
 
-  /** Adds `(using GivenType[T])` clauses to constructors of classes listed in `requiredGivens`,
-    * `T` the class's own first type parameter, built structurally so the package rename reaches it.
-    * Unlike holder-based threading this runs no closure: the class is named directly, and callers
-    * supply the given by inline resolution. An abstract class's clause propagates through `extends`.
+  /** Adds `(using GivenType[T])` clauses to constructors of classes listed in `requiredGivens`, `T` the class's own first type parameter, built structurally so the package rename reaches it. Unlike
+    * holder-based threading this runs no closure: the class is named directly, and callers supply the given by inline resolution. An abstract class's clause propagates through `extends`.
     */
   private def applyRequiredGivens(program0: Program): Program =
     val mint = new Minter(program0)
-    val o = Origin.synthetic
+    val o    = Origin.synthetic
 
     // transitive closure: a generic class C[T] constructing a bounded-given class B[T] with its
     // own first type parameter needs the same given threaded through its own constructors.
@@ -400,26 +494,26 @@ final class GlobalsToImplicitsTransform(
       val firstTp = cd.tparams.head.symbol
       boundGivens.view.flatMap { (givenClassSym, givenFqn) =>
         def hasInstantiation(stmts: List[Statement]): Boolean = stmts.exists(hasNew)
-        def hasNew(t: Tree): Boolean = t match
+        def hasNew(t: Tree):                          Boolean = t match
           case Tree.New(tpt, _, _, _) =>
             tpt.tpe match
               case TypeRepr.AppliedType(TypeRepr.TypeRef(_, headSym), args) =>
                 headSym == givenClassSym && args.headOption.exists {
                   case TypeRepr.TypeRef(_, s) => s == firstTp
-                  case _ => false
+                  case _                      => false
                 }
               case TypeRepr.TypeRef(_, headSym) =>
                 headSym == givenClassSym
               case _ => false
-          case a: Tree.Apply => hasNew(a.fun) || a.args.exists(hasNew)
-          case ta: Tree.TypeApply => hasNew(ta.fun)
-          case b: Tree.Block => b.stats.exists(hasNew) || hasNew(b.expr)
-          case sel: Tree.Select => hasNew(sel.qual)
-          case typed: Tree.Typed => hasNew(typed.expr)
-          case ifc: Tree.If => hasNew(ifc.cond) || hasNew(ifc.thenp) || hasNew(ifc.elsep)
-          case d: Tree.DefDef => d.rhs.exists(hasNew)
-          case v: Tree.ValDef => v.rhs.exists(hasNew)
-          case a: Tree.Assign => hasNew(a.rhs)
+          case a:     Tree.Apply     => hasNew(a.fun) || a.args.exists(hasNew)
+          case ta:    Tree.TypeApply => hasNew(ta.fun)
+          case b:     Tree.Block     => b.stats.exists(hasNew) || hasNew(b.expr)
+          case sel:   Tree.Select    => hasNew(sel.qual)
+          case typed: Tree.Typed     => hasNew(typed.expr)
+          case ifc:   Tree.If        => hasNew(ifc.cond) || hasNew(ifc.thenp) || hasNew(ifc.elsep)
+          case d:     Tree.DefDef    => d.rhs.exists(hasNew)
+          case v:     Tree.ValDef    => v.rhs.exists(hasNew)
+          case a:     Tree.Assign    => hasNew(a.rhs)
           case _ => false
         if hasInstantiation(cd.body) then Some(givenFqn)
         else None
@@ -449,19 +543,21 @@ final class GlobalsToImplicitsTransform(
 
     // build a map from class SymId -> list of (givenTypeSym, appliedTypeRef)
     val givenEntries: Map[SymId, List[(SymId, TypeRepr)]] = boundGivens.flatMap { (classSym, givenFqnRaw) =>
-      val specs = parseGivenSpec(givenFqnRaw)
+      val specs    = parseGivenSpec(givenFqnRaw)
       val classDef = program0.definitionOf(classSym).collect { case cd: Tree.ClassDef => cd }
-      classDef.map { cd =>
-        val entries = specs.flatMap { (givenFqn, tpIndex) =>
-          cd.tparams.lift(tpIndex).map { tp =>
-            val tpRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp.symbol)
-            val givenTypeSym = mint.tpe(givenFqn.split('.').last + (if tpIndex > 0 then s"$$$tpIndex" else ""), givenFqn)
-            val appliedType = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, givenTypeSym), List(tpRef))
-            (givenTypeSym, appliedType)
+      classDef
+        .map { cd =>
+          val entries = specs.flatMap { (givenFqn, tpIndex) =>
+            cd.tparams.lift(tpIndex).map { tp =>
+              val tpRef        = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp.symbol)
+              val givenTypeSym = mint.tpe(givenFqn.split('.').last + (if tpIndex > 0 then s"$$$tpIndex" else ""), givenFqn)
+              val appliedType  = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, givenTypeSym), List(tpRef))
+              (givenTypeSym, appliedType)
+            }
           }
+          classSym -> entries
         }
-        classSym -> entries
-      }.filter(_._2.nonEmpty)
+        .filter(_._2.nonEmpty)
     }
 
     if givenEntries.isEmpty then return program0
@@ -473,47 +569,58 @@ final class GlobalsToImplicitsTransform(
           case Some(entries) if entries.nonEmpty =>
             val ctors = t.body.collect { case d: Tree.DefDef if isCtor(p, d.symbol) => d.symbol }
             if ctors.isEmpty then t
-            else t.copy(body = t.body.map {
-              case d: Tree.DefDef if ctors.contains(d.symbol) =>
-                // a clause another phase already put there (`ElementWitnessTransform` threads the
-                // same witness) is not added twice: order-independent, as the witness phase's own
-                // `carriesClause` check is — two givens of one type make every construction ambiguous
-                val carried: Set[(String, SymId)] = d.paramss.flatten.flatMap { v =>
-                  if !p.symbolOf(v.symbol).exists(_.flags.isGiven) then Nil
-                  else v.tpt.tpe match
-                    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, w), List(TypeRepr.TypeRef(_, e))) =>
-                      p.symbolOf(w).map(ws => (ws.fullName, e)).toList
-                    case _ => Nil
-                }.toSet
-                val params = entries.filterNot { (givenTypeSym, appliedType) =>
-                  appliedType match
-                    case TypeRepr.AppliedType(_, List(TypeRepr.TypeRef(_, e))) =>
-                      p.symbolOf(givenTypeSym).exists(gs => carried((gs.fullName, e)))
-                    case _ => false
-                }.map { (_, appliedType) =>
-                  mint.usingParam(d.symbol, appliedType.toString, appliedType, d.origin)
+            else
+              t.copy(
+                body = t.body.map {
+                  case d: Tree.DefDef if ctors.contains(d.symbol) =>
+                    // a clause another phase already put there (`ElementWitnessTransform` threads the
+                    // same witness) is not added twice: order-independent, as the witness phase's own
+                    // `carriesClause` check is — two givens of one type make every construction ambiguous
+                    val carried: Set[(String, SymId)] = d.paramss.flatten.flatMap { v =>
+                      if !p.symbolOf(v.symbol).exists(_.flags.isGiven) then Nil
+                      else
+                        v.tpt.tpe match
+                          case TypeRepr.AppliedType(TypeRepr.TypeRef(_, w), List(TypeRepr.TypeRef(_, e))) =>
+                            p.symbolOf(w).map(ws => (ws.fullName, e)).toList
+                          case _ => Nil
+                    }.toSet
+                    val params = entries
+                      .filterNot { (givenTypeSym, appliedType) =>
+                        appliedType match
+                          case TypeRepr.AppliedType(_, List(TypeRepr.TypeRef(_, e))) =>
+                            p.symbolOf(givenTypeSym).exists(gs => carried((gs.fullName, e)))
+                          case _ => false
+                      }
+                      .map { (_, appliedType) =>
+                        mint.usingParam(d.symbol, appliedType.toString, appliedType, d.origin)
+                      }
+                    if params.isEmpty then d else d.copy(paramss = d.paramss :+ params)
+                  case s => s
                 }
-                if params.isEmpty then d else d.copy(paramss = d.paramss :+ params)
-              case s => s
-            })
+              )
           case _ => t
 
-    val prog1 = program0.rebuilt(symbols = SymbolTable(program0.symbols.all ++ mint.minted))
+    val prog1  = program0.rebuilt(symbols = SymbolTable(program0.symbols.all ++ mint.minted))
     val units1 = prog1.units.map(u => StandardTraversal.mapClassDef(edit, u)(using prog1))
-    val prog2 = prog1.rebuilt(units = units1, symbols = SymbolTable(prog1.symbols.all ++ mint.minted))
+    val prog2  = prog1.rebuilt(units = units1, symbols = SymbolTable(prog1.symbols.all ++ mint.minted))
 
     // record decisions
     boundGivens.foreach { (classSym, givenFqn) =>
       program0.symbolOf(classSym).foreach { s =>
-        record(Decision(
-          kind = Decision.Kind.RequiredGiven,
-          subject = classSym,
-          subjectFqn = s.fullName,
-          detail = Map("given" -> givenFqn, "why" -> ("a retarget construction inside this class's " +
-            "body needs MkArray[T] and the factory's inline summon cannot resolve a type parameter")),
-          reason = Reason.Configured(name, s"requiredGivens/${s.fullName}"),
-          origin = Decision.originOf(program0, classSym),
-        ))
+        record(
+          Decision(
+            kind = Decision.Kind.RequiredGiven,
+            subject = classSym,
+            subjectFqn = s.fullName,
+            detail = Map(
+              "given" -> givenFqn,
+              "why" -> ("a retarget construction inside this class's " +
+                "body needs MkArray[T] and the factory's inline summon cannot resolve a type parameter")
+            ),
+            reason = Reason.Configured(name, s"requiredGivens/${s.fullName}"),
+            origin = Decision.originOf(program0, classSym)
+          )
+        )
       }
     }
 
@@ -521,60 +628,79 @@ final class GlobalsToImplicitsTransform(
 
   private def runHolder(program0: Program, h: ContextHolder): Program =
     val statics: Map[SymId, String] =
-      boundStatics.getOrElse(h.holder, Map.empty).toList.flatMap { (field, syms) =>
-        syms.filter(s => program0.owns(s) && program0.symbolOf(s).exists(_.flags.isStatic))
-          .map(_ -> h.members(field))
-      }.toMap
+      boundStatics
+        .getOrElse(h.holder, Map.empty)
+        .toList
+        .flatMap { (field, syms) =>
+          syms.filter(s => program0.owns(s) && program0.symbolOf(s).exists(_.flags.isStatic)).map(_ -> h.members(field))
+        }
+        .toMap
     if statics.isEmpty then return program0
 
     given Program = program0
-    val mint  = new Minter(program0)
-    val graph = OverrideGraph.build(program0)
+    val mint      = new Minter(program0)
+    val graph     = OverrideGraph.build(program0)
     // an entry with an empty expression is malformed and reported; it must not also unthread its type.
-    val selfSupplied = boundSelf.getOrElse(h.holder, Map.empty)
-      .filter((_, k) => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
+    val selfSupplied = boundSelf.getOrElse(h.holder, Map.empty).filter((_, k) => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
+
     /** the type → the Scala the port wrote for it, spliced verbatim by the emitter. */
     val selfSource: Map[SymId, String] = selfSupplied.map((s, k) => s -> h.selfSupplied(k))
+
     /** the type → the member name its retained context is readable under. Bound entries only. */
     val retainOf: Map[SymId, String] =
       boundRetain.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.retain.get(k).map(s -> _))
+
     /** the type → the member name its CACHED context is readable under. */
     val cacheOf: Map[SymId, String] =
       boundCache.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.cache.get(k).map(s -> _))
-    /** the types a `cache` entry actually minted on — complements the dead-binding report, since a
-      * `cache` key binds against a real class whether or not the closure threaded it. ENGINE-LIMITS CT6 */
+
+    /** the types a `cache` entry actually minted on — complements the dead-binding report, since a `cache` key binds against a real class whether or not the closure threaded it. ENGINE-LIMITS CT6
+      */
     val cacheFired = collection.mutable.Set.empty[SymId]
-    /** the type -> (its own member the holder is read through, that member's type, the context hop
-      * the member stands for). An entry naming no such member, or a member whose type no single-hop
-      * static has, is a counted finding and threads as before. */
+
+    /** the type -> (its own member the holder is read through, that member's type, the context hop the member stands for). An entry naming no such member, or a member whose type no single-hop static
+      * has, is a counted finding and threads as before.
+      */
     val throughOf: Map[SymId, (SymId, TypeRepr, String)] =
       boundThrough.getOrElse(h.holder, Map.empty).flatMap { (c, key) =>
         val nm = h.through(key)
         def head(t: TypeRepr): Option[SymId] = t match
-          case TypeRepr.TypeRef(_, s)        => Some(s)
-          case TypeRepr.AppliedType(t2, _)   => head(t2)
-          case _                             => scala.None
-        val member = program0.symbols.all.find(s =>
-          s.owner == c && s.name == nm && !s.flags.isStatic && !PolicyBinder.isExecutable(s.info))
-        val hop = member.flatMap(m => head(m.info)).flatMap(t =>
-          statics.toList.sortBy(_._2).collectFirst {
-            case (st, path) if !path.contains('.') && program0.symbolOf(st).flatMap(s => head(s.info)).contains(t) => path
-          })
+          case TypeRepr.TypeRef(_, s)      => Some(s)
+          case TypeRepr.AppliedType(t2, _) => head(t2)
+          case _                           => scala.None
+        val member = program0.symbols.all.find(s => s.owner == c && s.name == nm && !s.flags.isStatic && !PolicyBinder.isExecutable(s.info))
+        val hop    = member
+          .flatMap(m => head(m.info))
+          .flatMap(t =>
+            statics.toList.sortBy(_._2).collectFirst {
+              case (st, path) if !path.contains('.') && program0.symbolOf(st).flatMap(s => head(s.info)).contains(t) => path
+            }
+          )
         (member, hop) match
           case (Some(m), Some(p)) => Some(c -> (m.id, m.info, p))
-          case (scala.None, _) =>
-            deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
-              key, PolicyIssue.Unverifiable, s"`$nm` is not a non-static field of this type, so there is " +
-                "nothing to read the holder through; the type threads as before")
+          case (scala.None, _)    =>
+            deadSites += PolicyFinding(
+              name,
+              s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
+              key,
+              PolicyIssue.Unverifiable,
+              s"`$nm` is not a non-static field of this type, so there is " +
+                "nothing to read the holder through; the type threads as before"
+            )
             scala.None
           case (Some(_), scala.None) =>
-            deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
-              key, PolicyIssue.Unverifiable, s"no single-hop mapped static has `$nm`'s type, so no context " +
-                "member is the one this field stands for; the type threads as before")
+            deadSites += PolicyFinding(
+              name,
+              s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
+              key,
+              PolicyIssue.Unverifiable,
+              s"no single-hop mapped static has `$nm`'s type, so no context " +
+                "member is the one this field stands for; the type threads as before"
+            )
             scala.None
       }
     // ---- `capture`: a static's VALUE as a field + companion applies (ContextHolder.capture) ----
-    def fqnOf(s: SymId): String = program0.symbolOf(s).map(_.fullName).getOrElse("?")
+    def fqnOf(s: SymId):     String        = program0.symbolOf(s).map(_.fullName).getOrElse("?")
     def headOf(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s)      => Some(s)
       case TypeRepr.AppliedType(t2, _) => headOf(t2)
@@ -582,94 +708,122 @@ final class GlobalsToImplicitsTransform(
     @annotation.tailrec
     def instanceOwner(s: SymId, fuel: Int): Option[SymId] =
       if s == SymId.None || fuel <= 0 then scala.None
-      else program0.symbolOf(s) match
-        case scala.None => scala.None
-        case Some(sym) =>
-          if graph.types.contains(s) then Some(s)
-          else if sym.flags.isStatic then scala.None
-          else instanceOwner(sym.owner, fuel - 1)
+      else
+        program0.symbolOf(s) match
+          case scala.None => scala.None
+          case Some(sym)  =>
+            if graph.types.contains(s) then Some(s)
+            else if sym.flags.isStatic then scala.None
+            else instanceOwner(sym.owner, fuel - 1)
     val allDefs = program0.units.flatMap(u => StandardTraversal.allClassDefs(u))
     def captureFinding(key: String, why: String): Unit =
-      deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", key,
-        PolicyIssue.Unverifiable, why)
+      deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", key, PolicyIssue.Unverifiable, why)
     val captureOf: Map[SymId, CaptureRun] =
-      boundCapture.getOrElse(h.holder, Map.empty).toList.sortBy(_._1.raw).flatMap { (c, key) =>
-        val spec = CaptureSpec.parse(h.capture(key)).get
-        val st   = boundStatics.getOrElse(h.holder, Map.empty).getOrElse(spec.static, Nil).find(statics.contains)
-        val meth = st.flatMap(program0.symbolOf).flatMap(s => headOf(s.info)).flatMap(t =>
-          program0.symbols.all.find(m => m.owner == t && m.name == spec.method &&
-            (m.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _ => false })))
-        val res   = meth.map(_.info).collect { case TypeRepr.MethodType(_, r, _) => r }
-        val ctors = program0.symbols.all.filter(s => s.owner == c && s.name == ContextNeed.CtorName).map(_.id).toList.sortBy(_.raw)
-        val cd    = allDefs.find(_.symbol == c)
-        (st, meth, res) match
-          case _ if cd.isEmpty || ctors.isEmpty =>
-            captureFinding(key, "the type declares no constructor this program emits; nothing to capture at"); Nil
-          case _ if cd.exists(_.tparams.nonEmpty) =>
-            captureFinding(key, "the type is generic and a companion `apply` would need its type parameters (not in v1)"); Nil
-          case (scala.None, _, _) =>
-            captureFinding(key, s"`${spec.static}` binds to no static this program reads"); Nil
-          case (_, scala.None, _) | (_, _, scala.None) =>
-            captureFinding(key, s"`${spec.method}()` is not a nullary method this program parses on `${spec.static}`'s type — an " +
-              "unreadable class file has no value type to capture"); Nil
-          case (Some(s), Some(m), Some(r)) =>
-            // a wrapper named by the key is an external type this program may already reference
-            // (the nullability step's own wrapper): reuse its symbol so both phases hold ONE
-            val wrapperSym = spec.wrapper.map(w =>
-              program0.symbols.all.find(_.fullName == w).map(_.id)
-                // minted as the nullability step mints its own (no info): a self-typed symbol prints bare at a value position
-                .getOrElse(mint.member(w.split('.').last, w, SymId.None, TypeRepr.NoType, Flags())))
-            val fieldTpe = wrapperSym.fold(r)(ws => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, ws), List(r)))
-            val wrapApply = wrapperSym.zip(spec.wrapper).map((ws, w) =>
-              ws -> mint.member("apply", MemberKey(w, "apply").render + "/capture", ws, TypeRepr.NoType, Flags(isStatic = true)))
-            val field = mint.member(spec.param, MemberKey(fqnOf(c), spec.param).render, c, fieldTpe,
-                                    Flags(isMutable = true, isProtected = true))
-            List(c -> CaptureRun(key, field, fieldTpe, s, statics(s), m.id, ctors, spec.default, wrapApply))
-      }.toMap
+      boundCapture
+        .getOrElse(h.holder, Map.empty)
+        .toList
+        .sortBy(_._1.raw)
+        .flatMap { (c, key) =>
+          val spec = CaptureSpec.parse(h.capture(key)).get
+          val st   = boundStatics.getOrElse(h.holder, Map.empty).getOrElse(spec.static, Nil).find(statics.contains)
+          val meth = st
+            .flatMap(program0.symbolOf)
+            .flatMap(s => headOf(s.info))
+            .flatMap(t =>
+              program0.symbols.all.find(m =>
+                m.owner == t && m.name == spec.method &&
+                  (m.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _ => false })
+              )
+            )
+          val res   = meth.map(_.info).collect { case TypeRepr.MethodType(_, r, _) => r }
+          val ctors = program0.symbols.all.filter(s => s.owner == c && s.name == ContextNeed.CtorName).map(_.id).toList.sortBy(_.raw)
+          val cd    = allDefs.find(_.symbol == c)
+          (st, meth, res) match
+            case _ if cd.isEmpty || ctors.isEmpty =>
+              captureFinding(key, "the type declares no constructor this program emits; nothing to capture at"); Nil
+            case _ if cd.exists(_.tparams.nonEmpty) =>
+              captureFinding(key, "the type is generic and a companion `apply` would need its type parameters (not in v1)"); Nil
+            case (scala.None, _, _) =>
+              captureFinding(key, s"`${spec.static}` binds to no static this program reads"); Nil
+            case (_, scala.None, _) | (_, _, scala.None) =>
+              captureFinding(
+                key,
+                s"`${spec.method}()` is not a nullary method this program parses on `${spec.static}`'s type — an " +
+                  "unreadable class file has no value type to capture"
+              );
+              Nil
+            case (Some(s), Some(m), Some(r)) =>
+              // a wrapper named by the key is an external type this program may already reference
+              // (the nullability step's own wrapper): reuse its symbol so both phases hold ONE
+              val wrapperSym = spec.wrapper.map(w =>
+                program0.symbols.all
+                  .find(_.fullName == w)
+                  .map(_.id)
+                  // minted as the nullability step mints its own (no info): a self-typed symbol prints bare at a value position
+                  .getOrElse(mint.member(w.split('.').last, w, SymId.None, TypeRepr.NoType, Flags()))
+              )
+              val fieldTpe  = wrapperSym.fold(r)(ws => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, ws), List(r)))
+              val wrapApply = wrapperSym.zip(spec.wrapper).map((ws, w) => ws -> mint.member("apply", MemberKey(w, "apply").render + "/capture", ws, TypeRepr.NoType, Flags(isStatic = true)))
+              val field     = mint.member(spec.param, MemberKey(fqnOf(c), spec.param).render, c, fieldTpe, Flags(isMutable = true, isProtected = true))
+              List(c -> CaptureRun(key, field, fieldTpe, s, statics(s), m.id, ctors, spec.default, wrapApply))
+        }
+        .toMap
     val captureCtor: Map[SymId, (SymId, CaptureRun)] =
       captureOf.toList.flatMap((c, run) => run.ctors.map(_ -> (c, run))).toMap
+
     /** the reads the field answers: `<static>.<method>()` inside an instance member of the type. */
     val capturedPlans: Map[(SymId, Origin), ReadPlan.Captured] =
       captureOf.toList.flatMap { (c, cr) =>
-        program0.usages(cr.static).collect {
-          case Usage(UsageKind.TermRef, site, enc) if instanceOwner(enc, 64).contains(c) => (site.origin, enc)
-        }.flatMap { (o, _) =>
-          // the read is the METHOD's receiver, checked on the tree: a bare `Gdx.files` is not it
-          val under = allDefs.find(_.symbol == c).toList.flatMap { cd =>
-            val acc = collection.mutable.Set.empty[Origin]
-            val scan = new Phase:
-              def name = "globals->implicits/capture-scan"
-              override def transformApply(t: Tree.Apply)(using Program): Term =
-                t match
-                  case Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _) if m == cr.method =>
-                    q match
-                      case Tree.Ident(s, _, qo) if s == cr.static     => acc += qo
-                      case Tree.Select(_, s, _, qo) if s == cr.static => acc += qo
+        program0
+          .usages(cr.static)
+          .collect {
+            case Usage(UsageKind.TermRef, site, enc) if instanceOwner(enc, 64).contains(c) => (site.origin, enc)
+          }
+          .flatMap { (o, _) =>
+            // the read is the METHOD's receiver, checked on the tree: a bare `Gdx.files` is not it
+            val under = allDefs
+              .find(_.symbol == c)
+              .toList
+              .flatMap { cd =>
+                val acc  = collection.mutable.Set.empty[Origin]
+                val scan = new Phase:
+                  def name = "globals->implicits/capture-scan"
+                  override def transformApply(t: Tree.Apply)(using Program): Term =
+                    t match
+                      case Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _) if m == cr.method =>
+                        q match
+                          case Tree.Ident(s, _, qo) if s == cr.static     => acc += qo
+                          case Tree.Select(_, s, _, qo) if s == cr.static => acc += qo
+                          case _                                          => ()
                       case _ => ()
-                  case _ => ()
-                t
-            StandardTraversal.mapClassDef(scan, cd)(using program0)
-            acc.toList
-          }.toSet
-          Option.when(under(o))((cr.static, o) -> (ReadPlan.Captured(c, cr.field, cr.fieldTpe): ReadPlan.Captured))
-        }
+                    t
+                StandardTraversal.mapClassDef(scan, cd)(using program0)
+                acc.toList
+              }
+              .toSet
+            Option.when(under(o))((cr.static, o) -> (ReadPlan.Captured(c, cr.field, cr.fieldTpe): ReadPlan.Captured))
+          }
       }.toMap
-    /** construction sites of a captured type: forwarded from the field inside its own instance
-      * members, otherwise a synthetic read the closure seeds and plans; anonymous subclasses keep
-      * the default and are counted. Declared subclasses assign the field at their own construction. */
+
+    /** construction sites of a captured type: forwarded from the field inside its own instance members, otherwise a synthetic read the closure seeds and plans; anonymous subclasses keep the default
+      * and are counted. Declared subclasses assign the field at their own construction.
+      */
     val forwardSites = collection.mutable.Set.empty[Origin]
     val extraReads   = collection.mutable.ListBuffer.empty[(SymId, Origin, SymId)]
     captureOf.foreach { (c, run) =>
       run.ctors.flatMap(program0.usages).foreach { u =>
         val newNode = u.site match
-          case n: Tree.New                     => Some(n)
+          case n: Tree.New => Some(n)
           case Tree.Apply(n: Tree.New, _, _, _, _) => Some(n)
-          case _                               => scala.None
+          case _                                   => scala.None
         newNode.foreach { n =>
           if n.anon.isDefined then
-            captureFinding(run.key, s"an anonymous subclass at ${u.site.origin.javaPath}:${u.site.origin.line} keeps " +
-              s"`${h.through.getOrElse("", "")}${program0.symbolOf(run.field).map(_.name).getOrElse("?")}`'s default — " +
-              "its super call cannot become the companion `apply`")
+            captureFinding(
+              run.key,
+              s"an anonymous subclass at ${u.site.origin.javaPath}:${u.site.origin.line} keeps " +
+                s"`${h.through.getOrElse("", "")}${program0.symbolOf(run.field).map(_.name).getOrElse("?")}`'s default — " +
+                "its super call cannot become the companion `apply`"
+            )
           else if instanceOwner(u.enclosing, 64).contains(c) then forwardSites += n.origin
           else extraReads += ((run.static, n.origin, u.enclosing))
         }
@@ -678,23 +832,28 @@ final class GlobalsToImplicitsTransform(
         extraReads += ((run.static, Decision.originOf(program0, d), d))
       }
     }
-    val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
-                                boundForce.getOrElse(h.holder, Set.empty),
-                                (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
-                                (s, why) => refuse(h, why),
-                                boundSites.getOrElse(h.holder, Map.empty),
-                                selfSupplied,
-                                throughOf,
-                                capturedPlans,
-                                extraReads.toList.distinct)
+    val need = new ContextNeed(
+      program0,
+      graph,
+      h,
+      statics,
+      boundPromote.getOrElse(h.holder, Set.empty),
+      boundForce.getOrElse(h.holder, Set.empty),
+      (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
+      (s, why) => refuse(h, why),
+      boundSites.getOrElse(h.holder, Map.empty),
+      selfSupplied,
+      throughOf,
+      capturedPlans,
+      extraReads.toList.distinct
+    )
     need.grow()
 
     // CT11: remove stale UnsuppliableUse seams for fields that became holders — the growth
     // records the seam BEFORE discoverFieldHolders resolves it, so the stale row stays.
     if need.fieldHolders.nonEmpty then
       val held = need.fieldHolders.keySet
-      seamLog.filterInPlace(f =>
-        !(f.kind == ContextSeamCheck.Kind.UnsuppliableUse && held.contains(f.enclosing)))
+      seamLog.filterInPlace(f => !(f.kind == ContextSeamCheck.Kind.UnsuppliableUse && held.contains(f.enclosing)))
 
     // ---- the context TYPE, and the terms that read through it ---------------------------------
     val ctxFqn = h.context.fqn
@@ -705,54 +864,61 @@ final class GlobalsToImplicitsTransform(
     val predefSym = mint.tpe("Predef", "scala.Predef")
     val summonSym = mint.member("summon", "scala.Predef#summon", predefSym, ctxRef, Flags(isStatic = true))
     val applySym  = mint.member("apply", MemberKey(ctxFqn, "apply").render, ctxSym, ctxRef, Flags(isStatic = true))
-    val globalSym = mint.member("global", MemberKey(ctxFqn, "global").render, ctxSym, ctxRef,
-                                Flags(isStatic = true, isMutable = true))
+    val globalSym = mint.member("global", MemberKey(ctxFqn, "global").render, ctxSym, ctxRef, Flags(isStatic = true, isMutable = true))
     val segCache  = collection.mutable.Map.empty[String, SymId]
     def segSym(seg: String): SymId =
       segCache.getOrElseUpdate(seg, mint.member(seg, MemberKey(ctxFqn, seg).render, ctxSym, TypeRepr.NoType, Flags()))
 
-    /** `scala.Predef.summon[T]`, or `T.apply()`. Built structurally, not as text — a name spliced
-      * into a string would be the one reference the package rename (§4.56) cannot see. */
+    /** `scala.Predef.summon[T]`, or `T.apply()`. Built structurally, not as text — a name spliced into a string would be the one reference the package rename (§4.56) cannot see.
+      */
     def contextExpr: Term = h.reader match
       case ContextReader.Summon =>
         Tree.TypeApply(Tree.Ident(summonSym, ctxRef, o), List(TypeTree(ctxRef, o)), ctxRef, o)
       case ContextReader.Apply => Tree.Apply(Tree.Ident(applySym, ctxRef, o), Nil, applySym, ctxRef, o)
 
-    /** a `seg()` hop is a nullary METHOD on the previous hop (a getter the port has not turned into
-      * a property yet): minted with a method type and applied, so the emitter writes the call. */
+    /** a `seg()` hop is a nullary METHOD on the previous hop (a getter the port has not turned into a property yet): minted with a method type and applied, so the emitter writes the call.
+      */
     val methodHops = collection.mutable.Map.empty[SymId, String]
     def segMethodSym(seg: String, tpe: TypeRepr): SymId =
-      val id = segCache.getOrElseUpdate(seg + "()",
-        mint.member(seg, MemberKey(ctxFqn, seg + "()").render, ctxSym, TypeRepr.MethodType(Nil, tpe), Flags()))
+      val id = segCache.getOrElseUpdate(seg + "()", mint.member(seg, MemberKey(ctxFqn, seg + "()").render, ctxSym, TypeRepr.MethodType(Nil, tpe), Flags()))
       methodHops.getOrElseUpdate(id, seg)
       id
-    /** a WRITE through a getter hop is the bean SETTER's call (`getGL20()` <- `setGL20(v)`): java's
-      * own convention for the pair, which is what a `()` hop stands for until the property step. */
+
+    /** a WRITE through a getter hop is the bean SETTER's call (`getGL20()` <- `setGL20(v)`): java's own convention for the pair, which is what a `()` hop stands for until the property step.
+      */
     def setterFor(getter: String, valueTpe: TypeRepr): SymId =
       val nm = "set" + getter.stripPrefix("get")
-      segCache.getOrElseUpdate(nm + "(v)",
-        mint.member(nm, MemberKey(ctxFqn, nm + "(v)").render, ctxSym,
-          TypeRepr.MethodType(List(("value", valueTpe)), TypeRepr.NoType), Flags()))
-    /** the program type a mapped static's PATH SEGMENT reaches (`graphics` -> the `Graphics` type): the
-      * first hop off an injected context is typed by the static that maps to it. */
+      segCache.getOrElseUpdate(
+        nm + "(v)",
+        mint.member(nm, MemberKey(ctxFqn, nm + "(v)").render, ctxSym, TypeRepr.MethodType(List(("value", valueTpe)), TypeRepr.NoType), Flags())
+      )
+
+    /** the program type a mapped static's PATH SEGMENT reaches (`graphics` -> the `Graphics` type): the first hop off an injected context is typed by the static that maps to it.
+      */
     def staticTypeOf(seg: String): Option[SymId] =
       statics.collectFirst { case (st, pth) if pth == seg => st }.flatMap(program0.symbolOf).map(_.info).flatMap {
-        case TypeRepr.TypeRef(_, t) => Some(t); case TypeRepr.AppliedType(TypeRepr.TypeRef(_, t), _) => Some(t); case _ => scala.None }
+        case TypeRepr.TypeRef(_, t) => Some(t); case TypeRepr.AppliedType(TypeRepr.TypeRef(_, t), _) => Some(t); case _ => scala.None
+      }
     def headSymOf(t: TypeRepr): Option[SymId] = t match
-      case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(t2, _) => headSymOf(t2); case _ => scala.None
+      case TypeRepr.TypeRef(_, s)      => Some(s);
+      case TypeRepr.AppliedType(t2, _) => headSymOf(t2);
+      case _                           => scala.None
     def resultOf(m: Symbol): TypeRepr = m.info match
       case TypeRepr.MethodType(_, r, _) => r
       case other                        => other
-    /** the REAL member a path segment names on a program type — by its own name or java's getter
-      * spelling of it (`gl30` for `getGL30()`), a field or a nilary method — so every later phase
-      * (a derived `Nullable`, the bean fold, a rename) sees an ordinary reference and not a minted name. */
+
+    /** the REAL member a path segment names on a program type — by its own name or java's getter spelling of it (`gl30` for `getGL30()`), a field or a nilary method — so every later phase (a derived
+      * `Nullable`, the bean fold, a rename) sees an ordinary reference and not a minted name.
+      */
     def realMember(owner: SymId, seg: String): Option[Symbol] =
-      val nilary = (m: Symbol) => m.info match
-        case TypeRepr.MethodType(Nil, _, _)               => true
-        case _: TypeRepr.MethodType | _: TypeRepr.PolyType => false
-        case _                                             => true
+      val nilary = (m: Symbol) =>
+        m.info match
+          case TypeRepr.MethodType(Nil, _, _)                => true
+          case _: TypeRepr.MethodType | _: TypeRepr.PolyType => false
+          case _                                             => true
       val all = program0.symbols.all.filter(m => m.owner == owner && !m.flags.isStatic && nilary(m)).toList
       all.find(_.name == seg).orElse(all.find(m => m.name.equalsIgnoreCase("get" + seg) || m.name.equalsIgnoreCase("is" + seg)))
+
     /** the real setter beside a real getter hop, for a WRITE through it. */
     val realSetterOf = collection.mutable.Map.empty[SymId, Option[SymId]]
     def pathOn(base: Term, path: String, tpe: TypeRepr, at: Origin): Term =
@@ -768,8 +934,15 @@ final class GlobalsToImplicitsTransform(
               if m.name.startsWith("get") then "set" + m.name.drop(3)
               else if m.name.startsWith("is") then "set" + m.name.drop(2)
               else "set" + m.name.capitalize
-            realSetterOf.getOrElseUpdate(m.id, program0.symbols.all.find(s => s.owner == m.owner && !s.flags.isStatic &&
-              s.name == setterName && (s.info match { case TypeRepr.MethodType(List(_), _, _) => true; case _ => false })).map(_.id))
+            realSetterOf.getOrElseUpdate(
+              m.id,
+              program0.symbols.all
+                .find(s =>
+                  s.owner == m.owner && !s.flags.isStatic &&
+                    s.name == setterName && (s.info match { case TypeRepr.MethodType(List(_), _, _) => true; case _ => false })
+                )
+                .map(_.id)
+            )
             m.info match
               case TypeRepr.MethodType(Nil, r, _) => Tree.Apply(Tree.Select(q, m.id, TypeRepr.NoType, at), Nil, m.id, r, at)
               case other                          => Tree.Select(q, m.id, other, at)
@@ -785,44 +958,57 @@ final class GlobalsToImplicitsTransform(
     val deferred = new DeferredInit(program0, h, mint, ctxRef, need.deferrals)
     deferred.deferrals.foreach { d =>
       program0.symbolOf(d.field).foreach { s =>
-        seamLog += ContextSeamCheck.Finding(ContextSeamCheck.Kind.DeferredInit, s.fullName, d.key,
-          "initialised at first READ instead of at class initialisation", Decision.originOf(program0, d.field), d.field)
-        record(Decision(
-          kind = Decision.Kind.DeferredInit, subject = d.field, subjectFqn = s.fullName,
-          // no `key` in detail: `Reason.Configured` already carries it (§4.575).
-          detail = Map(
-            "from" -> (if d.clinit == SymId.None then "the field's own initialiser"
-                       else "assigned by the class initialiser"),
-            "to"   -> s"a `def` over a cache, taking `(using $ctxFqn)`",
-            "why"  -> ("java runs a class initialiser at first ACTIVE USE of the class and this " +
-              "runs at first READ of the field — an eager→lazy change the `sites` policy asked for"),
-          ),
-          reason = Reason.Configured(name, d.key),
-          origin = Decision.originOf(program0, d.field),
-        ))
+        seamLog += ContextSeamCheck.Finding(
+          ContextSeamCheck.Kind.DeferredInit,
+          s.fullName,
+          d.key,
+          "initialised at first READ instead of at class initialisation",
+          Decision.originOf(program0, d.field),
+          d.field
+        )
+        record(
+          Decision(
+            kind = Decision.Kind.DeferredInit,
+            subject = d.field,
+            subjectFqn = s.fullName,
+            // no `key` in detail: `Reason.Configured` already carries it (§4.575).
+            detail = Map(
+              "from" -> (if d.clinit == SymId.None then "the field's own initialiser"
+                         else "assigned by the class initialiser"),
+              "to" -> s"a `def` over a cache, taking `(using $ctxFqn)`",
+              "why" -> ("java runs a class initialiser at first ACTIVE USE of the class and this " +
+                "runs at first READ of the field — an eager→lazy change the `sites` policy asked for")
+            ),
+            reason = Reason.Configured(name, d.key),
+            origin = Decision.originOf(program0, d.field)
+          )
+        )
       }
     }
 
     // ---- what each READ SITE becomes -----------------------------------------------------------
     val plan = need.readPlan
-    /** the captured VALUE at a construction site or a subclass: the field itself inside the type,
-      * else the context's read where the plan says one is in scope. */
+
+    /** the captured VALUE at a construction site or a subclass: the field itself inside the type, else the context's read where the plan says one is in scope.
+      */
     def captureValue(c: SymId, run: CaptureRun, at: Origin, forward: Boolean): Option[Term] =
       def call(base: Term): Term =
         val read = Tree.Apply(Tree.Select(base, run.method, TypeRepr.NoType, at), Nil, run.method, TypeRepr.NoType, at)
         // through the wrapper, as the nullability step writes its `empty`: `Wrapper.apply(read)`
         run.wrapApply.fold(read) { (ws, ap) =>
-          Tree.Apply(Tree.Select(Tree.Ident(ws, TypeRepr.NoType, at), ap, TypeRepr.NoType, at), List(read), ap, run.fieldTpe, at) }
+          Tree.Apply(Tree.Select(Tree.Ident(ws, TypeRepr.NoType, at), ap, TypeRepr.NoType, at), List(read), ap, run.fieldTpe, at)
+        }
       if forward then Some(Tree.Select(Tree.This(c, TypeRepr.TypeRef(TypeRepr.NoPrefix, c), at), run.field, run.fieldTpe, at))
-      else plan.get(run.static -> at) match
-        case Some(ReadPlan.Threaded) => Some(call(pathOn(contextExpr, run.hop, TypeRepr.NoType, at)))
-        case Some(ReadPlan.Global)   => Some(call(pathOn(Tree.Ident(globalSym, ctxRef, o), run.hop, TypeRepr.NoType, at)))
-        case _                       => scala.None
+      else
+        plan.get(run.static -> at) match
+          case Some(ReadPlan.Threaded) => Some(call(pathOn(contextExpr, run.hop, TypeRepr.NoType, at)))
+          case Some(ReadPlan.Global)   => Some(call(pathOn(Tree.Ident(globalSym, ctxRef, o), run.hop, TypeRepr.NoType, at)))
+          case _                       => scala.None
     val rewrite = new Phase:
       def name = "globals->implicits/read"
-      override def transformIdent(t: Tree.Ident)(using Program): Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
+      override def transformIdent(t:  Tree.Ident)(using Program):  Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
       override def transformSelect(t: Tree.Select)(using Program): Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
-      override def transformTerm(t: Term)(using Program): Term = t match
+      override def transformTerm(t: Term)(using Program):          Term = t match
         // the lhs was rewritten (children first) into a getter-hop CALL: an assignment to a call is
         // the setter's call instead.
         case Tree.Assign(Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _), rhs, _, at, None) if methodHops.contains(m) =>
@@ -849,10 +1035,10 @@ final class GlobalsToImplicitsTransform(
               Tree.Apply(Tree.Ident(ap, TypeRepr.NoType, at), args :+ v, ap, tpe, at)
             case scala.None => t
         case _ => t
-      /** the java static's type against the type of the member its path ends on: where an earlier
-        * phase WRAPPED that member (`getGL30(): Nullable[GL30]` under a static `GL30 gl30`), the
-        * read is unwrapped null-preservingly (`.orNull`) — the seam this rewrite creates, closed
-        * where the shapes differ by exactly one wrapper (CLAUDE.md §1(b): every seam is counted). */
+
+      /** the java static's type against the type of the member its path ends on: where an earlier phase WRAPPED that member (`getGL30(): Nullable[GL30]` under a static `GL30 gl30`), the read is
+        * unwrapped null-preservingly (`.orNull`) — the seam this rewrite creates, closed where the shapes differ by exactly one wrapper (CLAUDE.md §1(b): every seam is counted).
+        */
       private val orNullSym = mint.member("orNull", MemberKey(ctxFqn, "<orNull>").render, ctxSym, TypeRepr.NoType, Flags())
       private def unwrapIfWrapped(term: Term, path: String, staticTpe: TypeRepr, at: Origin)(using p: Program): Term =
         val segs = path.split('.').toList.filter(_.nonEmpty)
@@ -860,16 +1046,23 @@ final class GlobalsToImplicitsTransform(
         else
           // the path may already spell the PROPERTY (`gl30`) the bean step makes of java's getter
           // (`getGL30()`): the member is found under either spelling
-          val seg = segs(1).stripSuffix("()")
-          val forms = Set(seg, "get" + seg, "is" + seg).map(_.toLowerCase)
+          val seg       = segs(1).stripSuffix("()")
+          val forms     = Set(seg, "get" + seg, "is" + seg).map(_.toLowerCase)
           val hopStatic = statics.collectFirst { case (st, pth) if pth == segs.head => st }
           val hopType   = hopStatic.flatMap(p.symbolOf).map(_.info).flatMap {
-            case TypeRepr.TypeRef(_, t) => Some(t); case TypeRepr.AppliedType(TypeRepr.TypeRef(_, t), _) => Some(t); case _ => scala.None }
-          val method    = hopType.flatMap(t => p.symbols.all.find(m => m.owner == t && forms(m.name.toLowerCase) &&
-            (m.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _: TypeRepr.MethodType | _: TypeRepr.PolyType => false; case _ => true })))
-          val result    = method.map(_.info).map { case TypeRepr.MethodType(_, r, _) => r; case other => other }
+            case TypeRepr.TypeRef(_, t) => Some(t); case TypeRepr.AppliedType(TypeRepr.TypeRef(_, t), _) => Some(t); case _ => scala.None
+          }
+          val method = hopType.flatMap(t =>
+            p.symbols.all.find(m =>
+              m.owner == t && forms(m.name.toLowerCase) &&
+                (m.info match { case TypeRepr.MethodType(Nil, _, _) => true; case _: TypeRepr.MethodType | _: TypeRepr.PolyType => false; case _ => true })
+            )
+          )
+          val result = method.map(_.info).map { case TypeRepr.MethodType(_, r, _) => r; case other => other }
           def headOf(t: TypeRepr): Option[SymId] = t match
-            case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(t2, _) => headOf(t2); case _ => scala.None
+            case TypeRepr.TypeRef(_, s)      => Some(s);
+            case TypeRepr.AppliedType(t2, _) => headOf(t2);
+            case _                           => scala.None
           (result, staticTpe) match
             case (Some(TypeRepr.AppliedType(_, List(arg))), st) if headOf(arg).isDefined && headOf(arg) == headOf(st) && result.get != st =>
               Tree.Select(term, orNullSym, st, at)
@@ -877,69 +1070,71 @@ final class GlobalsToImplicitsTransform(
       private def read(s: SymId, tpe: TypeRepr, at: Origin)(using p: Program): Option[Term] =
         // the static's DECLARED type, not the node's (a node may carry none)
         val declared = p.symbolOf(s).map(_.info).filter(_ != TypeRepr.NoType).getOrElse(tpe)
-        statics.get(s).flatMap(path => plan.get(s -> at) match
-          case Some(ReadPlan.Threaded) => Some(unwrapIfWrapped(pathOn(contextExpr, path, tpe, at), path, declared, at))
-          case Some(ReadPlan.Global)   => Some(unwrapIfWrapped(pathOn(Tree.Ident(globalSym, ctxRef, o), path, tpe, at), path, declared, at))
-          case Some(ReadPlan.Through(c, m, mTpe, hop)) =>
-            val clsRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, c)
-            val base   = Tree.Select(Tree.This(c, clsRef, at), m, mTpe, at)
-            Some(pathOn(base, path.stripPrefix(hop).stripPrefix("."), tpe, at))
-          case _                       => scala.None)
+        statics
+          .get(s)
+          .flatMap(path =>
+            plan.get(s -> at) match
+              case Some(ReadPlan.Threaded)                 => Some(unwrapIfWrapped(pathOn(contextExpr, path, tpe, at), path, declared, at))
+              case Some(ReadPlan.Global)                   => Some(unwrapIfWrapped(pathOn(Tree.Ident(globalSym, ctxRef, o), path, tpe, at), path, declared, at))
+              case Some(ReadPlan.Through(c, m, mTpe, hop)) =>
+                val clsRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, c)
+                val base   = Tree.Select(Tree.This(c, clsRef, at), m, mTpe, at)
+                Some(pathOn(base, path.stripPrefix(hop).stripPrefix("."), tpe, at))
+              case _ => scala.None
+          )
 
     // ---- the signature edits --------------------------------------------------------------------
     val deferredFields = need.deferrals.map(_.field).toSet
-    val edit = new Phase:
+    val edit           = new Phase:
       def name = "globals->implicits/thread"
 
       override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
         // a deferral's own `def` was minted WITH its clause; adding a second one would be two.
-        if need.threadedMethods(t.symbol) && !deferredFields(t.symbol) then
-          t.copy(paramss = t.paramss :+ List(mint.usingParam(t.symbol, ctxFqn, ctxRef, t.origin)))
+        if need.threadedMethods(t.symbol) && !deferredFields(t.symbol) then t.copy(paramss = t.paramss :+ List(mint.usingParam(t.symbol, ctxFqn, ctxRef, t.origin)))
         else t
 
-      /** [[ContextHolder.cache]]: emits the private holder, the throwing accessor, and
-        * `<held> = summon[T]` at the head of every threaded METHOD this type declares. Runs ahead
-        * of the arms below, for an all-`static` holder no `threadedClasses` arm would otherwise
-        * see. A constructor is excluded — its body is the constructor region (DESIGN.md §8.2), and
-        * a cache written from one is [[ContextHolder.retain]]'s question instead. */
+      /** [[ContextHolder.cache]]: emits the private holder, the throwing accessor, and `<held> = summon[T]` at the head of every threaded METHOD this type declares. Runs ahead of the arms below, for
+        * an all-`static` holder no `threadedClasses` arm would otherwise see. A constructor is excluded — its body is the constructor region (DESIGN.md §8.2), and a cache written from one is
+        * [[ContextHolder.retain]]'s question instead.
+        */
       private def cached(t: Tree.ClassDef)(using Program): Tree.ClassDef =
         cacheOf.get(t.symbol).fold(t) { nm =>
-          val p = summon[Program]
+          val p    = summon[Program]
           val mine = t.body.collect {
-            case d: Tree.DefDef
-              if need.threadedMethods(d.symbol) && !deferredFields(d.symbol) && !isCtor(p, d.symbol) =>
+            case d: Tree.DefDef if need.threadedMethods(d.symbol) && !deferredFields(d.symbol) && !isCtor(p, d.symbol) =>
               d.symbol
           }.toSet
           if mine.isEmpty then t
           else
             cacheFired += t.symbol
             val (hold, acc) = mint.cachedContext(t.symbol, nm, ctxFqn, ctxRef, t.origin)
-            t.copy(body = hold :: acc :: t.body.map {
-              case d: Tree.DefDef if mine(d.symbol) =>
-                d.copy(rhs = d.rhs.map(r => mint.prependStore(hold.symbol, ctxRef, contextExpr, r)))
-              case s => s
-            })
+            t.copy(
+              body = hold :: acc :: t.body.map {
+                case d: Tree.DefDef if mine(d.symbol) =>
+                  d.copy(rhs = d.rhs.map(r => mint.prependStore(hold.symbol, ctxRef, contextExpr, r)))
+                case s => s
+              }
+            )
         }
 
-      /** CT11: static field constructing a threaded class becomes a holder + throwing accessor.
-        * No manifest key -- the accessor keeps the field's name. Like [[cached]], runs ahead of
-        * the arms below. */
+      /** CT11: static field constructing a threaded class becomes a holder + throwing accessor. No manifest key -- the accessor keeps the field's name. Like [[cached]], runs ahead of the arms below.
+        */
       private def fieldHeld(t: Tree.ClassDef)(using Program): Tree.ClassDef =
-        val p = summon[Program]
-        val fh = need.fieldHolders
+        val p        = summon[Program]
+        val fh       = need.fieldHolders
         val myFields = t.body.collect {
           case v: Tree.ValDef if fh.contains(v.symbol) => v
         }
         if myFields.isEmpty then return t
         val myThreaded = t.body.collect {
           case d: Tree.DefDef
-            if need.threadedMethods(d.symbol) && !deferredFields(d.symbol) &&
-               p.symbolOf(d.symbol).exists(s => s.flags.isStatic && s.name != ContextNeed.CtorName) =>
+              if need.threadedMethods(d.symbol) && !deferredFields(d.symbol) &&
+                p.symbolOf(d.symbol).exists(s => s.flags.isStatic && s.name != ContextNeed.CtorName) =>
             d.symbol
         }.toSet
         if myThreaded.isEmpty then return t
         val built = myFields.map { v =>
-          val initRhs = fh(v.symbol)
+          val initRhs     = fh(v.symbol)
           val (hold, acc) = mint.fieldHolder(v.symbol, v.tpt.tpe, v.origin)
           (v.symbol, hold, acc, initRhs)
         }
@@ -949,26 +1144,29 @@ final class GlobalsToImplicitsTransform(
         val fieldSyms = holdMap.keySet
         val newMembers: List[Statement] = built.flatMap { case (_, hold, acc, _) => List(hold, acc) }
         val clinitStmts = need.fieldHolderClinit.getOrElse(t.symbol, Nil)
-        t.copy(body = newMembers ++ t.body.flatMap {
-          case v: Tree.ValDef if fieldSyms(v.symbol) => Nil
-          case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == ContextNeed.ClinitName) &&
-                                 clinitStmts.nonEmpty =>
-            stripClinitStmts(d, clinitStmts)
-          case d: Tree.DefDef if myThreaded(d.symbol) =>
-            val stored = holdMap.values.foldLeft(d.rhs) { case (body, (holdSym, initRhs)) =>
-              body.map(b => mint.prependFieldInit(holdSym, initRhs, b, clinitStmts))
-            }
-            List(d.copy(rhs = stored))
-          case s => List(s)
-        })
+        t.copy(
+          body = newMembers ++ t.body.flatMap {
+            case v: Tree.ValDef if fieldSyms(v.symbol) => Nil
+            case d: Tree.DefDef
+                if p.symbolOf(d.symbol).exists(_.name == ContextNeed.ClinitName) &&
+                  clinitStmts.nonEmpty =>
+              stripClinitStmts(d, clinitStmts)
+            case d: Tree.DefDef if myThreaded(d.symbol) =>
+              val stored = holdMap.values.foldLeft(d.rhs) { case (body, (holdSym, initRhs)) =>
+                body.map(b => mint.prependFieldInit(holdSym, initRhs, b, clinitStmts))
+              }
+              List(d.copy(rhs = stored))
+            case s => List(s)
+          }
+        )
 
-      /** Strip statements from the clinit that were moved to the holder init. If nothing remains,
-        * drop the clinit entirely. */
+      /** Strip statements from the clinit that were moved to the holder init. If nothing remains, drop the clinit entirely.
+        */
       private def stripClinitStmts(d: Tree.DefDef, moved: List[Statement]): List[Statement] =
         val movedSet = moved.toSet
         d.rhs.map(Tree.uncomment) match
           case Some(b: Tree.Block) =>
-            val remaining = (b.stats :+ b.expr).filterNot(movedSet.contains)
+            val remaining    = (b.stats :+ b.expr).filterNot(movedSet.contains)
             val (init, expr) = remaining.lastOption match
               case Some(t: Term) => (remaining.dropRight(1), t)
               case _             => (remaining, Tree.Literal(Constant.UnitC, TypeRepr.NoType, d.origin))
@@ -981,47 +1179,61 @@ final class GlobalsToImplicitsTransform(
         case Tree.Literal(Constant.UnitC, _, _) => true
         case _                                  => false
 
-      /** Does this type's companion need its own `given` too? A scala `class` and its `object` are
-        * two scopes, so a `private given` at the head of the class body reaches no `summon` in a
-        * `static` member. Skipped where the type emits as a MODULE (one shared scope — a second
-        * given would collide) or declares no static member (nothing for it to serve). */
+      /** Does this type's companion need its own `given` too? A scala `class` and its `object` are two scopes, so a `private given` at the head of the class body reaches no `summon` in a `static`
+        * member. Skipped where the type emits as a MODULE (one shared scope — a second given would collide) or declares no static member (nothing for it to serve).
+        */
       private def needsStaticGiven(t: Tree.ClassDef)(using p: Program): Boolean =
         !p.symbolOf(t.symbol).exists(_.flags.isModule) &&
-          t.body.exists { case d: Definition => p.symbolOf(d.symbol).exists(_.flags.isStatic)
-                          case _             => false }
+          t.body.exists {
+            case d: Definition => p.symbolOf(d.symbol).exists(_.flags.isStatic)
+            case _ => false
+          }
 
-      /** `capture`: the field at the head, one companion `apply` per constructor at the end; a
-        * declared subclass assigns the field at its own construction where a context is in scope. */
+      /** `capture`: the field at the head, one companion `apply` per constructor at the end; a declared subclass assigns the field at its own construction where a context is in scope.
+        */
       private def captureEdit(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
         captureOf.get(t.symbol) match
           case Some(run) =>
-            val at   = t.origin
-            val cRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol)
+            val at       = t.origin
+            val cRef     = TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol)
             val fieldDef = Tree.ValDef(run.field, TypeTree(run.fieldTpe, at), Some(Tree.Opaque(run.default, run.fieldTpe, at)), at)
-            val applies = t.body.collect { case d: Tree.DefDef if run.ctors.contains(d.symbol) => d }.map { d =>
-              val ap     = mint.captureApply(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
-              val apFull = p.symbolOf(ap).map(_.fullName).getOrElse("?")
+            val applies  = t.body.collect { case d: Tree.DefDef if run.ctors.contains(d.symbol) => d }.map { d =>
+              val ap         = mint.captureApply(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
+              val apFull     = p.symbolOf(ap).map(_.fullName).getOrElse("?")
               val origParams = d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven))
-              val params = origParams.map { v =>
+              val params     = origParams.map { v =>
                 val nm = p.symbolOf(v.symbol).map(_.name).getOrElse("p")
                 Tree.ValDef(mint.member(nm, MemberKey(apFull, nm).render, ap, v.tpt.tpe, Flags(isParam = true)), v.tpt, scala.None, v.origin)
               }
               val vNm  = p.symbolOf(run.field).map(_.name).getOrElse("value")
-              val vPar = Tree.ValDef(mint.member(vNm, MemberKey(apFull, vNm).render, ap, run.fieldTpe, Flags(isParam = true)),
-                                     TypeTree(run.fieldTpe, at), scala.None, at)
+              val vPar = Tree.ValDef(
+                mint.member(vNm, MemberKey(apFull, vNm).render, ap, run.fieldTpe, Flags(isParam = true)),
+                TypeTree(run.fieldTpe, at),
+                scala.None,
+                at
+              )
               val hSym = mint.member("built", MemberKey(apFull, "built").render, ap, cRef, Flags())
               val make = Tree.Apply(Tree.New(TypeTree(cRef, at), cRef, at), params.map(v => Tree.Ident(v.symbol, v.tpt.tpe, at)), d.symbol, cRef, at)
               val body = Tree.Block(
-                List(Tree.ValDef(hSym, TypeTree(cRef, at), Some(make), at),
-                     Tree.Assign(Tree.Select(Tree.Ident(hSym, cRef, at), run.field, run.fieldTpe, at),
-                                 Tree.Ident(vPar.symbol, run.fieldTpe, at), TypeRepr.NoType, at)),
-                Tree.Ident(hSym, cRef, at), cRef, at)
+                List(
+                  Tree.ValDef(hSym, TypeTree(cRef, at), Some(make), at),
+                  Tree.Assign(
+                    Tree.Select(Tree.Ident(hSym, cRef, at), run.field, run.fieldTpe, at),
+                    Tree.Ident(vPar.symbol, run.fieldTpe, at),
+                    TypeRepr.NoType,
+                    at
+                  )
+                ),
+                Tree.Ident(hSym, cRef, at),
+                cRef,
+                at
+              )
               // the PLAIN overload (java's own arity) delegates with the default — a default ARGUMENT on
               // more than one overload is illegal, so it is a second method, dropped where its signature
               // would collide with another apply's (counted)
-              val plain = mint.captureApplyPlain(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
+              val plain     = mint.captureApplyPlain(t.symbol, d.symbol, run.ctors.indexOf(d.symbol), fqnOf(t.symbol))
               val plainFull = p.symbolOf(plain).map(_.fullName).getOrElse("?")
-              val pParams = origParams.map { v =>
+              val pParams   = origParams.map { v =>
                 val nm = p.symbolOf(v.symbol).map(_.name).getOrElse("p")
                 Tree.ValDef(mint.member(nm, MemberKey(plainFull, nm).render, plain, v.tpt.tpe, Flags(isParam = true)), v.tpt, scala.None, v.origin)
               }
@@ -1029,21 +1241,35 @@ final class GlobalsToImplicitsTransform(
               val pSym  = mint.member("built", MemberKey(plainFull, "built").render, plain, cRef, Flags())
               val pMake = Tree.Apply(Tree.New(TypeTree(cRef, at), cRef, at), pParams.map(v => Tree.Ident(v.symbol, v.tpt.tpe, at)), d.symbol, cRef, at)
               val pBody = Tree.Block(
-                List(Tree.ValDef(pSym, TypeTree(cRef, at), Some(pMake), at),
-                     Tree.Assign(Tree.Select(Tree.Ident(pSym, cRef, at), run.field, run.fieldTpe, at),
-                                 Tree.Opaque(run.default, run.fieldTpe, at), TypeRepr.NoType, at)),
-                Tree.Ident(pSym, cRef, at), cRef, at)
-              (Tree.DefDef(ap, List(params :+ vPar), TypeTree(cRef, at), Some(body), at),
-               Tree.DefDef(plain, List(pParams), TypeTree(cRef, at), Some(pBody), at))
+                List(
+                  Tree.ValDef(pSym, TypeTree(cRef, at), Some(pMake), at),
+                  Tree.Assign(
+                    Tree.Select(Tree.Ident(pSym, cRef, at), run.field, run.fieldTpe, at),
+                    Tree.Opaque(run.default, run.fieldTpe, at),
+                    TypeRepr.NoType,
+                    at
+                  )
+                ),
+                Tree.Ident(pSym, cRef, at),
+                cRef,
+                at
+              )
+              (Tree.DefDef(ap, List(params :+ vPar), TypeTree(cRef, at), Some(body), at), Tree.DefDef(plain, List(pParams), TypeTree(cRef, at), Some(pBody), at))
             }
             val valueApplies = applies.map(_._1)
             val valueSigs    = valueApplies.map(_.paramss.flatten.map(_.tpt.tpe)).toSet
             val plainApplies = applies.map(_._2).filter { d =>
               val sig = d.paramss.flatten.map(_.tpt.tpe)
               val ok  = !valueSigs.contains(sig)
-              if !ok then deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture", run.key,
-                PolicyIssue.Unverifiable, s"the plain `apply(${sig.size} args)` overload would collide with another constructor's value overload; " +
-                  "callers of that constructor pass the value explicitly")
+              if !ok then
+                deadSites += PolicyFinding(
+                  name,
+                  s"GlobalsToImplicitsTransform(holders) `${h.holder}`.capture",
+                  run.key,
+                  PolicyIssue.Unverifiable,
+                  s"the plain `apply(${sig.size} args)` overload would collide with another constructor's value overload; " +
+                    "callers of that constructor pass the value explicitly"
+                )
               ok
             }
             t.copy(body = fieldDef :: (t.body ++ valueApplies ++ plainApplies))
@@ -1053,48 +1279,61 @@ final class GlobalsToImplicitsTransform(
                 captureValue(c, run, Decision.originOf(p, t.symbol), forward = false) match
                   case Some(v) =>
                     val at = t.origin
-                    t.copy(body = Tree.Assign(Tree.Select(Tree.This(t.symbol, TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol), at),
-                      run.field, run.fieldTpe, at), v, TypeRepr.NoType, at) :: t.body)
+                    t.copy(
+                      body = Tree.Assign(
+                        Tree.Select(Tree.This(t.symbol, TypeRepr.TypeRef(TypeRepr.NoPrefix, t.symbol), at), run.field, run.fieldTpe, at),
+                        v,
+                        TypeRepr.NoType,
+                        at
+                      ) :: t.body
+                    )
                   case scala.None => t
               case scala.None => t
       override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
         val t = fieldHeld(cached(captureEdit(t0)))
         // ENGINE-LIMITS CT7: no clause anywhere; a `given` member at the HEAD of the body instead
         // (a class body is a constructor, so a use ahead of it would read `null`).
-        if need.selfSuppliedClasses(t.symbol) then
-          t.copy(body = mint.givenMembers(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin,
-                                          companion = needsStaticGiven(t)) ++ t.body)
+        if need.selfSuppliedClasses(t.symbol) then t.copy(body = mint.givenMembers(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin, companion = needsStaticGiven(t)) ++ t.body)
         else if !need.threadedClasses(t.symbol) then t
         else
           // the retained member, at the HEAD for the `given` case's reason. Rides on the threaded
           // arm only — a type with no clause has no context to keep.
-          val retained = retainOf.get(t.symbol)
-            .map(nm => mint.retainedMember(t.symbol, nm, ctxRef, contextExpr, t.origin)).toList
-          val ctors = t.body.collect { case d: Tree.DefDef if isCtor(summon[Program], d.symbol) => d.symbol }
+          val retained = retainOf.get(t.symbol).map(nm => mint.retainedMember(t.symbol, nm, ctxRef, contextExpr, t.origin)).toList
+          val ctors    = t.body.collect { case d: Tree.DefDef if isCtor(summon[Program], d.symbol) => d.symbol }
           if ctors.isEmpty then
             // a java interface has no constructor; a trait promoted to an abstract class needs one minted.
             val at   = t.origin
-            val ctor = mint.member(ContextNeed.CtorName,
-              MemberKey(summon[Program].symbolOf(t.symbol).map(_.fullName).getOrElse("?"),
-                        ContextNeed.CtorName).render,
-              t.symbol, TypeRepr.MethodType(Nil, TypeRepr.NoType), Flags())
-            t.copy(body = retained ++ (Tree.DefDef(ctor, List(List(mint.usingParam(ctor, ctxFqn, ctxRef, at))),
-              TypeTree(TypeRepr.NoType, at), Some(Tree.Block(Nil, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at),
-                TypeRepr.NoType, at)), at) :: t.body))
+            val ctor = mint.member(
+              ContextNeed.CtorName,
+              MemberKey(summon[Program].symbolOf(t.symbol).map(_.fullName).getOrElse("?"), ContextNeed.CtorName).render,
+              t.symbol,
+              TypeRepr.MethodType(Nil, TypeRepr.NoType),
+              Flags()
+            )
+            t.copy(
+              body = retained ++ (Tree.DefDef(
+                ctor,
+                List(List(mint.usingParam(ctor, ctxFqn, ctxRef, at))),
+                TypeTree(TypeRepr.NoType, at),
+                Some(Tree.Block(Nil, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at), TypeRepr.NoType, at)),
+                at
+              ) :: t.body)
+            )
           else
             // The clause lands on EVERY constructor. A Scala class parameter is in scope throughout
             // the body, so instance methods summon it with no signature change — but a SECONDARY
             // constructor is a method, and one that did not take the clause could not delegate.
-            t.copy(body = retained ++ t.body.map {
-              case d: Tree.DefDef if ctors.contains(d.symbol) =>
-                d.copy(paramss = d.paramss :+ List(mint.usingParam(d.symbol, ctxFqn, ctxRef, d.origin)))
-              case s => s
-            })
+            t.copy(
+              body = retained ++ t.body.map {
+                case d: Tree.DefDef if ctors.contains(d.symbol) =>
+                  d.copy(paramss = d.paramss :+ List(mint.usingParam(d.symbol, ctxFqn, ctxRef, d.origin)))
+                case s => s
+              }
+            )
 
     // ---- apply, in order --------------------------------------------------------------------
     val promotedTbl = need.promoted.foldLeft(program0.symbols) { (tbl, t) =>
-      tbl.get(t).map(s => tbl.updated(s.copy(flags = s.flags.copy(isTrait = false, isAbstract = true))))
-        .getOrElse(tbl)
+      tbl.get(t).map(s => tbl.updated(s.copy(flags = s.flags.copy(isTrait = false, isAbstract = true)))).getOrElse(tbl)
     }
     val prog1  = program0.rebuilt(symbols = SymbolTable(promotedTbl.all ++ mint.minted))
     val units1 = prog1.units.map(u => deferred.apply(u)(using prog1))
@@ -1124,59 +1363,68 @@ final class GlobalsToImplicitsTransform(
 
   // ---- the minted context type ----------------------------------------------------------------
 
-  /** Synthesizes the context type: one `var` per mapped field, plus `var global` when a residual read
-    * exists — the holder's own shape (a bag of mutable statics) moved onto an instance, so a
-    * consumer's bootstrap sets them where it used to set `Holder.field = …`. `inject` a richer type
-    * (immutable case class, accessor sugar) instead of relying on this to guess one. */
-  private def mintContext(p: Program, h: ContextHolder, fqn: String, ctxSym: SymId, ctxRef: TypeRepr,
-                          statics: Map[SymId, String], globalSym: SymId, mint: Minter): Program =
-    val o = Origin.synthetic
+  /** Synthesizes the context type: one `var` per mapped field, plus `var global` when a residual read exists — the holder's own shape (a bag of mutable statics) moved onto an instance, so a
+    * consumer's bootstrap sets them where it used to set `Holder.field = …`. `inject` a richer type (immutable case class, accessor sugar) instead of relying on this to guess one.
+    */
+  private def mintContext(p: Program, h: ContextHolder, fqn: String, ctxSym: SymId, ctxRef: TypeRepr, statics: Map[SymId, String], globalSym: SymId, mint: Minter): Program =
+    val o      = Origin.synthetic
     val fields = statics.toList
       .flatMap((s, path) => p.symbolOf(s).map(sym => path -> sym.info))
       .filterNot((path, _) => path.contains('.'))
-      .distinctBy(_._1).sortBy(_._1)
+      .distinctBy(_._1)
+      .sortBy(_._1)
       .map((path, info) => mint.member(path, MemberKey(fqn, path).render, ctxSym, info, Flags(isMutable = true)) -> info)
     val hasGlobal = seamLog.exists(f => f.kind == ContextSeamCheck.Kind.ResidualGlobalRead)
     val body: List[Statement] =
       fields.map((id, info) => Tree.ValDef(id, TypeTree(info, o), scala.None, o)) ++
         (if hasGlobal then List(Tree.ValDef(globalSym, TypeTree(ctxRef, o), scala.None, o)) else Nil)
-    record(Decision(
-      kind = Decision.Kind.InjectedMember, subject = ctxSym, subjectFqn = fqn,
-      detail = Map(
-        "minted"  -> "context-type",
-        "holder"  -> h.holder,
-        "members" -> statics.values.toList.filterNot(_.contains('.')).distinct.sorted.mkString("|"),
-        "why"     -> ("the port asked for a MINTED context, so this type is the engine's own: one " +
-          "mutable member per mapped holder static, set by the consumer's bootstrap where it used " +
-          "to set the statics. `inject` a type of your own for anything richer"),
-      ),
-      reason = Reason.Configured(name, h.holder),
-      origin = Origin.synthetic,
-    ))
-    p.rebuilt(units  = p.units :+ Tree.ClassDef(ctxSym, Nil, scala.None, body, o),
-              symbols = SymbolTable(p.symbols.all ++ mint.minted))
+    record(
+      Decision(
+        kind = Decision.Kind.InjectedMember,
+        subject = ctxSym,
+        subjectFqn = fqn,
+        detail = Map(
+          "minted" -> "context-type",
+          "holder" -> h.holder,
+          "members" -> statics.values.toList.filterNot(_.contains('.')).distinct.sorted.mkString("|"),
+          "why" -> ("the port asked for a MINTED context, so this type is the engine's own: one " +
+            "mutable member per mapped holder static, set by the consumer's bootstrap where it used " +
+            "to set the statics. `inject` a type of your own for anything richer")
+        ),
+        reason = Reason.Configured(name, h.holder),
+        origin = Origin.synthetic
+      )
+    )
+    p.rebuilt(units = p.units :+ Tree.ClassDef(ctxSym, Nil, scala.None, body, o), symbols = SymbolTable(p.symbols.all ++ mint.minted))
 
   // ---- the DERIVED residual holder ------------------------------------------------------------
 
-  /** The holder survives iff something still READS it — derived, not a knob. Every mapped static
-    * whose reads all moved onto the context is dropped; a residual read stays, already counted as a
-    * `residual-global-read` seam. */
+  /** The holder survives iff something still READS it — derived, not a knob. Every mapped static whose reads all moved onto the context is dropped; a residual read stays, already counted as a
+    * `residual-global-read` seam.
+    */
   private def residualHolder(p: Program, h: ContextHolder, statics: Map[SymId, String]): Program =
     val gone = statics.keySet.filter(s => !p.usages(s).exists(_.kind == UsageKind.TermRef))
     if gone.isEmpty then return p
     gone.toList.sortBy(_.raw).foreach { s =>
       // subject is the OWNING TYPE: a dropped member has no declaration for `PorterNote.InBody`.
-      p.symbolOf(s).foreach(sym => record(Decision(
-        kind = Decision.Kind.DroppedMember, subject = sym.owner, subjectFqn = sym.fullName,
-        detail = Map(
-          "holder" -> h.holder,
-          "to"     -> s"${h.context.fqn}.${statics(s)}",
-          "why"    -> ("every read of this static now goes through the threaded context, so the " +
-            "global it stood for has no reader left — what remains of the holder is what still does"),
-        ),
-        reason = Reason.Configured(name, h.holder),
-        origin = Decision.originOf(p, s),
-      )))
+      p.symbolOf(s)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.DroppedMember,
+              subject = sym.owner,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "holder" -> h.holder,
+                "to" -> s"${h.context.fqn}.${statics(s)}",
+                "why" -> ("every read of this static now goes through the threaded context, so the " +
+                  "global it stood for has no reader left — what remains of the holder is what still does")
+              ),
+              reason = Reason.Configured(name, h.holder),
+              origin = Decision.originOf(p, s)
+            )
+          )
+        )
     }
     val strip = new Phase:
       def name = "globals->implicits/residual"
@@ -1187,223 +1435,299 @@ final class GlobalsToImplicitsTransform(
 
   // ---- provenance -----------------------------------------------------------------------------
 
-  /** One row per DECLARATION whose emitted signature moved. Nothing for a CALL into a threaded
-    * declaration — its argument is supplied by the `using` in scope, so the call site is unchanged. */
+  /** One row per DECLARATION whose emitted signature moved. Nothing for a CALL into a threaded declaration — its argument is supplied by the `using` in scope, so the call site is unchanged.
+    */
   private def recordDecisions(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String): Unit =
     val deferredFields = need.deferrals.map(_.field).toSet
     def row(s: SymId, to: String): Unit =
-      p.symbolOf(s).foreach(sym => record(Decision(
-        kind = Decision.Kind.RetypedSignature, subject = s, subjectFqn = sym.fullName,
-        // no `key`: `Reason.Configured(name, h.holder)` below already carries it.
-        detail = Map("from" -> "reads the holder's static state, or reaches something that does",
-                     "to" -> to) ++ need.via(s).map("via" -> _) ++
-          Map("why" -> ("the ambient state this declaration read is threaded to it explicitly; a " +
-            "call into it is unchanged, since the argument comes from the `using` in scope")),
-        reason = Reason.Configured(name, h.holder),
-        origin = Decision.originOf(p, s),
-      )))
-    need.threadedMethods.toList.filterNot(deferredFields).sortBy(_.raw)
-      .foreach(m => row(m, s"takes a trailing `(using $ctxFqn)`"))
-    need.threadedClasses.toList.sortBy(_.raw)
-      .foreach(c => row(c, s"its constructors take `(using $ctxFqn)`"))
+      p.symbolOf(s)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.RetypedSignature,
+              subject = s,
+              subjectFqn = sym.fullName,
+              // no `key`: `Reason.Configured(name, h.holder)` below already carries it.
+              detail = Map("from" -> "reads the holder's static state, or reaches something that does", "to" -> to) ++ need.via(s).map("via" -> _) ++
+                Map(
+                  "why" -> ("the ambient state this declaration read is threaded to it explicitly; a " +
+                    "call into it is unchanged, since the argument comes from the `using` in scope")
+                ),
+              reason = Reason.Configured(name, h.holder),
+              origin = Decision.originOf(p, s)
+            )
+          )
+        )
+    need.threadedMethods.toList.filterNot(deferredFields).sortBy(_.raw).foreach(m => row(m, s"takes a trailing `(using $ctxFqn)`"))
+    need.threadedClasses.toList.sortBy(_.raw).foreach(c => row(c, s"its constructors take `(using $ctxFqn)`"))
     need.scopedOut.toList.sortBy(_.raw).foreach { s =>
-      p.symbolOf(s).foreach(sym => record(Decision(
-        kind = Decision.Kind.ScopedOut, subject = s, subjectFqn = sym.fullName,
-        detail = Map("scope" -> h.scope.fingerprint,
-          "why" -> ("this declaration reads the holder and the holder's `scope` deliberately held " +
-            "it back, so it keeps the upstream global while the code around it moved")),
-        reason = Reason.Configured(name, h.holder),
-        origin = Decision.originOf(p, s),
-      )))
+      p.symbolOf(s)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.ScopedOut,
+              subject = s,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "scope" -> h.scope.fingerprint,
+                "why" -> ("this declaration reads the holder and the holder's `scope` deliberately held " +
+                  "it back, so it keeps the upstream global while the code around it moved")
+              ),
+              reason = Reason.Configured(name, h.holder),
+              origin = Decision.originOf(p, s)
+            )
+          )
+        )
     }
 
-  /** One row per FRAMEWORK-INSTANTIATED type — CLAUDE.md §1(b)'s third answer, recorded. An
-    * `InjectedMember` and not a `RetypedSignature`: the signature did not move, the port gained a
-    * member instead. Subject is the TYPE, so the note sits above the emitted `class` line. */
-  private def recordSelfSupplied(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
-                                 bound: Map[SymId, String], src: Map[SymId, String]): Unit =
+  /** One row per FRAMEWORK-INSTANTIATED type — CLAUDE.md §1(b)'s third answer, recorded. An `InjectedMember` and not a `RetypedSignature`: the signature did not move, the port gained a member
+    * instead. Subject is the TYPE, so the note sits above the emitted `class` line.
+    */
+  private def recordSelfSupplied(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String, bound: Map[SymId, String], src: Map[SymId, String]): Unit =
     need.selfSuppliedClasses.toList.sortBy(_.raw).foreach { c =>
-      p.symbolOf(c).foreach(sym => record(Decision(
-        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
-        detail = Map(
-          "given"  -> ctxFqn,
-          "source" -> src.getOrElse(c, ""),
-          "from"   -> "a constructor clause the closure would otherwise have attached",
-          "to"     -> s"a `private given $ctxFqn` member of this type",
-          "why"    -> ("this type is constructed by a FRAMEWORK, not by this program, and a " +
-            "reflective construction cannot supply a `using` — so it takes the context without " +
-            "taking a parameter, from an expression this port wrote"),
-        ),
-        reason = Reason.Configured(name, bound.getOrElse(c, h.holder)),
-        origin = Decision.originOf(p, c),
-      )))
+      p.symbolOf(c)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.InjectedMember,
+              subject = c,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "given" -> ctxFqn,
+                "source" -> src.getOrElse(c, ""),
+                "from" -> "a constructor clause the closure would otherwise have attached",
+                "to" -> s"a `private given $ctxFqn` member of this type",
+                "why" -> ("this type is constructed by a FRAMEWORK, not by this program, and a " +
+                  "reflective construction cannot supply a `using` — so it takes the context without " +
+                  "taking a parameter, from an expression this port wrote")
+              ),
+              reason = Reason.Configured(name, bound.getOrElse(c, h.holder)),
+              origin = Decision.originOf(p, c)
+            )
+          )
+        )
     }
 
-  /** ONE ROW PER TYPE THAT KEPT ITS CONTEXT — `ContextHolder.retain`. An `InjectedMember`: the
-    * signature did move (the clause is on the constructors either way), and this decision is about
-    * the MEMBER — emitted surface java never declared. */
-  private def recordRetained(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
-                             retained: Map[SymId, String]): Unit =
+  /** ONE ROW PER TYPE THAT KEPT ITS CONTEXT — `ContextHolder.retain`. An `InjectedMember`: the signature did move (the clause is on the constructors either way), and this decision is about the MEMBER
+    * — emitted surface java never declared.
+    */
+  private def recordRetained(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String, retained: Map[SymId, String]): Unit =
     val keyOf = boundRetain.getOrElse(h.holder, Map.empty)
     retained.toList.filter((c, _) => need.threadedClasses(c)).sortBy(_._1.raw).foreach { (c, nm) =>
-      p.symbolOf(c).foreach(sym => record(Decision(
-        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
-        detail = Map(
-          "member" -> nm,
-          "type"   -> ctxFqn,
-          "from"   -> "a constructor clause nothing outside this type can name",
-          "to"     -> s"a `val $nm: $ctxFqn` this type keeps, readable from anything holding one",
-          "why"    -> ("the clause the threading attaches is a CONSTRUCTOR PARAMETER, in scope in " +
-            "this body and nameable nowhere else — so a declaration the closure could not reach, " +
-            "holding one of these, has the context in its hand and no way to spell it. This port " +
-            "asked for it to be kept under a name, which is what a `selfSupplied` expression on " +
-            "such a holder then reads"),
-        ),
-        reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
-        origin = Decision.originOf(p, c),
-      )))
+      p.symbolOf(c)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.InjectedMember,
+              subject = c,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "member" -> nm,
+                "type" -> ctxFqn,
+                "from" -> "a constructor clause nothing outside this type can name",
+                "to" -> s"a `val $nm: $ctxFqn` this type keeps, readable from anything holding one",
+                "why" -> ("the clause the threading attaches is a CONSTRUCTOR PARAMETER, in scope in " +
+                  "this body and nameable nowhere else — so a declaration the closure could not reach, " +
+                  "holding one of these, has the context in its hand and no way to spell it. This port " +
+                  "asked for it to be kept under a name, which is what a `selfSupplied` expression on " +
+                  "such a holder then reads")
+              ),
+              reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
+              origin = Decision.originOf(p, c)
+            )
+          )
+        )
     }
 
   /** ONE ROW PER TYPE WHOSE STATIC VALUE WAS CAPTURED — `ContextHolder.capture`. */
   private def recordCaptured(p: Program, h: ContextHolder, captureOf: Map[SymId, CaptureRun]): Unit =
     captureOf.toList.sortBy(_._1.raw).foreach { (c, run) =>
-      p.symbolOf(c).foreach(sym => record(Decision(
-        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
-        detail = Map(
-          "field"   -> p.symbolOf(run.field).map(_.name).getOrElse("?"),
-          "applies" -> run.ctors.size.toString,
-          "from"    -> s"`${h.holder}.${run.hop}.${p.symbolOf(run.method).map(_.name).getOrElse("?")}()` read at every use",
-          "to"      -> "a field this type carries, given at construction (companion `apply`, generated callers pass the context's value)",
-          "why"     -> ("the value is read once at construction instead of at each use — the reference port's " +
-            "shape for a type built by hand-written code with no context in scope; identical while the " +
-            "value does not change after construction"),
-        ),
-        reason = Reason.Configured(name, run.key),
-        origin = Decision.originOf(p, c),
-      )))
+      p.symbolOf(c)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.InjectedMember,
+              subject = c,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "field" -> p.symbolOf(run.field).map(_.name).getOrElse("?"),
+                "applies" -> run.ctors.size.toString,
+                "from" -> s"`${h.holder}.${run.hop}.${p.symbolOf(run.method).map(_.name).getOrElse("?")}()` read at every use",
+                "to" -> "a field this type carries, given at construction (companion `apply`, generated callers pass the context's value)",
+                "why" -> ("the value is read once at construction instead of at each use — the reference port's " +
+                  "shape for a type built by hand-written code with no context in scope; identical while the " +
+                  "value does not change after construction")
+              ),
+              reason = Reason.Configured(name, run.key),
+              origin = Decision.originOf(p, c)
+            )
+          )
+        )
     }
-  /** ONE ROW PER TYPE THAT READ THE HOLDER THROUGH ITS OWN MEMBER — `ContextHolder.through`; a
-    * bound entry no read went through is reported, since removing it changes no emitted byte. */
-  private def recordThrough(p: Program, h: ContextHolder, need: ContextNeed,
-                            throughOf: Map[SymId, (SymId, TypeRepr, String)]): Unit =
+
+  /** ONE ROW PER TYPE THAT READ THE HOLDER THROUGH ITS OWN MEMBER — `ContextHolder.through`; a bound entry no read went through is reported, since removing it changes no emitted byte.
+    */
+  private def recordThrough(p: Program, h: ContextHolder, need: ContextNeed, throughOf: Map[SymId, (SymId, TypeRepr, String)]): Unit =
     val keyOf = boundThrough.getOrElse(h.holder, Map.empty)
     val fired = need.throughFired
     throughOf.toList.sortBy(_._1.raw).foreach { case (c, (m, _, hop)) =>
       if fired(c) then
-        p.symbolOf(c).foreach(sym => record(Decision(
-          kind = Decision.Kind.RedirectedCall, subject = c, subjectFqn = sym.fullName,
-          detail = Map(
-            "member" -> p.symbolOf(m).map(_.name).getOrElse("?"),
-            "hop"    -> hop,
-            "from"   -> s"`${h.holder}` statics under `$hop`, read through the context",
-            "to"     -> "the same paths on this type's own member",
-            "why"    -> ("this type is handed the service the statics live on, so the port reads " +
-              "them off what it was given instead of taking a constructor clause — the reference " +
-              "port's shape; identical while the member is the context's own service"),
-          ),
-          reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
-          origin = Decision.originOf(p, c),
-        )))
+        p.symbolOf(c)
+          .foreach(sym =>
+            record(
+              Decision(
+                kind = Decision.Kind.RedirectedCall,
+                subject = c,
+                subjectFqn = sym.fullName,
+                detail = Map(
+                  "member" -> p.symbolOf(m).map(_.name).getOrElse("?"),
+                  "hop" -> hop,
+                  "from" -> s"`${h.holder}` statics under `$hop`, read through the context",
+                  "to" -> "the same paths on this type's own member",
+                  "why" -> ("this type is handed the service the statics live on, so the port reads " +
+                    "them off what it was given instead of taking a constructor clause — the reference " +
+                    "port's shape; identical while the member is the context's own service")
+                ),
+                reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
+                origin = Decision.originOf(p, c)
+              )
+            )
+          )
       else
-        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
-          keyOf.getOrElse(c, "?"), PolicyIssue.NeverMatched, "the entry bound, but no read of the " +
+        deadSites += PolicyFinding(
+          name,
+          s"GlobalsToImplicitsTransform(holders) `${h.holder}`.through",
+          keyOf.getOrElse(c, "?"),
+          PolicyIssue.NeverMatched,
+          "the entry bound, but no read of the " +
             "holder inside an instance member of this type is under the member's context hop; nothing " +
-            "was redirected and removing the entry would change no emitted byte")
+            "was redirected and removing the entry would change no emitted byte"
+        )
     }
-  /** ONE ROW PER TYPE THAT CACHED ITS CONTEXT — `ContextHolder.cache`. An `InjectedMember`: no
-    * signature moved, the port gained two companion members, one PUBLIC. Subject is the TYPE. */
-  private def recordCached(p: Program, h: ContextHolder, ctxFqn: String,
-                           cached: Map[SymId, String], fired: Set[SymId]): Unit =
+
+  /** ONE ROW PER TYPE THAT CACHED ITS CONTEXT — `ContextHolder.cache`. An `InjectedMember`: no signature moved, the port gained two companion members, one PUBLIC. Subject is the TYPE.
+    */
+  private def recordCached(p: Program, h: ContextHolder, ctxFqn: String, cached: Map[SymId, String], fired: Set[SymId]): Unit =
     val keyOf = boundCache.getOrElse(h.holder, Map.empty)
     cached.toList.filter((c, _) => fired(c)).sortBy(_._1.raw).foreach { (c, nm) =>
-      p.symbolOf(c).foreach(sym => record(Decision(
-        kind = Decision.Kind.InjectedMember, subject = c, subjectFqn = sym.fullName,
-        detail = Map(
-          "member" -> nm,
-          "type"   -> ctxFqn,
-          "from"   -> "a `using` clause on this type's own methods, live only for one call",
-          "to"     -> s"a private holder assigned at the head of each of them and a `def $nm: $ctxFqn` over it",
-          "why"    -> ("this type takes the context on its STATIC METHODS, so it is in no threaded " +
-            "class and there is no constructor parameter to keep — the value exists and nothing " +
-            "outside can name it. This port asked for it to be captured under a name, which is " +
-            "what a `selfSupplied` expression elsewhere then reads as `<Type>." + nm + "`. The " +
-            "accessor THROWS when nothing has captured one yet, which is the java contract's own " +
-            "refusal rather than a `null` that reaches its caller as a plausible wrong answer"),
-        ),
-        reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
-        origin = Decision.originOf(p, c),
-      )))
+      p.symbolOf(c)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.InjectedMember,
+              subject = c,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "member" -> nm,
+                "type" -> ctxFqn,
+                "from" -> "a `using` clause on this type's own methods, live only for one call",
+                "to" -> s"a private holder assigned at the head of each of them and a `def $nm: $ctxFqn` over it",
+                "why" -> ("this type takes the context on its STATIC METHODS, so it is in no threaded " +
+                  "class and there is no constructor parameter to keep — the value exists and nothing " +
+                  "outside can name it. This port asked for it to be captured under a name, which is " +
+                  "what a `selfSupplied` expression elsewhere then reads as `<Type>." + nm + "`. The " +
+                  "accessor THROWS when nothing has captured one yet, which is the java contract's own " +
+                  "refusal rather than a `null` that reaches its caller as a plausible wrong answer")
+              ),
+              reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
+              origin = Decision.originOf(p, c)
+            )
+          )
+        )
     }
 
   /** CT11: one `InjectedMember` row per field holder. */
   private def recordFieldHolders(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String): Unit =
     need.fieldHolders.toList.sortBy(_._1.raw).foreach { (field, rhs) =>
-      p.symbolOf(field).foreach(sym => record(Decision(
-        kind = Decision.Kind.InjectedMember, subject = field, subjectFqn = sym.fullName,
-        detail = Map(
-          "from"   -> "a static field whose initialiser constructs a threaded class",
-          "to"     -> (s"a private `var` holder + throwing accessor `def ${sym.name}` -- the " +
-            "initialiser runs at the head of every threaded static method behind an `eq null` guard"),
-          "why"    -> ("this field's initialiser cannot run at companion-initialisation time because " +
-            s"it constructs a type whose constructor now takes `(using $ctxFqn)` and there is no " +
-            "given in scope at that point. The accessor keeps the field's name so no new public " +
-            "name is minted"),
-        ),
-        reason = Reason.Universal("static-field-holder (CT11)"),
-        origin = Decision.originOf(p, field),
-      )))
+      p.symbolOf(field)
+        .foreach(sym =>
+          record(
+            Decision(
+              kind = Decision.Kind.InjectedMember,
+              subject = field,
+              subjectFqn = sym.fullName,
+              detail = Map(
+                "from" -> "a static field whose initialiser constructs a threaded class",
+                "to" -> (s"a private `var` holder + throwing accessor `def ${sym.name}` -- the " +
+                  "initialiser runs at the head of every threaded static method behind an `eq null` guard"),
+                "why" -> ("this field's initialiser cannot run at companion-initialisation time because " +
+                  s"it constructs a type whose constructor now takes `(using $ctxFqn)` and there is no " +
+                  "given in scope at that point. The accessor keeps the field's name so no new public " +
+                  "name is minted")
+              ),
+              reason = Reason.Universal("static-field-holder (CT11)"),
+              origin = Decision.originOf(p, field)
+            )
+          )
+        )
     }
 
-  /** A bound `cache` entry on a type that declares no threaded method: no holder/accessor emitted,
-    * so a `selfSupplied` expression reading the accessor names something not there. */
+  /** A bound `cache` entry on a type that declares no threaded method: no holder/accessor emitted, so a `selfSupplied` expression reading the accessor names something not there.
+    */
   private def recordDeadCache(h: ContextHolder, fired: Set[SymId]): Unit =
-    boundCache.getOrElse(h.holder, Map.empty).toList
-      .filterNot((c, _) => fired(c)).map((_, k) => k).distinct.sorted.foreach { k =>
-        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache",
-          k, PolicyIssue.NeverMatched, "the entry names a type of this program that declares NO " +
-            "method the closure threaded — nothing in it reads the holder, nothing it uses is " +
-            "threaded, or its attachment landed on the CONSTRUCTORS instead, which is `retain`'s " +
-            "question and not this one. There is no clause for a captured value to come from, so " +
-            "no holder and no accessor were emitted, and any `selfSupplied` expression written to " +
-            "read the accessor names something that is not there — a compile error in a different " +
-            "file from this key. Fix the key, use `retain` if the type is threaded at its " +
-            "constructors, or find out why nothing in it is threaded")
-      }
+    boundCache.getOrElse(h.holder, Map.empty).toList.filterNot((c, _) => fired(c)).map((_, k) => k).distinct.sorted.foreach { k =>
+      deadSites += PolicyFinding(
+        name,
+        s"GlobalsToImplicitsTransform(holders) `${h.holder}`.cache",
+        k,
+        PolicyIssue.NeverMatched,
+        "the entry names a type of this program that declares NO " +
+          "method the closure threaded — nothing in it reads the holder, nothing it uses is " +
+          "threaded, or its attachment landed on the CONSTRUCTORS instead, which is `retain`'s " +
+          "question and not this one. There is no clause for a captured value to come from, so " +
+          "no holder and no accessor were emitted, and any `selfSupplied` expression written to " +
+          "read the accessor names something that is not there — a compile error in a different " +
+          "file from this key. Fix the key, use `retain` if the type is threaded at its " +
+          "constructors, or find out why nothing in it is threaded"
+      )
+    }
 
-  /** A bound `retain` entry on a type the closure never threaded: no member emitted, so a
-    * `selfSupplied` expression naming it is a compile error in a different file from this key. */
+  /** A bound `retain` entry on a type the closure never threaded: no member emitted, so a `selfSupplied` expression naming it is a compile error in a different file from this key.
+    */
   private def recordDeadRetain(h: ContextHolder, need: ContextNeed): Unit =
-    boundRetain.getOrElse(h.holder, Map.empty).toList
-      .filterNot((c, _) => need.threadedClasses(c)).map((_, k) => k).distinct.sorted.foreach { k =>
-        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain",
-          k, PolicyIssue.NeverMatched, "the entry names a type of this program that took NO " +
-            "constructor clause — either the closure never reached it, or it is `selfSupplied`, or " +
-            "it was scoped out. There is no context for the member to keep, so none was emitted, and " +
-            "any `selfSupplied` expression written to read it names something that is not there — a " +
-            "compile error in a different file from this key. Fix the key, or find out why the type " +
-            "is not threaded")
-      }
+    boundRetain.getOrElse(h.holder, Map.empty).toList.filterNot((c, _) => need.threadedClasses(c)).map((_, k) => k).distinct.sorted.foreach { k =>
+      deadSites += PolicyFinding(
+        name,
+        s"GlobalsToImplicitsTransform(holders) `${h.holder}`.retain",
+        k,
+        PolicyIssue.NeverMatched,
+        "the entry names a type of this program that took NO " +
+          "constructor clause — either the closure never reached it, or it is `selfSupplied`, or " +
+          "it was scoped out. There is no context for the member to keep, so none was emitted, and " +
+          "any `selfSupplied` expression written to read it names something that is not there — a " +
+          "compile error in a different file from this key. Fix the key, or find out why the type " +
+          "is not threaded"
+      )
+    }
 
-  /** A bound `selfSupplied` entry the closure never reached: emits no `given` member, so removing
-    * it changes no emitted byte — the same blindness CT6 measured for `sites`. */
+  /** A bound `selfSupplied` entry the closure never reached: emits no `given` member, so removing it changes no emitted byte — the same blindness CT6 measured for `sites`.
+    */
   private def recordDeadSelf(h: ContextHolder, need: ContextNeed): Unit =
     val reached = need.selfSuppliedClasses
-    boundSelf.getOrElse(h.holder, Map.empty).toList.filterNot((s, _) => reached(s))
+    boundSelf
+      .getOrElse(h.holder, Map.empty)
+      .toList
+      .filterNot((s, _) => reached(s))
       .map((_, k) => k)
       // an entry with no expression is already `Malformed`; do not also report it here.
       .filter(k => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
-      .sorted.foreach { k =>
-        deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied",
-          k, PolicyIssue.NeverMatched, "the entry names a type of this program that the closure " +
+      .sorted
+      .foreach { k =>
+        deadSites += PolicyFinding(
+          name,
+          s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied",
+          k,
+          PolicyIssue.NeverMatched,
+          "the entry names a type of this program that the closure " +
             "never reached: nothing in it reads the holder and nothing it uses is threaded, so it " +
             "would have taken no constructor clause and there is no context for a `given` member " +
             "to supply. No `given` was emitted and removing the entry would change no emitted byte. " +
-            "Delete it, or fix the key if it was meant to name a different type")
+            "Delete it, or fix the key if it was meant to name a different type"
+        )
       }
 
   private def refuse(h: ContextHolder, why: String): Unit =
-    refusals += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`",
-      h.holder, PolicyIssue.Unverifiable, why)
+    refusals += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`", h.holder, PolicyIssue.Unverifiable, why)
 
 object GlobalsToImplicitsTransform:
 
@@ -1411,37 +1735,50 @@ object GlobalsToImplicitsTransform:
   enum ReadPlan:
     /** through the context in scope: `summon[T].<path>`. */
     case Threaded
+
     /** through the context companion's `global`: still a global read, and counted as one. */
     case Global
+
     /** left exactly as it is — the `refuse` boundary, and a scoped-out declaration. Also counted. */
     case Leave
+
     /** through the enclosing type's OWN member (`ContextHolder.through`): `this.<member>.<rest>`. */
     case Through(cls: SymId, member: SymId, memberTpe: TypeRepr, hop: String)
+
     /** a captured VALUE (`ContextHolder.capture`): the enclosing `<static>.<method>()` becomes `this.<field>`. */
     case Captured(cls: SymId, field: SymId, fieldTpe: TypeRepr)
 
   /** one `capture` entry as parsed: `"<static>.<method>() as <param> = <default>"`. */
-  /** `wrapper`: the value is carried WRAPPED (`: lowlevel.Nullable`) — the field's type is the wrapper
-    * applied to the value's, callers pass `Wrapper.apply(value)`, the default is the wrapper's empty. */
+  /** `wrapper`: the value is carried WRAPPED (`: lowlevel.Nullable`) — the field's type is the wrapper applied to the value's, callers pass `Wrapper.apply(value)`, the default is the wrapper's empty.
+    */
   final case class CaptureSpec(static: String, method: String, param: String, default: String, wrapper: Option[String] = scala.None)
   object CaptureSpec:
     private val Grammar = """^\s*(\w+)\.(\w+)\(\)\s+as\s+(\w+)(?:\s*:\s*([\w.]+))?\s*=\s*(.+?)\s*$""".r
     def parse(v: String): Option[CaptureSpec] = v match
       case Grammar(s, m, p, w, d) => Some(CaptureSpec(s, m, p, d, Option(w).filter(_.nonEmpty)))
       case _                      => scala.None
-  /** one captured type's run: the minted field, the static and method it answers, the type's
-    * constructors (each gets a companion `apply`), and the field's default source. */
-  final case class CaptureRun(key: String, field: SymId, fieldTpe: TypeRepr, static: SymId, hop: String,
-                              method: SymId, ctors: List[SymId], default: String,
-                              /** the wrapper and its `apply`, where the value is carried wrapped */
-                              wrapApply: Option[(SymId, SymId)] = scala.None)
+
+  /** one captured type's run: the minted field, the static and method it answers, the type's constructors (each gets a companion `apply`), and the field's default source.
+    */
+  final case class CaptureRun(
+    key:      String,
+    field:    SymId,
+    fieldTpe: TypeRepr,
+    static:   SymId,
+    hop:      String,
+    method:   SymId,
+    ctors:    List[SymId],
+    default:  String,
+    /** the wrapper and its `apply`, where the value is carried wrapped */
+    wrapApply: Option[(SymId, SymId)] = scala.None
+  )
 
   def isCtor(p: Program, s: SymId): Boolean = p.symbolOf(s).exists(_.name == "<init>")
 
   /** A symbol MINTER for one holder's run — a value the run owns, never phase-instance state. */
   final class Minter(program: Program):
-    private var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
-    private val buf  = collection.mutable.ListBuffer.empty[Symbol]
+    private var next    = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
+    private val buf     = collection.mutable.ListBuffer.empty[Symbol]
     private val usings  = collection.mutable.Map.empty[SymId, SymId]
     private val givens  = collection.mutable.Map.empty[SymId, SymId]
     private val retains = collection.mutable.Map.empty[SymId, SymId]
@@ -1453,8 +1790,8 @@ object GlobalsToImplicitsTransform:
     /** an external TYPE symbol — owner `SymId.None`, so `Program.owned` says false for it. */
     def tpe(nm: String, full: String): SymId = selfTyped(nm, full, Flags())
 
-    /** a type symbol whose `info` is its own `TypeRef`, which is how every type in the TIR describes
-      * itself. */
+    /** a type symbol whose `info` is its own `TypeRef`, which is how every type in the TIR describes itself.
+      */
     def selfTyped(nm: String, full: String, flags: Flags): SymId =
       val id = fresh()
       buf += Symbol(id, nm, full, flags, SymId.None, TypeRepr.TypeRef(TypeRepr.NoPrefix, id))
@@ -1465,158 +1802,192 @@ object GlobalsToImplicitsTransform:
       buf += Symbol(id, nm, full, flags, owner, info)
       id
 
-    /** the clause — anonymous, since a named parameter would shadow a fully-qualified reference and
-      * nothing reads the name (`using`/`summon` never do). One per owner. */
+    /** the clause — anonymous, since a named parameter would shadow a fully-qualified reference and nothing reads the name (`using`/`summon` never do). One per owner.
+      */
     private val applies = collection.mutable.Map.empty[SymId, SymId]
-    /** the companion `apply` standing for one constructor of a captured type (`ContextHolder.capture`):
-      * `static`, so the emitter places it in the companion; one per constructor, minted once. */
+
+    /** the companion `apply` standing for one constructor of a captured type (`ContextHolder.capture`): `static`, so the emitter places it in the companion; one per constructor, minted once.
+      */
     def captureApply(owner: SymId, ctor: SymId, index: Int, ownerFqn: String): SymId =
-      applies.getOrElseUpdate(ctor,
-        member("apply", MemberKey(ownerFqn, "apply").render + "/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
+      applies.getOrElseUpdate(ctor, member("apply", MemberKey(ownerFqn, "apply").render + "/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
     private val plainApplies = collection.mutable.Map.empty[SymId, SymId]
+
     /** the java-arity `apply` beside [[captureApply]]'s, delegating with the default. */
     def captureApplyPlain(owner: SymId, ctor: SymId, index: Int, ownerFqn: String): SymId =
-      plainApplies.getOrElseUpdate(ctor,
-        member("apply", MemberKey(ownerFqn, "apply").render + "/plain/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
+      plainApplies.getOrElseUpdate(ctor, member("apply", MemberKey(ownerFqn, "apply").render + "/plain/" + index, owner, TypeRepr.NoType, Flags(isStatic = true)))
     def usingParam(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, at: Origin): Tree.ValDef =
-      val id = usings.getOrElseUpdate(owner,
-        member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))
+      val id = usings.getOrElseUpdate(owner, member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), scala.None, at)
 
-    /** `private given <ctx> = <the port's expression>`, at the head of a framework-instantiated
-      * type's body (ENGINE-LIMITS CT7). Anonymous and `private` for [[usingParam]]'s reasons — off
-      * the published surface. RHS is [[Tree.Opaque]] (Scala the frontend never saw), emitted
-      * verbatim and not type-checked here; the target compiler is the gate. */
+    /** `private given <ctx> = <the port's expression>`, at the head of a framework-instantiated type's body (ENGINE-LIMITS CT7). Anonymous and `private` for [[usingParam]]'s reasons — off the
+      * published surface. RHS is [[Tree.Opaque]] (Scala the frontend never saw), emitted verbatim and not type-checked here; the target compiler is the gate.
+      */
     def givenMember(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin): Tree.ValDef =
-      val id = givens.getOrElseUpdate(owner,
-        member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef,
-               Flags(isGiven = true, isPrivate = true)))
+      val id = givens.getOrElseUpdate(owner, member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef, Flags(isGiven = true, isPrivate = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at)
 
-    /** the same member for the COMPANION, where `companion` says the type has one — two scopes, so
-      * a `static` method's summon needs its own given; a second id for the same owner. */
-    def givenMembers(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin,
-                     companion: Boolean): List[Tree.ValDef] =
+    /** the same member for the COMPANION, where `companion` says the type has one — two scopes, so a `static` method's summon needs its own given; a second id for the same owner.
+      */
+    def givenMembers(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin, companion: Boolean): List[Tree.ValDef] =
       val inst = givenMember(owner, ctxFqn, ctxRef, src, at)
       if !companion then List(inst)
       else
-        val id = staticGivens.getOrElseUpdate(owner,
-          member("", MemberKey(ctxFqn, "<given-static>").render, owner, ctxRef,
-                 Flags(isGiven = true, isPrivate = true, isStatic = true)))
+        val id = staticGivens.getOrElseUpdate(
+          owner,
+          member("", MemberKey(ctxFqn, "<given-static>").render, owner, ctxRef, Flags(isGiven = true, isPrivate = true, isStatic = true))
+        )
         List(inst, Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at))
 
     private val staticGivens = collection.mutable.Map.empty[SymId, SymId]
 
-    /** `val <nm>: <ctx> = <context expr>`, at the head of a threaded type's body
-      * ([[ContextHolder.retain]]) — NAMED and PUBLIC, unlike the machinery members above, so code
-      * outside the type can read it. Not `given` — a second candidate would make `summon` ambiguous
-      * inside this body. One per owner. */
+    /** `val <nm>: <ctx> = <context expr>`, at the head of a threaded type's body ([[ContextHolder.retain]]) — NAMED and PUBLIC, unlike the machinery members above, so code outside the type can read
+      * it. Not `given` — a second candidate would make `summon` ambiguous inside this body. One per owner.
+      */
     def retainedMember(owner: SymId, nm: String, ctxRef: TypeRepr, rhs: Term, at: Origin): Tree.ValDef =
-      val id = retains.getOrElseUpdate(owner,
-        member(nm, MemberKey(program.symbolOf(owner).map(_.fullName).getOrElse("?"), nm).render,
-               owner, ctxRef, Flags(isFinal = true)))
+      val id = retains.getOrElseUpdate(
+        owner,
+        member(nm, MemberKey(program.symbolOf(owner).map(_.fullName).getOrElse("?"), nm).render, owner, ctxRef, Flags(isFinal = true))
+      )
       Tree.ValDef(id, TypeTree(ctxRef, at), Some(rhs), at)
 
     // ---- THE CACHED CONTEXT (`ContextHolder.cache`) ------------------------------------------
 
     private val caches = collection.mutable.Map.empty[SymId, (SymId, SymId)]
 
-    /** a PRIVATE `var` holder and a PUBLIC accessor, both `static`, on the type's companion. Two
-      * members deliberately: a public `var` would answer `null` before anything wrote it, so the
-      * accessor THROWS instead (`IllegalStateException`, java's own precondition contract, CLAUDE.md
-      * §1). The holder has no initialiser (renders as `scala.compiletime.uninitialized`, tested with
-      * `eq null`). The message names the type's SIMPLE name, stable under a package rename (§4.56). */
-    def cachedContext(owner: SymId, nm: String, ctxFqn: String, ctxRef: TypeRepr,
-                      at: Origin): (Tree.ValDef, Tree.DefDef) =
-      val ownerFqn = program.symbolOf(owner).map(_.fullName).getOrElse("?")
-      val (hold, acc) = caches.getOrElseUpdate(owner, (
-        member(s"$nm$$cache", MemberKey(ownerFqn, s"$nm$$cache").render, owner, ctxRef,
-               Flags(isStatic = true, isMutable = true, isPrivate = true)),
-        member(nm, MemberKey(ownerFqn, nm).render, owner, TypeRepr.MethodType(Nil, ctxRef),
-               Flags(isStatic = true)),
-      ))
-      val simple = ownerFqn.split('.').last.split('$').last
+    /** a PRIVATE `var` holder and a PUBLIC accessor, both `static`, on the type's companion. Two members deliberately: a public `var` would answer `null` before anything wrote it, so the accessor
+      * THROWS instead (`IllegalStateException`, java's own precondition contract, CLAUDE.md §1). The holder has no initialiser (renders as `scala.compiletime.uninitialized`, tested with `eq null`).
+      * The message names the type's SIMPLE name, stable under a package rename (§4.56).
+      */
+    def cachedContext(owner: SymId, nm: String, ctxFqn: String, ctxRef: TypeRepr, at: Origin): (Tree.ValDef, Tree.DefDef) =
+      val ownerFqn    = program.symbolOf(owner).map(_.fullName).getOrElse("?")
+      val (hold, acc) = caches.getOrElseUpdate(
+        owner,
+        (
+          member(
+            s"$nm$$cache",
+            MemberKey(ownerFqn, s"$nm$$cache").render,
+            owner,
+            ctxRef,
+            Flags(isStatic = true, isMutable = true, isPrivate = true)
+          ),
+          member(nm, MemberKey(ownerFqn, nm).render, owner, TypeRepr.MethodType(Nil, ctxRef), Flags(isStatic = true))
+        )
+      )
+      val simple    = ownerFqn.split('.').last.split('$').last
       val ctxSimple = ctxFqn.split('.').last
-      val read = Tree.Ident(hold, ctxRef, at)
-      val cond = Tree.Apply(Tree.Select(read, eqOp, TypeRepr.NoType, at),
-                            List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
-                            eqOp, TypeRepr.NoType, at)
-      val boom = Tree.Throw(Tree.Apply(
-        Tree.New(TypeTree(illegalStateRef, at), illegalStateRef, at),
-        List(Tree.Literal(Constant.StringC(
-          s"$simple has captured no $ctxSimple yet — call one of its context-taking members first"),
-          TypeRepr.NoType, at)),
-        illegalStateCtor, illegalStateRef, at), TypeRepr.NoType, at)
-      (Tree.ValDef(hold, TypeTree(ctxRef, at), scala.None, at),
-       Tree.DefDef(acc, Nil, TypeTree(ctxRef, at),
-                   Some(Tree.If(cond, boom, Tree.Ident(hold, ctxRef, at), ctxRef, at)), at))
+      val read      = Tree.Ident(hold, ctxRef, at)
+      val cond      = Tree.Apply(
+        Tree.Select(read, eqOp, TypeRepr.NoType, at),
+        List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
+        eqOp,
+        TypeRepr.NoType,
+        at
+      )
+      val boom = Tree.Throw(
+        Tree.Apply(
+          Tree.New(TypeTree(illegalStateRef, at), illegalStateRef, at),
+          List(
+            Tree.Literal(
+              Constant.StringC(s"$simple has captured no $ctxSimple yet — call one of its context-taking members first"),
+              TypeRepr.NoType,
+              at
+            )
+          ),
+          illegalStateCtor,
+          illegalStateRef,
+          at
+        ),
+        TypeRepr.NoType,
+        at
+      )
+      (Tree.ValDef(hold, TypeTree(ctxRef, at), scala.None, at), Tree.DefDef(acc, Nil, TypeTree(ctxRef, at), Some(Tree.If(cond, boom, Tree.Ident(hold, ctxRef, at), ctxRef, at)), at))
 
-    /** `<held> = <context expr>` at the HEAD of a threaded method's body — the capture, so anything
-      * the body calls finds the value already there. */
+    /** `<held> = <context expr>` at the HEAD of a threaded method's body — the capture, so anything the body calls finds the value already there.
+      */
     def prependStore(hold: SymId, ctxRef: TypeRepr, rhs: Term, body: Term): Term =
       val store = Tree.Assign(Tree.Ident(hold, ctxRef, body.origin), rhs, TypeRepr.NoType, body.origin)
       body match
         case b: Tree.Block => b.copy(stats = store :: b.stats)
-        case other         => Tree.Block(List(store), other, other.tpe, other.origin)
+        case other => Tree.Block(List(store), other, other.tpe, other.origin)
 
     // ---- STATIC FIELD HOLDERS (CT11) -----------------------------------------------------------
 
     private val fieldHolderCache = collection.mutable.Map.empty[SymId, (SymId, SymId)]
 
-    /** CT11: a `private var` holder + throwing `def` accessor for a static field whose initialiser
-      * constructs a threaded class. Accessor keeps the field's name. Parallel to [[cachedContext]]. */
+    /** CT11: a `private var` holder + throwing `def` accessor for a static field whose initialiser constructs a threaded class. Accessor keeps the field's name. Parallel to [[cachedContext]].
+      */
     def fieldHolder(field: SymId, fieldTpe: TypeRepr, at: Origin): (Tree.ValDef, Tree.DefDef) =
-      val sym   = program.symbolOf(field)
-      val nm    = sym.map(_.name).getOrElse("f")
-      val owner = sym.map(_.owner).getOrElse(SymId.None)
-      val full  = sym.map(_.fullName).getOrElse(nm)
-      val (hold, acc) = fieldHolderCache.getOrElseUpdate(field, (
-        member(s"$nm$$holder", MemberKey(full, s"$nm$$holder").render, owner, fieldTpe,
-               Flags(isStatic = true, isMutable = true, isPrivate = true)),
-        member(nm, MemberKey(full, nm).render, owner, TypeRepr.MethodType(Nil, fieldTpe),
-               Flags(isStatic = true)),
-      ))
+      val sym         = program.symbolOf(field)
+      val nm          = sym.map(_.name).getOrElse("f")
+      val owner       = sym.map(_.owner).getOrElse(SymId.None)
+      val full        = sym.map(_.fullName).getOrElse(nm)
+      val (hold, acc) = fieldHolderCache.getOrElseUpdate(
+        field,
+        (
+          member(
+            s"$nm$$holder",
+            MemberKey(full, s"$nm$$holder").render,
+            owner,
+            fieldTpe,
+            Flags(isStatic = true, isMutable = true, isPrivate = true)
+          ),
+          member(nm, MemberKey(full, nm).render, owner, TypeRepr.MethodType(Nil, fieldTpe), Flags(isStatic = true))
+        )
+      )
       val ownerSimple = program.symbolOf(owner).map(_.fullName).getOrElse("?").split('.').last.split('$').last
-      val read = Tree.Ident(hold, fieldTpe, at)
-      val cond = Tree.Apply(Tree.Select(read, eqOp, TypeRepr.NoType, at),
-                            List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
-                            eqOp, TypeRepr.NoType, at)
-      val boom = Tree.Throw(Tree.Apply(
-        Tree.New(TypeTree(illegalStateRef, at), illegalStateRef, at),
-        List(Tree.Literal(Constant.StringC(
-          s"$ownerSimple.$nm has not been initialised yet — call one of its context-taking members first"),
-          TypeRepr.NoType, at)),
-        illegalStateCtor, illegalStateRef, at), TypeRepr.NoType, at)
-      (Tree.ValDef(hold, TypeTree(fieldTpe, at), scala.None, at),
-       Tree.DefDef(acc, Nil, TypeTree(fieldTpe, at),
-                   Some(Tree.If(cond, boom, Tree.Ident(hold, fieldTpe, at), fieldTpe, at)), at))
+      val read        = Tree.Ident(hold, fieldTpe, at)
+      val cond        = Tree.Apply(
+        Tree.Select(read, eqOp, TypeRepr.NoType, at),
+        List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
+        eqOp,
+        TypeRepr.NoType,
+        at
+      )
+      val boom = Tree.Throw(
+        Tree.Apply(
+          Tree.New(TypeTree(illegalStateRef, at), illegalStateRef, at),
+          List(
+            Tree.Literal(
+              Constant.StringC(s"$ownerSimple.$nm has not been initialised yet — call one of its context-taking members first"),
+              TypeRepr.NoType,
+              at
+            )
+          ),
+          illegalStateCtor,
+          illegalStateRef,
+          at
+        ),
+        TypeRepr.NoType,
+        at
+      )
+      (Tree.ValDef(hold, TypeTree(fieldTpe, at), scala.None, at), Tree.DefDef(acc, Nil, TypeTree(fieldTpe, at), Some(Tree.If(cond, boom, Tree.Ident(hold, fieldTpe, at), fieldTpe, at)), at))
 
-    /** CT11: `if (<held> eq null) { <held> = <init>; <clinit stmts> }` at the head of a threaded
-      * method. The method already has `(using T)` from the thread pass. */
-    def prependFieldInit(hold: SymId, rhs: Term, body: Term,
-                         clinitStmts: List[Statement] = Nil): Term =
-      val tpe = rhs.tpe
-      val at  = body.origin
+    /** CT11: `if (<held> eq null) { <held> = <init>; <clinit stmts> }` at the head of a threaded method. The method already has `(using T)` from the thread pass.
+      */
+    def prependFieldInit(hold: SymId, rhs: Term, body: Term, clinitStmts: List[Statement] = Nil): Term =
+      val tpe  = rhs.tpe
+      val at   = body.origin
       val read = Tree.Ident(hold, tpe, at)
-      val cond = Tree.Apply(Tree.Select(read, eqOp, TypeRepr.NoType, at),
-                            List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
-                            eqOp, TypeRepr.NoType, at)
+      val cond = Tree.Apply(
+        Tree.Select(read, eqOp, TypeRepr.NoType, at),
+        List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
+        eqOp,
+        TypeRepr.NoType,
+        at
+      )
       val store = Tree.Assign(Tree.Ident(hold, tpe, at), rhs, TypeRepr.NoType, at)
       val thenBody: Term =
         if clinitStmts.isEmpty then store
-        else Tree.Block(store :: clinitStmts.collect { case t: Term => t },
-                        Tree.Literal(Constant.UnitC, TypeRepr.NoType, at), TypeRepr.NoType, at)
-      val init  = Tree.If(cond, thenBody, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at),
-                          TypeRepr.NoType, at)
+        else Tree.Block(store :: clinitStmts.collect { case t: Term => t }, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at), TypeRepr.NoType, at)
+      val init = Tree.If(cond, thenBody, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at), TypeRepr.NoType, at)
       body match
         case b: Tree.Block => b.copy(stats = init :: b.stats)
-        case other         => Tree.Block(List(init), other, other.tpe, other.origin)
+        case other => Tree.Block(List(init), other, other.tpe, other.origin)
 
-    /** `eq` — reference identity, the faithful spelling of java's `== null` (CLAUDE.md §4.4). The
-      * `scala.<op>#` prefix is what the emitter reads to render an operator infix. */
-    private lazy val eqOp: SymId = member("eq", "scala.<op>#eq", SymId.None, TypeRepr.NoType, Flags())
-    private lazy val illegalStateSym: SymId = tpe("IllegalStateException", "java.lang.IllegalStateException")
-    private lazy val illegalStateRef: TypeRepr = TypeRepr.TypeRef(TypeRepr.NoPrefix, illegalStateSym)
-    private lazy val illegalStateCtor: SymId =
-      member("<init>", MemberKey("java.lang.IllegalStateException", "<init>").render,
-             illegalStateSym, TypeRepr.NoType, Flags())
+    /** `eq` — reference identity, the faithful spelling of java's `== null` (CLAUDE.md §4.4). The `scala.<op>#` prefix is what the emitter reads to render an operator infix.
+      */
+    private lazy val eqOp:             SymId    = member("eq", "scala.<op>#eq", SymId.None, TypeRepr.NoType, Flags())
+    private lazy val illegalStateSym:  SymId    = tpe("IllegalStateException", "java.lang.IllegalStateException")
+    private lazy val illegalStateRef:  TypeRepr = TypeRepr.TypeRef(TypeRepr.NoPrefix, illegalStateSym)
+    private lazy val illegalStateCtor: SymId    =
+      member("<init>", MemberKey("java.lang.IllegalStateException", "<init>").render, illegalStateSym, TypeRepr.NoType, Flags())

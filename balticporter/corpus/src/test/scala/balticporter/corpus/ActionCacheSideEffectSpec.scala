@@ -1,22 +1,21 @@
 package balticporter.corpus
 
-import balticporter.core.{ActionCache, RuntimePlan}
+import balticporter.core.{ ActionCache, RuntimePlan }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.runner.PortRun
-import balticporter.tir.{Decision, DecisionLog, Pipeline}
+import balticporter.tir.{ Decision, DecisionLog, Pipeline }
 
-/** EMISSION IS NOT A PURE FUNCTION OF THE UNIT, and the action cache stored only half of what it
-  * produces. */
+/** EMISSION IS NOT A PURE FUNCTION OF THE UNIT, and the action cache stored only half of what it produces.
+  */
 class ActionCacheSideEffectSpec extends munit.FunSuite:
 
-  /** a java `sealed` hierarchy whose permitted subtype lands in ANOTHER emitted file: scala's
-    * `sealed` is FILE-scoped, so the seal cannot be reproduced and the emitter records a
-    * `WidenedSeal` decision and prints its note WHILE RENDERING. The smallest real shape that
-    * produces an emission-time decision at all. */
+  /** a java `sealed` hierarchy whose permitted subtype lands in ANOTHER emitted file: scala's `sealed` is FILE-scoped, so the seal cannot be reproduced and the emitter records a `WidenedSeal`
+    * decision and prints its note WHILE RENDERING. The smallest real shape that produces an emission-time decision at all.
+    */
   private val sources = List(
     "A.java" -> "package p;\npublic sealed class A permits B { }\n",
-    "B.java" -> "package p;\npublic final class B extends A { }\n",
+    "B.java" -> "package p;\npublic final class B extends A { }\n"
   )
 
   private def translated(cache: ActionCache): PortRun.Translated =
@@ -46,16 +45,14 @@ class ActionCacheSideEffectSpec extends munit.FunSuite:
     // while `text2 == text1` — the note in the file, and nothing behind it.
     val (text2, decisions2, notes2, _) = run(cache)
     assertEquals(text2, text1, "the cache's existing claim: byte-identical text")
-    assertEquals(decisions2.map(_.tsv), decisions1.map(_.tsv),
-      "a cached re-run must reproduce decisions.tsv byte-identically")
+    assertEquals(decisions2.map(_.tsv), decisions1.map(_.tsv), "a cached re-run must reproduce decisions.tsv byte-identically")
     assertEquals(notes2, notes1, "…and the note records NoteCoverageCheck joins them against")
   }
 
   test("a unit that records NOTHING is still cached — the refusal is scoped, not a kill switch") {
     val dir   = java.nio.file.Files.createTempDirectory("bp-cache-spec")
     val cache = new ActionCache(dir, enabled = true)
-    val plain = List("C.java" -> "package p;\npublic class C { int x = 1; }\n",
-                     "D.java" -> "package p;\npublic class D { }\n")
+    val plain = List("C.java" -> "package p;\npublic class C { int x = 1; }\n", "D.java" -> "package p;\npublic class D { }\n")
 
     def once(): (List[String], Int) =
       val program = Pipeline.run(SpoonTir.fromSources(plain), Nil)

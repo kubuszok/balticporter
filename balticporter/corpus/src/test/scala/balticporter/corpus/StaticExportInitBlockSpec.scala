@@ -30,6 +30,8 @@ class StaticExportInitBlockSpec extends munit.FunSuite:
   }
 
   test("an ordinary redeclared static IS still excluded — the exclusion itself is not disabled") {
-    assert(clue(out).contains("SHARED => _"),
-      "the heir redeclares SHARED, so the parent's must be hidden or the export is a duplicate definition")
+    assert(
+      clue(out).contains("SHARED => _"),
+      "the heir redeclares SHARED, so the parent's must be hidden or the export is a duplicate definition"
+    )
   }

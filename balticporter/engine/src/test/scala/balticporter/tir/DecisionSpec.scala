@@ -20,10 +20,11 @@ class DecisionSpec extends munit.FunSuite:
     val saved = kv.map((k, _) => k -> Option(System.getProperty(k)))
     kv.foreach((k, v) => System.setProperty(k, v))
     try body
-    finally saved.foreach {
-      case (k, Some(v))    => System.setProperty(k, v)
-      case (k, scala.None) => System.clearProperty(k)
-    }
+    finally
+      saved.foreach {
+        case (k, Some(v))    => System.setProperty(k, v)
+        case (k, scala.None) => System.clearProperty(k)
+      }
 
   // -------------------------------------------------------------------------
   // the classification is a TYPE, not a sentence
@@ -38,8 +39,10 @@ class DecisionSpec extends munit.FunSuite:
     assert(clue(Reason.LibraryRule("x").section).startsWith("§1(c)"))
     // the phase and the key survive the one column they share — that pair IS the edit an agent
     // has to make, so losing either would make the record unactionable.
-    assertEquals(Reason.parse("configured", Reason.Configured("substitutions", "com.demo.W").detail),
-                 Reason.Configured("substitutions", "com.demo.W"))
+    assertEquals(
+      Reason.parse("configured", Reason.Configured("substitutions", "com.demo.W").detail),
+      Reason.Configured("substitutions", "com.demo.W")
+    )
     // …including a key that itself contains the separator: the split is at the FIRST colon.
     assertEquals(Reason.parse("configured", Reason.Configured("p", "a:b").detail), Reason.Configured("p", "a:b"))
   }
@@ -49,14 +52,13 @@ class DecisionSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("runTraced hands back what the phases decided; run still returns only the program") {
-    val phases = List(new Deciding("one"), new Deciding("two"))
+    val phases      = List(new Deciding("one"), new Deciding("two"))
     val (prog, log) = Pipeline.runTraced(TinyProgram.program, phases)
     assertEquals(prog.units.size, TinyProgram.program.units.size)
     // TinyProgram has two int literals, each seen by both phases
     assertEquals(log.size, 4)
     assertEquals(log.counts, Map(Decision.Kind.RetypedSignature -> 4))
-    assertEquals(log.all.map(_.reason).collect { case Reason.Configured(p, _) => p }.distinct.sorted,
-                 List("one", "two"))
+    assertEquals(log.all.map(_.reason).collect { case Reason.Configured(p, _) => p }.distinct.sorted, List("one", "two"))
     // the old entry point is untouched — every existing caller keeps compiling and keeps behaving
     assertEquals(Pipeline.run(TinyProgram.program, phases).units.size, prog.units.size)
   }
@@ -66,8 +68,8 @@ class DecisionSpec extends munit.FunSuite:
     // that ports two source sets does the same. A buffer that survived would report the first
     // run's decisions as the second's — the exact contamination §5.1 records for the global srcmap.
     val phase = new Deciding("once")
-    val a = Pipeline.runTraced(TinyProgram.program, List(phase))._2
-    val b = Pipeline.runTraced(TinyProgram.program, List(phase))._2
+    val a     = Pipeline.runTraced(TinyProgram.program, List(phase))._2
+    val b     = Pipeline.runTraced(TinyProgram.program, List(phase))._2
     assertEquals(a.size, 2)
     assertEquals(b.size, 2)
     assertEquals(phase.decisions.size, 0, "the pipeline DRAINS a phase's buffer; nothing outlives the run")
@@ -87,23 +89,25 @@ class DecisionSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("decisions.tsv is SORTED, so accumulation order — i.e. phase order — never reaches the diff") {
-    val one = new DecisionLog
-    val two = new DecisionLog
+    val one  = new DecisionLog
+    val two  = new DecisionLog
     val rows = List(
       d(Decision.Kind.DroppedType, "com.demo.Widget", Reason.Configured("substitutions", "com.demo.Widget")),
       d(Decision.Kind.RenamedPackage, "com.demo.Gadget", Reason.Configured("package-rename", "com.demo -> org.port")),
-      d(Decision.Kind.InjectedMember, "com.demo.Widget", Reason.Configured("substitutions", "inject")),
+      d(Decision.Kind.InjectedMember, "com.demo.Widget", Reason.Configured("substitutions", "inject"))
     )
     rows.foreach(one.record)
     rows.reverse.foreach(two.record)
     val dir = Files.createTempDirectory("decisions")
-    val a = Files.readString(Decision.write(dir.resolve("a"), one))
-    val b = Files.readString(Decision.write(dir.resolve("b"), two))
+    val a   = Files.readString(Decision.write(dir.resolve("a"), one))
+    val b   = Files.readString(Decision.write(dir.resolve("b"), two))
     assertEquals(a, b)
     assert(clue(a).startsWith(Decision.Header))
     // DroppedType before InjectedMember before RenamedPackage — by kind, then by subject
-    assertEquals(Decision.parseAll(dir.resolve("a/decisions.tsv")).map(_.kind),
-                 List(Decision.Kind.DroppedType, Decision.Kind.InjectedMember, Decision.Kind.RenamedPackage))
+    assertEquals(
+      Decision.parseAll(dir.resolve("a/decisions.tsv")).map(_.kind),
+      List(Decision.Kind.DroppedType, Decision.Kind.InjectedMember, Decision.Kind.RenamedPackage)
+    )
   }
 
   test("an EMPTY log still writes a header-only file — nothing decided is not nothing run") {
@@ -115,9 +119,16 @@ class DecisionSpec extends munit.FunSuite:
 
   test("a row round-trips, and no SymId reaches the file") {
     val log = new DecisionLog
-    log.record(Decision(Decision.Kind.DroppedMember, SymId(42), "com.demo.Widget#labels",
-      Map("key" -> "com.demo.Widget#labels", "why" -> "replaced by a codec"),
-      Reason.Configured("substitutions", "com.demo.Widget#labels"), Origin("/abs/src/com/demo/Widget.java", 12, 3)))
+    log.record(
+      Decision(
+        Decision.Kind.DroppedMember,
+        SymId(42),
+        "com.demo.Widget#labels",
+        Map("key" -> "com.demo.Widget#labels", "why" -> "replaced by a codec"),
+        Reason.Configured("substitutions", "com.demo.Widget#labels"),
+        Origin("/abs/src/com/demo/Widget.java", 12, 3)
+      )
+    )
     val dir  = Files.createTempDirectory("decisions-rt")
     val text = Files.readString(Decision.write(dir, log))
     assert(!clue(text).contains("42"), "symbol ids are interning order and must never reach an artifact")

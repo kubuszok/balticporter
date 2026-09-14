@@ -2,13 +2,12 @@ package balticporter.corpus.demo
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OpaqueSpec, Pipeline}
+import balticporter.tir.{ OpaqueSpec, Pipeline }
 import balticporter.transform.PrimitiveToOpaqueTransform
 
-/** Demonstrates the primitive → opaque-type transform end-to-end: a class with a
-  * semantically-tagged `int layer` becomes an `opaque type Layer.T = Int` with a synthesized
-  * companion, retyped everywhere it flows, wrapped at construction and unwrapped at use.
-  * `corpus/runMain balticporter.corpus.demo.OpaqueDemo` */
+/** Demonstrates the primitive → opaque-type transform end-to-end: a class with a semantically-tagged `int layer` becomes an `opaque type Layer.T = Int` with a synthesized companion, retyped
+  * everywhere it flows, wrapped at construction and unwrapped at use. `corpus/runMain balticporter.corpus.demo.OpaqueDemo`
+  */
 object OpaqueDemo:
 
   private val src =
@@ -24,11 +23,10 @@ object OpaqueDemo:
       |}
       |""".stripMargin
 
-  /** the ONLY hint is the field `layer`. Everything else — `getLayer`'s return, `setLayer`'s
-    * param, and the local `l` in `slot` — is DISCOVERED by flow propagation. `underlying` and
-    * `scope` are left at their defaults: `scala.Int`, and a fence that fences nothing. */
-  private val transform = new PrimitiveToOpaqueTransform(
-    OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer")))
+  /** the ONLY hint is the field `layer`. Everything else — `getLayer`'s return, `setLayer`'s param, and the local `l` in `slot` — is DISCOVERED by flow propagation. `underlying` and `scope` are left
+    * at their defaults: `scala.Int`, and a fence that fences nothing.
+    */
+  private val transform = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer")))
 
   def main(args: Array[String]): Unit =
     val before = SpoonTir.fromSource(src)

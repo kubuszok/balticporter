@@ -2,11 +2,11 @@ package balticporter.transform
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{DerivedPolicy, Pipeline, PolicyBinder, RuleScope, RunScope}
-import balticporter.verify.{ApiParityCheck, ReferencePolicy}
+import balticporter.tir.{ DerivedPolicy, Pipeline, PolicyBinder, RuleScope, RunScope }
+import balticporter.verify.{ ApiParityCheck, ReferencePolicy }
 
-/** `(T) null` at a slot the retyping WRAPPED is the empty wrapper, in a constructor delegation as
-  * anywhere else (`super(data, (Array<TextureRegion>) null, integer)`). */
+/** `(T) null` at a slot the retyping WRAPPED is the empty wrapper, in a constructor delegation as anywhere else (`super(data, (Array<TextureRegion>) null, integer)`).
+  */
 class NullabilityNullCastSpec extends munit.FunSuite:
   private val javaSrc =
     """package com.demo;
@@ -23,10 +23,13 @@ class NullabilityNullCastSpec extends munit.FunSuite:
       |""".stripMargin
 
   test("a cast null at a wrapped constructor slot becomes the empty wrapper") {
-    val phase = new NullabilityTransform(annotations = Set("com.demo.Null"),
-      target = NullabilityTransform.Target.Named("demo.Nullable"), scope = RuleScope.Everywhere(Set.empty))
+    val phase = new NullabilityTransform(
+      annotations = Set("com.demo.Null"),
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty)
+    )
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(javaSrc, "Demo.java"), List(phase))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(!clue(out).contains("(null: demo.Nullable"), out)
     assert(out.contains("demo.Nullable.empty"), out)
   }
@@ -47,10 +50,14 @@ class NullabilityNullCastSpec extends munit.FunSuite:
     val derived = ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     assert(clue(derived.policy.rows.map(_.upstream)).exists(_.contains("regions")))
     val scope = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
-    val phase = new NullabilityTransform(annotations = Set.empty,
-      target = NullabilityTransform.Target.Named("demo.Nullable"), scope = RuleScope.Everywhere(Set.empty), deriveMembers = true)
+    val phase = new NullabilityTransform(
+      annotations = Set.empty,
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty),
+      deriveMembers = true
+    )
     val (after, log) = Pipeline.runTraced(program, List(phase), new PolicyBinder(program, program.members, scope))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(!clue(out).contains("(null: demo.Nullable"), out)
     assert(out.contains("demo.Nullable.empty"), out)
   }
@@ -75,12 +82,16 @@ class NullabilityNullCastSpec extends munit.FunSuite:
     val decls   = ApiParityCheck.parseSurface(List(dir)).toOption.get
     val program = SpoonTir.fromSource(src, "Demo.java")
     val derived = ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
-    val scope = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
-    val bean  = new BeanPropertyTransform(derive = true)
-    val nulls = new NullabilityTransform(annotations = Set.empty,
-      target = NullabilityTransform.Target.Named("demo.Nullable"), scope = RuleScope.Everywhere(Set.empty), deriveMembers = true)
+    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val bean    = new BeanPropertyTransform(derive = true)
+    val nulls   = new NullabilityTransform(
+      annotations = Set.empty,
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty),
+      deriveMembers = true
+    )
     val (after, log) = Pipeline.runTraced(program, List(bean, nulls), new PolicyBinder(program, program.members, scope))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("def gl30: demo.Nullable[com.demo.GL]"))
     assert(out.contains("def gl30_=(gl: com.demo.GL): scala.Unit"), out)
   }
@@ -110,12 +121,16 @@ class NullabilityNullCastSpec extends munit.FunSuite:
     val program = SpoonTir.fromSource(src, "Demo.java")
     val derived = ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     assert(clue(derived.policy.rows.filter(_.family == DerivedPolicy.Family.TargetName)).nonEmpty)
-    val scope = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
     val renames = new MemberRenameTransform(derive = true)
-    val nulls = new NullabilityTransform(annotations = Set.empty,
-      target = NullabilityTransform.Target.Named("demo.Nullable"), scope = RuleScope.Everywhere(Set.empty), deriveMembers = true)
+    val nulls   = new NullabilityTransform(
+      annotations = Set.empty,
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty),
+      deriveMembers = true
+    )
     val (after, log) = Pipeline.runTraced(program, List(renames, nulls), new PolicyBinder(program, program.members, scope))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("(actor: demo.Nullable[T])"))
     assert(out.contains("(text: demo.Nullable[java.lang.CharSequence])"), out)
     assert(out.contains("targetName(\"addLabel\")"), out)

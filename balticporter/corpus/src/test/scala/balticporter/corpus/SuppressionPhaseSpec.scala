@@ -42,23 +42,25 @@ class SuppressionPhaseSpec extends munit.FunSuite:
     val unitSym = SymId(5)
 
     val enumDef = Tree.ClassDef(
-      symbol     = enumSym,
-      parents    = Nil,
-      selfType   = None,
-      body       = Nil,
-      origin     = Origin.synthetic,
-      enumCases  = List(
+      symbol = enumSym,
+      parents = Nil,
+      selfType = None,
+      body = Nil,
+      origin = Origin.synthetic,
+      enumCases = List(
         Tree.EnumCase(addSym, Nil, Nil, Origin.synthetic),
-        Tree.EnumCase(remSym, Nil, Nil, Origin.synthetic),
-      ),
+        Tree.EnumCase(remSym, Nil, Nil, Origin.synthetic)
+      )
     )
-    val symbols = SymbolTable(List(
-      Symbol(enumSym, "Type", "pkg.Type", Flags(isEnum = true), SymId.None, TypeRepr.NoType),
-      Symbol(addSym, "Add", "pkg.Type.Add", Flags(), enumSym, TypeRepr.NoType),
-      Symbol(remSym, "Remove", "pkg.Type.Remove", Flags(), enumSym, TypeRepr.NoType),
-      Symbol(methSym, "process", "pkg.Foo#process()", Flags(), SymId.None, TypeRepr.NoType),
-      Symbol(unitSym, "Unit", "scala.Unit", Flags(), SymId.None, TypeRepr.NoType),
-    ))
+    val symbols = SymbolTable(
+      List(
+        Symbol(enumSym, "Type", "pkg.Type", Flags(isEnum = true), SymId.None, TypeRepr.NoType),
+        Symbol(addSym, "Add", "pkg.Type.Add", Flags(), enumSym, TypeRepr.NoType),
+        Symbol(remSym, "Remove", "pkg.Type.Remove", Flags(), enumSym, TypeRepr.NoType),
+        Symbol(methSym, "process", "pkg.Foo#process()", Flags(), SymId.None, TypeRepr.NoType),
+        Symbol(unitSym, "Unit", "scala.Unit", Flags(), SymId.None, TypeRepr.NoType)
+      )
+    )
     val enumTypeRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, enumSym)
     val unitType    = TypeRepr.TypeRef(TypeRepr.NoPrefix, unitSym)
 
@@ -67,35 +69,35 @@ class SuppressionPhaseSpec extends munit.FunSuite:
       scrutinee = Tree.Ident(addSym, enumTypeRef, Origin.synthetic),
       cases = List(
         Tree.CaseDef(
-          labels    = List(Tree.Literal(Constant.NullC, enumTypeRef, Origin.synthetic)),
-          guard     = None,
-          body      = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
-          isDefault = false,
+          labels = List(Tree.Literal(Constant.NullC, enumTypeRef, Origin.synthetic)),
+          guard = None,
+          body = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
+          isDefault = false
         ),
         Tree.CaseDef(
-          labels    = List(Tree.Select(Tree.Ident(enumSym, enumTypeRef, Origin.synthetic), addSym, enumTypeRef, Origin.synthetic)),
-          guard     = None,
-          body      = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
-          isDefault = false,
+          labels = List(Tree.Select(Tree.Ident(enumSym, enumTypeRef, Origin.synthetic), addSym, enumTypeRef, Origin.synthetic)),
+          guard = None,
+          body = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
+          isDefault = false
         ),
         Tree.CaseDef(
-          labels    = List(Tree.Select(Tree.Ident(enumSym, enumTypeRef, Origin.synthetic), remSym, enumTypeRef, Origin.synthetic)),
-          guard     = None,
-          body      = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
-          isDefault = false,
+          labels = List(Tree.Select(Tree.Ident(enumSym, enumTypeRef, Origin.synthetic), remSym, enumTypeRef, Origin.synthetic)),
+          guard = None,
+          body = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
+          isDefault = false
         ),
         Tree.CaseDef(
-          labels    = List(Tree.Ident(SymId.None, unitType, Origin.synthetic)),
-          guard     = None,
-          body      = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
-          isDefault = true,
-        ),
+          labels = List(Tree.Ident(SymId.None, unitType, Origin.synthetic)),
+          guard = None,
+          body = Tree.Literal(Constant.UnitC, unitType, Origin.synthetic),
+          isDefault = true
+        )
       ),
-      tpe    = unitType,
-      origin = Origin.synthetic,
+      tpe = unitType,
+      origin = Origin.synthetic
     )
 
-    val xref = Xref.build(List(enumDef))
+    val xref    = Xref.build(List(enumDef))
     val program = new Program(List(enumDef), symbols, xref, MemberIndex.empty)
 
     assert(

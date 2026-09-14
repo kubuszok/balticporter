@@ -1,14 +1,14 @@
 package balticporter.corpus
 
-import balticporter.core.{FrontendConfig, ManifestAgreement, PolicyIssue, PortManifest, RealPath}
+import balticporter.core.{ FrontendConfig, ManifestAgreement, PolicyIssue, PortManifest, RealPath }
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 import balticporter.transform.NullabilityTransform
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** A DEPENDENT's own annotation FQN, reaching its BASE's declarations — the one policy key that
-  * selects a shared surface without naming any part of it. */
+/** A DEPENDENT's own annotation FQN, reaching its BASE's declarations — the one policy key that selects a shared surface without naming any part of it.
+  */
 class NullabilityBaseSurfaceSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
@@ -23,26 +23,26 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
       |public @interface Nullable {}
       |""".stripMargin
 
-  /** The base's Java carries the annotation — which is the whole point: a marker published by a
-    * third party is one BOTH modules' sources may use, and the base's port did not consume it. */
+  /** The base's Java carries the annotation — which is the whole point: a marker published by a third party is one BOTH modules' sources may use, and the base's port did not consume it.
+    */
   private val base = Map(
     "ann/Nullable.java" -> annotation,
     "p/Base.java" -> """package p;
-      |public class Base {
-      |  public @ann.Nullable String find(String key) { return null; }
-      |  public @ann.Nullable String cached;
-      |}""".stripMargin,
+                       |public class Base {
+                       |  public @ann.Nullable String find(String key) { return null; }
+                       |  public @ann.Nullable String cached;
+                       |}""".stripMargin
   )
 
   private val dep = Map(
     "q/Mine.java" -> """package q;
-      |public class Mine extends p.Base {
-      |  public @ann.Nullable String own() { return null; }
-      |}""".stripMargin,
+                       |public class Mine extends p.Base {
+                       |  public @ann.Nullable String own() { return null; }
+                       |}""".stripMargin
   )
 
   private def model(): (Program, Path) =
-    val root = Files.createTempDirectory("nullability-base-surface")
+    val root                                         = Files.createTempDirectory("nullability-base-surface")
     def put(under: Path, files: Map[String, String]) = files.foreach { (rel, body) =>
       val p = under.resolve(rel)
       Files.createDirectories(p.getParent)
@@ -51,8 +51,9 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
     put(root.resolve("base"), base)
     put(root.resolve("dep"), dep)
     val types = SpoonTir.buildModel(
-      FrontendConfig(root.resolve("dep"), dep.keys.toList.sorted, Nil,
-                     resolutionRoots = List(root.resolve("base"))), lenient = true)
+      FrontendConfig(root.resolve("dep"), dep.keys.toList.sorted, Nil, resolutionRoots = List(root.resolve("base"))),
+      lenient = true
+    )
     (SpoonTir.fromTypes(types), root)
 
   /** exactly what `PortRun.partitionUnits` computes — by ORIGIN, realpathed on both sides (§5.4). */
@@ -66,8 +67,8 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
   private def dependent(mine: NullabilityTransform, b: PortManifest = baseManifest()) =
     b.extendedBy(PortManifest(name = "dep", governs = Set("q"), surface = List(mine)))
 
-  /** the run, with the RunScope a dependent's `PortRun` builds — the emitted units from the origin
-    * split, and the contributed subjects from the manifest's own fold. */
+  /** the run, with the RunScope a dependent's `PortRun` builds — the emitted units from the origin split, and the contributed subjects from the manifest's own fold.
+    */
   private def run(p: Program, root: Path, m: PortManifest): Program =
     val scope  = RunScope.of(emittedUnits(p, root), m.contributedSubjects)
     val binder = new PolicyBinder(p, p.members, scope)
@@ -133,8 +134,7 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
     val (p, root) = model()
     val theirs    = new NullabilityTransform(Set("ann.Nullable"))
     val mine      = new NullabilityTransform(Set("ann.Nullable", "ann.Missing"))
-    val m         = baseManifest(Some(theirs)).extendedBy(
-      PortManifest(name = "dep", governs = Set("q"), surface = List(mine)))
+    val m         = baseManifest(Some(theirs)).extendedBy(PortManifest(name = "dep", governs = Set("q"), surface = List(mine)))
     // the fold composed the two into ONE instance, and recorded `ann.Missing` as this module's
     assertEquals(m.surfaceFold.ownKeys.get("nullability"), Some(Set("ann.Missing")))
     assertEquals(m.contributedSubjects("nullability"), Set("ann.Missing"))
@@ -143,9 +143,9 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
   }
 
   test("a BASE port screens nothing — `RunScope.whole` is the identity, by arithmetic") {
-    val (p, _)  = model()
-    val alone   = new NullabilityTransform(Set("ann.Nullable"))
-    val after   = Pipeline.runTraced(p, List(alone), new PolicyBinder(p, p.members))._1
+    val (p, _) = model()
+    val alone  = new NullabilityTransform(Set("ann.Nullable"))
+    val after  = Pipeline.runTraced(p, List(alone), new PolicyBinder(p, p.members))._1
     assert(isUnion(infoOf(after, "p.Base#find")))
     assertEquals(alone.policyReport.of(PolicyIssue.Unverifiable), Nil)
   }
@@ -157,16 +157,14 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
   test("a base that declares policy and claims NO namespace is REPORTED, non-fatally") {
     val silent = PortManifest(name = "base", dropTypes = Set("p.Gone"))
     val m      = silent.extendedBy(PortManifest(name = "dep", dropTypes = Set("p.Gone")))
-    val fs     = ManifestAgreement.check(Some(m), Nil, foreignRoots = true)
-      .filter(_.kind == ManifestAgreement.Kind.BaseNamespaceUnclaimed)
+    val fs     = ManifestAgreement.check(Some(m), Nil, foreignRoots = true).filter(_.kind == ManifestAgreement.Kind.BaseNamespaceUnclaimed)
     assertEquals(fs.map(_.base), List("base"))
     assert(!ManifestAgreement.Kind.BaseNamespaceUnclaimed.fatal)
   }
 
   test("…and a base that CLAIMS one, or declares no policy at all, reports nothing") {
     def unclaimed(m: PortManifest) =
-      ManifestAgreement.check(Some(m), Nil, foreignRoots = true)
-        .count(_.kind == ManifestAgreement.Kind.BaseNamespaceUnclaimed)
+      ManifestAgreement.check(Some(m), Nil, foreignRoots = true).count(_.kind == ManifestAgreement.Kind.BaseNamespaceUnclaimed)
     val claimed = PortManifest(name = "base", governs = Set("p"), dropTypes = Set("p.Gone"))
     assertEquals(unclaimed(claimed.extendedBy(PortManifest(name = "dep", dropTypes = Set("p.Gone")))), 0)
     // the EMPTY manifest — the documented way to say "this resolution root is not a ported module"

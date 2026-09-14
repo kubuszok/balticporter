@@ -5,14 +5,15 @@ import scala.jdk.CollectionConverters.*
 /** NODE-KIND TOTALITY — the half of the total-match requirement that scalac cannot give. */
 class NodeKindTotalitySpec extends munit.FunSuite:
 
-  /** Every `Ct*` interface name under the two node packages, read from the jar `CtElement` was
-    * loaded from. Not a `Class.forName` sweep over a hand-written list — that is the shape that
-    * cannot see a kind nobody thought to name, which is the whole failure this spec addresses. */
+  /** Every `Ct*` interface name under the two node packages, read from the jar `CtElement` was loaded from. Not a `Class.forName` sweep over a hand-written list — that is the shape that cannot see a
+    * kind nobody thought to name, which is the whole failure this spec addresses.
+    */
   private lazy val declared: Set[String] =
     val loc = classOf[spoon.reflect.declaration.CtElement].getProtectionDomain.getCodeSource.getLocation
     val zf  = java.util.zip.ZipFile(java.nio.file.Path.of(loc.toURI).toFile)
     try
-      zf.entries().asScala
+      zf.entries()
+        .asScala
         .map(_.getName)
         .filter(n => n.startsWith("spoon/reflect/code/") || n.startsWith("spoon/reflect/declaration/"))
         .filter(_.endsWith(".class"))
@@ -43,12 +44,18 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // removed or misspelt, and it is the one that makes an exclusion list rot quietly.
     val unclaimed = (producible -- claimed).toList.sorted
     val phantom   = (claimed -- producible).toList.sorted
-    assertEquals(unclaimed, Nil,
+    assertEquals(
+      unclaimed,
+      Nil,
       "these Spoon kinds have no entry in SpoonKinds.registry — say what the frontend does with each, " +
-        s"or add it to the exclusion set with the test that put it there: ${unclaimed.mkString(", ")}")
-    assertEquals(phantom, Nil,
+        s"or add it to the exclusion set with the test that put it there: ${unclaimed.mkString(", ")}"
+    )
+    assertEquals(
+      phantom,
+      Nil,
       "SpoonKinds.registry claims kinds the jar does not have — a renamed or misspelt entry: " +
-        phantom.mkString(", "))
+        phantom.mkString(", ")
+    )
   }
 
   test("the EXCLUSION set is about kinds that exist — a stale marker name is a hole with a lid on it") {
@@ -71,20 +78,21 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // absorption costs a construct with a green compile and no moved count, and a never-visited
     // kind costs whatever was written in a file the walk does not enter. A single number would let
     // one shrink while another grew.
-    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
+    assertEquals(
+      SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
       // ONE, and the three kinds that left went the two DIFFERENT ways this classification exists
       // to tell apart. `CtTextBlock` left when `TextBlockSpec` established that the absorption is
       // FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm that takes it is
       // the right arm — and `CtRecord` left when the absorption turned out to be four defects at
       // once (`JS-C43`) and each was fixed.
-      List("CtAnnotationFieldAccess"))
+      List("CtAnnotationFieldAccess")
+    )
     // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
     // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
     // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the
     // size of the FILE, which is the difference between "this library cannot be ported" and "these
     // three declarations cannot".
-    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
-      List("CtTypePattern"))
+    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable), List("CtTypePattern"))
     // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
     // stand here named "the type operand of an `instanceof`" as a shape a term-level marker cannot
     // take — true of the OPERAND and false of the construct, because the whole `instanceof` is a
@@ -95,16 +103,28 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // fixture that reaches it and found none: `CtUnnamedPattern` is not something this parser builds
     // from any source it accepts. A refusal nobody can trigger reads exactly like a refusal that
     // fires, which is the reason this census is three named lists and not a total.
-    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
-      List("CtModule", "CtModuleRequirement", "CtPackage", "CtPackageDeclaration", "CtPackageExport",
-        "CtProvidedService", "CtReceiverParameter", "CtUnnamedPattern",
-        "CtUsedService"))
+    assertEquals(
+      SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
+      List(
+        "CtModule",
+        "CtModuleRequirement",
+        "CtPackage",
+        "CtPackageDeclaration",
+        "CtPackageExport",
+        "CtProvidedService",
+        "CtReceiverParameter",
+        "CtUnnamedPattern",
+        "CtUsedService"
+      )
+    )
   }
 
   test("the accounting, printed — derived from the jar, stated as a constant nowhere") {
     val producible = declared -- SpoonKinds.excluded
-    println(s"[spoon-kinds] jar=${declared.size} excluded=${SpoonKinds.excluded.size} " +
-      s"producible=${producible.size} " +
-      s"(lowered=${SpoonKinds.lowered.size} positional=${SpoonKinds.positional.size} absent=${SpoonKinds.absent.size})")
+    println(
+      s"[spoon-kinds] jar=${declared.size} excluded=${SpoonKinds.excluded.size} " +
+        s"producible=${producible.size} " +
+        s"(lowered=${SpoonKinds.lowered.size} positional=${SpoonKinds.positional.size} absent=${SpoonKinds.absent.size})"
+    )
     assertEquals(SpoonKinds.registry.size, producible.size)
   }

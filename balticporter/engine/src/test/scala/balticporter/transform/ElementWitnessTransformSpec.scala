@@ -2,11 +2,11 @@ package balticporter.transform
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{DecisionLog, Phase, Pipeline, Program, RuleScope}
+import balticporter.tir.{ DecisionLog, Phase, Pipeline, Program, RuleScope }
 
-/** `ElementWitnessTransform` — the §1(b) mechanism moving an element-typed array onto a type-class
-  * WITNESS and dropping java's implicit `Object` bound. Every refusal kind is asserted, not
-  * sampled (CLAUDE.md §3). */
+/** `ElementWitnessTransform` — the §1(b) mechanism moving an element-typed array onto a type-class WITNESS and dropping java's implicit `Object` bound. Every refusal kind is asserted, not sampled
+  * (CLAUDE.md §3).
+  */
 class ElementWitnessTransformSpec extends munit.FunSuite:
   import ElementWitnessTransform.*
 
@@ -73,11 +73,10 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   private val Witness = "demo.MkArray"
 
   private def phase(
-      subjects: Map[String, List[Int]] = Map("com.demo.Bag" -> List(0), "com.demo.Table" -> List(0)),
-      unbound: Set[String] = Set("com.demo.Bag"),
-      boxed: Option[String] = Some("demo.MkArray.boxed[{elem}]"),
-  ) = new ElementWitnessTransform(
-    witness = Witness, subjectTypes = subjects, dropBound = unbound, boxedWitness = boxed)
+    subjects: Map[String, List[Int]] = Map("com.demo.Bag" -> List(0), "com.demo.Table" -> List(0)),
+    unbound:  Set[String] = Set("com.demo.Bag"),
+    boxed:    Option[String] = Some("demo.MkArray.boxed[{elem}]")
+  ) = new ElementWitnessTransform(witness = Witness, subjectTypes = subjects, dropBound = unbound, boxedWitness = boxed)
 
   private val witnessPhase = phase()
   private lazy val ported: Ported = run(witnessPhase)
@@ -115,16 +114,22 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
 
   // ---- what the fill owes (a raw formal filled to `Object`, a class literal's payload) ---------
   test("a raw formal filled to `C[Object]` gets java's unchecked conversion at the call, counted") {
-    assert(ported.out.contains("Raw.take(b.asInstanceOf[com.demo.Bag[java.lang.Object]])"),
-      ported.out.linesIterator.filter(l => l.contains("take") || l.contains("def call")).mkString("\n"))
+    assert(
+      ported.out.contains("Raw.take(b.asInstanceOf[com.demo.Bag[java.lang.Object]])"),
+      ported.out.linesIterator.filter(l => l.contains("take") || l.contains("def call")).mkString("\n")
+    )
     val rows = witnessPhase.refusals(ported.after, ported.after.units)
-    assert(rows.exists(r => r.issue == ElementWitnessCheck.Issue.RawConversion && r.subject == "com.demo.Raw"),
-      rows.map(r => s"${r.issue} ${r.subject}").mkString(", "))
+    assert(
+      rows.exists(r => r.issue == ElementWitnessCheck.Issue.RawConversion && r.subject == "com.demo.Raw"),
+      rows.map(r => s"${r.issue} ${r.subject}").mkString(", ")
+    )
   }
 
   test("a raw construction with an array-supplier argument is filled with the supplier's element, not Object") {
-    assert(clue(ported.out).contains("new com.demo.Bag[java.lang.String](3,"),
-      ported.out.linesIterator.filter(_.contains("new com.demo.Bag")).mkString("\n"))
+    assert(
+      clue(ported.out).contains("new com.demo.Bag[java.lang.String](3,"),
+      ported.out.linesIterator.filter(_.contains("new com.demo.Bag")).mkString("\n")
+    )
     assert(ported.out.contains("new com.demo.Bag[java.lang.String](4,"), "the `E[]::new` method reference")
   }
 
@@ -141,8 +146,7 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   }
 
   test("the drop is recorded as a decision naming the element parameter") {
-    val d = ported.log.all.filter(_.subjectFqn == "com.demo.Bag")
-      .filter(_.kind == balticporter.tir.Decision.Kind.RetypedSignature)
+    val d = ported.log.all.filter(_.subjectFqn == "com.demo.Bag").filter(_.kind == balticporter.tir.Decision.Kind.RetypedSignature)
     assert(clue(d).nonEmpty)
     assert(d.exists(_.detail.get("elements").contains("T")))
   }
@@ -177,7 +181,9 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
 
   private def findingsOf(t: ElementWitnessTransform, p: Ported) = t.refusals(p.after, p.after.units)
 
-  test("`Object[] items = this.items` keeps the ELEMENT type (an int[] is no Object[]); a raw view at an Object[] formal stays counted") {
+  test(
+    "`Object[] items = this.items` keeps the ELEMENT type (an int[] is no Object[]); a raw view at an Object[] formal stays counted"
+  ) {
     val t = phase()
     val r = run(t)
     // the alias: element-typed, no covariance cast, and its reads yield the element
@@ -191,8 +197,8 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   }
 
   test("a `null` sentinel at an element slot of a bound-KEPT subject is counted, never rewritten") {
-    val t = phase()
-    val r = run(t)
+    val t  = phase()
+    val r  = run(t)
     val fs = findingsOf(t, r).filter(_.issue == ElementWitnessCheck.Issue.OccupancySentinel)
     assert(clue(fs).nonEmpty)
     assert(fs.forall(_.subject == "com.demo.Table"))
@@ -201,14 +207,14 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   }
 
   test("an element-typed creation in a declaration the policy does not name is counted") {
-    val t = phase()
+    val t  = phase()
     val fs = findingsOf(t, run(t)).filter(_.issue == ElementWitnessCheck.Issue.NonSubject)
     assertEquals(clue(fs).map(_.subject).distinct, List("com.demo.Loose"))
   }
 
   test("a creation REFLECTED out of a `Class` argument is counted, and the java text kept") {
-    val t = phase()
-    val r = run(t)
+    val t  = phase()
+    val r  = run(t)
     val fs = findingsOf(t, r).filter(_.issue == ElementWitnessCheck.Issue.UnhandledCreation)
     assert(clue(fs).exists(_.subject == "com.demo.Bag"))
     assert(r.out.contains("java.lang.reflect.Array.newInstance"))
@@ -217,7 +223,7 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   test("a creation at a METHOD's own parameter is not an element position, and is not claimed") {
     // `<V> V[] toArray(Class<V>)`: `V` is nobody's element type, so the phase neither rewrites the
     // site nor counts it — the row would name a declaration no policy key can reach.
-    val t = phase()
+    val t  = phase()
     val fs = findingsOf(t, run(t)).filter(_.issue == ElementWitnessCheck.Issue.UnhandledCreation)
     assert(clue(fs).forall(f => f.detail.contains("`Class` argument")))
   }
@@ -232,7 +238,7 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   // ---- policy ---------------------------------------------------------------------------------
 
   test("a subject with an empty index list is reported malformed rather than silently ignored") {
-    val t = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("com.demo.Bag" -> Nil))
+    val t      = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("com.demo.Bag" -> Nil))
     val binder = new balticporter.tir.PolicyBinder(parse(), parse().members)
     t.bindPolicy(binder)
     assert(clue(t.policyReport.findings).exists(_.key == "com.demo.Bag"))
@@ -241,17 +247,16 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   test("the CONSTRUCTOR half is derived from the same value, one entry per element position") {
     assertEquals(
       constructorGivens(Map("a.B" -> List(0), "a.C" -> List(0, 1)), Witness),
-      Map("a.B" -> "demo.MkArray:0", "a.C" -> "demo.MkArray:0|demo.MkArray:1"))
+      Map("a.B" -> "demo.MkArray:0", "a.C" -> "demo.MkArray:0|demo.MkArray:1")
+    )
     assertEquals(constructorGivens(Map("a.B" -> List(0)), ""), Map.empty)
   }
 
   // ---- the merge contract ---------------------------------------------------------------------
 
   test("independent subjects UNION and the dropped bounds with them") {
-    val a = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.B" -> List(0)),
-                                        dropBound = Set("a.B"))
-    val b = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.C" -> List(1)),
-                                        dropBound = Set("a.C"))
+    val a = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.B" -> List(0)), dropBound = Set("a.B"))
+    val b = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.C" -> List(1)), dropBound = Set("a.C"))
     a.mergedWith(b) match
       case Right(m) =>
         val t = m.phase.asInstanceOf[ElementWitnessTransform]
@@ -280,7 +285,6 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   }
 
   test("the shared-surface subjects cover the subjects, the drops and the scope") {
-    val t = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.B" -> List(0)),
-                                        dropBound = Set("a.C"), scope = RuleScope.Only(Set("a.d")))
+    val t = new ElementWitnessTransform(witness = Witness, subjectTypes = Map("a.B" -> List(0)), dropBound = Set("a.C"), scope = RuleScope.Only(Set("a.d")))
     assertEquals(t.subjects, Set("a.B", "a.C", "a.d"))
   }

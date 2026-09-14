@@ -4,9 +4,9 @@ import balticporter.core.AnnotationPolicy
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
-/** Proves build-order step 2: the TIR is populated from REAL Spoon resolution, and the
-  * kinded whole-program xref traces every type usage — external types, a class
-  * type-parameter F-bound, member types, mixins — and still responds to a phase rewrite. */
+/** Proves build-order step 2: the TIR is populated from REAL Spoon resolution, and the kinded whole-program xref traces every type usage — external types, a class type-parameter F-bound, member
+  * types, mixins — and still responds to a phase rewrite.
+  */
 class SpoonTirSpec extends munit.FunSuite:
 
   private val src =
@@ -78,7 +78,7 @@ class SpoonTirSpec extends munit.FunSuite:
         case other                        => other
 
     val after = Pipeline.run(program, List(swap))
-    assertEquals(after.usagesOf(listId), Nil)                                  // old symbol vacated
+    assertEquals(after.usagesOf(listId), Nil) // old symbol vacated
     assertEquals(after.usages(target).map(_.kind).toSet, Set(UsageKind.Tycon)) // new symbol inherits
   }
 
@@ -120,22 +120,23 @@ class SpoonTirSpec extends munit.FunSuite:
       |  @Null Object ret(@Null Object a, Object b, @Tag("x") Object c) { return a; }
       |  void varargs(@Null Object... rest) {}
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
-  /** A PARAMETER cannot be found by `fullName` — the frontend qualifies it against its method
-    * before the method's own record is set, so its name is the minter's placeholder (see
-    * `RuleScope`). Reached through the method's definition instead, which is how every phase
-    * reaches one. */
+  /** A PARAMETER cannot be found by `fullName` — the frontend qualifies it against its method before the method's own record is set, so its name is the minter's placeholder (see `RuleScope`). Reached
+    * through the method's definition instead, which is how every phase reaches one.
+    */
   private def paramSym(method: String, param: String): Symbol =
     val m = annotated.symbols.all.find(_.fullName == method).getOrElse(fail(s"no method $method"))
     val d = annotated.definitionOf(m.id).collect { case d: Tree.DefDef => d }.getOrElse(fail(s"no def $method"))
-    d.paramss.flatten.map(_.symbol).flatMap(annotated.symbolOf).find(_.name == param)
-      .getOrElse(fail(s"no parameter $param of $method"))
+    d.paramss.flatten.map(_.symbol).flatMap(annotated.symbolOf).find(_.name == param).getOrElse(fail(s"no parameter $param of $method"))
 
   private def annotsOf(s: Symbol): List[String] =
-    s.annotations.flatMap(a => a.tpe match
-      case TypeRef(_, x) => annotated.symbolOf(x).map(_.fullName)
-      case _             => None)
+    s.annotations.flatMap(a =>
+      a.tpe match
+        case TypeRef(_, x) => annotated.symbolOf(x).map(_.fullName)
+        case _             => None
+    )
 
   private def annots(full: String): List[String] =
     annotsOf(annotated.symbols.all.find(_.fullName == full).getOrElse(fail(s"no symbol $full")))
@@ -176,10 +177,13 @@ class SpoonTirSpec extends munit.FunSuite:
 
   private def typeAnns(p: Program, full: String): (List[String], List[String]) =
     val s = p.symbols.all.find(_.fullName == full).getOrElse(fail(s"no symbol $full"))
-    (s.annotations.flatMap(a => a.tpe match
-       case TypeRef(_, x) => p.symbolOf(x).map(_.fullName)
-       case _             => None),
-     s.droppedAnnotations)
+    (s.annotations.flatMap(a =>
+       a.tpe match
+         case TypeRef(_, x) => p.symbolOf(x).map(_.fullName)
+         case _             => None
+     ),
+     s.droppedAnnotations
+    )
 
   test("a TYPE's argument-bearing annotation is DROPPED when the port claims no family") {
     // §1(b): the empty parameter is the no-op, and the no-op is what every port did before the
@@ -189,7 +193,7 @@ class SpoonTirSpec extends munit.FunSuite:
   }
 
   test("…and CARRIED, with its arguments, when the port claims the family") {
-    val p = SpoonTir.fromSource(typeAnnotated, annotations = AnnotationPolicy(List("demo.")))
+    val p                  = SpoonTir.fromSource(typeAnnotated, annotations = AnnotationPolicy(List("demo.")))
     val (carried, dropped) = typeAnns(p, "demo.Model")
     assertEquals(carried, List("demo.Ser"))
     assertEquals(dropped, Nil)
@@ -222,7 +226,8 @@ class SpoonTirSpec extends munit.FunSuite:
     val p = SpoonTir.fromSource(
       """package demo;
         |class T { String s; }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val strSym = p.symbols.all.find(_.fullName == "java.lang.String")
     assert(clue(strSym).isDefined)
     assert(clue(strSym.get.flags.isFinal), "String is a final class")
@@ -233,7 +238,8 @@ class SpoonTirSpec extends munit.FunSuite:
       """package demo;
         |import java.util.ArrayList;
         |class T { ArrayList<String> xs; }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val alSym = p.symbols.all.find(_.fullName == "java.util.ArrayList")
     assert(clue(alSym).isDefined)
     assert(!clue(alSym.get.flags.isFinal), "ArrayList is not final")
@@ -243,7 +249,8 @@ class SpoonTirSpec extends munit.FunSuite:
     val p = SpoonTir.fromSource(
       """package demo;
         |class T { CharSequence cs; }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val csSym = p.symbols.all.find(_.fullName == "java.lang.CharSequence")
     assert(clue(csSym).isDefined)
     assert(!clue(csSym.get.flags.isFinal), "CharSequence is an interface, never final")

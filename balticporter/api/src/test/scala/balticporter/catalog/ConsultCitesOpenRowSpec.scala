@@ -6,17 +6,17 @@ import balticporter.tir.Origin
 class ConsultCitesOpenRowSpec extends munit.FunSuite:
 
   private val origin = Origin("Snippet.java", 1, 1)
-  /** a FRESH stand-in for the Java node being lowered — `Lowering.of`'s `subject`, which joins the
-    * two dispatches of ONE node by identity. A `def`, so every call site is a different node. */
+
+  /** a FRESH stand-in for the Java node being lowered — `Lowering.of`'s `subject`, which joins the two dispatches of ONE node by identity. A `def`, so every call site is a different node.
+    */
   private def node: AnyRef = new Object
 
   /** the rule, over a LOG. `Nil` when every consult the run made is fine. */
-  private def findings(log: CatalogLog,
-                       statusOf: DiffId => Option[Status] = id => Differences.byId.get(id).map(_.status)): List[String] =
+  private def findings(log: CatalogLog, statusOf: DiffId => Option[Status] = id => Differences.byId.get(id).map(_.status)): List[String] =
     log.reached.toList.sortBy(_.toString).flatMap { id =>
       statusOf(id) match
         case scala.None => Some(s"$id is cited by a consult and is not in the registry")
-        case Some(st) =>
+        case Some(st)   =>
           st match
             case Status.Open      => Some(s"$id is consulted while the registry says nobody handles it")
             case Status.Absent(w) => Some(s"$id is consulted while the frontend has no model for it: $w")
@@ -25,7 +25,7 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
 
   /** consult `id` once, through the real surface — never by poking the log. */
   private def consulting(id: DiffId, applies: Boolean = false): CatalogLog =
-    val log = new CatalogLog
+    val log          = new CatalogLog
     given CatalogLog = log
     Lowering.of("CtBinaryOperator", Dispatch.Expression, origin, node) {
       Obligations.consult(id, origin)(if applies then Some(()) else scala.None)

@@ -1,10 +1,10 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.transform.{CollectionClosureCheck, CollectionsTransform}
+import balticporter.transform.{ CollectionClosureCheck, CollectionsTransform }
 
-/** The CLOSURE property of `CollectionsTransform.typeMap`: if a type maps, everything the JDK
-  * declares as its subtype must map or be REPORTED. */
+/** The CLOSURE property of `CollectionsTransform.typeMap`: if a type maps, everything the JDK declares as its subtype must map or be REPORTED.
+  */
 class CollectionClosureCheckSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ class CollectionClosureCheckSpec extends PortSuite:
     // the closure is complete and there is nothing to say. A check that cannot produce this answer
     // is reporting its own coverage, not the program's.
     val ph = new CollectionsTransform
-    val p = port(
+    val p  = port(
       """package demo;
         |import java.util.*;
         |class F {
@@ -73,7 +73,7 @@ class CollectionClosureCheckSpec extends PortSuite:
         |  Iterable<String> i() { return l; }
         |}
         |""".stripMargin,
-      ph,
+      ph
     )
     assertEquals(clue(ph.closure(p.after)), Nil)
   }
@@ -83,7 +83,7 @@ class CollectionClosureCheckSpec extends PortSuite:
     // A check that decided the family from the PACKAGE would report both (CLAUDE.md §4.56 — a
     // prefix is not a structural fact), which is exactly the noise that makes a check unread.
     val ph = new CollectionsTransform
-    val p = port(
+    val p  = port(
       """package demo;
         |import java.util.*;
         |class N {
@@ -93,7 +93,7 @@ class CollectionClosureCheckSpec extends PortSuite:
         |  int next() { return r.nextInt(3); }
         |}
         |""".stripMargin,
-      ph,
+      ph
     )
     assertEquals(clue(ph.closure(p.after)).map(_.tpe), Nil)
   }
@@ -103,7 +103,7 @@ class CollectionClosureCheckSpec extends PortSuite:
     // DECLARES, and the two disagreeing is 13 of simple-graphs' 20 errors (ENGINE-LIMITS K5).
     // `AbstractCollection` is mapped, so this is the SAME hole one level down.
     val ph = new CollectionsTransform
-    val p = port(
+    val p  = port(
       """package demo;
         |import java.util.*;
         |class Own extends AbstractList<String> {
@@ -111,7 +111,7 @@ class CollectionClosureCheckSpec extends PortSuite:
         |  public int size() { return 0; }
         |}
         |""".stripMargin,
-      ph,
+      ph
     )
     val fs = ph.closure(p.after).filter(_.tpe == "java.util.AbstractList")
     assert(fs.nonEmpty, clue(ph.closure(p.after)).toString)
@@ -141,10 +141,16 @@ class CollectionClosureCheckSpec extends PortSuite:
     // The one failure mode a transcribed table has: a misspelled parent, which silently ends the
     // walk and turns a finding into a silence. Every target must either have its own entry or be
     // one of the two roots this table deliberately stops at.
-    val leaves = Set("java.lang.Iterable", "java.util.Map", "java.util.Iterator", "java.util.Map$Entry",
-                     "java.util.Map.Entry", "java.util.RandomAccess", "java.util.Dictionary")
-    val orphans = CollectionClosureCheck.jdkSupertypes.values.flatten.toSet
-      .filterNot(t => CollectionClosureCheck.jdkSupertypes.contains(t) || leaves(t))
+    val leaves = Set(
+      "java.lang.Iterable",
+      "java.util.Map",
+      "java.util.Iterator",
+      "java.util.Map$Entry",
+      "java.util.Map.Entry",
+      "java.util.RandomAccess",
+      "java.util.Dictionary"
+    )
+    val orphans = CollectionClosureCheck.jdkSupertypes.values.flatten.toSet.filterNot(t => CollectionClosureCheck.jdkSupertypes.contains(t) || leaves(t))
     assertEquals(clue(orphans), Set.empty[String])
   }
 
@@ -155,14 +161,14 @@ class CollectionClosureCheckSpec extends PortSuite:
     // in its own repository is CLAUDE.md §4.45's "cannot classify" failure with a plausible owner
     // attached (ENGINE-LIMITS D2).
     val ph = new CollectionsTransform
-    val p = port(
+    val p  = port(
       """package demo;
         |import java.util.*;
         |import java.util.concurrent.*;
         |class Base { CopyOnWriteArrayList<String> v = new CopyOnWriteArrayList<String>(); }
         |class Dep  { List<String> l = new ArrayList<String>(); }
         |""".stripMargin,
-      ph,
+      ph
     )
     assert(clue(ph.closure(p.after)).nonEmpty)
     def unit(n: String) = p.after.units.filter(u => p.after.symbolOf(u.symbol).exists(_.fullName == n))

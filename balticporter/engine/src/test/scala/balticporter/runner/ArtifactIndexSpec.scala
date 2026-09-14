@@ -1,10 +1,10 @@
 package balticporter.runner
 
-import balticporter.catalog.{ArtifactDep, CrossKind}
+import balticporter.catalog.{ ArtifactDep, CrossKind }
 import balticporter.tir.DependencyCheck
 
-import java.nio.file.{Files, Path}
-import java.util.zip.{ZipEntry, ZipOutputStream}
+import java.nio.file.{ Files, Path }
+import java.util.zip.{ ZipEntry, ZipOutputStream }
 
 /** The PROVIDES-SET — read from the artifact, never derived from the coordinate. */
 class ArtifactIndexSpec extends munit.FunSuite:
@@ -60,29 +60,29 @@ class ArtifactIndexSpec extends munit.FunSuite:
   }
 
   test("a jar's listing is its class set") {
-    val jar = jarOf("META-INF/MANIFEST.MF", "p/", "p/Svc.class", "p/Svc$.class", "p/Svc.tasty",
-                    "p/Impl$$anon$1.class", "p/Registry.class")
+    val jar = jarOf("META-INF/MANIFEST.MF", "p/", "p/Svc.class", "p/Svc$.class", "p/Svc.tasty", "p/Impl$$anon$1.class", "p/Registry.class")
     assertEquals(ArtifactIndex.classesIn(List(jar)), Set("p.Svc", "p.Impl", "p.Registry"))
   }
 
   test("a jar that cannot be RESOLVED is Unverifiable — never an empty provides-set") {
     // §4.6: `Known(Set.empty)` is indistinguishable from "this artifact declares nothing the port
     // names", which is a REMOVE instruction. An offline run must not be able to produce one.
-    val got = ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3",
-      _ => Left("no network"))
+    val got = ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3", _ => Left("no network"))
     got match
       case DependencyCheck.Provides.Unverifiable(why) => assertEquals(why, "no network")
-      case other => fail(s"expected Unverifiable, got $other")
+      case other                                      => fail(s"expected Unverifiable, got $other")
   }
 
   test("…and a jar that RESOLVED and cannot be read is a different fact, said differently") {
     val missing = Files.createTempDirectory("artifact-index-").resolve("gone.jar")
-    val got = ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3",
-      _ => Right(List(missing)))
+    val got     = ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3", _ => Right(List(missing)))
     // the resolver's own filter drops a path that does not exist, so this is the honest empty jar
     // list rather than a crash; what must never happen is the run dying on a check column.
-    assert(got.isInstanceOf[DependencyCheck.Provides.Known] ||
-           got.isInstanceOf[DependencyCheck.Provides.Unverifiable], got.toString)
+    assert(
+      got.isInstanceOf[DependencyCheck.Provides.Known] ||
+        got.isInstanceOf[DependencyCheck.Provides.Unverifiable],
+      got.toString
+    )
   }
 
   test("the cache answers only for the invocation that produced it") {
@@ -93,23 +93,29 @@ class ArtifactIndexSpec extends munit.FunSuite:
     val dep = ArtifactDep("o", "n", "1", CrossKind.Platform)
     val jar = jarOf("p/A.class")
     // first call resolves and writes the listing beside its fingerprint
-    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3", _ => Right(List(jar))),
-                 DependencyCheck.Provides.Known(Set("p.A")))
+    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3", _ => Right(List(jar))), DependencyCheck.Provides.Known(Set("p.A")))
     assert(Files.exists(ArtifactIndex.cacheFile(dir, dep)))
     // …and the second answers from it without resolving anything
-    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3",
-                   _ => fail("the cache should have answered")),
-                 DependencyCheck.Provides.Known(Set("p.A")))
+    assertEquals(
+      ArtifactIndex.provides(dep, Some(dir), "3", _ => fail("the cache should have answered")),
+      DependencyCheck.Provides.Known(Set("p.A"))
+    )
     // a BUMPED revision is a different fingerprint and a different file — the stale listing is never
     // reused for it
     val bumped = dep.copy(rev = "2")
-    assertEquals(ArtifactIndex.provides(bumped, Some(dir), "3", _ => Right(List(jarOf("p/B.class")))),
-                 DependencyCheck.Provides.Known(Set("p.B")))
+    assertEquals(
+      ArtifactIndex.provides(bumped, Some(dir), "3", _ => Right(List(jarOf("p/B.class")))),
+      DependencyCheck.Provides.Known(Set("p.B"))
+    )
     // …and a listing whose sidecar disagrees is refetched rather than trusted
-    Files.writeString(ArtifactIndex.cacheFile(dir, dep).resolveSibling(
-      ArtifactIndex.cacheFile(dir, dep).getFileName.toString + ".coords"), "some other invocation\n")
-    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3", _ => Right(List(jarOf("p/C.class")))),
-                 DependencyCheck.Provides.Known(Set("p.C")))
+    Files.writeString(
+      ArtifactIndex.cacheFile(dir, dep).resolveSibling(ArtifactIndex.cacheFile(dir, dep).getFileName.toString + ".coords"),
+      "some other invocation\n"
+    )
+    assertEquals(
+      ArtifactIndex.provides(dep, Some(dir), "3", _ => Right(List(jarOf("p/C.class")))),
+      DependencyCheck.Provides.Known(Set("p.C"))
+    )
   }
 
   test("an EMPTY listing is a listing, and survives the cache round trip") {
@@ -117,10 +123,11 @@ class ArtifactIndexSpec extends munit.FunSuite:
     // jar's answer, so it must not be re-read as a miss.
     val dir = Files.createTempDirectory("artifact-index-")
     val dep = ArtifactDep("o", "empty", "1")
-    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3", _ => Right(List(jarOf("META-INF/x")))),
-                 DependencyCheck.Provides.Known(Set.empty))
-    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3", _ => fail("cached")),
-                 DependencyCheck.Provides.Known(Set.empty))
+    assertEquals(
+      ArtifactIndex.provides(dep, Some(dir), "3", _ => Right(List(jarOf("META-INF/x")))),
+      DependencyCheck.Provides.Known(Set.empty)
+    )
+    assertEquals(ArtifactIndex.provides(dep, Some(dir), "3", _ => fail("cached")), DependencyCheck.Provides.Known(Set.empty))
   }
 
   test("the supplier resolves one coordinate ONCE, however many times the 2×2 asks") {
@@ -145,8 +152,7 @@ class ArtifactIndexSpec extends munit.FunSuite:
     // nothing in the report could explain. One manifest holding a java and a scala-cross spelling of
     // one coordinate, or a snapshot beside its release, is the shape.
     var seen   = List.empty[String]
-    val supply = ArtifactIndex.supplier(scala.None, "3",
-      { cmd => seen = seen :+ cmd.mkString(" "); Right(List(jarOf("p/A.class"))) })
+    val supply = ArtifactIndex.supplier(scala.None, "3", { cmd => seen = seen :+ cmd.mkString(" "); Right(List(jarOf("p/A.class"))) })
     val java   = ArtifactDep("o", "n", "1", CrossKind.Java)
     supply(java)
     supply(java.copy(cross = CrossKind.Scala))
@@ -171,7 +177,8 @@ class ArtifactIndexSpec extends munit.FunSuite:
     assertEquals(ArtifactIndex.asPath("Downloading https://repo1.maven.org/x/y/z-1.0.jar"), scala.None)
     assertEquals(ArtifactIndex.asPath(dir.resolve("never-fetched.jar").toString), scala.None)
     // and the whole resolution answers with it: this is the arm the check's emitted column reads
-    assertEquals(ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3",
-                   _ => Right(List(here))),
-                 DependencyCheck.Provides.Known(Set("p.Spaced")))
+    assertEquals(
+      ArtifactIndex.provides(ArtifactDep("o", "n", "1"), scala.None, "3", _ => Right(List(here))),
+      DependencyCheck.Provides.Known(Set("p.Spaced"))
+    )
   }

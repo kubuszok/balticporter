@@ -1,10 +1,10 @@
 package balticporter.corpus
 
-import balticporter.core.{PolicyIssue, Substitutions}
+import balticporter.core.{ PolicyIssue, Substitutions }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
-import balticporter.transform.{CallSiteSubstitutionTransform, PackageRenameTransform}
+import balticporter.transform.{ CallSiteSubstitutionTransform, PackageRenameTransform }
 
 /** The call-site seam, end to end: keep the method mechanically translated, replace ONE call in it. */
 class CallSiteSubstitutionSpec extends munit.FunSuite:
@@ -46,8 +46,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("the call is replaced by the template, with the receiver and the argument spliced in") {
-    val (phase, out) = run(Map(
-      "demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"))
+    val (phase, out) = run(Map("demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"))
     assert(clue(out).contains("demo.Support.removeValue(this.bag, x)"))
     assertEquals(phase.substituted, List("demo.Bag#remove(Object)" -> 3))
     assertEquals(phase.policyReport.findings, Nil)
@@ -57,8 +56,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
   }
 
   test("OVERLOAD EXACTNESS: a key for remove(Object) does not touch remove(int) — §4.4's flagship") {
-    val (phase, out) = run(Map(
-      "demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"))
+    val (phase, out) = run(Map("demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"))
     assert(clue(out).contains("demo.Support.removeValue(this.bag, x)"))
     // the by-INDEX overload is a different member and stays exactly as translated. `Symbol.fullName`
     // is the same string for both, so nothing but the descriptor could have told them apart.
@@ -94,7 +92,8 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     // it would compile nowhere and be reported by nothing.
     val (_, out, _, _) = runTraced(
       Map("demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"),
-      List(new PackageRenameTransform(Map("demo" -> "port"))))
+      List(new PackageRenameTransform(Map("demo" -> "port")))
+    )
     assert(clue(out).contains("package port"))
     assert(clue(out).contains("removeValue(this.bag, x)"))
     // the TEMPLATE text is the port's own and is spliced verbatim — it is written in the port's
@@ -124,8 +123,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     // two options were to replace the CALLER's whole body (forking it from upstream permanently) or
     // to drop the caller too (deleting the feature); the call site itself had no seam at all.
     val subs  = Substitutions(dropMethods = Set("demo.Bag#remove(Object)"))
-    val phase = new CallSiteSubstitutionTransform(Map(
-      "demo.Bag#remove(Object)" -> "demo.Support.rm({recv}, {arg0})"))
+    val phase = new CallSiteSubstitutionTransform(Map("demo.Bag#remove(Object)" -> "demo.Support.rm({recv}, {arg0})"))
     val after = Pipeline.run(SpoonTir.fromSource(dropped, subs = subs), List(phase))
     val out   = new TirEmitter(after).emit
     assertEquals(phase.substituted, List("demo.Bag#remove(Object)" -> 1))
@@ -200,7 +198,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
 
   test("one DECISION per declaration, carrying the key and the site count, plus a porter note") {
     val (_, out, log, notes) = runTraced(Map("demo.Bag#remove(Object)" -> "demo.Support.rm({arg0})"))
-    val ds = log.all.filter(_.kind == balticporter.tir.Decision.Kind.SubstitutedCall)
+    val ds                   = log.all.filter(_.kind == balticporter.tir.Decision.Kind.SubstitutedCall)
     // two DECLARATIONS use the callee (`byValue` once, `twice` twice) — never one row per site
     assertEquals(ds.map(_.subjectFqn).sorted, List("demo.Store#byValue", "demo.Store#twice"))
     assertEquals(ds.flatMap(_.detail.get("sites")).sorted, List("1", "2"))
@@ -221,10 +219,10 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     // unreported it is a surviving reference to exactly the member the port declared it does not
     // call — a silence no compile, no check and no test can see.
     val (phase, out) = run(Map("demo.Aux#pass(Object)" -> "demo.Support.rm({arg0})"))
-    val r = phase.refusals
+    val r            = phase.refusals
     assertEquals(r.map(_._1), List("demo.Aux#pass(Object)"))
     assert(clue(r.head._2).contains("METHOD VALUE"))
-    assert(clue(out).contains("a.pass"))              // the reference itself survives, as stated
+    assert(clue(out).contains("a.pass")) // the reference itself survives, as stated
     // …and it is a FINDING, filed under the same key the manifest carries
     val f = phase.policyReport.findings
     assertEquals(f.map(_.issue), List(PolicyIssue.Unverifiable))

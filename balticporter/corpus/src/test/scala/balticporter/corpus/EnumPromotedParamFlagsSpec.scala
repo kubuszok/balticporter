@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A PROMOTED ENUM PARAMETER THAT SUPERSEDES A FIELD IS THAT FIELD — its ACCESS LEVEL and its
-  * MUTABILITY included. */
+/** A PROMOTED ENUM PARAMETER THAT SUPERSEDES A FIELD IS THAT FIELD — its ACCESS LEVEL and its MUTABILITY included.
+  */
 class EnumPromotedParamFlagsSpec extends PortSuite:
 
   test("a PRIVATE FINAL field's flags reach the parameter that supersedes it") {

@@ -2,10 +2,10 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
-/** A PROMOTED constructor's body becomes the class body, and a scala class body runs on EVERY
-  * construction path. Java's did not. */
+/** A PROMOTED constructor's body becomes the class body, and a scala class body runs on EVERY construction path. Java's did not.
+  */
 class CtorFunnelPromotedBodySpec extends munit.FunSuite:
 
   private val src =
@@ -61,9 +61,10 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
   }
 
   test("exactly the escaping constructor is reported") {
-    assertEquals(findings.map(f => (f.owner, f.detail)),
-                 List(("demo.Base",
-                       "1 statement(s) of the promoted constructor also run here; java ran them only on its own path")))
+    assertEquals(
+      findings.map(f => (f.owner, f.detail)),
+      List(("demo.Base", "1 statement(s) of the promoted constructor also run here; java ran them only on its own path"))
+    )
   }
 
   test("a constructor that delegates `this()` is NOT reported — java ran the body there too") {

@@ -1,15 +1,15 @@
 package balticporter.transform
 
 import balticporter.tir.*
-import balticporter.transform.CallSiteSubstitutionTransform.{Bound, Hole, Template, receiverOf, siteFault}
+import balticporter.transform.CallSiteSubstitutionTransform.{ Bound, Hole, Template, receiverOf, siteFault }
 
-/** The two halves of the call-site seam that need NO program: the TEMPLATE GRAMMAR, and the
-  * per-SITE refusals. */
+/** The two halves of the call-site seam that need NO program: the TEMPLATE GRAMMAR, and the per-SITE refusals.
+  */
 class CallSiteTemplateSpec extends munit.FunSuite:
 
-  private val o = Origin("Demo.java", 7, 3)
-  private def lit(n: Int)  = Tree.Literal(Constant.IntC(n), TypeRepr.NoType, o)
-  private def id(n: Int)   = Tree.Ident(SymId(n), TypeRepr.NoType, o)
+  private val o           = Origin("Demo.java", 7, 3)
+  private def lit(n: Int) = Tree.Literal(Constant.IntC(n), TypeRepr.NoType, o)
+  private def id(n:  Int) = Tree.Ident(SymId(n), TypeRepr.NoType, o)
 
   /** a call with `args`, through a receiver when `recv` is given. */
   private def call(recv: Option[Term], args: List[Term]): Tree.Apply =
@@ -70,13 +70,12 @@ class CallSiteTemplateSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("splice builds ONE Opaque carrying the terms; nothing is rendered at the phase") {
-    val t = parsed("a.B.c({recv}, {arg0})")
+    val t   = parsed("a.B.c({recv}, {arg0})")
     val out = t.splice(Some(id(1)), List(lit(4)), TypeRepr.NoType, o)
     val op  = out.asInstanceOf[Tree.Opaque]
     assertEquals(op.holes, List(id(1), lit(4)))
     // the marker is not text a template author can write, so a hole can never be forged by one
-    assertEquals(op.spliced { case Tree.Ident(s, _, _) => s"#${s.raw}"; case _ => "4" },
-      "a.B.c(#1, 4)")
+    assertEquals(op.spliced { case Tree.Ident(s, _, _) => s"#${s.raw}"; case _ => "4" }, "a.B.c(#1, 4)")
   }
 
   test("Opaque with NO holes is returned verbatim — a marker-shaped byte in it cannot be misread") {
@@ -97,7 +96,7 @@ class CallSiteTemplateSpec extends munit.FunSuite:
 
   test("a VARARG SPREAD is refused: a positional hole names a term, not a group") {
     val spread = Tree.Repeated(List(lit(1), lit(2)), TypeRepr.NoType, o)
-    val why = siteFault(call(Some(id(1)), List(lit(0), spread)), bound("f({arg1})", 2))
+    val why    = siteFault(call(Some(id(1)), List(lit(0), spread)), bound("f({arg1})", 2))
     assert(clue(why).exists(_.contains("VARARG SPREAD")))
   }
 

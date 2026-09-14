@@ -1,21 +1,20 @@
 package balticporter.tir
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** The kill switch of CLAUDE.md §4.6, exercised. A flag that is wired but never used is exactly
-  * the defect class §3 is about, so each of these asserts the OUTPUT changed, not that the flag
-  * parsed. */
+/** The kill switch of CLAUDE.md §4.6, exercised. A flag that is wired but never used is exactly the defect class §3 is about, so each of these asserts the OUTPUT changed, not that the flag parsed.
+  */
 class PipelineDebugSpec extends munit.FunSuite:
 
-  /** a phase that adds `by` to every integer literal — so "did this phase run" is readable off
-    * the tree rather than off a log line. */
+  /** a phase that adds `by` to every integer literal — so "did this phase run" is readable off the tree rather than off a log line.
+    */
   private class Bump(val name: String, by: Int) extends Phase:
     override def transformTerm(t: Term)(using Program): Term = t match
       case l @ Tree.Literal(Constant.IntC(v), _, _) => l.copy(const = Constant.IntC(v + by))
       case other                                    => other
 
   private def literals(p: Program): List[Int] =
-    val out = collection.mutable.ListBuffer[Int]()
+    val out     = collection.mutable.ListBuffer[Int]()
     val collect = new Phase:
       def name = "collect"
       override def transformTerm(t: Term)(using Program): Term =
@@ -30,10 +29,11 @@ class PipelineDebugSpec extends munit.FunSuite:
     val saved = kv.map((k, _) => k -> Option(System.getProperty(k)))
     kv.foreach((k, v) => System.setProperty(k, v))
     try body
-    finally saved.foreach {
-      case (k, Some(v))    => System.setProperty(k, v)
-      case (k, scala.None) => System.clearProperty(k)
-    }
+    finally
+      saved.foreach {
+        case (k, Some(v))    => System.setProperty(k, v)
+        case (k, scala.None) => System.clearProperty(k)
+      }
 
   private def capture(body: => Unit): String =
     val buf = new java.io.ByteArrayOutputStream()
@@ -49,20 +49,20 @@ class PipelineDebugSpec extends munit.FunSuite:
 
   test("skipPhases drops exactly the named phase — one run, no source edit") {
     withProps("balticporter.skipPhases" -> "bump-ten") {
-      val out = capture { assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(1, 2)) }
+      val out = capture(assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(1, 2)))
       assert(out.contains("SKIPPED phase 'bump-ten'"), out)
     }
   }
 
   test("skipPhases=* is the whole-pipeline kill switch") {
     withProps("balticporter.skipPhases" -> "*") {
-      capture { assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(0, 1)) }
+      capture(assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(0, 1)))
     }
   }
 
   test("a skipPhases name that matches NO phase is reported, and the available names listed") {
     withProps("balticporter.skipPhases" -> "bmup-ten") {
-      val out = capture { Pipeline.run(TinyProgram.program, phases) }
+      val out = capture(Pipeline.run(TinyProgram.program, phases))
       assert(out.contains("names no such phase: bmup-ten"), out)
       assert(out.contains("bump-one, bump-ten"), out)
     }
@@ -70,7 +70,7 @@ class PipelineDebugSpec extends munit.FunSuite:
 
   test("dumpTirAfter prints the TIR at that phase boundary, narrowed by dumpOnly") {
     withProps("balticporter.dumpTirAfter" -> "bump-one", "balticporter.dumpOnly" -> "p.Foo") {
-      val out = capture { Pipeline.run(TinyProgram.program, phases) }
+      val out = capture(Pipeline.run(TinyProgram.program, phases))
       assert(out.contains("===== TIR AFTER phase 'bump-one' [p.Foo] ====="), out)
       assert(out.contains("ClassDef class p.Foo#1"), out)
       assert(out.contains("Literal 1 : scala.Int"), out) // 0 has been bumped once, not yet ten
@@ -79,9 +79,8 @@ class PipelineDebugSpec extends munit.FunSuite:
   }
 
   test("dumpTirBefore and dumpTirAfter bracket the same phase, and the tree between them DIFFERS") {
-    withProps("balticporter.dumpTirBefore" -> "bump-ten", "balticporter.dumpTirAfter" -> "bump-ten",
-              "balticporter.dumpOnly" -> "p.Foo") {
-      val out = capture { Pipeline.run(TinyProgram.program, phases) }
+    withProps("balticporter.dumpTirBefore" -> "bump-ten", "balticporter.dumpTirAfter" -> "bump-ten", "balticporter.dumpOnly" -> "p.Foo") {
+      val out    = capture(Pipeline.run(TinyProgram.program, phases))
       val before = out.split("===== end TIR BEFORE").head
       val after  = out.split("===== TIR AFTER").last
       assert(before.contains("Literal 1 : scala.Int"), before)
@@ -91,13 +90,13 @@ class PipelineDebugSpec extends munit.FunSuite:
 
   test("dumpOnly naming a unit the program does not have says so, rather than printing nothing") {
     withProps("balticporter.dumpTirAfter" -> "bump-one", "balticporter.dumpOnly" -> "p.NotHere") {
-      val out = capture { Pipeline.run(TinyProgram.program, phases) }
+      val out = capture(Pipeline.run(TinyProgram.program, phases))
       assert(out.contains("<no unit named 'p.NotHere'"), out)
     }
   }
 
   test("with no flags set the pipeline prints nothing — a diagnostic that always prints is ignored") {
-    assertEquals(capture { Pipeline.run(TinyProgram.program, phases) }, "")
+    assertEquals(capture(Pipeline.run(TinyProgram.program, phases)), "")
   }
 
   // -------------------------------------------------------------------------------------------
@@ -111,36 +110,36 @@ class PipelineDebugSpec extends munit.FunSuite:
     files.foreach((name, body) => Files.writeString(r.resolve(".balticporter").resolve(name), body + "\n"))
     r
 
-  /** run with `DebugFlags.root` pointed at `r` and the flag system properties CLEARED — a system
-    * property beats both files, so leaving one set would silently test the wrong layer. */
+  /** run with `DebugFlags.root` pointed at `r` and the flag system properties CLEARED — a system property beats both files, so leaving one set would silently test the wrong layer.
+    */
   private def fromFiles[A](r: Path)(body: => A): A =
-    val keys = List("root", "skipPhases", "dumpTirBefore", "dumpTirAfter", "dumpOnly", "tracePhases")
-      .map(DebugFlags.Prefix + _)
+    val keys  = List("root", "skipPhases", "dumpTirBefore", "dumpTirAfter", "dumpOnly", "tracePhases").map(DebugFlags.Prefix + _)
     val saved = keys.map(k => k -> Option(System.getProperty(k)))
     keys.foreach(System.clearProperty)
     System.setProperty(DebugFlags.Prefix + "root", r.toString)
     try body
-    finally saved.foreach {
-      case (k, Some(v))    => System.setProperty(k, v)
-      case (k, scala.None) => System.clearProperty(k)
-    }
+    finally
+      saved.foreach {
+        case (k, Some(v))    => System.setProperty(k, v)
+        case (k, scala.None) => System.clearProperty(k)
+      }
 
   test("run.properties alone reaches Pipeline.run — the script-written layer") {
     val r = markerRoot("run.properties" -> "balticporter.skipPhases=bump-ten")
     fromFiles(r) {
-      val out = capture { assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(1, 2)) }
+      val out = capture(assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(1, 2)))
       assert(out.contains("SKIPPED phase 'bump-ten'"), out)
     }
   }
 
   test("debug.properties BEATS run.properties in a real run — the hand-written layer wins") {
     val r = markerRoot(
-      "run.properties"   -> "balticporter.skipPhases=bump-one",
-      "debug.properties" -> "balticporter.skipPhases=bump-ten",
+      "run.properties" -> "balticporter.skipPhases=bump-one",
+      "debug.properties" -> "balticporter.skipPhases=bump-ten"
     )
     fromFiles(r) {
       // bump-ten skipped and bump-one applied: 0,1 -> 1,2. Had run.properties won it would be 10,11.
-      val out = capture { assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(1, 2)) }
+      val out = capture(assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(1, 2)))
       assert(out.contains("SKIPPED phase 'bump-ten'"), out)
       assert(!out.contains("SKIPPED phase 'bump-one'"), out)
     }
@@ -149,17 +148,19 @@ class PipelineDebugSpec extends munit.FunSuite:
   test("skipPhases=* from debug.properties is the whole-pipeline kill switch — one file, no rebuild") {
     val r = markerRoot("debug.properties" -> "balticporter.skipPhases=*")
     fromFiles(r) {
-      val out = capture { assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(0, 1)) }
+      val out = capture(assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(0, 1)))
       assert(out.contains("SKIPPED phase 'bump-one'"), out)
       assert(out.contains("SKIPPED phase 'bump-ten'"), out)
     }
   }
 
   test("dumpTirAfter + dumpOnly from a file dump the same boundary a system property does") {
-    val r = markerRoot("debug.properties" ->
-      "balticporter.dumpTirAfter=bump-one\nbalticporter.dumpOnly=p.Foo")
+    val r = markerRoot(
+      "debug.properties" ->
+        "balticporter.dumpTirAfter=bump-one\nbalticporter.dumpOnly=p.Foo"
+    )
     fromFiles(r) {
-      val out = capture { Pipeline.run(TinyProgram.program, phases) }
+      val out = capture(Pipeline.run(TinyProgram.program, phases))
       assert(out.contains("===== TIR AFTER phase 'bump-one' [p.Foo] ====="), out)
       assert(out.contains("Literal 1 : scala.Int"), out)
     }
@@ -168,7 +169,7 @@ class PipelineDebugSpec extends munit.FunSuite:
   test("a file entry missing the `balticporter.` prefix does NOTHING — and the layer says so") {
     val r = markerRoot("debug.properties" -> "skipPhases=*")
     fromFiles(r) {
-      capture { assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(11, 12)) }
+      capture(assertEquals(literals(Pipeline.run(TinyProgram.program, phases)), List(11, 12)))
       assertEquals(DebugFlags.fileLayers(r).flatMap(_.ignored.keys), List("skipPhases"))
     }
   }

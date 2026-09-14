@@ -6,8 +6,8 @@ import balticporter.transform.CollectionsTransform
 /** A KIND THAT IS SEQ-SHAPED EVERYWHERE ELSE MUST BE SEQ-SHAPED AT THE SEAM TOO. */
 class CollectionsStackSeamSpec extends PortSuite:
 
-  /** Nothing here names `Iterable`, so the `Collection` bridge is tested on its own terms
-    * (`CollectionsBridgeGateSpec`'s rule, one kind over). */
+  /** Nothing here names `Iterable`, so the `Collection` bridge is tested on its own terms (`CollectionsBridgeGateSpec`'s rule, one kind over).
+    */
   private val ownedCollection =
     """package demo;
       |import java.util.*;
@@ -26,9 +26,9 @@ class CollectionsStackSeamSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  /** the EXTERNAL half — a class file's `java.lang.Object` formal, where nothing is broken and
-    * nothing compiles wrong, and the callee nevertheless sees a `JavaStack` where java handed it a
-    * `java.util.Stack` (`CollectionsTransform.ObjectFqn`'s own reasoning). */
+  /** the EXTERNAL half — a class file's `java.lang.Object` formal, where nothing is broken and nothing compiles wrong, and the callee nevertheless sees a `JavaStack` where java handed it a
+    * `java.util.Stack` (`CollectionsTransform.ObjectFqn`'s own reasoning).
+    */
   private val externalUniversal =
     """package demo;
       |import java.util.*;
@@ -38,16 +38,13 @@ class CollectionsStackSeamSpec extends PortSuite:
       |""".stripMargin
 
   test("a Stack at an owned `Collection` formal takes the SAME factory a List does") {
-    assertEmits(port(ownedCollection, new CollectionsTransform),
-                "Holder.of(balticporter.runtime.JavaCollection.from(s))")
+    assertEmits(port(ownedCollection, new CollectionsTransform), "Holder.of(balticporter.runtime.JavaCollection.from(s))")
   }
 
   test("…and at an `Iterable` formal, the shim every kind reaches") {
-    assertEmits(port(ownedIterable, new CollectionsTransform),
-                "Holder.each(balticporter.runtime.JavaIterable.from(s))")
+    assertEmits(port(ownedIterable, new CollectionsTransform), "Holder.each(balticporter.runtime.JavaIterable.from(s))")
   }
 
   test("…and at an EXTERNAL universal formal, where no compile error would ever have said so") {
-    assertEmits(port(externalUniversal, new CollectionsTransform),
-                "balticporter.runtime.JavaCollections.toJava(s)")
+    assertEmits(port(externalUniversal, new CollectionsTransform), "balticporter.runtime.JavaCollections.toJava(s)")
   }

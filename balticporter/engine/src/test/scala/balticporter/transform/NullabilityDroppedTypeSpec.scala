@@ -3,10 +3,10 @@ package balticporter.transform
 import balticporter.core.Substitutions
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, RuleScope}
+import balticporter.tir.{ Pipeline, RuleScope }
 
-/** A DROPPED type's members are read literally by the nullability phase: an injection stands at the
-  * name with signatures the phase cannot see (CLAUDE.md §4.56, K15). */
+/** A DROPPED type's members are read literally by the nullability phase: an injection stands at the name with signatures the phase cannot see (CLAUDE.md §4.56, K15).
+  */
 class NullabilityDroppedTypeSpec extends munit.FunSuite:
   private val java =
     """package com.demo;
@@ -25,8 +25,11 @@ class NullabilityDroppedTypeSpec extends munit.FunSuite:
 
   private def emitted(drop: Boolean): String =
     val subs  = if drop then Substitutions(dropTypes = Set("com.demo.Json")) else Substitutions.none
-    val phase = new NullabilityTransform(annotations = Set("com.demo.Null"),
-      target = NullabilityTransform.Target.Named("demo.Nullable"), scope = RuleScope.Everywhere(Set.empty))
+    val phase = new NullabilityTransform(
+      annotations = Set("com.demo.Null"),
+      target = NullabilityTransform.Target.Named("demo.Nullable"),
+      scope = RuleScope.Everywhere(Set.empty)
+    )
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(java, "Demo.java", subs = subs), List(phase))
     new TirEmitter(after, notes = log).emit
 

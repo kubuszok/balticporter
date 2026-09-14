@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `ENGINE-LIMITS.md` G8.10 — java's UNCHECKED override, where an F-BOUNDED result-only method type
-  * parameter is erased at the DECLARATION. */
+/** `ENGINE-LIMITS.md` G8.10 — java's UNCHECKED override, where an F-BOUNDED result-only method type parameter is erased at the DECLARATION.
+  */
 class UncheckedErasureOverrideSpec extends PortSuite:
 
   test("an F-BOUNDED, RESULT-ONLY method type parameter is erased to its bound at the DECLARATION") {
@@ -16,7 +16,8 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |interface Rich<T extends CharSequence> {
         |  <B extends Builder<B, T>> B getBuilder();
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // no `[B <: …]` clause survives, and `B`'s own occurrence inside the bound is `?`.
     assertEmits(p, "def getBuilder(): demo.Builder[?, T]")
     assertNotEmits(p, "def getBuilder[B")
@@ -30,7 +31,8 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |class Impl2 implements Rich2<String> {
         |  public <B extends Builder2<B, String>> B getBuilder() { return (B) null; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // java's own `(B)` — written under a `//noinspection unchecked` in every library that has this
     // shape — becomes a cast to the SAME erasure the result carries, so the body conforms.
     assertEmits(p, "def getBuilder(): demo.Builder2[?, java.lang.String]")
@@ -48,7 +50,8 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |interface Based extends Rich3<StringBuilder> {
         |  @Override Narrow getBuilder();
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `Based`'s declaration is untouched — it was never generic — and the parent it overrides is
     // now `getBuilder(): Builder3[?, StringBuilder]`, which `Narrow` conforms to. What makes the
     // override legal is that NO generic clause survives anywhere on this name.
@@ -63,7 +66,8 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |abstract class Seq4<T extends CharSequence> {
         |  abstract <B extends Builder4<B, T>> B reuse(B b);
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "def reuse[B <: demo.Builder4[B, T]]")
   }
 
@@ -74,7 +78,8 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |abstract class Tree {
         |  abstract <N extends Node> N first();
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `class MyNode implements Node` satisfies `N <: Node` perfectly, and java callers DO write it;
     // erasing this to `Node` would throw away the caller's own answer (G8's conjunct).
     assertEmits(p, "def first[N <: demo.Node]")
@@ -87,7 +92,8 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |class Empties {
         |  <T> List<T> emptyList() { return null; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // java's `<T>` IS `<T extends Object>` (§4.55's own note), which is a bound with no variable in
     // it — the clause survives, which is the point.
     assertEmits(p, "def emptyList[T <: java.lang.Object]")
@@ -100,6 +106,7 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |abstract class Seq5<T extends CharSequence> {
         |  abstract <B extends Builder5<B, T>> int count();
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "def count[B <: demo.Builder5[B, T]]")
   }

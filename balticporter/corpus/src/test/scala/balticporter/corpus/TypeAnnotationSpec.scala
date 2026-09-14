@@ -5,8 +5,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 
-/** A TYPE's argument-bearing annotation, from the harvest to the emitted text — `ENGINE-LIMITS.md`
-  * T16. */
+/** A TYPE's argument-bearing annotation, from the harvest to the emitted text — `ENGINE-LIMITS.md` T16.
+  */
 class TypeAnnotationSpec extends PortSuite:
 
   private val src =

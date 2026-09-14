@@ -1,6 +1,6 @@
 package balticporter.tir
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 class CheckReportSpec extends munit.FunSuite:
 
@@ -11,10 +11,11 @@ class CheckReportSpec extends munit.FunSuite:
     val saved = kv.map((k, _) => k -> Option(System.getProperty(k)))
     kv.foreach((k, v) => System.setProperty(k, v))
     try body
-    finally saved.foreach {
-      case (k, Some(v)) => System.setProperty(k, v)
-      case (k, scala.None) => System.clearProperty(k)
-    }
+    finally
+      saved.foreach {
+        case (k, Some(v))    => System.setProperty(k, v)
+        case (k, scala.None) => System.clearProperty(k)
+      }
 
   test("a finding's id ignores the LINE — an upstream whitespace edit must not orphan a baseline entry") {
     val a = f("omissions", "super(args) dropped", "p.Foo", "p/Foo.java", 12, "1 argument(s) discarded")
@@ -30,7 +31,7 @@ class CheckReportSpec extends munit.FunSuite:
     val three = List(
       f("omissions", "super(args) dropped", "p.Foo", "p/Foo.java", 43, "3 argument(s) discarded"),
       f("omissions", "super(args) dropped", "p.Foo", "p/Foo.java", 55, "3 argument(s) discarded"),
-      f("omissions", "super(args) dropped", "p.Foo", "p/Foo.java", 59, "3 argument(s) discarded"),
+      f("omissions", "super(args) dropped", "p.Foo", "p/Foo.java", 59, "3 argument(s) discarded")
     )
     val ids = CheckReport.assignSeq(three).map(_.id)
     assertEquals(ids.distinct.size, 3)
@@ -55,14 +56,14 @@ class CheckReportSpec extends munit.FunSuite:
     val base = List(
       f("omissions", "k", "p.A", "p/A.java", 1, "x"),
       f("omissions", "k", "p.B", "p/B.java", 2, "x"),
-      f("signature", "call arity", "p.C#m", "p/C.java", 3, "expects 1, found 2"),
+      f("signature", "call arity", "p.C#m", "p/C.java", 3, "expects 1, found 2")
     )
     val now = List(
-      f("omissions", "k", "p.A", "p/A.java", 5, "x"),   // same finding, moved line
-      f("omissions", "k", "p.D", "p/D.java", 9, "x"),   // new
-      f("signature", "call arity", "p.C#m", "p/C.java", 3, "expects 1, found 2"),
+      f("omissions", "k", "p.A", "p/A.java", 5, "x"), // same finding, moved line
+      f("omissions", "k", "p.D", "p/D.java", 9, "x"), // new
+      f("signature", "call arity", "p.C#m", "p/C.java", 3, "expects 1, found 2")
     )
-    val d = CheckReport.diff(base, now, Set("omissions", "signature"), Set("omissions", "signature"), hasBaseline = true)
+    val d  = CheckReport.diff(base, now, Set("omissions", "signature"), Set("omissions", "signature"), hasBaseline = true)
     val om = d.deltas.find(_.check == "omissions").get
     assertEquals(om.before, 2)
     assertEquals(om.after, 2)
@@ -77,14 +78,14 @@ class CheckReportSpec extends munit.FunSuite:
   test("the commit subject is COMPUTED as before->after, not remembered") {
     val base = (1 to 31).map(i => f("omissions", "k", s"p.T$i", "p/T.java", i, "x")).toList
     val now  = (1 to 33).map(i => f("omissions", "k", s"p.T$i", "p/T.java", i, "x")).toList
-    val d = CheckReport.diff(base, now, Set("omissions"), Set("omissions"), hasBaseline = true)
+    val d    = CheckReport.diff(base, now, Set("omissions"), Set("omissions"), hasBaseline = true)
     assertEquals(CheckReport.subject(d), "omissions 31->33")
   }
 
   test("a check that stopped RUNNING is not a check that found nothing") {
     val base = List(f("portability(emitted)", "java.net.", "p.A", "p/A.java", 1, "TermRef — networking"))
-    val d = CheckReport.diff(base, Nil, Set("portability(emitted)"), Set("omissions"), hasBaseline = true)
-    val p = d.deltas.find(_.check == "portability(emitted)").get
+    val d    = CheckReport.diff(base, Nil, Set("portability(emitted)"), Set("omissions"), hasBaseline = true)
+    val p    = d.deltas.find(_.check == "portability(emitted)").get
     assertEquals(p.ran, false)
     val rendered = CheckReport.renderDiff(d)
     assert(rendered.contains("CHECK DID NOT RUN"), rendered)
@@ -144,13 +145,13 @@ class CheckReportSpec extends munit.FunSuite:
         CheckReport.write(out)
         val jvm = Files.readString(out.resolve("jvm.txt"))
         // one `key\tvalue` per line, because the reader is a shell guard extracting a FIELD.
-        assertEquals(jvm.linesIterator.map(_.split('\t').head).toList,
-                     List("specification", "version", "vendor", "home"))
-        assertEquals(jvm.linesIterator.find(_.startsWith("specification\t")).map(_.split('\t')(1)),
-                     Some(balticporter.core.JvmInfo.specification))
+        assertEquals(jvm.linesIterator.map(_.split('\t').head).toList, List("specification", "version", "vendor", "home"))
+        assertEquals(
+          jvm.linesIterator.find(_.startsWith("specification\t")).map(_.split('\t')(1)),
+          Some(balticporter.core.JvmInfo.specification)
+        )
         // …and the operator document says it too, for the reader who is holding a moved `jdk=`.
-        assert(clue(Files.readString(out.resolve("report.md"))).contains(
-          s"spec ${balticporter.core.JvmInfo.specification}"))
+        assert(clue(Files.readString(out.resolve("report.md"))).contains(s"spec ${balticporter.core.JvmInfo.specification}"))
       }
     finally
       CheckReport.reset()
@@ -165,8 +166,7 @@ class CheckReportSpec extends munit.FunSuite:
     assert(balticporter.core.JvmInfo.version.nonEmpty)
     assert(balticporter.core.JvmInfo.vendor.nonEmpty)
     assert(balticporter.core.JvmInfo.home.nonEmpty)
-    assertEquals(balticporter.core.JvmInfo.specification,
-                 System.getProperty("java.specification.version"))
+    assertEquals(balticporter.core.JvmInfo.specification, System.getProperty("java.specification.version"))
   }
 
   test("recording is a no-op when reporting is off — a check stays a pure function") {
@@ -183,24 +183,25 @@ class CheckReportSpec extends munit.FunSuite:
     // under sbt 2. Any suite that turned reporting on without naming a directory therefore
     // published `<subproject>/port-report/WorkerMain/` into the checkout: an artifact write that
     // was gated on a FLAG and not on the artifact layer (§5.1, the `PortMap.write` precedent).
-    withProps("sun.java.command" -> "sbt.internal.worker1.WorkerMain --tcp 49786",
-              "balticporter.report" -> "on") {
+    withProps("sun.java.command" -> "sbt.internal.worker1.WorkerMain --tcp 49786", "balticporter.report" -> "on") {
       assertEquals(CheckReport.mainClassKey, scala.None)
       assert(!CheckReport.enabled, "reporting must not turn on for a JVM with no port identity")
       assertEquals(CheckReport.dir.getFileName.toString, CheckReport.NoMainClass)
     }
     // …while a port's OWN migration main still names its directory, which is the measurement
     // identity CLAUDE.md §2.1 keeps stable across a module rename.
-    withProps("sun.java.command" -> "com.example.port.WidgetMigrate",
-              "balticporter.report" -> "on") {
+    withProps("sun.java.command" -> "com.example.port.WidgetMigrate", "balticporter.report" -> "on") {
       assertEquals(CheckReport.mainClassKey, Some("WidgetMigrate"))
       assert(CheckReport.enabled)
       assertEquals(CheckReport.dir.getFileName.toString, "WidgetMigrate")
     }
     // …and an EXPLICIT directory is an identity the caller supplied, so it enables reporting even
     // under the build tool's main.
-    withProps("sun.java.command" -> "sbt.internal.worker1.WorkerMain",
-              "balticporter.report" -> "on", "balticporter.reportDir" -> "/tmp/bp-explicit") {
+    withProps(
+      "sun.java.command" -> "sbt.internal.worker1.WorkerMain",
+      "balticporter.report" -> "on",
+      "balticporter.reportDir" -> "/tmp/bp-explicit"
+    ) {
       assert(CheckReport.enabled)
       assertEquals(CheckReport.dir.getFileName.toString, "bp-explicit")
     }
@@ -212,7 +213,7 @@ class CheckReportSpec extends munit.FunSuite:
     // pins for the port map and for correlation, at the layer both of them go through.
     val here   = DebugFlags.root.resolve("port-report")
     def listed = if !Files.exists(here) then Set.empty[String]
-                 else Files.walk(here).sorted().toArray.map(_.toString).toSet
+    else Files.walk(here).sorted().toArray.map(_.toString).toSet
     val before = listed
     withProps("balticporter.report" -> "on") {
       CheckReport.reset()

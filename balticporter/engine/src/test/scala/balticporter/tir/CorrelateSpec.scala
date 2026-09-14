@@ -5,12 +5,14 @@ class CorrelateSpec extends munit.FunSuite:
   private def e(unit: String, member: String, s: Int, en: Int, jl: Int, scope: String = "main") =
     SrcMap.Entry(unit, member, "def", s, en, unit.replace('.', '/') + ".java", jl, "d", scope)
 
-  private val idx = SrcMap.Index.of(List(
-    SrcMap.Entry("p.Buf", "p.Buf", "class", 1, 90, "p/Buf.java", 3, "d", "main"),
-    e("p.Buf", "p.Buf#add(int)", 10, 20, 40),
-    SrcMap.Entry("p.BufTest", "p.BufTest", "class", 1, 30, "p/BufTest.java", 3, "d", "test"),
-    SrcMap.Entry("p.BufTest", "p.BufTest#<stmt1>", "stmt", 4, 8, "p/BufTest.java", 12, "d", "test"),
-  ))
+  private val idx = SrcMap.Index.of(
+    List(
+      SrcMap.Entry("p.Buf", "p.Buf", "class", 1, 90, "p/Buf.java", 3, "d", "main"),
+      e("p.Buf", "p.Buf#add(int)", 10, 20, 40),
+      SrcMap.Entry("p.BufTest", "p.BufTest", "class", 1, 30, "p/BufTest.java", 3, "d", "test"),
+      SrcMap.Entry("p.BufTest", "p.BufTest#<stmt1>", "stmt", 4, 8, "p/BufTest.java", 12, "d", "test")
+    )
+  )
 
   // =========================================================================================
   // scalac
@@ -51,8 +53,8 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("an error outside the source map is UNMAPPED, not silently an engine gap") {
     val ls = Correlate.locateErrors(Correlate.parseScalac(compileLog), idx)
-    assertEquals(ls(2).lane, Correlate.Lane.Unmapped)   // an injected shim, not emitted code
-    assertEquals(ls(1).lane, Correlate.Lane.EngineGap)  // between members -> the unit entry
+    assertEquals(ls(2).lane, Correlate.Lane.Unmapped) // an injected shim, not emitted code
+    assertEquals(ls(1).lane, Correlate.Lane.EngineGap) // between members -> the unit entry
   }
 
   test("with a marker set, an error at a marked member moves to the Approx lane (Stage 2 seam)") {
@@ -117,8 +119,8 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("an EXPECTED failure is not a regression, and the rule is DATA, not a name in the engine") {
     val expected = List(Correlate.Expected("p.BufTest", "wraps", "type substituted by the port"))
-    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, expected)
-    val d  = Correlate.diffTests(Map.empty, ts)
+    val ts       = Correlate.locateTests(Correlate.parseTests(testLog), idx, expected)
+    val d        = Correlate.diffTests(Map.empty, ts)
     assertEquals(d.expectedFailing.map(_.outcome.name), List("wraps"))
     assertEquals(d.newlyFailing.map(_.outcome.name), List("compares"))
     // a whole suite can be declared expected
@@ -127,12 +129,12 @@ class CorrelateSpec extends munit.FunSuite:
   }
 
   test("newly-failing / newly-passing / still-failing against a baseline") {
-    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx)
+    val ts   = Correlate.locateTests(Correlate.parseTests(testLog), idx)
     val base = Map(
-      "p.BufTest\twraps"    -> "fail",   // still failing
-      "p.BufTest\taddsOne"  -> "fail",   // newly passing
-      "p.BufTest\tcompares" -> "pass",   // newly failing
-      "p.Gone\tvanished"    -> "pass",   // did not run at all
+      "p.BufTest\twraps" -> "fail", // still failing
+      "p.BufTest\taddsOne" -> "fail", // newly passing
+      "p.BufTest\tcompares" -> "pass", // newly failing
+      "p.Gone\tvanished" -> "pass" // did not run at all
     )
     val d = Correlate.diffTests(base, ts)
     assertEquals(d.stillFailing.map(_.outcome.name), List("wraps"))
@@ -157,7 +159,7 @@ class CorrelateSpec extends munit.FunSuite:
     // `expected#declared`, no count moves, and the sentence in the `reason` column is about a
     // failure that is not happening. Anchored, the claim stops holding the moment the failure moves.
     val stale = List(Correlate.Expected("p.BufTest", "wraps", "substituted", frame = Some("p.SomewhereElse")))
-    val d = Correlate.diffTests(Map.empty, Correlate.locateTests(Correlate.parseTests(testLog), idx, stale))
+    val d     = Correlate.diffTests(Map.empty, Correlate.locateTests(Correlate.parseTests(testLog), idx, stale))
     assertEquals(d.expectedFailing, Nil)
     assertEquals(d.newlyFailing.map(_.outcome.name), List("compares", "wraps"))
     assertEquals(d.staleExpectations.map(_.outcome.name), List("wraps"))
@@ -178,10 +180,12 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("the anchor column is PARSED from the file, tagged rather than positional") {
     val f = java.nio.file.Files.createTempFile("bp-expected", ".tsv")
-    java.nio.file.Files.writeString(f,
+    java.nio.file.Files.writeString(
+      f,
       s"${Correlate.ExpectedHeader}\n" +
-      "p.BufTest\twraps\tthe reason, with prose\tframe=p.Buf\n" +
-      "p.BufTest\tcompares\tan older row with no anchor at all\n")
+        "p.BufTest\twraps\tthe reason, with prose\tframe=p.Buf\n" +
+        "p.BufTest\tcompares\tan older row with no anchor at all\n"
+    )
     val List(a, b) = Correlate.parseExpected(f): @unchecked
     assertEquals(a.frame, Some("p.Buf"))
     assertEquals(a.reason, "the reason, with prose")
@@ -197,15 +201,14 @@ class CorrelateSpec extends munit.FunSuite:
     // claim is neither wrong nor the reader's next step.
     val dropped = Set(Correlate.Dropped("p.Buf"))
     val stale   = List(Correlate.Expected("p.BufTest", "wraps", "something else", frame = Some("p.Nope")))
-    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, stale, Set.empty, dropped)
-    val d  = Correlate.diffTests(Map.empty, ts)
+    val ts      = Correlate.locateTests(Correlate.parseTests(testLog), idx, stale, Set.empty, dropped)
+    val d       = Correlate.diffTests(Map.empty, ts)
     assertEquals(d.expectedFailing.map(_.expected.get.source), List("derived"))
     assertEquals(d.staleExpectations, Nil)
   }
 
   test("an expected failure that started PASSING is reported — a substitution that works is news") {
-    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx,
-                                   List(Correlate.Expected("p.BufTest", "addsOne", "was substituted")))
+    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, List(Correlate.Expected("p.BufTest", "addsOne", "was substituted")))
     assertEquals(Correlate.diffTests(Map.empty, ts).expectedButPassing.map(_.test), List("addsOne"))
   }
 
@@ -229,8 +232,7 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("a SKIPPED test is recorded as skipped — dropping the marker loses the test entirely") {
     val os = Correlate.parseTests(skipLog)
-    assertEquals(os.map(o => o.name -> o.status),
-                 List("addsOne" -> "pass", "wraps" -> "fail", "grows" -> "skipped", "shrinks" -> "skipped"))
+    assertEquals(os.map(o => o.name -> o.status), List("addsOne" -> "pass", "wraps" -> "fail", "grows" -> "skipped", "shrinks" -> "skipped"))
     // the name must NOT swallow the word `skipped` — widening the failure pattern to `[XiIs]` does
     // exactly that, and the test then appears under a name no baseline can ever match.
     assert(os.forall(o => !o.name.contains("skipped")), clue(os.map(_.name)))
@@ -239,8 +241,10 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("a skip is neither a pass nor a fail, and it GATES: pass -> skipped is a regression") {
     val ts = Correlate.locateTests(Correlate.parseTests(skipLog), idx)
-    val d  = Correlate.diffTests(Map("p.BufTest\taddsOne" -> "pass", "p.BufTest\twraps" -> "fail",
-                                     "p.BufTest\tgrows"   -> "pass", "p.BufTest\tshrinks" -> "pass"), ts)
+    val d  = Correlate.diffTests(
+      Map("p.BufTest\taddsOne" -> "pass", "p.BufTest\twraps" -> "fail", "p.BufTest\tgrows" -> "pass", "p.BufTest\tshrinks" -> "pass"),
+      ts
+    )
     assertEquals(d.newlySkipped.map(_.outcome.name), List("grows", "shrinks"))
     // it is NOT any of the existing buckets — which is precisely why it moved no gate before
     assertEquals(d.newlyFailing, Nil)
@@ -253,8 +257,10 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("a skip the baseline already records as skipped is not a new regression") {
     val ts = Correlate.locateTests(Correlate.parseTests(skipLog), idx)
-    val d  = Correlate.diffTests(Map("p.BufTest\taddsOne" -> "pass", "p.BufTest\twraps" -> "fail",
-                                     "p.BufTest\tgrows"   -> "skipped", "p.BufTest\tshrinks" -> "skipped"), ts)
+    val d  = Correlate.diffTests(
+      Map("p.BufTest\taddsOne" -> "pass", "p.BufTest\twraps" -> "fail", "p.BufTest\tgrows" -> "skipped", "p.BufTest\tshrinks" -> "skipped"),
+      ts
+    )
     assertEquals(d.newlySkipped, Nil)
     assert(!d.regressed)
   }
@@ -300,13 +306,19 @@ class CorrelateSpec extends munit.FunSuite:
   }
 
   test("the DECLARED hatch still classifies a failure no drop explains, and stays distinguishable") {
-    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx,
-                                   List(Correlate.Expected("p.BufTest", "compares", "upstream asserts a JVM locale")),
-                                   Set.empty, Set(Correlate.Dropped("p.Buf")))
+    val ts = Correlate.locateTests(
+      Correlate.parseTests(testLog),
+      idx,
+      List(Correlate.Expected("p.BufTest", "compares", "upstream asserts a JVM locale")),
+      Set.empty,
+      Set(Correlate.Dropped("p.Buf"))
+    )
     val d = Correlate.diffTests(Map.empty, ts)
     assertEquals(d.newlyFailing, Nil)
-    assertEquals(d.expectedFailing.map(t => t.outcome.name -> t.expected.get.source).sorted,
-                 List("compares" -> "declared", "wraps" -> "derived"))
+    assertEquals(
+      d.expectedFailing.map(t => t.outcome.name -> t.expected.get.source).sorted,
+      List("compares" -> "declared", "wraps" -> "derived")
+    )
     // the artifact keeps the two apart, so a declared claim can never be read as a fact about the manifest
     val tsv = d.expectedFailing.map(_.tsv).mkString("\n")
     assert(clue(tsv).contains("expected#derived") && tsv.contains("expected#declared"))
@@ -322,9 +334,9 @@ class CorrelateSpec extends munit.FunSuite:
   // …across a PACKAGE RENAME, which is the case that had never once worked
   // -----------------------------------------------------------------------------------------
 
-  /** the same failure as `testLog`, but the port emitted its library into another namespace: the
-    * drop is declared upstream (`p.Buf`) and every frame says `sge.Buf`. Note the second suite,
-    * whose package merely SHARES A PREFIX with the dropped type. */
+  /** the same failure as `testLog`, but the port emitted its library into another namespace: the drop is declared upstream (`p.Buf`) and every frame says `sge.Buf`. Note the second suite, whose
+    * package merely SHARES A PREFIX with the dropped type.
+    */
   private val renamedLog =
     """|sge.BufTest:
        |==> X sge.BufTest.wraps  0.001s java.lang.UnsupportedOperationException: not ported
@@ -341,8 +353,7 @@ class CorrelateSpec extends munit.FunSuite:
     // The defect this closes: `dropped-types.tsv` held `p.Buf` (policy is written upstream, §4.56),
     // every frame said `sge.Buf`, and the comparison matched nothing — on every renaming port,
     // silently, for the whole life of the rule. The port writes both names now.
-    val ts = Correlate.locateTests(Correlate.parseTests(renamedLog), SrcMap.Index.empty,
-                                   Nil, Set.empty, Set(Correlate.Dropped("p.Buf", "sge.Buf")))
+    val ts = Correlate.locateTests(Correlate.parseTests(renamedLog), SrcMap.Index.empty, Nil, Set.empty, Set(Correlate.Dropped("p.Buf", "sge.Buf")))
     val d  = Correlate.diffTests(Map.empty, ts)
     assertEquals(d.expectedFailing.map(_.outcome.name), List("wraps"))
     val why = d.expectedFailing.head.expected.get
@@ -357,18 +368,17 @@ class CorrelateSpec extends munit.FunSuite:
   }
 
   test("a package that merely SHARES A PREFIX with a drop is not covered — com.foo vs com.foobar") {
-    val ts = Correlate.locateTests(Correlate.parseTests(renamedLog), SrcMap.Index.empty,
-                                   Nil, Set.empty, Set(Correlate.Dropped("p.Buf", "sge.Buf")))
+    val ts = Correlate.locateTests(Correlate.parseTests(renamedLog), SrcMap.Index.empty, Nil, Set.empty, Set(Correlate.Dropped("p.Buf", "sge.Buf")))
     val d  = Correlate.diffTests(Map.empty, ts)
     // `sge.Buffered` and `sge.BufferedTest` both start with `sge.Buf`; neither is under it.
     assertEquals(d.newlyFailing.map(_.outcome.name), List("grows"))
     assertEquals(d.expectedFailing.map(_.outcome.name), List("wraps"))
     // stated directly, at the rule rather than through a fixture
     assert(Correlate.covers("sge.Buf", "sge.Buf"))
-    assert(Correlate.covers("sge.Buf", "sge.Buf$"))          // companion
-    assert(Correlate.covers("sge.Buf", "sge.Buf$Ref"))       // nested type
+    assert(Correlate.covers("sge.Buf", "sge.Buf$")) // companion
+    assert(Correlate.covers("sge.Buf", "sge.Buf$Ref")) // nested type
     assert(Correlate.covers("sge.Buf", "sge.Buf$$anonfun$3")) // lambda
-    assert(Correlate.covers("sge.Buf", "sge.Buf#add"))       // member key form
+    assert(Correlate.covers("sge.Buf", "sge.Buf#add")) // member key form
     assert(!Correlate.covers("sge.Buf", "sge.Buffered"))
     assert(!Correlate.covers("sge.Buf", "sge.BufTest"))
     assert(!Correlate.covers("sge.Buf", "sge.Bu"))
@@ -377,10 +387,8 @@ class CorrelateSpec extends munit.FunSuite:
 
   test("dropped-types.tsv round-trips BOTH namespaces; a one-column line means no rename") {
     val p = java.nio.file.Files.createTempFile("dropped", ".tsv")
-    java.nio.file.Files.writeString(p,
-      s"${Correlate.DroppedHeader}\np.Buf\tq.Buf\n\n# a note\np.Other\n")
-    assertEquals(Correlate.parseDropped(p),
-                 Set(Correlate.Dropped("p.Buf", "q.Buf"), Correlate.Dropped("p.Other", "p.Other")))
+    java.nio.file.Files.writeString(p, s"${Correlate.DroppedHeader}\np.Buf\tq.Buf\n\n# a note\np.Other\n")
+    assertEquals(Correlate.parseDropped(p), Set(Correlate.Dropped("p.Buf", "q.Buf"), Correlate.Dropped("p.Other", "p.Other")))
     assertEquals(Correlate.parseDropped(p.resolveSibling("nope.tsv")), Set.empty[Correlate.Dropped])
   }
 

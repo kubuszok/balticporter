@@ -43,7 +43,9 @@ class CollectionsInferenceSiteSpec extends PortSuite:
         |import java.util.*;
         |class Sink { <T> void take(T value) { } }
         |class Uses { void go(Sink s, ArrayList<String> list) { s.take(list); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // Java bounds `T` from below here and nothing fixes it; reading the bare occurrence as a binder
     // would answer `T = ArrayBuffer[String]` and defeat the rule's own purpose.
     assertEmits(p, "s.take(list)")
@@ -60,7 +62,9 @@ class CollectionsInferenceSiteSpec extends PortSuite:
         |  static final Key<Collection<String>> ITEMS = new Key<Collection<String>>();
         |  void go(Box<Collection<String>> b, ArrayList<String> list) { b.put(ITEMS, list); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // §4.56 at its sharpest: `V` here owns to the CLASS, so this call cannot bind it and reading it
     // as though it could would be a name test wearing a symbol's clothes. The seam stays the
     // counted refusal it was — closing it needs the RECEIVER's instantiation, a different
@@ -79,7 +83,9 @@ class CollectionsInferenceSiteSpec extends PortSuite:
         |  static final Key<Collection<String>> ITEMS = new Key<Collection<String>>();
         |  void go(Holder h, Collection<String> c) { h.set(ITEMS, c); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // Both ends of the slot are the shim, so `coerce` finds no source kind and answers the argument
     // it was given. The substitution fires and changes nothing, which is what makes it safe.
     assertEmits(p, "h.set(Uses.ITEMS, c)")

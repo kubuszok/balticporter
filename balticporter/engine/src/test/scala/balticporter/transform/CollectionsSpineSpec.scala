@@ -5,7 +5,7 @@ import balticporter.tir.*
 /** The one assumption `CollectionsTransform.restoreExcluded` makes about the traversal, asserted. */
 class CollectionsSpineSpec extends munit.FunSuite:
 
-  private val o  = Origin("X.java", 1, 1)
+  private val o = Origin("X.java", 1, 1)
   private def st(n: Int): Statement = Tree.ValDef(SymId(n), TypeTree(TypeRepr.NoType, o), scala.None, o)
 
   test("equal lengths zip, position by position") {

@@ -2,17 +2,15 @@ package balticporter.tir
 
 import balticporter.core.ResourceTree
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** THE CLASSPATH-RESOURCE DELIVERABLE, at each of its answers — and every one of them is silent in
-  * production by construction. */
+/** THE CLASSPATH-RESOURCE DELIVERABLE, at each of its answers — and every one of them is silent in production by construction.
+  */
 class PortResourcesSpec extends munit.FunSuite:
 
   private val tmp = FunFixture[Path](
     setup = _ => Files.createTempDirectory("bp-res"),
-    teardown = dir =>
-      if Files.isDirectory(dir) then
-        Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.deleteIfExists(_)),
+    teardown = dir => if Files.isDirectory(dir) then Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.deleteIfExists(_))
   )
 
   private def resource(dir: Path, path: String, body: String): Path =
@@ -30,8 +28,8 @@ class PortResourcesSpec extends munit.FunSuite:
 
   tmp.test("the file is copied VERBATIM to the path the emitted code names") { dir =>
     resource(dir, "p/q/skin.json", """{ "font": "p/q/default.fnt" }""")
-    val out  = dir.resolve("out")
-    val plan = PortResources.plan(List(ResourceTree(dir, List("p/q/skin.json"))))
+    val out     = dir.resolve("out")
+    val plan    = PortResources.plan(List(ResourceTree(dir, List("p/q/skin.json"))))
     val List(w) = PortResources.write(plan, out): @unchecked
     assertEquals(w, out.resolve("p").resolve("q").resolve("skin.json"))
     assertEquals(Files.readString(w), """{ "font": "p/q/default.fnt" }""")
@@ -48,8 +46,8 @@ class PortResourcesSpec extends munit.FunSuite:
   }
 
   tmp.test("BINARY bytes survive — a resource is not text") { dir =>
-    val bytes = Array[Byte](0x89.toByte, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0xFF.toByte)
-    val f = dir.resolve("p").resolve("img.png")
+    val bytes = Array[Byte](0x89.toByte, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0xff.toByte)
+    val f     = dir.resolve("p").resolve("img.png")
     Files.createDirectories(f.getParent)
     Files.write(f, bytes)
     val out = dir.resolve("out")
@@ -77,10 +75,8 @@ class PortResourcesSpec extends munit.FunSuite:
     val trees = List(ResourceTree(dir, List("p/q/shipped.json")))
     val plan  = PortResources.plan(trees)
     val cands = PortResources.candidates(trees, plan)
-    val fs = PortResources.findings(plan, cands, trees,
-      named = Set("p/q/shipped.json", "p/q/forgotten.properties"))
-    assertEquals(kinds(fs), List(("named-unshipped", "p/q/forgotten.properties"),
-                                 ("shipped", "p/q/shipped.json")))
+    val fs    = PortResources.findings(plan, cands, trees, named = Set("p/q/shipped.json", "p/q/forgotten.properties"))
+    assertEquals(kinds(fs), List(("named-unshipped", "p/q/forgotten.properties"), ("shipped", "p/q/shipped.json")))
     assert(fs.exists(f => f.kind == "named-unshipped" && f.detail.contains("§1(b)")))
   }
 
@@ -116,15 +112,14 @@ class PortResourcesSpec extends munit.FunSuite:
     resource(dir, "p/q/skin.png", "img")
     val trees = List(ResourceTree(dir, List("p/q/skin.json", "p/q/skin.png")))
     val plan  = PortResources.plan(trees)
-    val fs = PortResources.findings(plan, PortResources.candidates(trees, plan), trees,
-      named = Set("p/q/skin.json"))
+    val fs    = PortResources.findings(plan, PortResources.candidates(trees, plan), trees, named = Set("p/q/skin.json"))
     assertEquals(kinds(fs), List(("shipped", "p/q/skin.json"), ("unnamed", "p/q/skin.png")))
   }
 
   tmp.test("a tree that declares NO file is a finding — it is indistinguishable from an absent resource") { dir =>
     resource(dir, "p/q/x.txt", "x")
     val trees = List(ResourceTree(dir, Nil))
-    val fs = PortResources.findings(Nil, PortResources.candidates(trees, Nil), trees, named = _ => false)
+    val fs    = PortResources.findings(Nil, PortResources.candidates(trees, Nil), trees, named = _ => false)
     assertEquals(fs.count(_.kind == "empty"), 1)
     // …and emphatically NOT read as "everything under the root", which is the scan this refuses.
     assertEquals(PortResources.plan(trees), Nil)
@@ -134,7 +129,7 @@ class PortResourcesSpec extends munit.FunSuite:
     resource(dir, "p/q/x.txt", "x")
     val trees = List(ResourceTree(dir, List("p/q/x.txt")))
     val plan  = PortResources.plan(trees)
-    val fs = PortResources.findings(plan, Nil, trees, named = Set("p/q/x.txt"))
+    val fs    = PortResources.findings(plan, Nil, trees, named = Set("p/q/x.txt"))
     assertEquals(fs.map(_.kind), List("shipped"))
     assertEquals(fs.head.check, PortResources.Name)
   }

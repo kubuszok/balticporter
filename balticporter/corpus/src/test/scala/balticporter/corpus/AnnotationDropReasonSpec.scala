@@ -31,8 +31,7 @@ class AnnotationDropReasonSpec extends PortSuite:
   }
 
   test("the three sentinels are distinct, and none of them can collide with an FQN") {
-    val all = List(SpoonTir.UnresolvedAnnotation, SpoonTir.UnreadableAnnotations,
-                   SpoonTir.FailedAnnotationArguments)
+    val all = List(SpoonTir.UnresolvedAnnotation, SpoonTir.UnreadableAnnotations, SpoonTir.FailedAnnotationArguments)
     assertEquals(all.distinct.size, 3)
     all.foreach { s =>
       assert(s.startsWith("<") && s.endsWith(">"), s"$s must not be mistakable for an annotation name")

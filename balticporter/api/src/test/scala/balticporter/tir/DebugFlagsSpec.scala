@@ -1,6 +1,6 @@
 package balticporter.tir
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** The FLAG RESOLUTION of CLAUDE.md §4.6, proven rather than described. */
 class DebugFlagsSpec extends munit.FunSuite:
@@ -13,18 +13,19 @@ class DebugFlagsSpec extends munit.FunSuite:
   private def write(root: Path, name: String, lines: String*): Unit =
     Files.writeString(root.resolve(".balticporter").resolve(name), lines.mkString("", "\n", "\n"))
 
-  /** point `DebugFlags.root` at `r` for the duration, and restore — the marker-file cache is keyed
-    * on the root, so this is all that is needed to make the file layers readable in a test. */
+  /** point `DebugFlags.root` at `r` for the duration, and restore — the marker-file cache is keyed on the root, so this is all that is needed to make the file layers readable in a test.
+    */
   private def at[A](r: Path, props: (String, String)*)(body: => A): A =
     val keys  = (DebugFlags.Prefix + "root") +: props.map(_._1)
     val saved = keys.map(k => k -> Option(System.getProperty(k)))
     System.setProperty(DebugFlags.Prefix + "root", r.toString)
     props.foreach((k, v) => System.setProperty(k, v))
     try body
-    finally saved.foreach {
-      case (k, Some(v))    => System.setProperty(k, v)
-      case (k, scala.None) => System.clearProperty(k)
-    }
+    finally
+      saved.foreach {
+        case (k, Some(v))    => System.setProperty(k, v)
+        case (k, scala.None) => System.clearProperty(k)
+      }
 
   private def resolved(rs: List[DebugFlags.Resolved], key: String): DebugFlags.Resolved =
     rs.find(_.key == key).getOrElse(fail(s"no resolution for $key in ${rs.map(_.key)}"))
@@ -61,8 +62,7 @@ class DebugFlagsSpec extends munit.FunSuite:
   test("the layers are listed in INCREASING precedence — the fold that resolves is the one printed") {
     val r = tempRoot()
     at(r) {
-      assertEquals(DebugFlags.layers(r, Map.empty).map(_.name),
-        List("run.properties", "debug.properties", "system properties"))
+      assertEquals(DebugFlags.layers(r, Map.empty).map(_.name), List("run.properties", "debug.properties", "system properties"))
     }
   }
 
@@ -100,20 +100,24 @@ class DebugFlagsSpec extends munit.FunSuite:
 
   test("the banner names every diagnosis flag that is on — including tracePhases") {
     val r = tempRoot()
-    write(r, "debug.properties",
-      "balticporter.skipPhases=collections", "balticporter.tracePhases=true",
-      "balticporter.dumpTirAfter=collections", "balticporter.dumpOnly=p.Foo",
-      "balticporter.traceNode=Typed")
+    write(
+      r,
+      "debug.properties",
+      "balticporter.skipPhases=collections",
+      "balticporter.tracePhases=true",
+      "balticporter.dumpTirAfter=collections",
+      "balticporter.dumpOnly=p.Foo",
+      "balticporter.traceNode=Typed"
+    )
     at(r) {
       val b = DebugFlags.banner.getOrElse(fail("no banner"))
-      List("skipPhases=collections", "dumpTirAfter=collections", "dumpOnly=p.Foo",
-        "tracePhases=true", "traceNode=Typed").foreach(f => assert(b.contains(f), b))
+      List("skipPhases=collections", "dumpTirAfter=collections", "dumpOnly=p.Foo", "tracePhases=true", "traceNode=Typed").foreach(f => assert(b.contains(f), b))
     }
   }
 
   test("the cache is keyed on the ROOT — a second root is read, not answered from the first") {
     val a = tempRoot(); write(a, "debug.properties", "balticporter.dumpOnly=p.A")
     val b = tempRoot(); write(b, "debug.properties", "balticporter.dumpOnly=p.B")
-    at(a) { assertEquals(DebugFlags.dumpOnly, Some("p.A")) }
-    at(b) { assertEquals(DebugFlags.dumpOnly, Some("p.B")) }
+    at(a)(assertEquals(DebugFlags.dumpOnly, Some("p.A")))
+    at(b)(assertEquals(DebugFlags.dumpOnly, Some("p.B")))
   }

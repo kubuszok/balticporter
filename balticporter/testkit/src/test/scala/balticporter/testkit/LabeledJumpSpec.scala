@@ -10,7 +10,8 @@ class LabeledJumpSpec extends PortSuite:
   test("break to a label on an `if` leaves that `if`, not the enclosing loop") {
     // JsonReader's shape: `outer: if (…) { … } else { …; break outer; …; string(…); }`. Dropped,
     // the port ran on and emitted a string event for every unquoted bool/null/number.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(boolean name, String v) {
@@ -24,7 +25,8 @@ class LabeledJumpSpec extends PortSuite:
           d(v);
         }
         void a(String s) {} void b(String s) {} void c(String s) {} void d(String s) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("scala.util.boundary { (lbl$1: scala.util.boundary.Label[scala.Unit]) ?=>"))
     assert(out.contains("scala.util.boundary.break(())(using lbl$1)"))
     assert(!out.contains("/* break"), out)
@@ -36,7 +38,8 @@ class LabeledJumpSpec extends PortSuite:
 
   test("a label on a bare block is a boundary around the block") {
     // TextField's `keys:`/`selection:`, GlyphLayout's `runEnded:`.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int k) {
@@ -48,26 +51,30 @@ class LabeledJumpSpec extends PortSuite:
           g(3);
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("scala.util.boundary { (lbl$1: scala.util.boundary.Label[scala.Unit]) ?=>"))
     assert(out.contains("scala.util.boundary.break(())(using lbl$1)"))
     assert(!out.contains("/* break"), out)
   }
 
   test("a label nobody breaks to emits no boundary at all") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int k) {
           outer: { g(k); }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(!clue(out).contains("boundary"), out)
   }
 
   test("a label on a switch: `break outer` leaves the switch, not just the case") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int k) {
@@ -79,7 +86,8 @@ class LabeledJumpSpec extends PortSuite:
           g(4);
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("(lbl$"), out)
     assert(out.contains("scala.util.boundary.break(())(using lbl$"), out)
     assert(!out.contains("/* break"), out)
@@ -88,7 +96,8 @@ class LabeledJumpSpec extends PortSuite:
   // ---- labelled jumps crossing nested loops ----
 
   test("break to an outer loop's label from inside a nested loop") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -102,14 +111,16 @@ class LabeledJumpSpec extends PortSuite:
           g(-1);
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("(brk$"), out)
     assert(out.contains("scala.util.boundary.break(())(using brk$"), out)
     assert(!out.contains("/* break"), out)
   }
 
   test("continue to an outer loop's label targets that loop's BODY boundary") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -123,7 +134,8 @@ class LabeledJumpSpec extends PortSuite:
           }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("(cnt$"), out)
     assert(out.contains("scala.util.boundary.break(())(using cnt$"), out)
     assert(!out.contains("/* continue"), out)
@@ -132,7 +144,8 @@ class LabeledJumpSpec extends PortSuite:
   test("a labelled statement inside a loop forces the LOOP's boundary to be named") {
     // The shielding rule: `boundary.break(())` with no `using` binds to the innermost `Label`, so
     // the labelled statement's boundary would swallow the loop's own unlabelled `break`.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -146,7 +159,8 @@ class LabeledJumpSpec extends PortSuite:
           }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("(brk$"), out)
     // the loop's own unlabelled break must NAME the loop boundary, not fall into `lbl$`
     assert(out.contains("scala.util.boundary.break(())(using brk$"), out)
@@ -156,21 +170,24 @@ class LabeledJumpSpec extends PortSuite:
   // ---- a case's terminator ----
 
   test("a case's trailing UNLABELLED break is the terminator and is stripped") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int k) { switch (k) { case 1: g(1); break; case 2: g(2); break; } }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("case 1 =>"), out)
-    assert(!out.contains("boundary"), out)  // nothing to leave early from
+    assert(!out.contains("boundary"), out) // nothing to leave early from
     assert(!out.contains("/* break"), out)
     // the terminator really was consumed, not duplicated into the next arm
     assert(!out.matches("(?s).*case 1 =>[^\n]*\\{[^}]*this\\.g\\(2\\).*"), out)
   }
 
   test("a case's trailing LABELLED break leaves the LOOP and is NOT stripped") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -181,7 +198,8 @@ class LabeledJumpSpec extends PortSuite:
           }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("scala.util.boundary.break(())(using brk$"), out)
     assert(!out.contains("/* break"), out)
   }
@@ -191,7 +209,8 @@ class LabeledJumpSpec extends PortSuite:
   test("a mid-case break stops the case; the duplicated fallthrough tail must not run") {
     // GlyphLayout's colour-tag arm: `case '[': if (ok) { …; break; } … ` falling through into
     // `default: continue outer`. Without a boundary the successful arm fell into the `continue`.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -207,7 +226,8 @@ class LabeledJumpSpec extends PortSuite:
           }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("scala.util.boundary { (case$"), out)
     assert(out.contains("scala.util.boundary.break(())(using case$"), out)
     assert(!out.contains("/* break"), out)
@@ -216,7 +236,8 @@ class LabeledJumpSpec extends PortSuite:
   }
 
   test("a mid-case break with no fallthrough tail still bounds only its own arm") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -227,7 +248,8 @@ class LabeledJumpSpec extends PortSuite:
           g(3);
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains("(case$"), out)
     assert(out.contains("scala.util.boundary.break(())(using case$"), out)
     assert(!out.contains("/* break"), out)
@@ -240,8 +262,7 @@ class LabeledJumpSpec extends PortSuite:
 
   /** Every shape above in one Scala file, for a real compiler. */
   test("emitted probe is written for a real compiler") {
-    val p = _root_.java.nio.file.Path
-      .of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), "LabeledJumpProbe.scala")
+    val p = _root_.java.nio.file.Path.of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), "LabeledJumpProbe.scala")
     _root_.java.nio.file.Files.createDirectories(p.getParent)
     _root_.java.nio.file.Files.writeString(p, emit(ProbeSource))
     println(s"[labeled-jump-probe] wrote ${p.toAbsolutePath}")

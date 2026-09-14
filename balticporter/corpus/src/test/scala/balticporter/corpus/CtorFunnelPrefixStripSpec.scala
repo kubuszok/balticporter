@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{CtorFunnel, OmissionCheck, Pipeline}
+import balticporter.tir.{ CtorFunnel, OmissionCheck, Pipeline }
 
 /** A10 / `ENGINE-LIMITS.md` C7 — the PREFIX STRIP, and the runtime shape it repairs. */
 class CtorFunnelPrefixStripSpec extends munit.FunSuite:
@@ -41,8 +41,8 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
   private def classOf_(name: String) =
     program.units.find(u => program.symbolOf(u.symbol).exists(_.name == name)).get
 
-  /** the text of ONE `def this(...)`, cut at its own closing brace — not a fixed window, which
-    * ran on into the next member and made the assertion below read that member's body. */
+  /** the text of ONE `def this(...)`, cut at its own closing brace — not a fixed window, which ran on into the next member and made the assertion below read that member's body.
+    */
   private def ctorText(param: String): String =
     val start = out.indexOf(s"def this($param)")
     assert(start >= 0, s"no `def this($param)` in:\n$out")
@@ -74,8 +74,8 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
   }
 
   test("residualBody and promotionEscapes are ONE answer, not two") {
-    val cd    = classOf_("Button")
-    val ctors = CtorFunnel.ctorsOf(program, cd.body)
+    val cd           = classOf_("Button")
+    val ctors        = CtorFunnel.ctorsOf(program, cd.body)
     val withResidual = ctors.filter(d => plans.residualBody(cd, d).isDefined)
     assertEquals(withResidual.size, 1)
     assert(plans.promotionEscapes(cd).forall(d => !withResidual.exists(_.symbol == d.symbol)))

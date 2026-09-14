@@ -2,12 +2,12 @@ package balticporter.corpus.libgdx
 
 import balticporter.testkit.PortSuite
 
-/** How a §1(c) rule is TESTED — from the porting repository, with the engine's testkit, on a Java
-  * snippet. The third of the three things [[GdxSharedIteratorRule]] exists to demonstrate. */
+/** How a §1(c) rule is TESTED — from the porting repository, with the engine's testkit, on a Java snippet. The third of the three things [[GdxSharedIteratorRule]] exists to demonstrate.
+  */
 class GdxSharedIteratorRuleSpec extends PortSuite:
 
-  /** The shape of libGDX's own `Array`, reduced to what the rule reads: the FQN and an
-    * `iterator()`. The rule keys on the fully-qualified name, so the package must be real. */
+  /** The shape of libGDX's own `Array`, reduced to what the rule reads: the FQN and an `iterator()`. The rule keys on the fully-qualified name, so the package must be real.
+    */
   private val gdxArray =
     """package com.badlogic.gdx.utils;
       |public class Array<T> implements Iterable<T> {
@@ -28,7 +28,7 @@ class GdxSharedIteratorRuleSpec extends PortSuite:
          |    }
          |  }
          |}""".stripMargin,
-      r,
+      r
     )
     assertEquals(r.findings.size, 1)
     val f = r.findings.head
@@ -49,7 +49,7 @@ class GdxSharedIteratorRuleSpec extends PortSuite:
          |    }
          |  }
          |}""".stripMargin,
-      r,
+      r
     )
     assertEquals(r.findings, Nil)
   }
@@ -64,7 +64,7 @@ class GdxSharedIteratorRuleSpec extends PortSuite:
         |    for (String a : actors) { for (String b : actors) { System.out.println(a + b); } }
         |  }
         |}""".stripMargin,
-      r,
+      r
     )
     assertEquals(r.findings, Nil)
   }
@@ -77,7 +77,7 @@ class GdxSharedIteratorRuleSpec extends PortSuite:
          |  com.badlogic.gdx.utils.Array<String> actors;
          |  void draw() { for (String a : actors) { System.out.println(a); } }
          |}""".stripMargin,
-      r,
+      r
     )
     assertEquals(r.findings, Nil)
   }

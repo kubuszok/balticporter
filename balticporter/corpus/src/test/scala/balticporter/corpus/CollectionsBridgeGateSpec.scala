@@ -6,8 +6,8 @@ import balticporter.transform.CollectionsTransform
 /** ONE SHIM'S ABSENCE MUST NOT SWITCH OFF ANOTHER SHIM'S BRIDGE. */
 class CollectionsBridgeGateSpec extends PortSuite:
 
-  /** `List` into a `Collection` formal — java's own subtyping, which the retyping does not keep:
-    * `mutable.Buffer` is not a `JavaCollection`. Nothing here names `Iterable`. */
+  /** `List` into a `Collection` formal — java's own subtyping, which the retyping does not keep: `mutable.Buffer` is not a `JavaCollection`. Nothing here names `Iterable`.
+    */
   private val noIterable =
     """package demo;
       |import java.util.*;
@@ -18,8 +18,8 @@ class CollectionsBridgeGateSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  /** the same program with ONE extra method, whose only job is to put `java.lang.Iterable` in the
-    * symbol table. Nothing about the two calls under test changes. */
+  /** the same program with ONE extra method, whose only job is to put `java.lang.Iterable` in the symbol table. Nothing about the two calls under test changes.
+    */
   private val withIterable =
     """package demo;
       |import java.util.*;
@@ -32,13 +32,11 @@ class CollectionsBridgeGateSpec extends PortSuite:
       |""".stripMargin
 
   test("a Buffer at an owned `Collection` formal is bridged — with no `Iterable` in the program") {
-    assertEmits(port(noIterable, new CollectionsTransform),
-                "Holder.of(balticporter.runtime.JavaCollection.from(more))")
+    assertEmits(port(noIterable, new CollectionsTransform), "Holder.of(balticporter.runtime.JavaCollection.from(more))")
   }
 
   test("…and a Set reaches the same slot through its own factory") {
-    assertEmits(port(noIterable, new CollectionsTransform),
-                "Holder.of(balticporter.runtime.JavaCollection.fromSet(more))")
+    assertEmits(port(noIterable, new CollectionsTransform), "Holder.of(balticporter.runtime.JavaCollection.fromSet(more))")
   }
 
   test("the program that DOES name `Iterable` emits exactly the same two bridges") {

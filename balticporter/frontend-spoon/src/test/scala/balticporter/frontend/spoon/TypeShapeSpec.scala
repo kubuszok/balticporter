@@ -39,20 +39,20 @@ class TypeShapeSpec extends munit.FunSuite:
     launcher.buildModel().getAllTypes.asScala.head
 
   private def fieldRef(name: String): CtTypeReference[?] =
-    cls.getFields.asScala.find(_.getSimpleName == name)
-      .getOrElse(fail(s"no field $name in the fixture")).getType
+    cls.getFields.asScala.find(_.getSimpleName == name).getOrElse(fail(s"no field $name in the fixture")).getType
 
   /** the FIRST type argument of a field's type — the position a wildcard is writable at. */
   private def argRef(name: String): CtTypeReference[?] =
-    fieldRef(name).getActualTypeArguments.asScala.headOption
-      .getOrElse(fail(s"field $name has no type argument"))
+    fieldRef(name).getActualTypeArguments.asScala.headOption.getOrElse(fail(s"field $name has no type argument"))
 
   test("the STRUCTURAL FACT: Spoon's CtWildcardReference IS a CtTypeParameterReference") {
     // The premise of every arm order in `SpoonTir`. Read off the hierarchy, never assumed — if a
     // Spoon upgrade separated the two, most of the wildcard arms would become plain alternatives
     // and this file's whole argument would need re-reading.
-    assert(classOf[CtTypeParameterReference].isAssignableFrom(classOf[CtWildcardReference]),
-           "CtWildcardReference no longer extends CtTypeParameterReference — re-read ENGINE-LIMITS.md G21")
+    assert(
+      classOf[CtTypeParameterReference].isAssignableFrom(classOf[CtWildcardReference]),
+      "CtWildcardReference no longer extends CtTypeParameterReference — re-read ENGINE-LIMITS.md G21"
+    )
     // …and the converse is what makes the order matter rather than being a free choice.
     assert(!classOf[CtWildcardReference].isAssignableFrom(classOf[CtTypeParameterReference]))
   }
@@ -62,13 +62,13 @@ class TypeShapeSpec extends munit.FunSuite:
     List("unbounded", "upper", "lower").foreach { f =>
       SpoonTir.TypeShape.of(argRef(f)) match
         case SpoonTir.TypeShape.Wildcard(_, _, _) => ()
-        case other => fail(s"$f's argument classified as $other, not Wildcard")
+        case other                                => fail(s"$f's argument classified as $other, not Wildcard")
     }
     // …and the NESTED one, which is the position `ENGINE-LIMITS.md` G21 is about: `Class<?>` is a
     // type this port can write, and its argument is the `?` the variable arm used to claim.
     SpoonTir.TypeShape.of(argRef("nestedWildcard")) match
       case SpoonTir.TypeShape.Wildcard(_, _, _) => ()
-      case other => fail(s"Class<?>'s argument classified as $other, not Wildcard")
+      case other                                => fail(s"Class<?>'s argument classified as $other, not Wildcard")
   }
 
   test("a real type VARIABLE still classifies as Variable — the arm order costs nothing") {
@@ -111,8 +111,7 @@ class TypeShapeSpec extends munit.FunSuite:
   }
 
   test("an INTERSECTION bound classifies apart from Named — two callers answer it differently") {
-    val u = cls.getMethods.asScala.find(_.getSimpleName == "inter")
-      .getOrElse(fail("no inter method")).getFormalCtTypeParameters.asScala.head
+    val u = cls.getMethods.asScala.find(_.getSimpleName == "inter").getOrElse(fail("no inter method")).getFormalCtTypeParameters.asScala.head
     // `U extends Number & Comparable<U>`: Spoon models the bound as an intersection reference.
     SpoonTir.TypeShape.of(u.getSuperclass) match
       case SpoonTir.TypeShape.Intersection(_, bounds) =>
@@ -124,12 +123,14 @@ class TypeShapeSpec extends munit.FunSuite:
     // The property the migrated catch-alls rest on. Written as a comparison against Spoon rather
     // than against a literal, because what a caller falling into `case r =>` used to compute IS
     // this call and nothing else.
-    val refs = List("bare", "unbounded", "applied", "raw", "concrete", "prim", "arr", "nestedWildcard")
-      .map(fieldRef) ++ List(argRef("unbounded"), argRef("upper"))
+    val refs = List("bare", "unbounded", "applied", "raw", "concrete", "prim", "arr", "nestedWildcard").map(fieldRef) ++ List(argRef("unbounded"), argRef("upper"))
     refs.foreach { r =>
       val shape = SpoonTir.TypeShape.of(r)
-      assertEquals(shape.args.map(_.getQualifiedName), r.getActualTypeArguments.asScala.toList.map(_.getQualifiedName),
-                   s"`args` disagrees with Spoon for ${r.getQualifiedName}")
+      assertEquals(
+        shape.args.map(_.getQualifiedName),
+        r.getActualTypeArguments.asScala.toList.map(_.getQualifiedName),
+        s"`args` disagrees with Spoon for ${r.getQualifiedName}"
+      )
       assert(shape.ref eq r, s"`ref` is not the reference classified, for ${r.getQualifiedName}")
     }
     assertEquals(SpoonTir.TypeShape.of(null).args, Nil)

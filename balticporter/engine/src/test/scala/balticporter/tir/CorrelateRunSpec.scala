@@ -1,9 +1,9 @@
 package balticporter.tir
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** [[CorrelateRun]] as a library call — the in-process half of what `CorrelateMain` does from a
-  * shell. */
+/** [[CorrelateRun]] as a library call — the in-process half of what `CorrelateMain` does from a shell.
+  */
 class CorrelateRunSpec extends munit.FunSuite:
 
   private def fixture(): Path =
@@ -11,12 +11,15 @@ class CorrelateRunSpec extends munit.FunSuite:
     val run  = port.resolve("run-latest")
     Files.createDirectories(run)
     Files.createDirectories(port.resolve("baseline"))
-    Files.writeString(run.resolve("srcmap.tsv"), List(
-      SrcMap.Header,
-      SrcMap.Entry("p.Buf", "p.Buf", "class", 1, 90, "p/Buf.java", 3, "d").tsv,
-      SrcMap.Entry("p.Buf", "p.Buf#add(int)", "def", 10, 20, "p/Buf.java", 40, "d").tsv,
-      SrcMap.Entry("p.BufTest", "p.BufTest", "class", 1, 30, "p/BufTest.java", 3, "d").tsv,
-    ).mkString("", "\n", "\n"))
+    Files.writeString(
+      run.resolve("srcmap.tsv"),
+      List(
+        SrcMap.Header,
+        SrcMap.Entry("p.Buf", "p.Buf", "class", 1, 90, "p/Buf.java", 3, "d").tsv,
+        SrcMap.Entry("p.Buf", "p.Buf#add(int)", "def", 10, 20, "p/Buf.java", 40, "d").tsv,
+        SrcMap.Entry("p.BufTest", "p.BufTest", "class", 1, 30, "p/BufTest.java", 3, "d").tsv
+      ).mkString("", "\n", "\n")
+    )
     Files.writeString(run.resolve("dropped-types.tsv"), s"${Correlate.DroppedHeader}\np.Buf\n")
     port
 
@@ -32,11 +35,13 @@ class CorrelateRunSpec extends munit.FunSuite:
     val port = fixture()
     val log  = port.resolve("run.txt")
     Files.writeString(log, testLog)
-    val r = CorrelateRun.run(CorrelateRun.Request(
-      srcmaps = List("main" -> port.resolve("run-latest/srcmap.tsv")),
-      tests   = Some(log),
-      out     = port.resolve("run-latest"),
-    ))
+    val r = CorrelateRun.run(
+      CorrelateRun.Request(
+        srcmaps = List("main" -> port.resolve("run-latest/srcmap.tsv")),
+        tests = Some(log),
+        out = port.resolve("run-latest")
+      )
+    )
     assert(Files.isRegularFile(port.resolve("run-latest/tests.tsv")))
     assert(Files.isRegularFile(port.resolve("run-latest/correlate.txt")))
     assert(Files.isRegularFile(port.resolve("run-latest/tests-diff.txt")))
@@ -51,12 +56,14 @@ class CorrelateRunSpec extends munit.FunSuite:
     // sbt's non-forked `run` has the SUBPROJECT as cwd, so a relative path that reads correctly in
     // a shell silently resolves to nothing — and the correlation then reports "0 units" as if the
     // port had no members. Every path in a Request is absolutised before use.
-    val rel = CorrelateRun.Request(
-      srcmaps  = List("main" -> Path.of("port-report/X/run-latest/srcmap.tsv")),
-      scalac   = Some(Path.of("out.txt")),
-      out      = Path.of("port-report/X/run-latest"),
-      baseline = Some(Path.of("port-report/X/baseline")),
-    ).absolute
+    val rel = CorrelateRun
+      .Request(
+        srcmaps = List("main" -> Path.of("port-report/X/run-latest/srcmap.tsv")),
+        scalac = Some(Path.of("out.txt")),
+        out = Path.of("port-report/X/run-latest"),
+        baseline = Some(Path.of("port-report/X/baseline"))
+      )
+      .absolute
     assert(rel.out.isAbsolute && rel.baselineDir.isAbsolute)
     assert(rel.srcmaps.forall(_._2.isAbsolute) && rel.scalac.forall(_.isAbsolute))
     assertEquals(rel.out, DebugFlags.root.resolve("port-report/X/run-latest").normalize)
@@ -67,12 +74,14 @@ class CorrelateRunSpec extends munit.FunSuite:
     // the correlate block by design. The run then wrote a header-only tests.tsv and a headline of
     // "tests 0 passing, 0 failing" — a whole suite reported as green because a path was wrong.
     val port = fixture()
-    val e = intercept[CorrelateRun.MissingInput] {
-      CorrelateRun.run(CorrelateRun.Request(
-        srcmaps = List("main" -> port.resolve("run-latest/srcmap.tsv")),
-        tests   = Some(port.resolve("nope.txt")),
-        out     = port.resolve("run-latest"),
-      ))
+    val e    = intercept[CorrelateRun.MissingInput] {
+      CorrelateRun.run(
+        CorrelateRun.Request(
+          srcmaps = List("main" -> port.resolve("run-latest/srcmap.tsv")),
+          tests = Some(port.resolve("nope.txt")),
+          out = port.resolve("run-latest")
+        )
+      )
     }
     assertEquals(e.paths.map(_.getFileName.toString), List("nope.txt"))
     assert(clue(e.getMessage).contains("NOT FOUND"))

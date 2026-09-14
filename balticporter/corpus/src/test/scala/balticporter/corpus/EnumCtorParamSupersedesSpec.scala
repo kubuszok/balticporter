@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** WHICH field a promoted enum constructor parameter SUPERSEDES — a (name, TYPE) question, never a
-  * name one. */
+/** WHICH field a promoted enum constructor parameter SUPERSEDES — a (name, TYPE) question, never a name one.
+  */
 class EnumCtorParamSupersedesSpec extends PortSuite:
 
   test("a DIFFERENT type is a DIFFERENT member — the field survives and the parameter moves aside") {

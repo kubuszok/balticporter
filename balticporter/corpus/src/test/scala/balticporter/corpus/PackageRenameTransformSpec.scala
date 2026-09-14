@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, DecisionLog, Pipeline, Program}
+import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program }
 import balticporter.transform.PackageRenameTransform
 
 /** `PackageRenameTransform` — the §1(b) phase that moves a port out of the upstream namespace. */
@@ -32,7 +32,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
     Pipeline.run(before, List(new PackageRenameTransform(renames)))
 
   private def names(p: Program): Set[String] = p.symbols.all.map(_.fullName).toSet
-  private def emit(p: Program): String       = new TirEmitter(p).emit
+  private def emit(p:  Program): String      = new TirEmitter(p).emit
 
   // ---------------------------------------------------------------------------
   // the no-op
@@ -153,15 +153,15 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   // M6 — the PER-TYPE maps: `typeRenames`, `subPackages`, `flattenNestedTypes`
 
   private def phase(
-      pkg: Map[String, String] = Map.empty,
-      types: Map[String, String] = Map.empty,
-      subs: Map[String, String] = Map.empty,
-      flat: Set[String] = Set.empty,
-      allow: Set[String] = Set.empty,
+    pkg:   Map[String, String] = Map.empty,
+    types: Map[String, String] = Map.empty,
+    subs:  Map[String, String] = Map.empty,
+    flat:  Set[String] = Set.empty,
+    allow: Set[String] = Set.empty
   ) = new PackageRenameTransform(pkg, types, subs, flat, allow)
 
-  /** run ONE instance, and keep it — the refusals and the decisions are read off the same value the
-    * pipeline bound, which is exactly what `PortRun` now does with it. */
+  /** run ONE instance, and keep it — the refusals and the decisions are read off the same value the pipeline bound, which is exactly what `PortRun` now does with it.
+    */
   private def runPhase(p: PackageRenameTransform, on: Program = before): (Program, DecisionLog) =
     Pipeline.runTraced(on, List(p))
 
@@ -244,8 +244,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("one type, ONE destination: a key named by two maps is refused on both") {
-    val p = phase(types = Map("com.example.demo.Widget" -> "Gadget"),
-                  subs = Map("com.example.demo.Widget" -> "internal"))
+    val p      = phase(types = Map("com.example.demo.Widget" -> "Gadget"), subs = Map("com.example.demo.Widget" -> "internal"))
     val (a, _) = runPhase(p)
     assertEquals(names(a), names(before))
     assertEquals(p.policyReport.findings.size, 2)
@@ -278,7 +277,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
     val widget = a.units.find(u => a.symbolOf(u.symbol).exists(_.fullName == "com.example.demo.Widget")).get
     assert(!widget.body.exists {
       case c: balticporter.tir.Tree.ClassDef => a.symbolOf(c.symbol).exists(_.name == "Style")
-      case _                                 => false
+      case _ => false
     })
     // every reference followed — nothing names the old path.
     assert(!clue(emit(a)).contains("Widget.Style"))
@@ -336,8 +335,11 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   test("split REFUSED: a move that puts a `protected` member across a new package boundary") {
     val p        = phase(types = Map("com.example.demo.Alpha" -> "com.other.Alpha"))
     val (a, log) = runPhase(p, split)
-    assertEquals(a.symbols.all.map(_.fullName).toSet, split.symbols.all.map(_.fullName).toSet,
-                 "a refused split must leave every name where it was")
+    assertEquals(
+      a.symbols.all.map(_.fullName).toSet,
+      split.symbols.all.map(_.fullName).toSet,
+      "a refused split must leave every name where it was"
+    )
     assertEquals(issues(p), List("com.example.demo.Alpha" -> PolicyIssue.Unverifiable))
     val why = p.policyReport.findings.head.detail
     assert(clue(why).contains("package-split"))
@@ -348,8 +350,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("split RECORDED: declared deliberate, it happens and each affected declaration gets a row") {
-    val p = phase(types = Map("com.example.demo.Alpha" -> "com.other.Alpha"),
-                  allow = Set("com.example.demo.Alpha"))
+    val p        = phase(types = Map("com.example.demo.Alpha" -> "com.other.Alpha"), allow = Set("com.example.demo.Alpha"))
     val (a, log) = runPhase(p, split)
     assertEquals(issues(p), Nil)
     assert(a.symbols.all.map(_.fullName).toSet.contains("com.other.Alpha"))
@@ -381,7 +382,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
         |public class Host { protected int shared() { return 1; } }
         |class Moving { int use(Host h) { return h.shared(); } }
         |""".stripMargin
-    val p = phase(subs = Map("com.example.demo.Moving" -> "internal"))
+    val p      = phase(subs = Map("com.example.demo.Moving" -> "internal"))
     val (a, _) = Pipeline.runTraced(SpoonTir.fromSource(incoming), List(p))
     assertEquals(issues(p), Nil, clue = "the moved type still reads its old package's `protected`")
     assert(a.symbols.all.map(_.fullName).toSet.contains("com.example.demo.internal.Moving"))
@@ -398,8 +399,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("an `allowPackageSplit` entry that declares nothing is itself a finding") {
-    val p = phase(types = Map("com.example.demo.Gamma" -> "com.other.Gamma"),
-                  allow = Set("com.example.demo.Gamma"))
+    val p = phase(types = Map("com.example.demo.Gamma" -> "com.other.Gamma"), allow = Set("com.example.demo.Gamma"))
     runPhase(p, split)
     assertEquals(issues(p), List("com.example.demo.Gamma" -> PolicyIssue.NeverMatched))
   }
@@ -451,12 +451,13 @@ class PackageRenameTransformSpec extends munit.FunSuite:
       |public class Uses {
       |  public boolean go() { return com.example.ext.Loader.isMac; }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   private val extFqn = "com.example.ext.Loader"
 
-  /** the same program with `Loader` marked RESOLVED — what a frontend classpath holding the class
-    * file produces, which no unit-test source root can supply. */
+  /** the same program with `Loader` marked RESOLVED — what a frontend classpath holding the class file produces, which no unit-test source root can supply.
+    */
   private def resolvingExternal: Program =
     val t = withExternal.symbols.all.foldLeft(withExternal.symbols) { (acc, s) =>
       if s.fullName.startsWith(extFqn) then acc.updated(s.copy(flags = s.flags.copy(isResolved = true)))
@@ -467,8 +468,10 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   private val toSge = Map("com.example" -> "sge.ui")
 
   test("an UNRESOLVED external under the port's prefix moves — nothing says its FQN is fixed") {
-    assert(withExternal.symbols.all.exists(s => s.fullName == extFqn && !s.flags.isResolved),
-           clue = "the frontend claimed a resolution it does not have")
+    assert(
+      withExternal.symbols.all.exists(s => s.fullName == extFqn && !s.flags.isResolved),
+      clue = "the frontend claimed a resolution it does not have"
+    )
     val after = Pipeline.run(withExternal, List(new PackageRenameTransform(toSge)))
     assert(names(after).contains("sge.ui.ext.Loader"))
     assert(!names(after).contains(extFqn))
@@ -483,8 +486,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("…and moves after all when the port DROPS it: the replacement is the port's own") {
-    val after = Pipeline.run(resolvingExternal,
-                             List(new PackageRenameTransform(toSge, drops = Set(extFqn))))
+    val after = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge, drops = Set(extFqn))))
     assert(names(after).contains("sge.ui.ext.Loader"))
     assert(!names(after).contains(extFqn))
   }
@@ -495,15 +497,13 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("…or when the port INJECTS ready-made Scala at the RENAMED name: upstream declares it nowhere") {
-    val after = Pipeline.run(resolvingExternal,
-                             List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Loader"))))
+    val after = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Loader"))))
     assert(names(after).contains("sge.ui.ext.Loader"))
     assert(!names(after).contains(extFqn))
   }
 
   test("an injection at some OTHER name moves nothing — the set is matched, never approximated") {
-    val after = Pipeline.run(resolvingExternal,
-                             List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Other"))))
+    val after = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Other"))))
     assert(names(after).contains(extFqn))
   }
 

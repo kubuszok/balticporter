@@ -1,6 +1,6 @@
 package balticporter.corpus
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** The cache every port's classpath is resolved through — and the ONE question it exists to ask. */
 class ClasspathCacheSpec extends munit.FunSuite:
@@ -21,9 +21,11 @@ class ClasspathCacheSpec extends munit.FunSuite:
     assert(ClasspathCache.fresh(f, k))
   }
 
-  test("a line whose jar has been EVICTED from the resolver cache is NOT reused — the coordinates agree and the file is gone") {
-    val f = tmp("cp.txt")
-    val k = ClasspathCache.key(List("com.github.tommyettinger:regexodus:0.1.21"))
+  test(
+    "a line whose jar has been EVICTED from the resolver cache is NOT reused — the coordinates agree and the file is gone"
+  ) {
+    val f    = tmp("cp.txt")
+    val k    = ClasspathCache.key(List("com.github.tommyettinger:regexodus:0.1.21"))
     val gone = jar("regexodus-0.1.21.jar")
     ClasspathCache.write(f, jar("kept.jar") + java.io.File.pathSeparator + gone, k)
     assert(ClasspathCache.fresh(f, k))
@@ -39,7 +41,7 @@ class ClasspathCacheSpec extends munit.FunSuite:
   }
 
   test("…and so is a line written with different RESOLVER ARGS — an exclusion is a classpath too") {
-    val f = tmp("cp.txt")
+    val f      = tmp("cp.txt")
     val coords = List("com.github.crykn.guacamole:gdx:v0.3.6")
     ClasspathCache.write(f, "/jars/g.jar", ClasspathCache.key(coords, List("-r", "https://jitpack.io")))
     assert(!ClasspathCache.fresh(f, ClasspathCache.key(coords)))
@@ -62,7 +64,7 @@ class ClasspathCacheSpec extends munit.FunSuite:
   test("the fingerprint is ORDER-SENSITIVE — `cs` resolves highest-version-wins across the set") {
     assertNotEquals(
       ClasspathCache.key(List("a:a:1", "b:b:2")),
-      ClasspathCache.key(List("b:b:2", "a:a:1")),
+      ClasspathCache.key(List("b:b:2", "a:a:1"))
     )
   }
 

@@ -2,22 +2,24 @@ package balticporter.emit
 
 import balticporter.tir.*
 
-/** Maps Java's four access levels to Scala qualifiers. DESIGN.md §8.7. Cross-package overrides use
-  * the nearest common ancestor package as qualifier, computed parents-first over already-rendered
-  * forms. Records residue as [[Decision.Kind.WidenedVisibility]] when a declaration ships wider
-  * than Java's. */
+/** Maps Java's four access levels to Scala qualifiers. DESIGN.md §8.7. Cross-package overrides use the nearest common ancestor package as qualifier, computed parents-first over already-rendered
+  * forms. Records residue as [[Decision.Kind.WidenedVisibility]] when a declaration ships wider than Java's.
+  */
 object Visibility:
 
-  /** The level a declaration renders at. Package cases carry no qualifier string —
-    * the emitter supplies its own package tail at emission time. */
+  /** The level a declaration renders at. Package cases carry no qualifier string — the emitter supplies its own package tail at emission time.
+    */
   enum Vis:
     case Public
+
     /** Bare `private` on top-level members; `private[TopLevel]` inside nested types. */
     case Private
     case PackagePrivate
     case ProtectedPkg
+
     /** Cross-package `private[pkg]` where `pkg` encloses but is not the declaration's own. */
     case PrivateAt(pkg: String)
+
     /** Cross-package `protected[pkg]`. */
     case ProtectedAt(pkg: String)
 
@@ -29,29 +31,40 @@ object Visibility:
   /** Why a declaration ships wider than Java wrote it. */
   private enum Cause(val slug: String, val why: String):
     /** `protected static` in a companion: no qualified form can express cross-package subclass access. */
-    case ProtectedStatic extends Cause("protected-static",
-      "java grants a cross-package subclass access to this static; scala's companion object is not " +
-        "a supertype of anything, so no qualified form can express it and the port widens instead")
+    case ProtectedStatic
+        extends Cause(
+          "protected-static",
+          "java grants a cross-package subclass access to this static; scala's companion object is not " +
+            "a supertype of anything, so no qualified form can express it and the port widens instead"
+        )
 
     /** No common ancestor package to qualify both child and parent. */
-    case NoCommonAncestor extends Cause("x-pkg-protected-override",
-      "this overrides a protected member declared in another package tree; a scala override may " +
-        "not have weaker access privileges and no enclosing package covers both, so it ships public")
+    case NoCommonAncestor
+        extends Cause(
+          "x-pkg-protected-override",
+          "this overrides a protected member declared in another package tree; a scala override may " +
+            "not have weaker access privileges and no enclosing package covers both, so it ships public"
+        )
 
     /** JLS 8.4.8.1: cross-package pkg-private is not an override in Java; Scala has one virtual chain. */
-    case PkgPrivateOverride extends Cause("x-pkg-pkg-private-override",
-      "java treats this as a NEW method rather than an override (JLS 8.4.8.1) because the parent's " +
-        "package-private member is not inherited across packages; scala has one virtual chain, so " +
-        "the port overrides and widens — DISPATCH DIFFERS where a caller held the parent type")
+    case PkgPrivateOverride
+        extends Cause(
+          "x-pkg-pkg-private-override",
+          "java treats this as a NEW method rather than an override (JLS 8.4.8.1) because the parent's " +
+            "package-private member is not inherited across packages; scala has one virtual chain, so " +
+            "the port overrides and widens — DISPATCH DIFFERS where a caller held the parent type"
+        )
 
     /** Qualifier segment shadowed by an enclosing type or nested package of the same name. */
-    case QualifierShadowed extends Cause("qualifier-shadowed",
-      "the qualifier this declaration needs is shadowed by an enclosing type or a nested package " +
-        "of the same name, so it would bind to that instead and silently NARROW the boundary")
+    case QualifierShadowed
+        extends Cause(
+          "qualifier-shadowed",
+          "the qualifier this declaration needs is shadowed by an enclosing type or a nested package " +
+            "of the same name, so it would bind to that instead and silently NARROW the boundary"
+        )
 
     /** Default package: no name for a qualifier to spell. */
-    case NoPackage extends Cause("unnameable-package",
-      "the declaration is in the default package, which has no name a qualifier can spell")
+    case NoPackage extends Cause("unnameable-package", "the declaration is in the default package, which has no name a qualifier can spell")
 
   /** Computes visibility for every non-public symbol; records widenings in `out`. */
   def plan(p: Program, out: collection.mutable.Buffer[Decision]): Map[SymId, Vis] =
@@ -72,10 +85,11 @@ object Visibility:
     p.units.foreach { u =>
       StandardTraversal.scanClassDef(u, ()) { (_, t) =>
         t match
-          case n: Tree.New => n.anon.foreach { a =>
-            anonParents(a.symbol) = headSym(n.tpt.tpe).toList
-            anonBody(a.symbol)    = a.body
-          }
+          case n: Tree.New =>
+            n.anon.foreach { a =>
+              anonParents(a.symbol) = headSym(n.tpt.tpe).toList
+              anonBody(a.symbol) = a.body
+            }
           case _ => ()
       }
     }
@@ -84,13 +98,15 @@ object Visibility:
 
     /** The top-level unit a symbol belongs to, by ownership climb. */
     val topOfMemo = collection.mutable.Map.empty[SymId, Option[SymId]]
-    def topOf(id: SymId): Option[SymId] = topOfMemo.getOrElseUpdate(id, {
-      def climb(x: SymId, fuel: Int): Option[SymId] =
-        if fuel <= 0 || x == SymId.None then None
-        else if unitSyms(x) then Some(x)
-        else symOf(x).flatMap(s => climb(s.owner, fuel - 1))
-      climb(id, 64)
-    })
+    def topOf(id: SymId): Option[SymId] = topOfMemo.getOrElseUpdate(
+      id, {
+        def climb(x: SymId, fuel: Int): Option[SymId] =
+          if fuel <= 0 || x == SymId.None then None
+          else if unitSyms(x) then Some(x)
+          else symOf(x).flatMap(s => climb(s.owner, fuel - 1))
+        climb(id, 64)
+      }
+    )
 
     /** Emitted package of a declaration; `""` in the default package. */
     def pkgOf(id: SymId): String =
@@ -102,14 +118,15 @@ object Visibility:
     def enclosingTypeNames(id: SymId): List[String] =
       def climb(x: SymId, fuel: Int, acc: List[String]): List[String] =
         if fuel <= 0 || x == SymId.None then acc
-        else symOf(x) match
-          case Some(s) if classDefs.contains(x) => climb(s.owner, fuel - 1, s.name :: acc)
-          case Some(s)                          => climb(s.owner, fuel - 1, acc)
-          case None                             => acc
+        else
+          symOf(x) match
+            case Some(s) if classDefs.contains(x) => climb(s.owner, fuel - 1, s.name :: acc)
+            case Some(s)                          => climb(s.owner, fuel - 1, acc)
+            case None                             => acc
       symOf(id).map(s => climb(s.owner, 64, Nil)).getOrElse(Nil)
 
-    /** Whether `pkg`'s last segment resolves unambiguously as a qualifier at `id`.
-      * False when shadowed by an enclosing type or a deeper segment of the same name. */
+    /** Whether `pkg`'s last segment resolves unambiguously as a qualifier at `id`. False when shadowed by an enclosing type or a deeper segment of the same name.
+      */
     def qualifierResolves(pkg: String, id: SymId): Boolean =
       pkg.nonEmpty && {
         val tail  = pkg.substring(pkg.lastIndexOf('.') + 1)
@@ -117,9 +134,9 @@ object Visibility:
         val segs  = own.split('.').toList
         val depth = pkg.split('.').length
         !enclosingTypeNames(id).contains(tail) &&
-          // cut only at a SEPARATOR (§4.56): `demo.a` must not cover `demo.abc`.
-          (own == pkg || own.startsWith(pkg + ".")) &&
-          segs.zipWithIndex.forall((s, i) => s != tail || i == depth - 1)
+        // cut only at a SEPARATOR (§4.56): `demo.a` must not cover `demo.abc`.
+        (own == pkg || own.startsWith(pkg + ".")) &&
+        segs.zipWithIndex.forall((s, i) => s != tail || i == depth - 1)
       }
 
     /** the last segment of a dotted package — the only form a Scala qualifier has. */
@@ -134,18 +151,17 @@ object Visibility:
 
     // ---- override graph (name, arity) ----
     val parentsOf: Map[SymId, List[SymId]] =
-      classDefs.view.mapValues(cd =>
-        cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
-      ).toMap ++ anonParents
+      classDefs.view.mapValues(cd => cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }).toMap ++ anonParents
 
-    /** Instance methods keyed by (name, arity), ALL overloads per key.
-      * Keeps every candidate so the fold takes the common (widest) package.
-      * Excludes statics (hide, not override) and privates (not inherited). */
-    def methodsIn(body: List[Statement]): Map[(String, Int), List[SymId]] = body.collect {
-      case d: Tree.DefDef
-        if !symOf(d.symbol).exists(s => s.flags.isStatic || s.flags.isPrivate) =>
-        (symOf(d.symbol).map(_.name).getOrElse(""), d.paramss.map(_.size).sum) -> d.symbol
-    }.groupMap(_._1)(_._2)
+    /** Instance methods keyed by (name, arity), ALL overloads per key. Keeps every candidate so the fold takes the common (widest) package. Excludes statics (hide, not override) and privates (not
+      * inherited).
+      */
+    def methodsIn(body: List[Statement]): Map[(String, Int), List[SymId]] = body
+      .collect {
+        case d: Tree.DefDef if !symOf(d.symbol).exists(s => s.flags.isStatic || s.flags.isPrivate) =>
+          (symOf(d.symbol).map(_.name).getOrElse(""), d.paramss.map(_.size).sum) -> d.symbol
+      }
+      .groupMap(_._1)(_._2)
 
     val methodsOf: Map[SymId, Map[(String, Int), List[SymId]]] =
       classDefs.view.mapValues(cd => methodsIn(cd.body)).toMap ++ anonBody.view.mapValues(methodsIn).toMap
@@ -163,27 +179,27 @@ object Visibility:
       bfs(parentsOf.getOrElse(owner, Nil).distinct, Set(owner), 32)
 
     // ---- the plan itself ----
-    val decided = collection.mutable.LinkedHashMap.empty[SymId, Vis]
+    val decided  = collection.mutable.LinkedHashMap.empty[SymId, Vis]
     val inFlight = collection.mutable.Set.empty[SymId]
 
     def record(id: SymId, cause: Cause, from: String, to: String): Unit =
       val s = symOf(id)
       out += Decision(
-        kind       = Decision.Kind.WidenedVisibility,
-        subject    = id,
+        kind = Decision.Kind.WidenedVisibility,
+        subject = id,
         subjectFqn = s.map(_.fullName).filter(_.nonEmpty).getOrElse("?"),
-        detail     = Map("cause" -> cause.slug, "from" -> from, "to" -> to, "why" -> cause.why),
-        reason     = Reason.Universal(Rule),
-        origin     = Decision.originOf(p, id),
+        detail = Map("cause" -> cause.slug, "from" -> from, "to" -> to, "why" -> cause.why),
+        reason = Reason.Universal(Rule),
+        origin = Decision.originOf(p, id)
       )
 
     /** Package the qualifier names; `""` for public or bare private. */
     def qualifierPkgOf(id: SymId, v: Vis): String = v match
-      case Vis.Public                              => ""
-      case Vis.Private                             => ""
-      case Vis.PackagePrivate | Vis.ProtectedPkg   => pkgOf(id)
-      case Vis.PrivateAt(q)                        => q
-      case Vis.ProtectedAt(q)                      => q
+      case Vis.Public                            => ""
+      case Vis.Private                           => ""
+      case Vis.PackagePrivate | Vis.ProtectedPkg => pkgOf(id)
+      case Vis.PrivateAt(q)                      => q
+      case Vis.ProtectedAt(q)                    => q
 
     def visOf(id: SymId): Vis = decided.getOrElse(id, compute(id))
 
@@ -191,15 +207,16 @@ object Visibility:
       if inFlight(id) then Vis.Public // a cycle in the class graph: refuse to constrain, do not hang
       else
         inFlight += id
-        val v = try decide(id) finally inFlight -= id
+        val v = try decide(id)
+        finally inFlight -= id
         decided(id) = v
         v
 
     def decide(id: SymId): Vis =
-      val s   = symOf(id).get
-      val f   = s.flags
-      val pkg = pkgOf(id)
-      val isType = classDefs.contains(id)
+      val s        = symOf(id).get
+      val f        = s.flags
+      val pkg      = pkgOf(id)
+      val isType   = classDefs.contains(id)
       val topLevel = unitSyms(id)
 
       /** widen, loudly. Every path out of this function that is not the mapping goes through it. */
@@ -239,8 +256,8 @@ object Visibility:
     def overrideTarget(id: SymId, s: Symbol, pkg: String): String =
       if !s.flags.isOverride then pkg
       else
-        val owner = s.owner
-        val key   = (s.name, s.info match { case TypeRepr.MethodType(ps, _, _) => ps.size; case _ => 0 })
+        val owner   = s.owner
+        val key     = (s.name, s.info match { case TypeRepr.MethodType(ps, _, _) => ps.size; case _ => 0 })
         val parents = declaringAncestors(owner, key)
         parents.foldLeft(pkg) { (acc, pm) =>
           if acc.isEmpty then ""
@@ -257,7 +274,6 @@ object Visibility:
 
     p.symbols.all.foreach { s =>
       val f = s.flags
-      if (f.isPrivate || f.isProtected || f.isPackagePrivate) && topOf(s.id).isDefined then
-        visOf(s.id)
+      if (f.isPrivate || f.isProtected || f.isPackagePrivate) && topOf(s.id).isDefined then visOf(s.id)
     }
     decided.filterNot(_._2 == Vis.Public).toMap

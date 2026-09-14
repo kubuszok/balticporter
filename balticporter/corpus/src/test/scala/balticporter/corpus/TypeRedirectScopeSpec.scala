@@ -1,11 +1,11 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, RuleScope}
+import balticporter.tir.{ Decision, RuleScope }
 import balticporter.transform.TypeRedirectTransform
 
-/** `TypeRedirectTransform` RETYPES declarations, so CLAUDE.md §1 owes it a `RuleScope` — and this
-  * suite is what says the scope is real rather than a constructor parameter nobody reads. */
+/** `TypeRedirectTransform` RETYPES declarations, so CLAUDE.md §1 owes it a `RuleScope` — and this suite is what says the scope is real rather than a constructor parameter nobody reads.
+  */
 class TypeRedirectScopeSpec extends PortSuite:
 
   private val sources = List(
@@ -27,12 +27,12 @@ class TypeRedirectScopeSpec extends PortSuite:
         |  public Slot mine;
         |  public Slot pick() { return mine; }
         |}
-        |""".stripMargin,
+        |""".stripMargin
   )
 
   private def redirect(scope: RuleScope) = new TypeRedirectTransform(
     redirects = Map("com.demo.Slot" -> "com.demo.Replacement"),
-    scopes    = if scope.isUnrestricted then Map.empty else Map("com.demo.Slot" -> scope),
+    scopes = if scope.isUnrestricted then Map.empty else Map("com.demo.Slot" -> scope)
   )
 
   test("UNSCOPED, the redirect reaches the OTHER module's declarations — the pre-scope behaviour") {
@@ -65,35 +65,32 @@ class TypeRedirectScopeSpec extends PortSuite:
     // THE SHAPE A MERGE PRODUCES: a base states a whole-program redirect and a dependent states a
     // package-scoped one, `surfaceFold` folds them into ONE phase, and a single scope on that phase
     // could not serve both. Keyed by the redirect source they simply do not interact.
-    val p = portAll(sources, new TypeRedirectTransform(
-      redirects = Map("com.demo.Slot" -> "com.demo.Replacement", "com.base.Holder" -> "com.demo.Bag"),
-      scopes    = Map("com.demo.Slot" -> RuleScope.Only(Set("com.demo"))),
-    ))
-    assertEmits(p, "var mine: com.demo.Replacement")   // scoped entry, inside its scope
-    assertEmits(p, "var slot: com.demo.Slot")          // scoped entry, outside it
-    assertNotEmits(p, "com.base.Holder")               // unscoped entry, everywhere
+    val p = portAll(
+      sources,
+      new TypeRedirectTransform(
+        redirects = Map("com.demo.Slot" -> "com.demo.Replacement", "com.base.Holder" -> "com.demo.Bag"),
+        scopes = Map("com.demo.Slot" -> RuleScope.Only(Set("com.demo")))
+      )
+    )
+    assertEmits(p, "var mine: com.demo.Replacement") // scoped entry, inside its scope
+    assertEmits(p, "var slot: com.demo.Slot") // scoped entry, outside it
+    assertNotEmits(p, "com.base.Holder") // unscoped entry, everywhere
   }
 
   test("the two instances MERGE where they scope different sources, and REFUSE the same one") {
     val base      = new TypeRedirectTransform(Map("com.base.Holder" -> "com.demo.Bag"))
-    val dependent = new TypeRedirectTransform(
-      redirects = Map("com.demo.Slot" -> "com.demo.Replacement"),
-      scopes    = Map("com.demo.Slot" -> RuleScope.Only(Set("com.demo"))))
+    val dependent = new TypeRedirectTransform(redirects = Map("com.demo.Slot" -> "com.demo.Replacement"), scopes = Map("com.demo.Slot" -> RuleScope.Only(Set("com.demo"))))
     // different sources — nothing to disagree about, and reading the base's ABSENT entry as
     // "everywhere" would have reported a conflict between a scope and a redirect that does not exist
     assert(clue(base.mergedWith(dependent)).isRight)
     // the same source, two scopes — the refusal, because a scope does not compose
-    val rival = new TypeRedirectTransform(
-      redirects = Map("com.demo.Slot" -> "com.demo.Replacement"),
-      scopes    = Map("com.demo.Slot" -> RuleScope.Only(Set("com.other"))))
+    val rival = new TypeRedirectTransform(redirects = Map("com.demo.Slot" -> "com.demo.Replacement"), scopes = Map("com.demo.Slot" -> RuleScope.Only(Set("com.other"))))
     assert(clue(dependent.mergedWith(rival)).isLeft)
   }
 
   test("the scope is part of the SURFACE fingerprint — two modules scoping differently are not equal") {
     val unscoped = new TypeRedirectTransform(Map("com.demo.Slot" -> "com.demo.Replacement"))
-    val scoped   = new TypeRedirectTransform(
-      redirects = Map("com.demo.Slot" -> "com.demo.Replacement"),
-      scopes    = Map("com.demo.Slot" -> RuleScope.Only(Set("com.demo"))))
+    val scoped   = new TypeRedirectTransform(redirects = Map("com.demo.Slot" -> "com.demo.Replacement"), scopes = Map("com.demo.Slot" -> RuleScope.Only(Set("com.demo"))))
     assertNotEquals(scoped.surfaceFingerprint, unscoped.surfaceFingerprint)
     // …and a port that states NO scope fingerprints exactly as it did before the parameter existed,
     // or every published port map moves for a change that shifted no signature.
@@ -101,9 +98,7 @@ class TypeRedirectScopeSpec extends PortSuite:
   }
 
   test("a scope entry that names nothing is REPORTED, not silently ignored") {
-    val phase = new TypeRedirectTransform(
-      redirects = Map("com.demo.Slot" -> "com.demo.Replacement"),
-      scopes    = Map("com.demo.Slot" -> RuleScope.Only(Set("com.absent"))))
+    val phase = new TypeRedirectTransform(redirects = Map("com.demo.Slot" -> "com.demo.Replacement"), scopes = Map("com.demo.Slot" -> RuleScope.Only(Set("com.absent"))))
     portAll(sources, phase)
     val findings = phase.policyReport.findings
     assertEquals(clue(findings).size, 1)

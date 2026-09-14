@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.emit.{InjectedSurface, TirEmitter}
+import balticporter.emit.{ InjectedSurface, TirEmitter }
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 import munit.FunSuite
@@ -15,16 +15,17 @@ class InjectedSurfaceFollowTransformSpec extends FunSuite:
       |  public void setBlend(int b) {}
       |}
       |""".stripMargin + "\n" +
-    """package q;
-      |public class User {
-      |  public String f(Pixmap p, Pixmap.Format fm) { p.setBlend(p.getWidth()); return fm.name(); }
-      |}
-      |""".stripMargin
+      """package q;
+        |public class User {
+        |  public String f(Pixmap p, Pixmap.Format fm) { p.setBlend(p.getWidth()); return fm.name(); }
+        |}
+        |""".stripMargin
 
   private def surface(): InjectedSurface.Surface =
     val dir = java.nio.file.Files.createTempDirectory("follow")
     java.nio.file.Files.createDirectories(dir.resolve("sge/graphics"))
-    java.nio.file.Files.writeString(dir.resolve("sge/graphics/Pixmap.scala"),
+    java.nio.file.Files.writeString(
+      dir.resolve("sge/graphics/Pixmap.scala"),
       """package sge
         |package graphics
         |class Pixmap {
@@ -32,14 +33,15 @@ class InjectedSurfaceFollowTransformSpec extends FunSuite:
         |  var blend: Int = 0
         |  enum Format { case A, B }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     InjectedSurface.fromRoots(List(dir))
 
   private lazy val emitted: String =
-    val p0 = SpoonTir.fromSource(javaSrc)
+    val p0    = SpoonTir.fromSource(javaSrc)
     val phase = new InjectedSurfaceFollowTransform(surface(), Map("q.Pixmap" -> "sge.graphics.Pixmap"))
-    val p1 = phase.run(p0)
-    val user = p1.units.find(u => p1.symbolOf(u.symbol).exists(_.name == "User")).get
+    val p1    = phase.run(p0)
+    val user  = p1.units.find(u => p1.symbolOf(u.symbol).exists(_.name == "User")).get
     new TirEmitter(p1.rebuilt(units = List(user))).emit
 
   test("a getter follows the injected property, parens gone") {

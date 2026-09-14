@@ -1,12 +1,11 @@
 package balticporter.emit
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.meta.*
 
 /** Member surface of injected Scala files (parsed with scalameta).
   *
-  * Extracts signatures so the emitter can align overrides of dropped+injected
-  * parents and follow their member arity (hasParens).
+  * Extracts signatures so the emitter can align overrides of dropped+injected parents and follow their member arity (hasParens).
   */
 object InjectedSurface:
 
@@ -15,11 +14,11 @@ object InjectedSurface:
 
   /** One member's signature in the injected file. */
   final case class MemberSig(
-      ownerFqn: String,
-      name: String,
-      paramTypes: List[List[ParamType]],
-      hasParens: Boolean,
-      returnType: Option[String],
+    ownerFqn:   String,
+    name:       String,
+    paramTypes: List[List[ParamType]],
+    hasParens:  Boolean,
+    returnType: Option[String]
   ):
     def arity: Int = paramTypes.flatten.size
 
@@ -28,18 +27,18 @@ object InjectedSurface:
     case Class, Trait, Object
 
   final case class Surface(
-      members: Map[(String, String, Int), List[MemberSig]],
-      /** Type parameter names per injected type, for substitution in overrides. */
-      typeParams: Map[String, List[String]] = Map.empty,
-      /** Declaration kind per injected type, so a dependent's port map gets `Published`. */
-      typeForms: Map[String, TypeForm] = Map.empty,
-      /** upstream FQN -> emitted FQN of a dropped+injected type: the emitter asks by the SYMBOL's
-        * (java) name, the file declares the emitted one (`PROGRESS.md` §13.31 step 3). */
-      aliases: Map[String, String] = Map.empty,
+    members: Map[(String, String, Int), List[MemberSig]],
+    /** Type parameter names per injected type, for substitution in overrides. */
+    typeParams: Map[String, List[String]] = Map.empty,
+    /** Declaration kind per injected type, so a dependent's port map gets `Published`. */
+    typeForms: Map[String, TypeForm] = Map.empty,
+    /** upstream FQN -> emitted FQN of a dropped+injected type: the emitter asks by the SYMBOL's (java) name, the file declares the emitted one (`PROGRESS.md` §13.31 step 3).
+      */
+    aliases: Map[String, String] = Map.empty
   ):
-    def isEmpty: Boolean = members.isEmpty
-    def withAliases(a: Map[String, String]): Surface = copy(aliases = aliases ++ a)
-    private def owners(fqn: String): List[String] = fqn :: aliases.get(fqn).toList
+    def isEmpty:                                  Boolean      = members.isEmpty
+    def withAliases(a:      Map[String, String]): Surface      = copy(aliases = aliases ++ a)
+    private def owners(fqn: String):              List[String] = fqn :: aliases.get(fqn).toList
 
     /** Renders a minimal `form=` payload per injected type for port-map type-shape rows. */
     def renderedTypeShapes: Map[String, String] =
@@ -52,26 +51,20 @@ object InjectedSurface:
       }
 
     /** Look up the injected member, substituting the child's actual type args. */
-    def lookup(ownerFqn0: String, memberName: String, arity: Int,
-               actualTypeArgs: List[String] = Nil): Option[MemberSig] =
+    def lookup(ownerFqn0: String, memberName: String, arity: Int, actualTypeArgs: List[String] = Nil): Option[MemberSig] =
       val ownerFqn = owners(ownerFqn0).find(o => members.contains((o, memberName, arity))).getOrElse(ownerFqn0)
       members.get((ownerFqn, memberName, arity)).flatMap(_.headOption).map { sig =>
         val tparams = typeParams.getOrElse(ownerFqn, Nil)
         if tparams.isEmpty || actualTypeArgs.isEmpty then sig
         else
           val subst = tparams.zip(actualTypeArgs).toMap
-          sig.copy(paramTypes = sig.paramTypes.map(_.map(pt =>
-            ParamType(substituteTypeParams(pt.rendered, subst)))))
+          sig.copy(paramTypes = sig.paramTypes.map(_.map(pt => ParamType(substituteTypeParams(pt.rendered, subst)))))
       }
 
     /** Whether this member has parens in the injected file. */
     def memberHasParens(ownerFqn0: String, memberName: String): Option[Boolean] =
       val os = owners(ownerFqn0).toSet
-      members.iterator
-        .filter { case ((fqn, n, _), _) => os(fqn) && n == memberName }
-        .flatMap(_._2)
-        .map(_.hasParens)
-        .nextOption()
+      members.iterator.filter { case ((fqn, n, _), _) => os(fqn) && n == memberName }.flatMap(_._2).map(_.hasParens).nextOption()
 
   /** Substitute type parameter names in a rendered type string (whole-word match). */
   private def substituteTypeParams(rendered: String, subst: Map[String, String]): String =
@@ -86,47 +79,47 @@ object InjectedSurface:
 
   /** Parse `.scala` files under the given roots and extract member signatures. */
   def fromRoots(roots: List[Path]): Surface =
-    val sigs = List.newBuilder[MemberSig]
+    val sigs    = List.newBuilder[MemberSig]
     val tparams = collection.mutable.Map[String, List[String]]()
     val forms   = collection.mutable.Map[String, TypeForm]()
     for
       root <- roots if Files.exists(root)
-      src  <- scalaSources(root)
+      src <- scalaSources(root)
     do
-      val text = new String(Files.readAllBytes(src), "UTF-8")
+      val text  = new String(Files.readAllBytes(src), "UTF-8")
       val input = Input.VirtualFile(src.toString, text)
       dialects.Scala3(input).parse[Source] match
         case Parsed.Success(tree) =>
           val pkg = extractPackage(tree)
           collectMembers(tree, pkg, sigs, tparams, forms)
         case _ => () // parse failure: nothing to extract
-    val all = sigs.result()
+    val all     = sigs.result()
     val grouped = all.groupBy(m => (m.ownerFqn, m.name, m.arity))
     Surface(grouped, tparams.toMap, forms.toMap)
 
   private def scalaSources(root: Path): List[Path] =
     import scala.jdk.CollectionConverters.*
     if !Files.isDirectory(root) then Nil
-    else
-      Files.walk(root).iterator().asScala
-        .filter(p => Files.isRegularFile(p) && p.toString.endsWith(".scala"))
-        .toList
+    else Files.walk(root).iterator().asScala.filter(p => Files.isRegularFile(p) && p.toString.endsWith(".scala")).toList
 
   /** Package name from a parsed Scala source tree. */
-  /** the dotted package of a source file, CHAINED clauses included (`package sge` then
-    * `package graphics` is `sge.graphics` — a hand port's usual spelling; reading the first clause
-    * alone keyed every member of such a file under the wrong owner). */
+  /** the dotted package of a source file, CHAINED clauses included (`package sge` then `package graphics` is `sge.graphics` — a hand port's usual spelling; reading the first clause alone keyed every
+    * member of such a file under the wrong owner).
+    */
   private def extractPackage(tree: Source): String =
-    def go(stats: List[Stat], acc: List[String]): List[String] = stats.collectFirst {
-      case Pkg(ref, inner) => go(inner, acc :+ ref.syntax)
-    }.getOrElse(acc)
+    def go(stats: List[Stat], acc: List[String]): List[String] = stats
+      .collectFirst { case Pkg(ref, inner) =>
+        go(inner, acc :+ ref.syntax)
+      }
+      .getOrElse(acc)
     go(tree.stats, Nil).mkString(".")
 
   private def collectMembers(
-      tree: Tree, pkg: String,
-      out: collection.mutable.Builder[MemberSig, List[MemberSig]],
-      tparams: collection.mutable.Map[String, List[String]],
-      forms: collection.mutable.Map[String, TypeForm],
+    tree:    Tree,
+    pkg:     String,
+    out:     collection.mutable.Builder[MemberSig, List[MemberSig]],
+    tparams: collection.mutable.Map[String, List[String]],
+    forms:   collection.mutable.Map[String, TypeForm]
   ): Unit =
     def walkTemplate(templ: Template, fqn: String): Unit =
       templ.body.stats.foreach(walk(_, fqn))
@@ -142,13 +135,13 @@ object InjectedSurface:
         stats.foreach(walk(_, fqn))
       case d: Defn.Class =>
         val childFqn = fqnOf(fqn, d.name.value)
-        val tp = extractTParams(d.tparamClause)
+        val tp       = extractTParams(d.tparamClause)
         if tp.nonEmpty then tparams(childFqn) = tp
         forms(childFqn) = TypeForm.Class
         walkTemplate(d.templ, childFqn)
       case d: Defn.Trait =>
         val childFqn = fqnOf(fqn, d.name.value)
-        val tp = extractTParams(d.tparamClause)
+        val tp       = extractTParams(d.tparamClause)
         if tp.nonEmpty then tparams(childFqn) = tp
         forms(childFqn) = TypeForm.Trait
         walkTemplate(d.templ, childFqn)
@@ -157,23 +150,21 @@ object InjectedSurface:
         forms(childFqn) = TypeForm.Object
         walkTemplate(d.templ, childFqn)
       case d: Defn.Def =>
-        val nonUsingClauses = d.paramClauseGroups.flatMap(_.paramClauses)
-          .filterNot(pc => pc.values.nonEmpty && pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using])))
-        val paramClauses = nonUsingClauses.map { pc =>
+        val nonUsingClauses = d.paramClauseGroups.flatMap(_.paramClauses).filterNot(pc => pc.values.nonEmpty && pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using])))
+        val paramClauses    = nonUsingClauses.map { pc =>
           pc.values.map(p => ParamType(p.decltpe.map(_.syntax).getOrElse("?")))
         }
         // hasParens: true if ANY non-using clause exists (even an empty `()`)
         val hasP = nonUsingClauses.nonEmpty
-        val ret = d.decltpe.map(_.syntax)
+        val ret  = d.decltpe.map(_.syntax)
         out += MemberSig(fqn, d.name.value, paramClauses, hasP, ret)
       case d: Decl.Def =>
-        val nonUsingClauses = d.paramClauseGroups.flatMap(_.paramClauses)
-          .filterNot(pc => pc.values.nonEmpty && pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using])))
-        val paramClauses = nonUsingClauses.map { pc =>
+        val nonUsingClauses = d.paramClauseGroups.flatMap(_.paramClauses).filterNot(pc => pc.values.nonEmpty && pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using])))
+        val paramClauses    = nonUsingClauses.map { pc =>
           pc.values.map(p => ParamType(p.decltpe.map(_.syntax).getOrElse("?")))
         }
         val hasP = nonUsingClauses.nonEmpty
-        val ret = Some(d.decltpe.syntax)
+        val ret  = Some(d.decltpe.syntax)
         out += MemberSig(fqn, d.name.value, paramClauses, hasP, ret)
       case d: Defn.Val =>
         d.pats.foreach {

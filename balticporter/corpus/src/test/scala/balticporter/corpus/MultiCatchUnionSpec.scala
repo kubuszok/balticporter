@@ -5,8 +5,8 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 import balticporter.tir.Pipeline
 
-/** java's multi-catch `catch (A | B e)` is a scala UNION TYPE in a typed pattern — and the
-  * parentheses round it are a fact about scala's GRAMMAR, not about its types. */
+/** java's multi-catch `catch (A | B e)` is a scala UNION TYPE in a typed pattern — and the parentheses round it are a fact about scala's GRAMMAR, not about its types.
+  */
 class MultiCatchUnionSpec extends PortSuite:
 
   private val src =
@@ -29,8 +29,7 @@ class MultiCatchUnionSpec extends PortSuite:
   private val out = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), Nil)).emit
 
   test("a multi-catch renders a PARENTHESISED union in the typed pattern") {
-    assert(clue(out).contains(
-      "case _: (java.lang.NumberFormatException | java.lang.IndexOutOfBoundsException) =>"))
+    assert(clue(out).contains("case _: (java.lang.NumberFormatException | java.lang.IndexOutOfBoundsException) =>"))
     assert(!out.contains("case _: java.lang.NumberFormatException | "))
   }
 

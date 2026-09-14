@@ -13,26 +13,28 @@ object TinyProgram:
   val X     = SymId(7)
   val PLUS  = SymId(8)
 
-  val O: Origin = Origin("/abs/src/p/Foo.java", 3, 1)
+  val O:               Origin   = Origin("/abs/src/p/Foo.java", 3, 1)
   def tt(t: TypeRepr): TypeTree = TypeTree(t, O)
 
-  val tInt: TypeRepr  = TypeRef(NoPrefix, INT)
-  val tT: TypeRepr    = TypeRef(NoPrefix, T)
+  val tInt:  TypeRepr = TypeRef(NoPrefix, INT)
+  val tT:    TypeRepr = TypeRef(NoPrefix, T)
   val tBase: TypeRepr = TypeRef(NoPrefix, BASE)
 
   private def s(id: SymId, full: String, info: TypeRepr, flags: Flags = Flags()) =
     Symbol(id, full.substring(full.lastIndexOf('.') + 1), full, flags, SymId.None, info, origin = O)
 
-  val symbols: SymbolTable = SymbolTable(List(
-    s(FOO, "p.Foo", TypeRef(NoPrefix, FOO)),
-    s(T, "p.Foo.T", AnyBounds),
-    s(BASE, "p.Base", tBase),
-    s(INT, "scala.Int", tInt),
-    s(COUNT, "p.Foo.count", tInt, Flags(isMutable = true)),
-    s(ADD, "p.Foo.add", MethodType(List("x" -> tT), tInt)),
-    s(X, "p.Foo.add.x", tT, Flags(isParam = true)),
-    s(PLUS, "scala.Int.+", MethodType(List("y" -> tInt), tInt)),
-  ))
+  val symbols: SymbolTable = SymbolTable(
+    List(
+      s(FOO, "p.Foo", TypeRef(NoPrefix, FOO)),
+      s(T, "p.Foo.T", AnyBounds),
+      s(BASE, "p.Base", tBase),
+      s(INT, "scala.Int", tInt),
+      s(COUNT, "p.Foo.count", tInt, Flags(isMutable = true)),
+      s(ADD, "p.Foo.add", MethodType(List("x" -> tT), tInt)),
+      s(X, "p.Foo.add.x", tT, Flags(isParam = true)),
+      s(PLUS, "scala.Int.+", MethodType(List("y" -> tInt), tInt))
+    )
+  )
 
   private def countRef = Tree.Ident(COUNT, tInt, O)
 
@@ -42,13 +44,17 @@ object TinyProgram:
     ADD,
     paramss = List(List(Tree.ValDef(X, tt(tT), scala.None, O))),
     returnTpt = tt(tInt),
-    rhs = Some(Tree.Block(
-      stats = List(Tree.Assign(
-        countRef,
-        Tree.Apply(Tree.Select(countRef, PLUS, tInt, O), List(Tree.Literal(Constant.IntC(1), tInt, O)), PLUS, tInt, O),
-        tInt, O)),
-      expr = countRef, tpe = tInt, origin = O)),
-    origin = O,
+    rhs = Some(
+      Tree.Block(
+        stats = List(
+          Tree.Assign(countRef, Tree.Apply(Tree.Select(countRef, PLUS, tInt, O), List(Tree.Literal(Constant.IntC(1), tInt, O)), PLUS, tInt, O), tInt, O)
+        ),
+        expr = countRef,
+        tpe = tInt,
+        origin = O
+      )
+    ),
+    origin = O
   )
 
   val foo: Tree.ClassDef = Tree.ClassDef(
@@ -57,7 +63,7 @@ object TinyProgram:
     selfType = scala.None,
     body = List(countDef, addDef),
     origin = O,
-    tparams = List(Tree.TypeDef(T, tt(AnyBounds), O)),
+    tparams = List(Tree.TypeDef(T, tt(AnyBounds), O))
   )
 
   def program: Program = new Program(List(foo), symbols, Xref.build(List(foo)), MemberIndex.empty)

@@ -1,6 +1,6 @@
 package balticporter.core
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** CLAUDE.md §5.4's rule, and the DUPLICATION scan that keeps it one rule. */
@@ -49,7 +49,7 @@ class RealPathSpec extends munit.FunSuite:
 
   test("ofExisting is FATAL on an absent input, and the message names the path (§5.1)") {
     val missing = Path.of("/definitely/not/here/Missing.java")
-    val e = intercept[java.nio.file.NoSuchFileException](RealPath.ofExisting(missing, "declared source file"))
+    val e       = intercept[java.nio.file.NoSuchFileException](RealPath.ofExisting(missing, "declared source file"))
     assert(clue(e.getFile).contains("Missing.java"))
     assert(clue(e.getReason).contains("declared source file"))
   }
@@ -63,12 +63,13 @@ class RealPathSpec extends munit.FunSuite:
   // the duplication scan — one rule, one implementation
   // -------------------------------------------------------------------------------------------
 
-  /** every production `src/main/scala`, written into the test resources by build.sbt so the scan
-    * does not depend on where the suite is run from (the device `PolicyKeyLintSpec` uses). */
+  /** every production `src/main/scala`, written into the test resources by build.sbt so the scan does not depend on where the suite is run from (the device `PolicyKeyLintSpec` uses).
+    */
   private def productionRoots: List[Path] =
     val is = Option(getClass.getClassLoader.getResourceAsStream("balticporter/production-source-dirs.txt"))
       .getOrElse(fail("balticporter/production-source-dirs.txt is missing — the Test resourceGenerator did not run"))
-    val s = try new String(is.readAllBytes(), "UTF-8") finally is.close()
+    val s = try new String(is.readAllBytes(), "UTF-8")
+    finally is.close()
     s.linesIterator.map(_.trim).filter(_.nonEmpty).map(Path.of(_)).toList
 
   private def scalaFiles(root: Path): List[Path] =

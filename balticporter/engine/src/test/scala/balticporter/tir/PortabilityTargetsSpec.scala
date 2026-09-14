@@ -1,9 +1,9 @@
 package balticporter.tir
 
-import balticporter.catalog.{ApiRows, Platform, Verdict}
+import balticporter.catalog.{ ApiRows, Platform, Verdict }
 
-/** `PortabilityCheck` as a §1(b) phase — the TARGET SET is the parameter, and this is what stops the
-  * parameterisation from being a lane reset. */
+/** `PortabilityCheck` as a §1(b) phase — the TARGET SET is the parameter, and this is what stops the parameterisation from being a lane reset.
+  */
 class PortabilityTargetsSpec extends munit.FunSuite:
 
   private val All = Platform.values.toSet
@@ -15,8 +15,7 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     // promoted `portability(all)` baselines are byte-identical rather than merely equal in count.
     val lane = PortabilityCheck.rulesFor(All)
     assertEquals(lane, PortabilityCheck.all.filter(lane.contains))
-    assertEquals(lane.toSet & PortabilityCheck.dependencyRulesFor(All).toSet,
-                 Set.empty[PortabilityCheck.Rule])
+    assertEquals(lane.toSet & PortabilityCheck.dependencyRulesFor(All).toSet, Set.empty[PortabilityCheck.Rule])
   }
 
   test("an EMPTY target set is the no-op §1(b) asks for") {
@@ -34,25 +33,28 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     // over the PORTABILITY lane alone: the `Verdict.Depend` rules narrow by target too, and their
     // narrowing is `DependencyCoverageSpec`'s to assert.
     val dropped = (PortabilityCheck.rulesFor(All).map(_.api).toSet --
-                   PortabilityCheck.rulesFor(jvmNative).map(_.api).toSet).toList.sorted
-    assertEquals(dropped, List(
-      // the eight re-scoped families…
-      "java.lang.ProcessBuilder",
-      "java.lang.System#getProperty",
-      "java.lang.Thread",
-      "java.net.",
-      "java.nio.channels.",
-      "java.nio.file.",
-      "java.util.concurrent.",
-      // …plus `getenv`, empty on JS and real on Native. `java.util.ServiceLoader` is deliberately
-      // NOT here: its JS half leaves and its NATIVE half stays, under the same api, which is the
-      // whole point of the split — the assertion below reads which of the two survived.
-      "java.lang.System#getenv",
-      // …and the one COLLECTION on the list, whose answer is a REFUSAL rather than a mapping:
-      // JS's `WeakMap` cannot enumerate and Native has the real class.
-      "java.util.WeakHashMap",
-      "java.util.zip.",
-    ).sorted)
+      PortabilityCheck.rulesFor(jvmNative).map(_.api).toSet).toList.sorted
+    assertEquals(
+      dropped,
+      List(
+        // the eight re-scoped families…
+        "java.lang.ProcessBuilder",
+        "java.lang.System#getProperty",
+        "java.lang.Thread",
+        "java.net.",
+        "java.nio.channels.",
+        "java.nio.file.",
+        "java.util.concurrent.",
+        // …plus `getenv`, empty on JS and real on Native. `java.util.ServiceLoader` is deliberately
+        // NOT here: its JS half leaves and its NATIVE half stays, under the same api, which is the
+        // whole point of the split — the assertion below reads which of the two survived.
+        "java.lang.System#getenv",
+        // …and the one COLLECTION on the list, whose answer is a REFUSAL rather than a mapping:
+        // JS's `WeakMap` cannot enumerate and Native has the real class.
+        "java.util.WeakHashMap",
+        "java.util.zip."
+      ).sorted
+    )
     // the negative half: everything that stays is a rule Scala Native genuinely cannot answer —
     // reflection, class loading, javax, the JUnit/Hamcrest test vocabulary, the socket channels its
     // FILE-channel implementation does not cover, and the whole text/locale residue.
@@ -102,15 +104,21 @@ class PortabilityTargetsSpec extends munit.FunSuite:
 
   test("the rules the RESEARCH found missing are all present, each citing its row") {
     val missing = List(
-      "java.lang.System#getenv", "java.nio.channels.SocketChannel", "java.nio.channels.ServerSocketChannel",
-      "java.net.IDN", "java.text.MessageFormat", "java.text.Collator", "java.text.BreakIterator",
-      "java.util.Calendar", "java.util.GregorianCalendar", "java.util.TimeZone",
+      "java.lang.System#getenv",
+      "java.nio.channels.SocketChannel",
+      "java.nio.channels.ServerSocketChannel",
+      "java.net.IDN",
+      "java.text.MessageFormat",
+      "java.text.Collator",
+      "java.text.BreakIterator",
+      "java.util.Calendar",
+      "java.util.GregorianCalendar",
+      "java.util.TimeZone"
     ).filterNot(a => PortabilityCheck.all.exists(_.api == a))
     assertEquals(missing, Nil, missing.mkString(", "))
     // every one of them cites a row — the availability claim and its version anchor live there,
     // never in the `why`.
-    val uncited = PortabilityCheck.all.filter(r => r.api.startsWith("java.text.") || r.api == "java.util.Calendar")
-      .filter(_.at.isEmpty).map(_.api)
+    val uncited = PortabilityCheck.all.filter(r => r.api.startsWith("java.text.") || r.api == "java.util.Calendar").filter(_.at.isEmpty).map(_.api)
     assertEquals(uncited, Nil)
   }
 
@@ -120,10 +128,16 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     // told to remove a call that a one-line `libraryDependencies` entry makes correct. So the
     // refusals here are the RESIDUE — the classes no surveyed source tree implements — and
     // `java.time`, `Locale`, `DecimalFormat` and `SimpleDateFormat` must NOT be on this list.
-    val overreach = List("java.time.Instant", "java.util.Locale", "java.text.DecimalFormat",
-                         "java.text.SimpleDateFormat", "java.util.Currency", "java.util.Date",
-                         "java.nio.charset.StandardCharsets", "java.util.Formatter")
-      .filter(fqn => PortabilityCheck.rulesFor(All).exists(r => !r.exactMember && PortabilityCheck.names(r, fqn)))
+    val overreach = List(
+      "java.time.Instant",
+      "java.util.Locale",
+      "java.text.DecimalFormat",
+      "java.text.SimpleDateFormat",
+      "java.util.Currency",
+      "java.util.Date",
+      "java.nio.charset.StandardCharsets",
+      "java.util.Formatter"
+    ).filter(fqn => PortabilityCheck.rulesFor(All).exists(r => !r.exactMember && PortabilityCheck.names(r, fqn)))
     assertEquals(overreach, Nil, s"reported as unportable, but supplied by an artifact: $overreach")
   }
 
@@ -156,8 +170,10 @@ class PortabilityTargetsSpec extends munit.FunSuite:
   test("a prefix rule cuts at a SEPARATOR — java.lang.Thread is not java.lang.ThreadLocal") {
     val thread = PortabilityCheck.all.find(_.api == "java.lang.Thread").get
     assert(PortabilityCheck.names(thread, "java.lang.Thread"))
-    assert(!PortabilityCheck.names(thread, "java.lang.ThreadLocal"),
-      "`startsWith` covered ThreadLocal, which Scala.js implements — §4.56's own hazard, live")
+    assert(
+      !PortabilityCheck.names(thread, "java.lang.ThreadLocal"),
+      "`startsWith` covered ThreadLocal, which Scala.js implements — §4.56's own hazard, live"
+    )
     val file = PortabilityCheck.all.find(_.api == "java.nio.file.").get
     assert(PortabilityCheck.names(file, "java.nio.file.Path"))
     assert(PortabilityCheck.names(file, "java.nio.file.attribute.FileTime"))

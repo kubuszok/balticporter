@@ -4,32 +4,30 @@ import balticporter.core.*
 import balticporter.emit.ScalaPrinter
 import balticporter.frontend.spoon.SpoonFrontend
 import balticporter.runner.M0Pipeline
-import balticporter.vocab.{PackageRenamePass, Vocabulary, VocabPass}
+import balticporter.vocab.{ PackageRenamePass, VocabPass, Vocabulary }
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** Tier-2/Tier-3 gate: translate an engine-owned demo unit through the pass
-  * pipeline (vocabulary table + package rename), assert the rewrites landed,
-  * compile the result with scalac, and check double-translation determinism.
-  * Exit != 0 on any failure.
+/** Tier-2/Tier-3 gate: translate an engine-owned demo unit through the pass pipeline (vocabulary table + package rename), assert the rewrites landed, compile the result with scalac, and check
+  * double-translation determinism. Exit != 0 on any failure.
   */
 object VocabDemo:
 
   def main(args: Array[String]): Unit =
-    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
-    val demoRoot = repoRoot.resolve("balticporter/corpus/vocab-demo")
+    val repoRoot   = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+    val demoRoot   = repoRoot.resolve("balticporter/corpus/vocab-demo")
     val sourceRoot = demoRoot.resolve("src")
 
     val vocabulary = Vocabulary.loadFile(demoRoot.resolve("demo.vocab"))
     val passes: List[BirPass] = List(
       new VocabPass(vocabulary),
-      new PackageRenamePass("demo", "vocabdemo"),
+      new PackageRenamePass("demo", "vocabdemo")
     )
     println(s"[vocab] passes: ${PassPipeline.fingerprint(passes)}")
     println(s"[vocab] table: ${vocabulary.typeMap.size} types, ${vocabulary.methodMap.size} methods")
 
     def translate(): String =
-      val cfg = FrontendConfig(sourceRoot, List("demo/Registry.java"), Nil, Nil)
+      val cfg  = FrontendConfig(sourceRoot, List("demo/Registry.java"), Nil, Nil)
       val unit = new SpoonFrontend(ScoutPolicy.PreservedAnnotationPrefixes).parse(cfg).head
       val prov = Provenance("balticporter-demo", "n/a", "Apache-2.0", "corpus/vocab-demo/src")
       ScalaPrinter.print(PassPipeline.run(passes, unit), prov)

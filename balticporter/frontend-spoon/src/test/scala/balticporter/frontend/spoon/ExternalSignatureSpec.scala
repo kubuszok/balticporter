@@ -33,7 +33,7 @@ class ExternalSignatureSpec extends munit.FunSuite:
   private def external(owner: String, name: String): Symbol =
     val found = program.symbols.all.toList.filter { s =>
       s.name == name && s.owner != SymId.None &&
-        program.symbols.get(s.owner).exists(_.fullName == owner)
+      program.symbols.get(s.owner).exists(_.fullName == owner)
     }
     found match
       case List(one) => one
@@ -41,13 +41,13 @@ class ExternalSignatureSpec extends munit.FunSuite:
       case many      => fail(s"$owner#$name is ambiguous here: ${many.map(_.fullName)}")
 
   private def fqn(t: TypeRepr): String = t match
-    case TypeRef(_, s)       => program.symbols.get(s).map(_.fullName).getOrElse("?")
-    case AppliedType(tc, as) => s"${fqn(tc)}[${as.map(fqn).mkString(",")}]"
+    case TypeRef(_, s)              => program.symbols.get(s).map(_.fullName).getOrElse("?")
+    case AppliedType(tc, as)        => s"${fqn(tc)}[${as.map(fqn).mkString(",")}]"
     case TypeBounds(NoType, NoType) => "?"
     case TypeBounds(NoType, hi)     => s"? <: ${fqn(hi)}"
     case TypeBounds(lo, NoType)     => s"? >: ${fqn(lo)}"
-    case NoType              => "<none>"
-    case other               => other.toString
+    case NoType                     => "<none>"
+    case other                      => other.toString
 
   private def sig(s: Symbol): Option[(List[String], String)] = s.info match
     case MethodType(ps, ret, _) => Some(ps.map((_, t) => fqn(t)) -> fqn(ret))
@@ -56,8 +56,7 @@ class ExternalSignatureSpec extends munit.FunSuite:
   // -- the feature: a class file's signature is now readable ---------------------------------
 
   test("a fully-resolvable external method carries its MethodType") {
-    assertEquals(sig(external("java.util.regex.Pattern", "matcher")),
-                 Some(List("java.lang.CharSequence") -> "java.util.regex.Matcher"))
+    assertEquals(sig(external("java.util.regex.Pattern", "matcher")), Some(List("java.lang.CharSequence") -> "java.util.regex.Matcher"))
   }
 
   test("a GENERIC formal keeps its exact head and records `?` for what the class file erased") {
@@ -66,8 +65,10 @@ class ExternalSignatureSpec extends munit.FunSuite:
     // formal, echoed — and there is no `CharSequence` bound left to read. `Iterable[?]` is what was
     // actually read: the head exact, the argument saying the class file does not say. Recording the
     // head is the whole point, because the head is the whole of the question a boundary asks.
-    assertEquals(sig(external("java.lang.String", "join")),
-                 Some(List("java.lang.CharSequence", "java.lang.Iterable[?]") -> "java.lang.String"))
+    assertEquals(
+      sig(external("java.lang.String", "join")),
+      Some(List("java.lang.CharSequence", "java.lang.Iterable[?]") -> "java.lang.String")
+    )
   }
 
   test("a type variable at an ARGUMENT is `?`; the same variable at the SLOT is a refusal") {
@@ -79,10 +80,12 @@ class ExternalSignatureSpec extends munit.FunSuite:
       """package demo;
         |class C { java.util.List<String> u(java.util.List<String> s) {
         |  return java.util.Collections.unmodifiableList(s); } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val m = p.symbols.all.toList.filter(s =>
       s.name == "unmodifiableList" && s.owner != SymId.None &&
-        p.symbols.get(s.owner).exists(_.fullName == "java.util.Collections"))
+        p.symbols.get(s.owner).exists(_.fullName == "java.util.Collections")
+    )
     assertEquals(m.size, 1)
     m.head.info match
       case MethodType(List((_, AppliedType(TypeRef(_, h), List(TypeBounds(NoType, NoType))))), _, _) =>
@@ -91,8 +94,7 @@ class ExternalSignatureSpec extends munit.FunSuite:
   }
 
   test("…a primitive result, and a primitive formal") {
-    assertEquals(sig(external("java.lang.String", "indexOf")),
-                 Some(List("java.lang.String") -> "scala.Int"))
+    assertEquals(sig(external("java.lang.String", "indexOf")), Some(List("java.lang.String") -> "scala.Int"))
   }
 
   test("an external CONSTRUCTOR's result is Unit — the grammar execDef uses for our own") {
@@ -123,10 +125,12 @@ class ExternalSignatureSpec extends munit.FunSuite:
         |class C {
         |  void go(java.util.Map<String, Integer> m, String k) { m.getOrDefault(k, 0); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val getOrDefault = p.symbols.all.filter(s =>
       s.name == "getOrDefault" && s.owner != SymId.None &&
-        p.symbols.get(s.owner).exists(_.fullName == "java.util.Map"))
+        p.symbols.get(s.owner).exists(_.fullName == "java.util.Map")
+    )
     assertEquals(getOrDefault.size, 1)
     // `getOrDefault(Object key, V defaultValue)` — slot 0 renders, slot 1 is `V`.
     assertEquals(getOrDefault.head.info, NoType)
@@ -143,8 +147,7 @@ class ExternalSignatureSpec extends munit.FunSuite:
     // `execDef` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any`. The external
     // `Object#equals` this class CALLS is a different symbol and reads java's own `Object`, which
     // is the point: one is a declaration this program emits, the other is a class file.
-    assertEquals(sig(external("java.lang.Object", "equals")),
-                 Some(List("java.lang.Object") -> "scala.Boolean"))
+    assertEquals(sig(external("java.lang.Object", "equals")), Some(List("java.lang.Object") -> "scala.Boolean"))
   }
 
   test("an external member still carries its OWNER and its interning-key fullName (P4)") {
@@ -171,7 +174,8 @@ class ExternalSignatureSpec extends munit.FunSuite:
         |  List<? super Number> sup;
         |  List<? extends Number> sub;
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // NOTE the renderer is bound to THIS program: `fqn` resolves symbol ids, and an id means
     // nothing outside the run that minted it.
     def show(t: TypeRepr): String = t match
@@ -182,14 +186,13 @@ class ExternalSignatureSpec extends munit.FunSuite:
       case TypeBounds(lo, NoType)     => s"? >: ${show(lo)}"
       case other                      => other.toString
     def field(n: String): String =
-      p.symbols.all.toList.find(s => s.name == n && p.symbols.get(s.owner).exists(_.fullName == "demo.W"))
-        .map(s => show(s.info)).getOrElse(fail(s"no demo.W#$n"))
-    assertEquals(field("any"),  "java.util.List[?]")
-    assertEquals(field("src"),  "java.util.List[?]")
+      p.symbols.all.toList.find(s => s.name == n && p.symbols.get(s.owner).exists(_.fullName == "demo.W")).map(s => show(s.info)).getOrElse(fail(s"no demo.W#$n"))
+    assertEquals(field("any"), "java.util.List[?]")
+    assertEquals(field("src"), "java.util.List[?]")
     assertEquals(field("sink"), "java.util.List[java.lang.Object]")
     // …and a lower bound that is NOT `Object` really is a family, so it keeps its bound.
-    assertEquals(field("sup"),  "java.util.List[? >: java.lang.Number]")
-    assertEquals(field("sub"),  "java.util.List[? <: java.lang.Number]")
+    assertEquals(field("sup"), "java.util.List[? >: java.lang.Number]")
+    assertEquals(field("sub"), "java.util.List[? <: java.lang.Number]")
   }
 
   // -- the case this was built for: a REAL classpath, one class file of which is incomplete ------
@@ -206,40 +209,56 @@ class ExternalSignatureSpec extends munit.FunSuite:
     Files.createDirectories(jsrc.resolve("ext"))
     Files.createDirectories(cls)
     Files.writeString(jsrc.resolve("ext/Gone.java"), "package ext; public class Gone { }")
-    Files.writeString(jsrc.resolve("ext/Partial.java"),
+    Files.writeString(
+      jsrc.resolve("ext/Partial.java"),
       """package ext;
         |public class Partial {
         |  public void needsGone(Gone g) { }
         |  public void plain(String s) { }
-        |}""".stripMargin)
-    Files.writeString(jsrc.resolve("ext/Whole.java"),
+        |}""".stripMargin
+    )
+    Files.writeString(
+      jsrc.resolve("ext/Whole.java"),
       """package ext;
         |public class Whole {
         |  public void feed(java.util.Set<String> xs) { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     val javac = javax.tools.ToolProvider.getSystemJavaCompiler
-    assertEquals(javac.run(null, null, null, "-d", cls.toString,
-      jsrc.resolve("ext/Gone.java").toString, jsrc.resolve("ext/Partial.java").toString,
-      jsrc.resolve("ext/Whole.java").toString), 0)
+    assertEquals(
+      javac.run(
+        null,
+        null,
+        null,
+        "-d",
+        cls.toString,
+        jsrc.resolve("ext/Gone.java").toString,
+        jsrc.resolve("ext/Partial.java").toString,
+        jsrc.resolve("ext/Whole.java").toString
+      ),
+      0
+    )
     Files.delete(cls.resolve("ext/Gone.class"))
 
     val srcRoot = root.resolve("src")
     Files.createDirectories(srcRoot.resolve("demo"))
-    Files.writeString(srcRoot.resolve("demo/Caller.java"),
+    Files.writeString(
+      srcRoot.resolve("demo/Caller.java"),
       """package demo;
         |public class Caller {
         |  void go(ext.Partial p, ext.Whole w, java.util.Set<String> s) {
         |    p.plain("x");
         |    w.feed(s);
         |  }
-        |}""".stripMargin)
-    val p = SpoonTir.fromTypes(
-      SpoonTir.buildModel(FrontendConfig(srcRoot, List("demo/Caller.java"), List(cls)), lenient = true))
+        |}""".stripMargin
+    )
+    val p = SpoonTir.fromTypes(SpoonTir.buildModel(FrontendConfig(srcRoot, List("demo/Caller.java"), List(cls)), lenient = true))
 
     def member(owner: String, name: String): Symbol =
       p.symbols.all.toList.filter(s =>
         s.name == name && s.owner != SymId.None &&
-          p.symbols.get(s.owner).exists(_.fullName == owner)) match
+          p.symbols.get(s.owner).exists(_.fullName == owner)
+      ) match
         case List(one) => one
         case other     => fail(s"expected one $owner#$name, got ${other.map(_.fullName)}")
 

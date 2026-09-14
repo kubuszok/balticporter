@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue}
+import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
@@ -10,9 +10,9 @@ class MemberRenameTransformSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------
 
-  /** A window hierarchy with a `close()` at three levels and a caller — the shape a widget toolkit
-    * actually has. NOTHING here has an unparsed parent, so every refusal below is caused by the
-    * thing it names and not by an anchor. */
+  /** A window hierarchy with a `close()` at three levels and a caller — the shape a widget toolkit actually has. NOTHING here has an unparsed parent, so every refusal below is caused by the thing it
+    * names and not by an anchor.
+    */
   private val windows =
     """package com.demo;
       |
@@ -50,8 +50,8 @@ class MemberRenameTransformSpec extends munit.FunSuite:
   private def sym(p: Program, fqn: String): SymId =
     p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(fail(s"no symbol named $fqn"))
 
-  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose
-    * (§4.575's `from=`), so a text search that forgets reports a phantom. */
+  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose (§4.575's `from=`), so a text search that forgets reports a phantom.
+    */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
 
@@ -76,8 +76,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     val r  = run(windows, ph)
 
     assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
-    List("com.demo.Window#close", "com.demo.Dialog#close", "com.demo.Picker#close")
-      .foreach(f => assertEquals(r.nameOf(f), Some("closeWindow"), f))
+    List("com.demo.Window#close", "com.demo.Dialog#close", "com.demo.Picker#close").foreach(f => assertEquals(r.nameOf(f), Some("closeWindow"), f))
 
     // the call site inside `Picker#go` follows the symbol, for free (§4.55's exactness argument)
     assert(clue(code(r.out)).contains("closeWindow()"), r.out)
@@ -147,8 +146,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     val r  = run(windows, ph)
 
     // nothing moved — whole or none
-    List("com.demo.Window#close", "com.demo.Dialog#close", "com.demo.Picker#close")
-      .foreach(f => assertEquals(r.nameOf(f), Some("close"), f))
+    List("com.demo.Window#close", "com.demo.Dialog#close", "com.demo.Picker#close").foreach(f => assertEquals(r.nameOf(f), Some("close"), f))
 
     val f = ph.policyReport.findings
     assertEquals(clue(f).size, 1)
@@ -165,10 +163,8 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     // declaration here emits an `override` of a member the base does not have (§1.5).
     val before = parse(windows)
     val ph     = new MemberRenameTransform(Map("com.demo.Picker#close" -> "closeWindow"))
-    val theirs = before.units.map(_.symbol)
-      .filter(u => before.symbolOf(u).exists(_.fullName.contains("Window"))).toSet
-    ph.bindPolicy(new PolicyBinder(before, before.members, RunScope.of(
-      emitted = before.units.map(_.symbol).toSet -- theirs, own = Map.empty)))
+    val theirs = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName.contains("Window"))).toSet
+    ph.bindPolicy(new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- theirs, own = Map.empty)))
     val after = ph.run(before)
 
     assertEquals(after.symbolOf(sym(before, "com.demo.Picker#close")).map(_.name), Some("close"))
@@ -184,8 +180,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     new MemberRenameTransform(a).mergedWith(new MemberRenameTransform(b))
 
   test("independent members UNION, and the added SUBJECTS are what `governs` screens") {
-    val m = merge(Map("com.demo.Window#close" -> "closeWindow"),
-                  Map("com.other.Stream#close" -> "closeStream"))
+    val m = merge(Map("com.demo.Window#close" -> "closeWindow"), Map("com.other.Stream#close" -> "closeStream"))
     m match
       case Right(MergeablePolicy.Merged(p: MemberRenameTransform, added)) =>
         assertEquals(p.renames.size, 2)
@@ -203,8 +198,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(clue(l).isLeft)
     assert(l.left.exists(_.contains("ONE member")), l.toString)
     // two DISTINCT descriptors really are two members and do not refuse
-    assert(merge(Map("com.demo.Window#close(int)" -> "a"),
-                 Map("com.demo.Window#close(long)" -> "b")).isRight)
+    assert(merge(Map("com.demo.Window#close(int)" -> "a"), Map("com.demo.Window#close(long)" -> "b")).isRight)
     // agreeing on the same value is agreement, not a clash
     assert(merge(Map("com.demo.Window#close" -> "a"), Map("com.demo.Window#close" -> "a")).isRight)
   }
@@ -229,30 +223,42 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     // `Pipeline.order` is a min-heap on declaration index, so this is the position a base gives the
     // phase and the reason an empty instance in a base's surface is worth its one fingerprint field.
     val named = (n: String) => new Phase { def name = n }
-    val order = Pipeline.order(List(
-      named("collections"), named("a"), new MemberRenameTransform(),
-      named("type-redirect"), named("b"), named("globals->implicits")))
-    assertEquals(order.map(_.name),
-      List("collections", "a", "member-rename", "type-redirect", "b", "globals->implicits"))
+    val order = Pipeline.order(
+      List(
+        named("collections"),
+        named("a"),
+        new MemberRenameTransform(),
+        named("type-redirect"),
+        named("b"),
+        named("globals->implicits")
+      )
+    )
+    assertEquals(order.map(_.name), List("collections", "a", "member-rename", "type-redirect", "b", "globals->implicits"))
   }
 
   test("declared BEHIND it — where an unmerged dependent phase lands — it postpones it: the defect") {
     val named = (n: String) => new Phase { def name = n }
-    val order = Pipeline.order(List(
-      named("collections"), named("a"), named("type-redirect"),
-      named("b"), named("globals->implicits"), new MemberRenameTransform()))
+    val order = Pipeline.order(
+      List(
+        named("collections"),
+        named("a"),
+        named("type-redirect"),
+        named("b"),
+        named("globals->implicits"),
+        new MemberRenameTransform()
+      )
+    )
     // `type-redirect` has slid past BOTH `b` and `globals->implicits`, which is exactly the
     // reordering that moved a check count with no emitted change. Pinned so that a port which
     // declares this phase without a base position can see what it is buying.
-    assertEquals(order.map(_.name),
-      List("collections", "a", "b", "globals->implicits", "member-rename", "type-redirect"))
+    assertEquals(order.map(_.name), List("collections", "a", "b", "globals->implicits", "member-rename", "type-redirect"))
   }
 
   // ---- 6. SYMBOLIC NAMES with @targetName (CLAUDE.md §1(b)) ------------------------------------
 
-  /** A Vec2 hierarchy with `add/sub/scl/dot/len2`, overloads, and an override chain — the shape a
-    * game-engine math library actually has. The reference hand port (`sge.math.Vector2`) renames
-    * `add` to `+`, `sub` to `-`, etc. with `@targetName`. */
+  /** A Vec2 hierarchy with `add/sub/scl/dot/len2`, overloads, and an override chain — the shape a game-engine math library actually has. The reference hand port (`sge.math.Vector2`) renames `add` to
+    * `+`, `sub` to `-`, etc. with `@targetName`.
+    */
   private val vectors =
     """package com.math;
       |
@@ -304,11 +310,13 @@ class MemberRenameTransformSpec extends munit.FunSuite:
   }
 
   test("multiple operators: `add` -> `+`, `sub` -> `-`, `scl` -> `*`") {
-    val ph = new MemberRenameTransform(Map(
-      "com.math.Vec2#add" -> "+",
-      "com.math.Vec2#sub" -> "-",
-      "com.math.Vec2#scl" -> "*",
-    ))
+    val ph = new MemberRenameTransform(
+      Map(
+        "com.math.Vec2#add" -> "+",
+        "com.math.Vec2#sub" -> "-",
+        "com.math.Vec2#scl" -> "*"
+      )
+    )
     val r = run(vectors, ph)
     assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
     assertEquals(r.nameOf("com.math.Vec2#add"), Some("+"))
@@ -430,13 +438,13 @@ class MemberRenameTransformSpec extends munit.FunSuite:
         |""".stripMargin
     val dir = java.nio.file.Files.createTempDirectory("fieldname")
     java.nio.file.Files.writeString(dir.resolve("Cell.scala"), reference)
-    val decls   = balticporter.verify.ApiParityCheck.parseSurface(List(dir)).toOption.get
-    val program = SpoonTir.fromSource(src, "Cell.java")
-    val derived = balticporter.verify.ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
-    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
-    val phase   = new MemberRenameTransform(derive = true)
+    val decls        = balticporter.verify.ApiParityCheck.parseSurface(List(dir)).toOption.get
+    val program      = SpoonTir.fromSource(src, "Cell.java")
+    val derived      = balticporter.verify.ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val scope        = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val phase        = new MemberRenameTransform(derive = true)
     val (after, log) = Pipeline.runTraced(program, List(phase), new PolicyBinder(program, program.members, scope))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("var _fillX"))
     assert(!out.contains("fillX$field"), out)
     assert(out.contains("_fillX = 1.0f") || out.contains("this._fillX = 1.0f"), out)
@@ -458,13 +466,13 @@ class MemberRenameTransformSpec extends munit.FunSuite:
         |""".stripMargin
     val dir = java.nio.file.Files.createTempDirectory("derivedrename")
     java.nio.file.Files.writeString(dir.resolve("Input.scala"), reference)
-    val decls   = balticporter.verify.ApiParityCheck.parseSurface(List(dir)).toOption.get
-    val program = SpoonTir.fromSource(src, "Input.java")
-    val derived = balticporter.verify.ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
-    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
-    val phase   = new MemberRenameTransform(derive = true)
+    val decls        = balticporter.verify.ApiParityCheck.parseSurface(List(dir)).toOption.get
+    val program      = SpoonTir.fromSource(src, "Input.java")
+    val derived      = balticporter.verify.ReferencePolicy.derive(program, decls, program.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val scope        = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived.policy.resolved(program))
+    val phase        = new MemberRenameTransform(derive = true)
     val (after, log) = Pipeline.runTraced(program, List(phase), new PolicyBinder(program, program.members, scope))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("def x(pointer: scala.Int): scala.Int"))
     assert(out.contains("in.x(1)"), out)
     assert(!out.contains("def getX") && !out.contains("in.getX"), out)

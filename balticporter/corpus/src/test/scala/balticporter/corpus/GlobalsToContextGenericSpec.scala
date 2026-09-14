@@ -2,15 +2,15 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, DecisionLog, PorterNote, Pipeline, Program, UsageKind}
+import balticporter.tir.{ Decision, DecisionLog, Pipeline, PorterNote, Program, UsageKind }
 import balticporter.transform.*
 
 /** `ENGINE-LIMITS.md` CT6 — the two faces of the same blindness, and the fixture that dumped them. */
 class GlobalsToContextGenericSpec extends munit.FunSuite:
 
-  /** The five shapes CT6 needs, side by side — a GENERIC and a NON-GENERIC class with the same
-    * constructor, each constructed from a static field initialiser, plus the type-argument slot that
-    * must NOT read as a construction. */
+  /** The five shapes CT6 needs, side by side — a GENERIC and a NON-GENERIC class with the same constructor, each constructed from a static field initialiser, plus the type-argument slot that must NOT
+    * read as a construction.
+    */
   private val src =
     """package demo;
       |
@@ -31,8 +31,8 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
       |public class Sized { static Pool<Cell> mine = new Pool<Cell>(); }
       |""".stripMargin
 
-  /** an anonymous subclass of a GENERIC parent written inside a METHOD, whose body reads the holder
-    * — CT1's shape, for generics, from the other side of the same table. */
+  /** an anonymous subclass of a GENERIC parent written inside a METHOD, whose body reads the holder — CT1's shape, for generics, from the other side of the same table.
+    */
   private val anonSrc =
     """package demo;
       |public class Cfg { public static Svc svc; }
@@ -47,28 +47,27 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
       |""".stripMargin
 
   private def base = ContextHolder(
-    holder  = "demo.Cfg",
+    holder = "demo.Cfg",
     context = ContextType.Injected("demo.Ctx"),
     members = Map("svc" -> "svc"),
-    attach  = ContextAttach.Class,
+    attach = ContextAttach.Class
   )
 
-  private def portedFrom(source: String, h: ContextHolder)
-      : (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
+  private def portedFrom(source: String, h: ContextHolder): (GlobalsToImplicitsTransform, Program, DecisionLog, String) =
     val phase        = new GlobalsToImplicitsTransform(List(h))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(source, "Generic.java"), List(phase))
     (phase, after, log, new TirEmitter(after, notes = log).emit)
 
   private def ported(h: ContextHolder) = portedFrom(src, h)
 
-  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose
-    * (§4.575). */
+  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose (§4.575).
+    */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
 
   private lazy val (phase, after, log, out) = ported(base)
 
-  private def seams(p: GlobalsToImplicitsTransform, a: Program) = p.seams(a)
+  private def seams(p:  GlobalsToImplicitsTransform, a: Program) = p.seams(a)
   private def render(p: GlobalsToImplicitsTransform, a: Program) = p.seams(a).map(_.render).mkString("\n")
 
   // -------------------------------------------------------------------------
@@ -81,11 +80,15 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // and re-labelling one arm is its own thirteen-port measure cycle. The phase compensates; the
     // index does not change. If this test ever fails because the arm was re-labelled, the two
     // widenings below become redundant rather than wrong.
-    val p    = SpoonTir.fromSource(src, "Generic.java")
+    val p                       = SpoonTir.fromSource(src, "Generic.java")
     def kindsAtNew(fqn: String) =
-      p.symbols.all.filter(_.fullName == fqn).flatMap(s => p.usages(s.id)).collect {
-        case u if u.site.isInstanceOf[balticporter.tir.Tree.New] => u.kind
-      }.toSet
+      p.symbols.all
+        .filter(_.fullName == fqn)
+        .flatMap(s => p.usages(s.id))
+        .collect {
+          case u if u.site.isInstanceOf[balticporter.tir.Tree.New] => u.kind
+        }
+        .toSet
     assertEquals(clue(kindsAtNew("demo.Plain")), Set(UsageKind.Instantiate))
     assertEquals(clue(kindsAtNew("demo.Cell")), Set(UsageKind.Tycon))
   }
@@ -99,8 +102,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // threaded class, and before CT6 only the non-generic one was a counted boundary.
     // NEGATIVE: make `ContextNeed.instantiates` read `u.kind == UsageKind.Instantiate` only, and the
     // `demo.Tbl#cellPool` row disappears while `demo.Named#p` stays.
-    val subjects = seams(phase, after)
-      .filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse).map(_.subject).toSet
+    val subjects = seams(phase, after).filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse).map(_.subject).toSet
     assert(clue(subjects).contains("demo.Named#p"), render(phase, after))
     assert(clue(subjects).contains("demo.Tbl#cellPool"), render(phase, after))
   }
@@ -119,8 +121,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // the precision the kind-blind widening would have lost. `Cell` is named at that `New` node as a
     // `TypeArg`, and `Sized#mine` constructs a `Pool` and nothing else.
     // NEGATIVE: relax `instantiates` to `case _: Tree.New => true` and this gains a seam.
-    assertEquals(clue(seams(phase, after).count(_.subject == "demo.Sized#mine")), 0,
-      render(phase, after))
+    assertEquals(clue(seams(phase, after).count(_.subject == "demo.Sized#mine")), 0, render(phase, after))
   }
 
   test("an anonymous subclass of a GENERIC parent has its LEXICAL HOME, not the enclosing class") {
@@ -131,8 +132,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     val c = code(out)
     assert(clue(c).contains("class Cell"), c)
     assert(!c.contains("class Tbl(using"), c)
-    assertEquals(clue(log.of(Decision.Kind.RetypedSignature).map(_.subjectFqn).toSet.contains("demo.Tbl")),
-      false, c)
+    assertEquals(clue(log.of(Decision.Kind.RetypedSignature).map(_.subjectFqn).toSet.contains("demo.Tbl")), false, c)
   }
 
   test("a capture inside an anonymous subclass of a GENERIC parent lands on the ENCLOSING METHOD") {
@@ -140,7 +140,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // resolves to a CLASS, which is a boundary in that mode, so the read stayed global and the
     // enclosing method — the one that can actually supply the context — was never asked.
     val (p, a, _, o) = portedFrom(anonSrc, base.copy(attach = ContextAttach.Method))
-    val c = code(o)
+    val c            = code(o)
     assert(clue(c).contains("def go()(using demo.Ctx)"), c)
     // the SAM body's own signature is what its parent declares, and it is untouched
     assert(!c.contains("def install(t: java.lang.String)(using"), c)
@@ -157,7 +157,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // set) and this emits nothing at all — which is precisely what was measured on a real port:
     // the key BINDS, the output is byte-identical, and `policy` stays at its floor.
     val (p, a, l, o) = ported(base.copy(sites = Map("demo.Tbl#cellPool" -> ContextSite.LazyInit)))
-    val c = code(o)
+    val c            = code(o)
     assert(clue(c).contains("def cellPool(using demo.Ctx)"), c)
     assert(c.contains("cellPool$set"), c)
     assert(c.contains("cellPool$value"), c)
@@ -172,12 +172,13 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   test("…and the boundary it was the exit FOR is gone: no unsuppliable-use row for that field") {
     val (p, a, _, _) = ported(base.copy(sites = Map("demo.Tbl#cellPool" -> ContextSite.LazyInit)))
-    assertEquals(clue(p.seams(a).count(f =>
-      f.kind == ContextSeamCheck.Kind.UnsuppliableUse && f.subject == "demo.Tbl#cellPool")), 0,
-      render(p, a))
+    assertEquals(
+      clue(p.seams(a).count(f => f.kind == ContextSeamCheck.Kind.UnsuppliableUse && f.subject == "demo.Tbl#cellPool")),
+      0,
+      render(p, a)
+    )
     // the OTHER boundary is untouched — a per-site policy decides one site
-    assert(p.seams(a).exists(f =>
-      f.kind == ContextSeamCheck.Kind.UnsuppliableUse && f.subject == "demo.Named#p"), render(p, a))
+    assert(p.seams(a).exists(f => f.kind == ContextSeamCheck.Kind.UnsuppliableUse && f.subject == "demo.Named#p"), render(p, a))
   }
 
   test("the read-derived trigger still fires: a class initialiser that READS the holder") {
@@ -221,7 +222,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // NEGATIVE: drop `recordDeadSites` and this is a policy entry that is accepted, does nothing,
     // and is invisible to every check in the run.
     val (p, _, _, _) = ported(base.copy(sites = Map("demo.Svc#width" -> ContextSite.LazyInit)))
-    val f = p.policyReport.findings.find(_.key == "demo.Svc#width")
+    val f            = p.policyReport.findings.find(_.key == "demo.Svc#width")
     assert(clue(p.policyReport.findings).nonEmpty)
     assertEquals(clue(f).map(_.issue), Some(PolicyIssueLazy))
     assert(f.get.detail.contains("nothing for a context to arrive for"), f.get.render)
@@ -243,8 +244,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   test("an entry that DID fire is not reported — a `lazy-init` that deferred") {
     val (p, _, _, _) = ported(base.copy(sites = Map("demo.Tbl#cellPool" -> ContextSite.LazyInit)))
-    assertEquals(clue(p.policyReport.findings.filter(_.key == "demo.Tbl#cellPool")), Nil,
-      p.policyReport.render)
+    assertEquals(clue(p.policyReport.findings.filter(_.key == "demo.Tbl#cellPool")), Nil, p.policyReport.render)
   }
 
   test("…and a `residual-global` that a READ resolved through") {
@@ -256,8 +256,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
         |public class Svc { public int width() { return 0; } }
         |public class Scene { int w = Cfg.svc.width(); }
         |""".stripMargin
-    val (p, _, _, o) = portedFrom(readSrc,
-      base.copy(attach = ContextAttach.Method, sites = Map("demo.Scene#w" -> ContextSite.ResidualGlobal)))
+    val (p, _, _, o) = portedFrom(readSrc, base.copy(attach = ContextAttach.Method, sites = Map("demo.Scene#w" -> ContextSite.ResidualGlobal)))
     assert(clue(code(o)).contains("demo.Ctx.global.svc.width()"), o)
     assertEquals(clue(p.policyReport.findings.filter(_.key == "demo.Scene#w")), Nil, p.policyReport.render)
   }
@@ -267,7 +266,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // it reads no mapped static, so there is nothing for `residual-global` to re-spell. The report
     // has to say that rather than claim the site was never reached, or its reader edits the key.
     val (p, _, _, _) = ported(base.copy(sites = Map("demo.Named#p" -> ContextSite.ResidualGlobal)))
-    val f = p.policyReport.findings.find(_.key == "demo.Named#p")
+    val f            = p.policyReport.findings.find(_.key == "demo.Named#p")
     assert(clue(f).isDefined, p.policyReport.render)
     assert(f.get.detail.contains("UNSUPPLIABLE USE"), f.get.render)
     assert(f.get.detail.contains("`lazy-init`"), f.get.render)
@@ -275,8 +274,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   test("an UNBOUND entry is reported ONCE, by the binder — never twice for one mistake") {
     val (p, _, _, _) = ported(base.copy(sites = Map("demo.NoSuch#member" -> ContextSite.LazyInit)))
-    assertEquals(clue(p.policyReport.findings.count(_.key == "demo.NoSuch#member")), 1,
-      p.policyReport.render)
+    assertEquals(clue(p.policyReport.findings.count(_.key == "demo.NoSuch#member")), 1, p.policyReport.render)
   }
 
   test("no `sites` at all: no dead-binding row, and the report is what it always was") {

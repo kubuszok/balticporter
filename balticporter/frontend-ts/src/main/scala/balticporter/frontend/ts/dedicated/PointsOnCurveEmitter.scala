@@ -1,20 +1,18 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
 import balticporter.frontend.ts.RastFile
 
-/** Dedicated emitter for points-on-curve (index.ts + curve-to-bezier.ts).
-  * Produces Scala matching the hand-port structure: Point case class,
-  * PointsOnCurve object, CurveToBezier object. */
+/** Dedicated emitter for points-on-curve (index.ts + curve-to-bezier.ts). Produces Scala matching the hand-port structure: Point case class, PointsOnCurve object, CurveToBezier object.
+  */
 object PointsOnCurveEmitter {
 
-  def emit(indexRast: RastFile, curveToBezierRast: RastFile): Map[String, String] = {
+  def emit(indexRast: RastFile, curveToBezierRast: RastFile): Map[String, String] =
     Map(
       "PointsOnCurve" -> emitPointsOnCurve(),
-      "CurveToBezier" -> emitCurveToBezier(),
+      "CurveToBezier" -> emitCurveToBezier()
     )
-  }
 
   private def emitPointsOnCurve(): String = {
     s"""package ssg.graphs.commons.rough.curve
@@ -152,7 +150,7 @@ object PointsOnCurveEmitter {
        |""".stripMargin
   }
 
-  private def emitCurveToBezier(): String = {
+  private def emitCurveToBezier(): String =
     s"""package ssg.graphs.commons.rough.curve
        |
        |import scala.collection.mutable.ArrayBuffer
@@ -212,5 +210,4 @@ object PointsOnCurveEmitter {
        |  }
        |}
        |""".stripMargin
-  }
 }

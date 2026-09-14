@@ -1,9 +1,9 @@
 package balticporter.testkit
 
-import balticporter.catalog.{Attaches, Differences, JS, Status}
+import balticporter.catalog.{ Attaches, Differences, JS, Status }
 
-/** THE `JS-S` EDGE-CASE SUITE — one test per statement row the engine wires, at the shape the row is
-  * about. */
+/** THE `JS-S` EDGE-CASE SUITE — one test per statement row the engine wires, at the shape the row is about.
+  */
 class CatalogAreaSSpec extends PortSuite:
 
   // -- JS-S01: an unlabelled jump binds LEXICALLY to the innermost enclosing loop ------------------
@@ -46,8 +46,7 @@ class CatalogAreaSSpec extends PortSuite:
   // -- JS-S03: an INTERPOSED boundary steals the enclosing loop's un-annotated jumps ---------------
 
   test("JS-S03 — a labelled statement inside a loop forces the loop's own boundary to be NAMED") {
-    val p = port(
-      "public class C { void f(boolean b) { while (true) { inner: { if (b) break inner; } break; } } }")
+    val p = port("public class C { void f(boolean b) { while (true) { inner: { if (b) break inner; } break; } } }")
     assertConsults(p, JS.S(3), fired = true)
     assertEmits(p, "brk$")
   }
@@ -101,8 +100,7 @@ class CatalogAreaSSpec extends PortSuite:
   // -- JS-S07: only an UNLABELLED trailing `break` terminates a case ---------------------------------
 
   test("JS-S07 — a LABELLED trailing break is NOT a case terminator; it leaves the loop") {
-    val p = port(
-      "public class G { int n; void f(int i) { outer: while (true) { switch (i) { case 1: break outer; } n = 1; } } }")
+    val p = port("public class G { int n; void f(int i) { outer: while (true) { switch (i) { case 1: break outer; } n = 1; } } }")
     assertConsults(p, JS.S(7))
     // the jump survives — stripping it as a terminator is what silently deleted it
     assertEmits(p, "boundary")
@@ -130,8 +128,7 @@ class CatalogAreaSSpec extends PortSuite:
   // -- JS-S11: a translated CATCH swallows a translated JUMP ------------------------------------------
 
   test("JS-S11 — a jump crossing a BROAD catch gets the re-throw arm ahead of java's own") {
-    val p = port(
-      "public class I { void f() { while (true) { try { break; } catch (Exception e) { } } } }")
+    val p = port("public class I { void f() { while (true) { try { break; } catch (Exception e) { } } } }")
     assertConsults(p, JS.S(11), fired = true)
     assertEmits(p, "scala.util.boundary.Break[?] => throw")
   }
@@ -162,7 +159,8 @@ class CatalogAreaSSpec extends PortSuite:
       """public class K {
         |  java.io.InputStream open() { return null; }
         |  void f() throws Exception { try (java.io.InputStream in = open()) { in.read(); } }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.S(13), fired = true)
     assertEmits(p, "close()")
   }
@@ -175,8 +173,7 @@ class CatalogAreaSSpec extends PortSuite:
   // -- JS-S14: multi-catch `A | B` -------------------------------------------------------------------
 
   test("JS-S14 — multi-catch becomes a union type in the pattern") {
-    val p = port(
-      "public class L { int n; void f() { try { n = 1; } catch (java.io.IOException | RuntimeException e) { } } }")
+    val p = port("public class L { int n; void f() { try { n = 1; } catch (java.io.IOException | RuntimeException e) { } } }")
     assertConsults(p, JS.S(14), fired = true)
     assertEmits(p, "|")
   }
@@ -195,8 +192,7 @@ class CatalogAreaSSpec extends PortSuite:
   }
 
   test("JS-S16 — a binding REASSIGNED in the body cannot be a scala generator's `val`") {
-    val p = port(
-      "public class N { java.lang.Object[] xs; void f() { for (java.lang.Object o : xs) { o = null; } } }")
+    val p = port("public class N { java.lang.Object[] xs; void f() { for (java.lang.Object o : xs) { o = null; } } }")
     assertConsults(p, JS.S(16), fired = true)
     assertEmits(p, "$e")
   }
@@ -248,8 +244,7 @@ class CatalogAreaSSpec extends PortSuite:
     // The happy path, which this suite could not assert before `ENGINE-LIMITS.md` I9: the nested
     // `def` needs the SAM METHOD's result type — `String`, not `Str` — and nothing carried it. The
     // frontend reads it off the interface now, so the lowering is here rather than one repair away.
-    val p = port(
-      "public class R { interface Str { String get(); } Str s = () -> { return \"x\"; }; }")
+    val p = port("public class R { interface Str { String get(); } Str s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
     assertEmits(p, "return \"x\"")
@@ -331,23 +326,31 @@ class CatalogAreaSSpec extends PortSuite:
   // -- the partition, asserted rather than left to a reader --------------------------------------------------
 
   test("every JS-S row is wired, declared unmechanised, or owes nothing — and NONE is unmechanised any more") {
-    val byKind = Differences.statements.groupBy(d => Differences.leaves(d.attaches) match
-      case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
-      case _                                                      => "none")
+    val byKind = Differences.statements.groupBy(d =>
+      Differences.leaves(d.attaches) match
+        case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
+        case _                                                      => "none"
+    )
     assertEquals(byKind.values.map(_.size).sum, Differences.statements.size)
     // THE CHUNK'S OWN BAR. Area S opened with all 25 rows on `Unmechanised` because the emitter had
     // no obligation dispatch; the audit point for this wave is "were the emitter-side rows really
     // instrumented, or marked unmechanised to keep the lane green".
-    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet, Set.empty,
-      "a JS-S row still says nothing is measuring it, and all three dispatch surfaces now exist")
+    assertEquals(
+      byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
+      Set.empty,
+      "a JS-S row still says nothing is measuring it, and all three dispatch surfaces now exist"
+    )
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-S row is wired to the RENDERING dispatch")
     assert(byKind.getOrElse("lowered", Nil).nonEmpty, "no JS-S row is wired to the LOWERING dispatch")
     // …and a row claiming NO obligation must not be one the registry calls Open: that would be a
     // gap no lane can see.
-    assertEquals(byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id), Nil,
-      "an Open row claiming NoObligation is a gap no lane can see")
+    assertEquals(
+      byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id),
+      Nil,
+      "an Open row claiming NoObligation is a gap no lane can see"
+    )
   }
 
   // The other half of that question — "does every `Rendered` kind name a `Tree` node that EXISTS"

@@ -25,8 +25,7 @@ class OmissionRemedySpec extends munit.FunSuite:
     pl
 
   private def sym(p: Program, fqn: String): SymId =
-    p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(
-      fail(s"no symbol $fqn in ${p.symbols.all.map(_.fullName).take(40).mkString(", ")}"))
+    p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(fail(s"no symbol $fqn in ${p.symbols.all.map(_.fullName).take(40).mkString(", ")}"))
 
   private def row(kind: String, at: SymId, owner: String = "com.demo.Widget") =
     OmissionCheck.Finding(kind, owner, "d", Origin.synthetic, at)
@@ -77,10 +76,13 @@ class OmissionRemedySpec extends munit.FunSuite:
     // accepting it would retire it silently. Asserted on the MENU rather than on a drain, because a
     // property that held only because of which rows a fixture produced is one refactor from false.
     val answered = OmissionCheck.remedies.flatMap(_.kinds).toSet
-    List(OmissionCheck.Kind.DroppedSuperArgs, OmissionCheck.Kind.DroppedNilaryCtor,
-         OmissionCheck.Kind.DroppedCauseMessage, OmissionCheck.Kind.DroppedAnonMember,
-         OmissionCheck.Kind.UnnameableLambdaReturn)
-      .foreach(k => assert(!clue(answered).contains(clue(k))))
+    List(
+      OmissionCheck.Kind.DroppedSuperArgs,
+      OmissionCheck.Kind.DroppedNilaryCtor,
+      OmissionCheck.Kind.DroppedCauseMessage,
+      OmissionCheck.Kind.DroppedAnonMember,
+      OmissionCheck.Kind.UnnameableLambdaReturn
+    ).foreach(k => assert(!clue(answered).contains(clue(k))))
   }
 
   // -------------------------------------------------------------------------------------------
@@ -88,13 +90,12 @@ class OmissionRemedySpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("`accept-promoted-body` drains its own kind at the CONSTRUCTOR and leaves every other kind") {
-    val p  = program
-    val at = sym(p, "com.demo.Widget#<init>")
-    val pl = plan(p, Map("com.demo.Widget#<init>(int)" -> "accept-promoted-body"))
+    val p    = program
+    val at   = sym(p, "com.demo.Widget#<init>")
+    val pl   = plan(p, Map("com.demo.Widget#<init>(int)" -> "accept-promoted-body"))
     val rows = OmissionCheck.Kind.all.map(row(_, at))
     val kept = OmissionCheck.resolved(pl, rows)
-    assertEquals(clue(kept).map(_.what),
-      OmissionCheck.Kind.all.filterNot(_ == OmissionCheck.Kind.PromotedBodyEveryPath))
+    assertEquals(clue(kept).map(_.what), OmissionCheck.Kind.all.filterNot(_ == OmissionCheck.Kind.PromotedBodyEveryPath))
     assertEquals(pl.all.map(_.remedy.id), List("accept-promoted-body"))
     assertEquals(pl.all.map(_.drained), List(1))
   }
@@ -103,9 +104,9 @@ class OmissionRemedySpec extends munit.FunSuite:
     // The sharpest negative this lane has: `super(args) dropped` and `promoted constructor body
     // runs on every path` fire at the SAME constructor on nine of the corpus's rows, and only the
     // second has an answer. A drain keyed on the declaration alone would take both.
-    val p  = program
-    val at = sym(p, "com.demo.Widget#<init>")
-    val pl = plan(p, Map("com.demo.Widget#<init>(int)" -> "accept-promoted-body"))
+    val p    = program
+    val at   = sym(p, "com.demo.Widget#<init>")
+    val pl   = plan(p, Map("com.demo.Widget#<init>(int)" -> "accept-promoted-body"))
     val kept = OmissionCheck.resolved(pl, List(row(OmissionCheck.Kind.DroppedSuperArgs, at)))
     assertEquals(kept.size, 1)
     assertEquals(pl.all, Nil)
@@ -118,14 +119,13 @@ class OmissionRemedySpec extends munit.FunSuite:
     val p    = program
     val fld  = sym(p, "com.demo.Widget#size")
     val tpe  = sym(p, "com.demo.Widget")
-    val pl   = plan(p, Map("com.demo.Widget#size" -> "accept-dropped-annotation",
-                           "com.demo.Widget"      -> "accept-dropped-type-annotation"))
-    val kept = OmissionCheck.resolved(pl, List(
-      row(OmissionCheck.Kind.DroppedAnnotation, fld, "com.demo.Widget#size"),
-      row(OmissionCheck.Kind.DroppedAnnotation, tpe)))
+    val pl   = plan(p, Map("com.demo.Widget#size" -> "accept-dropped-annotation", "com.demo.Widget" -> "accept-dropped-type-annotation"))
+    val kept = OmissionCheck.resolved(
+      pl,
+      List(row(OmissionCheck.Kind.DroppedAnnotation, fld, "com.demo.Widget#size"), row(OmissionCheck.Kind.DroppedAnnotation, tpe))
+    )
     assertEquals(clue(kept), Nil)
-    assertEquals(pl.all.map(_.remedy.id).sorted,
-      List("accept-dropped-annotation", "accept-dropped-type-annotation"))
+    assertEquals(pl.all.map(_.remedy.id).sorted, List("accept-dropped-annotation", "accept-dropped-type-annotation"))
     // …and neither reports a CONFLICT, which is the whole reason the pair can exist: a bare FQN and
     // an `owner#member` key cannot bind the same declaration, so `Remedy.overlaps` is never asked
     // about a pair that could answer one row.
@@ -143,8 +143,8 @@ class OmissionRemedySpec extends munit.FunSuite:
   }
 
   test("a row whose `at` is None is UNSELECTABLE — never drained by a selection elsewhere") {
-    val p  = program
-    val pl = plan(p, Map("com.demo.Widget#<init>(int)" -> "accept-promoted-body"))
+    val p      = program
+    val pl     = plan(p, Map("com.demo.Widget#<init>(int)" -> "accept-promoted-body"))
     val orphan = row(OmissionCheck.Kind.PromotedBodyEveryPath, SymId.None)
     assertEquals(OmissionCheck.resolved(pl, List(orphan)).size, 1)
     assertEquals(pl.all, Nil)

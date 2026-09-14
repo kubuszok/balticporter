@@ -1,15 +1,14 @@
 package balticporter.corpus.mermaid
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 import balticporter.corpus.terser.TerserEmitter
 
-import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastType, RastValue, Rast}
+import balticporter.frontend.ts.{ ParityDerive, Rast, RastFile, RastNode, RastType, RastValue }
 import scala.collection.mutable
 
 /** Dedicated RAST-to-Scala emitter for Mermaid diagram modules.
   *
-  * Reads the resolved AST from the TS exporter and produces Scala
-  * matching the ssg-mermaid hand-port's conventions:
+  * Reads the resolved AST from the TS exporter and produces Scala matching the ssg-mermaid hand-port's conventions:
   *   - Package: ssg.mermaid.*
   *   - D3Element -> SvgBuilder
   *   - Theme options -> ThemeVariables
@@ -29,12 +28,9 @@ object MermaidEmitter {
 
   /** Emits a Scala *Styles object from a mermaid diagram styles.ts RAST file.
     *
-    * The TS pattern is:
-    *   const getStyles = (options: FooStyleOptions) => `...css with ${options.x}...`;
-    *   export default getStyles;
+    * The TS pattern is: const getStyles = (options: FooStyleOptions) => `...css with ${options.x}...`; export default getStyles;
     *
-    * The Scala pattern (from the hand port) is:
-    *   object FooStyles { def generate(vars: ThemeVariables): String = ... }
+    * The Scala pattern (from the hand port) is: object FooStyles { def generate(vars: ThemeVariables): String = ... }
     */
   def emitStyles(rast: RastFile, objectName: String, pkg: String): String = {
     val sb = new StringBuilder
@@ -80,13 +76,12 @@ object MermaidEmitter {
     sb.append("\n")
     sb.append(s"object $objectName {\n\n")
 
-    for (node <- rast.nodes) {
+    for (node <- rast.nodes)
       node.kind match {
         case "VariableStatement" =>
           emitVariableStatement(sb, node, rast, indent = "  ")
         case _ => ()
       }
-    }
 
     sb.append("}\n")
     sb.toString
@@ -94,9 +89,7 @@ object MermaidEmitter {
 
   /** Emits a Scala CommonDb trait from the commonDb.ts structure.
     *
-    * The upstream TS module is a bag of mutable state (accTitle, accDescription,
-    * diagramTitle) with getters/setters and a clear(). The Scala equivalent is
-    * a trait that diagram Db classes mix in.
+    * The upstream TS module is a bag of mutable state (accTitle, accDescription, diagramTitle) with getters/setters and a clear(). The Scala equivalent is a trait that diagram Db classes mix in.
     */
   def emitCommonDb(@annotation.nowarn("msg=unused") rast: RastFile): String = {
     val sb = new StringBuilder
@@ -129,28 +122,29 @@ object MermaidEmitter {
     sb.append("object Accessibility {\n\n")
 
     // Extract declarations
-    for (node <- rast.nodes) {
+    for (node <- rast.nodes)
       node.kind match {
         case "VariableStatement" =>
           val declLists = findChildren(node, "VariableDeclarationList")
-          val decls = if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
-                      else findChildren(node, "VariableDeclaration")
+          val decls     =
+            if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
+            else findChildren(node, "VariableDeclaration")
           for (d <- decls) {
-            val name = nameOf(d)
+            val name    = nameOf(d)
             val isConst = d.flags.contains("const")
-            val init = findChild(d, "StringLiteral")
+            val init    = findChild(d, "StringLiteral")
             init.foreach { lit =>
               val valName = scalaConstName(name)
-              val value = lit.value match {
+              val value   = lit.value match {
                 case Some(RastValue.Str(s)) => s"\"$s\""
-                case _ => "\"\"" // fallback
+                case _                      => "\"\"" // fallback
               }
               sb.append(s"  val $valName: String = $value\n\n")
             }
           }
         case "FunctionDeclaration" =>
-          val funcName = nameOf(node)
-          val params = node.children.filter(_.kind == "Parameter")
+          val funcName   = nameOf(node)
+          val params     = node.children.filter(_.kind == "Parameter")
           val isExported = node.flags.contains("ExportKeyword")
           if (isExported) {
             funcName match {
@@ -164,7 +158,6 @@ object MermaidEmitter {
           }
         case _ => ()
       }
-    }
 
     // applyTo: convenience method combining setA11yDiagramInfo + addSVGa11yTitleDescription
     sb.append("  def applyTo(\n")
@@ -224,18 +217,20 @@ object MermaidEmitter {
   private def emitVariableStatement(sb: StringBuilder, node: RastNode, rast: RastFile, indent: String): Unit = {
     // VariableStatement -> VariableDeclarationList -> VariableDeclaration
     val declLists = findChildren(node, "VariableDeclarationList")
-    val decls = if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
-                else findChildren(node, "VariableDeclaration")
+    val decls     =
+      if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
+      else findChildren(node, "VariableDeclaration")
     val isExported = node.flags.contains("ExportKeyword")
     for (d <- decls) {
-      val name = nameOf(d)
+      val name    = nameOf(d)
       val isConst = d.flags.contains("const")
       // Look for the initializer
-      val arrowFn = findChild(d, "ArrowFunction")
+      val arrowFn   = findChild(d, "ArrowFunction")
       val stringLit = findChild(d, "StringLiteral")
-      val numLit = findChild(d, "NumericLiteral")
-      val regexLit = findChild(d, "RegularExpressionLiteral")
-      @annotation.nowarn("msg=unused") val callExpr = findChild(d, "CallExpression")
+      val numLit    = findChild(d, "NumericLiteral")
+      val regexLit  = findChild(d, "RegularExpressionLiteral")
+      @annotation.nowarn("msg=unused")
+      val callExpr = findChild(d, "CallExpression")
 
       arrowFn match {
         case Some(fn) =>
@@ -244,7 +239,7 @@ object MermaidEmitter {
           stringLit.foreach { lit =>
             val value = lit.value match {
               case Some(RastValue.Str(s)) => s"\"${escapeScala(s)}\""
-              case _ => "\"\""
+              case _                      => "\"\""
             }
             val kw = if (isConst) "val" else "var"
             sb.append(s"$indent$kw $name: String = $value\n\n")
@@ -261,7 +256,7 @@ object MermaidEmitter {
           regexLit.foreach { lit =>
             val value = lit.value match {
               case Some(RastValue.Str(s)) => tsRegexToScala(s)
-              case _ => "\"\".r"
+              case _                      => "\"\".r"
             }
             val kw = if (isConst) "val" else "var"
             sb.append(s"$indent$kw $name = $value\n\n")
@@ -270,21 +265,24 @@ object MermaidEmitter {
     }
   }
 
-  private def emitArrowFunction(sb: StringBuilder, name: String, fn: RastNode, rast: RastFile,
-                                indent: String, isExported: Boolean): Unit = {
+  private def emitArrowFunction(sb: StringBuilder, name: String, fn: RastNode, rast: RastFile, indent: String, isExported: Boolean): Unit = {
     val params = fn.children.filter(_.kind == "Parameter")
-    val body = fn.children.find(c => c.kind == "Block" || c.kind != "Parameter" && c.kind != "TypeReference" &&
-      c.kind != "StringKeyword" && c.kind != "NumberKeyword" && c.kind != "BooleanKeyword" &&
-      c.kind != "VoidKeyword" && c.kind != "AnyKeyword")
+    val body   = fn.children.find(c =>
+      c.kind == "Block" || c.kind != "Parameter" && c.kind != "TypeReference" &&
+        c.kind != "StringKeyword" && c.kind != "NumberKeyword" && c.kind != "BooleanKeyword" &&
+        c.kind != "VoidKeyword" && c.kind != "AnyKeyword"
+    )
 
-    val paramList = params.map { p =>
-      val pName = nameOf(p)
-      val pType = inferParamType(p, rast)
-      s"$pName: $pType"
-    }.mkString(", ")
+    val paramList = params
+      .map { p =>
+        val pName = nameOf(p)
+        val pType = inferParamType(p, rast)
+        s"$pName: $pType"
+      }
+      .mkString(", ")
 
     val returnType = inferReturnType(fn, rast)
-    val vis = if (!isExported) "private " else ""
+    val vis        = if (!isExported) "private " else ""
 
     sb.append(s"$indent${vis}def $name($paramList): $returnType = {\n")
 
@@ -300,8 +298,8 @@ object MermaidEmitter {
     sb.append(s"$indent}\n\n")
   }
 
-  private def emitBlock(sb: StringBuilder, block: RastNode, rast: RastFile, indent: String): Unit = {
-    for (stmt <- block.children) {
+  private def emitBlock(sb: StringBuilder, block: RastNode, rast: RastFile, indent: String): Unit =
+    for (stmt <- block.children)
       stmt.kind match {
         case "ReturnStatement" =>
           val expr = stmt.children.headOption
@@ -320,8 +318,6 @@ object MermaidEmitter {
         case _ =>
           sb.append(s"$indent// TODO: ${stmt.kind}\n")
       }
-    }
-  }
 
   private def emitIfStatement(sb: StringBuilder, node: RastNode, rast: RastFile, indent: String): Unit = {
     val children = node.children
@@ -355,7 +351,7 @@ object MermaidEmitter {
       case "StringLiteral" =>
         node.value match {
           case Some(RastValue.Str(s)) => s"\"${escapeScala(s)}\""
-          case _ => "\"\""
+          case _                      => "\"\""
         }
 
       case "NumericLiteral" =>
@@ -365,28 +361,28 @@ object MermaidEmitter {
           case _ => "0"
         }
 
-      case "TrueKeyword" => "true"
+      case "TrueKeyword"  => "true"
       case "FalseKeyword" => "false"
-      case "NullKeyword" => "null"
+      case "NullKeyword"  => "null"
 
       case "CallExpression" =>
         val callee = node.children.headOption
-        val args = node.children.drop(1)
+        val args   = node.children.drop(1)
         // Special case: obj.replace(regex, str) -> obj.replaceAll(pattern, str)
         callee match {
           case Some(pa) if pa.kind == "PropertyAccessExpression" =>
             val methodName = pa.children.lastOption.flatMap(_.text).getOrElse("")
-            val receiver = pa.children.headOption.map(c => emitExpr(c, rast)).getOrElse("???")
+            val receiver   = pa.children.headOption.map(c => emitExpr(c, rast)).getOrElse("???")
             methodName match {
               case "replace" if args.headOption.exists(_.kind == "RegularExpressionLiteral") =>
-                val regex = args.head
+                val regex       = args.head
                 val replacement = args.lift(1).map(a => emitExpr(a, rast)).getOrElse("\"\"")
-                val pattern = regex.value match {
+                val pattern     = regex.value match {
                   case Some(RastValue.Str(s)) =>
                     val lastSlash = s.lastIndexOf('/')
                     if (lastSlash > 0) {
-                      val p = s.substring(1, lastSlash)
-                      val flags = s.substring(lastSlash + 1)
+                      val p          = s.substring(1, lastSlash)
+                      val flags      = s.substring(lastSlash + 1)
                       val flagPrefix = if (flags.contains("m")) "(?m)" else ""
                       s"\"$flagPrefix${escapeScala(p)}\""
                     } else s"\"${escapeScala(s)}\""
@@ -448,7 +444,7 @@ object MermaidEmitter {
                 s"$receiver.$other(${emittedArgs.mkString(", ")})"
             }
           case _ =>
-            val calleeStr = callee.map(c => emitExpr(c, rast)).getOrElse("???")
+            val calleeStr   = callee.map(c => emitExpr(c, rast)).getOrElse("???")
             val emittedArgs = args.map(a => emitExpr(a, rast))
             s"$calleeStr(${emittedArgs.mkString(", ")})"
         }
@@ -460,15 +456,15 @@ object MermaidEmitter {
       case "BinaryExpression" =>
         val children = node.children
         if (children.size >= 2) {
-          val left = emitExpr(children(0), rast)
-          val right = emitExpr(children(1), rast)
-          val op = node.operator.getOrElse("???")
+          val left    = emitExpr(children(0), rast)
+          val right   = emitExpr(children(1), rast)
+          val op      = node.operator.getOrElse("???")
           val scalaOp = tsOpToScala(op)
           s"$left $scalaOp $right"
         } else "???"
 
       case "PrefixUnaryExpression" =>
-        val op = node.operator.getOrElse("")
+        val op      = node.operator.getOrElse("")
         val operand = node.children.headOption.map(c => emitExpr(c, rast)).getOrElse("???")
         val scalaOp = tsOpToScala(op)
         s"$scalaOp$operand"
@@ -483,19 +479,19 @@ object MermaidEmitter {
       case "NoSubstitutionTemplateLiteral" =>
         val text = node.value match {
           case Some(RastValue.Str(s)) => escapeScala(s)
-          case _ => ""
+          case _                      => ""
         }
         s"\"${text}\""
 
       case "RegularExpressionLiteral" =>
         node.value match {
           case Some(RastValue.Str(s)) => tsRegexToScala(s)
-          case _ => "\"\".r"
+          case _                      => "\"\".r"
         }
 
       case "ObjectLiteralExpression" =>
         val fields = findChildren(node, "PropertyAssignment").map { pa =>
-          val key = nameOf(pa)
+          val key   = nameOf(pa)
           val value = pa.children.lastOption.map(c => emitExpr(c, rast)).getOrElse("???")
           s"$key = $value"
         }
@@ -509,7 +505,7 @@ object MermaidEmitter {
       case "ConditionalExpression" =>
         val children = node.children
         if (children.size >= 3) {
-          val cond = emitExpr(children(0), rast)
+          val cond  = emitExpr(children(0), rast)
           val thenE = emitExpr(children(1), rast)
           val elseE = emitExpr(children(2), rast)
           s"if ($cond) $thenE else $elseE"
@@ -520,15 +516,17 @@ object MermaidEmitter {
         val idx = node.children.lastOption.map(c => emitExpr(c, rast)).getOrElse("0")
         s"$obj($idx)"
 
-      case "ThisKeyword" => "this"
+      case "ThisKeyword"  => "this"
       case "SuperKeyword" => "super"
 
       case "ArrowFunction" =>
         val params = node.children.filter(_.kind == "Parameter")
-        val body = node.children.find(c => c.kind == "Block" || (c.kind != "Parameter" &&
-          c.kind != "TypeReference" && c.kind != "StringKeyword" && c.kind != "NumberKeyword"))
+        val body   = node.children.find(c =>
+          c.kind == "Block" || (c.kind != "Parameter" &&
+            c.kind != "TypeReference" && c.kind != "StringKeyword" && c.kind != "NumberKeyword")
+        )
         val paramList = params.map(p => nameOf(p)).mkString(", ")
-        val bodyStr = body.map(b => emitExpr(b, rast)).getOrElse("???")
+        val bodyStr   = body.map(b => emitExpr(b, rast)).getOrElse("???")
         if (params.size == 1) s"{ $paramList => $bodyStr }"
         else s"{ ($paramList) => $bodyStr }"
 
@@ -536,8 +534,8 @@ object MermaidEmitter {
         val stmts = node.children
         if (stmts.isEmpty) "()"
         else {
-          val last = stmts.last
-          val init = stmts.init.map(s => emitExpr(s, rast))
+          val last    = stmts.last
+          val init    = stmts.init.map(s => emitExpr(s, rast))
           val lastStr = emitExpr(last, rast)
           if (init.isEmpty) lastStr
           else (init :+ lastStr).mkString("{ ", "; ", " }")
@@ -551,12 +549,12 @@ object MermaidEmitter {
   private def emitTemplateExpression(node: RastNode, rast: RastFile): String = {
     val sb = new StringBuilder
     sb.append("s\"")
-    for (child <- node.children) {
+    for (child <- node.children)
       child.kind match {
         case "TemplateHead" =>
           child.value.foreach {
             case RastValue.Str(s) => sb.append(escapeInterpolation(s))
-            case _ => ()
+            case _                => ()
           }
         case "TemplateSpan" =>
           val expr = child.children.headOption
@@ -569,12 +567,11 @@ object MermaidEmitter {
           tail.foreach { t =>
             t.value.foreach {
               case RastValue.Str(s) => sb.append(escapeInterpolation(s))
-              case _ => ()
+              case _                => ()
             }
           }
         case _ => ()
       }
-    }
     sb.append("\"")
     sb.toString
   }
@@ -582,38 +579,35 @@ object MermaidEmitter {
   // -- Style-specific helpers -------------------------------------------------
 
   private def findTemplateExpression(rast: RastFile): Option[RastNode] = {
-    def search(node: RastNode): Option[RastNode] = {
+    def search(node: RastNode): Option[RastNode] =
       if (node.kind == "TemplateExpression") Some(node)
       else node.children.view.flatMap(search).headOption
-    }
     rast.nodes.view.flatMap(search).headOption
   }
 
-  /** Finds the parameter name of the ArrowFunction that CONTAINS the
-    * TemplateExpression (the CSS generator), not just any ArrowFunction
-    * (the file may contain helper functions like fade(color, opacity)).
+  /** Finds the parameter name of the ArrowFunction that CONTAINS the TemplateExpression (the CSS generator), not just any ArrowFunction (the file may contain helper functions like fade(color,
+    * opacity)).
     */
   private def findStylesParamName(rast: RastFile): String = {
     def hasTemplate(node: RastNode): Boolean =
       node.kind == "TemplateExpression" || node.children.exists(hasTemplate)
 
-    def search(node: RastNode): Option[String] = {
+    def search(node: RastNode): Option[String] =
       if (node.kind == "ArrowFunction" && hasTemplate(node)) {
         node.children.find(_.kind == "Parameter").map(nameOf)
       } else node.children.view.flatMap(search).headOption
-    }
     rast.nodes.view.flatMap(search).headOption.getOrElse("options")
   }
 
   private def extractCssFromTemplate(tmpl: RastNode, paramName: String): List[String] = {
     // Build the complete CSS string with ${vars.xxx} substitutions
     val sb = new StringBuilder
-    for (child <- tmpl.children) {
+    for (child <- tmpl.children)
       child.kind match {
         case "TemplateHead" =>
           child.value.foreach {
             case RastValue.Str(s) => sb.append(s)
-            case _ => ()
+            case _                => ()
           }
         case "TemplateSpan" =>
           val expr = child.children.headOption
@@ -625,14 +619,13 @@ object MermaidEmitter {
           tail.foreach { t =>
             t.value.foreach {
               case RastValue.Str(s) => sb.append(s)
-              case _ => ()
+              case _                => ()
             }
           }
         case _ => ()
       }
-    }
     // Clean up: remove JS-style // comments, normalize whitespace
-    val raw = sb.toString.trim
+    val raw     = sb.toString.trim
     val cleaned = raw.linesIterator
       .map { line =>
         // Strip // comments inside CSS (not inside interpolations)
@@ -646,17 +639,14 @@ object MermaidEmitter {
     else List(cleaned + "\n")
   }
 
-  /** Checks that every `${...}` interpolation in the extracted CSS references
-    * a `vars.xxx` field that actually exists on ThemeVariables. Returns false if any
-    * reference is to a field from the upstream TS config type (like PacketDiagramConfig)
-    * that has no ThemeVariables equivalent, or if the parameter name was not rewritten
-    * to `vars` at all.
+  /** Checks that every `${...}` interpolation in the extracted CSS references a `vars.xxx` field that actually exists on ThemeVariables. Returns false if any reference is to a field from the upstream
+    * TS config type (like PacketDiagramConfig) that has no ThemeVariables equivalent, or if the parameter name was not rewritten to `vars` at all.
     */
   private def cssRefsAreThemeVars(css: String): Boolean = {
     // Every interpolation must be vars.knownField (possibly wrapped in an if-else)
     val allInterpolations = """\$\{([^}]+)\}""".r
-    val varRefPattern = """vars\.(\w+)""".r
-    val matches = allInterpolations.findAllMatchIn(css).toList
+    val varRefPattern     = """vars\.(\w+)""".r
+    val matches           = allInterpolations.findAllMatchIn(css).toList
     if (matches.isEmpty) return true // no interpolations at all is fine
     matches.forall { m =>
       val expr = m.group(1)
@@ -667,46 +657,150 @@ object MermaidEmitter {
   }
 
   private val knownThemeVarFields: Set[String] = Set(
-    "darkMode", "background", "primaryColor", "secondaryColor", "tertiaryColor",
-    "primaryBorderColor", "secondaryBorderColor", "tertiaryBorderColor",
-    "primaryTextColor", "secondaryTextColor", "tertiaryTextColor",
-    "lineColor", "textColor", "mainBkg", "secondBkg", "border1", "border2",
-    "arrowheadColor", "fontFamily", "fontSize", "labelBackground", "THEME_COLOR_LIMIT",
-    "nodeBkg", "nodeBorder", "clusterBkg", "clusterBorder", "defaultLinkColor",
-    "titleColor", "edgeLabelBackground", "nodeTextColor",
-    "actorBorder", "actorBkg", "actorTextColor", "actorLineColor",
-    "signalColor", "signalTextColor", "labelBoxBkgColor", "labelBoxBorderColor",
-    "labelTextColor", "loopTextColor", "noteBorderColor", "noteBkgColor", "noteTextColor",
-    "activationBorderColor", "activationBkgColor", "sequenceNumberColor",
-    "sectionBkgColor", "altSectionBkgColor", "sectionBkgColor2", "excludeBkgColor",
-    "taskBorderColor", "taskBkgColor", "taskTextLightColor", "taskTextColor",
-    "taskTextDarkColor", "taskTextOutsideColor", "taskTextClickableColor",
-    "activeTaskBorderColor", "activeTaskBkgColor", "gridColor", "todayLineColor",
-    "done", "doneTaskBkgColor", "doneTaskBorderColor",
-    "pieStrokeColor", "pieStrokeWidth", "pieOpacity", "pieOuterStrokeColor",
-    "pieOuterStrokeWidth", "pieTitleTextSize", "pieTitleTextColor",
-    "pieSectionTextSize", "pieSectionTextColor", "pieLegendTextSize", "pieLegendTextColor",
-    "mainContrastColor", "darkTextColor", "altBackground",
-    "classText", "fillType0", "fillType1", "fillType2", "fillType3",
-    "fillType4", "fillType5", "fillType6", "fillType7",
-    "compositeBackground", "compositeBorder", "compositeTitleBackground",
-    "requirementBackground", "requirementBorderColor", "requirementBorderSize",
-    "requirementTextColor", "relationColor", "relationLabelBackground", "relationLabelColor",
-    "quadrant1Fill", "quadrant2Fill", "quadrant3Fill", "quadrant4Fill",
-    "quadrant1TextFill", "quadrant2TextFill", "quadrant3TextFill", "quadrant4TextFill",
-    "quadrantExternalBorderStrokeFill", "quadrantInternalBorderStrokeFill",
-    "quadrantPointFill", "quadrantPointTextFill", "quadrantTitleFill",
-    "quadrantXAxisTextFill", "quadrantYAxisTextFill",
-    "note", "text", "contrast", "labelColor", "labelBackgroundColor", "specialStateColor",
-    "stateBkg", "stateLabelColor", "transitionColor", "transitionLabelColor",
-    "errorBkgColor", "errorTextColor", "personBkg", "personBorder",
-    "scaleLabelColor", "branchLabelColor", "commitLabelColor", "commitLabelBackground",
-    "commitLabelFontSize", "tagLabelFontSize", "tagLabelColor", "tagLabelBackground",
-    "tagLabelBorder", "innerEndBackground", "critBkgColor", "critBorderColor", "critical",
-    "attributeBackgroundColorOdd", "attributeBackgroundColorEven",
+    "darkMode",
+    "background",
+    "primaryColor",
+    "secondaryColor",
+    "tertiaryColor",
+    "primaryBorderColor",
+    "secondaryBorderColor",
+    "tertiaryBorderColor",
+    "primaryTextColor",
+    "secondaryTextColor",
+    "tertiaryTextColor",
+    "lineColor",
+    "textColor",
+    "mainBkg",
+    "secondBkg",
+    "border1",
+    "border2",
+    "arrowheadColor",
+    "fontFamily",
+    "fontSize",
+    "labelBackground",
+    "THEME_COLOR_LIMIT",
+    "nodeBkg",
+    "nodeBorder",
+    "clusterBkg",
+    "clusterBorder",
+    "defaultLinkColor",
+    "titleColor",
+    "edgeLabelBackground",
+    "nodeTextColor",
+    "actorBorder",
+    "actorBkg",
+    "actorTextColor",
+    "actorLineColor",
+    "signalColor",
+    "signalTextColor",
+    "labelBoxBkgColor",
+    "labelBoxBorderColor",
+    "labelTextColor",
+    "loopTextColor",
+    "noteBorderColor",
+    "noteBkgColor",
+    "noteTextColor",
+    "activationBorderColor",
+    "activationBkgColor",
+    "sequenceNumberColor",
+    "sectionBkgColor",
+    "altSectionBkgColor",
+    "sectionBkgColor2",
+    "excludeBkgColor",
+    "taskBorderColor",
+    "taskBkgColor",
+    "taskTextLightColor",
+    "taskTextColor",
+    "taskTextDarkColor",
+    "taskTextOutsideColor",
+    "taskTextClickableColor",
+    "activeTaskBorderColor",
+    "activeTaskBkgColor",
+    "gridColor",
+    "todayLineColor",
+    "done",
+    "doneTaskBkgColor",
+    "doneTaskBorderColor",
+    "pieStrokeColor",
+    "pieStrokeWidth",
+    "pieOpacity",
+    "pieOuterStrokeColor",
+    "pieOuterStrokeWidth",
+    "pieTitleTextSize",
+    "pieTitleTextColor",
+    "pieSectionTextSize",
+    "pieSectionTextColor",
+    "pieLegendTextSize",
+    "pieLegendTextColor",
+    "mainContrastColor",
+    "darkTextColor",
+    "altBackground",
+    "classText",
+    "fillType0",
+    "fillType1",
+    "fillType2",
+    "fillType3",
+    "fillType4",
+    "fillType5",
+    "fillType6",
+    "fillType7",
+    "compositeBackground",
+    "compositeBorder",
+    "compositeTitleBackground",
+    "requirementBackground",
+    "requirementBorderColor",
+    "requirementBorderSize",
+    "requirementTextColor",
+    "relationColor",
+    "relationLabelBackground",
+    "relationLabelColor",
+    "quadrant1Fill",
+    "quadrant2Fill",
+    "quadrant3Fill",
+    "quadrant4Fill",
+    "quadrant1TextFill",
+    "quadrant2TextFill",
+    "quadrant3TextFill",
+    "quadrant4TextFill",
+    "quadrantExternalBorderStrokeFill",
+    "quadrantInternalBorderStrokeFill",
+    "quadrantPointFill",
+    "quadrantPointTextFill",
+    "quadrantTitleFill",
+    "quadrantXAxisTextFill",
+    "quadrantYAxisTextFill",
+    "note",
+    "text",
+    "contrast",
+    "labelColor",
+    "labelBackgroundColor",
+    "specialStateColor",
+    "stateBkg",
+    "stateLabelColor",
+    "transitionColor",
+    "transitionLabelColor",
+    "errorBkgColor",
+    "errorTextColor",
+    "personBkg",
+    "personBorder",
+    "scaleLabelColor",
+    "branchLabelColor",
+    "commitLabelColor",
+    "commitLabelBackground",
+    "commitLabelFontSize",
+    "tagLabelFontSize",
+    "tagLabelColor",
+    "tagLabelBackground",
+    "tagLabelBorder",
+    "innerEndBackground",
+    "critBkgColor",
+    "critBorderColor",
+    "critical",
+    "attributeBackgroundColorOdd",
+    "attributeBackgroundColorEven"
   )
 
-  private def rewriteThemeAccess(node: RastNode, paramName: String): String = {
+  private def rewriteThemeAccess(node: RastNode, paramName: String): String =
     // options.pieStrokeColor -> vars.pieStrokeColor
     node.kind match {
       case "PropertyAccessExpression" =>
@@ -718,9 +812,9 @@ object MermaidEmitter {
       case "BinaryExpression" =>
         val children = node.children
         if (children.size >= 2) {
-          val left = rewriteThemeAccess(children(0), paramName)
+          val left  = rewriteThemeAccess(children(0), paramName)
           val right = rewriteThemeAccess(children(1), paramName)
-          val op = node.operator.getOrElse("||")
+          val op    = node.operator.getOrElse("||")
           if (op == "BarBarToken") {
             // options.nodeTextColor || options.textColor ->
             // if (vars.nodeTextColor.nonEmpty) vars.nodeTextColor else vars.textColor
@@ -732,14 +826,14 @@ object MermaidEmitter {
       case "CallExpression" =>
         // Handle fade(options.edgeLabelBackground, 0.5)
         val callee = node.children.headOption
-        val args = node.children.drop(1)
+        val args   = node.children.drop(1)
         callee match {
           case Some(id) if id.kind == "Identifier" && id.text.contains("fade") =>
             // fade(color, opacity) -> just use the color directly
             args.headOption.map(a => rewriteThemeAccess(a, paramName)).getOrElse("???")
           case _ =>
             val calleeStr = callee.map(c => rewriteThemeAccess(c, paramName)).getOrElse("???")
-            val argStrs = args.map(a => rewriteThemeAccess(a, paramName))
+            val argStrs   = args.map(a => rewriteThemeAccess(a, paramName))
             s"$calleeStr(${argStrs.mkString(", ")})"
         }
       case "Identifier" =>
@@ -748,7 +842,6 @@ object MermaidEmitter {
       case _ =>
         emitExpr(node, new RastFile(1, "", "", Nil, Map.empty, Map.empty))
     }
-  }
 
   // -- Type inference ---------------------------------------------------------
 
@@ -761,7 +854,7 @@ object MermaidEmitter {
     )
     typeNode match {
       case Some(t) => tsTypeToScala(t, rast)
-      case None =>
+      case None    =>
         // Try the type map
         param.`type`.flatMap(rast.types.get).map(rastTypeToScala).getOrElse("Any")
     }
@@ -775,39 +868,38 @@ object MermaidEmitter {
     )
     typeNode match {
       case Some(t) => tsTypeToScala(t, rast)
-      case None =>
+      case None    =>
         // Try the RAST type map
         fn.`type`.flatMap(rast.types.get) match {
           case Some(rt) if rt.returnType.isDefined =>
             rt.returnType.flatMap(rast.types.get).map(rastTypeToScala).getOrElse("Any")
           case Some(rt) => rastTypeToScala(rt)
-          case None => "Any"
+          case None     => "Any"
         }
     }
   }
 
-  private def tsTypeToScala(node: RastNode, rast: RastFile): String = {
+  private def tsTypeToScala(node: RastNode, rast: RastFile): String =
     node.kind match {
-      case "StringKeyword" => "String"
-      case "NumberKeyword" => "Double"
+      case "StringKeyword"  => "String"
+      case "NumberKeyword"  => "Double"
       case "BooleanKeyword" => "Boolean"
-      case "VoidKeyword" => "Unit"
-      case "AnyKeyword" => "Any"
-      case "TypeReference" =>
+      case "VoidKeyword"    => "Unit"
+      case "AnyKeyword"     => "Any"
+      case "TypeReference"  =>
         val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("Any")
         name match {
           case "RegExp" => "scala.util.matching.Regex"
-          case "Array" =>
-            val typeArg = node.children.find(c => c.kind != "Identifier")
-              .map(c => tsTypeToScala(c, rast)).getOrElse("Any")
+          case "Array"  =>
+            val typeArg = node.children.find(c => c.kind != "Identifier").map(c => tsTypeToScala(c, rast)).getOrElse("Any")
             s"Vector[$typeArg]"
-          case "Map" => "Map[String, Any]"
-          case "Set" => "Set[Any]"
-          case "Promise" => "Any" // async eliminated
+          case "Map"       => "Map[String, Any]"
+          case "Set"       => "Set[Any]"
+          case "Promise"   => "Any" // async eliminated
           case "D3Element" => "SvgBuilder"
-          case "SVG" => "SvgBuilder"
-          case "SVGGroup" => "SvgBuilder"
-          case other => other
+          case "SVG"       => "SvgBuilder"
+          case "SVGGroup"  => "SvgBuilder"
+          case other       => other
         }
       case "ArrayType" =>
         val elem = node.children.headOption.map(c => tsTypeToScala(c, rast)).getOrElse("Any")
@@ -818,26 +910,23 @@ object MermaidEmitter {
         else if (types.size == 2 && types.contains("undefined")) {
           val real = types.filterNot(_ == "undefined")
           s"Option[${real.head}]"
-        }
-        else types.mkString(" | ")
+        } else types.mkString(" | ")
       case _ => "Any"
     }
-  }
 
-  private def rastTypeToScala(rt: RastType): String = {
+  private def rastTypeToScala(rt: RastType): String =
     rt.kind match {
-      case "string" => "String"
-      case "number" => "Double"
-      case "boolean" => "Boolean"
-      case "void" => "Unit"
+      case "string"             => "String"
+      case "number"             => "Double"
+      case "boolean"            => "Boolean"
+      case "void"               => "Unit"
       case "null" | "undefined" => "Null"
-      case "any" => "Any"
-      case "never" => "Nothing"
-      case "function" => "Any" // simplified
-      case "array" => "Vector[Any]"
-      case _ => "Any"
+      case "any"                => "Any"
+      case "never"              => "Nothing"
+      case "function"           => "Any" // simplified
+      case "array"              => "Vector[Any]"
+      case _                    => "Any"
     }
-  }
 
   // -- Helpers ----------------------------------------------------------------
 
@@ -850,26 +939,24 @@ object MermaidEmitter {
   private def findChildren(node: RastNode, kind: String): List[RastNode] =
     node.children.filter(_.kind == kind)
 
-  private def extractCallArgs(call: RastNode): List[String] = {
+  private def extractCallArgs(call: RastNode): List[String] =
     call.children.drop(1).map { arg =>
       arg.kind match {
         case "StringLiteral" =>
           arg.value match {
             case Some(RastValue.Str(s)) => s"\"${escapeScala(s)}\""
-            case _ => "\"\""
+            case _                      => "\"\""
           }
         case "Identifier" => arg.text.getOrElse("???")
-        case _ => "???"
+        case _            => "???"
       }
     }
-  }
 
-  private def scalaConstName(tsName: String): String = {
+  private def scalaConstName(tsName: String): String =
     // SVG_ROLE -> SvgRole (PascalCase from SCREAMING_SNAKE)
     if (tsName.forall(c => c.isUpper || c == '_')) {
       tsName.split('_').map(w => w.head + w.tail.toLowerCase).mkString
     } else tsName
-  }
 
   private def escapeScala(s: String): String =
     s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
@@ -877,51 +964,49 @@ object MermaidEmitter {
   private def escapeInterpolation(s: String): String =
     s.replace("$", "$$").replace("\"", "\\\"")
 
-  private def tsRegexToScala(regex: String): String = {
+  private def tsRegexToScala(regex: String): String =
     // /pattern/flags -> "pattern".r (simplified, ignoring flags)
     if (regex.startsWith("/")) {
       val lastSlash = regex.lastIndexOf('/')
       if (lastSlash > 0) {
-        val pattern = regex.substring(1, lastSlash)
-        val flags = regex.substring(lastSlash + 1)
-        val escaped = pattern.replace("\\", "\\\\").replace("\"", "\\\"")
+        val pattern    = regex.substring(1, lastSlash)
+        val flags      = regex.substring(lastSlash + 1)
+        val escaped    = pattern.replace("\\", "\\\\").replace("\"", "\\\"")
         val flagPrefix = if (flags.contains("m")) "(?m)" else ""
         val globalNote = if (flags.contains("g")) " /* global */" else ""
         s"\"$flagPrefix$escaped\".r$globalNote"
       } else s"\"${escapeScala(regex)}\".r"
     } else s"\"${escapeScala(regex)}\".r"
-  }
 
   private def tsOpToScala(op: String): String = op match {
-    case "EqualsEqualsEqualsToken" => "=="
+    case "EqualsEqualsEqualsToken"      => "=="
     case "ExclamationEqualsEqualsToken" => "!="
-    case "EqualsEqualsToken" => "=="
-    case "ExclamationEqualsToken" => "!="
-    case "AmpersandAmpersandToken" => "&&"
-    case "BarBarToken" => "||"
-    case "PlusToken" => "+"
-    case "MinusToken" => "-"
-    case "AsteriskToken" => "*"
-    case "SlashToken" => "/"
-    case "PercentToken" => "%"
-    case "LessThanToken" => "<"
-    case "GreaterThanToken" => ">"
-    case "LessThanEqualsToken" => "<="
-    case "GreaterThanEqualsToken" => ">="
-    case "ExclamationToken" => "!"
-    case "PlusEqualsToken" => "+="
-    case "MinusEqualsToken" => "-="
-    case other => other
+    case "EqualsEqualsToken"            => "=="
+    case "ExclamationEqualsToken"       => "!="
+    case "AmpersandAmpersandToken"      => "&&"
+    case "BarBarToken"                  => "||"
+    case "PlusToken"                    => "+"
+    case "MinusToken"                   => "-"
+    case "AsteriskToken"                => "*"
+    case "SlashToken"                   => "/"
+    case "PercentToken"                 => "%"
+    case "LessThanToken"                => "<"
+    case "GreaterThanToken"             => ">"
+    case "LessThanEqualsToken"          => "<="
+    case "GreaterThanEqualsToken"       => ">="
+    case "ExclamationToken"             => "!"
+    case "PlusEqualsToken"              => "+="
+    case "MinusEqualsToken"             => "-="
+    case other                          => other
   }
 
   // -- Renderer emission (D3 -> SvgBuilder) -----------------------------------
 
   /** A single call in a D3 method chain, linearized from the nested RAST.
     *
-    * Example chain: `g.append('path').attr('class', 'x').attr('d', '...')`
-    * becomes: `ChainLink("append", List("path")), ChainLink("attr", ...), ...`
+    * Example chain: `g.append('path').attr('class', 'x').attr('d', '...')` becomes: `ChainLink("append", List("path")), ChainLink("attr", ...), ...`
     */
-  private final case class ChainLink(method: String, args: List[RastNode])
+  final private case class ChainLink(method: String, args: List[RastNode])
 
   /** Emits a Scala renderer object from a mermaid diagram renderer RAST file.
     *
@@ -947,7 +1032,7 @@ object MermaidEmitter {
     drawFn match {
       case Some(fn) =>
         val params = fn.children.filter(_.kind == "Parameter")
-        val body = fn.children.find(_.kind == "Block")
+        val body   = fn.children.find(_.kind == "Block")
 
         // Emit the render method
         sb.append(s"  def render(")
@@ -976,11 +1061,12 @@ object MermaidEmitter {
 
   /** Find the `draw` arrow function in a renderer RAST file. */
   private def findDrawFunction(rast: RastFile): Option[RastNode] = {
-    for (node <- rast.nodes) {
+    for (node <- rast.nodes)
       if (node.kind == "VariableStatement") {
         val declLists = findChildren(node, "VariableDeclarationList")
-        val decls = if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
-                    else findChildren(node, "VariableDeclaration")
+        val decls     =
+          if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
+          else findChildren(node, "VariableDeclaration")
         for (d <- decls) {
           val name = nameOf(d)
           if (name == "draw") {
@@ -991,7 +1077,6 @@ object MermaidEmitter {
           }
         }
       }
-    }
     None
   }
 
@@ -1009,7 +1094,7 @@ object MermaidEmitter {
     // Track which variables hold SvgBuilder instances
     val svgVars = mutable.Set.empty[String]
 
-    for (stmt <- block.children) {
+    for (stmt <- block.children)
       stmt.kind match {
         case "VariableStatement" =>
           emitRendererVarStatement(sb, stmt, rast, indent, svgVars)
@@ -1020,7 +1105,6 @@ object MermaidEmitter {
         case _ =>
           emitBlock(sb, stmt, rast, indent)
       }
-    }
 
     // End with svg.build().toMarkup() if we found an svg variable
     if (svgVars.contains("svg")) {
@@ -1029,20 +1113,22 @@ object MermaidEmitter {
   }
 
   /** Emit a variable statement inside a renderer body. */
-  private def emitRendererVarStatement(sb: StringBuilder, stmt: RastNode, rast: RastFile,
-                                       indent: String, svgVars: mutable.Set[String]): Unit = {
+  private def emitRendererVarStatement(sb: StringBuilder, stmt: RastNode, rast: RastFile, indent: String, svgVars: mutable.Set[String]): Unit = {
     val declLists = findChildren(stmt, "VariableDeclarationList")
-    val decls = if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
-                else findChildren(stmt, "VariableDeclaration")
+    val decls     =
+      if (declLists.nonEmpty) declLists.flatMap(dl => findChildren(dl, "VariableDeclaration"))
+      else findChildren(stmt, "VariableDeclaration")
     for (d <- decls) {
       val name = nameOf(d)
-      val init = d.children.find(c => c.kind != "Identifier" && c.kind != "TypeReference" &&
-        c.kind != "StringKeyword" && c.kind != "NumberKeyword" && c.kind != "BooleanKeyword")
+      val init = d.children.find(c =>
+        c.kind != "Identifier" && c.kind != "TypeReference" &&
+          c.kind != "StringKeyword" && c.kind != "NumberKeyword" && c.kind != "BooleanKeyword"
+      )
 
       init match {
         case Some(call) if call.kind == "CallExpression" =>
           val callee = call.children.headOption
-          val args = call.children.drop(1)
+          val args   = call.children.drop(1)
 
           callee match {
             // selectSvgElement(id) -> SvgBuilder.createSvg(viewBox)
@@ -1053,12 +1139,15 @@ object MermaidEmitter {
             // obj.append('tag') -> val name = obj.append("tag")
             case Some(pa) if pa.kind == "PropertyAccessExpression" =>
               val methodName = pa.children.lastOption.flatMap(_.text).getOrElse("")
-              val receiver = pa.children.headOption.flatMap(_.text).getOrElse("")
+              val receiver   = pa.children.headOption.flatMap(_.text).getOrElse("")
               if (methodName == "append" && svgVars.contains(receiver)) {
                 svgVars += name
-                val tag = args.headOption.flatMap(_.value).collect {
-                  case RastValue.Str(s) => s
-                }.getOrElse("g")
+                val tag = args.headOption
+                  .flatMap(_.value)
+                  .collect { case RastValue.Str(s) =>
+                    s
+                  }
+                  .getOrElse("g")
                 sb.append(s"${indent}val $name = $receiver.append(\"$tag\")\n")
               } else {
                 // Check if this is a D3 chain that assigns to a variable
@@ -1084,8 +1173,7 @@ object MermaidEmitter {
   }
 
   /** Emit an expression statement inside a renderer body. */
-  private def emitRendererExprStatement(sb: StringBuilder, expr: RastNode, rast: RastFile,
-                                        indent: String, svgVars: mutable.Set[String]): Unit = {
+  private def emitRendererExprStatement(sb: StringBuilder, expr: RastNode, rast: RastFile, indent: String, svgVars: mutable.Set[String]): Unit =
     expr.kind match {
       case "CallExpression" =>
         val callee = expr.children.headOption
@@ -1094,7 +1182,7 @@ object MermaidEmitter {
           // log.debug(...) -> skip
           case Some(pa) if pa.kind == "PropertyAccessExpression" =>
             val receiver = pa.children.headOption.flatMap(_.text).getOrElse("")
-            val method = pa.children.lastOption.flatMap(_.text).getOrElse("")
+            val method   = pa.children.lastOption.flatMap(_.text).getOrElse("")
             if (receiver == "log") {
               // Skip logging calls
               ()
@@ -1117,13 +1205,10 @@ object MermaidEmitter {
       case _ =>
         sb.append(s"$indent${emitExpr(expr, rast)}\n")
     }
-  }
 
   /** Linearize a nested D3 method chain into a flat list of ChainLinks.
     *
-    * The RAST for `g.append('path').attr('class', 'x').attr('d', '...')`
-    * is a deeply nested structure where each `.method(args)` wraps the
-    * previous call as the receiver:
+    * The RAST for `g.append('path').attr('class', 'x').attr('d', '...')` is a deeply nested structure where each `.method(args)` wraps the previous call as the receiver:
     *
     * {{{
     * CallExpression(.attr('d', '...'))
@@ -1141,8 +1226,7 @@ object MermaidEmitter {
     *   ...
     * }}}
     *
-    * Returns: (rootReceiver, List[ChainLink]) where rootReceiver is the
-    * initial identifier (e.g. "g") and each ChainLink is a method call.
+    * Returns: (rootReceiver, List[ChainLink]) where rootReceiver is the initial identifier (e.g. "g") and each ChainLink is a method call.
     */
   private def linearizeChain(call: RastNode): List[(String, ChainLink)] = {
     val result = mutable.ListBuffer.empty[(String, ChainLink)]
@@ -1154,11 +1238,11 @@ object MermaidEmitter {
       }
 
       val callee = node.children.headOption
-      val args = node.children.drop(1)
+      val args   = node.children.drop(1)
 
       callee match {
         case Some(pa) if pa.kind == "PropertyAccessExpression" =>
-          val method = pa.children.lastOption.flatMap(_.text).getOrElse("")
+          val method   = pa.children.lastOption.flatMap(_.text).getOrElse("")
           val receiver = pa.children.headOption
 
           receiver match {
@@ -1201,21 +1285,16 @@ object MermaidEmitter {
 
   /** Emit a D3 method chain as linearized SvgBuilder calls.
     *
-    * For: `g.append('path').attr('class', 'error-icon').attr('d', '...')`
-    * Emits:
+    * For: `g.append('path').attr('class', 'error-icon').attr('d', '...')` Emits:
     * {{{
     * val path = g.append("path")
     * path.attr("class", "error-icon")
     * path.attr("d", "...")
     * }}}
     *
-    * When the chain starts with `.append(tag)`, a local variable is created
-    * for the new element. Subsequent `.attr()`, `.style()`, `.text()` calls
-    * are emitted as statements on that variable.
+    * When the chain starts with `.append(tag)`, a local variable is created for the new element. Subsequent `.attr()`, `.style()`, `.text()` calls are emitted as statements on that variable.
     */
-  private def emitD3Chain(sb: StringBuilder, call: RastNode, rast: RastFile,
-                          indent: String, svgVars: mutable.Set[String],
-                          assignTo: Option[String]): Unit = {
+  private def emitD3Chain(sb: StringBuilder, call: RastNode, rast: RastFile, indent: String, svgVars: mutable.Set[String], assignTo: Option[String]): Unit = {
     val chain = linearizeChain(call)
     if (chain.isEmpty) {
       // Not a D3 chain, emit as-is
@@ -1224,21 +1303,24 @@ object MermaidEmitter {
     }
 
     val rootReceiver = chain.head._1
-    val links = chain.map(_._2)
+    val links        = chain.map(_._2)
 
     // Separate the chain: first .append() creates a new element,
     // subsequent calls modify it
     var currentVar = rootReceiver
-    var appendIdx = -1
+    var appendIdx  = -1
 
     for (i <- links.indices) {
       val link = links(i)
       link.method match {
         case "append" if i == 0 =>
           // First .append creates a new child
-          val tag = link.args.headOption.flatMap(_.value).collect {
-            case RastValue.Str(s) => s
-          }.getOrElse("g")
+          val tag = link.args.headOption
+            .flatMap(_.value)
+            .collect { case RastValue.Str(s) =>
+              s
+            }
+            .getOrElse("g")
           val varName = assignTo.getOrElse(tagToVarName(tag, svgVars))
           svgVars += varName
           sb.append(s"${indent}val $varName = $currentVar.append(\"$tag\")\n")
@@ -1247,9 +1329,12 @@ object MermaidEmitter {
 
         case "append" =>
           // Subsequent .append creates a nested child
-          val tag = link.args.headOption.flatMap(_.value).collect {
-            case RastValue.Str(s) => s
-          }.getOrElse("g")
+          val tag = link.args.headOption
+            .flatMap(_.value)
+            .collect { case RastValue.Str(s) =>
+              s
+            }
+            .getOrElse("g")
           val varName = tagToVarName(tag, svgVars)
           svgVars += varName
           sb.append(s"${indent}val $varName = $currentVar.append(\"$tag\")\n")
@@ -1268,7 +1353,7 @@ object MermaidEmitter {
           sb.append(s"$indent$currentVar.text(${argStrs.mkString(", ")})\n")
 
         case "classed" =>
-          val argStrs = link.args.map(a => emitRendererArg(a, rast))
+          val argStrs  = link.args.map(a => emitRendererArg(a, rast))
           val classStr = if (argStrs.size == 1) s"${argStrs.head}, true" else argStrs.mkString(", ")
           sb.append(s"$indent$currentVar.classed($classStr)\n")
 
@@ -1277,9 +1362,12 @@ object MermaidEmitter {
           sb.append(s"$indent$currentVar.html(${argStrs.mkString(", ")})\n")
 
         case "insert" =>
-          val tag = link.args.headOption.flatMap(_.value).collect {
-            case RastValue.Str(s) => s
-          }.getOrElse("g")
+          val tag = link.args.headOption
+            .flatMap(_.value)
+            .collect { case RastValue.Str(s) =>
+              s
+            }
+            .getOrElse("g")
           val varName = tagToVarName(tag, svgVars)
           svgVars += varName
           val argStrs = link.args.map(a => emitRendererArg(a, rast))
@@ -1300,12 +1388,12 @@ object MermaidEmitter {
   }
 
   /** Emit a renderer argument, handling special cases. */
-  private def emitRendererArg(node: RastNode, rast: RastFile): String = {
+  private def emitRendererArg(node: RastNode, rast: RastFile): String =
     node.kind match {
       case "StringLiteral" =>
         node.value match {
           case Some(RastValue.Str(s)) => s"\"${escapeScala(s)}\""
-          case _ => "\"\""
+          case _                      => "\"\""
         }
       case "NumericLiteral" =>
         node.value match {
@@ -1313,42 +1401,40 @@ object MermaidEmitter {
             if (n == n.toLong) n.toLong.toString else n.toString
           case _ => "0"
         }
-      case "TrueKeyword" => "true"
-      case "FalseKeyword" => "false"
+      case "TrueKeyword"        => "true"
+      case "FalseKeyword"       => "false"
       case "TemplateExpression" =>
         emitTemplateExpression(node, rast)
       case _ =>
         emitExpr(node, rast)
     }
-  }
 
   /** Generate a variable name from an SVG tag name.
     *
-    * For `append('text')` -> `textEl`, `append('g')` -> `group`,
-    * `append('path')` -> `pathEl`, etc.
+    * For `append('text')` -> `textEl`, `append('g')` -> `group`, `append('path')` -> `pathEl`, etc.
     */
   private def tagToVarName(tag: String, existing: mutable.Set[String]): String = {
     val base = tag match {
-      case "g"              => "group"
-      case "text"           => "textEl"
-      case "tspan"          => "tspan"
-      case "rect"           => "rect"
-      case "circle"         => "circle"
-      case "line"           => "lineEl"
-      case "path"           => "pathEl"
-      case "polygon"        => "polygon"
-      case "polyline"       => "polyline"
-      case "image"          => "imageEl"
-      case "svg"            => "svgEl"
-      case "defs"           => "defs"
-      case "style"          => "styleEl"
-      case "use"            => "useEl"
-      case "marker"         => "marker"
-      case "clipPath"       => "clipPath"
-      case "foreignObject"  => "foreignObj"
-      case "title"          => "titleEl"
-      case "desc"           => "descEl"
-      case other            => other + "El"
+      case "g"             => "group"
+      case "text"          => "textEl"
+      case "tspan"         => "tspan"
+      case "rect"          => "rect"
+      case "circle"        => "circle"
+      case "line"          => "lineEl"
+      case "path"          => "pathEl"
+      case "polygon"       => "polygon"
+      case "polyline"      => "polyline"
+      case "image"         => "imageEl"
+      case "svg"           => "svgEl"
+      case "defs"          => "defs"
+      case "style"         => "styleEl"
+      case "use"           => "useEl"
+      case "marker"        => "marker"
+      case "clipPath"      => "clipPath"
+      case "foreignObject" => "foreignObj"
+      case "title"         => "titleEl"
+      case "desc"          => "descEl"
+      case other           => other + "El"
     }
     if (!existing.contains(base)) base
     else {
@@ -1362,8 +1448,7 @@ object MermaidEmitter {
 
   /** Emits the complete InfoDb class from the infoDb RAST.
     *
-    * The upstream TS exports a default object with version/accTitle/accDescription.
-    * The Scala port is a mutable class with those fields and a clear() method.
+    * The upstream TS exports a default object with version/accTitle/accDescription. The Scala port is a mutable class with those fields and a clear() method.
     */
   def emitInfoDb(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1381,8 +1466,7 @@ object MermaidEmitter {
 
   /** Emits the complete InfoDiagram facade from the infoDiagram RAST.
     *
-    * The upstream TS exports a DiagramDefinition with db/renderer/parser/detector.
-    * The Scala port provides detect/parse/render methods as a single object.
+    * The upstream TS exports a DiagramDefinition with db/renderer/parser/detector. The Scala port provides detect/parse/render methods as a single object.
     */
   def emitInfoDiagram(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1404,8 +1488,7 @@ object MermaidEmitter {
 
   /** Emits the complete InfoParser from the infoParser RAST.
     *
-    * The upstream TS parser is langium-based; the Scala port is a trivial
-    * parser that just creates a db (the info diagram has no meaningful body).
+    * The upstream TS parser is langium-based; the Scala port is a trivial parser that just creates a db (the info diagram has no meaningful body).
     */
   def emitInfoParser(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1425,9 +1508,7 @@ object MermaidEmitter {
 
   /** Emits the complete InfoRenderer from the infoRenderer RAST.
     *
-    * Reads the D3 chain from the RAST (group.append('text').attr(...).text(v...))
-    * and produces the hand-port pattern: SvgBuilder with theming, accessibility,
-    * CSS generation.
+    * Reads the D3 chain from the RAST (group.append('text').attr(...).text(v...)) and produces the hand-port pattern: SvgBuilder with theming, accessibility, CSS generation.
     */
   def emitInfoRenderer(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1444,7 +1525,9 @@ object MermaidEmitter {
     sb.append("    val svg     = SvgBuilder.createSvg(viewBox)\n")
     sb.append("    svg.attr(\"role\", \"img\"); svg.classed(\"mermaid\", true)\n\n")
     sb.append("    // Accessibility: role + aria-roledescription always; a11y title/desc when present.\n")
-    sb.append("    // Mirrors addA11yInfo in mermaidAPI.ts:521-529 (accessibility.ts setA11yDiagramInfo + addSVGa11yTitleDescription).\n")
+    sb.append(
+      "    // Mirrors addA11yInfo in mermaidAPI.ts:521-529 (accessibility.ts setA11yDiagramInfo + addSVGa11yTitleDescription).\n"
+    )
     sb.append("    Accessibility.applyTo(svg, \"info\", db.accTitle, db.accDescription)\n\n")
     sb.append("    val defs      = svg.append(\"defs\")\n")
     sb.append("    val themeVars = Theme.getThemeByName(config.theme, config.themeVariables)\n")
@@ -1459,7 +1542,9 @@ object MermaidEmitter {
     // The chain is: group.append('text').attr('x', 100).attr('y', 40).attr('class', 'version')
     //   .attr('font-size', 32).style('text-anchor', 'middle').text(`v${version}`)
     // In the hand port this becomes a single chained line with different values.
-    sb.append("    svg.append(\"text\").attr(\"x\", 150).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"infoText\", true).text(s\"mermaid version ${db.version}\")\n\n")
+    sb.append(
+      "    svg.append(\"text\").attr(\"x\", 150).attr(\"y\", 30).attr(\"text-anchor\", \"middle\").classed(\"infoText\", true).text(s\"mermaid version ${db.version}\")\n\n"
+    )
 
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n")
@@ -1469,8 +1554,7 @@ object MermaidEmitter {
 
   /** Emits InfoStyles from the info styles pattern.
     *
-    * The info diagram's styles are minimal (one CSS class for infoText).
-    * No RAST file exists for info styles (the upstream TS is trivial).
+    * The info diagram's styles are minimal (one CSS class for infoText). No RAST file exists for info styles (the upstream TS is trivial).
     */
   def emitInfoStyles(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1550,9 +1634,7 @@ object MermaidEmitter {
 
   /** Emits the complete ErrorRenderer from the errorRenderer RAST.
     *
-    * Reads the D3 chains from the RAST (path elements for error icon, text for
-    * error message) and produces the hand-port pattern with SvgBuilder, theming,
-    * and CSS generation.
+    * Reads the D3 chains from the RAST (path elements for error icon, text for error message) and produces the hand-port pattern with SvgBuilder, theming, and CSS generation.
     */
   def emitErrorRenderer(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1579,8 +1661,12 @@ object MermaidEmitter {
     // Error icon (simple X in a circle) - the hand port simplifies the upstream's
     // complex SVG path data into a circle + exclamation mark
     sb.append("    // Error icon (simple X in a circle)\n")
-    sb.append("    svg.append(\"circle\").attr(\"cx\", 40).attr(\"cy\", 40).attr(\"r\", 25).style(\"fill\", \"#ff6b6b\").style(\"stroke\", \"#cc0000\").style(\"stroke-width\", \"2\")\n")
-    sb.append("    svg.append(\"text\").attr(\"x\", 40).attr(\"y\", 48).attr(\"text-anchor\", \"middle\").style(\"fill\", \"white\").style(\"font-size\", \"28px\").style(\"font-weight\", \"bold\").text(\"!\")\n\n")
+    sb.append(
+      "    svg.append(\"circle\").attr(\"cx\", 40).attr(\"cy\", 40).attr(\"r\", 25).style(\"fill\", \"#ff6b6b\").style(\"stroke\", \"#cc0000\").style(\"stroke-width\", \"2\")\n"
+    )
+    sb.append(
+      "    svg.append(\"text\").attr(\"x\", 40).attr(\"y\", 48).attr(\"text-anchor\", \"middle\").style(\"fill\", \"white\").style(\"font-size\", \"28px\").style(\"font-weight\", \"bold\").text(\"!\")\n\n"
+    )
 
     // Error message
     sb.append("    // Error message\n")
@@ -1652,7 +1738,9 @@ object MermaidEmitter {
     sb.append("    firstLine.startsWith(\"pie\")\n")
     sb.append("  }\n\n")
     sb.append("  def parse(text: String): PieDb = PieParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new PieDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    PieParser.parse(text, db)\n")
@@ -1712,7 +1800,9 @@ object MermaidEmitter {
     sb.append("  private def tryParseTitle(scanner: Scanner, db: PieDb): Boolean = boundary {\n")
     sb.append("    val saved = scanner.save()\n")
     sb.append("    if (!scanner.matchStrIgnoreCase(\"title\")) break(false)\n")
-    sb.append("    if (!scanner.isEof && scanner.peek() != ' ' && scanner.peek() != '\\t' && scanner.peek() != '\\n') { scanner.restore(saved); break(false) }\n")
+    sb.append(
+      "    if (!scanner.isEof && scanner.peek() != ' ' && scanner.peek() != '\\t' && scanner.peek() != '\\n') { scanner.restore(saved); break(false) }\n"
+    )
     sb.append("    scanner.skipWhitespace(); db.title = readTextUntilNewline(scanner).trim; true\n")
     sb.append("  }\n\n")
     sb.append("  private def tryParseAccTitle(scanner: Scanner, db: PieDb): Boolean = boundary {\n")
@@ -1742,7 +1832,9 @@ object MermaidEmitter {
     sb.append("    scanner.skipWhitespace()\n")
     sb.append("    if (!scanner.isEof && scanner.peek() == ':') scanner.advance()\n")
     sb.append("    scanner.skipWhitespace()\n")
-    sb.append("    val value = if (!scanner.isEof && (scanner.peek().isDigit || scanner.peek() == '-' || scanner.peek() == '.')) scanner.readNumber() else 0.0\n")
+    sb.append(
+      "    val value = if (!scanner.isEof && (scanner.peek().isDigit || scanner.peek() == '-' || scanner.peek() == '.')) scanner.readNumber() else 0.0\n"
+    )
     sb.append("    db.addSection(label, value)\n")
     sb.append("    skipToNewline(scanner)\n")
     sb.append("  }\n\n")
@@ -1794,7 +1886,9 @@ object MermaidEmitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n\n")
     sb.append("    var titleOffset = 0.0\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", centerX).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"pieTitleText\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", centerX).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"pieTitleText\", true).text(db.title)\n"
+    )
     sb.append("      titleOffset = 20.0\n")
     sb.append("    }\n\n")
     sb.append("    val totalValue = db.total\n")
@@ -1806,7 +1900,9 @@ object MermaidEmitter {
     sb.append("        val sliceAngle = (section.value / totalValue) * 2.0 * math.Pi\n")
     sb.append("        val endAngle   = startAngle + sliceAngle\n")
     sb.append("        val colorIdx   = idx % 13\n")
-    sb.append("        val fillColor  = if (themeVars.pie(colorIdx).nonEmpty) themeVars.pie(colorIdx) else defaultPieColor(colorIdx)\n\n")
+    sb.append(
+      "        val fillColor  = if (themeVars.pie(colorIdx).nonEmpty) themeVars.pie(colorIdx) else defaultPieColor(colorIdx)\n\n"
+    )
     sb.append("        val path = createArcPath(0, 0, radius, startAngle, endAngle)\n")
     sb.append("        val slice = pieGroup.append(\"path\")\n")
     sb.append("        slice.attr(\"d\", path).classed(\"pieCircle\", true)\n")
@@ -1820,9 +1916,13 @@ object MermaidEmitter {
     sb.append("        val percentage  = (section.value / totalValue) * 100.0\n")
     sb.append("        if (percentage > 3.0) {\n")
     sb.append("          val label = pieGroup.append(\"text\")\n")
-    sb.append("          label.attr(\"x\", labelX).attr(\"y\", labelY).attr(\"text-anchor\", \"middle\").attr(\"dominant-baseline\", \"central\").classed(\"slice\", true)\n")
+    sb.append(
+      "          label.attr(\"x\", labelX).attr(\"y\", labelY).attr(\"text-anchor\", \"middle\").attr(\"dominant-baseline\", \"central\").classed(\"slice\", true)\n"
+    )
     sb.append("          val percentStr = ssg.graphs.commons.util.FormatUtil.toFixed(percentage, 1)\n")
-    sb.append("          label.text(if (db.showData) s\"$percentStr% (${Math.round(section.value).toString})\" else s\"$percentStr%\")\n")
+    sb.append(
+      "          label.text(if (db.showData) s\"$percentStr% (${Math.round(section.value).toString})\" else s\"$percentStr%\")\n"
+    )
     sb.append("        }\n")
     sb.append("        startAngle = endAngle\n")
     sb.append("      }\n\n")
@@ -1830,17 +1930,27 @@ object MermaidEmitter {
     sb.append("      legendGroup.attr(\"transform\", s\"translate(${centerX + radius + 40}, ${DiagramPadding + titleOffset})\")\n")
     sb.append("      for ((section, idx) <- db.sections.zipWithIndex) {\n")
     sb.append("        val colorIdx  = idx % 13\n")
-    sb.append("        val fillColor = if (themeVars.pie(colorIdx).nonEmpty) themeVars.pie(colorIdx) else defaultPieColor(colorIdx)\n")
+    sb.append(
+      "        val fillColor = if (themeVars.pie(colorIdx).nonEmpty) themeVars.pie(colorIdx) else defaultPieColor(colorIdx)\n"
+    )
     sb.append("        val yOffset   = idx * (LegendRectSize + LegendSpacing)\n")
     sb.append("        val legendItem = legendGroup.append(\"g\").attr(\"transform\", s\"translate(0, $yOffset)\")\n")
-    sb.append("        legendItem.append(\"rect\").attr(\"width\", LegendRectSize).attr(\"height\", LegendRectSize).style(\"fill\", fillColor).style(\"stroke\", themeVars.pieStrokeColor)\n")
-    sb.append("        val text = legendItem.append(\"text\").attr(\"x\", LegendRectSize + LegendSpacing).attr(\"y\", LegendRectSize - LegendSpacing).classed(\"legend\", true)\n")
-    sb.append("        text.text(if (db.showData) s\"${section.label} [${Math.round(section.value).toString}]\" else section.label)\n")
+    sb.append(
+      "        legendItem.append(\"rect\").attr(\"width\", LegendRectSize).attr(\"height\", LegendRectSize).style(\"fill\", fillColor).style(\"stroke\", themeVars.pieStrokeColor)\n"
+    )
+    sb.append(
+      "        val text = legendItem.append(\"text\").attr(\"x\", LegendRectSize + LegendSpacing).attr(\"y\", LegendRectSize - LegendSpacing).classed(\"legend\", true)\n"
+    )
+    sb.append(
+      "        text.text(if (db.showData) s\"${section.label} [${Math.round(section.value).toString}]\" else section.label)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n\n")
-    sb.append("  private def createArcPath(cx: Double, cy: Double, radius: Double, startAngle: Double, endAngle: Double): String = {\n")
+    sb.append(
+      "  private def createArcPath(cx: Double, cy: Double, radius: Double, startAngle: Double, endAngle: Double): String = {\n"
+    )
     sb.append("    val startX = cx + radius * math.cos(startAngle - math.Pi / 2.0)\n")
     sb.append("    val startY = cy + radius * math.sin(startAngle - math.Pi / 2.0)\n")
     sb.append("    val endX   = cx + radius * math.cos(endAngle - math.Pi / 2.0)\n")
@@ -1849,7 +1959,9 @@ object MermaidEmitter {
     sb.append("    s\"M $cx $cy L $startX $startY A $radius $radius 0 $largeArcFlag 1 $endX $endY Z\"\n")
     sb.append("  }\n\n")
     sb.append("  private def defaultPieColor(index: Int): String = {\n")
-    sb.append("    val colors = Array(\"#ECECFF\", \"#ffffde\", \"#bde0fe\", \"#ffc8dd\", \"#caffbf\", \"#ffd6a5\", \"#a0c4ff\", \"#fdffb6\", \"#9bf6ff\", \"#bdb2ff\", \"#ffc6ff\", \"#e8e8e4\", \"#d4a373\")\n")
+    sb.append(
+      "    val colors = Array(\"#ECECFF\", \"#ffffde\", \"#bde0fe\", \"#ffc8dd\", \"#caffbf\", \"#ffd6a5\", \"#a0c4ff\", \"#fdffb6\", \"#9bf6ff\", \"#bdb2ff\", \"#ffc6ff\", \"#e8e8e4\", \"#d4a373\")\n"
+    )
     sb.append("    colors(index % colors.length)\n")
     sb.append("  }\n")
     sb.append("}\n")
@@ -1920,8 +2032,7 @@ object MermaidEmitter {
 
   /** Emits BlockStyles from the block/styles.ts RAST.
     *
-    * Reads CSS rules from the RAST template, rewrites `options.xxx` to `vars.xxx`,
-    * and produces the simplified CSS matching the ssg hand port.
+    * Reads CSS rules from the RAST template, rewrites `options.xxx` to `vars.xxx`, and produces the simplified CSS matching the ssg hand port.
     */
   def emitBlockStyles(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -1942,7 +2053,7 @@ object MermaidEmitter {
         val cssBlocks = extractCssFromTemplate(tmpl, paramName)
         if (cssBlocks.nonEmpty && cssRefsAreThemeVars(cssBlocks.head)) {
           // Split CSS into individual rule blocks for cleaner output
-          val css = cssBlocks.head
+          val css   = cssBlocks.head
           val rules = splitCssRules(css)
           for (rule <- rules) {
             sb.append("    sb.append(\n")
@@ -1997,8 +2108,7 @@ object MermaidEmitter {
 
   /** Emits FlowchartStyles from the flowchart/styles.ts RAST.
     *
-    * Reads CSS rules from the RAST template, rewrites theme access,
-    * and adds `nodeClass`/`edgeClass` helper methods needed by FlowchartRenderer.
+    * Reads CSS rules from the RAST template, rewrites theme access, and adds `nodeClass`/`edgeClass` helper methods needed by FlowchartRenderer.
     */
   def emitFlowchartStyles(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -2011,13 +2121,13 @@ object MermaidEmitter {
 
     // Extract from RAST and use the template if it validates
     val templateExpr = findTemplateExpression(rast)
-    val usedRast = templateExpr match {
+    val usedRast     = templateExpr match {
       case Some(tmpl) =>
         val paramName = findStylesParamName(rast)
         val cssBlocks = extractCssFromTemplate(tmpl, paramName)
         if (cssBlocks.nonEmpty && cssRefsAreThemeVars(cssBlocks.head)) {
           sb.append("    val sb = new StringBuilder()\n\n")
-          val css = cssBlocks.head
+          val css   = cssBlocks.head
           val rules = splitCssRules(css)
           for (rule <- rules) {
             sb.append("    sb.append(\n")
@@ -2186,8 +2296,7 @@ object MermaidEmitter {
 
   /** Emits MindmapStyles from the mindmap/styles.ts RAST.
     *
-    * The upstream TS iterates over THEME_COLOR_LIMIT using a for-loop
-    * with `options['cScale' + i]`. The hand port uses `vars.cScale(i)`.
+    * The upstream TS iterates over THEME_COLOR_LIMIT using a for-loop with `options['cScale' + i]`. The hand port uses `vars.cScale(i)`.
     */
   def emitMindmapStyles(rast: RastFile): String = {
     val sb = new StringBuilder
@@ -2239,12 +2348,11 @@ object MermaidEmitter {
   }
 
   /** Split a CSS string into separate rule blocks (each ending at `}`). */
-  private def splitCssRules(css: String): List[String] = {
+  private def splitCssRules(css: String): List[String] =
     // For now return the whole CSS as one block.
     // A proper split would parse braces, but the CSS is already formatted.
     if (css.isEmpty) Nil
     else List(css)
-  }
 
   // -- Complete Packet diagram emission ----------------------------------------
 
@@ -2265,11 +2373,15 @@ object MermaidEmitter {
     sb.append("  val fields: mutable.ArrayBuffer[PacketField] = mutable.ArrayBuffer.empty\n\n")
     sb.append("  def addField(label: String, startBit: Int, endBit: Int): Unit = {\n")
     sb.append("    if (endBit < startBit)\n")
-    sb.append("      throw new IllegalArgumentException(s\"Packet block $startBit - $endBit is invalid. End must be greater than start.\")\n")
+    sb.append(
+      "      throw new IllegalArgumentException(s\"Packet block $startBit - $endBit is invalid. End must be greater than start.\")\n"
+    )
     sb.append("    if (fields.nonEmpty) {\n")
     sb.append("      val expectedStart = fields.last.endBit + 1\n")
     sb.append("      if (startBit != expectedStart)\n")
-    sb.append("        throw new IllegalArgumentException(s\"Packet block $startBit - $endBit is not contiguous. It should start from $expectedStart.\")\n")
+    sb.append(
+      "        throw new IllegalArgumentException(s\"Packet block $startBit - $endBit is not contiguous. It should start from $expectedStart.\")\n"
+    )
     sb.append("    }\n")
     sb.append("    fields += PacketField(label, startBit, endBit)\n")
     sb.append("  }\n\n")
@@ -2294,7 +2406,9 @@ object MermaidEmitter {
     sb.append("    firstLine.startsWith(\"packet-beta\")\n")
     sb.append("  }\n\n")
     sb.append("  def parse(text: String): PacketDb = PacketParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new PacketDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    PacketParser.parse(text, db)\n")
@@ -2340,23 +2454,31 @@ object MermaidEmitter {
     sb.append("  private def tryParseTitle(scanner: Scanner, db: PacketDb): Boolean = boundary {\n")
     sb.append("    val saved = scanner.save()\n")
     sb.append("    if (!scanner.matchStrIgnoreCase(\"title\")) break(false)\n")
-    sb.append("    if (!scanner.isEof && scanner.peek() != ' ' && scanner.peek() != '\\t' && scanner.peek() != '\\n') { scanner.restore(saved); break(false) }\n")
+    sb.append(
+      "    if (!scanner.isEof && scanner.peek() != ' ' && scanner.peek() != '\\t' && scanner.peek() != '\\n') { scanner.restore(saved); break(false) }\n"
+    )
     sb.append("    scanner.skipWhitespace(); db.title = readTextUntilNewline(scanner).trim; true\n")
     sb.append("  }\n\n")
     sb.append("  private def tryParseField(scanner: Scanner, db: PacketDb): Boolean = boundary {\n")
     sb.append("    val saved = scanner.save()\n")
     sb.append("    if (!scanner.peek().isDigit) break(false)\n")
     sb.append("    val startBit = scanner.readNumber().toInt\n")
-    sb.append("    val endBit   = if (!scanner.isEof && scanner.peek() == '-') { scanner.advance(); scanner.readNumber().toInt } else startBit\n")
+    sb.append(
+      "    val endBit   = if (!scanner.isEof && scanner.peek() == '-') { scanner.advance(); scanner.readNumber().toInt } else startBit\n"
+    )
     sb.append("    scanner.skipWhitespace()\n")
     sb.append("    if (scanner.isEof || scanner.peek() != ':') { scanner.restore(saved); break(false) }\n")
     sb.append("    scanner.advance(); scanner.skipWhitespace()\n")
-    sb.append("    val label = if (!scanner.isEof && scanner.peek() == '\"') scanner.readQuotedString() else readTextUntilNewline(scanner).trim\n")
+    sb.append(
+      "    val label = if (!scanner.isEof && scanner.peek() == '\"') scanner.readQuotedString() else readTextUntilNewline(scanner).trim\n"
+    )
     sb.append("    db.addField(label, startBit, endBit)\n")
     sb.append("    skipToNewline(scanner); true\n")
     sb.append("  }\n\n")
     sb.append("  private def readTextUntilNewline(scanner: Scanner): String = {\n")
-    sb.append("    val sb = new StringBuilder(); while (!scanner.isEof && scanner.peek() != '\\n') sb.append(scanner.advance()); sb.toString\n")
+    sb.append(
+      "    val sb = new StringBuilder(); while (!scanner.isEof && scanner.peek() != '\\n') sb.append(scanner.advance()); sb.toString\n"
+    )
     sb.append("  }\n\n")
     sb.append("  private def skipToNewline(scanner: Scanner): Unit = {\n")
     sb.append("    while (!scanner.isEof && scanner.peek() != '\\n') scanner.advance()\n")
@@ -2400,11 +2522,15 @@ object MermaidEmitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    var yOffset = Padding\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", totalWidth / 2).attr(\"y\", yOffset + 15).attr(\"text-anchor\", \"middle\").classed(\"packetTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", totalWidth / 2).attr(\"y\", yOffset + 15).attr(\"text-anchor\", \"middle\").classed(\"packetTitle\", true).text(db.title)\n"
+    )
     sb.append("      yOffset += 30\n")
     sb.append("    }\n\n")
     sb.append("    for (bit <- 0 until bitsPerRow by 8)\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", Padding + bit * BitWidth + BitWidth / 2).attr(\"y\", yOffset + 12).attr(\"text-anchor\", \"middle\").classed(\"packetBitLabel\", true).text(bit.toString)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", Padding + bit * BitWidth + BitWidth / 2).attr(\"y\", yOffset + 12).attr(\"text-anchor\", \"middle\").classed(\"packetBitLabel\", true).text(bit.toString)\n"
+    )
     sb.append("    yOffset += 15\n\n")
     sb.append("    for (field <- db.fields) {\n")
     sb.append("      val startRow = field.startBit / bitsPerRow\n")
@@ -2416,8 +2542,12 @@ object MermaidEmitter {
     sb.append("        val y = yOffset + row * RowHeight\n")
     sb.append("        val w = (rowEndBit - rowStartBit + 1) * BitWidth\n")
     sb.append("        val h = RowHeight - 2\n")
-    sb.append("        mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", w).attr(\"height\", h).classed(\"packetField\", true)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + h / 2 + 5).attr(\"text-anchor\", \"middle\").classed(\"packetFieldLabel\", true).text(field.label)\n")
+    sb.append(
+      "        mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", w).attr(\"height\", h).classed(\"packetField\", true)\n"
+    )
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + h / 2 + 5).attr(\"text-anchor\", \"middle\").classed(\"packetFieldLabel\", true).text(field.label)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -2494,7 +2624,9 @@ object MermaidEmitter {
     sb.append("/** A card in a Kanban column. */\n")
     sb.append("final case class KanbanCard(id: String, label: String, priority: String = \"\")\n\n")
     sb.append("/** A column in a Kanban board. */\n")
-    sb.append("final case class KanbanColumn(id: String, label: String, cards: mutable.ArrayBuffer[KanbanCard] = mutable.ArrayBuffer.empty)\n\n")
+    sb.append(
+      "final case class KanbanColumn(id: String, label: String, cards: mutable.ArrayBuffer[KanbanCard] = mutable.ArrayBuffer.empty)\n\n"
+    )
     sb.append("/** Mutable database for Kanban board data. */\n")
     sb.append("final class KanbanDb {\n\n")
     sb.append("  var title:          String = \"\"\n")
@@ -2527,7 +2659,9 @@ object MermaidEmitter {
     sb.append("    firstLine.startsWith(\"kanban\")\n")
     sb.append("  }\n\n")
     sb.append("  def parse(text: String): KanbanDb = KanbanParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new KanbanDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    KanbanParser.parse(text, db)\n")
@@ -2573,8 +2707,12 @@ object MermaidEmitter {
     sb.append("    if (bracketIdx >= 0) {\n")
     sb.append("      val id     = text.substring(0, bracketIdx).trim\n")
     sb.append("      val endIdx = text.lastIndexOf(']')\n")
-    sb.append("      val rawLabel = if (endIdx > bracketIdx) text.substring(bracketIdx + 1, endIdx).trim else text.substring(bracketIdx + 1).trim\n")
-    sb.append("      val label = if (rawLabel.startsWith(\"\\\"\") && rawLabel.endsWith(\"\\\"\")) rawLabel.substring(1, rawLabel.length - 1) else rawLabel\n")
+    sb.append(
+      "      val rawLabel = if (endIdx > bracketIdx) text.substring(bracketIdx + 1, endIdx).trim else text.substring(bracketIdx + 1).trim\n"
+    )
+    sb.append(
+      "      val label = if (rawLabel.startsWith(\"\\\"\") && rawLabel.endsWith(\"\\\"\")) rawLabel.substring(1, rawLabel.length - 1) else rawLabel\n"
+    )
     sb.append("      (if (id.nonEmpty) id else label, label)\n")
     sb.append("    } else (text, text)\n")
     sb.append("  }\n")
@@ -2619,12 +2757,22 @@ object MermaidEmitter {
     sb.append("    for ((col, colIdx) <- db.columns.zipWithIndex) {\n")
     sb.append("      val x            = Padding + colIdx * (ColumnWidth + ColumnGap)\n")
     sb.append("      val columnHeight = HeaderHeight + col.cards.size * (CardHeight + CardGap) + Padding\n")
-    sb.append("      mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", Padding).attr(\"width\", ColumnWidth).attr(\"height\", columnHeight).attr(\"rx\", 6).attr(\"ry\", 6).classed(\"kanbanColumn\", true)\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + ColumnWidth / 2).attr(\"y\", Padding + 20).attr(\"text-anchor\", \"middle\").classed(\"kanbanColumnLabel\", true).text(col.label)\n")
+    sb.append(
+      "      mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", Padding).attr(\"width\", ColumnWidth).attr(\"height\", columnHeight).attr(\"rx\", 6).attr(\"ry\", 6).classed(\"kanbanColumn\", true)\n"
+    )
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x + ColumnWidth / 2).attr(\"y\", Padding + 20).attr(\"text-anchor\", \"middle\").classed(\"kanbanColumnLabel\", true).text(col.label)\n"
+    )
     sb.append("      for ((card, cardIdx) <- col.cards.zipWithIndex) {\n")
-    sb.append("        val cardX = x + 5; val cardY = Padding + HeaderHeight + cardIdx * (CardHeight + CardGap) + 5; val cardW = ColumnWidth - 10\n")
-    sb.append("        mainGroup.append(\"rect\").attr(\"x\", cardX).attr(\"y\", cardY).attr(\"width\", cardW).attr(\"height\", CardHeight).attr(\"rx\", 4).attr(\"ry\", 4).classed(\"kanbanCard\", true)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", cardX + cardW / 2).attr(\"y\", cardY + CardHeight / 2 + 4).attr(\"text-anchor\", \"middle\").classed(\"kanbanCardLabel\", true).text(card.label)\n")
+    sb.append(
+      "        val cardX = x + 5; val cardY = Padding + HeaderHeight + cardIdx * (CardHeight + CardGap) + 5; val cardW = ColumnWidth - 10\n"
+    )
+    sb.append(
+      "        mainGroup.append(\"rect\").attr(\"x\", cardX).attr(\"y\", cardY).attr(\"width\", cardW).attr(\"height\", CardHeight).attr(\"rx\", 4).attr(\"ry\", 4).classed(\"kanbanCard\", true)\n"
+    )
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", cardX + cardW / 2).attr(\"y\", cardY + CardHeight / 2 + 4).attr(\"text-anchor\", \"middle\").classed(\"kanbanCardLabel\", true).text(card.label)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -2704,7 +2852,9 @@ object MermaidEmitter {
     sb.append("  def detect(text: String): Boolean =\n")
     sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"cynefin\")\n\n")
     sb.append("  def parse(text: String): CynefinDb = CynefinParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new CynefinDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    CynefinParser.parse(text, db)\n")
@@ -2793,7 +2943,9 @@ object MermaidEmitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    val half      = Size / 2\n\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgSize / 2).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"cynefinTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgSize / 2).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"cynefinTitle\", true).text(db.title)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    val ox = Padding; val oy = Padding + 20\n\n")
     sb.append("    // Four quadrants\n")
@@ -2805,12 +2957,18 @@ object MermaidEmitter {
     sb.append("    )\n\n")
     sb.append("    for ((name, x, y, w, h) <- domains) {\n")
     sb.append("      val color = DomainColors.getOrElse(name.toLowerCase, \"#f0f0f0\")\n")
-    sb.append("      mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", w).attr(\"height\", h).style(\"fill\", color).style(\"stroke\", \"#ccc\").classed(\"cynefinDomain\", true)\n\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + 20).attr(\"text-anchor\", \"middle\").classed(\"cynefinDomainLabel\", true).text(name)\n\n")
+    sb.append(
+      "      mainGroup.append(\"rect\").attr(\"x\", x).attr(\"y\", y).attr(\"width\", w).attr(\"height\", h).style(\"fill\", color).style(\"stroke\", \"#ccc\").classed(\"cynefinDomain\", true)\n\n"
+    )
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + 20).attr(\"text-anchor\", \"middle\").classed(\"cynefinDomainLabel\", true).text(name)\n\n"
+    )
     sb.append("      // Items in this domain\n")
     sb.append("      val domainItems = db.itemsInDomain(name)\n")
     sb.append("      for ((item, idx) <- domainItems.zipWithIndex)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + 45 + idx * 20).attr(\"text-anchor\", \"middle\").classed(\"cynefinItem\", true).text(item.label)\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", x + w / 2).attr(\"y\", y + 45 + idx * 20).attr(\"text-anchor\", \"middle\").classed(\"cynefinItem\", true).text(item.label)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    // Center: Disorder\n")
     sb.append("    val centerSize = 80.0\n")
@@ -2823,7 +2981,9 @@ object MermaidEmitter {
     sb.append("      .style(\"fill\", DomainColors(\"disorder\"))\n")
     sb.append("      .style(\"stroke\", \"#999\")\n")
     sb.append("      .classed(\"cynefinDomain\", true)\n")
-    sb.append("    mainGroup.append(\"text\").attr(\"x\", ox + half).attr(\"y\", oy + half + 5).attr(\"text-anchor\", \"middle\").classed(\"cynefinDomainLabel\", true).text(\"Disorder\")\n\n")
+    sb.append(
+      "    mainGroup.append(\"text\").attr(\"x\", ox + half).attr(\"y\", oy + half + 5).attr(\"text-anchor\", \"middle\").classed(\"cynefinDomainLabel\", true).text(\"Disorder\")\n\n"
+    )
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n")
     sb.append("}\n")
@@ -2840,7 +3000,9 @@ object MermaidEmitter {
     sb.append("  def generate(vars: ThemeVariables): String =\n")
     sb.append("    s\"\"\".cynefinTitle { font-size: 18px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
     sb.append("       |.cynefinDomain { stroke-width: 1px; }\n")
-    sb.append("       |.cynefinDomainLabel { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
+    sb.append(
+      "       |.cynefinDomainLabel { font-size: 14px; font-weight: bold; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n"
+    )
     sb.append("       |.cynefinItem { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
     sb.append("       |\"\"\".stripMargin\n")
     sb.append("}\n")
@@ -2882,7 +3044,9 @@ object MermaidEmitter {
     sb.append("  def detect(text: String): Boolean =\n")
     sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"treeview\")\n\n")
     sb.append("  def parse(text: String): TreeViewDb = TreeViewParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new TreeViewDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    TreeViewParser.parse(text, db)\n")
@@ -2977,7 +3141,9 @@ object MermaidEmitter {
     sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
     sb.append("    val mainGroup = svg.append(\"g\")\n\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2).attr(\"y\", 20).attr(\"text-anchor\", \"middle\").classed(\"treeTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2).attr(\"y\", 20).attr(\"text-anchor\", \"middle\").classed(\"treeTitle\", true).text(db.title)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    var yPos = Padding + (if (db.title.nonEmpty) 30 else 0)\n\n")
     sb.append("    def renderNode(node: TreeNode, depth: Int, parentX: Double, parentY: Double): Unit = {\n")
@@ -2986,12 +3152,18 @@ object MermaidEmitter {
     sb.append("      yPos += LineHeight\n\n")
     sb.append("      // Connector line from parent\n")
     sb.append("      if (depth > 0) {\n")
-    sb.append("        mainGroup.append(\"line\").attr(\"x1\", parentX + 5).attr(\"y1\", parentY).attr(\"x2\", x).attr(\"y2\", y).classed(\"treeConnector\", true)\n")
+    sb.append(
+      "        mainGroup.append(\"line\").attr(\"x1\", parentX + 5).attr(\"y1\", parentY).attr(\"x2\", x).attr(\"y2\", y).classed(\"treeConnector\", true)\n"
+    )
     sb.append("      }\n\n")
     sb.append("      // Node circle\n")
-    sb.append("      mainGroup.append(\"circle\").attr(\"cx\", x + 5).attr(\"cy\", y).attr(\"r\", 4).classed(\"treeNode\", true)\n\n")
+    sb.append(
+      "      mainGroup.append(\"circle\").attr(\"cx\", x + 5).attr(\"cy\", y).attr(\"r\", 4).classed(\"treeNode\", true)\n\n"
+    )
     sb.append("      // Label\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + 15).attr(\"y\", y + 4).classed(\"treeLabel\", true).text(node.label)\n\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x + 15).attr(\"y\", y + 4).classed(\"treeLabel\", true).text(node.label)\n\n"
+    )
     sb.append("      for (child <- node.children)\n")
     sb.append("        renderNode(child, depth + 1, x, y)\n")
     sb.append("    }\n\n")
@@ -3057,7 +3229,9 @@ object MermaidEmitter {
     sb.append("  def detect(text: String): Boolean =\n")
     sb.append("    text.trim.split(\"[\\n\\r]\", 2)(0).trim.toLowerCase.startsWith(\"wardley\")\n\n")
     sb.append("  def parse(text: String): WardleyDb = WardleyParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new WardleyDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    WardleyParser.parse(text, db)\n")
@@ -3151,35 +3325,53 @@ object MermaidEmitter {
     sb.append("    val mainGroup = svg.append(\"g\")\n")
     sb.append("    var yOff      = Padding\n\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"wardleyTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", svgWidth / 2).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"wardleyTitle\", true).text(db.title)\n"
+    )
     sb.append("      yOff += 30\n")
     sb.append("    }\n\n")
     sb.append("    val chartX = Padding * 2; val chartY = yOff\n\n")
-    sb.append("    mainGroup.append(\"rect\").attr(\"x\", chartX).attr(\"y\", chartY).attr(\"width\", ChartWidth).attr(\"height\", ChartHeight).style(\"fill\", \"#fafafa\").style(\"stroke\", \"#ccc\")\n\n")
+    sb.append(
+      "    mainGroup.append(\"rect\").attr(\"x\", chartX).attr(\"y\", chartY).attr(\"width\", ChartWidth).attr(\"height\", ChartHeight).style(\"fill\", \"#fafafa\").style(\"stroke\", \"#ccc\")\n\n"
+    )
     sb.append("    for ((label, idx) <- EvolutionLabels.zipWithIndex) {\n")
     sb.append("      val x = chartX + (idx + 0.5) * ChartWidth / 4\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", chartY + ChartHeight + 20).attr(\"text-anchor\", \"middle\").classed(\"wardleyAxisLabel\", true).text(label)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x).attr(\"y\", chartY + ChartHeight + 20).attr(\"text-anchor\", \"middle\").classed(\"wardleyAxisLabel\", true).text(label)\n"
+    )
     sb.append("      if (idx > 0) {\n")
     sb.append("        val dx = chartX + idx * ChartWidth / 4\n")
-    sb.append("        mainGroup.append(\"line\").attr(\"x1\", dx).attr(\"y1\", chartY).attr(\"x2\", dx).attr(\"y2\", chartY + ChartHeight).style(\"stroke\", \"#ddd\").style(\"stroke-dasharray\", \"3,3\")\n")
+    sb.append(
+      "        mainGroup.append(\"line\").attr(\"x1\", dx).attr(\"y1\", chartY).attr(\"x2\", dx).attr(\"y2\", chartY + ChartHeight).style(\"stroke\", \"#ddd\").style(\"stroke-dasharray\", \"3,3\")\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
-    sb.append("    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + 10).attr(\"text-anchor\", \"end\").classed(\"wardleyAxisLabel\", true).text(\"Visible\")\n")
-    sb.append("    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + ChartHeight).attr(\"text-anchor\", \"end\").classed(\"wardleyAxisLabel\", true).text(\"Invisible\")\n\n")
+    sb.append(
+      "    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + 10).attr(\"text-anchor\", \"end\").classed(\"wardleyAxisLabel\", true).text(\"Visible\")\n"
+    )
+    sb.append(
+      "    mainGroup.append(\"text\").attr(\"x\", chartX - 10).attr(\"y\", chartY + ChartHeight).attr(\"text-anchor\", \"end\").classed(\"wardleyAxisLabel\", true).text(\"Invisible\")\n\n"
+    )
     sb.append("    val positions = mutable.Map.empty[String, (Double, Double)]\n")
     sb.append("    for (comp <- db.components) {\n")
     sb.append("      val x = chartX + comp.evolution * ChartWidth\n")
     sb.append("      val y = chartY + (1.0 - comp.visibility) * ChartHeight\n")
     sb.append("      positions(comp.name) = (x, y)\n")
-    sb.append("      mainGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", y).attr(\"r\", 6).classed(\"wardleyComponent\", true)\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", x + 10).attr(\"y\", y + 4).classed(\"wardleyComponentLabel\", true).text(comp.name)\n")
+    sb.append(
+      "      mainGroup.append(\"circle\").attr(\"cx\", x).attr(\"cy\", y).attr(\"r\", 6).classed(\"wardleyComponent\", true)\n"
+    )
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", x + 10).attr(\"y\", y + 4).classed(\"wardleyComponentLabel\", true).text(comp.name)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    for (link <- db.links)\n")
     sb.append("      for {\n")
     sb.append("        (sx, sy) <- positions.get(link.from)\n")
     sb.append("        (tx, ty) <- positions.get(link.to)\n")
     sb.append("      }\n")
-    sb.append("        mainGroup.append(\"line\").attr(\"x1\", sx).attr(\"y1\", sy).attr(\"x2\", tx).attr(\"y2\", ty).classed(\"wardleyLink\", true)\n\n")
+    sb.append(
+      "        mainGroup.append(\"line\").attr(\"x1\", sx).attr(\"y1\", sy).attr(\"x2\", tx).attr(\"y2\", ty).classed(\"wardleyLink\", true)\n\n"
+    )
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n")
     sb.append("}\n")
@@ -3196,7 +3388,9 @@ object MermaidEmitter {
     sb.append("  def generate(vars: ThemeVariables): String =\n")
     sb.append("    s\"\"\".wardleyTitle { font-size: 16px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
     sb.append("       |.wardleyAxisLabel { font-size: 11px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
-    sb.append("       |.wardleyComponent { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n")
+    sb.append(
+      "       |.wardleyComponent { fill: $${vars.primaryColor}; stroke: $${vars.primaryBorderColor}; stroke-width: 1px; }\n"
+    )
     sb.append("       |.wardleyComponentLabel { font-size: 12px; fill: $${vars.textColor}; font-family: $${vars.fontFamily}; }\n")
     sb.append("       |.wardleyLink { stroke: $${vars.lineColor}; stroke-width: 1px; }\n")
     sb.append("       |\"\"\".stripMargin\n")
@@ -3252,7 +3446,9 @@ object MermaidEmitter {
     sb.append("    firstLine.startsWith(\"ishikawa\")\n")
     sb.append("  }\n\n")
     sb.append("  def parse(text: String): IshikawaDb = IshikawaParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new IshikawaDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    IshikawaParser.parse(text, db)\n")
@@ -3305,8 +3501,12 @@ object MermaidEmitter {
     sb.append("    if (bracketIdx >= 0) {\n")
     sb.append("      val id       = text.substring(0, bracketIdx).trim\n")
     sb.append("      val endIdx   = text.lastIndexOf(']')\n")
-    sb.append("      val rawLabel = if (endIdx > bracketIdx) text.substring(bracketIdx + 1, endIdx).trim else text.substring(bracketIdx + 1).trim\n")
-    sb.append("      val label    = if (rawLabel.startsWith(\"\\\"\") && rawLabel.endsWith(\"\\\"\")) rawLabel.substring(1, rawLabel.length - 1) else rawLabel\n")
+    sb.append(
+      "      val rawLabel = if (endIdx > bracketIdx) text.substring(bracketIdx + 1, endIdx).trim else text.substring(bracketIdx + 1).trim\n"
+    )
+    sb.append(
+      "      val label    = if (rawLabel.startsWith(\"\\\"\") && rawLabel.endsWith(\"\\\"\")) rawLabel.substring(1, rawLabel.length - 1) else rawLabel\n"
+    )
     sb.append("      (if (id.nonEmpty) id else label, label)\n")
     sb.append("    } else (text, text)\n")
     sb.append("  }\n")
@@ -3347,7 +3547,9 @@ object MermaidEmitter {
     sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
     sb.append("    val marker = defs.append(\"marker\")\n")
     sb.append("    marker.attr(\"id\", \"fishhead\").attr(\"viewBox\", \"0 0 10 10\")\n")
-    sb.append("    marker.attr(\"refX\", 10).attr(\"refY\", 5).attr(\"markerWidth\", 8).attr(\"markerHeight\", 8).attr(\"orient\", \"auto\")\n")
+    sb.append(
+      "    marker.attr(\"refX\", 10).attr(\"refY\", 5).attr(\"markerWidth\", 8).attr(\"markerHeight\", 8).attr(\"orient\", \"auto\")\n"
+    )
     sb.append("    marker.append(\"path\").attr(\"d\", \"M 0 0 L 10 5 L 0 10 z\").style(\"fill\", themeVars.lineColor)\n\n")
     sb.append("    val mainGroup   = svg.append(\"g\")\n")
     sb.append("    val spineY      = svgHeight / 2\n")
@@ -3358,7 +3560,9 @@ object MermaidEmitter {
     sb.append("    spine.attr(\"x2\", spineEndX).attr(\"y2\", spineY)\n")
     sb.append("    spine.attr(\"marker-end\", \"url(#fishhead)\").classed(\"ishikawaSpine\", true)\n\n")
     sb.append("    if (db.effect.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", spineEndX + 15).attr(\"y\", spineY + 5).attr(\"text-anchor\", \"start\").classed(\"ishikawaEffect\", true).text(db.effect)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", spineEndX + 15).attr(\"y\", spineY + 5).attr(\"text-anchor\", \"start\").classed(\"ishikawaEffect\", true).text(db.effect)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    val spacing = if (branchCount > 1) (SpineLength - 60) / (branchCount - 1).toDouble else SpineLength / 2\n")
     sb.append("    for ((branch, idx) <- db.branches.zipWithIndex) {\n")
@@ -3370,7 +3574,9 @@ object MermaidEmitter {
     sb.append("      line.attr(\"x2\", branchX).attr(\"y2\", branchEndY)\n")
     sb.append("      line.classed(\"ishikawaBranch\", true)\n\n")
     sb.append("      val labelY = if (isTop) branchEndY - 10 else branchEndY + 20\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", branchX).attr(\"y\", labelY).attr(\"text-anchor\", \"middle\").classed(\"ishikawaBranchLabel\", true).text(branch.label)\n\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", branchX).attr(\"y\", labelY).attr(\"text-anchor\", \"middle\").classed(\"ishikawaBranchLabel\", true).text(branch.label)\n\n"
+    )
     sb.append("      for ((cause, cIdx) <- branch.causes.zipWithIndex) {\n")
     sb.append("        val causeY = if (isTop) branchEndY + 20 + cIdx * CauseSpacing else branchEndY - 20 - cIdx * CauseSpacing\n")
     sb.append("        val causeEndX = branchX + 80\n")
@@ -3378,7 +3584,9 @@ object MermaidEmitter {
     sb.append("        causeLine.attr(\"x1\", branchX).attr(\"y1\", causeY)\n")
     sb.append("        causeLine.attr(\"x2\", causeEndX).attr(\"y2\", causeY)\n")
     sb.append("        causeLine.classed(\"ishikawaCause\", true)\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", causeEndX + 5).attr(\"y\", causeY + 4).attr(\"text-anchor\", \"start\").classed(\"ishikawaCauseLabel\", true).text(cause)\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", causeEndX + 5).attr(\"y\", causeY + 4).attr(\"text-anchor\", \"start\").classed(\"ishikawaCauseLabel\", true).text(cause)\n"
+    )
     sb.append("      }\n")
     sb.append("    }\n\n")
     sb.append("    svg.build().toMarkup()\n")
@@ -3474,7 +3682,9 @@ object MermaidEmitter {
     sb.append("    firstLine.startsWith(\"venn-beta\")\n")
     sb.append("  }\n\n")
     sb.append("  def parse(text: String): VennDb = VennParser.parse(text)\n\n")
-    sb.append("  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n")
+    sb.append(
+      "  def render(text: String, config: MermaidConfig = MermaidConfig(), title: Nullable[String] = Nullable.empty): String = {\n"
+    )
     sb.append("    val db = new VennDb\n")
     sb.append("    title.foreach(t => db.title = t)\n")
     sb.append("    VennParser.parse(text, db)\n")
@@ -3635,7 +3845,9 @@ object MermaidEmitter {
     sb.append("    styleEl.text(baseCss + \"\\n\" + css + (if (config.themeCSS.nonEmpty) \"\\n\" + config.themeCSS else \"\"))\n\n")
     sb.append("    val mainGroup = svg.append(\"g\")\n\n")
     sb.append("    if (db.title.nonEmpty) {\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"vennTitle\", true).text(db.title)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", 25).attr(\"text-anchor\", \"middle\").classed(\"vennTitle\", true).text(db.title)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    val angleStep = 2 * math.Pi / setCount\n")
     sb.append("    val offset    = if (setCount <= 1) 0.0 else Radius * 0.6\n\n")
@@ -3651,11 +3863,15 @@ object MermaidEmitter {
     sb.append("      circle.classed(\"vennSet\", true)\n\n")
     sb.append("      val labelX = cx + (offset + Radius * 0.6) * math.cos(angle)\n")
     sb.append("      val labelY = cy + (offset + Radius * 0.6) * math.sin(angle)\n")
-    sb.append("      mainGroup.append(\"text\").attr(\"x\", labelX).attr(\"y\", labelY + 5).attr(\"text-anchor\", \"middle\").classed(\"vennSetLabel\", true).text(vset.label)\n")
+    sb.append(
+      "      mainGroup.append(\"text\").attr(\"x\", labelX).attr(\"y\", labelY + 5).attr(\"text-anchor\", \"middle\").classed(\"vennSetLabel\", true).text(vset.label)\n"
+    )
     sb.append("    }\n\n")
     sb.append("    for (isect <- db.intersections)\n")
     sb.append("      if (isect.label.nonEmpty) {\n")
-    sb.append("        mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy + 5).attr(\"text-anchor\", \"middle\").classed(\"vennIntersectionLabel\", true).text(isect.label)\n")
+    sb.append(
+      "        mainGroup.append(\"text\").attr(\"x\", cx).attr(\"y\", cy + 5).attr(\"text-anchor\", \"middle\").classed(\"vennIntersectionLabel\", true).text(isect.label)\n"
+    )
     sb.append("      }\n\n")
     sb.append("    svg.build().toMarkup()\n")
     sb.append("  }\n")
@@ -3702,44 +3918,42 @@ object MermaidEmitter {
 
   /** Summary of styles parity-derive emission. */
   final case class StylesParitySummary(
-      diagramType: String,
-      totalMethods: Int,
-      matchedFromRast: Int,
-      keptFromReference: Int,
+    diagramType:       String,
+    totalMethods:      Int,
+    matchedFromRast:   Int,
+    keptFromReference: Int
   )
 
-  /** Emit a styles module using parity-derive: reference structure with
-    * RAST-translated bodies where they match.
+  /** Emit a styles module using parity-derive: reference structure with RAST-translated bodies where they match.
     */
   def emitStylesWithParity(
-      rastFile: RastFile,
-      referencePath: java.nio.file.Path,
+    rastFile:      RastFile,
+    referencePath: java.nio.file.Path
   ): (String, StylesParitySummary) =
     val referenceSource = new String(java.nio.file.Files.readAllBytes(referencePath))
-    val rastBodies = buildStylesBodyMap(rastFile)
+    val rastBodies      = buildStylesBodyMap(rastFile)
     val mermaidPatterns = List("document.", "window.", "d3.", "selection.", "transition.")
-    val policy = ParityDerive.Policy(uncompilablePatterns = mermaidPatterns)
-    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
-    val diagramType = referencePath.getFileName.toString.stripSuffix("Styles.scala").toLowerCase
+    val policy          = ParityDerive.Policy(uncompilablePatterns = mermaidPatterns)
+    val result          = ParityDerive.derive(referenceSource, rastBodies, policy)
+    val diagramType     = referencePath.getFileName.toString.stripSuffix("Styles.scala").toLowerCase
 
     val summary = StylesParitySummary(
       diagramType = diagramType,
       totalMethods = result.totalMethods,
       matchedFromRast = result.rastCount,
-      keptFromReference = result.referenceCount,
+      keptFromReference = result.referenceCount
     )
     (result.emittedSource, summary)
 
   /** Build a body map from a styles RAST file.
     *
-    * Includes Mermaid-specific name aliases: `getStyles` → `generate`,
-    * `fade` → `fade`, etc.
+    * Includes Mermaid-specific name aliases: `getStyles` → `generate`, `fade` → `fade`, etc.
     */
   private def buildStylesBodyMap(rastFile: RastFile): Map[String, (String, Int)] =
     val result = scala.collection.mutable.Map.empty[String, (String, Int)]
     // Mermaid styles name aliases: upstream TS → reference Scala
     val nameAliases = Map(
-      "getStyles" -> "generate",
+      "getStyles" -> "generate"
     )
     for node <- rastFile.nodes do
       node.kind match
@@ -3748,9 +3962,9 @@ object MermaidEmitter {
           if name.nonEmpty then
             val bodyNode = findBodyBlock(node)
             bodyNode.foreach { body =>
-              val entry = TerserEmitter.DefmethodEntry("_free_", name, Nil, body)
+              val entry      = TerserEmitter.DefmethodEntry("_free_", name, Nil, body)
               val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-              val scalaName = toCamelCase(name)
+              val scalaName  = toCamelCase(name)
               result(scalaName) = (translated.scalaBody, translated.refusalCount)
               // Register under alias if one exists
               nameAliases.get(name).foreach { alias =>
@@ -3761,21 +3975,23 @@ object MermaidEmitter {
     result.toMap
 
   private def findFunctionName(node: RastNode): String =
-    node.children.find(_.kind == "VariableDeclarationList")
+    node.children
+      .find(_.kind == "VariableDeclarationList")
       .flatMap(_.children.find(_.kind == "VariableDeclaration"))
       .flatMap(_.children.headOption.flatMap(_.text))
       .orElse(node.children.find(_.kind == "Identifier").flatMap(_.text))
       .getOrElse("")
 
   private def findBodyBlock(node: RastNode): Option[RastNode] =
-    node.children.find(_.kind == "VariableDeclarationList")
+    node.children
+      .find(_.kind == "VariableDeclarationList")
       .flatMap(_.children.find(_.kind == "VariableDeclaration"))
       .flatMap(_.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression"))
-      .flatMap(fn => fn.children.find(_.kind == "Block").orElse {
-        fn.children.find(c => c.kind != "Parameter").map(e =>
-          RastNode("Block", 0, (0, 0), children = List(
-            RastNode("ReturnStatement", 0, (0, 0), children = List(e)))))
-      })
+      .flatMap(fn =>
+        fn.children.find(_.kind == "Block").orElse {
+          fn.children.find(c => c.kind != "Parameter").map(e => RastNode("Block", 0, (0, 0), children = List(RastNode("ReturnStatement", 0, (0, 0), children = List(e)))))
+        }
+      )
       .orElse(node.children.find(_.kind == "Block"))
 
   private def containsMermaidUncompilablePatterns(body: String): Boolean =
@@ -3794,39 +4010,42 @@ object MermaidEmitter {
 
   /** A Mermaid module descriptor. */
   final case class MermaidModule(
-      diagramType: String,
-      rastResource: String,
-      referenceSubPath: String,
+    diagramType:      String,
+    rastResource:     String,
+    referenceSubPath: String
   )
 
   /** Styles modules with both RAST files and reference counterparts. */
   val AllStyles: List[MermaidModule] = List(
-    MermaidModule("block",       "/rast/mermaid/src/diagrams/block/styles.rast.json",       "block/BlockStyles.scala"),
-    MermaidModule("c4",          "/rast/mermaid/src/diagrams/c4/styles.rast.json",          "c4/C4Styles.scala"),
-    MermaidModule("class",       "/rast/mermaid/src/diagrams/class/styles.rast.json",       "class_/ClassStyles.scala"),
-    MermaidModule("er",          "/rast/mermaid/src/diagrams/er/styles.rast.json",          "er/ErStyles.scala"),
-    MermaidModule("flowchart",   "/rast/mermaid/src/diagrams/flowchart/styles.rast.json",   "flowchart/FlowchartStyles.scala"),
-    MermaidModule("gantt",       "/rast/mermaid/src/diagrams/gantt/styles.rast.json",       "gantt/GanttStyles.scala"),
-    MermaidModule("git",         "/rast/mermaid/src/diagrams/git/styles.rast.json",         "git/GitStyles.scala"),
-    MermaidModule("mindmap",     "/rast/mermaid/src/diagrams/mindmap/styles.rast.json",     "mindmap/MindmapStyles.scala"),
-    MermaidModule("packet",      "/rast/mermaid/src/diagrams/packet/styles.rast.json",      "packet/PacketStyles.scala"),
+    MermaidModule("block", "/rast/mermaid/src/diagrams/block/styles.rast.json", "block/BlockStyles.scala"),
+    MermaidModule("c4", "/rast/mermaid/src/diagrams/c4/styles.rast.json", "c4/C4Styles.scala"),
+    MermaidModule("class", "/rast/mermaid/src/diagrams/class/styles.rast.json", "class_/ClassStyles.scala"),
+    MermaidModule("er", "/rast/mermaid/src/diagrams/er/styles.rast.json", "er/ErStyles.scala"),
+    MermaidModule("flowchart", "/rast/mermaid/src/diagrams/flowchart/styles.rast.json", "flowchart/FlowchartStyles.scala"),
+    MermaidModule("gantt", "/rast/mermaid/src/diagrams/gantt/styles.rast.json", "gantt/GanttStyles.scala"),
+    MermaidModule("git", "/rast/mermaid/src/diagrams/git/styles.rast.json", "git/GitStyles.scala"),
+    MermaidModule("mindmap", "/rast/mermaid/src/diagrams/mindmap/styles.rast.json", "mindmap/MindmapStyles.scala"),
+    MermaidModule("packet", "/rast/mermaid/src/diagrams/packet/styles.rast.json", "packet/PacketStyles.scala"),
     MermaidModule("requirement", "/rast/mermaid/src/diagrams/requirement/styles.rast.json", "requirement/RequirementStyles.scala"),
-    MermaidModule("sequence",    "/rast/mermaid/src/diagrams/sequence/styles.rast.json",    "sequence/SequenceStyles.scala"),
-    MermaidModule("state",       "/rast/mermaid/src/diagrams/state/styles.rast.json",       "state/StateStyles.scala"),
-    MermaidModule("timeline",    "/rast/mermaid/src/diagrams/timeline/styles.rast.json",    "timeline/TimelineStyles.scala"),
-    MermaidModule("journey",     "/rast/mermaid/src/diagrams/user-journey/styles.rast.json","journey/JourneyStyles.scala"),
+    MermaidModule("sequence", "/rast/mermaid/src/diagrams/sequence/styles.rast.json", "sequence/SequenceStyles.scala"),
+    MermaidModule("state", "/rast/mermaid/src/diagrams/state/styles.rast.json", "state/StateStyles.scala"),
+    MermaidModule("timeline", "/rast/mermaid/src/diagrams/timeline/styles.rast.json", "timeline/TimelineStyles.scala"),
+    MermaidModule("journey", "/rast/mermaid/src/diagrams/user-journey/styles.rast.json", "journey/JourneyStyles.scala")
   )
 
   /** Batch emit all styles with parity-derive.
     *
-    * @param loadRast function to load a RAST file from a resource path
-    * @param mermaidRefRoot path to the ssg-mermaid diagrams source root
-    * @param outDir output directory for emitted files
+    * @param loadRast
+    *   function to load a RAST file from a resource path
+    * @param mermaidRefRoot
+    *   path to the ssg-mermaid diagrams source root
+    * @param outDir
+    *   output directory for emitted files
     */
   def emitAllStylesWithParity(
-      loadRast: String => Option[RastFile],
-      mermaidRefRoot: java.nio.file.Path,
-      outDir: java.nio.file.Path,
+    loadRast:       String => Option[RastFile],
+    mermaidRefRoot: java.nio.file.Path,
+    outDir:         java.nio.file.Path
   ): List[(MermaidModule, StylesParitySummary)] =
     java.nio.file.Files.createDirectories(outDir)
     val results = scala.collection.mutable.ListBuffer.empty[(MermaidModule, StylesParitySummary)]
@@ -3836,7 +4055,7 @@ object MermaidEmitter {
       if java.nio.file.Files.exists(refPath) then
         loadRast(mod.rastResource).foreach { rast =>
           val (source, summary) = emitStylesWithParity(rast, refPath)
-          val outFile = outDir.resolve(s"${mod.diagramType}Styles.scala")
+          val outFile           = outDir.resolve(s"${mod.diagramType}Styles.scala")
           java.nio.file.Files.writeString(outFile, source)
           results += ((mod, summary))
         }
@@ -3862,7 +4081,7 @@ object MermaidEmitter {
     sb.toString
 
   @annotation.nowarn("msg=unused")
-  private def header(tsPath: String, scalaFile: String): String = {
+  private def header(tsPath: String, scalaFile: String): String =
     s"""/*
        | * Mermaid diagramming engine - Scala 3 port
        | *
@@ -3872,5 +4091,4 @@ object MermaidEmitter {
        | * Auto-generated by MermaidEmitter from RAST v1
        | */
        |""".stripMargin
-  }
 }

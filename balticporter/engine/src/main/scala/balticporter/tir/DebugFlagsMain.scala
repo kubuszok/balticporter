@@ -1,12 +1,12 @@
 package balticporter.tir
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** Renders the §4.6 flag resolution: layers, effective merge, and what a port's last run recorded.
   *
-  * Uses [[DebugFlags.resolution]] (the same fold [[DebugFlags.get]] reads). The system-property
-  * layer shown is THIS process's, not the forked migration's. `--port` shows what the last run
-  * actually saw. `just debug-flags [PORT]`. */
+  * Uses [[DebugFlags.resolution]] (the same fold [[DebugFlags.get]] reads). The system-property layer shown is THIS process's, not the forked migration's. `--port` shows what the last run actually
+  * saw. `just debug-flags [PORT]`.
+  */
 object DebugFlagsMain:
 
   private def usage(): Nothing =
@@ -14,7 +14,8 @@ object DebugFlagsMain:
       """usage: DebugFlagsMain [--root <dir>] [--port <PortReportDir>]
         |  --root <dir>   the checkout whose .balticporter/ is read (default: balticporter.root, else cwd)
         |  --port <name>  also print what port-report/<name>'s last run recorded
-        |""".stripMargin)
+        |""".stripMargin
+    )
     sys.exit(2)
 
   def main(args: Array[String]): Unit =
@@ -61,8 +62,9 @@ object DebugFlagsMain:
         // port-supplied flag left here silently changes emitted output
         val fallback =
           if DebugFlags.PortSupplied.contains(r.key)
-          then "   (FALLBACK — a port states this in its own configuration and IGNORES this flag; " +
-            "set here only for a tool that has no port)"
+          then
+            "   (FALLBACK — a port states this in its own configuration and IGNORES this flag; " +
+              "set here only for a tool that has no port)"
           else ""
         sb.append(s"  ${r.key.padTo(w, ' ')} = ${r.value}   [${r.source}]$shadow$unknown$fallback\n")
       }
@@ -77,7 +79,8 @@ object DebugFlagsMain:
       "\nNOTE  a migration runs in a JVM FORKED from the sbt server, so it sees the two FILES plus\n" +
         "      build.sbt's javaOptions — never your shell's environment, never a -D on your command\n" +
         "      line (CLAUDE.md §4.6). The system-property layer above is THIS process's.\n" +
-        "      Set one with `just debug-set <key> <value>`; clear them with `just debug-clear`.\n")
+        "      Set one with `just debug-set <key> <value>`; clear them with `just debug-clear`.\n"
+    )
 
     port.foreach(p => sb.append('\n').append(recorded(root, p)))
     sb.result()
@@ -98,7 +101,5 @@ object DebugFlagsMain:
         (if known.isEmpty then "   (no port-report/ in this checkout — nothing has run here)\n"
          else s"   ports with a report directory: ${known.mkString(", ")}\n")
     else
-      val line = Files.readAllLines(md).toArray(Array.empty[String]).toList
-        .find(_.startsWith("debug flags:"))
-        .getOrElse("debug flags: (not recorded — this run predates the record)")
+      val line = Files.readAllLines(md).toArray(Array.empty[String]).toList.find(_.startsWith("debug flags:")).getOrElse("debug flags: (not recorded — this run predates the record)")
       s"AS RECORDED BY THE LAST RUN of $port ($md):\n  $line\n"

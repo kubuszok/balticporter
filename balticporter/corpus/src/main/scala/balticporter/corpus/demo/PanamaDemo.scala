@@ -5,10 +5,9 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.PanamaFfiTransform
 
-/** Demonstrates JNI → Panama: `native` methods become generated `java.lang.foreign` downcall
-  * bindings (a MethodHandle over a FunctionDescriptor built from the signature).
+/** Demonstrates JNI → Panama: `native` methods become generated `java.lang.foreign` downcall bindings (a MethodHandle over a FunctionDescriptor built from the signature).
   *
-  *   corpus/runMain balticporter.corpus.demo.PanamaDemo
+  * corpus/runMain balticporter.corpus.demo.PanamaDemo
   */
 object PanamaDemo:
 

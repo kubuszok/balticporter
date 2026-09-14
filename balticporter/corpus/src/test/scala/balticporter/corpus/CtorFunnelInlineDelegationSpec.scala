@@ -2,25 +2,20 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{CtorFunnel, OmissionCheck, Pipeline}
+import balticporter.tir.{ CtorFunnel, OmissionCheck, Pipeline }
 
-/** When a subclass's roots call DIFFERENT parent constructors that all delegate to the same parent
-  * ROOT, `CtorFunnel.resolvedThroughParent` resolves the delegation chain to synthesise a primary
-  * at the parent root's parameters.
+/** When a subclass's roots call DIFFERENT parent constructors that all delegate to the same parent ROOT, `CtorFunnel.resolvedThroughParent` resolves the delegation chain to synthesise a primary at
+  * the parent root's parameters.
   *
   * Three cases, each of which was wrong in a different way before it was written:
   *
-  *   (a) PURE delegation — the parent secondary's body is ONLY the `this(args)` call, nothing after
-  *       it. The resolution is exact and nothing is lost.
+  * (a) PURE delegation — the parent secondary's body is ONLY the `this(args)` call, nothing after it. The resolution is exact and nothing is lost.
   *
-  *   (b) Delegation WITH a replayable post-body — the parent secondary has statements after its
-  *       `this(args)` (e.g., `this.desc = desc`). The post-body is replayed through a synthesised
-  *       PARAMETER in the child's primary, guarded by a null check. The effectful argument is
-  *       evaluated ONCE per secondary's `this(...)` call. // ENGINE-LIMITS C3 item 4
+  * (b) Delegation WITH a replayable post-body — the parent secondary has statements after its `this(args)` (e.g., `this.desc = desc`). The post-body is replayed through a synthesised PARAMETER in the
+  * child's primary, guarded by a null check. The effectful argument is evaluated ONCE per secondary's `this(...)` call. // ENGINE-LIMITS C3 item 4
   *
-  *   (c) Delegation with a NON-REPLAYABLE post-body — the post-body contains `super.m()` or
-  *       `return`, which dispatch wrongly or leave the wrong frame in a subclass. The resolution
-  *       is REFUSED and the synthesis falls back (E134, loud).
+  * (c) Delegation with a NON-REPLAYABLE post-body — the post-body contains `super.m()` or `return`, which dispatch wrongly or leave the wrong frame in a subclass. The resolution is REFUSED and the
+  * synthesis falls back (E134, loud).
   */
 class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
 
@@ -44,11 +39,9 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
 
   test("(a) pure delegation: synthesis resolves both roots to the parent root") {
     // both roots should reach PureBase(int) via the synthesis
-    assert(clue(pureOut).contains("extends demo.PureBase(sup$0)"),
-      "synthesised primary at parent root's parameter")
+    assert(clue(pureOut).contains("extends demo.PureBase(sup$0)"), "synthesised primary at parent root's parameter")
     // the String root should inline s.length() into the delegation
-    assert(clue(pureOut).contains("s.length()"),
-      "the String root's inlined delegation resolves the effective arg")
+    assert(clue(pureOut).contains("s.length()"), "the String root's inlined delegation resolves the effective arg")
   }
 
   // ---- (b) Delegation with post-body replayed through a parameter ----
@@ -74,8 +67,7 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
 
   test("(b) delegation with post-body: synthesis resolves via parent root with post-body parameter") {
     // the synthesis resolves to AttrBase(int) — the parent root
-    assert(clue(replayOut).contains("extends demo.AttrBase(sup$0)"),
-      "synthesised primary at parent root's parameter")
+    assert(clue(replayOut).contains("extends demo.AttrBase(sup$0)"), "synthesised primary at parent root's parameter")
   }
 
   test("(b) the post-body is in the class body, guarded by a null check") {
@@ -85,13 +77,15 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     // The class body should have something like: if (desc$ != null) { this.desc = desc$ }
     // Note: the exact names depend on the parent param names
     val hasGuardedPostBody = replayOut.contains("!= null") || replayOut.contains("if (")
-    assert(clue(replayOut).contains("desc$"),
-      "post-body parameter is present in the output")
+    assert(clue(replayOut).contains("desc$"), "post-body parameter is present in the output")
   }
 
   test("(b) no super args are reported as dropped") {
-    assertEquals(clue(replayDropped).count(_.owner.contains("AttrSub")), 0,
-      "all AttrSub roots are expressed (delegation + post-body parameter)")
+    assertEquals(
+      clue(replayDropped).count(_.owner.contains("AttrSub")),
+      0,
+      "all AttrSub roots are expressed (delegation + post-body parameter)"
+    )
   }
 
   // ---- (b2) Post-body with an effectful argument — evaluated ONCE ----
@@ -118,11 +112,9 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   test("(b2) effectful argument: synthesis succeeds (no double-evaluation refusal)") {
     // the synthesis should succeed — getSkin() is non-simple but the post-body is carried
     // through a parameter, so double evaluation is avoided
-    assert(clue(effectOut).contains("extends demo.EffBase(sup$0)"),
-      "synthesised primary at parent root's parameter")
+    assert(clue(effectOut).contains("extends demo.EffBase(sup$0)"), "synthesised primary at parent root's parameter")
     // the post-body should appear in the class body
-    assert(clue(effectOut).contains("skin$"),
-      "post-body parameter for the effectful argument")
+    assert(clue(effectOut).contains("skin$"), "post-body parameter for the effectful argument")
     // the root that goes directly to the parent root passes null
     // (its delegation should NOT include getSkin())
   }
@@ -147,14 +139,10 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   private val boolOut     = new TirEmitter(boolProgram).emit
 
   test("(b3) param-less post-body: boolean guard runs the assignment") {
-    assert(clue(boolOut).contains("extends demo.FlagBase(sup$0)"),
-      "synthesised primary at parent root's parameter")
-    assert(clue(boolOut).contains("via$pb"),
-      "boolean guard parameter for param-less post-body")
-    assert(clue(boolOut).contains("ownsIt = true"),
-      "the assignment is emitted under the guard")
-    assert(clue(boolOut).contains("if (via$pb)"),
-      "guard uses boolean condition, not null check")
+    assert(clue(boolOut).contains("extends demo.FlagBase(sup$0)"), "synthesised primary at parent root's parameter")
+    assert(clue(boolOut).contains("via$pb"), "boolean guard parameter for param-less post-body")
+    assert(clue(boolOut).contains("ownsIt = true"), "the assignment is emitted under the guard")
+    assert(clue(boolOut).contains("if (via$pb)"), "guard uses boolean condition, not null check")
   }
 
   // ---- (c) Non-replayable post-body — `return` or `super.m()` ----
@@ -178,11 +166,9 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
 
   test("(c) non-replayable post-body: resolution is REFUSED (E134, loud)") {
     // the synthesis should NOT happen — there is no synthesised primary
-    assert(!clue(refusedOut).contains("protected (sup$0"),
-      "no synthesised primary when post-body is not replayable")
+    assert(!clue(refusedOut).contains("protected (sup$0"), "no synthesised primary when post-body is not replayable")
     // the super args should be counted as dropped
-    assert(clue(refusedDropped).exists(_.owner.contains("RetSub")),
-      "super args reported as dropped for the refused root")
+    assert(clue(refusedDropped).exists(_.owner.contains("RetSub")), "super args reported as dropped for the refused root")
   }
 
   // ---- (d) Generic constructor type param -> wildcard slot type // G25, card 4e ----
@@ -207,13 +193,10 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   private val genericCtorOut     = new TirEmitter(genericCtorProgram).emit
 
   test("(d) generic ctor type param: slot type is wildcard-bounded, not bare T") {
-    assert(clue(genericCtorOut).contains("extends demo.GenBase(sup$0)"),
-      "synthesised primary at parent root's parameter")
+    assert(clue(genericCtorOut).contains("extends demo.GenBase(sup$0)"), "synthesised primary at parent root's parameter")
     // The slot for `Box<T>` where `T extends B` should be `Box[? <: B]`, not `Box[T]`.
-    assert(clue(genericCtorOut).contains("Box[? <: demo.B]"),
-      "constructor type param rendered as wildcard with bound")
-    assert(!clue(genericCtorOut).contains("Box[T]"),
-      "no bare T in the slot type")
+    assert(clue(genericCtorOut).contains("Box[? <: demo.B]"), "constructor type param rendered as wildcard with bound")
+    assert(!clue(genericCtorOut).contains("Box[T]"), "no bare T in the slot type")
   }
 
   // ---- (e) Value-typed post-body input -> slot defaults to JVM zero + boolean guard // card 4e ----
@@ -236,16 +219,12 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   private val valueSlotOut     = new TirEmitter(valueSlotProgram).emit
 
   test("(e) value-typed post-body input: slot defaults to 0f with boolean guard") {
-    assert(clue(valueSlotOut).contains("extends demo.ValBase(sup$0)"),
-      "synthesised primary at parent root's parameter")
+    assert(clue(valueSlotOut).contains("extends demo.ValBase(sup$0)"), "synthesised primary at parent root's parameter")
     // The slot for `float offset` should be `offset$: Float`, not null-guarded.
-    assert(clue(valueSlotOut).contains("offset$"),
-      "value-typed post-body slot present")
+    assert(clue(valueSlotOut).contains("offset$"), "value-typed post-body slot present")
     // A boolean guard controls the post-body since Float cannot be null-checked.
-    assert(clue(valueSlotOut).contains("via$pb"),
-      "boolean guard for value-typed post-body input")
-    assert(clue(valueSlotOut).contains("if (via$pb)"),
-      "guard uses boolean condition, not null check")
+    assert(clue(valueSlotOut).contains("via$pb"), "boolean guard for value-typed post-body input")
+    assert(clue(valueSlotOut).contains("if (via$pb)"), "guard uses boolean condition, not null check")
   }
 
   // ---- (f) a child whose primary is SYNTHESISED passes its slots to the parent root: it does not
@@ -282,9 +261,8 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     val prog = Pipeline.run(SpoonTir.fromSource(chainSrc), Nil)
     // plan0 WITHOUT a parent plan lookup: the parent (ChainMid) has 2+ roots and its plan is
     // unknown, so resolvedThroughParentPlan refuses and the child gets Plan.none. // D4, C3
-    val leafCd = prog.units.flatMap(balticporter.tir.StandardTraversal.allClassDefs(_)(using prog))
-      .find(cd => prog.symbolOf(cd.symbol).exists(_.name == "ChainLeaf")).get
-    val plan = CtorFunnel.plan0(prog, leafCd)
+    val leafCd = prog.units.flatMap(balticporter.tir.StandardTraversal.allClassDefs(_)(using prog)).find(cd => prog.symbolOf(cd.symbol).exists(_.name == "ChainLeaf")).get
+    val plan   = CtorFunnel.plan0(prog, leafCd)
     assert(clue(plan.superArgs.isEmpty), "no super args without parent plan")
     assert(clue(!plan.isSynthesised), "no synthesis without parent plan")
   }
@@ -312,21 +290,17 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   private lazy val dhSlotDropped = OmissionCheck.droppedSuperArgs(dhSlotProgram)
 
   test("(h) delegation-head slot: parameter used >1x with non-simple arg is bound to a slot") {
-    assert(clue(dhSlotOut).contains("extends demo.DhBase("),
-      "synthesised primary delegates to the parent root")
-    assert(!clue(dhSlotOut).contains("E134"),
-      "no refusal -- the synthesis succeeded")
+    assert(clue(dhSlotOut).contains("extends demo.DhBase("), "synthesised primary delegates to the parent root")
+    assert(!clue(dhSlotOut).contains("E134"), "no refusal -- the synthesis succeeded")
   }
 
   test("(h) delegation-head slot: no super args dropped") {
-    assertEquals(clue(dhSlotDropped).count(_.owner.contains("DhSub")), 0,
-      "all DhSub roots are expressed via delegation-head slot")
+    assertEquals(clue(dhSlotDropped).count(_.owner.contains("DhSub")), 0, "all DhSub roots are expressed via delegation-head slot")
   }
 
   test("(h) delegation-head slot: the doubled expression renders with the slot reference") {
     // the super arg at the doubled position should reference the slot name (dh suffix)
-    assert(clue(dhSlotOut).contains("$dh"),
-      "delegation-head slot parameter present in output")
+    assert(clue(dhSlotOut).contains("$dh"), "delegation-head slot parameter present in output")
   }
 
   // ---- (h2) Same shape but with a post-body too (like BitmapFont) ----
@@ -357,18 +331,15 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   private lazy val dhWithPostDropped = OmissionCheck.droppedSuperArgs(dhWithPostProgram)
 
   test("(h2) delegation-head slot + post-body: synthesis succeeds") {
-    assert(clue(dhWithPostOut).contains("extends demo.FontBase("),
-      "synthesised primary delegates to the parent root")
+    assert(clue(dhWithPostOut).contains("extends demo.FontBase("), "synthesised primary delegates to the parent root")
   }
 
   test("(h2) delegation-head slot + post-body: no super args dropped") {
-    assertEquals(clue(dhWithPostDropped).count(_.owner.contains("FontSub")), 0,
-      "all FontSub roots are expressed")
+    assertEquals(clue(dhWithPostDropped).count(_.owner.contains("FontSub")), 0, "all FontSub roots are expressed")
   }
 
   test("(h2) delegation-head slot + post-body: boolean guard for ownsTexture-style post-body") {
-    assert(clue(dhWithPostOut).contains("via$pb"),
-      "boolean guard present for param-less post-body")
+    assert(clue(dhWithPostOut).contains("via$pb"), "boolean guard present for param-less post-body")
   }
 
   // ---- (h3) a doubled parameter whose head argument ALSO mentions another parameter: the
@@ -396,8 +367,10 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
 
   test("(h3) a slotted head argument mentioning another parameter is refused and counted") {
     assert(!clue(mixedOut).contains("$dh"), "no delegation-head slot")
-    assert(!clue(mixedOut).contains("extends demo.Lbl(") || !mixedOut.contains("getFont(fontName)"),
-      "the child's parameter names never reach the class header")
+    assert(
+      !clue(mixedOut).contains("extends demo.Lbl(") || !mixedOut.contains("getFont(fontName)"),
+      "the child's parameter names never reach the class header"
+    )
     assert(clue(OmissionCheck.droppedSuperArgs(mixedProgram)).nonEmpty, "the refusal is counted")
   }
 

@@ -2,8 +2,8 @@ package balticporter.tir
 
 /** Marker line for a recovered comment: `/* trivia: recovered from <path>:<line> */`.
   *
-  * Has its own token (not porter-note grammar) so [[NoteCoverageCheck]] cannot confuse the two.
-  * [[stripAll]] removes both markers and porter notes before any text search. */
+  * Has its own token (not porter-note grammar) so [[NoteCoverageCheck]] cannot confuse the two. [[stripAll]] removes both markers and porter notes before any text search.
+  */
 object TriviaMark:
 
   /** The token every marker starts with. */
@@ -28,8 +28,8 @@ object TriviaMark:
   /** Text with both trivia markers and porter notes removed. */
   def stripAll(text: String): String = strip(stripFrom(text, PorterNote.Marker))
 
-  /** Remove every block comment that opens with `marker`. Shared implementation for both
-    * marker kinds to prevent drift. */
+  /** Remove every block comment that opens with `marker`. Shared implementation for both marker kinds to prevent drift.
+    */
   private def stripFrom(text: String, marker: String): String =
     if !text.contains(marker) then text
     else

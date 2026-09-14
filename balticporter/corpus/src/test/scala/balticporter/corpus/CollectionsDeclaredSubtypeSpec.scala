@@ -48,7 +48,9 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
         |  void take(Collection<String> c) { }
         |  void go(Roll<String> r) { take(r); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the slot is a formal THIS PROGRAM DECLARES, which is where `coerce` is reached at all: a
     // call at a symbol the PHASE MINTED carries no signature, and K26 records that third blindness
     // with the number the operand-only arm measured (2 rows, 1 of them false).
@@ -76,7 +78,9 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
         |}
         |class Leaf<E> extends Base<E> { }
         |class Callers { void go(Base<String> a, Leaf<String> b) { a.retainAll(b); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // §4.56's fast-path rule: a test written for the shape in front of you answers for that shape
     // and silently declines for every one added since. `Leaf` is re-parented exactly as much as
     // `Base` is — through it.
@@ -89,7 +93,9 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
         |import java.util.*;
         |interface Feed<E> extends Collection<E> { }
         |class Sink { void go(Collection<String> c, Feed<String> f) { c.addAll(f); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // `Feed` is emitted `extends JavaCollection[E]`, so it IS the slot's type. A wrap here would be
     // a factory call around a value that already conforms — the over-approximation `CLAUDE.md` §5
     // has no instrument for.
@@ -103,7 +109,9 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
         |import java.util.*;
         |class Loose<E> { }
         |class Sink { void go(Collection<String> c, Loose<String> l) { c.add(l); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // nothing re-parented `Loose`, so the phase has no standing to say what it is (§4.56) and
     // guessing a factory would be a wrap that cannot compile.
     assertNotEmits(p, "JavaCollection.from(l)")

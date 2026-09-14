@@ -1,8 +1,7 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{BreakCatchCheck, Constant, Flags, MemberIndex, Origin, Program, Symbol,
-  SymbolTable, SymId, Tree, TypeRepr, TypeTree, Xref}
+import balticporter.tir.{ BreakCatchCheck, Constant, Flags, MemberIndex, Origin, Program, SymId, Symbol, SymbolTable, Tree, TypeRepr, TypeTree, Xref }
 import balticporter.tir.BreakCatchCheck.Issue
 
 /** The `break-catch` lane: can it report, and does it read 0 once the emitter guards? */
@@ -48,7 +47,8 @@ class BreakCatchCheckSpec extends PortSuite:
   }
 
   test("a narrow catch is not a crossing at all — 0 even un-repaired") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         void f(int n) {
@@ -58,26 +58,30 @@ class BreakCatchCheckSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assertEquals(BreakCatchCheck.check(p.after, p.after.units, (_: Tree.Try) => false), Nil)
   }
 
   test("a jump the emitter leaves as a RESIDUE is not reported here — it has no boundary to cross") {
     // No enclosing loop or switch, so the `break` never becomes a `boundary.break`: it is the
     // break-residue measure's finding, and counting it twice would make two numbers of one defect.
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         void f(int n) {
           try { g(n); } catch (Exception e) { h(e); }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assertEquals(BreakCatchCheck.check(p.after, p.after.units, (_: Tree.Try) => false), Nil)
   }
 
   test("a jump in the CATCH ARM is not under that try's handler") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         void f(int n) {
@@ -87,12 +91,14 @@ class BreakCatchCheckSpec extends PortSuite:
           }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assertEquals(BreakCatchCheck.check(p.after, p.after.units, (_: Tree.Try) => false), Nil)
   }
 
   test("every jump kind that can cross is reported, and a labelled one names its label") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         void f(int[][] rows) {
@@ -109,7 +115,8 @@ class BreakCatchCheckSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     val fs = BreakCatchCheck.check(p.after, p.after.units, (_: Tree.Try) => false)
     assertEquals(clue(fs.map(_.jump).sorted), List("break", "break outer", "continue"))
     // …and the emitter guards that try once, which covers all three
@@ -129,26 +136,31 @@ class BreakCatchCheckSpec extends PortSuite:
 
     def aTry = Tree.Try(
       resources = Nil,
-      body      = Tree.Break(None, TypeRepr.NoType, O),
-      catches   = List(Tree.CatchCase(
-        Tree.ValDef(E, TypeTree(exT, O), rhs = None, origin = O),
-        Tree.Literal(Constant.UnitC, TypeRepr.NoType, O))),
-      finalizer = None, tpe = TypeRepr.NoType, origin = O)
+      body = Tree.Break(None, TypeRepr.NoType, O),
+      catches = List(Tree.CatchCase(Tree.ValDef(E, TypeTree(exT, O), rhs = None, origin = O), Tree.Literal(Constant.UnitC, TypeRepr.NoType, O))),
+      finalizer = None,
+      tpe = TypeRepr.NoType,
+      origin = O
+    )
 
     val guardedTry = aTry
     val siblingTry = aTry // a DIFFERENT node, structurally equal, at the same origin
-    val loop = Tree.While(Tree.Literal(Constant.BoolC(true), TypeRepr.NoType, O),
-      Tree.Block(List(guardedTry, siblingTry), Tree.Literal(Constant.UnitC, TypeRepr.NoType, O),
-        TypeRepr.NoType, O), TypeRepr.NoType, O)
-    val d  = Tree.DefDef(M, paramss = List(Nil), returnTpt = TypeTree(TypeRepr.NoType, O),
-      rhs = Some(loop), origin = O)
-    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
-    val syms = SymbolTable(List(
-      Symbol(CLS, "C", "demo.C", Flags(), SymId.None, TypeRepr.TypeRef(TypeRepr.NoPrefix, CLS)),
-      Symbol(M, "f", "demo.C#f", Flags(), CLS, TypeRepr.MethodType(Nil, TypeRepr.NoType)),
-      Symbol(EX, "Exception", "java.lang.Exception", Flags(), SymId.None, TypeRepr.NoType),
-      Symbol(E, "e", "demo.C#f(e)", Flags(), M, exT),
-    ))
+    val loop       = Tree.While(
+      Tree.Literal(Constant.BoolC(true), TypeRepr.NoType, O),
+      Tree.Block(List(guardedTry, siblingTry), Tree.Literal(Constant.UnitC, TypeRepr.NoType, O), TypeRepr.NoType, O),
+      TypeRepr.NoType,
+      O
+    )
+    val d    = Tree.DefDef(M, paramss = List(Nil), returnTpt = TypeTree(TypeRepr.NoType, O), rhs = Some(loop), origin = O)
+    val cd   = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
+    val syms = SymbolTable(
+      List(
+        Symbol(CLS, "C", "demo.C", Flags(), SymId.None, TypeRepr.TypeRef(TypeRepr.NoPrefix, CLS)),
+        Symbol(M, "f", "demo.C#f", Flags(), CLS, TypeRepr.MethodType(Nil, TypeRepr.NoType)),
+        Symbol(EX, "Exception", "java.lang.Exception", Flags(), SymId.None, TypeRepr.NoType),
+        Symbol(E, "e", "demo.C#f(e)", Flags(), M, exT)
+      )
+    )
     val program = Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)
 
     // BY TOKEN — what the emitter records: the sibling is still reported, and only it.

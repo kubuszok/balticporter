@@ -21,8 +21,8 @@ class MethodBodyTransformSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** a class whose only interesting member is a STATIC INITIALISER — the shape a `<clinit>` key
-    * addresses. Kept apart from `src` so the other tests' emitted text does not move. */
+  /** a class whose only interesting member is a STATIC INITIALISER — the shape a `<clinit>` key addresses. Kept apart from `src` so the other tests' emitted text does not move.
+    */
   private val withClinit =
     """package demo;
       |class Boot {
@@ -37,13 +37,13 @@ class MethodBodyTransformSpec extends munit.FunSuite:
     val after  = Pipeline.run(before, List(phase))
     (phase, new TirEmitter(after).emit)
 
-  /** the same, but keeping the DECISION LOG — a substituted body must also carry its porter note
-    * (CLAUDE.md §4.575), and only the traced form can show that. */
+  /** the same, but keeping the DECISION LOG — a substituted body must also carry its porter note (CLAUDE.md §4.575), and only the traced form can show that.
+    */
   private def emitTraced(source: String, policy: Map[String, String]) =
-    val before        = SpoonTir.fromSource(source)
-    val phase         = new MethodBodyTransform(policy)
-    val (after, log)  = Pipeline.runTraced(before, List(phase))
-    val emitter       = new TirEmitter(after, notes = log)
+    val before       = SpoonTir.fromSource(source)
+    val phase        = new MethodBodyTransform(policy)
+    val (after, log) = Pipeline.runTraced(before, List(phase))
+    val emitter      = new TirEmitter(after, notes = log)
     (phase, emitter.emit, emitter.notesPrinted)
 
   test("replaces the named body and leaves the SIGNATURE untouched") {

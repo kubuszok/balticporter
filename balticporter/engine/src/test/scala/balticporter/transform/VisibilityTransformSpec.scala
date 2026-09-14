@@ -16,9 +16,9 @@ class VisibilityTransformSpec extends munit.FunSuite:
       |""".stripMargin
 
   test("the listed constructor and method lose their `protected`; an unlisted one keeps it") {
-    val phase = new VisibilityTransform(widen = Set("com.demo.A#<init>", "com.demo.A#m"))
+    val phase        = new VisibilityTransform(widen = Set("com.demo.A#<init>", "com.demo.A#m"))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(javaSrc, "A.java"), List(phase))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("class A(x$p: scala.Int)"), out)
     assert(out.linesIterator.exists(l => l.trim.startsWith("def m()")), out)
     assert(out.linesIterator.exists(l => l.contains("protected") && l.contains("def keep()")), out)

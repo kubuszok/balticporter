@@ -1,6 +1,6 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
 /** Dedicated emitter for roughjs math.ts → RoughMath.scala + Random class. */
 object RoughMathEmitter {

@@ -3,36 +3,36 @@ package balticporter.verify
 import balticporter.core.ParityRef
 import balticporter.tir.CheckReport
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 import scala.meta.*
 
 /** Compare the emitted port's public surface against a hand-written reference port. // CLAUDE.md §1(b)
   *
-  * Parses both sides with scalameta, classifies each divergence into a family, reports per-family
-  * lanes. Empty/absent `PortManifest.parity` makes the check a no-op. Each family carries a §1
-  * classification so an agent knows whether the fix is engine, manifest, or library-specific. */
+  * Parses both sides with scalameta, classifies each divergence into a family, reports per-family lanes. Empty/absent `PortManifest.parity` makes the check a no-op. Each family carries a §1
+  * classification so an agent knows whether the fix is engine, manifest, or library-specific.
+  */
 object ApiParityCheck:
 
   /** The family slugs. Each becomes `api-parity(<slug>)`. */
   val Families: List[String] = List(
-    "accessor",           // getter/setter collapse (getX/setX vs x/x_=) or paren-vs-parenless
-    "static-placement",   // class vs companion placement
-    "mutability",         // val vs var vs def
-    "rename",             // same shape, different name (usually a known rename)
-    "visibility",         // different access level
-    "hand-port-extra",    // declared only in the hand port (hand port added API)
-    "hand-original",      // hand-port file with no upstream marker in its header (informational)
-    "port-extra",         // declared only in the emitted port (java the hand port skipped)
-    "null-model",         // T | Null vs Nullable[T] vs Option[T] vs bare T
+    "accessor", // getter/setter collapse (getX/setX vs x/x_=) or paren-vs-parenless
+    "static-placement", // class vs companion placement
+    "mutability", // val vs var vs def
+    "rename", // same shape, different name (usually a known rename)
+    "visibility", // different access level
+    "hand-port-extra", // declared only in the hand port (hand port added API)
+    "hand-original", // hand-port file with no upstream marker in its header (informational)
+    "port-extra", // declared only in the emitted port (java the hand port skipped)
+    "null-model", // T | Null vs Nullable[T] vs Option[T] vs bare T
     "collection-retarget", // collection family type difference (java.util.* vs scala.collection.*)
-    "opaque",             // primitive vs non-primitive where hand port has opaque type
-    "operator",           // symbolic name / @targetName on one side
-    "factory",            // companion apply/from/wrap vs public constructor; private ctor
-    "file-merge",         // same FQN in different file/nesting (informational)
-    "rule",               // the ONLY difference is one the engine makes by a CATALOG rule
-    "signature",          // same name+arity, any other type difference (catch-all)
-    "unclassified",       // everything else — the work list
+    "opaque", // primitive vs non-primitive where hand port has opaque type
+    "operator", // symbolic name / @targetName on one side
+    "factory", // companion apply/from/wrap vs public constructor; private ctor
+    "file-merge", // same FQN in different file/nesting (informational)
+    "rule", // the ONLY difference is one the engine makes by a CATALOG rule
+    "signature", // same name+arity, any other type difference (catch-all)
+    "unclassified" // everything else — the work list
   )
 
   def lane(family: String): String = s"api-parity($family)"
@@ -40,94 +40,78 @@ object ApiParityCheck:
   val AllLanes: Set[String] = Families.map(lane).toSet
 
   val Classification: Map[String, String] = Map(
-    "accessor" -> (
-      "§1(a) ENGINE: the engine emits java-shaped accessors (getX/setX/isX) where the hand port " +
-        "collapsed them to scala properties. An idiom phase in the engine produces this shape."),
-    "static-placement" -> (
-      "§1(a) ENGINE: the engine places java statics in the companion; the hand port may place " +
-        "members freely between the class and its companion. Informational."),
-    "mutability" -> (
-      "§1(a) ENGINE: val vs var vs def drift between the two ports. Usually benign " +
-        "(the hand port narrowed mutability)."),
-    "rename" -> (
-      "§1(a) ENGINE or §1(b) CONFIGURED: the two ports use different names for the same member. " +
-        "Known renames (from packageRenames or typeRenames) are expected; others may be a " +
-        "missing rename rule or a hand-port freedom."),
-    "visibility" -> (
-      "§1(a) ENGINE or §1(c) LIBRARY-SPECIFIC: the two ports disagree on access level. " +
-        "Often a hand-port decision to widen or narrow access."),
-    "hand-port-extra" -> (
-      "§1(c) LIBRARY-SPECIFIC or INFORMATIONAL: the hand port declares members the emitted port " +
-        "does not have. These are hand-port additions (factory methods, helpers, redesigned APIs) " +
-        "that a mechanical port cannot and should not reproduce."),
-    "hand-original" -> (
-      "INFORMATIONAL: a hand-port FILE whose header names no upstream source (`ParityRef." +
-        "upstreamMarkers`). It is the hand port's own code, twin to no ported declaration, so its " +
-        "members are compared against nothing. One row per top-level type."),
-    "port-extra" -> (
-      "§1(a) ENGINE or §1(b) CONFIGURED: the emitted port declares members the hand port does " +
-        "not have. These are java members the hand port skipped — either deliberately (drops) or " +
-        "because it redesigned the API."),
-    "null-model" -> (
-      "§1(b) CONFIGURED: NullabilityTransform target — the engine's null-model phase produces " +
-        "one spelling (T | Null, Nullable[T], Option[T]), the hand port uses another."),
-    "collection-retarget" -> (
-      "§1(b) CONFIGURED: TypeRedirect/CollectionsTransform retarget — the engine retargets JDK " +
-        "collection types, the hand port may use different collection targets."),
-    "opaque" -> (
-      "§1(c) LIBRARY-SPECIFIC: OpaqueSpec — the hand port uses opaque types for primitives that " +
-        "the emitted port keeps as the underlying type."),
-    "operator" -> (
-      "§1(b) CONFIGURED: MemberRename symbolic — the hand port uses symbolic operator names " +
-        "where the emitted port uses the java name, or one side has @targetName."),
-    "factory" -> (
-      "§1(b) CONFIGURED: CtorFunnel factory policy — the hand port has companion " +
-        "apply/from/wrap/of/create methods instead of public constructors, or vice versa."),
-    "file-merge" -> (
-      "INFORMATIONAL: same FQN in a different file or nesting — no behavioural difference, " +
-        "informational only."),
-    "rule" -> (
-      "§1(a) ENGINE: the ONLY difference is one the engine makes BY A CATALOG RULE, so the row is " +
-        "a decided question, not a hand-port spelling one. The detail names the `JS-…` id whose " +
-        "translation produced the emitted spelling; java's behaviour is what the engine kept."),
-    "signature" -> (
-      "UNKNOWN: same name and arity but different type signature — the catch-all for type-level " +
-        "differences not yet classified into a specific family."),
-    "unclassified" -> (
-      "UNKNOWN: a divergence that fits no recognised family. This is the work list — each row " +
-        "is either a missing classifier in this check or a real divergence to investigate."),
+    "accessor" -> ("§1(a) ENGINE: the engine emits java-shaped accessors (getX/setX/isX) where the hand port " +
+      "collapsed them to scala properties. An idiom phase in the engine produces this shape."),
+    "static-placement" -> ("§1(a) ENGINE: the engine places java statics in the companion; the hand port may place " +
+      "members freely between the class and its companion. Informational."),
+    "mutability" -> ("§1(a) ENGINE: val vs var vs def drift between the two ports. Usually benign " +
+      "(the hand port narrowed mutability)."),
+    "rename" -> ("§1(a) ENGINE or §1(b) CONFIGURED: the two ports use different names for the same member. " +
+      "Known renames (from packageRenames or typeRenames) are expected; others may be a " +
+      "missing rename rule or a hand-port freedom."),
+    "visibility" -> ("§1(a) ENGINE or §1(c) LIBRARY-SPECIFIC: the two ports disagree on access level. " +
+      "Often a hand-port decision to widen or narrow access."),
+    "hand-port-extra" -> ("§1(c) LIBRARY-SPECIFIC or INFORMATIONAL: the hand port declares members the emitted port " +
+      "does not have. These are hand-port additions (factory methods, helpers, redesigned APIs) " +
+      "that a mechanical port cannot and should not reproduce."),
+    "hand-original" -> ("INFORMATIONAL: a hand-port FILE whose header names no upstream source (`ParityRef." +
+      "upstreamMarkers`). It is the hand port's own code, twin to no ported declaration, so its " +
+      "members are compared against nothing. One row per top-level type."),
+    "port-extra" -> ("§1(a) ENGINE or §1(b) CONFIGURED: the emitted port declares members the hand port does " +
+      "not have. These are java members the hand port skipped — either deliberately (drops) or " +
+      "because it redesigned the API."),
+    "null-model" -> ("§1(b) CONFIGURED: NullabilityTransform target — the engine's null-model phase produces " +
+      "one spelling (T | Null, Nullable[T], Option[T]), the hand port uses another."),
+    "collection-retarget" -> ("§1(b) CONFIGURED: TypeRedirect/CollectionsTransform retarget — the engine retargets JDK " +
+      "collection types, the hand port may use different collection targets."),
+    "opaque" -> ("§1(c) LIBRARY-SPECIFIC: OpaqueSpec — the hand port uses opaque types for primitives that " +
+      "the emitted port keeps as the underlying type."),
+    "operator" -> ("§1(b) CONFIGURED: MemberRename symbolic — the hand port uses symbolic operator names " +
+      "where the emitted port uses the java name, or one side has @targetName."),
+    "factory" -> ("§1(b) CONFIGURED: CtorFunnel factory policy — the hand port has companion " +
+      "apply/from/wrap/of/create methods instead of public constructors, or vice versa."),
+    "file-merge" -> ("INFORMATIONAL: same FQN in a different file or nesting — no behavioural difference, " +
+      "informational only."),
+    "rule" -> ("§1(a) ENGINE: the ONLY difference is one the engine makes BY A CATALOG RULE, so the row is " +
+      "a decided question, not a hand-port spelling one. The detail names the `JS-…` id whose " +
+      "translation produced the emitted spelling; java's behaviour is what the engine kept."),
+    "signature" -> ("UNKNOWN: same name and arity but different type signature — the catch-all for type-level " +
+      "differences not yet classified into a specific family."),
+    "unclassified" -> ("UNKNOWN: a divergence that fits no recognised family. This is the work list — each row " +
+      "is either a missing classifier in this check or a real divergence to investigate.")
   )
 
   /** A declaration on the public surface. Both sides rendered through the same `.syntax`. */
   final case class SurfaceDecl(
-      path: String,
-      kind: String,
-      name: String,
-      arity: Int,
-      paramTypes: List[String] = Nil,
-      resultType: String = "",
-      typeParams: String = "",
-      parents: List[String] = Nil,
-      modifiers: Set[String] = Set.empty,
-      accessLevel: String = "public",
-      targetName: String = "",
-      constantType: String = "",
-      /** a `def` written WITHOUT a parameter clause (`def x: T`) — a fact of the spelling, not of
-        * the arity. `ReferencePolicy` reads it; `compare` does not. */
-      parenless: Boolean = false,
-      /** trailing parameters carrying a DEFAULT: the declaration answers every arity from
-        * `explicitArity - defaults` up to `explicitArity` (a java overload per omitted one). */
-      defaults: Int = 0,
-      /** parameters in `using`/`implicit` clauses, counted at the END of `paramTypes`; the explicit
-        * arity a JAVA member is matched against is `arity - usingCount`. */
-      usingCount: Int = 0,
-      /** the file's package — NOT part of the path or the match key (`compare` is package-blind);
-        * `ReferencePolicy` reads it to tell two same-named types apart. */
-      pkg: String = "",
+    path:         String,
+    kind:         String,
+    name:         String,
+    arity:        Int,
+    paramTypes:   List[String] = Nil,
+    resultType:   String = "",
+    typeParams:   String = "",
+    parents:      List[String] = Nil,
+    modifiers:    Set[String] = Set.empty,
+    accessLevel:  String = "public",
+    targetName:   String = "",
+    constantType: String = "",
+    /** a `def` written WITHOUT a parameter clause (`def x: T`) — a fact of the spelling, not of the arity. `ReferencePolicy` reads it; `compare` does not.
+      */
+    parenless: Boolean = false,
+    /** trailing parameters carrying a DEFAULT: the declaration answers every arity from `explicitArity - defaults` up to `explicitArity` (a java overload per omitted one).
+      */
+    defaults: Int = 0,
+    /** parameters in `using`/`implicit` clauses, counted at the END of `paramTypes`; the explicit arity a JAVA member is matched against is `arity - usingCount`.
+      */
+    usingCount: Int = 0,
+    /** the file's package — NOT part of the path or the match key (`compare` is package-blind); `ReferencePolicy` reads it to tell two same-named types apart.
+      */
+    pkg: String = ""
   ):
     /** the explicit (non-`using`) parameter types — what a java signature can be matched against. */
     def explicitParamTypes: List[String] = paramTypes.dropRight(usingCount)
-    def explicitArity: Int = arity - usingCount
+    def explicitArity:      Int          = arity - usingCount
+
     /** A CONSTANT initialiser — the rhs is a literal, so the declaration has a constant type. */
     def constantInit: Boolean = constantType.nonEmpty
 
@@ -139,14 +123,13 @@ object ApiParityCheck:
     /** val/var/param are one class, def is another. */
     private def kindClass: String = kind match
       case "val" | "var" | "param" => "prop"
-      case other                    => other
+      case other                   => other
 
     override def toString: String = s"$path: $kind $name/$arity"
 
-  /** A type parameter's NAME is not API: the parameters in scope canonicalise to `$0…` BY
-    * POSITION (the owner's first, then the declaration's own) before any type is rendered, so an
-    * alpha-renaming is no divergence (`CLAUDE.md` §3.5). BOUNDS and ARITY are still compared;
-    * `<: java.lang.Object`, `<: Any` and no bound are one absent bound. */
+  /** A type parameter's NAME is not API: the parameters in scope canonicalise to `$0…` BY POSITION (the owner's first, then the declaration's own) before any type is rendered, so an alpha-renaming is
+    * no divergence (`CLAUDE.md` §3.5). BOUNDS and ARITY are still compared; `<: java.lang.Object`, `<: Any` and no bound are one absent bound.
+    */
   private def substFor(outer: List[String], own: List[String]): Map[String, String] =
     (outer ++ own).zipWithIndex.collect { case (n, i) if n.nonEmpty => n -> s"$$$i" }.toMap
 
@@ -158,8 +141,8 @@ object ApiParityCheck:
     if subst.isEmpty then t
     else
       t.transform {
-        case n: Type.Name if subst.contains(n.value) => Type.Name(subst(n.value))
-        case sel: Type.Select                        => sel
+        case n:   Type.Name if subst.contains(n.value) => Type.Name(subst(n.value))
+        case sel: Type.Select                          => sel
       }
 
   private def renderType(tpe: Option[Type], subst: Map[String, String]): String =
@@ -193,31 +176,37 @@ object ApiParityCheck:
       case _: Mod.Opaque      => Some("opaque")
       case _: Mod.Case        => Some("case")
       case _: Mod.Transparent => Some("transparent")
-      case _                  => None
+      case _ => None
     }.toSet
 
   private def extractAccessLevel(mods: List[Mod]): String =
-    mods.collectFirst {
-      case p: Mod.Private =>
-        p.within match
-          case ref: Name if ref.value.nonEmpty => s"private[${ref.value}]"
-          case _                               => "private"
-      case p: Mod.Protected =>
-        p.within match
-          case ref: Name if ref.value.nonEmpty => s"protected[${ref.value}]"
-          case _                               => "protected"
-    }.getOrElse("public")
+    mods
+      .collectFirst {
+        case p: Mod.Private =>
+          p.within match
+            case ref: Name if ref.value.nonEmpty => s"private[${ref.value}]"
+            case _ => "private"
+        case p: Mod.Protected =>
+          p.within match
+            case ref: Name if ref.value.nonEmpty => s"protected[${ref.value}]"
+            case _ => "protected"
+      }
+      .getOrElse("public")
 
   /** `@targetName("x")` bare or qualified (`@scala.annotation.targetName`), among any other annotations. */
   private def extractTargetName(mods: List[Mod]): String =
     def isTargetName(t: Type): Boolean = t match
-      case n: Type.Name         => n.value == "targetName"
+      case n: Type.Name => n.value == "targetName"
       case Type.Select(_, name) => name.value == "targetName"
       case _                    => false
-    mods.collect {
-      case annot: Mod.Annot if isTargetName(annot.init.tpe) =>
-        annot.init.argClauses.flatMap(_.values).collectFirst { case lit: Lit.String => lit.value }
-    }.flatten.headOption.getOrElse("")
+    mods
+      .collect {
+        case annot: Mod.Annot if isTargetName(annot.init.tpe) =>
+          annot.init.argClauses.flatMap(_.values).collectFirst { case lit: Lit.String => lit.value }
+      }
+      .flatten
+      .headOption
+      .getOrElse("")
 
   private def extractParents(templ: Template, subst: Map[String, String]): List[String] =
     templ.inits.map(i => renderType(i.tpe, subst))
@@ -235,19 +224,15 @@ object ApiParityCheck:
   def parseSurface(roots: List[Path]): Either[String, List[SurfaceDecl]] =
     parseSurface(roots, Nil).map(_._1)
 
-  /** Parse the roots, splitting PARTIES (header names an upstream source) from originals.
-    * Empty `markers` makes every file a party — the no-op (`CLAUDE.md` §1b). */
+  /** Parse the roots, splitting PARTIES (header names an upstream source) from originals. Empty `markers` makes every file a party — the no-op (`CLAUDE.md` §1b).
+    */
   def parseSurface(
-      roots: List[Path],
-      markers: List[String],
+    roots:   List[Path],
+    markers: List[String]
   ): Either[String, (List[SurfaceDecl], List[HandOriginal])] =
     val files = roots.flatMap { root =>
       if !Files.isDirectory(root) then Nil
-      else Files.walk(root).iterator().asScala
-        .filter(p => p.toString.endsWith(".scala") && Files.isRegularFile(p))
-        .toList
-        .sorted
-        .map(f => (root, f))
+      else Files.walk(root).iterator().asScala.filter(p => p.toString.endsWith(".scala") && Files.isRegularFile(p)).toList.sorted.map(f => (root, f))
     }
     val errors   = List.newBuilder[String]
     val decls    = List.newBuilder[SurfaceDecl]
@@ -268,8 +253,7 @@ object ApiParityCheck:
             val own = List.newBuilder[SurfaceDecl]
             collectDecls(tree, "", own)
             val mine  = own.result().filterNot(_.name.contains('$'))
-            val types = mine.filter(d => d.path.isEmpty && TypeKinds.contains(d.kind))
-              .map(_.name).distinct.sorted
+            val types = mine.filter(d => d.path.isEmpty && TypeKinds.contains(d.kind)).map(_.name).distinct.sorted
             val hint  = header.find(h => OriginHints.exists(h.contains)).map(_.trim).getOrElse("")
             // A file that declares nothing public took nothing out of the comparison.
             if mine.nonEmpty then original += HandOriginal(relativeTo(root, f), types, hint)
@@ -279,10 +263,13 @@ object ApiParityCheck:
     val errs = errors.result()
     if errs.nonEmpty then Left(errs.mkString("; "))
     // `$` in a member name is phase-minted or scalac-internal, never API surface
-    else Right((
-      decls.result().filterNot(_.name.contains('$')).sortBy(d => (d.path, d.kind, d.name, d.arity)),
-      original.result(),
-    ))
+    else
+      Right(
+        (
+          decls.result().filterNot(_.name.contains('$')).sortBy(d => (d.path, d.kind, d.name, d.arity)),
+          original.result()
+        )
+      )
 
   private val TypeKinds = Set("class", "trait", "object", "enum", "type")
 
@@ -299,27 +286,27 @@ object ApiParityCheck:
     else None
 
   private def collectDecls(
-      tree: Tree,
-      path: String,
-      out: collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]],
-      outer: List[String] = Nil,
+    tree:  Tree,
+    path:  String,
+    out:   collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]],
+    outer: List[String] = Nil
   ): Unit =
     /** Public or protected -- both are API surface for subclassing. */
     def isAccessible(mods: List[Mod]): Boolean =
       !mods.exists {
         case _: Mod.Private => true
-        case _              => false
+        case _ => false
       }
 
     def walkTemplate(templ: Template, path: String, scope: List[String]): Unit =
       templ.body.stats.foreach(member(_, path, scope))
 
     def ctorParams(
-        name: String,
-        isCase: Boolean,
-        ctor: Ctor.Primary,
-        path: String,
-        subst: Map[String, String],
+      name:   String,
+      isCase: Boolean,
+      ctor:   Ctor.Primary,
+      path:   String,
+      subst:  Map[String, String]
     ): Unit =
       ctor.paramClauses.flatMap(_.values).foreach { p =>
         val paramKind = p.mods
@@ -337,20 +324,19 @@ object ApiParityCheck:
               arity = 0,
               resultType = renderType(p.decltpe, subst),
               modifiers = extractModifiers(p.mods),
-              accessLevel = extractAccessLevel(p.mods),
+              accessLevel = extractAccessLevel(p.mods)
             )
         }
       }
 
     def trailingDefaults(clauses: List[Term.ParamClause]): Int =
-      clauses.filterNot(c => c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]))
-        .flatMap(_.values).reverse.takeWhile(_.default.isDefined).size
+      clauses.filterNot(c => c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit])).flatMap(_.values).reverse.takeWhile(_.default.isDefined).size
     def defParamTypes(clauses: List[Term.ParamClause], subst: Map[String, String]): List[String] =
       clauses.flatMap(_.values).map(p => renderType(p.decltpe, subst))
 
-    /** A DIRECT member of a template body, of a top-level scope or of an extension group — the
-      * only declarations that are public surface. A declaration inside a method body, a block, a
-      * lambda or an INACCESSIBLE template is unreachable from outside and is not walked. */
+    /** A DIRECT member of a template body, of a top-level scope or of an extension group — the only declarations that are public surface. A declaration inside a method body, a block, a lambda or an
+      * INACCESSIBLE template is unreachable from outside and is not walked.
+      */
     def member(t: Tree, path: String, scope: List[String]): Unit = t match
       case d: Defn.Class if isAccessible(d.mods) =>
         val own   = tparamNames(d.tparamClause.values)
@@ -363,7 +349,7 @@ object ApiParityCheck:
           typeParams = renderTypeParams(d.tparamClause.values, subst),
           parents = extractParents(d.templ, subst),
           modifiers = extractModifiers(d.mods),
-          accessLevel = extractAccessLevel(d.mods),
+          accessLevel = extractAccessLevel(d.mods)
         )
         ctorParams(d.name.value, d.mods.exists(_.isInstanceOf[Mod.Case]), d.ctor, path, subst)
         // the PRIMARY constructor as a `ctor` declaration: what `new X(...)` takes. Read by
@@ -375,7 +361,7 @@ object ApiParityCheck:
           arity = defArity(d.ctor.paramClauses.toList),
           paramTypes = defParamTypes(d.ctor.paramClauses.toList, subst),
           usingCount = usingArity(d.ctor.paramClauses.toList),
-          defaults = trailingDefaults(d.ctor.paramClauses.toList),
+          defaults = trailingDefaults(d.ctor.paramClauses.toList)
         )
         walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Trait if isAccessible(d.mods) =>
@@ -389,7 +375,7 @@ object ApiParityCheck:
           typeParams = renderTypeParams(d.tparamClause.values, subst),
           parents = extractParents(d.templ, subst),
           modifiers = extractModifiers(d.mods),
-          accessLevel = extractAccessLevel(d.mods),
+          accessLevel = extractAccessLevel(d.mods)
         )
         walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Object if isAccessible(d.mods) =>
@@ -400,7 +386,7 @@ object ApiParityCheck:
           arity = 0,
           parents = extractParents(d.templ, substFor(scope, Nil)),
           modifiers = extractModifiers(d.mods),
-          accessLevel = extractAccessLevel(d.mods),
+          accessLevel = extractAccessLevel(d.mods)
         )
         walkTemplate(d.templ, s"$path/${d.name.value}$$", scope)
       case d: Defn.Enum if isAccessible(d.mods) =>
@@ -414,7 +400,7 @@ object ApiParityCheck:
           typeParams = renderTypeParams(d.tparamClause.values, subst),
           parents = extractParents(d.templ, subst),
           modifiers = extractModifiers(d.mods),
-          accessLevel = extractAccessLevel(d.mods),
+          accessLevel = extractAccessLevel(d.mods)
         )
         ctorParams(d.name.value, isCase = false, d.ctor, path, subst)
         walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
@@ -439,7 +425,7 @@ object ApiParityCheck:
           targetName = extractTargetName(d.mods),
           parenless = clauses.isEmpty,
           usingCount = usingArity(clauses),
-          defaults = trailingDefaults(clauses),
+          defaults = trailingDefaults(clauses)
         )
       case d: Ctor.Secondary if isAccessible(d.mods) =>
         val subst = substFor(scope, Nil)
@@ -450,7 +436,7 @@ object ApiParityCheck:
           arity = defArity(d.paramClauses.toList),
           paramTypes = defParamTypes(d.paramClauses.toList, subst),
           usingCount = usingArity(d.paramClauses.toList),
-          defaults = trailingDefaults(d.paramClauses.toList),
+          defaults = trailingDefaults(d.paramClauses.toList)
         )
       case d: Decl.Def if isAccessible(d.mods) =>
         val clauses = d.paramClauseGroups.flatMap(_.paramClauses)
@@ -468,7 +454,7 @@ object ApiParityCheck:
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
           parenless = clauses.isEmpty,
-          usingCount = usingArity(clauses),
+          usingCount = usingArity(clauses)
         )
       case d: Defn.Val if isAccessible(d.mods) =>
         d.pats.foreach {
@@ -481,7 +467,7 @@ object ApiParityCheck:
               resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
-              constantType = constantTypeOf(d.rhs),
+              constantType = constantTypeOf(d.rhs)
             )
           case _ => ()
         }
@@ -495,7 +481,7 @@ object ApiParityCheck:
               arity = 0,
               resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
-              accessLevel = extractAccessLevel(d.mods),
+              accessLevel = extractAccessLevel(d.mods)
             )
           case _ => ()
         }
@@ -509,7 +495,7 @@ object ApiParityCheck:
               arity = 0,
               resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
-              accessLevel = extractAccessLevel(d.mods),
+              accessLevel = extractAccessLevel(d.mods)
             )
           case _ => ()
         }
@@ -523,7 +509,7 @@ object ApiParityCheck:
               arity = 0,
               resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
-              accessLevel = extractAccessLevel(d.mods),
+              accessLevel = extractAccessLevel(d.mods)
             )
           case _ => ()
         }
@@ -533,10 +519,9 @@ object ApiParityCheck:
           kind = "type",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(
-            d.tparamClause.values, substFor(scope, tparamNames(d.tparamClause.values))),
+          typeParams = renderTypeParams(d.tparamClause.values, substFor(scope, tparamNames(d.tparamClause.values))),
           modifiers = extractModifiers(d.mods),
-          accessLevel = extractAccessLevel(d.mods),
+          accessLevel = extractAccessLevel(d.mods)
         )
       case d: Decl.Type if isAccessible(d.mods) =>
         out += SurfaceDecl(
@@ -544,16 +529,15 @@ object ApiParityCheck:
           kind = "type",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(
-            d.tparamClause.values, substFor(scope, tparamNames(d.tparamClause.values))),
+          typeParams = renderTypeParams(d.tparamClause.values, substFor(scope, tparamNames(d.tparamClause.values))),
           modifiers = extractModifiers(d.mods),
-          accessLevel = extractAccessLevel(d.mods),
+          accessLevel = extractAccessLevel(d.mods)
         )
       case d: Defn.ExtensionGroup =>
         val inner = scope ++ tparamNames(d.paramClauseGroup.toList.flatMap(_.tparamClause.values))
         d.body match
           case b: Term.Block => b.stats.foreach(member(_, path, inner))
-          case one           => member(one, path, inner)
+          case one => member(one, path, inner)
       case _ => ()
 
     /** Source, packages and package objects carry surface without being it. */
@@ -561,7 +545,7 @@ object ApiParityCheck:
       case s: Source     => s.stats.foreach(top(_, path))
       case p: Pkg        => p.stats.foreach(top(_, path))
       case p: Pkg.Object => p.templ.body.stats.foreach(member(_, path, outer))
-      case other         => member(other, path, outer)
+      case other => member(other, path, outer)
 
     top(tree, path)
 
@@ -570,47 +554,48 @@ object ApiParityCheck:
     def go(t: Tree, acc: List[String]): List[String] = t match
       case s: Source => s.stats.collectFirst { case p: Pkg => go(p, acc) }.getOrElse(acc)
       case p: Pkg    => p.stats.collectFirst { case q: Pkg => go(q, acc :+ p.ref.syntax) }.getOrElse(acc :+ p.ref.syntax)
-      case _         => acc
+      case _ => acc
     go(tree, Nil).mkString(".")
 
   private def defArity(clauses: List[Term.ParamClause]): Int =
     clauses.map(_.values.length).sum
 
-  /** parameters in `using`/`implicit` clauses (a clause-level modifier in scala 3; scala 2's
-    * `implicit` sits on the first parameter). */
+  /** parameters in `using`/`implicit` clauses (a clause-level modifier in scala 3; scala 2's `implicit` sits on the first parameter).
+    */
   private def usingArity(clauses: List[Term.ParamClause]): Int =
-    clauses.filter { c =>
-      c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]) ||
+    clauses
+      .filter { c =>
+        c.mod.exists(m => m.is[Mod.Using] || m.is[Mod.Implicit]) ||
         c.values.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
-    }.map(_.values.length).sum
+      }
+      .map(_.values.length)
+      .sum
 
-  /** The type a CONSTANT initialiser gives an unascribed `val` — a value literal, optionally
-    * negated. Empty where the rhs is not one: `null` and `()` are neither a primitive nor a String,
-    * so neither is a java constant variable (JLS 4.12.4). */
+  /** The type a CONSTANT initialiser gives an unascribed `val` — a value literal, optionally negated. Empty where the rhs is not one: `null` and `()` are neither a primitive nor a String, so neither
+    * is a java constant variable (JLS 4.12.4).
+    */
   private def constantTypeOf(rhs: Term): String = rhs match
     case _: Lit.Null | _: Lit.Unit => ""
-    case _: Lit.Int                => "Int"
-    case _: Lit.Long               => "Long"
-    case _: Lit.Float              => "Float"
-    case _: Lit.Double             => "Double"
-    case _: Lit.Boolean            => "Boolean"
-    case _: Lit.Char               => "Char"
-    case _: Lit.String             => "String"
-    case _: Lit.Byte               => "Byte"
-    case _: Lit.Short              => "Short"
-    case Term.ApplyUnary(op, arg)  => if op.value == "-" then constantTypeOf(arg) else ""
-    case _                         => ""
+    case _: Lit.Int     => "Int"
+    case _: Lit.Long    => "Long"
+    case _: Lit.Float   => "Float"
+    case _: Lit.Double  => "Double"
+    case _: Lit.Boolean => "Boolean"
+    case _: Lit.Char    => "Char"
+    case _: Lit.String  => "String"
+    case _: Lit.Byte    => "Byte"
+    case _: Lit.Short   => "Short"
+    case Term.ApplyUnary(op, arg) => if op.value == "-" then constantTypeOf(arg) else ""
+    case _                        => ""
 
-  /** An INTEGER literal spells three declared types identically: `TirEmitterMembers.constAt`
-    * renders a `byte`/`short` constant as a plain integer literal, and `inline val` takes its type
-    * from the literal, so the ascription that told them apart is gone. Compared as ONE type rather
-    * than fabricating `Int` (the wider `long`/`float`/`double` all keep a suffix). */
+  /** An INTEGER literal spells three declared types identically: `TirEmitterMembers.constAt` renders a `byte`/`short` constant as a plain integer literal, and `inline val` takes its type from the
+    * literal, so the ascription that told them apart is gone. Compared as ONE type rather than fabricating `Int` (the wider `long`/`float`/`double` all keep a suffix).
+    */
   private val IntegralLiterals = Set("Byte", "Short", "Int")
 
-  /** The result type to compare: a declaration's own ascription, or — for an unascribed `inline
-    * val` — the type its constant initialiser gives it. Restores the comparison the empty
-    * `resultType` skipped (`CLAUDE.md` §3.5): an emitted `inline val K = 57` really does diverge
-    * from a hand port's `final val K: Key = 57`, and the row was hidden. */
+  /** The result type to compare: a declaration's own ascription, or — for an unascribed `inline val` — the type its constant initialiser gives it. Restores the comparison the empty `resultType`
+    * skipped (`CLAUDE.md` §3.5): an emitted `inline val K = 57` really does diverge from a hand port's `final val K: Key = 57`, and the row was hidden.
+    */
   private def effectiveResultType(d: SurfaceDecl): String =
     if d.resultType.nonEmpty then d.resultType
     else if d.kind == "val" && d.modifiers.contains("inline") then d.constantType
@@ -634,7 +619,7 @@ object ApiParityCheck:
 
   /** Strip `scala.Predef.`, `scala.`, `java.lang.` prefixes (always-available without import). */
   private def normalizeTypeName(t: String): String =
-    val s = t.trim
+    val s        = t.trim
     val prefixes = List("scala.Predef.", "scala.", "java.lang.")
     prefixes.foldLeft(s) { (acc, pfx) =>
       if acc.startsWith(pfx) then acc.drop(pfx.length) else acc
@@ -648,7 +633,7 @@ object ApiParityCheck:
   private[verify] def isNullWrapped(t: String): Boolean =
     val s = t.trim
     s.endsWith("| Null") || s.endsWith("| Null)") ||
-      nullWrappers.exists(w => s.startsWith(w + "[") || s.contains("." + w + "["))
+    nullWrappers.exists(w => s.startsWith(w + "[") || s.contains("." + w + "["))
 
   /** Strip `| Null`, `Nullable[...]`, or `Option[...]` to get the inner type. */
   private[verify] def stripNullWrapper(t: String): String =
@@ -658,42 +643,79 @@ object ApiParityCheck:
       val inner = s.drop(1).dropRight(7).trim
       inner
     else
-      nullWrappers.foldLeft(Option.empty[String]) { (acc, w) =>
-        acc.orElse {
-          if s.startsWith(w + "[") && s.endsWith("]") then
-            Some(s.drop(w.length + 1).dropRight(1))
-          else
-            val idx = s.indexOf("." + w + "[")
-            if idx >= 0 && s.endsWith("]") then
-              Some(s.drop(idx + w.length + 2).dropRight(1))
-            else None
+      nullWrappers
+        .foldLeft(Option.empty[String]) { (acc, w) =>
+          acc.orElse {
+            if s.startsWith(w + "[") && s.endsWith("]") then Some(s.drop(w.length + 1).dropRight(1))
+            else
+              val idx = s.indexOf("." + w + "[")
+              if idx >= 0 && s.endsWith("]") then Some(s.drop(idx + w.length + 2).dropRight(1))
+              else None
+          }
         }
-      }.getOrElse(s)
+        .getOrElse(s)
 
   private val javaCollectionTypes = Set(
-    "java.util.List", "java.util.ArrayList", "java.util.LinkedList",
-    "java.util.Set", "java.util.HashSet", "java.util.TreeSet", "java.util.LinkedHashSet",
-    "java.util.Map", "java.util.HashMap", "java.util.TreeMap", "java.util.LinkedHashMap",
-    "java.util.Collection", "java.util.Iterator", "java.util.Enumeration",
-    "java.util.Queue", "java.util.Deque", "java.util.ArrayDeque",
-    "java.lang.Iterable",
+    "java.util.List",
+    "java.util.ArrayList",
+    "java.util.LinkedList",
+    "java.util.Set",
+    "java.util.HashSet",
+    "java.util.TreeSet",
+    "java.util.LinkedHashSet",
+    "java.util.Map",
+    "java.util.HashMap",
+    "java.util.TreeMap",
+    "java.util.LinkedHashMap",
+    "java.util.Collection",
+    "java.util.Iterator",
+    "java.util.Enumeration",
+    "java.util.Queue",
+    "java.util.Deque",
+    "java.util.ArrayDeque",
+    "java.lang.Iterable"
   )
 
   private val scalaCollectionPrefixes = List(
-    "scala.collection.mutable.", "scala.collection.immutable.", "scala.collection.",
+    "scala.collection.mutable.",
+    "scala.collection.immutable.",
+    "scala.collection."
   )
 
   private val knownCollectionSimpleNames = Set(
-    "Array", "ArrayBuffer", "Buffer", "ListBuffer",
-    "Seq", "IndexedSeq", "List", "Vector",
-    "Set", "HashSet", "TreeSet", "SortedSet",
-    "Map", "HashMap", "TreeMap", "SortedMap",
-    "Iterator", "Iterable", "IterableOnce",
-    "BitSet", "Bits",
-    "Queue", "Stack", "ArrayDeque",
-    "mutable.Buffer", "mutable.Map", "mutable.Set",
-    "mutable.ArrayBuffer", "mutable.HashMap", "mutable.HashSet",
-    "immutable.List", "immutable.Map", "immutable.Set",
+    "Array",
+    "ArrayBuffer",
+    "Buffer",
+    "ListBuffer",
+    "Seq",
+    "IndexedSeq",
+    "List",
+    "Vector",
+    "Set",
+    "HashSet",
+    "TreeSet",
+    "SortedSet",
+    "Map",
+    "HashMap",
+    "TreeMap",
+    "SortedMap",
+    "Iterator",
+    "Iterable",
+    "IterableOnce",
+    "BitSet",
+    "Bits",
+    "Queue",
+    "Stack",
+    "ArrayDeque",
+    "mutable.Buffer",
+    "mutable.Map",
+    "mutable.Set",
+    "mutable.ArrayBuffer",
+    "mutable.HashMap",
+    "mutable.HashSet",
+    "immutable.List",
+    "immutable.Map",
+    "immutable.Set"
   )
 
   private def isJavaCollectionType(t: String): Boolean =
@@ -703,7 +725,7 @@ object ApiParityCheck:
   private def isScalaCollectionType(t: String): Boolean =
     val head = t.takeWhile(c => c != '[' && c != ' ')
     scalaCollectionPrefixes.exists(head.startsWith) ||
-      knownCollectionSimpleNames.contains(head)
+    knownCollectionSimpleNames.contains(head)
 
   /** True when one type is a JDK collection and the other is a scala collection. */
   private def isCollectionRetarget(a: String, b: String): Boolean =
@@ -711,9 +733,22 @@ object ApiParityCheck:
       (isScalaCollectionType(a) && isJavaCollectionType(b))
 
   private val primitiveTypes = Set(
-    "Int", "Long", "Float", "Double", "Short", "Byte", "Char", "Boolean",
-    "scala.Int", "scala.Long", "scala.Float", "scala.Double",
-    "scala.Short", "scala.Byte", "scala.Char", "scala.Boolean",
+    "Int",
+    "Long",
+    "Float",
+    "Double",
+    "Short",
+    "Byte",
+    "Char",
+    "Boolean",
+    "scala.Int",
+    "scala.Long",
+    "scala.Float",
+    "scala.Double",
+    "scala.Short",
+    "scala.Byte",
+    "scala.Char",
+    "scala.Boolean"
   )
 
   private val factoryNames = Set("apply", "from", "wrap", "of", "create")
@@ -723,54 +758,54 @@ object ApiParityCheck:
     if renames.isEmpty then path
     else
       val segments = path.stripPrefix("/").split('/').toList
-      val dotted = segments.mkString(".")
-      val sorted = renames.toList.sortBy(-_._1.length)
+      val dotted   = segments.mkString(".")
+      val sorted   = renames.toList.sortBy(-_._1.length)
       sorted.find((from, _) => dotted == from || dotted.startsWith(from + ".")) match
         case Some((from, to)) =>
-          val rest = dotted.drop(from.length)
+          val rest      = dotted.drop(from.length)
           val newDotted = if rest.isEmpty then to else to + rest
           "/" + newDotted.replace('.', '/')
         case None => path
 
   /** A divergence between the two surfaces. */
   final case class Divergence(
-      family: String,
-      emitted: Option[SurfaceDecl],
-      reference: Option[SurfaceDecl],
-      detail: String,
-      renameCandidates: String = "",
+    family:           String,
+    emitted:          Option[SurfaceDecl],
+    reference:        Option[SurfaceDecl],
+    detail:           String,
+    renameCandidates: String = ""
   ):
-    def subject: String = emitted.orElse(reference).map(_.toString).getOrElse("?")
+    def subject:                              String              = emitted.orElse(reference).map(_.toString).getOrElse("?")
     def report(renames: Map[String, String]): CheckReport.Finding =
-      val path = emitted.orElse(reference).map(d => normalisePath(d.path, renames)).getOrElse("")
+      val path       = emitted.orElse(reference).map(d => normalisePath(d.path, renames)).getOrElse("")
       val fullDetail = if renameCandidates.nonEmpty then s"$detail [rename candidates: $renameCandidates]"
-                       else detail
+      else detail
       CheckReport.Finding(
-        check  = lane(family),
-        kind   = family,
-        owner  = emitted.orElse(reference).map(d => d.path.stripPrefix("/").replace('/', '.') + "#" + d.name).getOrElse("?"),
-        path   = path,
-        line   = 0,
-        detail = fullDetail,
+        check = lane(family),
+        kind = family,
+        owner = emitted.orElse(reference).map(d => d.path.stripPrefix("/").replace('/', '.') + "#" + d.name).getOrElse("?"),
+        path = path,
+        line = 0,
+        detail = fullDetail
       )
 
   /** Compare two surfaces and classify every divergence.
     *
-    * `javaFields` is the run's own port map, reduced to the members java declared as FIELDS —
-    * `"OwnerSimpleName#member"` for every member row whose upstream key carries no parameter list
-    * (`PortMap.Entry.upstream`'s grammar). Empty makes [[finalFieldRule]] a no-op. */
+    * `javaFields` is the run's own port map, reduced to the members java declared as FIELDS — `"OwnerSimpleName#member"` for every member row whose upstream key carries no parameter list
+    * (`PortMap.Entry.upstream`'s grammar). Empty makes [[finalFieldRule]] a no-op.
+    */
   def compare(
-      emitted: List[SurfaceDecl],
-      reference: List[SurfaceDecl],
-      renames: Map[String, String],
-      javaFields: Set[String] = Set.empty,
+    emitted:    List[SurfaceDecl],
+    reference:  List[SurfaceDecl],
+    renames:    Map[String, String],
+    javaFields: Set[String] = Set.empty
   ): List[Divergence] =
     val inverseRenames = renames.map((k, v) => (v, k))
     // constructors are a derivation input, not a compared surface (the factory family reads them)
-    val normRef = reference.filterNot(_.kind == "ctor").map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
-    val emittedByKey  = emitted.filterNot(_.kind == "ctor").groupBy(_.matchKey)
-    val refByKey      = normRef.groupBy(_.matchKey)
-    val allKeys       = (emittedByKey.keySet ++ refByKey.keySet).toList.sorted
+    val normRef      = reference.filterNot(_.kind == "ctor").map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
+    val emittedByKey = emitted.filterNot(_.kind == "ctor").groupBy(_.matchKey)
+    val refByKey     = normRef.groupBy(_.matchKey)
+    val allKeys      = (emittedByKey.keySet ++ refByKey.keySet).toList.sorted
 
     val out = List.newBuilder[Divergence]
 
@@ -783,23 +818,18 @@ object ApiParityCheck:
           val drift = e.kind != r.kind
           if drift then
             val family = classifyKindDrift(e, r)
-            out += Divergence(family, Some(e), Some(r),
-              s"kind differs: emitted ${e.kind}, reference ${r.kind}")
+            out += Divergence(family, Some(e), Some(r), s"kind differs: emitted ${e.kind}, reference ${r.kind}")
           classifyTypeDifferences(e, r, drift, javaFields).foreach(out += _)
         }
       else if es.nonEmpty && rs.isEmpty then
         es.foreach { e =>
           val (family, candidates) = tryClassifyExtraWithCandidates(e, normRef, "port-extra")
-          out += Divergence(family, Some(e), None,
-            s"${e.kind} ${e.name}/${e.arity} in emitted port only",
-            renameCandidates = candidates)
+          out += Divergence(family, Some(e), None, s"${e.kind} ${e.name}/${e.arity} in emitted port only", renameCandidates = candidates)
         }
       else
         rs.foreach { r =>
           val (family, candidates) = tryClassifyMissingWithCandidates(r, emitted, "hand-port-extra")
-          out += Divergence(family, None, Some(r),
-            s"${r.kind} ${r.name}/${r.arity} in reference port only",
-            renameCandidates = candidates)
+          out += Divergence(family, None, Some(r), s"${r.kind} ${r.name}/${r.arity} in reference port only", renameCandidates = candidates)
         }
     }
 
@@ -811,138 +841,145 @@ object ApiParityCheck:
     if propKinds.contains(e.kind) && propKinds.contains(r.kind) then "mutability"
     else "unclassified"
 
-  /** Classify type-level divergences between two key-matched declarations. `kindDrift` says the
-    * caller already reported one, so the pair's difference is not the modifiers alone. */
+  /** Classify type-level divergences between two key-matched declarations. `kindDrift` says the caller already reported one, so the pair's difference is not the modifiers alone.
+    */
   private def classifyTypeDifferences(
-      e: SurfaceDecl,
-      r: SurfaceDecl,
-      kindDrift: Boolean,
-      javaFields: Set[String],
+    e:          SurfaceDecl,
+    r:          SurfaceDecl,
+    kindDrift:  Boolean,
+    javaFields: Set[String]
   ): List[Divergence] =
     val out = List.newBuilder[Divergence]
 
     if e.paramTypes.nonEmpty || r.paramTypes.nonEmpty then
       val maxLen = math.max(e.paramTypes.length, r.paramTypes.length)
-      val ePad = e.paramTypes.padTo(maxLen, "")
-      val rPad = r.paramTypes.padTo(maxLen, "")
+      val ePad   = e.paramTypes.padTo(maxLen, "")
+      val rPad   = r.paramTypes.padTo(maxLen, "")
       ePad.zip(rPad).zipWithIndex.foreach { case ((et, rt), idx) =>
         if !typesMatch(et, rt) then
           val family = classifyTypePairDivergence(et, rt)
-          out += Divergence(family, Some(e), Some(r),
-            s"param $idx type differs: emitted '$et', reference '$rt'")
+          out += Divergence(family, Some(e), Some(r), s"param $idx type differs: emitted '$et', reference '$rt'")
       }
 
     val eResult = effectiveResultType(e)
     val rResult = effectiveResultType(r)
     if eResult.nonEmpty && rResult.nonEmpty && !resultTypesMatch(e, r, eResult, rResult) then
       val family = classifyTypePairDivergence(eResult, rResult)
-      out += Divergence(family, Some(e), Some(r),
-        s"result type differs: emitted '$eResult', reference '$rResult'")
+      out += Divergence(family, Some(e), Some(r), s"result type differs: emitted '$eResult', reference '$rResult'")
 
     if e.typeParams.nonEmpty && r.typeParams.nonEmpty && e.typeParams != r.typeParams then
-      out += Divergence("signature", Some(e), Some(r),
-        s"type params differ: emitted '${e.typeParams}', reference '${r.typeParams}'")
+      out += Divergence("signature", Some(e), Some(r), s"type params differ: emitted '${e.typeParams}', reference '${r.typeParams}'")
 
     if Set("class", "trait", "enum").contains(e.kind) && e.parents != r.parents then
       val eDiff = e.parents.filterNot(ep => r.parents.exists(rp => typesMatch(ep, rp)))
       val rDiff = r.parents.filterNot(rp => e.parents.exists(ep => typesMatch(ep, rp)))
       if eDiff.nonEmpty || rDiff.nonEmpty then
         val family = classifyParentDivergence(eDiff, rDiff)
-        out += Divergence(family, Some(e), Some(r),
-          s"parents differ: emitted-only [${eDiff.mkString(", ")}], reference-only [${rDiff.mkString(", ")}]")
+        out += Divergence(
+          family,
+          Some(e),
+          Some(r),
+          s"parents differ: emitted-only [${eDiff.mkString(", ")}], reference-only [${rDiff.mkString(", ")}]"
+        )
 
-    if e.accessLevel != r.accessLevel then
-      out += Divergence("visibility", Some(e), Some(r),
-        s"access differs: emitted '${e.accessLevel}', reference '${r.accessLevel}'")
+    if e.accessLevel != r.accessLevel then out += Divergence("visibility", Some(e), Some(r), s"access differs: emitted '${e.accessLevel}', reference '${r.accessLevel}'")
 
     if e.targetName != r.targetName then
-      if e.targetName.nonEmpty || r.targetName.nonEmpty then
-        out += Divergence("operator", Some(e), Some(r),
-          s"@targetName differs: emitted '${e.targetName}', reference '${r.targetName}'")
+      if e.targetName.nonEmpty || r.targetName.nonEmpty then out += Divergence("operator", Some(e), Some(r), s"@targetName differs: emitted '${e.targetName}', reference '${r.targetName}'")
 
     // The family means the ONLY difference is the engine's rule, so the rows above are the test:
     // a pair that also drifted in kind or type is a `signature` question about that other thing.
     val pre     = out.result()
     val whole   = !kindDrift && pre.isEmpty
     val modDiff = e.modifiers.diff(r.modifiers) ++ r.modifiers.diff(e.modifiers)
-    val mods =
+    val mods    =
       if modDiff.isEmpty then Nil
-      else if modDiff.contains("opaque") then
-        List(Divergence("opaque", Some(e), Some(r),
-          s"opaque modifier differs: emitted ${e.modifiers}, reference ${r.modifiers}"))
+      else if modDiff.contains("opaque") then List(Divergence("opaque", Some(e), Some(r), s"opaque modifier differs: emitted ${e.modifiers}, reference ${r.modifiers}"))
       else
         catalogRule(e, r, modDiff, javaFields).filter(_ => whole) match
           case Some(detail) => List(Divergence("rule", Some(e), Some(r), detail))
-          case None =>
-            List(Divergence("signature", Some(e), Some(r),
-              s"modifiers differ: emitted ${e.modifiers.mkString(",")}, reference ${r.modifiers.mkString(",")}"))
+          case None         =>
+            List(
+              Divergence(
+                "signature",
+                Some(e),
+                Some(r),
+                s"modifiers differ: emitted ${e.modifiers.mkString(",")}, reference ${r.modifiers.mkString(",")}"
+              )
+            )
 
     pre ++ mods
 
-  /** The modifier difference the engine made BY A CATALOG RULE, or `None`. Read off the emitted
-    * SHAPE plus the run's own port map — no `Decision` is recorded per declaration for either
-    * rendering; when one is, read that instead (`CLAUDE.md` §3.5). */
+  /** The modifier difference the engine made BY A CATALOG RULE, or `None`. Read off the emitted SHAPE plus the run's own port map — no `Decision` is recorded per declaration for either rendering;
+    * when one is, read that instead (`CLAUDE.md` §3.5).
+    */
   private def catalogRule(
-      e: SurfaceDecl,
-      r: SurfaceDecl,
-      modDiff: Set[String],
-      javaFields: Set[String],
+    e:          SurfaceDecl,
+    r:          SurfaceDecl,
+    modDiff:    Set[String],
+    javaFields: Set[String]
   ): Option[String] =
     inlineConstantRule(e, r, modDiff).orElse(finalFieldRule(e, r, modDiff, javaFields))
 
-  /** The engine renders a java CONSTANT VARIABLE `inline val <n> = <literal>` so that reading it
-    * triggers no class initialiser (`CLAUDE.md` §4.4, catalog `JS-C08`, JLS 4.12.4/13.1). That one
-    * rendering both ADDS `inline` and DROPS java's `final` (`TirEmitterMembers.valDef0`), so a
-    * hand port's `final` is the same difference and not a second one. */
+  /** The engine renders a java CONSTANT VARIABLE `inline val <n> = <literal>` so that reading it triggers no class initialiser (`CLAUDE.md` §4.4, catalog `JS-C08`, JLS 4.12.4/13.1). That one
+    * rendering both ADDS `inline` and DROPS java's `final` (`TirEmitterMembers.valDef0`), so a hand port's `final` is the same difference and not a second one.
+    */
   private def inlineConstantRule(
-      e: SurfaceDecl,
-      r: SurfaceDecl,
-      modDiff: Set[String],
+    e:       SurfaceDecl,
+    r:       SurfaceDecl,
+    modDiff: Set[String]
   ): Option[String] =
     val refSpelling = (r.modifiers.toList.sorted :+ r.kind).mkString(" ")
     Option.when(
       (modDiff == Set("inline") || (modDiff == Set("inline", "final") && r.modifiers.contains("final"))) &&
         e.modifiers.contains("inline") && !e.modifiers.contains("final") &&
         e.kind == "val" && r.kind == "val" && e.constantInit
-    )(s"rule ${balticporter.catalog.JS.C(8)}: emitted inline val (a java constant variable is " +
-      s"inlined, JLS 4.12.4/13.1), reference $refSpelling")
+    )(
+      s"rule ${balticporter.catalog.JS.C(8)}: emitted inline val (a java constant variable is " +
+        s"inlined, JLS 4.12.4/13.1), reference $refSpelling"
+    )
 
-  /** A java FIELD is HIDDEN, never overridden (JLS 8.3), so `mods` carries java's `final` onto the
-    * emitted val to restate that static binding (`CLAUDE.md` §4.4, catalog `JS-C53`); the hand port
-    * dropped it. "Came from a java FIELD" is the PORT MAP's answer, not the emitted shape — a `val`
-    * with no member row (an injected file's) is left alone, which the shape could not tell apart. */
+  /** A java FIELD is HIDDEN, never overridden (JLS 8.3), so `mods` carries java's `final` onto the emitted val to restate that static binding (`CLAUDE.md` §4.4, catalog `JS-C53`); the hand port
+    * dropped it. "Came from a java FIELD" is the PORT MAP's answer, not the emitted shape — a `val` with no member row (an injected file's) is left alone, which the shape could not tell apart.
+    */
   private def finalFieldRule(
-      e: SurfaceDecl,
-      r: SurfaceDecl,
-      modDiff: Set[String],
-      javaFields: Set[String],
+    e:          SurfaceDecl,
+    r:          SurfaceDecl,
+    modDiff:    Set[String],
+    javaFields: Set[String]
   ): Option[String] =
     val refSpelling = (r.modifiers.toList.sorted :+ r.kind).mkString(" ")
     Option.when(
       modDiff == Set("final") && e.modifiers.contains("final") &&
         e.kind == "val" && r.kind == "val" && javaFields.contains(fieldKey(e))
-    )(s"rule ${balticporter.catalog.JS.C(53)}: emitted final val (java's final on a FIELD also " +
-      s"states no subclass may override the read, JLS 8.3), reference $refSpelling")
+    )(
+      s"rule ${balticporter.catalog.JS.C(53)}: emitted final val (java's final on a FIELD also " +
+        s"states no subclass may override the read, JLS 8.3), reference $refSpelling"
+    )
 
-  /** `"OwnerSimpleName#member"` — the key both a [[SurfaceDecl]] and a port-map member row reduce
-    * to. Paths carry no package (`normalisePath`), so the owner is its last segment. */
+  /** `"OwnerSimpleName#member"` — the key both a [[SurfaceDecl]] and a port-map member row reduce to. Paths carry no package (`normalisePath`), so the owner is its last segment.
+    */
   private def fieldKey(d: SurfaceDecl): String =
     val owner = d.path.split('/').lastOption.getOrElse("").stripSuffix("$")
     s"$owner#${d.name}"
 
-  /** The port map, reduced to the members java declared as FIELDS. A member row's `upstream` key
-    * is `owner#name(P1,P2)` for a method and `owner#name` for a field, so the parameter list is the
-    * discriminator; a dropped row emitted nothing to compare. */
+  /** The port map, reduced to the members java declared as FIELDS. A member row's `upstream` key is `owner#name(P1,P2)` for a method and `owner#name` for a field, so the parameter list is the
+    * discriminator; a dropped row emitted nothing to compare.
+    */
   def javaFieldKeys(members: List[balticporter.core.PortMap.Entry]): Set[String] =
-    members.iterator.collect {
-      case m if !m.upstream.contains('(') && m.emitted.nonEmpty &&
-        m.disposition != balticporter.core.PortMap.Disposition.Dropped =>
-        val cut   = m.emitted.lastIndexOf('#')
-        val owner = m.emitted.take(math.max(cut, 0))
-        val name  = m.emitted.drop(cut + 1)
-        val simple = owner.split(Array('.', '$')).lastOption.getOrElse("")
-        s"$simple#$name"
-    }.filterNot(_.startsWith("#")).toSet
+    members.iterator
+      .collect {
+        case m
+            if !m.upstream.contains('(') && m.emitted.nonEmpty &&
+              m.disposition != balticporter.core.PortMap.Disposition.Dropped =>
+          val cut    = m.emitted.lastIndexOf('#')
+          val owner  = m.emitted.take(math.max(cut, 0))
+          val name   = m.emitted.drop(cut + 1)
+          val simple = owner.split(Array('.', '$')).lastOption.getOrElse("")
+          s"$simple#$name"
+      }
+      .filterNot(_.startsWith("#"))
+      .toSet
 
   private def classifyTypePairDivergence(emitted: String, reference: String): String =
     val eNull = isNullWrapped(emitted)
@@ -970,20 +1007,20 @@ object ApiParityCheck:
 
   /** Classify an extra member on one side, with rename candidates. */
   private def tryClassifyExtraWithCandidates(
-      d: SurfaceDecl,
-      otherSide: List[SurfaceDecl],
-      defaultFamily: String,
+    d:             SurfaceDecl,
+    otherSide:     List[SurfaceDecl],
+    defaultFamily: String
   ): (String, String) =
-    val family = tryClassifyExtra(d, otherSide, defaultFamily)
+    val family     = tryClassifyExtra(d, otherSide, defaultFamily)
     val candidates = if family == defaultFamily then findRenameCandidates(d, otherSide) else ""
     (family, candidates)
 
   private def tryClassifyMissingWithCandidates(
-      d: SurfaceDecl,
-      otherSide: List[SurfaceDecl],
-      defaultFamily: String,
+    d:             SurfaceDecl,
+    otherSide:     List[SurfaceDecl],
+    defaultFamily: String
   ): (String, String) =
-    val family = tryClassifyMissing(d, otherSide, defaultFamily)
+    val family     = tryClassifyMissing(d, otherSide, defaultFamily)
     val candidates = if family == defaultFamily then findRenameCandidates(d, otherSide) else ""
     (family, candidates)
 
@@ -993,45 +1030,38 @@ object ApiParityCheck:
     else
       val candidates = otherSide.filter { o =>
         o.path == d.path &&
-          o.kind == d.kind &&
-          o.arity == d.arity &&
-          o.name != d.name
+        o.kind == d.kind &&
+        o.arity == d.arity &&
+        o.name != d.name
       }
       candidates.map(_.name).mkString(", ")
 
   private def tryClassifyExtra(d: SurfaceDecl, otherSide: List[SurfaceDecl], defaultFamily: String): String =
     if d.kind == "def" && d.arity == 0 then
       val prop = accessorPropName(d.name)
-      if prop.isDefined && otherSide.exists(o => o.path == d.path && prop.contains(o.name)) then
-        return "accessor"
+      if prop.isDefined && otherSide.exists(o => o.path == d.path && prop.contains(o.name)) then return "accessor"
     if d.kind == "def" && d.arity == 1 then
       val prop = setterPropName(d.name)
-      if prop.isDefined && otherSide.exists(o => o.path == d.path && prop.contains(o.name)) then
-        return "accessor"
-    if d.path.endsWith("$") && factoryNames.contains(d.name) then
-      if hasMatchingType(d.path, otherSide) then
-        return "factory"
+      if prop.isDefined && otherSide.exists(o => o.path == d.path && prop.contains(o.name)) then return "accessor"
+    if d.path.endsWith("$") && factoryNames.contains(d.name) then if hasMatchingType(d.path, otherSide) then return "factory"
     if otherSide.exists(o =>
-      normCompanionPath(o.path) == normCompanionPath(d.path) &&
-        o.kind == d.kind && o.name == d.name && o.arity == d.arity
-    ) then
-      return "static-placement"
+        normCompanionPath(o.path) == normCompanionPath(d.path) &&
+          o.kind == d.kind && o.name == d.name && o.arity == d.arity
+      )
+    then return "static-placement"
     if isOperatorRename(d, otherSide) then return "operator"
     defaultFamily
 
   private def tryClassifyMissing(d: SurfaceDecl, otherSide: List[SurfaceDecl], defaultFamily: String): String =
     if Set("val", "var").contains(d.kind) then
       val getters = List("get" + d.name.capitalize, "is" + d.name.capitalize)
-      if otherSide.exists(o => o.path == d.path && o.kind == "def" && o.arity == 0 && getters.contains(o.name)) then
-        return "accessor"
-    if d.path.endsWith("$") && factoryNames.contains(d.name) then
-      if hasMatchingType(d.path, otherSide) then
-        return "factory"
+      if otherSide.exists(o => o.path == d.path && o.kind == "def" && o.arity == 0 && getters.contains(o.name)) then return "accessor"
+    if d.path.endsWith("$") && factoryNames.contains(d.name) then if hasMatchingType(d.path, otherSide) then return "factory"
     if otherSide.exists(o =>
-      normCompanionPath(o.path) == normCompanionPath(d.path) &&
-        o.kind == d.kind && o.name == d.name && o.arity == d.arity
-    ) then
-      return "static-placement"
+        normCompanionPath(o.path) == normCompanionPath(d.path) &&
+          o.kind == d.kind && o.name == d.name && o.arity == d.arity
+      )
+    then return "static-placement"
     if isOperatorRename(d, otherSide) then return "operator"
     defaultFamily
 
@@ -1039,9 +1069,9 @@ object ApiParityCheck:
   private def isOperatorRename(d: SurfaceDecl, otherSide: List[SurfaceDecl]): Boolean =
     otherSide.exists { o =>
       o.path == d.path && o.kind == d.kind && o.arity == d.arity && o.name != d.name &&
-        ((d.targetName.nonEmpty && d.targetName == o.name) ||
-         (o.targetName.nonEmpty && o.targetName == d.name) ||
-         (d.targetName.nonEmpty && o.targetName.nonEmpty && d.targetName == o.targetName))
+      ((d.targetName.nonEmpty && d.targetName == o.name) ||
+        (o.targetName.nonEmpty && o.targetName == d.name) ||
+        (d.targetName.nonEmpty && o.targetName.nonEmpty && d.targetName == o.targetName))
     }
 
   private def accessorPropName(name: String): Option[String] =
@@ -1051,14 +1081,13 @@ object ApiParityCheck:
     }
 
   private def setterPropName(name: String): Option[String] =
-    if name.length > 3 && name.startsWith("set") && name(3).isUpper then
-      Some(name(3).toLower.toString + name.drop(4))
+    if name.length > 3 && name.startsWith("set") && name(3).isUpper then Some(name(3).toLower.toString + name.drop(4))
     else None
 
   /** True if a type with matching name exists at the companion's parent path. */
   private def hasMatchingType(companionMemberPath: String, decls: List[SurfaceDecl]): Boolean =
-    val companionPath = companionMemberPath.stripSuffix("$")
-    val lastSlash = companionPath.lastIndexOf('/')
+    val companionPath          = companionMemberPath.stripSuffix("$")
+    val lastSlash              = companionPath.lastIndexOf('/')
     val (parentPath, typeName) =
       if lastSlash >= 0 then (companionPath.take(lastSlash), companionPath.drop(lastSlash + 1))
       else ("", companionPath.stripPrefix("/"))
@@ -1070,24 +1099,22 @@ object ApiParityCheck:
   private def normCompanionPath(path: String): String =
     path.split('/').map(_.stripSuffix("$")).mkString("/")
 
-  /** Run the check. Returns per-family findings. `javaFields` is [[javaFieldKeys]] over this run's
-    * own port map; empty makes the field rule a no-op. */
+  /** Run the check. Returns per-family findings. `javaFields` is [[javaFieldKeys]] over this run's own port map; empty makes the field rule a no-op.
+    */
   def check(
-      ref: ParityRef,
-      emitDir: Path,
-      renames: Map[String, String],
-      javaFields: Set[String] = Set.empty,
+    ref:        ParityRef,
+    emitDir:    Path,
+    renames:    Map[String, String],
+    javaFields: Set[String] = Set.empty
   ): List[CheckReport.Finding] =
     val emittedResult   = parseSurface(List(emitDir))
     val referenceResult = parseSurface(ref.roots, ref.upstreamMarkers)
 
     (emittedResult, referenceResult) match
       case (Left(err), _) =>
-        List(CheckReport.Finding(lane("unclassified"), "parse-error", "emitted", "", 0,
-          s"could not parse emitted sources: $err"))
+        List(CheckReport.Finding(lane("unclassified"), "parse-error", "emitted", "", 0, s"could not parse emitted sources: $err"))
       case (_, Left(err)) =>
-        List(CheckReport.Finding(lane("unclassified"), "parse-error", "reference", "", 0,
-          s"could not parse reference sources: $err"))
+        List(CheckReport.Finding(lane("unclassified"), "parse-error", "reference", "", 0, s"could not parse reference sources: $err"))
       case (Right(emitted), Right((reference, originals))) =>
         val effectiveRenames = if ref.packageMapping.nonEmpty then ref.packageMapping else renames
         // A type ONLY an excluded file declares leaves the comparison on BOTH sides: the emitted
@@ -1103,21 +1130,19 @@ object ApiParityCheck:
 
   /** One informational row per top-level type in a hand-port file with no upstream marker. */
   private def handOriginal(
-      o: HandOriginal,
-      emittedTypes: Set[String],
-      excluded: Set[String],
+    o:            HandOriginal,
+    emittedTypes: Set[String],
+    excluded:     Set[String]
   ): List[CheckReport.Finding] =
     // A file with no top-level type (top-level defs, an extension group) is listed under its own
     // name: an excluded file that appears in no row is an exclusion nothing can see.
     val owners = if o.types.nonEmpty then o.types else List(stemOf(o.path))
     val none   = if o.types.nonEmpty then "" else "; no top-level type"
     owners.map { t =>
-      val hint  = if o.hint.isEmpty then "" else s"; ${o.hint}"
-      val twin  = if excluded.contains(t) && emittedTypes.contains(t) then
-                    s"; the emitted port declares $t — its members are compared against nothing"
-                  else ""
-      CheckReport.Finding(lane("hand-original"), "hand-original", t, o.path, 0,
-        s"no upstream marker in header$none$hint$twin")
+      val hint = if o.hint.isEmpty then "" else s"; ${o.hint}"
+      val twin = if excluded.contains(t) && emittedTypes.contains(t) then s"; the emitted port declares $t — its members are compared against nothing"
+      else ""
+      CheckReport.Finding(lane("hand-original"), "hand-original", t, o.path, 0, s"no upstream marker in header$none$hint$twin")
     }
 
   private def stemOf(path: String): String =
@@ -1126,7 +1151,9 @@ object ApiParityCheck:
   /** Summary line for stdout, counts by family. */
   def summary(findings: List[CheckReport.Finding]): String =
     val byFamily = findings.groupBy(_.kind)
-    Families.map { f =>
-      val n = byFamily.getOrElse(f, Nil).size
-      s"  $f: $n"
-    }.mkString("API PARITY:\n", "\n", "")
+    Families
+      .map { f =>
+        val n = byFamily.getOrElse(f, Nil).size
+        s"  $f: $n"
+      }
+      .mkString("API PARITY:\n", "\n", "")

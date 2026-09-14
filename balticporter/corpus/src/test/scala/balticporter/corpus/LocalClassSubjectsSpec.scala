@@ -25,7 +25,7 @@ class LocalClassSubjectsSpec extends PortSuite:
 
   private def subjects: Set[String] =
     given Program = ported.after
-    val into = collection.mutable.Set.empty[SymId]
+    val into      = collection.mutable.Set.empty[SymId]
     ported.after.units.foreach(u => PortRun.declaredSymbols(u, into))
     into.flatMap(s => ported.after.symbolOf(s).map(_.name)).toSet
 
@@ -47,15 +47,16 @@ class LocalClassSubjectsSpec extends PortSuite:
 
   // -- the marker half: the count was right, the ATTRIBUTION was not ----------------------------
 
-  /** wraps the LOCAL class's own method body in an open marker and nothing else — `Tree.Unportable`
-    * refuses a synthetic origin, so the marker takes the body's real one. */
+  /** wraps the LOCAL class's own method body in an open marker and nothing else — `Tree.Unportable` refuses a synthetic origin, so the marker takes the body's real one.
+    */
   private class MintInLocal extends Phase:
-    def name: String = "test/mint-in-local"
+    def name:                                                       String      = "test/mint-in-local"
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if !p.symbolOf(d.symbol).exists(_.name == "twice") then d
-      else d.copy(rhs = d.rhs.map(r =>
-        Tree.Unportable.open(r, UnportableKind.FrontendBlindSpot, scala.None,
-          "a planted refusal", r.tpe, r.origin)))
+      else
+        d.copy(
+          rhs = d.rhs.map(r => Tree.Unportable.open(r, UnportableKind.FrontendBlindSpot, scala.None, "a planted refusal", r.tpe, r.origin))
+        )
 
   test("a marker inside a method-local class is sited on THAT class's member, not on the enclosing method") {
     val p     = port(src, new MintInLocal)

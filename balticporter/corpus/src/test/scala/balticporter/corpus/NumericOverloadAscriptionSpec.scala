@@ -16,7 +16,8 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
         |    void put(float a, float b) {}
         |    void go() { put(1, 2); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("(this.put: (scala.Int, scala.Int) => scala.Unit)(1, 2)"), o)
   }
 
@@ -33,7 +34,8 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
         |class Caller {
         |    void go(Plain p) { p.append(' ', 2); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("(p.append: (scala.Char, scala.Int) => demo.Plain)"), o)
     assert(!o.contains("=> S)"), o)
   }
@@ -48,7 +50,8 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
         |    S append(int start, int end) { return null; }
         |    S twice() { return append(' ', 2); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("(this.append: (scala.Char, scala.Int) => S)"), o)
   }
 
@@ -61,7 +64,8 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
         |    void put(char a, char b) {}
         |    void go() { put(1, 2); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!o.contains("this.put:"), o)
     assert(o.contains("this.put(1, 2)"), o)
   }
@@ -80,7 +84,8 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
         |    @SuppressWarnings("rawtypes")
         |    void go(Builder b) { b.append(' ', 2); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!o.contains("=> S)"), o)
     // …and not `=> ?` either: binding the variable to the wildcard the raw use carries names
     // nothing, which is the second half of the same decline.
@@ -98,6 +103,7 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
         |    <T> T pick(int a, int b) { return null; }
         |    void go() { pick(' ', 2); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!o.contains("=> T)"), o)
   }

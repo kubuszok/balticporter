@@ -1,7 +1,7 @@
 package balticporter.tir
 
 import balticporter.catalog.CatalogLog
-import balticporter.core.{PolicyIssue, PolicyReport}
+import balticporter.core.{ PolicyIssue, PolicyReport }
 import balticporter.frontend.spoon.SpoonTir
 
 /** THE FIRST MENU, END TO END — `heap-pollution`'s `acknowledge` (`DESIGN.md` §8.16). */
@@ -19,8 +19,8 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
 
   private val vocabulary = RemedyVocabulary.from(List(HeapPollutionCheck))
 
-  /** bind a selection and RUN the applier through the pipeline — the seam a port uses, never a
-    * direct call into the phase. */
+  /** bind a selection and RUN the applier through the pipeline — the seam a port uses, never a direct call into the phase.
+    */
   private def run(p: Program, declared: Map[String, String]): (Program, PolicyBinder) =
     val binder = new PolicyBinder(p, p.members)
     binder.resolving(ResolutionPlan.of(declared, vocabulary, vocabulary.byId.keySet, binder))
@@ -56,12 +56,11 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
 
   test("with no selections the lane is what it always was — the mechanism's no-op") {
     val p = program
-    assertEquals(lane(p).sorted, List("Acknowledged com.demo.Vault#keepSafely",
-                                      "Unacknowledged com.demo.Vault#keep"))
+    assertEquals(lane(p).sorted, List("Acknowledged com.demo.Vault#keepSafely", "Unacknowledged com.demo.Vault#keep"))
   }
 
   test("a selection DRAINS its row: the lane falls by exactly what `remediation(resolved)` gained") {
-    val p            = program
+    val p             = program
     val (out, binder) = run(p, Map("com.demo.Vault#keep(T[])" -> "acknowledge"))
     val plan          = binder.resolutions
     // ONE row moved, and it is the one the key named.
@@ -89,8 +88,8 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
   }
 
   test("the TREE is untouched — `acknowledge` is not emission-affecting, and that is structural") {
-    val p   = program
-    val out = run(p, Map("com.demo.Vault#keep(T[])" -> "acknowledge"))._1
+    val p      = program
+    val out    = run(p, Map("com.demo.Vault#keep(T[])" -> "acknowledge"))._1
     val before = p.definitionOf(p.symbols.all.find(_.fullName == "com.demo.Vault#keep").get.id)
     val after  = out.definitionOf(out.symbols.all.find(_.fullName == "com.demo.Vault#keep").get.id)
     assertEquals(after, before)
@@ -109,8 +108,7 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
     val (out, binder) = run(p, Map("com.demo.Vault#keepSafely(T[])" -> "acknowledge"))
     val plan          = binder.resolutions
     assertEquals(plan.all, Nil)
-    assertEquals(lane(out, plan).sorted, List("Acknowledged com.demo.Vault#keepSafely",
-                                              "Unacknowledged com.demo.Vault#keep"))
+    assertEquals(lane(out, plan).sorted, List("Acknowledged com.demo.Vault#keepSafely", "Unacknowledged com.demo.Vault#keep"))
     val issues = PolicyReport.fromResolutions(plan.troubles).findings
     assertEquals(issues.map(_.issue), List(PolicyIssue.NeverApplied))
     assert(clue(issues.head.detail).contains("inert"))
@@ -120,22 +118,19 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
   test("…and one at a declaration with NO finding at all is the same report, not silence") {
     val (_, binder) = run(program, Map("com.demo.Vault#plain(int)" -> "acknowledge"))
     assertEquals(binder.resolutions.all, Nil)
-    assertEquals(PolicyReport.fromResolutions(binder.resolutions.troubles).findings.map(_.issue),
-                 List(PolicyIssue.NeverApplied))
+    assertEquals(PolicyReport.fromResolutions(binder.resolutions.troubles).findings.map(_.issue), List(PolicyIssue.NeverApplied))
   }
 
   test("a declaration this run does NOT emit is another module's row — D2 at the resolution ledger") {
     // A dependent's `Program` CONTAINS its base's units, so an inherited selection binds here too.
     // Applied, it would file a `remediation(resolved)` row about a declaration this module does not
     // write — the shape `ENGINE-LIMITS.md` D2 records five times on the reporting side.
-    val p       = program
-    val binder  = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))
-    binder.resolving(ResolutionPlan.of(
-      Map("com.demo.Vault#keep(T[])" -> "acknowledge"), vocabulary, vocabulary.byId.keySet, binder))
+    val p      = program
+    val binder = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))
+    binder.resolving(ResolutionPlan.of(Map("com.demo.Vault#keep(T[])" -> "acknowledge"), vocabulary, vocabulary.byId.keySet, binder))
     Pipeline.runTraced(p, List(new HeapPollutionCheck.Apply), binder)
     assertEquals(binder.resolutions.all, Nil)
-    assertEquals(PolicyReport.fromResolutions(binder.resolutions.troubles).findings.map(_.issue),
-                 List(PolicyIssue.NeverApplied))
+    assertEquals(PolicyReport.fromResolutions(binder.resolutions.troubles).findings.map(_.issue), List(PolicyIssue.NeverApplied))
   }
 
   test("the DRAIN reads the ledger, so a refused selection keeps its finding") {
@@ -144,8 +139,6 @@ class HeapPollutionRemedySpec extends munit.FunSuite:
     // between a resolution and a suppression.
     val p      = program
     val binder = new PolicyBinder(p, p.members)
-    binder.resolving(ResolutionPlan.of(
-      Map("com.demo.Vault#keep(T[])" -> "acknowledge"), vocabulary, vocabulary.byId.keySet, binder))
-    assertEquals(lane(p, binder.resolutions).sorted,
-                 List("Acknowledged com.demo.Vault#keepSafely", "Unacknowledged com.demo.Vault#keep"))
+    binder.resolving(ResolutionPlan.of(Map("com.demo.Vault#keep(T[])" -> "acknowledge"), vocabulary, vocabulary.byId.keySet, binder))
+    assertEquals(lane(p, binder.resolutions).sorted, List("Acknowledged com.demo.Vault#keepSafely", "Unacknowledged com.demo.Vault#keep"))
   }

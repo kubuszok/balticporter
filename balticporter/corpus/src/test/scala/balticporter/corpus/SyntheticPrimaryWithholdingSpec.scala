@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** THE WHOLE-PROGRAM GUARDS AROUND THE SYNTHESIS — the two that were measured and then pinned by
-  * nothing but a lane. */
+/** THE WHOLE-PROGRAM GUARDS AROUND THE SYNTHESIS — the two that were measured and then pinned by nothing but a lane.
+  */
 class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
   // ---- C1: the withholding fixpoint, on the shape that named it ----
@@ -33,10 +33,8 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
   test("C1 — child resolves through parent plan: no withholding cascade") {
     // C3 item 4c: Sub resolves through Mid's synthesised plan, so Mid keeps its synthesis
-    assert(clue(withheld).contains(
-      "class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Base(sup$0, sup$1)"))
-    assert(clue(withheld).contains(
-      "class Sub protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Mid(sup$0, sup$1)"))
+    assert(clue(withheld).contains("class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Base(sup$0, sup$1)"))
+    assert(clue(withheld).contains("class Sub protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Mid(sup$0, sup$1)"))
   }
 
   test("C1 — a child with ONLY a nilary ctor still withholds the parent's synthesis") {
@@ -55,12 +53,9 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val o = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), Nil)).emit
-    assert(clue(o).contains("extends with1b.Mid"),
-      "nilary-only child has bare extends (no super args)")
-    assert(!o.contains("extends with1b.Mid(sup$0"),
-      "no paramful extends of a withheld parent")
-    assert(!o.contains("class Mid protected (sup$0"),
-      "parent synthesis withheld by the nilary child")
+    assert(clue(o).contains("extends with1b.Mid"), "nilary-only child has bare extends (no super args)")
+    assert(!o.contains("extends with1b.Mid(sup$0"), "no paramful extends of a withheld parent")
+    assert(!o.contains("class Mid protected (sup$0"), "parent synthesis withheld by the nilary child")
   }
 
   test("C1 — withholding is NOT a whole-program ban: a synthesis nothing reaches bare survives") {

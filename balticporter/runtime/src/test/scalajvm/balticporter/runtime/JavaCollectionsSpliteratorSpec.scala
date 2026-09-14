@@ -13,8 +13,10 @@ class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
     // java's OWN defaults give, which is what the two helpers reproduce.
     val ordered = JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c"))
     assert(ordered.hasCharacteristics(java.util.Spliterator.ORDERED), "List.spliterator() passes ORDERED")
-    assert(ordered.hasCharacteristics(java.util.Spliterator.SIZED),
-           "…and `Spliterators.spliterator(Collection, int)` ORs in SIZED — the half `asJava` loses")
+    assert(
+      ordered.hasCharacteristics(java.util.Spliterator.SIZED),
+      "…and `Spliterators.spliterator(Collection, int)` ORs in SIZED — the half `asJava` loses"
+    )
     assert(ordered.hasCharacteristics(java.util.Spliterator.SUBSIZED))
     assertEquals(ordered.estimateSize(), 3L)
 
@@ -30,8 +32,7 @@ class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
     // characteristics are a CLAIM about the traversal; this is the traversal. A spliterator that
     // reported ORDERED and handed back nothing would pass the test above.
     val seen = ArrayBuffer.empty[String]
-    JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c"))
-      .forEachRemaining((s: String) => { seen += s; () })
+    JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c")).forEachRemaining { (s: String) => seen += s; () }
     assertEquals(seen.toList, List("a", "b", "c"))
   }
 
@@ -43,12 +44,15 @@ class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
     // what the two helpers above produce, characteristics `16464` either way.
     import scala.jdk.CollectionConverters.*
     val viaAsJava = ArrayBuffer("a", "b", "c").asJava.spliterator()
-    assert(viaAsJava.hasCharacteristics(java.util.Spliterator.ORDERED),
-           "the converter's wrapper DOES report ORDERED — K23's near miss is not reproducible")
-    assert(viaAsJava.hasCharacteristics(java.util.Spliterator.SIZED),
-           "…and SIZED")
-    assertEquals(viaAsJava.characteristics(),
-                 JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c")).characteristics(),
-                 "and it agrees with the helper exactly, which is what makes this a measurement " +
-                 "about the REASON rather than about the answer")
+    assert(
+      viaAsJava.hasCharacteristics(java.util.Spliterator.ORDERED),
+      "the converter's wrapper DOES report ORDERED — K23's near miss is not reproducible"
+    )
+    assert(viaAsJava.hasCharacteristics(java.util.Spliterator.SIZED), "…and SIZED")
+    assertEquals(
+      viaAsJava.characteristics(),
+      JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c")).characteristics(),
+      "and it agrees with the helper exactly, which is what makes this a measurement " +
+        "about the REASON rather than about the answer"
+    )
   }

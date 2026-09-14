@@ -1,6 +1,6 @@
 package balticporter.tir
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** `just debug-flags`, which is this class's [[DebugFlagsMain.render]] and nothing else. */
 class DebugFlagsMainSpec extends munit.FunSuite:
@@ -21,10 +21,10 @@ class DebugFlagsMainSpec extends munit.FunSuite:
 
   test("the effective value names its source AND what it shadowed") {
     val r = root(
-      "run.properties"   -> "balticporter.skipPhases=collections",
-      "debug.properties" -> "balticporter.skipPhases=*",
+      "run.properties" -> "balticporter.skipPhases=collections",
+      "debug.properties" -> "balticporter.skipPhases=*"
     )
-    val out = DebugFlagsMain.render(r, Map.empty, scala.None)
+    val out  = DebugFlagsMain.render(r, Map.empty, scala.None)
     val line = out.linesIterator.find(_.contains("balticporter.skipPhases =")).getOrElse(fail(out))
     assert(line.contains("= *"), line)
     assert(line.contains("[debug.properties]"), line)
@@ -54,13 +54,11 @@ class DebugFlagsMainSpec extends munit.FunSuite:
     // The one thing an operator cannot see otherwise: `baseReports` changes what a run EMITS (it
     // decides which base contracts are found), so a leftover entry makes this checkout emit
     // differently at the same commit with every count identical — §4.6's `reportPathRoot` lesson.
-    val out = DebugFlagsMain.render(root("debug.properties" -> "balticporter.baseReports=/tmp/x"),
-                                    Map.empty, scala.None)
+    val out = DebugFlagsMain.render(root("debug.properties" -> "balticporter.baseReports=/tmp/x"), Map.empty, scala.None)
     assert(out.contains("(FALLBACK"), out)
     assert(out.contains("a port states this in its own configuration"), out)
     // …and an ordinary diagnostic flag is not marked, or the marking says nothing
-    val plain = DebugFlagsMain.render(root("debug.properties" -> "balticporter.skipPhases=*"),
-                                      Map.empty, scala.None)
+    val plain = DebugFlagsMain.render(root("debug.properties" -> "balticporter.skipPhases=*"), Map.empty, scala.None)
     assert(!plain.contains("(FALLBACK"), plain)
   }
 
@@ -84,8 +82,8 @@ class DebugFlagsMainSpec extends munit.FunSuite:
   }
 
   test("a system property is shown as beating both files — the layer this JVM speaks for") {
-    val r   = root("debug.properties" -> "balticporter.dumpOnly=p.File")
-    val out = DebugFlagsMain.render(r, Map("balticporter.dumpOnly" -> "p.Prop"), scala.None)
+    val r    = root("debug.properties" -> "balticporter.dumpOnly=p.File")
+    val out  = DebugFlagsMain.render(r, Map("balticporter.dumpOnly" -> "p.Prop"), scala.None)
     val line = out.linesIterator.find(_.contains("balticporter.dumpOnly =")).getOrElse(fail(out))
     assert(line.contains("= p.Prop"), line)
     assert(line.contains("[system properties]"), line)

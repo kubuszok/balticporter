@@ -18,7 +18,9 @@ class FieldShadowsExternalSpec extends munit.FunSuite:
         private boolean finalize;
         public boolean isFinalize() { return finalize; }
       }
-      """, "BlockContinueImpl")
+      """,
+      "BlockContinueImpl"
+    )
     assert(names.contains("finalize$shadow"), names)
     assert(!names.contains("finalize"), names)
   }
@@ -39,7 +41,9 @@ class FieldShadowsExternalSpec extends munit.FunSuite:
         public char charAt(int i) { return 'a'; }
         public CharSequence subSequence(int a, int b) { return this; }
       }
-      """, "RepeatedSequence")
+      """,
+      "RepeatedSequence"
+    )
     assert(names.contains("chars$shadow"), names)
     assert(!names.contains("chars"), names)
   }
@@ -57,19 +61,22 @@ class FieldShadowsExternalSpec extends munit.FunSuite:
         private int compareTo;
         public int compareTo(Ranked o) { return 0; }
       }
-      """, "Ranked")
+      """,
+      "Ranked"
+    )
     assert(names.contains("compareTo"), names)
   }
 
   // -- an UNKNOWN external ancestor: unknown does NOT rename ----------------------------------
 
   test("NEGATIVE — an unparsed parent with no stated surface leaves the field alone") {
-    val names = fieldNames(
-      """
+    val names = fieldNames("""
       class Rolls extends java.util.Random {
         private int nextInt;
       }
-      """, "Rolls")
+      """,
+                           "Rolls"
+    )
     assert(names.contains("nextInt"), names)
     assert(!names.exists(_.startsWith("nextInt$")), names)
   }
@@ -83,7 +90,9 @@ class FieldShadowsExternalSpec extends munit.FunSuite:
         public char charAt(int i) { return 'a'; }
         public CharSequence subSequence(int a, int b) { return this; }
       }
-      """, "Seq")
+      """,
+      "Seq"
+    )
     assert(names.contains("startIndex"), names)
   }
 
@@ -94,7 +103,9 @@ class FieldShadowsExternalSpec extends munit.FunSuite:
       """
       class Base { protected int toString; }
       class Derived extends Base { private int toString; }
-      """, "Derived")
+      """,
+      "Derived"
+    )
     assert(names.exists(_.startsWith("toString$")), names)
     assert(!names.contains("toString"), names)
   }

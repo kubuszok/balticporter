@@ -2,17 +2,16 @@ package balticporter.corpus.libgdx
 
 import balticporter.tir.*
 
-/** A CLAUDE.md §1(c) rule — a phase living OUTSIDE the engine, in `corpus`, because
-  * `com.badlogic.gdx.utils.Array.iterator()` returns a CACHED iterator reset in place, so nested
-  * iteration over the same collection silently terminates the outer loop early — a libGDX
-  * allocation invariant, not a Java/Scala fact. Enters the pipeline as an ordinary `Phase`
-  * element of `PortRun(phases = …)`. REPORTS rather than rewrites (deferred, §5). */
+/** A CLAUDE.md §1(c) rule — a phase living OUTSIDE the engine, in `corpus`, because `com.badlogic.gdx.utils.Array.iterator()` returns a CACHED iterator reset in place, so nested iteration over the
+  * same collection silently terminates the outer loop early — a libGDX allocation invariant, not a Java/Scala fact. Enters the pipeline as an ordinary `Phase` element of `PortRun(phases = …)`.
+  * REPORTS rather than rewrites (deferred, §5).
+  */
 final class GdxSharedIteratorRule extends Phase:
 
   def name: String = "gdx-shared-iterator"
 
-  /** libGDX collections whose `iterator()` returns a CACHED instance. Not a configuration knob —
-    * a fact about this library's `utils` package, listed because it is finite and known. */
+  /** libGDX collections whose `iterator()` returns a CACHED instance. Not a configuration knob — a fact about this library's `utils` package, listed because it is finite and known.
+    */
   private val cachedIteratorCollections: Set[String] = Set(
     "com.badlogic.gdx.utils.Array",
     "com.badlogic.gdx.utils.SnapshotArray",
@@ -26,7 +25,7 @@ final class GdxSharedIteratorRule extends Phase:
     "com.badlogic.gdx.utils.IntSet",
     "com.badlogic.gdx.utils.LongMap",
     "com.badlogic.gdx.utils.IdentityMap",
-    "com.badlogic.gdx.utils.Queue",
+    "com.badlogic.gdx.utils.Queue"
   )
 
   final case class Finding(collection: String, receiver: String, outer: Origin, inner: Origin):
@@ -39,15 +38,15 @@ final class GdxSharedIteratorRule extends Phase:
 
   def findings: List[Finding] = found.toList
 
-  /** Full-control entry point: a whole-program analysis, then the program returned UNCHANGED.
-    * Uses `StandardTraversal.scanTerm` rather than a private recursion (CLAUDE.md §3: a walk that
-    * misses a node kind reports zero hazards from a program that has them). */
+  /** Full-control entry point: a whole-program analysis, then the program returned UNCHANGED. Uses `StandardTraversal.scanTerm` rather than a private recursion (CLAUDE.md §3: a walk that misses a
+    * node kind reports zero hazards from a program that has them).
+    */
   override def run(program: Program): Program =
     given Program = program
     found.clear()
     val outerScan = new Phase:
-      def name: String = "gdx-shared-iterator/outer"
-      override def transformTerm(t: Term)(using Program): Term =
+      def name:                                           String = "gdx-shared-iterator/outer"
+      override def transformTerm(t: Term)(using Program): Term   =
         t match
           case fe: Tree.ForEach =>
             for
@@ -68,28 +67,26 @@ final class GdxSharedIteratorRule extends Phase:
       )
       fs.foreach(f => println("  " + f.render))
     // Registered even when empty, so `counts.tsv` can tell "found nothing" from "never ran".
-    CheckReport.record(name, fs.map { f =>
-      CheckReport.Finding(name, "nested-cached-iterator", f.receiver,
-        CheckReport.relativise(f.inner.javaPath), f.inner.line, f.render)
-    })
+    CheckReport.record(
+      name,
+      fs.map { f =>
+        CheckReport.Finding(name, "nested-cached-iterator", f.receiver, CheckReport.relativise(f.inner.javaPath), f.inner.line, f.render)
+      }
+    )
     program
 
   /** the libGDX collection FQN this loop iterates, if it is one with a cached iterator. */
   private def collectionOf(program: Program, fe: Tree.ForEach): Option[String] =
-    headSymbol(fe.iterable.tpe)
-      .flatMap(program.symbolOf)
-      .map(_.fullName)
-      .filter(cachedIteratorCollections.contains)
+    headSymbol(fe.iterable.tpe).flatMap(program.symbolOf).map(_.fullName).filter(cachedIteratorCollections.contains)
 
-  /** the SYMBOL being iterated, named so two loops can be compared. Only a plain reference
-    * qualifies: `for (X x : a)` and `for (Y y : a)` share `a`'s iterator, while `for (X x :
-    * a.copy())` does not — and treating a call result as the same receiver would manufacture
-    * hazards that do not exist. */
+  /** the SYMBOL being iterated, named so two loops can be compared. Only a plain reference qualifies: `for (X x : a)` and `for (Y y : a)` share `a`'s iterator, while `for (X x : a.copy())` does not —
+    * and treating a call result as the same receiver would manufacture hazards that do not exist.
+    */
   private def receiverOf(program: Program, fe: Tree.ForEach): Option[String] =
     (fe.iterable match
       case i: Tree.Ident  => Some(i.sym)
       case s: Tree.Select => Some(s.sym)
-      case _              => scala.None
+      case _ => scala.None
     ).flatMap(program.symbolOf).map(_.fullName)
 
   /** a for-each INSIDE `fe`'s body over the same receiver. */
@@ -98,7 +95,7 @@ final class GdxSharedIteratorRule extends Phase:
       .scanTerm(fe.body, List.empty[Tree.ForEach]) { (acc, t) =>
         t match
           case inner: Tree.ForEach if receiverOf(program, inner).contains(receiver) => inner :: acc
-          case _                                                                   => acc
+          case _ => acc
       }
       .lastOption
 

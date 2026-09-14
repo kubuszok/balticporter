@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.TypeRedirectTransform
 
-/** `TypeRedirectTransform` promises that EVERY reference to a redirected type moves together —
-  * "so a partial redirect is impossible", in its own words. This suite is what holds it to that. */
+/** `TypeRedirectTransform` promises that EVERY reference to a redirected type moves together — "so a partial redirect is impossible", in its own words. This suite is what holds it to that.
+  */
 class TypeRedirectTransformSpec extends PortSuite:
 
   private val java =
@@ -31,10 +31,14 @@ class TypeRedirectTransformSpec extends PortSuite:
       |""".stripMargin
 
   private def redirected =
-    port(java, new TypeRedirectTransform(Map(
-      "com.demo.Helper" -> "com.other.Slab",
-      "com.demo.Marker" -> "com.other.Tag",
-    )))
+    port(java,
+         new TypeRedirectTransform(
+           Map(
+             "com.demo.Helper" -> "com.other.Slab",
+             "com.demo.Marker" -> "com.other.Tag"
+           )
+         )
+    )
 
   test("a TYPE occurrence moves — field type, parameter, result, and `new`") {
     val p = redirected

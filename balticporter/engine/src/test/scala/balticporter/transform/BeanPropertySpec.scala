@@ -7,40 +7,33 @@ import balticporter.tir.*
 
 /** [[BeanPropertyTransform]] — the positives, and one negative per refusal DESIGN.md §8.5 names.
   *
-  * Every negative asserts TWO things: the pair is untouched, and the refusal is COUNTED. A silent
-  * skip and a counted one look identical in the emitted file and are opposite facts about the port.
+  * Every negative asserts TWO things: the pair is untouched, and the refusal is COUNTED. A silent skip and a counted one look identical in the emitted file and are opposite facts about the port.
   */
 class BeanPropertySpec extends munit.FunSuite:
 
-  private case class Ran(before: Program, after: Program, phase: BeanPropertyTransform,
-                         log: DecisionLog, idioms: IdiomLog = IdiomLog.discarding,
-                         rewrites: RewriteLog = RewriteLog.discarding):
-    def out: String = new TirEmitter(after).emit
-    def refusals: List[String] = phase.policyReport.findings.map(_.detail)
+  private case class Ran(before: Program, after: Program, phase: BeanPropertyTransform, log: DecisionLog, idioms: IdiomLog = IdiomLog.discarding, rewrites: RewriteLog = RewriteLog.discarding):
+    def out:                String         = new TirEmitter(after).emit
+    def refusals:           List[String]   = phase.policyReport.findings.map(_.detail)
     def named(fqn: String): Option[Symbol] = after.symbols.all.find(_.fullName == fqn)
 
   private def run(java: String, pairs: (String, String)*): Ran =
     ran(java, new BeanPropertyTransform(pairs.toMap))
 
-  /** THE IDIOM LOG IS DRAINED AT THE PHASE BOUNDARY, so a fixture that reads the phase's own buffer
-    * afterwards reads an empty one — `Pipeline.runTraced` clears it precisely so a phase reused
-    * across two translations cannot report the first run's candidates as the second's. Every
-    * fixture therefore owns the log it asserts on, which is also the shape a run has. */
+  /** THE IDIOM LOG IS DRAINED AT THE PHASE BOUNDARY, so a fixture that reads the phase's own buffer afterwards reads an empty one — `Pipeline.runTraced` clears it precisely so a phase reused across
+    * two translations cannot report the first run's candidates as the second's. Every fixture therefore owns the log it asserts on, which is also the shape a run has.
+    */
   private def ran(java: String, phase: BeanPropertyTransform): Ran =
-    val before   = SpoonTir.fromSource(java)
-    val idioms   = new IdiomLog
-    val rewrites = RewriteLog()
-    val (after, log) = Pipeline.runTraced(before, List(phase),
-      new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding,
-      rewrites, idioms)
+    val before       = SpoonTir.fromSource(java)
+    val idioms       = new IdiomLog
+    val rewrites     = RewriteLog()
+    val (after, log) = Pipeline.runTraced(before, List(phase), new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding, rewrites, idioms)
     Ran(before, after, phase, log, idioms, rewrites)
 
-  /** what the member the UPSTREAM called `fqn` is called now. Resolved by SYMBOL — a rename moves
-    * `fullName` too (§4.56), so looking the result up by the old name finds nothing and reads as a
-    * missing member rather than as a successful rename. */
+  /** what the member the UPSTREAM called `fqn` is called now. Resolved by SYMBOL — a rename moves `fullName` too (§4.56), so looking the result up by the old name finds nothing and reads as a missing
+    * member rather than as a successful rename.
+    */
   private def nameOf(r: Ran, fqn: String): String =
-    r.before.symbols.all.find(_.fullName == fqn).map(_.id)
-      .flatMap(r.after.symbolOf).map(_.name).getOrElse(s"<no $fqn>")
+    r.before.symbols.all.find(_.fullName == fqn).map(_.id).flatMap(r.after.symbolOf).map(_.name).getOrElse(s"<no $fqn>")
 
   // -------------------------------------------------------------------------------------------
   // positives
@@ -98,7 +91,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public void setW(int v) { this.w = v; }
         void bump() { setW(getW() + 1); }
       }
-      """, "Thing#w" -> "getW/setW")
+      """,
+      "Thing#w" -> "getW/setW"
+    )
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     assert(clue(r.out).contains("this.w = this.w + 1"))
   }
@@ -108,7 +103,9 @@ class BeanPropertySpec extends munit.FunSuite:
       """
       class Map1 { public String getProperties() { return "p"; } }
       class Use { void go(Map1 m) { String s = m.getProperties(); } }
-      """, "Map1#properties" -> "getProperties")
+      """,
+      "Map1#properties" -> "getProperties"
+    )
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     assert(clue(r.out).contains("def properties: "))
     assert(r.out.contains("m.properties"))
@@ -131,12 +128,16 @@ class BeanPropertySpec extends munit.FunSuite:
         }; }
         void go(Drawable d) { d.setLeftWidth(d.getLeftWidth()); }
       }
-      """, "Drawable#leftWidth" -> "getLeftWidth/setLeftWidth")
+      """,
+      "Drawable#leftWidth" -> "getLeftWidth/setLeftWidth"
+    )
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
-    assertEquals(r.out.linesIterator.count(_.contains("LeftWidth")), 0,
-      s"an implementor or the anonymous body kept the java name:\n${r.out}")
-    assertEquals(r.log.of(Decision.Kind.RenamedMember).size, 6,
-      "3 declarations x 2 accessors, one decision each")
+    assertEquals(
+      r.out.linesIterator.count(_.contains("LeftWidth")),
+      0,
+      s"an implementor or the anonymous body kept the java name:\n${r.out}"
+    )
+    assertEquals(r.log.of(Decision.Kind.RenamedMember).size, 6, "3 declarations x 2 accessors, one decision each")
   }
 
   test("an N-DEEP override chain is renamed ATOMICALLY, or not at all") {
@@ -146,7 +147,9 @@ class BeanPropertySpec extends munit.FunSuite:
       class B extends A { public int getV() { return 1; } }
       class C extends B { public int getV() { return 2; } }
       class D extends C { public int getV() { return 3; } }
-      """, "A#v" -> "getV")
+      """,
+      "A#v" -> "getV"
+    )
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     List("A", "B", "C", "D").foreach(t => assertEquals(nameOf(r, s"$t#getV"), "v", s"$t did not move"))
     assertEquals(r.log.of(Decision.Kind.RenamedMember).size, 4)
@@ -160,7 +163,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getCell(int i) { return i; }
       }
       class Use { void go(Grid g) { int a = g.getCell(); int b = g.getCell(3); } }
-      """, "Grid#cell" -> "getCell")
+      """,
+      "Grid#cell" -> "getCell"
+    )
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     assert(clue(r.out).contains("g.cell"))
     assert(clue(r.out).contains("g.getCell(3)"), "the parameterised overload must not move")
@@ -207,7 +212,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getRank() { return rank; }
         public void setRank(int v) { this.rank = v; }
       }
-      """, "Sorted#rank" -> "getRank/setRank")
+      """,
+      "Sorted#rank" -> "getRank/setRank"
+    )
     assertUntouched(r, "Sorted#getRank", "getRank")
     assertEquals(nameOf(r, "Sorted#setRank"), "setRank", "half a property is not a property")
     assert(clue(r.refusals.mkString("\n")).contains("java.util.Comparator"))
@@ -222,15 +229,15 @@ class BeanPropertySpec extends munit.FunSuite:
         public Builder setW(int v) { this.w = v; return this; }
       }
       class Use { Builder go(Builder b) { return b.setW(1).setW(2); } }
-      """, "Builder#w" -> "getW/setW")
+      """,
+      "Builder#w" -> "getW/setW"
+    )
     assertUntouched(r, "Builder#getW", "getW")
     assert(clue(r.refusals.mkString("\n")).contains("FLUENT"))
   }
 
   test("a SET-ONLY entry refuses — the assignment's LHS names the GETTER, and there is none") {
-    val r = run(
-      """class Thing { private int w; public void setW(int v) { this.w = v; } }""",
-      "Thing#w" -> "/setW")
+    val r = run("""class Thing { private int w; public void setW(int v) { this.w = v; } }""", "Thing#w" -> "/setW")
     assertEquals(nameOf(r, "Thing#setW"), "setW")
     assertEquals(r.phase.policyReport.of(PolicyIssue.Malformed).size, 1)
     assert(clue(r.refusals.mkString("\n")).contains("nothing to put on an LHS"))
@@ -246,7 +253,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public void setW(int v) { this.w = v; }
         Supplier<Integer> read() { return this::getW; }
       }
-      """, "Thing#w" -> "getW/setW")
+      """,
+      "Thing#w" -> "getW/setW"
+    )
     assertUntouched(r, "Thing#getW", "getW")
     assert(clue(r.refusals.mkString("\n")).contains("VALUE position"))
   }
@@ -259,7 +268,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public static int getW() { return w; }
         public static void setW(int v) { w = v; }
       }
-      """, "Cfg#w" -> "getW/setW")
+      """,
+      "Cfg#w" -> "getW/setW"
+    )
     assertUntouched(r, "Cfg#getW", "getW")
     assert(clue(r.refusals.mkString("\n")).contains("STATIC"))
   }
@@ -272,7 +283,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getWidth() { return 2; }
         public void setWidth(int v) {}
       }
-      """, "Thing#width" -> "getWidth/setWidth")
+      """,
+      "Thing#width" -> "getWidth/setWidth"
+    )
     assertUntouched(r, "Thing#getWidth", "getWidth")
     assert(clue(r.refusals.mkString("\n")).contains("not a member the emitter"))
   }
@@ -289,14 +302,15 @@ class BeanPropertySpec extends munit.FunSuite:
   test("an entry naming a type this program does not DECLARE reports through the binder") {
     // The `RuleScope`/`Ownership.Owned` rule: an entry naming a JDK type matches the interned
     // external perfectly, the phase rewrites nothing, and without this it counts as having fired.
-    val r = run("""class Thing { void go(String s) { s.length(); } }""",
-      "java.lang.String#len" -> "length")
+    val r = run("""class Thing { void go(String s) { s.length(); } }""", "java.lang.String#len" -> "length")
     assertEquals(r.log.of(Decision.Kind.RenamedMember), Nil)
     val fs = r.phase.policyReport.findings
     assertEquals(clue(fs).size, 1)
     assertEquals(fs.head.issue, PolicyIssue.NeverMatched)
-    assert(clue(fs.head.detail).contains("REFERENCES and does not DECLARE") ||
-           clue(fs.head.detail).contains("silently did not run"))
+    assert(
+      clue(fs.head.detail).contains("REFERENCES and does not DECLARE") ||
+        clue(fs.head.detail).contains("silently did not run")
+    )
   }
 
   test("a MALFORMED key is reported as malformed, not as a typo") {
@@ -318,7 +332,9 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return 1; }
         public void setW(String v) {}
       }
-      """, "Thing#w" -> "getW/setW")
+      """,
+      "Thing#w" -> "getW/setW"
+    )
     assertUntouched(r, "Thing#getW", "getW")
     assert(clue(r.refusals.mkString("\n")).contains("not a pair"))
   }
@@ -333,8 +349,7 @@ class BeanPropertySpec extends munit.FunSuite:
 
   test("…and two configurations differing ONLY in `target` do NOT compare equal (CT9)") {
     val d = new BeanPropertyTransform(Map("a#x" -> "getX/setX"))
-    val v = new BeanPropertyTransform(Map("a#x" -> "getX/setX"),
-                                      Map("a#x" -> BeanPropertyTransform.Target.Var))
+    val v = new BeanPropertyTransform(Map("a#x" -> "getX/setX"), Map("a#x" -> BeanPropertyTransform.Target.Var))
     assertNotEquals(d.surfaceFingerprint, v.surfaceFingerprint)
   }
 
@@ -344,13 +359,12 @@ class BeanPropertySpec extends munit.FunSuite:
   // a claim nothing checks (`CLAUDE.md` §3).
   // -------------------------------------------------------------------------------------------
 
-  private def collapse(java: String, target: BeanPropertyTransform.Target,
-                       pairs: (String, String)*): Ran =
+  private def collapse(java: String, target: BeanPropertyTransform.Target, pairs: (String, String)*): Ran =
     ran(java, new BeanPropertyTransform(pairs.toMap, pairs.map((k, _) => k -> target).toMap))
 
-  /** the guard a run declined every configured pair under — the `idiom(refused)` row's own string,
-    * read from the log the run owns rather than re-derived, because the phase is the one place that
-    * holds both halves at the moment it files (§4.6, K2.5). */
+  /** the guard a run declined every configured pair under — the `idiom(refused)` row's own string, read from the log the run owns rather than re-derived, because the phase is the one place that holds
+    * both halves at the moment it files (§4.6, K2.5).
+    */
   private def guards(r: Ran): List[String] =
     r.idioms.all.collect { case IdiomCandidate(_, IdiomVerdict.Refused(g, _), _, _, _) => g }
 
@@ -386,9 +400,9 @@ class BeanPropertySpec extends munit.FunSuite:
     // no `info` on either side of the phase, so `Pipeline.runTraced` records nothing, the phase
     // owes no `accountedBy` lane, and every unrewritten usage is invisible. Asserted on the PATCH
     // and not on the emitted text, which is exactly the distinction that makes it worth pinning.
-    val r = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
+    val r      = collapse(varSrc, BeanPropertyTransform.Target.Var, "Layer#name" -> "getName/setName")
     val before = r.before
-    val patch = r.rewrites.all.find(_.phase == "bean-properties")
+    val patch  = r.rewrites.all.find(_.phase == "bean-properties")
     assert(clue(patch).isDefined, "a collapse that records no patch owes no lane and counts nothing")
     assertEquals(patch.get.accountedBy, Set(IdiomCheck.Residue))
     val getter = before.symbols.all.find(_.fullName == "Layer#getName").get.id
@@ -410,7 +424,10 @@ class BeanPropertySpec extends munit.FunSuite:
         private String props = "p";
         public String getProps() { return props; }
       }
-      """, BeanPropertyTransform.Target.Val, "Map0#props" -> "getProps")
+      """,
+      BeanPropertyTransform.Target.Val,
+      "Map0#props" -> "getProps"
+    )
     assertEquals(converted(r), 1)
     assert(clue(r.out).contains("val props: java.lang.String = \"p\""))
   }
@@ -424,7 +441,10 @@ class BeanPropertySpec extends munit.FunSuite:
         public float getO() { if (parent != null) return o * parent.getO(); return o; }
         public void setO(float v) { this.o = v; }
       }
-      """, BeanPropertyTransform.Target.Var, "L#o" -> "getO/setO")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "L#o" -> "getO/setO"
+    )
     assertEquals(guards(r), List("ComputedBody"))
     assert(clue(r.out).contains("def o"), "a refused collapse degenerates to the def-pair")
   }
@@ -437,7 +457,10 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return w; }
         public void setW(int v) { if (v < 0) throw new RuntimeException("no"); this.w = v; }
       }
-      """, BeanPropertyTransform.Target.Var, "L#w" -> "getW/setW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "L#w" -> "getW/setW"
+    )
     assertEquals(guards(r), List("ComputedBody"))
   }
 
@@ -449,7 +472,10 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getA() { return a; }
         public void setA(int v) { this.b = v; }
       }
-      """, BeanPropertyTransform.Target.Var, "L#a" -> "getA/setA")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "L#a" -> "getA/setA"
+    )
     assertEquals(guards(r), List("SplitFields"))
   }
 
@@ -464,12 +490,17 @@ class BeanPropertySpec extends munit.FunSuite:
       class S extends B {
         public int getW() { return 7; }
       }
-      """, BeanPropertyTransform.Target.Var, "B#w" -> "getW/setW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "B#w" -> "getW/setW"
+    )
     assert(clue(guards(r)).contains("OverriddenBelow") || clue(guards(r)).contains("ConcreteRelative"))
   }
 
-  test("a `val`'s decision records the SECOND reflective fact — its backing field is `final` and\n" +
-       "     java's was not") {
+  test(
+    "a `val`'s decision records the SECOND reflective fact — its backing field is `final` and\n" +
+      "     java's was not"
+  ) {
     // §8.5's guard 5 records that the JVM METHOD NAMES move. A `val` moves one more thing, at the
     // FIELD and in the other direction: `MutableStorage` asks for a declaration initialiser and no
     // assignment IN THIS PROGRAM — never for java's `final` keyword, deliberately — so the java
@@ -481,7 +512,10 @@ class BeanPropertySpec extends munit.FunSuite:
         private final java.lang.String n = "x";
         public java.lang.String getN() { return n; }
       }
-      """, BeanPropertyTransform.Target.Val, "V#n" -> "getN")
+      """,
+      BeanPropertyTransform.Target.Val,
+      "V#n" -> "getN"
+    )
     val d = r.log.all.find(_.kind == Decision.Kind.CollapsedProperty).get
     assertEquals(d.detail.get("form"), Some("val"))
     assert(clue(d.detail("why")).contains("`final` on the JVM"))
@@ -512,7 +546,10 @@ class BeanPropertySpec extends munit.FunSuite:
       abstract class S extends M {
         public abstract int getW();
       }
-      """, BeanPropertyTransform.Target.Var, "B#w" -> "getW/setW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "B#w" -> "getW/setW"
+    )
     assertEquals(clue(guards(r)), List("OverriddenBelow"))
   }
 
@@ -528,15 +565,20 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return w; }
         public void setW(int v) { this.w = v; }
       }
-      """, BeanPropertyTransform.Target.Var, "B#w" -> "getW/setW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "B#w" -> "getW/setW"
+    )
     assertEquals(converted(r), 1)
     assert(clue(r.out).contains("def w: scala.Int"), "the interface keeps the abstract getter")
     assert(clue(r.out).contains("def w_="), "…and the abstract setter")
     assert(clue(r.out).contains("var w: scala.Int"), "…which the class's `var` implements")
   }
 
-  test("a CONCRETE accessor above is refused — a `var` implements an abstract member, never an\n" +
-       "     override of a concrete one") {
+  test(
+    "a CONCRETE accessor above is refused — a `var` implements an abstract member, never an\n" +
+      "     override of a concrete one"
+  ) {
     val r = collapse(
       """
       class P {
@@ -548,7 +590,10 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return w; }
         public void setW(int v) { this.w = v; }
       }
-      """, BeanPropertyTransform.Target.Var, "C#w" -> "getW/setW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "C#w" -> "getW/setW"
+    )
     assertEquals(guards(r), List("ConcreteRelative"))
   }
 
@@ -563,7 +608,10 @@ class BeanPropertySpec extends munit.FunSuite:
     val r = collapse(
       """
       class L { private int w = 1; public int getW() { return w; } }
-      """, BeanPropertyTransform.Target.Var, "L#w" -> "getW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "L#w" -> "getW"
+    )
     assertEquals(guards(r), List("VarWithoutSetter"))
   }
 
@@ -580,12 +628,17 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return w; }
         void bump() { this.w = this.w + 1; }
       }
-      """, BeanPropertyTransform.Target.Val, "L#w" -> "getW")
+      """,
+      BeanPropertyTransform.Target.Val,
+      "L#w" -> "getW"
+    )
     assertEquals(guards(r), List("MutableStorage"))
   }
 
-  test("…and `val` over storage the CONSTRUCTOR fills is refused too — the keyword would be the\n" +
-       "     constructor funnel's answer and this phase cannot see it") {
+  test(
+    "…and `val` over storage the CONSTRUCTOR fills is refused too — the keyword would be the\n" +
+      "     constructor funnel's answer and this phase cannot see it"
+  ) {
     val r = collapse(
       """
       class L {
@@ -593,7 +646,10 @@ class BeanPropertySpec extends munit.FunSuite:
         public L(int v) { this.w = v; }
         public int getW() { return w; }
       }
-      """, BeanPropertyTransform.Target.Val, "L#w" -> "getW")
+      """,
+      BeanPropertyTransform.Target.Val,
+      "L#w" -> "getW"
+    )
     assertEquals(guards(r), List("MutableStorage"))
   }
 
@@ -615,7 +671,10 @@ class BeanPropertySpec extends munit.FunSuite:
         public Builder setW(int v) { this.w = v; return this; }
       }
       class Use { Builder go(Builder b) { return b.setW(1).setW(2); } }
-      """, BeanPropertyTransform.Target.Var, "Builder#w" -> "getW/setW")
+      """,
+      BeanPropertyTransform.Target.Var,
+      "Builder#w" -> "getW/setW"
+    )
     assertEquals(guards(r), List("PairRefused"))
   }
 
@@ -623,9 +682,10 @@ class BeanPropertySpec extends munit.FunSuite:
     // K21 face 2 PUTS java-bean names on a field for a reflective framework to find; the collapse
     // TAKES them off. The two policies are asked for separately and only the run sees both, so the
     // refusal is what stops a port getting neither.
-    val r = ran(varSrc, new BeanPropertyTransform(Map("Layer#name" -> "getName/setName"),
-                          Map("Layer#name" -> BeanPropertyTransform.Target.Var),
-                          RuleScope.Only(Set("Layer"))))
+    val r = ran(
+      varSrc,
+      new BeanPropertyTransform(Map("Layer#name" -> "getName/setName"), Map("Layer#name" -> BeanPropertyTransform.Target.Var), RuleScope.Only(Set("Layer")))
+    )
     assertEquals(guards(r), List("ExposedField"))
     assert(clue(r.out).contains("def name"), "a refused collapse degenerates to the def-pair")
   }
@@ -653,7 +713,7 @@ class BeanPropertySpec extends munit.FunSuite:
       }
       class Use { void go(Cell c) { c.setTile("grass"); } }
     """
-    val r = run(src, "Cell#tile" -> "getTile/setTile")
+    val r   = run(src, "Cell#tile" -> "getTile/setTile")
     assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
     assert(clue(r.out).contains("def tile_=(tile: java.lang.String): scala.Unit"))
     assert(!r.out.linesIterator.exists(_.trim == "return this"), r.out)

@@ -2,10 +2,9 @@ package balticporter.corpus.demo
 
 import balticporter.emit.CtorOverride
 
-/** PLAN §7 declaration-level constructor overrides for the flexmark-ext-xwiki-macros cold port —
-  * the irreducible constructor shapes the funnel refuses (genuinely different super targets).
-  * Only the constructor block is handwritten; the engine still translates every other member, so
-  * these stay in sync with upstream on re-port. Keyed by FQCN. */
+/** PLAN §7 declaration-level constructor overrides for the flexmark-ext-xwiki-macros cold port — the irreducible constructor shapes the funnel refuses (genuinely different super targets). Only the
+  * constructor block is handwritten; the engine still translates every other member, so these stay in sync with upstream on re-port. Keyed by FQCN.
+  */
 object XwikiOverrides:
 
   val map: Map[String, CtorOverride] = Map(
@@ -17,7 +16,7 @@ object XwikiOverrides:
       body = List(
         "protected val tag: String = String.valueOf(tag0)",
         "",
-        "def this(tag: CharSequence, range: Range) = this(tag, range.getStart(), range.getEnd())",
-      ),
-    ),
+        "def this(tag: CharSequence, range: Range) = this(tag, range.getStart(), range.getEnd())"
+      )
+    )
   )

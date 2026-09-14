@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** `ContextHolder.through`: a class handed the service a mapped static lives on reads the static
-  * off its own member and takes no clause (DESIGN.md §8.4). */
+/** `ContextHolder.through`: a class handed the service a mapped static lives on reads the static off its own member and takes no clause (DESIGN.md §8.4).
+  */
 class ContextThroughSpec extends munit.FunSuite:
   private val java =
     """package com.demo;
@@ -28,19 +28,20 @@ class ContextThroughSpec extends munit.FunSuite:
       |""".stripMargin
 
   private def holder(through: Map[String, String]) = ContextHolder(
-    holder   = "com.demo.Gdx",
-    context  = ContextType.Injected("com.demo.Ctx"),
-    members  = Map("graphics" -> "graphics", "gl" -> "graphics.getGL20()"),
-    attach   = ContextAttach.Class,
-    reader   = ContextReader.Summon,
+    holder = "com.demo.Gdx",
+    context = ContextType.Injected("com.demo.Ctx"),
+    members = Map("graphics" -> "graphics", "gl" -> "graphics.getGL20()"),
+    attach = ContextAttach.Class,
+    reader = ContextReader.Summon,
     boundary = ContextBoundary.Refuse,
-    through  = through)
+    through = through
+  )
 
   test("a `through` type reads the statics off its own member and takes no clause") {
-    val phase = new GlobalsToImplicitsTransform(holders = List(holder(Map("com.demo.Profiler" -> "graphics"))))
+    val phase        = new GlobalsToImplicitsTransform(holders = List(holder(Map("com.demo.Profiler" -> "graphics"))))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(java, "Demo.java"), List(phase))
-    val out = new TirEmitter(after, notes = log).emit
-    val profiler = out.linesIterator.dropWhile(!_.contains("class Profiler")).takeWhile(!_.contains("class User")).mkString("\n")
+    val out          = new TirEmitter(after, notes = log).emit
+    val profiler     = out.linesIterator.dropWhile(!_.contains("class Profiler")).takeWhile(!_.contains("class User")).mkString("\n")
     assert(clue(profiler).contains("this.graphics.getGL20().glClear(1)"))
     assert(profiler.contains("this.graphics.getWidth()"))
     assert(profiler.contains("this.graphics.setGL20(x)"))
@@ -51,13 +52,17 @@ class ContextThroughSpec extends munit.FunSuite:
   }
 
   test("an entry naming no such member is a counted finding and the type threads as before") {
-    val phase = new GlobalsToImplicitsTransform(holders = List(holder(Map("com.demo.Profiler" -> "nothing"))))
+    val phase        = new GlobalsToImplicitsTransform(holders = List(holder(Map("com.demo.Profiler" -> "nothing"))))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(java, "Demo.java"), List(phase))
-    val out = new TirEmitter(after, notes = log).emit
-    assert(clue(out).contains("class Profiler(graphics$p: com.demo.Graphics)(using com.demo.Ctx)") ||
-      out.contains("Profiler(") && out.contains("(using com.demo.Ctx)"))
-    assert(phase.policyReport.findings.exists(_.detail.contains("not a non-static field")),
-      phase.policyReport.findings.mkString("\n"))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(
+      clue(out).contains("class Profiler(graphics$p: com.demo.Graphics)(using com.demo.Ctx)") ||
+        out.contains("Profiler(") && out.contains("(using com.demo.Ctx)")
+    )
+    assert(
+      phase.policyReport.findings.exists(_.detail.contains("not a non-static field")),
+      phase.policyReport.findings.mkString("\n")
+    )
   }
 
   test("the fingerprint moves with the key and only when it is non-empty") {

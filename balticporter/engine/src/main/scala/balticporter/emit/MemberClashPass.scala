@@ -3,35 +3,37 @@ package balticporter.emit
 import balticporter.core.*
 import balticporter.core.BExpr.*
 
-/** Java permits a field and a method with the same name in one class; Scala does not.
-  * Non-public clashing fields are renamed `x` → `x$fld` with their own-field
-  * references rewritten. Public clashing fields would change the class's API — those
-  * fail loudly instead.
+/** Java permits a field and a method with the same name in one class; Scala does not. Non-public clashing fields are renamed `x` → `x$fld` with their own-field references rewritten. Public clashing
+  * fields would change the class's API — those fail loudly instead.
   */
 object MemberClashPass:
 
   def apply(unit: BUnit, registry: Option[CtorRegistry] = None): BUnit =
     val collapsed = registry.map(_.collapsedAccessors).getOrElse(Set.empty)
-    val dropped = registry.map(_.droppedDeprecatedClashes).getOrElse(Set.empty)
+    val dropped   = registry.map(_.droppedDeprecatedClashes).getOrElse(Set.empty)
     val pkgPrefix = if unit.pkg.isEmpty then "" else unit.pkg + "."
-    val u1 =
+    val u1        =
       if collapsed.isEmpty then unit
       else
         // collapsed accessors: nilary calls become field reads across all units
-        unit.copy(types = unit.types.map(BirTransform.mapTypeDecl(_) {
-          case Call(recv, n, Nil, _, Some(owner)) if collapsed((owner, n)) =>
-            recv match
-              case Recv.On(r)     => Select(r, n)
-              case Recv.OnThis    => Ident(n, RefKind.OwnField)
-              case Recv.Static(o) => Ident(n, RefKind.StaticField(o))
-              case Recv.OnSuper   => Select(This, n)
-          case e => e
-        }))
+        unit.copy(
+          types = unit.types.map(
+            BirTransform.mapTypeDecl(_) {
+              case Call(recv, n, Nil, _, Some(owner)) if collapsed((owner, n)) =>
+                recv match
+                  case Recv.On(r)     => Select(r, n)
+                  case Recv.OnThis    => Ident(n, RefKind.OwnField)
+                  case Recv.Static(o) => Ident(n, RefKind.StaticField(o))
+                  case Recv.OnSuper   => Select(This, n)
+              case e => e
+            }
+          )
+        )
     val u2 = u1.copy(types = u1.types.map(t => dropMembers(t, pkgPrefix + t.name, collapsed ++ dropped)))
     // include inherited method names so locals shadowing them are renamed too
     def inheritedMethods(t: BTypeDecl): Set[String] =
       registry match
-        case None => Set.empty
+        case None      => Set.empty
         case Some(reg) =>
           val supers = t.superClass.toList.map(_.qname) ++ t.interfaces.collect { case BType.Ref(q, _) => q }
           supers.flatMap(reg.inheritedMethodNames(_)).toSet
@@ -41,16 +43,22 @@ object MemberClashPass:
   private def qualifyParamShadowedThisCalls(t0: BTypeDecl): BTypeDecl =
     val t = t0.copy(
       nested = t0.nested.map(qualifyParamShadowedThisCalls),
-      inner = t0.inner.map(qualifyParamShadowedThisCalls),
+      inner = t0.inner.map(qualifyParamShadowedThisCalls)
     )
     def fixM(m: BMethod): BMethod =
       val pnames = m.params.map(_.name).toSet
       if pnames.isEmpty then m
       else
-        m.copy(body = m.body.map(_.map(s => BirTransform.mapStmt(s) {
-          case Call(Recv.OnThis, n, args, f, o) if pnames.contains(n) => Call(Recv.On(This), n, args, f, o)
-          case e                                                      => e
-        })))
+        m.copy(
+          body = m.body.map(
+            _.map(s =>
+              BirTransform.mapStmt(s) {
+                case Call(Recv.OnThis, n, args, f, o) if pnames.contains(n) => Call(Recv.On(This), n, args, f, o)
+                case e                                                      => e
+              }
+            )
+          )
+        )
     t.copy(methods = t.methods.map(fixM), staticMethods = t.staticMethods.map(fixM))
 
   /** Remove collapsed/dropped accessors, hoisting their trivia onto the field. */
@@ -69,7 +77,7 @@ object MemberClashPass:
       methods = keepInst,
       staticMethods = keepStat,
       nested = t.nested.map(n => dropMembers(n, s"$fqcn$$${n.name}", gone)),
-      inner = t.inner.map(n => dropMembers(n, s"$fqcn$$${n.name}", gone)),
+      inner = t.inner.map(n => dropMembers(n, s"$fqcn$$${n.name}", gone))
     )
 
   /** Rename locals whose name clashes with a method (`x` -> `x$loc`). */
@@ -78,10 +86,12 @@ object MemberClashPass:
     // scan for this-method calls (catches JDK-inherited methods outside the closure)
     val thisCallNames = collection.mutable.Set[String]()
     def scan(body: List[BStmt]): Unit =
-      body.foreach(s => BirTransform.mapStmt(s) {
-        case c @ Call(Recv.OnThis, n, _, _, _) => thisCallNames += n; c
-        case e                                 => e
-      })
+      body.foreach(s =>
+        BirTransform.mapStmt(s) {
+          case c @ Call(Recv.OnThis, n, _, _, _) => thisCallNames += n; c
+          case e                                 => e
+        }
+      )
     (t.methods ++ t.staticMethods).foreach(_.body.foreach(scan))
     t.ctors.foreach(c => scan(c.body))
     val methodNames = (t.methods ++ t.staticMethods).map(_.name).toSet ++ inherited ++ thisCallNames
@@ -99,20 +109,20 @@ object MemberClashPass:
         staticMethods = t.staticMethods.map(fixM),
         ctors = t.ctors.map(c => c.copy(body = c.body.map(renStmt))),
         staticInit = t.staticInit.map(renStmt),
-        instanceInit = t.instanceInit.map(renStmt),
+        instanceInit = t.instanceInit.map(renStmt)
       )
 
   private def renameLocalDecls(s: BStmt, names: Set[String]): BStmt =
     def r(x: BStmt): BStmt = renameLocalDecls(x, names)
     val k = s.k match
       case lv: BStmtK.LocalVar if names.contains(lv.name) => lv.copy(name = lv.name + "$loc")
-      case BStmtK.If(c, tb, eb)      => BStmtK.If(c, tb.map(r), eb.map(_.map(r)))
-      case BStmtK.While(c, b)        => BStmtK.While(c, b.map(r))
-      case BStmtK.Block(b)           => BStmtK.Block(b.map(r))
-      case BStmtK.Try(b, cs, f)      => BStmtK.Try(b.map(r), cs.map(c => c.copy(body = c.body.map(r))), f.map(_.map(r)))
-      case BStmtK.Boundary(b, l)     => BStmtK.Boundary(b.map(r), l)
-      case BStmtK.Match(scr, cases)  => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(r))))
-      case other                     => other
+      case BStmtK.If(c, tb, eb)     => BStmtK.If(c, tb.map(r), eb.map(_.map(r)))
+      case BStmtK.While(c, b)       => BStmtK.While(c, b.map(r))
+      case BStmtK.Block(b)          => BStmtK.Block(b.map(r))
+      case BStmtK.Try(b, cs, f)     => BStmtK.Try(b.map(r), cs.map(c => c.copy(body = c.body.map(r))), f.map(_.map(r)))
+      case BStmtK.Boundary(b, l)    => BStmtK.Boundary(b.map(r), l)
+      case BStmtK.Match(scr, cases) => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(r))))
+      case other                    => other
     s.copy(k = k)
 
   private def fixType(t0: BTypeDecl, unit: BUnit): BTypeDecl =
@@ -130,20 +140,20 @@ object MemberClashPass:
         case None => ()
 
       def newName(n: String) = n + "$fld"
-      val fqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
+      val fqcn               = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
 
       val renameRefs: BExpr => BExpr = {
-        case Ident(n, RefKind.OwnField) if instClash.contains(n) => Ident(newName(n), RefKind.OwnField)
+        case Ident(n, RefKind.OwnField) if instClash.contains(n)                                              => Ident(newName(n), RefKind.OwnField)
         case Ident(n, RefKind.StaticField(owner)) if statClash.contains(n) && owner.replace('$', '.') == fqcn =>
           Ident(newName(n), RefKind.StaticField(owner))
         case e => e
       }
 
       // rewrite refs except in nested types (fixed independently, may reuse names)
-      val nested = t.nested
+      val nested    = t.nested
       val rewritten = BirTransform.mapTypeDecl(t.copy(nested = Nil))(renameRefs)
       rewritten.copy(
         fields = rewritten.fields.map(f => if instClash.contains(f.name) then f.copy(name = newName(f.name)) else f),
         staticFields = rewritten.staticFields.map(f => if statClash.contains(f.name) then f.copy(name = newName(f.name)) else f),
-        nested = nested,
+        nested = nested
       )

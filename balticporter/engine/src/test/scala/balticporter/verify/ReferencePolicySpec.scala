@@ -4,9 +4,9 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 import munit.FunSuite
 
-/** `ReferencePolicy.derive` reads SPELLING off a reference tree: an opaque slot, a nullable
-  * member, a parenless accessor; overloads that disagree are counted, never guessed
-  * (`PROGRESS.md` §13.31 step 1). */
+/** `ReferencePolicy.derive` reads SPELLING off a reference tree: an opaque slot, a nullable member, a parenless accessor; overloads that disagree are counted, never guessed (`PROGRESS.md` §13.31 step
+  * 1).
+  */
 class ReferencePolicySpec extends FunSuite:
 
   private val javaSrc =
@@ -49,8 +49,10 @@ class ReferencePolicySpec extends FunSuite:
 
   test("a primitive slot the reference spells at an opaque target becomes a seed — parameter, result and field") {
     val r = derive()
-    assertEquals(r.policy.opaqueSeeds("sge.utils.Seconds"),
-      Set("com.example.gfx.Clock#delta", "com.example.gfx.Clock#getDelta", "com.example.gfx.Clock#update#dt"))
+    assertEquals(
+      r.policy.opaqueSeeds("sge.utils.Seconds"),
+      Set("com.example.gfx.Clock#delta", "com.example.gfx.Clock#getDelta", "com.example.gfx.Clock#update#dt")
+    )
     assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Clock#update#width"))
   }
 
@@ -145,10 +147,17 @@ class ReferencePolicySpec extends FunSuite:
       """package sge.audio
         |class Effect { def run(dt: Float): Unit = () }
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
+    val p     = SpoonTir.fromSource(javaSrc2)
     val decls = refDecls(ref) ++ refDecls(other)
-    val r = ReferencePolicy.derive(p, decls, p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set("sge.utils.Seconds"),
-      packageRenames = Map("com.example" -> "sge"))
+    val r     = ReferencePolicy.derive(
+      p,
+      decls,
+      p.units.map(_.symbol).toSet,
+      Map.empty,
+      Set.empty,
+      Set("sge.utils.Seconds"),
+      packageRenames = Map("com.example" -> "sge")
+    )
     assertEquals(r.policy.opaqueSeeds("sge.utils.Seconds"), Set("com.example.gfx.Effect#run#dt"))
     assertEquals(r.findings.count(_.check == ReferencePolicy.LaneAmbiguous), 0)
   }
@@ -171,8 +180,10 @@ class ReferencePolicySpec extends FunSuite:
     val p = SpoonTir.fromSource(javaSrc2)
     val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set("sge.utils.Seconds", "sge.Pixels"))
     // two constructors are an overload set: their rows are keyed by descriptor
-    assertEquals(r.policy.opaqueSeeds("sge.utils.Seconds"),
-      Set("com.example.gfx.Delay#<init>(float)#duration", "com.example.gfx.Delay#<init>(float,int)#duration"))
+    assertEquals(
+      r.policy.opaqueSeeds("sge.utils.Seconds"),
+      Set("com.example.gfx.Delay#<init>(float)#duration", "com.example.gfx.Delay#<init>(float,int)#duration")
+    )
     assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Delay#<init>(float,int)#reps"))
   }
 
@@ -252,8 +263,8 @@ class ReferencePolicySpec extends FunSuite:
       """package sge.gfx
         |class Dist { def size(): Int = 1; def total: Float = 1f }
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
-    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val p    = SpoonTir.fromSource(javaSrc2)
+    val r    = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     val fams = r.policy.rows.map(row => row.upstream -> row.family).toMap
     assertEquals(fams.get("com.example.gfx.Dist#size"), Some(DerivedPolicy.Family.KeepParens))
     assertEquals(fams.get("com.example.gfx.Dist#total"), Some(DerivedPolicy.Family.Parenless))
@@ -272,8 +283,8 @@ class ReferencePolicySpec extends FunSuite:
         |import scala.reflect.ClassTag
         |class PM { def get[T: ClassTag]: T = ???; def add[T: ClassTag](v: T): Unit = () }
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
-    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val p    = SpoonTir.fromSource(javaSrc2)
+    val r    = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     val fams = r.policy.rows.filter(_.family == DerivedPolicy.Family.ClassTagParam).map(_.upstream).sorted
     assertEquals(fams, List("com.example.gfx.PM#add", "com.example.gfx.PM#get"))
   }
@@ -291,12 +302,14 @@ class ReferencePolicySpec extends FunSuite:
         |import lowlevel.Nullable
         |class Gfx { def gl30Available: Boolean = false; def gl30: Nullable[String] = Nullable.empty }
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
-    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val p     = SpoonTir.fromSource(javaSrc2)
+    val r     = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     val props = r.policy.rows.filter(_.family == DerivedPolicy.Family.Property).map(row => row.upstream -> row.target).toMap
     assertEquals(props.get("com.example.gfx.Gfx#isGL30Available"), Some("gl30Available"))
     assertEquals(props.get("com.example.gfx.Gfx#getGL30"), Some("gl30"))
-    assert(r.policy.rows.exists(row => row.family == DerivedPolicy.Family.NullableMember && row.upstream == "com.example.gfx.Gfx#getGL30"))
+    assert(
+      r.policy.rows.exists(row => row.family == DerivedPolicy.Family.NullableMember && row.upstream == "com.example.gfx.Gfx#getGL30")
+    )
   }
 
   test("several reference constructors at one arity: the one whose parameter types match java's decides") {
@@ -314,8 +327,8 @@ class ReferencePolicySpec extends FunSuite:
         |  def this(data: String, region: String, integer: Boolean) = this(data, Nullable.empty, integer)
         |}
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
-    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val p         = SpoonTir.fromSource(javaSrc2)
+    val r         = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     val nullables = r.policy.rows.filter(_.family == DerivedPolicy.Family.NullableMember).map(_.upstream)
     assert(clue(nullables).exists(_.contains("regions")), r.policy.rows.mkString("\n"))
   }
@@ -352,7 +365,9 @@ class ReferencePolicySpec extends FunSuite:
         |""".stripMargin
     val p = SpoonTir.fromSource(javaSrc2)
     val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
-    assert(clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.KeepName && row.upstream == "com.example.gfx.Cell#getMinWidth"))
+    assert(
+      clue(r.policy.rows).exists(row => row.family == DerivedPolicy.Family.KeepName && row.upstream == "com.example.gfx.Cell#getMinWidth")
+    )
   }
 
   test("a field the reference declares under an underscore name derives a FieldName row, its type rows read there") {
@@ -369,8 +384,8 @@ class ReferencePolicySpec extends FunSuite:
         |import lowlevel.Nullable
         |class Cell { var _fillX: Nullable[Float] = Nullable.empty; def fillX(): Cell = this; def fillX: Float = 0f }
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
-    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val p         = SpoonTir.fromSource(javaSrc2)
+    val r         = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     val fieldRows = r.policy.rows.filter(_.upstream == "com.example.gfx.Cell#fillX:field")
     assert(clue(fieldRows).exists(row => row.family == DerivedPolicy.Family.FieldName && row.target == "_fillX"))
     assert(fieldRows.exists(_.family == DerivedPolicy.Family.NullableMember))
@@ -390,8 +405,8 @@ class ReferencePolicySpec extends FunSuite:
       """package sge.gfx
         |trait Input { def x: Int; def x(pointer: Int): Int; def isButtonPressed(button: Int): Boolean; def glVersion(slot: Int): Int }
         |""".stripMargin
-    val p = SpoonTir.fromSource(javaSrc2)
-    val r = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
+    val p       = SpoonTir.fromSource(javaSrc2)
+    val r       = ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set.empty)
     val renames = r.policy.rows.filter(_.family == DerivedPolicy.Family.Rename)
     assert(clue(renames).exists(row => row.upstream.startsWith("com.example.gfx.Input#getX(") && row.target == "x"))
     assert(renames.exists(row => row.upstream == "com.example.gfx.Input#getGLVersion" && row.target == "glVersion"))

@@ -3,17 +3,14 @@ package balticporter.transform
 import balticporter.runner.PortRun
 import balticporter.tir.*
 
-/** THE THREE BOUNDARY MENUS — what each check offers, and the two things a menu can be wrong about
-  * that nothing else in a run would notice. */
+/** THE THREE BOUNDARY MENUS — what each check offers, and the two things a menu can be wrong about that nothing else in a run would notice.
+  */
 class BoundaryRemedySpec extends munit.FunSuite:
 
   private val menus: List[(RemedySource, String, Set[String])] = List(
-    (CollectionBoundaryCheck, CollectionBoundaryCheck.Name,
-     CollectionBoundaryCheck.Issue.values.map(_.toString).toSet),
-    (ContextSeamCheck, ContextSeamCheck.Name,
-     ContextSeamCheck.Kind.values.map(_.label).toSet),
-    (NullabilityBoundaryCheck, NullabilityBoundaryCheck.Name,
-     NullabilityBoundaryCheck.Issue.values.map(_.toString).toSet),
+    (CollectionBoundaryCheck, CollectionBoundaryCheck.Name, CollectionBoundaryCheck.Issue.values.map(_.toString).toSet),
+    (ContextSeamCheck, ContextSeamCheck.Name, ContextSeamCheck.Kind.values.map(_.label).toSet),
+    (NullabilityBoundaryCheck, NullabilityBoundaryCheck.Name, NullabilityBoundaryCheck.Issue.values.map(_.toString).toSet)
   )
 
   test("every remedy names ITS OWN check's lane, and a kind that check really files") {
@@ -71,7 +68,7 @@ class BoundaryRemedySpec extends munit.FunSuite:
     p.symbols.all.find(_.fullName == "com.demo.Widget").get.id
 
   test("nullability: `accept-scoped-out` drains a ScopedOut row and leaves every other kind") {
-    val (_, size, plan) = fixture("com.demo.Widget#size", "accept-scoped-out")
+    val (_, size, plan)                        = fixture("com.demo.Widget#size", "accept-scoped-out")
     def row(i: NullabilityBoundaryCheck.Issue) =
       NullabilityBoundaryCheck.Finding(i, "com.demo.Widget#size", "d", Origin.synthetic, SymId.None, size)
     val rows = NullabilityBoundaryCheck.Issue.values.toList.map(row)
@@ -85,15 +82,14 @@ class BoundaryRemedySpec extends munit.FunSuite:
     // is not a declaration either). A fallback to the finding's UNIT would have made one selection
     // drain every row in a file, which is why the default is None and not that.
     val (_, _, plan) = fixture("com.demo.Widget#size", "accept-scoped-out")
-    val orphan = NullabilityBoundaryCheck.Finding(
-      NullabilityBoundaryCheck.Issue.ScopedOut, "?#local", "d", Origin.synthetic, SymId.None)
+    val orphan       = NullabilityBoundaryCheck.Finding(NullabilityBoundaryCheck.Issue.ScopedOut, "?#local", "d", Origin.synthetic, SymId.None)
     assertEquals(NullabilityBoundaryCheck.resolved(plan, List(orphan)).size, 1)
     assertEquals(plan.all, Nil)
   }
 
   test("context-seam: `accept-unconstructed-thread` is keyed at the TYPE, not at a constructor") {
-    val (p, _, plan) = fixture("com.demo.Widget", "accept-unconstructed-thread")
-    val at = widgetType(p)
+    val (p, _, plan)                  = fixture("com.demo.Widget", "accept-unconstructed-thread")
+    val at                            = widgetType(p)
     def row(k: ContextSeamCheck.Kind) =
       ContextSeamCheck.Finding(k, "com.demo.Widget", "holder", "d", Origin.synthetic, at)
     val rows = ContextSeamCheck.Kind.values.toList.map(row)
@@ -115,8 +111,7 @@ class BoundaryRemedySpec extends munit.FunSuite:
     // Both rows' `enclosing` is the callee — the phase records them there because the question is
     // per external METHOD — so the selection key names a member this program references and does not
     // declare, and an `Ownership.Owned` binding would have refused it as `ExternalOnly`.
-    CollectionBoundaryCheck.remedies.foreach(r =>
-      assertEquals(clue(r).subject, Remedy.Subject.ExternalMember))
+    CollectionBoundaryCheck.remedies.foreach(r => assertEquals(clue(r).subject, Remedy.Subject.ExternalMember))
   }
 
   test("…and a REFUSED kind (`ReifiedOccurrence`, `InexpressibleParent`) has no entry at all") {

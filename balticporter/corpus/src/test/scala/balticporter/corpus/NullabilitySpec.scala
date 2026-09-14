@@ -1,9 +1,9 @@
 package balticporter.corpus
 
 import balticporter.core.PolicyIssue
-import balticporter.testkit.{PortFixture, PortSuite}
+import balticporter.testkit.{ PortFixture, PortSuite }
 import balticporter.tir.*
-import balticporter.transform.{MutableParamsTransform, NullabilityBoundaryCheck, NullabilityTransform}
+import balticporter.transform.{ MutableParamsTransform, NullabilityBoundaryCheck, NullabilityTransform }
 import balticporter.transform.NullabilityBoundaryCheck.Issue
 import balticporter.transform.NullabilityTransform.Target
 
@@ -30,9 +30,7 @@ class NullabilitySpec extends PortSuite:
       |}
       |""".stripMargin
 
-  private def phase(annotations: Set[String] = Set("demo.Null"),
-                    target: Target = Target.Union,
-                    scope: RuleScope = RuleScope.Everywhere()) =
+  private def phase(annotations: Set[String] = Set("demo.Null"), target: Target = Target.Union, scope: RuleScope = RuleScope.Everywhere()) =
     new NullabilityTransform(annotations, target, scope)
 
   private def run(p: NullabilityTransform): (Program, DecisionLog) =
@@ -77,9 +75,8 @@ class NullabilitySpec extends PortSuite:
 
   test("a DECISION per retyped declaration, `Reason.Configured` with the annotation FQN as the key") {
     val (_, log) = run(phase())
-    val rows = log.of(Decision.Kind.RetypedSignature)
-    assertEquals(rows.map(_.subjectFqn).sorted,
-                 List("demo.Group#find", "demo.Group#parent", "demo.Group#pick"))
+    val rows     = log.of(Decision.Kind.RetypedSignature)
+    assertEquals(rows.map(_.subjectFqn).sorted, List("demo.Group#find", "demo.Group#parent", "demo.Group#pick"))
     rows.foreach { d =>
       assertEquals(d.reason, Reason.Configured("nullability", "demo.Null"))
       // the key lives in the classification and NOWHERE else — `decisions.tsv` writes `reason` as
@@ -100,14 +97,14 @@ class NullabilitySpec extends PortSuite:
     p.boundary(after.units).groupBy(_.issue).view.mapValues(_.map(_.subject)).toMap
 
   test("an annotated VARARG is refused loudly — a Scala vararg has no nullable form") {
-    val ph = phase()
+    val ph         = phase()
     val (after, _) = run(ph)
-    val by = issuesOf(ph, after)
+    val by         = issuesOf(ph, after)
     assertEquals(by.get(Issue.VarargParameter).map(_.size), Some(1))
   }
 
   test("an annotated PRIMITIVE is refused loudly — a primitive cannot be null at all") {
-    val ph = phase()
+    val ph         = phase()
     val (after, _) = run(ph)
     assertEquals(issuesOf(ph, after).get(Issue.PrimitiveType), Some(List("demo.Group#count")))
     // …and the emitted signature is exactly what it was.
@@ -119,15 +116,17 @@ class NullabilitySpec extends PortSuite:
     // `T | Null` does not conform to `T` and every use of `pick()`'s result in a `T` slot is a
     // compile error. Nothing at the declaration is wrong — so this is counted, not refused, and
     // the row is the only warning a port gets before it compiles.
-    val ph = phase()
+    val ph           = phase()
     val (after, log) = run(ph)
     assertEquals(issuesOf(ph, after).get(Issue.AbstractTypeParameter), Some(List("demo.Group#pick")))
-    assert(log.of(Decision.Kind.RetypedSignature).exists(_.subjectFqn == "demo.Group#pick"),
-           "counted is not refused — the declaration still moved")
+    assert(
+      log.of(Decision.Kind.RetypedSignature).exists(_.subjectFqn == "demo.Group#pick"),
+      "counted is not refused — the declaration still moved"
+    )
   }
 
   test("an annotation carrying ARGUMENTS is refused — `@A(x)` is not `@A`") {
-    val ph = phase(annotations = Set("demo.Tag"))
+    val ph         = phase(annotations = Set("demo.Tag"))
     val (after, _) = run(ph)
     assertEquals(issuesOf(ph, after).get(Issue.AnnotationArguments).map(_.size), Some(1))
   }
@@ -173,7 +172,7 @@ class NullabilitySpec extends PortSuite:
     // the reason the two lists are joined BY POSITION.
     val p = port(reassigning, new MutableParamsTransform, phase())
     assertEmits(p, "def trim(s$arg: java.lang.String | scala.Null)")
-    val m = p.after.symbols.all.find(_.fullName == "demo.Group#trim").getOrElse(fail("no `trim`"))
+    val m          = p.after.symbols.all.find(_.fullName == "demo.Group#trim").getOrElse(fail("no `trim`"))
     val firstParam = m.info match
       case TypeRepr.MethodType(ps, _, _) => ps.head._2
       case other                         => fail(s"not a method type: $other")
@@ -189,16 +188,16 @@ class NullabilitySpec extends PortSuite:
   }
 
   test("an UNKNOWN annotation FQN never fires, and the BINDER says so") {
-    val ph = phase(annotations = Set("demo.Null", "com.nowhere.Nullable"))
+    val ph         = phase(annotations = Set("demo.Null", "com.nowhere.Nullable"))
     val (after, _) = run(ph)
-    val never = ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key)
+    val never      = ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key)
     assertEquals(never, List("com.nowhere.Nullable"))
     // …and the one that DID bind still did its work.
     assert(after.symbols.all.exists(s => s.fullName == "demo.Group#parent" && isUnion(s.info)))
   }
 
   test("`scope { only }` and `scope { except }` fence the retype, and the exclusion is RECORDED") {
-    val only = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
+    val only     = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
     val (_, log) = Pipeline.runTraced(PortFixture.parse(java), List(only))
     assertEquals(log.of(Decision.Kind.RetypedSignature).map(_.subjectFqn), List("demo.Group#parent"))
     // the held-back declarations get the COMPLEMENT row — the one that explains why a declaration
@@ -214,7 +213,7 @@ class NullabilitySpec extends PortSuite:
     assert(out.forall(!_.detail.contains("key")))
     assertEquals(PorterNote.pairs(out.head).count(_._1 == "key"), 1)
 
-    val except = phase(scope = RuleScope.Everywhere(Set("demo.Group#parent")))
+    val except    = phase(scope = RuleScope.Everywhere(Set("demo.Group#parent")))
     val (_, log2) = Pipeline.runTraced(PortFixture.parse(java), List(except))
     assertEquals(log2.of(Decision.Kind.RetypedSignature).map(_.subjectFqn).contains("demo.Group#parent"), false)
   }
@@ -249,16 +248,16 @@ class NullabilitySpec extends PortSuite:
   }
 
   test("every SCOPED-OUT declaration is COUNTED, not only decided — the residue is a number") {
-    val only = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
+    val only       = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
     val (after, _) = Pipeline.runTraced(PortFixture.parse(java), List(only))
-    val out = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
+    val out        = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
     // one per held-back DECLARATION, and the finding count agrees with the decision count exactly —
     // two artifacts, one act, and a diff between them would be the thing neither can show alone
     val (_, log) = Pipeline.runTraced(PortFixture.parse(java), List(phase(scope = RuleScope.Only(Set("demo.Group#parent")))))
     assertEquals(out.size, log.of(Decision.Kind.ScopedOut).size)
     assert(clue(out).contains("demo.Group#find"))
     // …and it is EMPTY where nothing is scoped out, by arithmetic
-    val open = phase()
+    val open    = phase()
     val (a2, _) = Pipeline.runTraced(PortFixture.parse(java), List(open))
     assertEquals(open.boundary(a2.units).count(_.issue == Issue.ScopedOut), 0)
   }
@@ -268,9 +267,9 @@ class NullabilitySpec extends PortSuite:
     // REMOVED that site's `AbstractTypeParameter`/refusal row and added nothing, so
     // `nullability-boundary` fell with nothing to attribute the fall to — indistinguishable from a
     // check that stopped asking (CLAUDE.md §5).
-    val only = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
+    val only         = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
     val (after, log) = Pipeline.runTraced(PortFixture.parse(java), List(only))
-    val out = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
+    val out          = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
     // `name` is `find`'s annotated parameter and `rest` is `spread`'s annotated VARARG — the scope
     // is asked BEFORE the vararg refusal, so a held-back vararg is a `ScopedOut` and not a
     // `VarargParameter`, and both are here rather than only the four declarations.
@@ -304,7 +303,7 @@ class NullabilitySpec extends PortSuite:
         |class Inheritor extends Box { }
         |""".stripMargin
     def closureOf(sc: RuleScope): List[String] =
-      val ph        = new NullabilityTransform(Set("demo.Null"), scope = sc)
+      val ph         = new NullabilityTransform(Set("demo.Null"), scope = sc)
       val (after, _) = Pipeline.runTraced(PortFixture.parse(src), List(ph))
       ph.boundary(after.units).filter(_.issue == Issue.ScopedOutParent).map(_.subject)
 
@@ -322,10 +321,8 @@ class NullabilitySpec extends PortSuite:
     // §1(b)'s no-op rule at the fingerprint: the target segment is OMITTED when default (Union),
     // so a port that never stated a target contributes no segment for one.
     assertEquals(phase().surfaceFingerprint, "demo.Null|")
-    assertEquals(phase(target = Target.Named("lowlevel.Nullable")).surfaceFingerprint,
-                 "demo.Null|named:lowlevel.Nullable|")
-    assertEquals(phase(target = Target.OptionTarget).surfaceFingerprint,
-                 "demo.Null|option|")
+    assertEquals(phase(target = Target.Named("lowlevel.Nullable")).surfaceFingerprint, "demo.Null|named:lowlevel.Nullable|")
+    assertEquals(phase(target = Target.OptionTarget).surfaceFingerprint, "demo.Null|option|")
   }
 
   // -------------------------------------------------------------------------

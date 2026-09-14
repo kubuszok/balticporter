@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** Java's RAW static constants, and java's POSITIONAL `addAll` — two shapes that reached scalac as
-  * something else and neither of which is a mapping gap. */
+/** Java's RAW static constants, and java's POSITIONAL `addAll` — two shapes that reached scalac as something else and neither of which is a mapping gap.
+  */
 class CollectionsRawConstantSpec extends PortSuite:
 
   test("`Collections.EMPTY_LIST` becomes the TYPED factory java says it is") {
@@ -15,7 +15,9 @@ class CollectionsRawConstantSpec extends PortSuite:
         |  @SuppressWarnings("unchecked")
         |  List<String> none() { return Collections.EMPTY_LIST; }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.emptyList()")
     // …and the raw wrap is GONE, not merely joined: `fromJava` at a raw field is the weaker answer,
     // because it PRESERVES the type this one removes.
@@ -32,7 +34,9 @@ class CollectionsRawConstantSpec extends PortSuite:
         |  @SuppressWarnings("unchecked")
         |  Map<String, String> noneMap() { return Collections.EMPTY_MAP; }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.emptySet()")
     assertEmits(p, "balticporter.runtime.JavaCollections.emptyMap()")
   }
@@ -49,7 +53,9 @@ class CollectionsRawConstantSpec extends PortSuite:
         |  boolean isNone(List<String> xs) { return xs == Collections.EMPTY_LIST; }
         |  List<String> mk() { return Collections.emptyList(); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "eq balticporter.runtime.JavaCollections.emptyList()")
   }
 
@@ -60,7 +66,9 @@ class CollectionsRawConstantSpec extends PortSuite:
         |class Box {
         |  int count(java.util.jar.Attributes a) { return 0; }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the table is three keys and closed by JAVA — `Collections` has no other field. Nothing else
     // may take this path, because a non-empty external collection has no factory to become.
     assertNotEmits(p, "JavaCollections.emptyList()")
@@ -73,7 +81,9 @@ class CollectionsRawConstantSpec extends PortSuite:
         |class Box {
         |  void merge(List<String> dst, List<String> src) { dst.addAll(0, src); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.insertAll(dst, 0, src)")
     // the shape that used to reach scalac: `Growable.addAll` takes ONE `IterableOnce`, so scala
     // auto-tupled java's two arguments into a pair. It is a compile error at most element types and
@@ -88,7 +98,9 @@ class CollectionsRawConstantSpec extends PortSuite:
         |class Box {
         |  void merge(List<String> dst, List<String> src) { dst.addAll(src); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "dst ++= src")
     assertNotEmits(p, "insertAll")
   }

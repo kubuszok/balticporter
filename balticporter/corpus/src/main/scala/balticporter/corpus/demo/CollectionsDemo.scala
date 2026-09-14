@@ -5,10 +5,9 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-/** Demonstrates the java→scala collections transform end-to-end: parse Java that uses
-  * `java.util` collections, emit it, run the `CollectionsTransform` phase, and emit again.
+/** Demonstrates the java→scala collections transform end-to-end: parse Java that uses `java.util` collections, emit it, run the `CollectionsTransform` phase, and emit again.
   *
-  *   corpus/runMain balticporter.corpus.demo.CollectionsDemo
+  * corpus/runMain balticporter.corpus.demo.CollectionsDemo
   */
 object CollectionsDemo:
 

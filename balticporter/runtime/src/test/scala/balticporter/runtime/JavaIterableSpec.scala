@@ -20,7 +20,7 @@ class JavaIterableSpec extends munit.FunSuite {
 
   test("fromIterator is re-traversable — each call creates a fresh iterator") {
     var callCount = 0
-    val ji = JavaIterable.fromIterator { () =>
+    val ji        = JavaIterable.fromIterator { () =>
       callCount += 1
       Iterator(1, 2)
     }
@@ -42,7 +42,7 @@ class JavaIterableSpec extends munit.FunSuite {
   }
 
   test("foreach extension works") {
-    val ji = JavaIterable.from(List(1, 2, 3))
+    val ji  = JavaIterable.from(List(1, 2, 3))
     var sum = 0
     ji.foreach(x => sum += x)
     assertEquals(sum, 6)

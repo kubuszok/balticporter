@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, PortabilityCheck, Program, Remediator, SymId}
+import balticporter.tir.{ Pipeline, PortabilityCheck, Program, Remediator, SymId }
 
 /** Two things at once, because they are the same defect seen from two ends. */
 class RemediatorSpec extends munit.FunSuite:
@@ -34,9 +34,8 @@ class RemediatorSpec extends munit.FunSuite:
   }
 
   test("an external member's owner resolves to the real type; the member itself stays keyed") {
-    val p = parse(reflective)
-    val forName = p.symbols.all.find(s =>
-      s.name == "forName" && p.symbolOf(s.owner).exists(_.fullName == "java.lang.Class"))
+    val p       = parse(reflective)
+    val forName = p.symbols.all.find(s => s.name == "forName" && p.symbolOf(s.owner).exists(_.fullName == "java.lang.Class"))
     assert(forName.isDefined, "java.lang.Class#forName has no owner — the check is blind again")
     // the fullName is deliberately NOT changed: it is the interning key, and the emitter and the
     // package rename both read it. Only the OWNER moved.
@@ -44,12 +43,11 @@ class RemediatorSpec extends munit.FunSuite:
   }
 
   test("an external TYPE is still rooted at None — every ownership predicate depends on it") {
-    val p = parse(reflective)
+    val p   = parse(reflective)
     val cls = p.symbols.all.find(_.fullName == "java.lang.Class")
     assertEquals(cls.map(_.owner), Some(SymId.None))
     // …and therefore an external member's chain still TERMINATES outside the program.
-    val forName = p.symbols.all.find(s =>
-      s.name == "forName" && p.symbolOf(s.owner).exists(_.fullName == "java.lang.Class")).get
+    val forName = p.symbols.all.find(s => s.name == "forName" && p.symbolOf(s.owner).exists(_.fullName == "java.lang.Class")).get
     assertEquals(p.symbolOf(forName.owner).map(_.owner), Some(SymId.None))
   }
 
@@ -71,7 +69,8 @@ class RemediatorSpec extends munit.FunSuite:
     val p = parse(
       """package demo;
         |public class Plain { public String go (Thread t) { return t.getName(); } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(suggest(p).forall(_.mechanism != "class-table"))
   }
 
@@ -123,7 +122,8 @@ class RemediatorSpec extends munit.FunSuite:
       """package demo;
         |import java.util.zip.CRC32;
         |public class Zipper { public long sum (byte[] b) { CRC32 c = new CRC32(); c.update(b); return c.getValue(); } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val s = suggest(p).filter(_.mechanism == "substitutions-drop")
     assertEquals(s.map(_.subject), List("demo.Zipper"))
     assertEquals(s.head.confidence, Remediator.Confidence.High) // nothing else references it
@@ -138,7 +138,8 @@ class RemediatorSpec extends munit.FunSuite:
         |  static class Zipper { long sum (byte[] b) { CRC32 c = new CRC32(); c.update(b); return c.getValue(); } }
         |  static long go (byte[] b) { return new Zipper().sum(b); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val s = suggest(p).filter(_.mechanism == "substitutions-drop")
     // whether Spoon nests or flattens, the claim under test is the GRADE, not the shape
     s.foreach { x =>
@@ -156,7 +157,8 @@ class RemediatorSpec extends munit.FunSuite:
         |  static class A { void go () { new Thread().start(); } }
         |  static class B { void go () { new Thread().start(); } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val s = suggest(p).filter(_.subject == "java.lang.Thread")
     s.foreach { x =>
       assertEquals(x.confidence, Remediator.Confidence.Observation)
@@ -182,9 +184,10 @@ class RemediatorSpec extends munit.FunSuite:
         |  CRC32 c = new CRC32();
         |  void go () { d.finish(); c.reset(); }
         |}
-        |""".stripMargin)
-    val apis     = violations(p).map(_.api).distinct.toSet
-    val proposed = suggest(p)
+        |""".stripMargin
+    )
+    val apis      = violations(p).map(_.api).distinct.toSet
+    val proposed  = suggest(p)
     val chokeApis = proposed.filter(_.mechanism == "substitutions-drop").flatMap(s => apis.filter(s.observed.contains))
     val observed  = proposed.filter(_.mechanism == "observation").map(_.subject)
     assert(observed.forall(a => !chokeApis.contains(a)), s"reported twice: $observed / $chokeApis")

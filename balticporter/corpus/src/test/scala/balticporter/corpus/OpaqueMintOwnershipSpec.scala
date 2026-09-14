@@ -1,15 +1,15 @@
 package balticporter.corpus
 
-import balticporter.core.{FrontendConfig, PortManifest, RealPath}
+import balticporter.core.{ FrontendConfig, PortManifest, RealPath }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 import balticporter.transform.PrimitiveToOpaqueTransform
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** A phase that MINTS a top-level unit owes the same one-module answer an `inject` does —
-  * `ENGINE-LIMITS.md` §13 O5, CLAUDE.md §1.5. */
+/** A phase that MINTS a top-level unit owes the same one-module answer an `inject` does — `ENGINE-LIMITS.md` §13 O5, CLAUDE.md §1.5.
+  */
 class OpaqueMintOwnershipSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
@@ -19,30 +19,30 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   /** the family's home: one tagged field, its getter, and the site that mints a raw value. */
   private val base = Map(
     "p/Gpu.java" -> """package p;
-      |public class Gpu {
-      |  private int handle;
-      |  public Gpu(int handle) { this.handle = handle; }
-      |  public int getHandle() { return handle; }
-      |  public void reset() { handle = 0; }
-      |}""".stripMargin,
+                      |public class Gpu {
+                      |  private int handle;
+                      |  public Gpu(int handle) { this.handle = handle; }
+                      |  public int getHandle() { return handle; }
+                      |  public void reset() { handle = 0; }
+                      |}""".stripMargin
   )
 
-  /** a CONSUMER, whose own local is dragged into the seed set by a pure-move flow from the base's
-    * tagged getter — the shape that makes a grown-set test wrong. */
+  /** a CONSUMER, whose own local is dragged into the seed set by a pure-move flow from the base's tagged getter — the shape that makes a grown-set test wrong.
+    */
   private val dep = Map(
     "q/Uses.java" -> """package q;
-      |public class Uses {
-      |  public int copy(p.Gpu g) {
-      |    int h = g.getHandle();
-      |    return h + 1;
-      |  }
-      |}""".stripMargin,
+                       |public class Uses {
+                       |  public int copy(p.Gpu g) {
+                       |    int h = g.getHandle();
+                       |    return h + 1;
+                       |  }
+                       |}""".stripMargin
   )
 
   private def model(): (Program, Path) = modelWith(dep)
 
   private def modelWith(depFiles: Map[String, String]): (Program, Path) =
-    val root = Files.createTempDirectory("opaque-mint-ownership")
+    val root                                         = Files.createTempDirectory("opaque-mint-ownership")
     def put(under: Path, files: Map[String, String]) = files.foreach { (rel, body) =>
       val p = under.resolve(rel)
       Files.createDirectories(p.getParent)
@@ -51,8 +51,9 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     put(root.resolve("base"), base)
     put(root.resolve("dep"), depFiles)
     val types = SpoonTir.buildModel(
-      FrontendConfig(root.resolve("dep"), depFiles.keys.toList.sorted, Nil,
-                     resolutionRoots = List(root.resolve("base"))), lenient = true)
+      FrontendConfig(root.resolve("dep"), depFiles.keys.toList.sorted, Nil, resolutionRoots = List(root.resolve("base"))),
+      lenient = true
+    )
     (SpoonTir.fromTypes(types), root)
 
   /** exactly what `PortRun.partitionUnits` computes — by ORIGIN, realpathed on both sides (§5.4). */
@@ -60,16 +61,17 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     val mine = RealPath.str(root.resolve(module))
     p.units.filter(u => RealPath.str(Path.of(u.origin.javaPath)).startsWith(mine)).map(_.symbol).toSet
 
-  /** the ONE instance both modules hold: a base declares it, a dependent inherits it through
-    * `extendedBy` and cannot subtract it (§1.5). The hint names a BASE declaration. */
-  private def phase = new PrimitiveToOpaqueTransform(OpaqueSpec(
-    fqn   = "p.Handle",
-    hints = Set("p.Gpu#handle"),
-  ))
+  /** the ONE instance both modules hold: a base declares it, a dependent inherits it through `extendedBy` and cannot subtract it (§1.5). The hint names a BASE declaration.
+    */
+  private def phase = new PrimitiveToOpaqueTransform(
+    OpaqueSpec(
+      fqn = "p.Handle",
+      hints = Set("p.Gpu#handle")
+    )
+  )
 
   private def manifest(ph: PrimitiveToOpaqueTransform): PortManifest =
-    PortManifest(name = "base", governs = Set("p"), surface = List(ph))
-      .extendedBy(PortManifest(name = "dep", governs = Set("q")))
+    PortManifest(name = "base", governs = Set("p"), surface = List(ph)).extendedBy(PortManifest(name = "dep", governs = Set("q")))
 
   /** run the inherited surface with the `RunScope` a `PortRun` builds for `module`. */
   private def run(p: Program, root: Path, ph: PrimitiveToOpaqueTransform, module: String): Program =
@@ -82,8 +84,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     p.units.flatMap(u => p.symbolOf(u.symbol).map(_.fullName)).sorted
 
   private def emitOf(p: Program, fqn: String): String =
-    val u = p.units.find(x => p.symbolOf(x.symbol).exists(_.fullName == fqn))
-      .getOrElse(fail(s"no unit $fqn in ${unitNames(p)}"))
+    val u = p.units.find(x => p.symbolOf(x.symbol).exists(_.fullName == fqn)).getOrElse(fail(s"no unit $fqn in ${unitNames(p)}"))
     new TirEmitter(p).emitUnit(u)
 
   private def infoOf(p: Program, fqn: String): TypeRepr =
@@ -114,12 +115,16 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   test("a DEPENDENT running the SAME inherited instance mints NOTHING") {
     val (p, root) = model()
     val after     = run(p, root, phase, "dep")
-    assert(!clue(unitNames(after)).contains("p.Handle"),
-      "the dependent wrote its own copy of a unit its base already emits — ENGINE-LIMITS §13 O5")
+    assert(
+      !clue(unitNames(after)).contains("p.Handle"),
+      "the dependent wrote its own copy of a unit its base already emits — ENGINE-LIMITS §13 O5"
+    )
     // …and not by accident of the phase declining to run: the SEED set is non-empty, which is what
     // makes this a fence on the MINT and not a fence on the translation.
-    assert(isOpaqueTyped(after, infoOf(after, "p.Gpu#handle")),
-      "the dependent did not seed at all, so this proves nothing about the mint")
+    assert(
+      isOpaqueTyped(after, infoOf(after, "p.Gpu#handle")),
+      "the dependent did not seed at all, so this proves nothing about the mint"
+    )
   }
 
   test("NEGATIVE: with no run scope the SAME dependent program mints — the fence is what stops it") {
@@ -129,8 +134,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     // fence rather than of some other difference between the two runs.
     val (p, root) = model()
     val ph        = phase
-    val after     = Pipeline.runTraced(p, manifest(ph).effectiveSurface,
-                                       new PolicyBinder(p, p.members, RunScope.whole))._1
+    val after     = Pipeline.runTraced(p, manifest(ph).effectiveSurface, new PolicyBinder(p, p.members, RunScope.whole))._1
     assert(clue(unitNames(after)).contains("p.Handle"))
   }
 
@@ -167,8 +171,10 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
       case _                                            => id
     val mine  = emittedUnits(after, root, "dep")
     val grown = ph.typeMapping.keySet
-    assert(grown.exists(id => mine.contains(unitOf(id))),
-      "the fixture no longer exercises the trap — no propagated seed is in a dependent-owned unit")
+    assert(
+      grown.exists(id => mine.contains(unitOf(id))),
+      "the fixture no longer exercises the trap — no propagated seed is in a dependent-owned unit"
+    )
     // …while no HINT is, which is the difference the fence reads.
     val hinted = after.symbols.all.filter(s => ph.spec.hints(s.fullName)).map(_.id)
     assert(clue(hinted).nonEmpty)
@@ -179,20 +185,21 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   // …and a hint set that STRADDLES the two modules is refused, not resolved by `exists`
   // -------------------------------------------------------------------------
 
-  /** the same two-module tree, plus a dependent declaration that the SAME HINT SET explicitly names.
-    * With `hints` as a `Set[String]`, spanning is expressed by listing FQNs from BOTH modules —
-    * `p.Gpu#handle` (base) and `q.Own#handle` (dependent). The test verifies that the fence rejects
-    * this explicitly-stated straddling, the same shape the predicate form used to create silently. */
+  /** the same two-module tree, plus a dependent declaration that the SAME HINT SET explicitly names. With `hints` as a `Set[String]`, spanning is expressed by listing FQNs from BOTH modules —
+    * `p.Gpu#handle` (base) and `q.Own#handle` (dependent). The test verifies that the fence rejects this explicitly-stated straddling, the same shape the predicate form used to create silently.
+    */
   private val depWithOwnField = dep + ("q/Own.java" -> """package q;
-    |public class Own {
-    |  private int handle;
-    |  public int get() { return handle; }
-    |}""".stripMargin)
+                                                         |public class Own {
+                                                         |  private int handle;
+                                                         |  public int get() { return handle; }
+                                                         |}""".stripMargin)
 
-  private def patternPhase = new PrimitiveToOpaqueTransform(OpaqueSpec(
-    fqn   = "p.Handle",
-    hints = Set("p.Gpu#handle", "q.Own#handle"),
-  ))
+  private def patternPhase = new PrimitiveToOpaqueTransform(
+    OpaqueSpec(
+      fqn = "p.Handle",
+      hints = Set("p.Gpu#handle", "q.Own#handle")
+    )
+  )
 
   test("SPANNING hints FAIL THE RUN — `exists` would have minted in BOTH modules") {
     // Pre-fix this was silent: `mintsHere` is `hints.exists(owned)`, true in the dependent because
@@ -200,7 +207,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     // `p.Handle.scala` — O5 in full, with the fence in place and answering. The belt behind it
     // (`PortRun.claimedSynthetic`) does not catch it either: with no published base map it ADMITS.
     val (p, root) = modelWith(depWithOwnField)
-    val err = intercept[IllegalStateException](run(p, root, patternPhase, "dep"))
+    val err       = intercept[IllegalStateException](run(p, root, patternPhase, "dep"))
     assert(clue(err.getMessage).contains("MORE THAN ONE module"))
     assert(err.getMessage.contains("p.Gpu#handle"), "the side this module does NOT emit is named")
     assert(err.getMessage.contains("q.Own#handle"), "…and so is the side it does")
@@ -210,19 +217,18 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
 
   test("…and the BASE side of the same tree refuses too — neither module may decide alone") {
     val (p, root) = modelWith(depWithOwnField)
-    val err = intercept[IllegalStateException](run(p, root, patternPhase, "base"))
+    val err       = intercept[IllegalStateException](run(p, root, patternPhase, "base"))
     assert(clue(err.getMessage).contains("MORE THAN ONE module"))
   }
 
   test("NEGATIVE: the SAME pattern over ONE module is not a span — the rule is about the LINE") {
     // `q.Own` alone, with no base to straddle: `RunScope.whole`, every hint owned, mint proceeds.
     // Without this the refusal could be "a name pattern is banned", which it is not.
-    val root  = Files.createTempDirectory("opaque-mint-one-module")
+    val root = Files.createTempDirectory("opaque-mint-one-module")
     depWithOwnField.foreach { (rel, body) =>
       val f = root.resolve(rel); Files.createDirectories(f.getParent); Files.writeString(f, body)
     }
-    val types = SpoonTir.buildModel(
-      FrontendConfig(root, depWithOwnField.keys.toList.sorted, Nil), lenient = true)
+    val types = SpoonTir.buildModel(FrontendConfig(root, depWithOwnField.keys.toList.sorted, Nil), lenient = true)
     val after = Pipeline.run(SpoonTir.fromTypes(types), List(patternPhase))
     assert(clue(unitNames(after)).contains("p.Handle"))
   }
@@ -240,7 +246,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("a SINGLE-MODULE port is unaffected — `RunScope.whole` is the identity, by arithmetic") {
-    val root  = Files.createTempDirectory("opaque-mint-single")
+    val root = Files.createTempDirectory("opaque-mint-single")
     base.foreach { (rel, body) =>
       val p = root.resolve(rel); Files.createDirectories(p.getParent); Files.writeString(p, body)
     }

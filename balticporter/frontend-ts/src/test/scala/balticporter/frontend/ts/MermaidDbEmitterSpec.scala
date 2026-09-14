@@ -12,7 +12,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- InfoDb (simplest: 11 LOC TS, no mutable state except version) ----------
 
   test("infoDb.ts -> InfoDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "InfoDb", "info")
     println("=== InfoDb.scala (RAST-based) ===")
     println(scala)
@@ -24,7 +24,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- PacketDb (56 LOC TS, mutable data, pushWord, getPacket) ---------------
 
   test("packet/db.ts -> PacketDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/db.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/db.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "PacketDb", "packet")
     println("=== PacketDb.scala (RAST-based) ===")
     println(scala)
@@ -37,7 +37,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- PieDb (67 LOC TS, Map sections, addSection, showData) -----------------
 
   test("pieDb.ts -> PieDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "PieDb", "pie")
     println("=== PieDb.scala (RAST-based) ===")
     println(scala)
@@ -49,7 +49,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- SankeyDb (88 LOC TS, classes, addLink, findOrCreateNode) --------------
 
   test("sankeyDB.ts -> SankeyDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/sankey/sankeyDB.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/sankey/sankeyDB.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "SankeyDb", "sankey")
     println("=== SankeyDb.scala (RAST-based) ===")
     println(scala)
@@ -63,7 +63,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- MindmapDb (159 LOC TS, complex: switch, functions, object) ------------
 
   test("mindmapDb.ts -> MindmapDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/mindmapDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/mindmap/mindmapDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "MindmapDb", "mindmap")
     assert(scala.contains("final class MindmapDb"), "should emit MindmapDb class")
     assert(scala.contains("def clear()"), "should have clear method")
@@ -77,7 +77,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- B2: QuadrantDb (complex with setters and axis labels) ----------------
 
   test("quadrantDb.ts -> QuadrantDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/quadrant-chart/quadrantDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/quadrant-chart/quadrantDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "QuadrantDb", "quadrant")
     assert(scala.contains("final class QuadrantDb"), "should emit QuadrantDb class")
     assert(scala.contains("def clear()"), "should have clear method")
@@ -85,7 +85,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- B2: BlockDb (complex with arrays, for loops) -------------------------
 
   test("blockDB.ts -> BlockDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/block/blockDB.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/block/blockDB.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "BlockDb", "block")
     assert(scala.contains("final class BlockDb"), "should emit BlockDb class")
     assert(scala.contains("def clear()"), "should have clear method")
@@ -95,7 +95,7 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- B2: XyChartDb (axis labels, data series) ----------------------------
 
   test("xychartDb.ts -> XyChartDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/xychart/xychartDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/xychart/xychartDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "XyChartDb", "xychart")
     assert(scala.contains("final class XyChartDb"), "should emit XyChartDb class")
     assert(scala.contains("def clear()"), "should have clear method")
@@ -103,64 +103,64 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
   // -- B5: JS-based Dbs ---------------------------------------------------
 
   test("erDb.js -> ErDb class from RAST (JS source)"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/er/erDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/er/erDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "ErDb", "er")
     assert(scala.contains("final class ErDb"), "should emit ErDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("c4Db.ts -> C4Db class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/c4/c4Db.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/c4/c4Db.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "C4Db", "c4")
     assert(scala.contains("final class C4Db"), "should emit C4Db class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("stateDb.ts -> StateDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/state/stateDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/state/stateDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "StateDb", "state")
     assert(scala.contains("final class StateDb"), "should emit StateDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("journeyDb.ts -> JourneyDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/user-journey/journeyDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/user-journey/journeyDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "JourneyDb", "journey")
     assert(scala.contains("final class JourneyDb"), "should emit JourneyDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("timelineDb.ts -> TimelineDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/timeline/timelineDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/timeline/timelineDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "TimelineDb", "timeline")
     assert(scala.contains("final class TimelineDb"), "should emit TimelineDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("requirementDb.ts -> RequirementDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/requirement/requirementDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/requirement/requirementDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "RequirementDb", "requirement")
     assert(scala.contains("final class RequirementDb"), "should emit RequirementDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("gitGraphAst.js -> GitDb class from RAST (JS source)"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/git/gitGraphAst.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/git/gitGraphAst.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "GitDb", "git")
     assert(scala.contains("final class GitDb"), "should emit GitDb class")
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("classDb.ts -> ClassDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/class/classDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/class/classDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "ClassDb", "class_")
     assert(scala.contains("class ClassDb"), "should emit ClassDb class")
 
   test("flowDb.ts -> FlowDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/flowDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/flowchart/flowDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "FlowDb", "flowchart")
     assert(scala.contains("class FlowDb"), "should emit FlowDb class")
 
   test("ganttDb.ts -> GanttDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/gantt/ganttDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/gantt/ganttDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "GanttDb", "gantt")
     assert(scala.contains("class GanttDb"), "should emit GanttDb class")
 
   test("sequenceDb.ts -> SequenceDb class from RAST"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/sequence/sequenceDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/sequence/sequenceDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, "SequenceDb", "sequence")
     assert(scala.contains("class SequenceDb"), "should emit SequenceDb class")
 
@@ -193,13 +193,13 @@ class MermaidDbEmitterSpec extends munit.FunSuite:
       ("/rast/mermaid/src/diagrams/class/classDb.rast.json", "ClassDb", "class_"),
       ("/rast/mermaid/src/diagrams/flowchart/flowDb.rast.json", "FlowDb", "flowchart"),
       ("/rast/mermaid/src/diagrams/gantt/ganttDb.rast.json", "GanttDb", "gantt"),
-      ("/rast/mermaid/src/diagrams/sequence/sequenceDb.rast.json", "SequenceDb", "sequence"),
+      ("/rast/mermaid/src/diagrams/sequence/sequenceDb.rast.json", "SequenceDb", "sequence")
     )
 
     for ((rastPath, className, pkg) <- files) {
-      val rast = loadRast(rastPath)
+      val rast  = loadRast(rastPath)
       val scala = balticporter.corpus.mermaid.MermaidDbEmitter.emitDb(rast, className, pkg)
-      val path = outDir.resolve(s"${className}_rast.scala")
+      val path  = outDir.resolve(s"${className}_rast.scala")
       java.nio.file.Files.writeString(path, scala)
       println(s"[emit-rast] ${className}.scala: ${scala.linesIterator.size} lines -> $path")
     }

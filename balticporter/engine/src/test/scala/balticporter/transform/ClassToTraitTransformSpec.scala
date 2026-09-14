@@ -1,18 +1,18 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, SurfacePolicy}
+import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** `class-to-trait` -- rewrite a nominated abstract class into a trait and transform every
-  * subclass (named and anonymous) to use `override val` members instead of constructor arguments. */
+/** `class-to-trait` -- rewrite a nominated abstract class into a trait and transform every subclass (named and anonymous) to use `override val` members instead of constructor arguments.
+  */
 class ClassToTraitTransformSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------
 
-  /** An abstract class with three constructors delegating to the widest, and several subclass
-    * shapes: named, anonymous with args, anonymous nilary, anonymous with partial args. */
+  /** An abstract class with three constructors delegating to the widest, and several subclass shapes: named, anonymous with args, anonymous nilary, anonymous with partial args.
+    */
   private val poolLike =
     """package com.demo;
       |
@@ -61,7 +61,7 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
 
   private val mappings = List(
     ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
-    ClassToTraitTransform.ParamMapping(1, "max"),
+    ClassToTraitTransform.ParamMapping(1, "max")
   )
 
   private def parse(java: String): Program = SpoonTir.fromSource(java, "Demo.java")
@@ -79,8 +79,8 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   // ---- 1. the no-op --------------------------------------------------------------------------
 
   test("empty specs is a structural no-op") {
-    val ph     = new ClassToTraitTransform()
-    val before = parse(poolLike)
+    val ph         = new ClassToTraitTransform()
+    val before     = parse(poolLike)
     val (after, _) = Pipeline.runTraced(before, List(ph))
     assertEquals(after.units.map(_.symbol), before.units.map(_.symbol))
     assertEquals(ph.surfaceFingerprint, "")
@@ -90,7 +90,7 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
 
   test("named subclass with full super args gets override vals") {
     val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val r  = run(poolLike, ph)
     assert(r.out.contains("override val initialCapacity"), "should have override val initialCapacity")
     assert(r.out.contains("override val max"), "should have override val max")
     // ConcretePool calls super(cap, mx) -- both mapped
@@ -102,8 +102,8 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   // ---- 3. named subclass nilary (defaults) ---------------------------------------------------
 
   test("named subclass with nilary super gets defaults") {
-    val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val ph          = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val r           = run(poolLike, ph)
     val defaultPool = r.out.linesIterator.dropWhile(!_.contains("class DefaultPool")).takeWhile(!_.contains("class Partial")).mkString("\n")
     assert(defaultPool.contains("override val initialCapacity"), s"DefaultPool should have initialCapacity: $defaultPool")
     assert(defaultPool.contains("override val max"), s"DefaultPool should have max: $defaultPool")
@@ -112,8 +112,8 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   // ---- 4. named subclass with partial args ---------------------------------------------------
 
   test("named subclass with partial super args falls back to defaults for the rest") {
-    val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val ph          = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val r           = run(poolLike, ph)
     val partialPool = r.out.linesIterator.dropWhile(!_.contains("class PartialPool")).takeWhile(!_.contains("class Client")).mkString("\n")
     assert(partialPool.contains("override val initialCapacity"), s"PartialPool should have initialCapacity: $partialPool")
     assert(partialPool.contains("override val max"), s"PartialPool should have max (from default): $partialPool")
@@ -123,7 +123,7 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
 
   test("anonymous new Pool(10, 20) { ... } gets override vals from actual args") {
     val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val r  = run(poolLike, ph)
     // The full-args anonymous class should have both override vals
     val fullArgs = r.out.linesIterator.dropWhile(!_.contains("fullArgs")).take(10).mkString("\n")
     assert(fullArgs.contains("override val initialCapacity"), s"fullArgs anon should have initialCapacity: $fullArgs")
@@ -133,8 +133,8 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   // ---- 6. anonymous nilary subclass ----------------------------------------------------------
 
   test("anonymous new Pool() { ... } gets override vals from defaults") {
-    val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val ph         = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val r          = run(poolLike, ph)
     val nilaryAnon = r.out.linesIterator.dropWhile(!_.contains("nilaryAnon")).take(10).mkString("\n")
     assert(nilaryAnon.contains("override val initialCapacity"), s"nilaryAnon should have initialCapacity: $nilaryAnon")
     assert(nilaryAnon.contains("override val max"), s"nilaryAnon should have max: $nilaryAnon")
@@ -143,8 +143,8 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   // ---- 7. anonymous partial-args subclass ----------------------------------------------------
 
   test("anonymous new Pool(42) { ... } gets first from arg, second from default") {
-    val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val ph          = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val r           = run(poolLike, ph)
     val partialAnon = r.out.linesIterator.dropWhile(!_.contains("partialAnon")).take(10).mkString("\n")
     assert(partialAnon.contains("override val initialCapacity"), s"partialAnon should have initialCapacity: $partialAnon")
     assert(partialAnon.contains("override val max"), s"partialAnon should have max (from default): $partialAnon")
@@ -165,16 +165,16 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   }
 
   test("merge of different specs for same type refuses") {
-    val a = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val a         = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
     val different = List(ClassToTraitTransform.ParamMapping(0, "cap"))
-    val b = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> different))
+    val b         = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> different))
     assert(a.mergedWith(b).isLeft, "different mappings for same type should refuse")
   }
 
   test("merge of disjoint specs unions") {
-    val a = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val other = List(ClassToTraitTransform.ParamMapping(0, "size"))
-    val b = new ClassToTraitTransform(specs = Map("com.other.Queue" -> other))
+    val a      = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val other  = List(ClassToTraitTransform.ParamMapping(0, "size"))
+    val b      = new ClassToTraitTransform(specs = Map("com.other.Queue" -> other))
     val result = a.mergedWith(b)
     assert(result.isRight, "disjoint specs should merge")
     result.foreach { merged =>
@@ -186,8 +186,8 @@ class ClassToTraitTransformSpec extends munit.FunSuite:
   // ---- 9. decision recording -----------------------------------------------------------------
 
   test("decisions are recorded for the nominated type and each subclass") {
-    val ph = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
-    val r = run(poolLike, ph)
+    val ph        = new ClassToTraitTransform(specs = Map("com.demo.Pool" -> mappings))
+    val r         = run(poolLike, ph)
     val decisions = r.log.all
     assert(decisions.nonEmpty, "should have recorded decisions")
     // The nominated type itself should have a decision

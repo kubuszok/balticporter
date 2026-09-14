@@ -4,9 +4,9 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A DIAMOND FORWARDER carries the PARENT's signature, and a generic parent writes that signature
-  * in its OWN scope — so every type parameter it mentions must be substituted by what the subclass
-  * instantiates the parent with (`CLAUDE.md` §4.56, `balticporter.tir.ParentSubst`). */
+/** A DIAMOND FORWARDER carries the PARENT's signature, and a generic parent writes that signature in its OWN scope — so every type parameter it mentions must be substituted by what the subclass
+  * instantiates the parent with (`CLAUDE.md` §4.56, `balticporter.tir.ParentSubst`).
+  */
 class ParentSubstForwarderSpec extends munit.FunSuite:
 
   private val src =

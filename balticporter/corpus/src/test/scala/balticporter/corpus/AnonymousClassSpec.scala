@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 import balticporter.transform.MutableParamsTransform
 
 /** Java ANONYMOUS CLASSES, end to end. */
@@ -48,15 +48,15 @@ class AnonymousClassSpec extends munit.FunSuite:
     assert(clue(out).contains("new demo.Listener()"))
     assert(out.contains("def clicked(x: scala.Int, y: scala.Int)"))
     assert(out.contains("def helper("))
-    assert(out.contains("var hits: scala.Int"))          // an anonymous class's own field
+    assert(out.contains("var hits: scala.Int")) // an anonymous class's own field
   }
 
   test("a method redefining a CONCRETE inherited member carries `override`") {
     // Scala rejects it without one (E164) — and E164 is reported by RefChecks, which never runs
     // while any typer error remains, so nothing else in this project would catch its absence.
     assert(clue(out).contains("override def clicked("))
-    assert(out.contains("override def compare("))        // permitted on an abstract member too
-    assert(!out.contains("override def helper("))        // overrides nothing — must NOT carry it
+    assert(out.contains("override def compare(")) // permitted on an abstract member too
+    assert(!out.contains("override def helper(")) // overrides nothing — must NOT carry it
   }
 
   test("an enclosing member reached from inside the body is qualified `Outer.this`") {

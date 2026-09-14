@@ -6,8 +6,8 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-/** The external-producer bridge is about what a callee HANDS BACK — a `new` hands back nothing of
-  * java's (`CLAUDE.md` §4.56). */
+/** The external-producer bridge is about what a callee HANDS BACK — a `new` hands back nothing of java's (`CLAUDE.md` §4.56).
+  */
 class ExternalProducerNewSpec extends PortSuite:
 
   private val src =
@@ -30,8 +30,12 @@ class ExternalProducerNewSpec extends PortSuite:
   private val out   = new TirEmitter(after).emit
 
   test("an anonymous class implementing a retyped JDK interface is NOT bridged from java") {
-    assert(clue(out).contains("val NONE: balticporter.runtime.JavaIterator[java.lang.String] = " +
-                              "new balticporter.runtime.JavaIterator[java.lang.String]()"))
+    assert(
+      clue(out).contains(
+        "val NONE: balticporter.runtime.JavaIterator[java.lang.String] = " +
+          "new balticporter.runtime.JavaIterator[java.lang.String]()"
+      )
+    )
     assert(!out.contains("fromJava(new balticporter.runtime.JavaIterator"))
   }
 

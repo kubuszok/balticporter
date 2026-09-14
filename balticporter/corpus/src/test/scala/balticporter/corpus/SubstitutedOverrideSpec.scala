@@ -6,11 +6,11 @@ import balticporter.testkit.PortSuite
 class SubstitutedOverrideSpec extends PortSuite:
 
   private val files = List(
-    "Item.java"    -> "package demo.model; public class Item { }",
-    "Action.java"  -> "package demo.model; public class Action<N> { }",
+    "Item.java" -> "package demo.model; public class Item { }",
+    "Action.java" -> "package demo.model; public class Action<N> { }",
     "Handler.java" -> "package demo.model; public class Handler<N, A> { }",
-    "Sink.java"    -> "package demo.model; public class Sink extends Action<Item> { }",
-    "Hook.java"    -> "package demo.model; public class Hook extends Handler<Item, Sink> { }",
+    "Sink.java" -> "package demo.model; public class Sink extends Action<Item> { }",
+    "Hook.java" -> "package demo.model; public class Hook extends Handler<Item, Sink> { }",
     "Base.java" ->
       """package demo.base;
         |import java.util.function.BiConsumer;
@@ -44,7 +44,7 @@ class SubstitutedOverrideSpec extends PortSuite:
         |    };
         |  }
         |}
-        |""".stripMargin,
+        |""".stripMargin
   )
 
   private val p = portAll(files)
@@ -56,9 +56,7 @@ class SubstitutedOverrideSpec extends PortSuite:
   test("an ANONYMOUS body gets the same answer — the same question at a different node") {
     // two occurrences: `Leaf`'s and the anonymous `Mid`'s. `parentClash`-style walks aside, an
     // anonymous class's members go through the very same `overridesInherited`.
-    assertEquals(
-      java.util.regex.Pattern.quote("override def handle(node: demo.model.Item").r.findAllIn(p.out).size,
-      2, clue(p.out))
+    assertEquals(java.util.regex.Pattern.quote("override def handle(node: demo.model.Item").r.findAllIn(p.out).size, 2, clue(p.out))
   }
 
   test("NEGATIVE — a same-name OVERLOAD at another arity overrides nothing") {

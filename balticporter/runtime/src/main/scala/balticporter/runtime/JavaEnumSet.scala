@@ -5,25 +5,25 @@ final class JavaEnumSet[E <: java.lang.Enum[E]] extends scala.collection.mutable
   private given byOrdinal: Ordering[E] = Ordering.by((e: E) => e.ordinal)
   private val under = scala.collection.mutable.TreeSet.empty[E]
 
-  /** NULL is [[JavaEnumMap]]'s rule verbatim, and the reasoning is stated once there: java has ONE
-    * gate (`isValidKey`/`typeCheck`) read two ways — `add` THROWS, every READER answers absent, so
-    * `contains(null)` is `false` and `remove(null)` is `false` with the set untouched
-    * (`null instanceof Enum` is false, and `RegularEnumSet` filters rather than throws). */
+  /** NULL is [[JavaEnumMap]]'s rule verbatim, and the reasoning is stated once there: java has ONE gate (`isValidKey`/`typeCheck`) read two ways — `add` THROWS, every READER answers absent, so
+    * `contains(null)` is `false` and `remove(null)` is `false` with the set untouched (`null instanceof Enum` is false, and `RegularEnumSet` filters rather than throws).
+    */
   private def valid(elem: E): Boolean = elem != null
 
-  def contains(elem: E): Boolean      = valid(elem) && under.contains(elem)
-  def iterator: Iterator[E]           = under.iterator
-  def addOne(elem: E): this.type      = {
+  def contains(elem: E): Boolean     = valid(elem) && under.contains(elem)
+  def iterator:          Iterator[E] = under.iterator
+  def addOne(elem: E):   this.type   = {
     if !valid(elem) then throw new NullPointerException("EnumSet does not permit a null element")
     under.addOne(elem)
     this
   }
   def subtractOne(elem: E): this.type = { if valid(elem) then under.subtractOne(elem); this }
-  override def knownSize: Int         = under.knownSize
-  override def clear(): Unit          = under.clear()
+  override def knownSize:   Int       = under.knownSize
+  override def clear():     Unit      = under.clear()
 }
 
 object JavaEnumSet {
+
   /** `EnumSet.noneOf(K.class)` — empty, and the class token is what java needs and this does not. */
   def noneOf[E <: java.lang.Enum[E]](@annotation.unused cls: Class[E]): JavaEnumSet[E] =
     new JavaEnumSet[E]
@@ -35,8 +35,8 @@ object JavaEnumSet {
     s
   }
 
-  /** `EnumSet.of(a, b, …)` — java has five fixed arities and a vararg; one repeated parameter
-    * serves them all, because the arities exist only to avoid an array allocation. */
+  /** `EnumSet.of(a, b, …)` — java has five fixed arities and a vararg; one repeated parameter serves them all, because the arities exist only to avoid an array allocation.
+    */
   def of[E <: java.lang.Enum[E]](elems: E*): JavaEnumSet[E] = {
     val s = new JavaEnumSet[E]
     elems.foreach(s.addOne)
@@ -50,25 +50,21 @@ object JavaEnumSet {
     s
   }
 
-  /** `EnumSet.range(from, to)` — INCLUSIVE at both ends, as java's is, and an empty range where
-    * `from > to` is java's `IllegalArgumentException` rather than a silently empty set. */
+  /** `EnumSet.range(from, to)` — INCLUSIVE at both ends, as java's is, and an empty range where `from > to` is java's `IllegalArgumentException` rather than a silently empty set.
+    */
   def range[E <: java.lang.Enum[E]](from: E, to: E): JavaEnumSet[E] = {
-    if from.ordinal > to.ordinal then
-      throw new IllegalArgumentException(s"$from > $to")
+    if from.ordinal > to.ordinal then throw new IllegalArgumentException(s"$from > $to")
     val s = new JavaEnumSet[E]
-    from.getDeclaringClass.getEnumConstants
-      .filter(e => e.ordinal >= from.ordinal && e.ordinal <= to.ordinal)
-      .foreach(s.addOne)
+    from.getDeclaringClass.getEnumConstants.filter(e => e.ordinal >= from.ordinal && e.ordinal <= to.ordinal).foreach(s.addOne)
     s
   }
 
-  /** `EnumSet.complementOf(s)` — the constants NOT in `s`. Java reads the enum's identity off the
-    * set itself, which is why java's own version throws on an EMPTY one: there is nothing to read
-    * it from. Reproduced rather than softened. */
+  /** `EnumSet.complementOf(s)` — the constants NOT in `s`. Java reads the enum's identity off the set itself, which is why java's own version throws on an EMPTY one: there is nothing to read it from.
+    * Reproduced rather than softened.
+    */
   def complementOf[E <: java.lang.Enum[E]](s: JavaEnumSet[E]): JavaEnumSet[E] = {
-    val head = s.headOption.getOrElse(
-      throw new IllegalArgumentException("complementOf of an empty EnumSet: the enum type cannot be determined"))
-    val out = new JavaEnumSet[E]
+    val head = s.headOption.getOrElse(throw new IllegalArgumentException("complementOf of an empty EnumSet: the enum type cannot be determined"))
+    val out  = new JavaEnumSet[E]
     head.getDeclaringClass.getEnumConstants.filterNot(s.contains).foreach(out.addOne)
     out
   }

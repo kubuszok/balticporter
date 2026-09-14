@@ -28,8 +28,7 @@ class CollectionsImplicitReceiverSpec extends PortSuite:
     // the inner `new HashMap(){{ put(…) }}` is a `Map`, the outer an `ArrayList`. Bottom-up, the
     // inner class is offered its own pending call first; claimed by the outer instead, `put` would
     // have been rewritten against a `Buffer`.
-    assertEmits(port(doubleBrace, new CollectionsTransform),
-                "this.put(\"k\", \"v\").getOrElse(null.asInstanceOf[java.lang.String])")
+    assertEmits(port(doubleBrace, new CollectionsTransform), "this.put(\"k\", \"v\").getOrElse(null.asInstanceOf[java.lang.String])")
   }
 
   /** an anonymous class of a type this phase does NOT map, nested inside one it does. */

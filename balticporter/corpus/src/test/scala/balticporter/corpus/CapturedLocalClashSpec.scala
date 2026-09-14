@@ -11,12 +11,12 @@ class CapturedLocalClashSpec extends munit.FunSuite:
 
   /** the same emission, WITH the porter notes.
     *
-    * An emitter renders only decisions its `notes` log already holds, and its own are a value fixed
-    * at construction (`ownDecisions`) which the orchestrator records — so a bare emitter emits the
-    * rename and no note for it, by design. This is `PortRun`'s two-emitter shape in miniature. */
+    * An emitter renders only decisions its `notes` log already holds, and its own are a value fixed at construction (`ownDecisions`) which the orchestrator records — so a bare emitter emits the
+    * rename and no note for it, by design. This is `PortRun`'s two-emitter shape in miniature.
+    */
   private def emitWithNotes(src: String): String =
-    val p     = SpoonTir.fromSource(src)
-    val log   = new DecisionLog
+    val p   = SpoonTir.fromSource(src)
+    val log = new DecisionLog
     log.recordAll(new TirEmitter(p).ownDecisions)
     new TirEmitter(p, notes = log).emit
 
@@ -75,7 +75,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    return new Filter() { public String filter(String a) { return filter.filter(a); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("filter$local"))
   }
 
@@ -89,7 +90,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    new Base() { public void run() { System.out.println(tag); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(tag$local: java.lang.String)"))
     assert(out.contains("println(tag$local)"))
   }
@@ -143,7 +145,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    new Base() { public void run() { System.out.println(tag()); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(tag$local: java.lang.String)"))
   }
 
@@ -167,7 +170,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    new Base(html) { public void run() { System.out.println(html); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("html$local"))
   }
 
@@ -186,7 +190,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    new Base() { public void run() { System.out.println(html); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(html: java.lang.String)"))
     assert(!out.contains("html$local"))
   }
@@ -206,7 +211,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(html: java.lang.String)"))
     assert(!out.contains("html$local"))
   }
@@ -219,7 +225,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |  W() { super("x"); }
         |  void go(final String html) { System.out.println(html); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(html: java.lang.String)"))
     assert(!out.contains("$local"))
   }
@@ -234,7 +241,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    return f.filter("x");
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(prefix: java.lang.String)"))
     assert(!out.contains("prefix$local"))
   }
@@ -251,7 +259,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    r.run();
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(run: java.lang.Runnable)"))
     assert(!out.contains("run$local"))
   }
@@ -269,7 +278,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    return value;
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("var value: scala.Int"))
     assert(!out.contains("value$local"))
   }
@@ -278,7 +288,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
     val out = emit(
       """package demo;
         |class W { int filter(int x) { return x; } int go(int filter) { return filter + 1; } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains("$local"))
   }
 
@@ -301,7 +312,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    r.run();
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("engine$local"))
   }
 
@@ -321,7 +333,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    r.run();
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("filter$local"))
   }
 
@@ -334,7 +347,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    r.run();
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains("engine$local"))
   }
 
@@ -343,10 +357,9 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   // as a dependent's base does). The fix: visibleMembers falls back to the symbol table.
   // -------------------------------------------------------------------------------------------
 
-  /** Simulate a resolution-root parent: parse parent and child together, then remove the parent
-    * from `units` while keeping all symbols. This is exactly the shape an ashley test creates:
-    * `EntitySystem` from the main source set (resolution root) with an anonymous subclass in the
-    * test method that has a local named `engine`. */
+  /** Simulate a resolution-root parent: parse parent and child together, then remove the parent from `units` while keeping all symbols. This is exactly the shape an ashley test creates:
+    * `EntitySystem` from the main source set (resolution root) with an anonymous subclass in the test method that has a local named `engine`.
+    */
   private def emitWithResolutionRoot(parentSrc: String, childSrc: String): String =
     val full = SpoonTir.fromSources(List("Parent.java" -> parentSrc, "Child.java" -> childSrc))
     // remove the parent's ClassDef from units — simulates a resolution root where the parent is
@@ -376,7 +389,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    new Base() { public void run() { System.out.println(x()); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(x$local: java.lang.String)"))
   }
 
@@ -395,7 +409,8 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    new Parent(engine) { public void run() { System.out.println(engine); } };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(engine$local: java.lang.String)"))
   }
 
@@ -415,6 +430,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |    return inner.filter("x");
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("def go(filter$local: demo.Base)"))
   }

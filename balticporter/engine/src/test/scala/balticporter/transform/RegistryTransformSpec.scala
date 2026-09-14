@@ -1,12 +1,12 @@
 package balticporter.transform
 
-import balticporter.core.{PortManifest, SurfaceFold}
+import balticporter.core.{ PortManifest, SurfaceFold }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, DecisionLog, Phase, Pipeline, PolicyBinder, Program, RewriteTrace, RuleScope, RunScope, SymId}
+import balticporter.tir.{ Decision, DecisionLog, Phase, Pipeline, PolicyBinder, Program, RewriteTrace, RuleScope, RunScope, SymId }
 
-/** `RegistryTransform` — the §1(b) mechanism replacing reflective instantiation with a `Class`-keyed
-  * registry (`ENGINE-LIMITS.md` P10). Every refusal kind is asserted, not sampled (CLAUDE.md §3). */
+/** `RegistryTransform` — the §1(b) mechanism replacing reflective instantiation with a `Class`-keyed registry (`ENGINE-LIMITS.md` P10). Every refusal kind is asserted, not sampled (CLAUDE.md §3).
+  */
 class RegistryTransformSpec extends munit.FunSuite:
   import RegistryTransform.*
 
@@ -46,11 +46,7 @@ class RegistryTransformSpec extends munit.FunSuite:
 
   private val objectAt = Placement.Object("com.demo.ComponentFactories", Spelling("table", "register", "create"))
 
-  private def entry(scope: RuleScope = RuleScope.Only(Set("com.demo")),
-                    miss: Miss = Miss.Null,
-                    handles: Set[String] = Set.empty,
-                    seeds: List[String] = Nil,
-                    placement: Placement = objectAt) =
+  private def entry(scope: RuleScope = RuleScope.Only(Set("com.demo")), miss: Miss = Miss.Null, handles: Set[String] = Set.empty, seeds: List[String] = Nil, placement: Placement = objectAt) =
     Registry("com.demo.Reflector#newInstance", placement, scope, seeds, handles, miss, Some("AnyRef"))
 
   private def phase(es: Registry*) = new RegistryTransform(es.toList)
@@ -98,23 +94,28 @@ class RegistryTransformSpec extends munit.FunSuite:
   test("one RedirectedCall per redirected declaration and one AddedMember per minted member") {
     val r  = run(phase(entry()))
     val ds = r.log.all
-    assert(ds.exists(d => d.kind == Decision.Kind.RedirectedCall &&
-      d.detail.get("from").contains("com.demo.Reflector#newInstance")))
+    assert(
+      ds.exists(d =>
+        d.kind == Decision.Kind.RedirectedCall &&
+          d.detail.get("from").contains("com.demo.Reflector#newInstance")
+      )
+    )
     assertEquals(clue(ds.count(_.kind == Decision.Kind.AddedMember)), 3)
   }
 
   test("Placement.Member puts the registry on a type the port already emits (CT7: no ctor parameter)") {
-    val r = run(phase(entry(placement =
-      Placement.Member("com.demo.Maker", Spelling("factories", "reg", "mk")))))
+    val r = run(phase(entry(placement = Placement.Member("com.demo.Maker", Spelling("factories", "reg", "mk")))))
     assert(clue(r.out).contains("protected val factories:"))
     assert(r.out.contains("def mk[T <: AnyRef](componentType: Class[T]): T"))
     assert(r.out.contains("this.mk(c)") || r.out.contains("com.demo.Maker.mk(c)") ||
-           r.out.contains(".mk(c)"), clue(r.out))
+             r.out.contains(".mk(c)"),
+           clue(r.out)
+    )
     assert(!r.out.contains("object Maker {\n  protected val factories"))
   }
 
   test("a minted member is not an ORPHANED CALL — a text-spliced declaration has no `Definition`") {
-    val r = run(phase(entry()))
+    val r       = run(phase(entry()))
     val orphans = RewriteTrace.check(r.after).filter(_.what == "call to a member with no declaration")
     assertEquals(clue(orphans.map(_.name)), Nil)
   }
@@ -151,14 +152,12 @@ class RegistryTransformSpec extends munit.FunSuite:
     assertEquals(Miss.render(Miss.JvmReflect()), "JvmReflect")
     assertEquals(Miss.render(Miss.Null), "Null")
     assert(clue(phase(entry(miss = Miss.JvmReflect())).surfaceFingerprint).contains("/JvmReflect<:"))
-    assert(Miss.render(Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "x")))
-      .contains("Throw(com.demo.Broken,x)"))
+    assert(Miss.render(Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "x"))).contains("Throw(com.demo.Broken,x)"))
     assert(clue(run(phase(entry(miss = Miss.JvmReflect()))).out).contains("null.asInstanceOf[T]"))
   }
 
   test("`handles` elides the try over a JvmReflect(Throw) arm, which now throws what java caught") {
-    val p = phase(entry(handles = Set("com.demo.Broken"),
-      miss = Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "no ctor for "))))
+    val p = phase(entry(handles = Set("com.demo.Broken"), miss = Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "no ctor for "))))
     val r = run(p)
     assert(!clue(r.out).contains("catch { case e"), clue(r.out))
     assertEquals(p.findings.count(_.issue == RegistryCheck.Issue.GuardedCall), 0)
@@ -167,12 +166,14 @@ class RegistryTransformSpec extends munit.FunSuite:
   // ---- composed with the NAME table -------------------------------------------------------------
 
   test("`newInstance(forName(s))` composes: the name table keys the registry (P10)") {
-    val js = java.replace("Object plain(Class<?> c) { return Reflector.newInstance(c); }",
-      "Object plain(Class<?> c) { return Reflector.newInstance(Reflector.forName(\"x\")); }")
-    val reg   = phase(entry())
-    val names = new ClassTableTransform(Map("com.demo.Reflector#forName" -> "com.demo.Names#classFor"))
+    val js = java.replace(
+      "Object plain(Class<?> c) { return Reflector.newInstance(c); }",
+      "Object plain(Class<?> c) { return Reflector.newInstance(Reflector.forName(\"x\")); }"
+    )
+    val reg          = phase(entry())
+    val names        = new ClassTableTransform(Map("com.demo.Reflector#forName" -> "com.demo.Names#classFor"))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(names, reg))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains("com.demo.ComponentFactories.create(com.demo.Names.classFor("), clue(out))
     // …and the by-name REFUSAL is gone, because the argument is no longer a run-time name lookup.
     assertEquals(clue(reg.findings.count(_.issue == RegistryCheck.Issue.ByName)), 0)
@@ -202,8 +203,8 @@ class RegistryTransformSpec extends munit.FunSuite:
   // ---- the refusals, each one counted ---------------------------------------------------------
 
   test("a call OUTSIDE the entry's scope is refused and counted") {
-    val p = phase(entry(scope = RuleScope.Only(Set("com.demo.Maker"))))
-    val r = run(p)
+    val p    = phase(entry(scope = RuleScope.Only(Set("com.demo.Maker"))))
+    val r    = run(p)
     val rows = p.findings.filter(_.issue == RegistryCheck.Issue.OutOfScope)
     assert(clue(rows).nonEmpty)
     // …and the java call SURVIVES where it was refused, loudly (§3).
@@ -211,8 +212,7 @@ class RegistryTransformSpec extends munit.FunSuite:
   }
 
   test("an argument that is not a Class value is refused and counted") {
-    val p = new RegistryTransform(List(
-      Registry("com.demo.Namer#build", objectAt, RuleScope.Only(Set("com.demo")))))
+    val p            = new RegistryTransform(List(Registry("com.demo.Namer#build", objectAt, RuleScope.Only(Set("com.demo")))))
     val (after, log) = Pipeline.runTraced(parse(), List(p))
     assertEquals(clue(p.findings.count(_.issue == RegistryCheck.Issue.NonClassArg)), 1)
     // …and the java call SURVIVES where it was refused, loudly (§3).
@@ -220,16 +220,20 @@ class RegistryTransformSpec extends munit.FunSuite:
   }
 
   test("a class named by a STRING at run time is refused and counted") {
-    val js = java.replace("Object plain(Class<?> c) { return Reflector.newInstance(c); }",
-      "Object plain(Class<?> c) { return Reflector.newInstance(Reflector.forName(\"x\")); }")
-    val p  = phase(entry())
+    val js = java.replace(
+      "Object plain(Class<?> c) { return Reflector.newInstance(c); }",
+      "Object plain(Class<?> c) { return Reflector.newInstance(Reflector.forName(\"x\")); }"
+    )
+    val p      = phase(entry())
     val (_, _) = Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(p))
     assert(clue(p.findings.filter(_.issue == RegistryCheck.Issue.ByName)).nonEmpty)
   }
 
   test("a reflective SELF-CLONE is refused with a non-reflective miss, and admitted with JvmReflect") {
-    val js = java.replace("Object plain(Class<?> c) { return Reflector.newInstance(c); }",
-      "Object plain(Class<?> c) { return Reflector.newInstance(getClass()); }")
+    val js = java.replace(
+      "Object plain(Class<?> c) { return Reflector.newInstance(c); }",
+      "Object plain(Class<?> c) { return Reflector.newInstance(getClass()); }"
+    )
     def fire(m: Miss) =
       val p = phase(entry(miss = m))
       Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(p))
@@ -239,9 +243,8 @@ class RegistryTransformSpec extends munit.FunSuite:
   }
 
   test("a facade member is COUNTED at every call and never rewritten") {
-    val js = java.replace("Object plain(Class<?> c) { return Reflector.newInstance(c); }",
-      "Object plain(Class<?> c) { return Facade.read(c); }")
-    val p  = new RegistryTransform(List(entry()), Set("com.demo.Facade#read"))
+    val js           = java.replace("Object plain(Class<?> c) { return Reflector.newInstance(c); }", "Object plain(Class<?> c) { return Facade.read(c); }")
+    val p            = new RegistryTransform(List(entry()), Set("com.demo.Facade#read"))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(p))
     assertEquals(clue(p.findings.count(_.issue == RegistryCheck.Issue.Facade)), 1)
     assert(new TirEmitter(after, notes = log).emit.contains("Facade.read(c)"))
@@ -270,14 +273,13 @@ class RegistryTransformSpec extends munit.FunSuite:
   }
 
   test("a module that does not EMIT the call site rewrites it, mints nothing and reports nothing") {
-    val before = parse()
+    val before       = parse()
     val emitsNothing = new RunScope:
-      def emits(unit: SymId): Boolean                     = false
+      def emits(unit:        SymId):  Boolean             = false
       def contributed(phase: String): Option[Set[String]] = scala.None
-    val p = phase(entry(miss = Miss.JvmReflect()))
-    val (after, log) = Pipeline.runTraced(before, List(p),
-      new PolicyBinder(before, before.members, emitsNothing))
-    val out = new TirEmitter(after, notes = log).emit
+    val p            = phase(entry(miss = Miss.JvmReflect()))
+    val (after, log) = Pipeline.runTraced(before, List(p), new PolicyBinder(before, before.members, emitsNothing))
+    val out          = new TirEmitter(after, notes = log).emit
     // the DEPENDENT's model of a base unit still moves — a model in which the base calls the
     // retired member reports the base's dropped type as this module's residue (D2)…
     assert(clue(out).contains("com.demo.ComponentFactories.create(c)"))
@@ -291,10 +293,18 @@ class RegistryTransformSpec extends munit.FunSuite:
 
   test("independent callees from base and dependent merge into one instance") {
     val b = PortManifest("base", governs = Set("com.demo"), surface = List(phase(entry())))
-    val d = b.extendedBy(PortManifest("dep", surface = List(new RegistryTransform(List(
-      Registry("com.demo.Namer#build",
-        Placement.Object("com.demo.Names", Spelling("t", "r", "c")),
-        RuleScope.Only(Set("com.demo"))))))))
+    val d = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(
+          new RegistryTransform(
+            List(
+              Registry("com.demo.Namer#build", Placement.Object("com.demo.Names", Spelling("t", "r", "c")), RuleScope.Only(Set("com.demo")))
+            )
+          )
+        )
+      )
+    )
     assertEquals(d.surfaceFold.refusals, Nil)
     val eff = d.effectiveSurface.collect { case r: RegistryTransform => r }
     assertEquals(clue(eff).size, 1)
@@ -303,8 +313,12 @@ class RegistryTransformSpec extends munit.FunSuite:
 
   test("the same placement slot with a different entry REFUSES") {
     val b = PortManifest("base", governs = Set("com.demo"), surface = List(phase(entry())))
-    val d = b.extendedBy(PortManifest("dep", surface = List(new RegistryTransform(List(
-      Registry("com.demo.Namer#build", objectAt, RuleScope.Only(Set("com.demo"))))))))
+    val d = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(new RegistryTransform(List(Registry("com.demo.Namer#build", objectAt, RuleScope.Only(Set("com.demo"))))))
+      )
+    )
     assert(clue(d.surfaceFold.refusals).nonEmpty)
     assertEquals(d.surfaceFold.refusals.head.cause, SurfaceFold.Cause.Conflict)
   }
@@ -321,6 +335,5 @@ class RegistryTransformSpec extends munit.FunSuite:
     assertEquals(RegistryCheck.AllLanes.size, RegistryCheck.Issue.values.length)
     assert(RegistryCheck.AllLanes.contains("registry(non-class-arg)"))
     assert(RegistryCheck.AllLanes.contains("registry(jvm-only-miss)"))
-    RegistryCheck.Issue.values.foreach(i =>
-      assert(RegistryCheck.Issue.classification(i).nonEmpty, clue(i)))
+    RegistryCheck.Issue.values.foreach(i => assert(RegistryCheck.Issue.classification(i).nonEmpty, clue(i)))
   }

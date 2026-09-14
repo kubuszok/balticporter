@@ -63,8 +63,6 @@ class PortFixtureSpec extends PortSuite:
     // …and at the expression dispatch: JS-E04 and JS-E17 are both discharged too.
     val (_, open) = PortFixture.parseWith("package demo; public class Q { int f(byte b) { return (b += 3); } }")
     assertEquals(open.undischarged.map(_.id), Nil)
-    assert(open.consulted(balticporter.catalog.JS.E(4)) > 0,
-      "the expression dispatch owes JS-E04 and discharges it")
-    assert(open.consulted(balticporter.catalog.JS.E(17)) > 0,
-      "JS-E17 is consulted at the expression dispatch too")
+    assert(open.consulted(balticporter.catalog.JS.E(4)) > 0, "the expression dispatch owes JS-E04 and discharges it")
+    assert(open.consulted(balticporter.catalog.JS.E(17)) > 0, "JS-E17 is consulted at the expression dispatch too")
   }

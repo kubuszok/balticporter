@@ -1,9 +1,9 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-/** Dedicated emitter for roughjs geometry.ts → Geometry.scala.
-  * Reads the RAST and produces the hand-port-equivalent Scala. */
+/** Dedicated emitter for roughjs geometry.ts → Geometry.scala. Reads the RAST and produces the hand-port-equivalent Scala.
+  */
 object RoughGeometryEmitter {
   def emit(): String = {
     val sb = new StringBuilder

@@ -1,10 +1,10 @@
 package balticporter.frontend.ts
 
 import balticporter.catalog.CatalogLog
-import balticporter.core.{FrontendConfig, Language, Substitutions, TirFrontend}
+import balticporter.core.{ FrontendConfig, Language, Substitutions, TirFrontend }
 import balticporter.tir.Program
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** TypeScript frontend — reads RAST v1 JSON and builds a TIR Program.
   *
@@ -20,8 +20,7 @@ class TsFrontend extends TirFrontend:
 
   def defaultInclude: List[String] = List("**/*.ts")
 
-  def build(cfg: FrontendConfig, subs: Substitutions, catalog: CatalogLog,
-            lenient: Boolean): Program =
+  def build(cfg: FrontendConfig, subs: Substitutions, catalog: CatalogLog, lenient: Boolean): Program =
     val rastFiles = cfg.files.map { relPath =>
       val jsonPath = cfg.sourceRoot.resolve(relPath)
       require(Files.exists(jsonPath), s"RAST file not found: $jsonPath")

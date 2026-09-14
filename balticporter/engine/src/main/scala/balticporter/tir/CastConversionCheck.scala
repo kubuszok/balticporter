@@ -1,24 +1,22 @@
 package balticporter.tir
 
-/** Casts where the operand is a wrapper of a DIFFERENT primitive than the target — java's
-  * unboxing conversion (JLS 5.1.8) rendered as a scala type assertion that throws. The frontend
-  * handles this shape (`SpoonTir.castOf`); this check catches the residue where a later phase
-  * retyped the operand, sharing its predicate with the emitter's consult. `ENGINE-LIMITS.md` K17,
-  * catalog JS-E06. */
+/** Casts where the operand is a wrapper of a DIFFERENT primitive than the target — java's unboxing conversion (JLS 5.1.8) rendered as a scala type assertion that throws. The frontend handles this
+  * shape (`SpoonTir.castOf`); this check catches the residue where a later phase retyped the operand, sharing its predicate with the emitter's consult. `ENGINE-LIMITS.md` K17, catalog JS-E06.
+  */
 object CastConversionCheck:
 
   val Name = "cast-conversion"
 
   /** Java's eight wrappers and the primitive each one unboxes to (JLS 5.1.8). */
   private val Unboxes = Map(
-    "java.lang.Byte"      -> "scala.Byte",
-    "java.lang.Short"     -> "scala.Short",
+    "java.lang.Byte" -> "scala.Byte",
+    "java.lang.Short" -> "scala.Short",
     "java.lang.Character" -> "scala.Char",
-    "java.lang.Integer"   -> "scala.Int",
-    "java.lang.Long"      -> "scala.Long",
-    "java.lang.Float"     -> "scala.Float",
-    "java.lang.Double"    -> "scala.Double",
-    "java.lang.Boolean"   -> "scala.Boolean",
+    "java.lang.Integer" -> "scala.Int",
+    "java.lang.Long" -> "scala.Long",
+    "java.lang.Float" -> "scala.Float",
+    "java.lang.Double" -> "scala.Double",
+    "java.lang.Boolean" -> "scala.Boolean"
   )
 
   enum Issue:
@@ -40,10 +38,9 @@ object CastConversionCheck:
         "primitive and widens (JLS 5.1.8, 5.1.2), and the emitted `asInstanceOf` asserts the " +
         "runtime class instead — a ClassCastException where java produced a value, with no compile " +
         "error and no other count able to see it"
-    def render: String = s"$issue $owner: ($target) $operand  (${origin.javaPath}:${origin.line})"
+    def render: String              = s"$issue $owner: ($target) $operand  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
-        origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   /** `None` at every cast that is not a cross-type unbox. */
   def crossTypeUnbox(t: Tree.Typed)(using p: Program): Option[(String, String)] =
@@ -62,19 +59,19 @@ object CastConversionCheck:
   /** Over the units the run emits (D2 ownership filter). */
   def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     given Program = program
-    val out = collection.mutable.ListBuffer.empty[Finding]
-    val scan = new Phase:
-      def name: String = "cast-conversion/scan"
-      private def claim(owner: SymId, t: Option[Term])(using p: Program): Unit =
-        t.foreach(x => StandardTraversal.scanTerm(x, ()) { (_, n) =>
-          n match
-            case ty: Tree.Typed =>
-              crossTypeUnbox(ty).foreach((s, g) =>
-                out += Finding(Issue.UnboxAsserted, p.symbolOf(owner).map(_.fullName).getOrElse("?"),
-                  s, g, ty.origin))
-            case _ => ()
-          ()
-        })
+    val out       = collection.mutable.ListBuffer.empty[Finding]
+    val scan      = new Phase:
+      def name:                                                           String = "cast-conversion/scan"
+      private def claim(owner: SymId, t: Option[Term])(using p: Program): Unit   =
+        t.foreach(x =>
+          StandardTraversal.scanTerm(x, ()) { (_, n) =>
+            n match
+              case ty: Tree.Typed =>
+                crossTypeUnbox(ty).foreach((s, g) => out += Finding(Issue.UnboxAsserted, p.symbolOf(owner).map(_.fullName).getOrElse("?"), s, g, ty.origin))
+              case _ => ()
+            ()
+          }
+        )
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { claim(d.symbol, d.rhs); d }
       override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef = { claim(v.symbol, v.rhs); v }
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
@@ -83,8 +80,12 @@ object CastConversionCheck:
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

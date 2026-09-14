@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Tree, TryResourceCheck}
+import balticporter.tir.{ Tree, TryResourceCheck }
 import balticporter.tir.TryResourceCheck.Issue
 
 /** Java's try-with-resources (JLS 14.20.3) — the lowering, and the lane that can see it go missing. */
@@ -55,8 +55,8 @@ class TryResourceSpec extends PortSuite:
     // exception, so recorded as `primary` it routed the `finally` to the SUPPRESSING arm — and
     // `boundary.Break` disables suppression, making `addSuppressed` a no-op that dropped the close
     // exception entirely. The arm below is what keeps `primary` null on a jump.
-    val p   = port(oneResource)
-    val out = p.out
+    val p    = port(oneResource)
+    val out  = p.out
     val jump = out.indexOf("scala.util.boundary.Break[?] => throw brkThru$")
     val rec  = out.indexOf("primary$1 = thrown$1")
     assert(clue(jump) >= 0, out)
@@ -64,7 +64,7 @@ class TryResourceSpec extends PortSuite:
   }
 
   test("two resources close in REVERSE declaration order, with distinct binders") {
-    val p = port(twoResources)
+    val p   = port(twoResources)
     val out = p.out
     // the SECOND resource is the inner block, so its `finally` runs first
     val firstClose  = out.indexOf("first.close()")
@@ -77,17 +77,20 @@ class TryResourceSpec extends PortSuite:
   }
 
   test("a plain `try` is untouched — no resource machinery for a statement that has none") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f() { try { return 1; } catch (Exception e) { return 2; } }
-      }""")
+      }"""
+    )
     assertNotEmits(p, "addSuppressed")
     assertNotEmits(p, "primary$")
   }
 
   test("resources close BEFORE this try's own catch — JLS 14.20.3.2's nesting") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       import java.io.Closeable;
       public class C {
@@ -95,7 +98,8 @@ class TryResourceSpec extends PortSuite:
           try (Closeable r = c) { return 1; }
           catch (Exception e) { return 2; }
         }
-      }""")
+      }"""
+    )
     val out = p.out
     // the java `catch` is OUTSIDE the resource block: `r.close()` comes before it in the text
     val close = out.indexOf("r.close()")
@@ -132,7 +136,8 @@ class TryResourceSpec extends PortSuite:
   }
 
   test("a `try` with NO resources is not a finding — 0 even un-repaired") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f() {
@@ -141,12 +146,14 @@ class TryResourceSpec extends PortSuite:
           } finally {
           }
         }
-      }""")
+      }"""
+    )
     assertEquals(TryResourceCheck.check(p.after, p.after.units, (_: Tree.Try) => false), Nil)
   }
 
   test("the lowering set is keyed by TOKEN — a lowered try may not vouch for its sibling") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       import java.io.Closeable;
       public class C {
@@ -155,7 +162,8 @@ class TryResourceSpec extends PortSuite:
           try (Closeable y = b) { use(y); }
         }
         void use(Closeable c) { }
-      }""")
+      }"""
+    )
     val tries = p.after.units.flatMap(collectTries(_)(using p.after))
     assertEquals(clue(tries).size, 2)
     // one lowered by token: the OTHER is still reported
@@ -169,7 +177,7 @@ class TryResourceSpec extends PortSuite:
     balticporter.tir.StandardTraversal.scanClassDef(u, ()) { (_, t) =>
       t match
         case tr: Tree.Try => out += tr
-        case _            => ()
+        case _ => ()
       ()
     }
     out.toList

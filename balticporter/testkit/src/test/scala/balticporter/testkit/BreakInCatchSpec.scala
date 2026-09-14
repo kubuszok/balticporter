@@ -14,7 +14,8 @@ class BreakInCatchSpec extends PortSuite:
     // BasicDateParser's shape: a loop over patterns, each attempt guarded, the success leaving the
     // loop. Without the guard the `break` is caught by the handler that exists to ignore a PARSE
     // failure, and the loop tries every remaining pattern instead of stopping.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         String f(String[] pats, String s) {
@@ -28,7 +29,8 @@ class BreakInCatchSpec extends PortSuite:
           return r;
         }
         String parse(String s, String p) { return s; }
-      }""")
+      }"""
+    )
     assert(clue(out).contains(Guard))
     // …and it is the FIRST arm: java's own arm must not see the jump.
     val g = out.indexOf(Guard)
@@ -38,7 +40,8 @@ class BreakInCatchSpec extends PortSuite:
   }
 
   test("`continue` inside a try with a broad catch gets the same arm") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(String[] xs) {
@@ -50,7 +53,8 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(String s) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains(Guard))
     val g = out.indexOf(Guard)
     val j = out.indexOf("case e: java.lang.RuntimeException")
@@ -58,7 +62,8 @@ class BreakInCatchSpec extends PortSuite:
   }
 
   test("`catch (Throwable)` is caught by the same rule") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -68,14 +73,16 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains(Guard))
   }
 
   test("a LABELLED break crossing a nested try's broad catch is guarded at that try") {
     // For.java's shape: `break outer` from an inner loop, with the inner body guarded. The label
     // makes the jump cross two constructs by definition; the catch it crosses is the inner one.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int[][] rows) {
@@ -90,13 +97,15 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assert(clue(out).contains(Guard))
     assert(out.contains("using brk$"), out)
   }
 
   test("a jump crossing TWO nested broad catches is guarded at both") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -108,7 +117,8 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     val first = out.indexOf(Guard)
     assert(clue(first) > 0, out)
     assert(out.indexOf(Guard, first + 1) > first, out)
@@ -117,7 +127,8 @@ class BreakInCatchSpec extends PortSuite:
   // ---- what must NOT be touched ----
 
   test("a NARROW catch cannot match a Break and is left exactly as it was") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -127,13 +138,15 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assert(!clue(out).contains("Break["), out)
     assert(out.contains("case e: java.lang.IllegalStateException"), out)
   }
 
   test("a jump in the CATCH ARM is not under that try's catch, so nothing is added") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -143,14 +156,16 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {}
-      }""")
+      }"""
+    )
     assert(!clue(out).contains("Break["), out)
     assert(out.contains("scala.util.boundary.break(())"), out)
   }
 
   test("try/FINALLY with a jump crossing it is untouched — a finally is not a handler") {
     // Both languages run the finalizer and let the jump through; there is nothing to repair.
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -160,13 +175,15 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(int n) {}
-      }""")
+      }"""
+    )
     assert(!clue(out).contains("Break["), out)
     assert(out.contains("finally"), out)
   }
 
   test("a broad catch with NO jump under it is untouched") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
@@ -176,19 +193,22 @@ class BreakInCatchSpec extends PortSuite:
           }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assert(!clue(out).contains("Break["), out)
   }
 
   test("a broad catch outside any loop is untouched — there is no boundary to cross") {
-    val out = emit("""
+    val out = emit(
+      """
       package demo;
       public class L {
         void f(int n) {
           try { g(n); } catch (Exception e) { h(e); }
         }
         void g(int n) {} void h(Object o) {}
-      }""")
+      }"""
+    )
     assert(!clue(out).contains("Break["), out)
   }
 
@@ -196,7 +216,7 @@ class BreakInCatchSpec extends PortSuite:
 
   test("BEHAVIOUR: an unguarded catch really does swallow the jump") {
     var attempts = 0
-    val r = scala.util.boundary { (brk: scala.util.boundary.Label[String]) ?=>
+    val r        = scala.util.boundary { (brk: scala.util.boundary.Label[String]) ?=>
       for p <- List("bad", "good", "also-good") do
         try
           attempts += 1
@@ -210,14 +230,14 @@ class BreakInCatchSpec extends PortSuite:
 
   test("BEHAVIOUR: the re-throw arm restores java's meaning exactly") {
     var attempts = 0
-    val r = scala.util.boundary { (brk: scala.util.boundary.Label[String]) ?=>
+    val r        = scala.util.boundary { (brk: scala.util.boundary.Label[String]) ?=>
       for p <- List("bad", "good", "also-good") do
         try
           attempts += 1
           if p.startsWith("good") then scala.util.boundary.break(p)(using brk)
         catch
           case brkThru: scala.util.boundary.Break[?] => throw brkThru
-          case _: java.lang.Exception                => ()
+          case _:       java.lang.Exception          => ()
       "none"
     }
     assertEquals(r, "good")
@@ -228,14 +248,14 @@ class BreakInCatchSpec extends PortSuite:
     // The arm is unconditional on the label: an inner boundary's own `Break` is re-thrown here and
     // caught by whichever boundary owns it, which is what `boundary.apply` does anyway.
     var handled = 0
-    val r = scala.util.boundary { (outer: scala.util.boundary.Label[String]) ?=>
+    val r       = scala.util.boundary { (outer: scala.util.boundary.Label[String]) ?=>
       try
         scala.util.boundary { (inner: scala.util.boundary.Label[String]) ?=>
           throw new java.lang.IllegalStateException("real")
         }
       catch
         case brkThru: scala.util.boundary.Break[?] => throw brkThru
-        case _: java.lang.Exception                => handled += 1
+        case _:       java.lang.Exception          => handled += 1
       "done"
     }
     assertEquals(r, "done")

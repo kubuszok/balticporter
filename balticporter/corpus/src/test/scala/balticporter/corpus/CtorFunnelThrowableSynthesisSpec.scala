@@ -2,10 +2,10 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{CtorFunnel, OmissionCheck, Pipeline}
+import balticporter.tir.{ CtorFunnel, OmissionCheck, Pipeline }
 
-/** THE THIRD THROWABLE SHAPE: several roots, several different `super(...)`, and NOT ONE of them
-  * passing its own parameters straight through. */
+/** THE THIRD THROWABLE SHAPE: several roots, several different `super(...)`, and NOT ONE of them passing its own parameters straight through.
+  */
 class CtorFunnelThrowableSynthesisSpec extends munit.FunSuite:
 
   private val src =
@@ -60,19 +60,24 @@ class CtorFunnelThrowableSynthesisSpec extends munit.FunSuite:
     out.linesIterator.dropWhile(!_.startsWith(s"class $name")).takeWhile(_ != "}").mkString("\n")
 
   test("the synthesised primary sits at the JDK's WIDEST overload and passes it straight up") {
-    assert(clue(classBody("Boom")).contains(
-      "protected (sup$0: java.lang.String, sup$1: java.lang.Throwable) " +
-        "extends java.lang.RuntimeException(sup$0, sup$1)"))
+    assert(
+      clue(classBody("Boom")).contains(
+        "protected (sup$0: java.lang.String, sup$1: java.lang.Throwable) " +
+          "extends java.lang.RuntimeException(sup$0, sup$1)"
+      )
+    )
   }
 
   test("a root that called the WIDEST overload delivers both arguments unchanged") {
-    assert(clue(classBody("Boom")).contains(
-      "def this(m: java.lang.String, line: scala.Int, c: java.lang.Throwable) = {\n    this(m, c)"))
+    assert(
+      clue(classBody("Boom")).contains("def this(m: java.lang.String, line: scala.Int, c: java.lang.Throwable) = {\n    this(m, c)")
+    )
   }
 
   test("a root that called `(String)` pads the CAUSE — the message is NOT lost") {
-    assert(clue(classBody("Boom")).contains(
-      "def this(m: java.lang.String, ctx: demo.Ctx) = {\n    this(m, null.asInstanceOf[java.lang.Throwable])"))
+    assert(
+      clue(classBody("Boom")).contains("def this(m: java.lang.String, ctx: demo.Ctx) = {\n    this(m, null.asInstanceOf[java.lang.Throwable])")
+    )
   }
 
   test("a SUBTYPE in the `Throwable` slot is delivered, not padded over") {
@@ -86,8 +91,7 @@ class CtorFunnelThrowableSynthesisSpec extends munit.FunSuite:
   }
 
   test("`super(cause)` still computes the JDK's own message under a SYNTHESIS") {
-    assert(clue(classBody("Cause")).contains(
-      "this(java.util.Objects.toString(c, null), c)"))
+    assert(clue(classBody("Cause")).contains("this(java.util.Objects.toString(c, null), c)"))
   }
 
   test("nothing is counted as dropped for the classes the synthesis expresses") {
@@ -113,7 +117,7 @@ class CtorFunnelThrowableSynthesisSpec extends munit.FunSuite:
   }
 
   test("the shape is NAMED, so `decisions.tsv` and the port map say which of the seven it is") {
-    val plans = CtorFunnel.Plans(program)
+    val plans              = CtorFunnel.Plans(program)
     def shapeOf(n: String) =
       program.units.find(u => program.symbolOf(u.symbol).exists(_.name == n)).map(plans.shape).getOrElse("?")
     assertEquals(shapeOf("Boom"), "padded-throwable-synthesis")

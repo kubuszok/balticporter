@@ -3,11 +3,11 @@ package balticporter.corpus
 import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Phase, Pipeline, Program}
-import balticporter.transform.{CallSiteSubstitutionTransform, CollectionsTransform, RetargetBoundaryCheck}
+import balticporter.tir.{ Phase, Pipeline, Program }
+import balticporter.transform.{ CallSiteSubstitutionTransform, CollectionsTransform, RetargetBoundaryCheck }
 
-/** `java.util.Comparator` → `scala.math.Ordering`, END TO END — the first RETARGET entry, and the
-  * first real input to the call-site seam. */
+/** `java.util.Comparator` → `scala.math.Ordering`, END TO END — the first RETARGET entry, and the first real input to the call-site seam.
+  */
 class ComparatorOrderingPortSpec extends munit.FunSuite:
 
   private val src =
@@ -31,8 +31,8 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** kept APART from `src` so the probe below compiles green: this snippet carries a pre-existing
-    * engine gap that has nothing to do with the retarget. See its own test. */
+  /** kept APART from `src` so the probe below compiles green: this snippet carries a pre-existing engine gap that has nothing to do with the retarget. See its own test.
+    */
   private val arraySrc =
     """package demo;
       |import java.util.Arrays;
@@ -79,8 +79,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
   }
 
   test("an empty retarget is a TOTAL no-op — byte-identical to the phase without one") {
-    assertEquals(emit(List(new CollectionsTransform())),
-                 emit(List(new CollectionsTransform(retarget = Map.empty))))
+    assertEquals(emit(List(new CollectionsTransform())), emit(List(new CollectionsTransform(retarget = Map.empty))))
   }
 
   test("a retarget key the COLLECTION mapping already answers is refused, never merged") {
@@ -88,7 +87,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     val phase = new CollectionsTransform(retarget = Map("java.util.List" -> "scala.List"))
     val out   = emit(List(phase))
     assertEquals(phase.policyReport.findings.map(_.issue), List(PolicyIssue.Malformed))
-    assert(clue(out).contains("scala.collection.mutable.Buffer"))  // the mapping stands
+    assert(clue(out).contains("scala.collection.mutable.Buffer")) // the mapping stands
     assert(!out.contains("scala.List["))
   }
 
@@ -109,9 +108,9 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
   test("a retyped declaration is attributed to the ENTRY, never to the engine") {
     // §4.45: the reader's first question is which repository the fix lives in, and a retarget is a
     // line in their manifest. Reported as `Universal` it would send them to `CollectionsTransform`.
-    val phase        = new CollectionsTransform(retarget = Retarget)
-    val (_, log)     = Pipeline.runTraced(SpoonTir.fromSource(src), List(phase))
-    val rows         = log.all.filter(_.detail.get("to").exists(_.contains("Ordering")))
+    val phase    = new CollectionsTransform(retarget = Retarget)
+    val (_, log) = Pipeline.runTraced(SpoonTir.fromSource(src), List(phase))
+    val rows     = log.all.filter(_.detail.get("to").exists(_.contains("Ordering")))
     assert(clue(rows).nonEmpty)
     assert(rows.forall(_.reason.className == "configured"))
     assert(rows.forall(_.reason.detail.contains("java.util.Comparator -> scala.math.Ordering")))
@@ -127,8 +126,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     // table. The mechanism needs nothing new for it: a `using` clause is ordinary text around a
     // hole, and the entry must be placed BEFORE `CollectionsTransform`, whose statics arm re-points
     // the same callee.
-    val m4  = new CallSiteSubstitutionTransform(Map(
-      "java.util.Collections#sort(List,Comparator)" -> "{arg0}.sortInPlace()(using {arg1})"))
+    val m4  = new CallSiteSubstitutionTransform(Map("java.util.Collections#sort(List,Comparator)" -> "{arg0}.sortInPlace()(using {arg1})"))
     val out = emit(List(m4, new CollectionsTransform(retarget = Retarget)))
     assert(clue(out).contains("this.items.sortInPlace()(using this.cmp)"))
     assertEquals(m4.substituted, List("java.util.Collections#sort(List,Comparator)" -> 1))
@@ -139,8 +137,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
 
   test("…and that shape is REFUTED by the compiler, which is why this policy ships no entry") {
     // MEASURED, `scala-cli compile --scala 3.8.4`:
-    assert(clue(emit(List(new CollectionsTransform(retarget = Retarget))))
-      .contains("balticporter.runtime.JavaCollections.sort("))
+    assert(clue(emit(List(new CollectionsTransform(retarget = Retarget)))).contains("balticporter.runtime.JavaCollections.sort("))
   }
 
   test("`Arrays.sort`'s erasure cast is PRE-EXISTING — this policy neither causes nor fixes it") {
@@ -155,9 +152,9 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
   // the PRODUCER direction — the half the subtyping argument does not license
   // -------------------------------------------------------------------------
 
-  /** every shape in which the JDK HANDS BACK a `Comparator`. None of these occurs in the corpus,
-    * which is why the counter had to be written against a synthetic one: a residue nobody can
-    * produce on demand is a residue nobody can prove is counted. */
+  /** every shape in which the JDK HANDS BACK a `Comparator`. None of these occurs in the corpus, which is why the counter had to be written against a synthetic one: a residue nobody can produce on
+    * demand is a residue nobody can prove is counted.
+    */
   private val producerSrc =
     """package demo;
       |import java.util.Collections;
@@ -179,10 +176,14 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     val phase        = new CollectionsTransform(retarget = Retarget)
     val (after, out) = ported(List(phase), producerSrc)
     val fs           = phase.retargetBoundary(after)
-    assertEquals(clue(fs).map(_.issue).distinct.sorted(Ordering.by(_.toString)),
-                 List(RetargetBoundaryCheck.Issue.CastToTarget,
-                      RetargetBoundaryCheck.Issue.ExternalProducer,
-                      RetargetBoundaryCheck.Issue.StaticReceiver))
+    assertEquals(
+      clue(fs).map(_.issue).distinct.sorted(Ordering.by(_.toString)),
+      List(
+        RetargetBoundaryCheck.Issue.CastToTarget,
+        RetargetBoundaryCheck.Issue.ExternalProducer,
+        RetargetBoundaryCheck.Issue.StaticReceiver
+      )
+    )
     // the three producers the JDK owns, plus the cast
     assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.ExternalProducer), 3)
     assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.StaticReceiver), 1)
@@ -237,8 +238,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     // runtime helper. Placed after it, a call-site entry's callee occurs nowhere and it rewrites
     // nothing — with every count unchanged and the emitted code exactly what the port asked to
     // change. This is the §1(b) silent no-op in its most expensive form, so it has its own finding.
-    val m4  = new CallSiteSubstitutionTransform(Map(
-      "java.util.Collections#sort(List,Comparator)" -> "{arg0}.sortInPlace()(using {arg1})"))
+    val m4  = new CallSiteSubstitutionTransform(Map("java.util.Collections#sort(List,Comparator)" -> "{arg0}.sortInPlace()(using {arg1})"))
     val out = emit(List(new CollectionsTransform(retarget = Retarget), m4))
     assertEquals(m4.substituted, Nil)
     val f = m4.policyReport.findings
@@ -257,12 +257,10 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     // forked test JVM cannot be handed one (`BeanPropertyPortSpec` uses the same device). ONE FILE
     // PER UNIT, because `TirEmitter.emit` concatenates units for convenience and two `package`
     // clauses in one file is not a thing a port ever writes.
-    val phase       = new CollectionsTransform(retarget = Retarget)
-    val (after, _)  = ported(List(phase))
-    val emitter     = new TirEmitter(after)
-    val dir = _root_.java.nio.file.Path
-      .of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"),
-        "comparator-ordering")
+    val phase      = new CollectionsTransform(retarget = Retarget)
+    val (after, _) = ported(List(phase))
+    val emitter    = new TirEmitter(after)
+    val dir        = _root_.java.nio.file.Path.of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), "comparator-ordering")
     _root_.java.nio.file.Files.createDirectories(dir)
     after.units.zipWithIndex.foreach { (u, i) =>
       _root_.java.nio.file.Files.writeString(dir.resolve(s"Unit$i.scala"), emitter.emitUnit(u))

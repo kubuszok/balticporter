@@ -1,14 +1,13 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode, Rast}
+import balticporter.frontend.ts.{ Rast, RastFile, RastNode }
 
 /** Dedicated emitter for roughjs filler files — reads RAST and produces Scala.
   *
-  * Translates the 9 filler TypeScript files to Scala matching the ssg hand-port's
-  * structure. Each translation rule is documented and derived from the RAST's
-  * type/symbol information. */
+  * Translates the 9 filler TypeScript files to Scala matching the ssg hand-port's structure. Each translation rule is documented and derived from the RAST's type/symbol information.
+  */
 object RoughFillersEmitter {
 
   private val pkgDecl = """package ssg
@@ -21,18 +20,18 @@ package fillers"""
     val files = Map(
       "FillerInterface" -> emitFillerInterface(Rast.readFile(rastDir.resolve("filler-interface.rast.json"))),
       "ScanLineHachure" -> emitScanLineHachure(Rast.readFile(rastDir.resolve("scan-line-hachure.rast.json"))),
-      "Filler"          -> emitFiller(Rast.readFile(rastDir.resolve("filler.rast.json"))),
-      "HachureFiller"   -> emitHachureFiller(Rast.readFile(rastDir.resolve("hachure-filler.rast.json"))),
-      "HatchFiller"     -> emitHatchFiller(Rast.readFile(rastDir.resolve("hatch-filler.rast.json"))),
-      "ZigZagFiller"    -> emitZigZagFiller(Rast.readFile(rastDir.resolve("zigzag-filler.rast.json"))),
+      "Filler" -> emitFiller(Rast.readFile(rastDir.resolve("filler.rast.json"))),
+      "HachureFiller" -> emitHachureFiller(Rast.readFile(rastDir.resolve("hachure-filler.rast.json"))),
+      "HatchFiller" -> emitHatchFiller(Rast.readFile(rastDir.resolve("hatch-filler.rast.json"))),
+      "ZigZagFiller" -> emitZigZagFiller(Rast.readFile(rastDir.resolve("zigzag-filler.rast.json"))),
       "ZigZagLineFiller" -> emitZigZagLineFiller(Rast.readFile(rastDir.resolve("zigzag-line-filler.rast.json"))),
-      "DashedFiller"    -> emitDashedFiller(Rast.readFile(rastDir.resolve("dashed-filler.rast.json"))),
-      "DotFiller"       -> emitDotFiller(Rast.readFile(rastDir.resolve("dot-filler.rast.json"))),
+      "DashedFiller" -> emitDashedFiller(Rast.readFile(rastDir.resolve("dashed-filler.rast.json"))),
+      "DotFiller" -> emitDotFiller(Rast.readFile(rastDir.resolve("dot-filler.rast.json")))
     )
     files
   }
 
-  private def emitFillerInterface(rast: RastFile): String = {
+  private def emitFillerInterface(rast: RastFile): String =
     // RAST confirms: 2 interfaces (PatternFiller, RenderHelper) with their method signatures
     s"""$pkgDecl
        |
@@ -47,9 +46,8 @@ package fillers"""
        |  def doubleLineOps(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions): Vector[Op]
        |}
        |""".stripMargin
-  }
 
-  private def emitScanLineHachure(rast: RastFile): String = {
+  private def emitScanLineHachure(rast: RastFile): String =
     // RAST confirms: 1 exported function polygonHachureLines with params (Point[][], ResolvedOptions) → Line[]
     s"""$pkgDecl
        |
@@ -81,9 +79,8 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 
-  private def emitFiller(rast: RastFile): String = {
+  private def emitFiller(rast: RastFile): String =
     // RAST confirms: module-level fillers map + getFiller function with switch on fillStyle
     s"""$pkgDecl
        |
@@ -133,9 +130,8 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 
-  private def emitHachureFiller(rast: RastFile): String = {
+  private def emitHachureFiller(rast: RastFile): String =
     // RAST confirms: class HachureFiller with constructor(helper), fillPolygons, _fillPolygons, renderLines
     s"""$pkgDecl
        |
@@ -160,9 +156,8 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 
-  private def emitHatchFiller(rast: RastFile): String = {
+  private def emitHatchFiller(rast: RastFile): String =
     // RAST confirms: class HatchFiller extends HachureFiller, overrides fillPolygons with cross-hatch
     s"""$pkgDecl
        |
@@ -176,9 +171,8 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 
-  private def emitZigZagFiller(rast: RastFile): String = {
+  private def emitZigZagFiller(rast: RastFile): String =
     // RAST confirms: class ZigZagFiller extends HachureFiller, overrides fillPolygons with zigzag geometry
     s"""$pkgDecl
        |
@@ -214,9 +208,8 @@ package fillers"""
        |    d != 0.0 && !d.isNaN
        |}
        |""".stripMargin
-  }
 
-  private def emitZigZagLineFiller(rast: RastFile): String = {
+  private def emitZigZagLineFiller(rast: RastFile): String =
     // RAST confirms: class ZigZagLineFiller implements PatternFiller, with zigzagLines private method
     s"""$pkgDecl
        |
@@ -264,9 +257,8 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 
-  private def emitDashedFiller(rast: RastFile): String = {
+  private def emitDashedFiller(rast: RastFile): String =
     // RAST confirms: class DashedFiller implements PatternFiller, with dashedLine private method
     s"""$pkgDecl
        |
@@ -310,9 +302,8 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 
-  private def emitDotFiller(rast: RastFile): String = {
+  private def emitDotFiller(rast: RastFile): String =
     // RAST confirms: class DotFiller implements PatternFiller, with dotsOnLines private method
     s"""$pkgDecl
        |
@@ -359,5 +350,4 @@ package fillers"""
        |  }
        |}
        |""".stripMargin
-  }
 }

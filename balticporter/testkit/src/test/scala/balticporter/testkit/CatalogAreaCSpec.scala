@@ -1,23 +1,21 @@
 package balticporter.testkit
 
-import balticporter.catalog.{Attaches, Differences, JS, Status}
+import balticporter.catalog.{ Attaches, Differences, JS, Status }
 import balticporter.tir.Decision
 
-/** THE `JS-C` EDGE-CASE SUITE — one test per class/member/initialisation row the engine wires, at
-  * the shape the row is about. */
+/** THE `JS-C` EDGE-CASE SUITE — one test per class/member/initialisation row the engine wires, at the shape the row is about.
+  */
 class CatalogAreaCSpec extends PortSuite:
 
-  /** two files in a real package — the only way to test the access levels at all, since a java
-    * package-private declaration in the DEFAULT package has no spellable Scala qualifier and
-    * `Visibility` turns it into a recorded widening instead. */
+  /** two files in a real package — the only way to test the access levels at all, since a java package-private declaration in the DEFAULT package has no spellable Scala qualifier and `Visibility`
+    * turns it into a recorded widening instead.
+    */
   private def inPkg(body: String): Ported =
     // TWO units, and the second is not decoration: a SINGLE in-memory unit reaches Spoon's
     // `SourcePositionImpl.getColumn` with a null buffer and the frontend NPEs while reading an
     // origin. Every other multi-unit fixture in this repository passes two, which is why nothing
     // had met it; a package boundary needs `portAll` and `portAll` needs the pair.
-    portAll(List(
-      "A.java"     -> s"package p;\n$body\n",
-      "Other.java" -> "package p;\npublic class Other { }\n"))
+    portAll(List("A.java" -> s"package p;\n$body\n", "Other.java" -> "package p;\npublic class Other { }\n"))
 
   // -- JS-C01 / JS-C02: a java `static` is INHERITED and a scala companion inherits nothing --------
 
@@ -27,7 +25,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  static class Base { static int m() { return 1; } }
         |  static class Sub extends Base {}
         |  int f() { return Sub.m(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(1), fired = true)
     // …and JS-C02 at the SAME call, because `Sub` is not the declarer. The two rows are the same
     // BFS read at its two edges, and a suite that asserted only the first would not notice the
@@ -43,7 +42,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  interface K { int X = 7; }
         |  static class C implements K {}
         |  int f() { return C.X; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(2), fired = true)
     assertConsults(p, JS.C(5), fired = true)
   }
@@ -53,7 +53,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class B { int m() { return 1; } }
         |  int f(B b) { return b.m(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(1))
     assertConsults(p, JS.C(2))
   }
@@ -65,7 +66,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class Base { static int m() { return 1; } }
         |  int f() { return Base.m(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(1), fired = true)
     assertConsults(p, JS.C(2))
   }
@@ -77,7 +79,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  interface K { int X = 7; }
         |  static class C implements K {}
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(34), fired = true)
     assertEmits(p, "export ")
   }
@@ -87,7 +90,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  interface K { int X = 7; }
         |  static class C implements K { static int X = 9; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(3), fired = true)
     assertEmitsMatch(p, "(?s).*export .*X => _.*")
   }
@@ -114,7 +118,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  static class B { static int m() { return 1; } }
         |  B mk() { return new B(); }
         |  int f() { return mk().m(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(6), fired = true)
     // the companion call has no receiver slot, so the expression has to be evaluated beside it
     assertEmitsMatch(p, "(?s).*\\{ *this\\.mk\\(\\).*A\\.B\\.m\\(\\).*")
@@ -125,7 +130,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class B { static int m() { return 1; } }
         |  int f() { return B.m(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(6))
   }
 
@@ -136,7 +142,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static java.util.List<String> reg = new java.util.ArrayList<String>();
         |  static { reg.add("x"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(7), fired = true)
     assertConsults(p, JS.C(9), fired = true)
   }
@@ -162,7 +169,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class Base { Base(int n) {} }
         |  static class Sub extends Base { Sub() { super(3); } }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(13), fired = true)
     assertConsults(p, JS.C(14), fired = true)
     assertEmitsMatch(p, "(?s).*class Sub.*extends A\\.Base\\(3\\).*")
@@ -180,7 +188,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  int n;
         |  A(int n) { this.n = n; }
         |  A() { this(1); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(19), fired = true)
     assertConsults(p, JS.C(21), fired = true)
     assertEmits(p, "def this()")
@@ -236,7 +245,8 @@ class CatalogAreaCSpec extends PortSuite:
         |    class Local { int v() { return 7; } }
         |    return "" + new Local().v();
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(30), fired = true)
     // the name, and NOT spoon's `1Local` — java's qualified name carries a binary disambiguator
     // that is the right interning key and is not an identifier (JLS 3.8 forbids a leading digit).
@@ -258,7 +268,8 @@ class CatalogAreaCSpec extends PortSuite:
         |    }
         |    return new Local(1).v();
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(30), fired = true)
     // a class the funnel does not PLAN emits every constructor as a SECONDARY one delegating to a
     // primary nothing synthesised — which is what `cd.body`-only walks produced before
@@ -272,7 +283,8 @@ class CatalogAreaCSpec extends PortSuite:
     val p = port(
       """public class A {
         |  public void run() { class Local { } new Local(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     // java gives a local class no modifier (JLS 14.3), so its default access reads as
     // package-private — and a modifier on a scala local definition is a syntax error, not merely
     // redundant. The type therefore emits bare; only its own members carry visibility.
@@ -297,7 +309,8 @@ class CatalogAreaCSpec extends PortSuite:
     val p = port(
       """public class A {
         |  java.util.List<String> l = new java.util.ArrayList<String>() {{ add("x"); }};
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(17), fired = true)
     assertConsults(p, JS.C(31), fired = true)
   }
@@ -315,7 +328,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  interface I { void m(); }
         |  static class B implements I { public void m() { } }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(25), fired = true)
     assertEmits(p, "override def m()")
   }
@@ -334,7 +348,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  interface I { default int m() { return 1; } }
         |  static class Base { public int m() { return 2; } }
         |  static class C extends Base implements I { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(33), fired = true)
     // JLS 9.4.1 rule 1: the CLASS wins. Scala linearises and would take the last mixin.
     assertEmits(p, "super[Base].m")
@@ -356,7 +371,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  interface I { default int m() { return 1; } }
         |  static class Base { public final int m() { return 2; } }
         |  static class C extends Base implements I { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertNotEmits(p, "super[Base].m")
   }
 
@@ -422,7 +438,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  RED { public int n() { return 0; } },
         |  GREEN { public int n() { return 1; } };
         |  public abstract int n();
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(37), fired = true)
     assertConsults(p, JS.C(39), fired = true)
     assertEmits(p, "def values")
@@ -435,7 +452,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  RED("r");
         |  private final String name;
         |  A(String name) { this.name = name; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(38), fired = true)
   }
 
@@ -445,7 +463,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  RED(1);
         |  private final int code;
         |  A(int code) { this.code = code; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(38))
   }
 
@@ -454,7 +473,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public enum A {
         |  RED { public int v() { return 1; } };
         |  public int v() { return 0; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(40), fired = true)
   }
 
@@ -486,7 +506,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class Inner { private int x = 1; }
         |  int f(Inner i) { return i.x; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(49), fired = true)
     assertEmits(p, "private[A]")
   }
@@ -511,7 +532,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class Base { int v = 1; }
         |  static class Sub extends Base { int v = 2; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertCites(p, JS.C(4), "Sub")
     assertEmitsMatch(p, "(?s).*var v\\$[a-z]+: scala\\.Int = 2.*")
   }
@@ -521,7 +543,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class Base { int v = 1; }
         |  static class Sub extends Base { int w = 2; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertEquals(p.catalog.citedAt(JS.C(4)), Nil)
     val _ = p.out
     assertEquals(p.catalog.citedAt(JS.C(4)), Nil)
@@ -546,7 +569,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public sealed class A permits A.X, A.Y {
         |  public static final class X extends A { }
         |  public static final class Y extends A { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(44), fired = true)
     assertEmits(p, "sealed class A")
     assertEquals(p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal), Nil)
@@ -557,9 +581,12 @@ class CatalogAreaCSpec extends PortSuite:
     // to name `p.B` with, so the type ships OPEN — a widening of who may extend it that is
     // invisible in the emitted text, which is exactly why it is a decision and a porter note
     // rather than nothing at all.
-    val p = portAll(List(
-      "A.java" -> "package p;\npublic sealed class A permits B { }\n",
-      "B.java" -> "package p;\npublic final class B extends A { }\n"))
+    val p = portAll(
+      List(
+        "A.java" -> "package p;\npublic sealed class A permits B { }\n",
+        "B.java" -> "package p;\npublic final class B extends A { }\n"
+      )
+    )
     assertConsults(p, JS.C(44), fired = true)
     assertNotEmits(p, "sealed class A")
     val ds = p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal)
@@ -574,9 +601,12 @@ class CatalogAreaCSpec extends PortSuite:
     // permits `p.B` and `p.C`, the port ships only `p.B` (the other is excluded, refused, or
     // another module's), and every surviving subtype is in this very file. Read off the parsed
     // extends-edges alone the seal looks EXACT and `sealed p.
-    val p = portAll(List(
-      "A.java" -> "package p;\npublic sealed class A permits A.B, C {\n  public static final class B extends A { }\n}\n",
-      "D.java" -> "package p;\npublic class D { }\n"))
+    val p = portAll(
+      List(
+        "A.java" -> "package p;\npublic sealed class A permits A.B, C {\n  public static final class B extends A { }\n}\n",
+        "D.java" -> "package p;\npublic class D { }\n"
+      )
+    )
     assertConsults(p, JS.C(44), fired = true)
     assertNotEmits(p, "sealed class A")
     val ds = p.emitter.emissionDecisions.filter(_.kind == Decision.Kind.WidenedSeal)
@@ -618,12 +648,15 @@ class CatalogAreaCSpec extends PortSuite:
         |  void f(String... a) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertConsults(p, JS.C(22), fired = true)
     assert(!Differences.byId(JS.C(22)).status.isOpen)
   }
 
-  test("…and a call with ONE candidate consults the row and does NOT fire — the answer at the overwhelming majority of calls") {
+  test(
+    "…and a call with ONE candidate consults the row and does NOT fire — the answer at the overwhelming majority of calls"
+  ) {
     val p = port("public class A { void f(String a) { } void go() { f(\"x\"); } }")
     assertConsults(p, JS.C(22))
     assertConsults(p, JS.C(23))
@@ -636,7 +669,8 @@ class CatalogAreaCSpec extends PortSuite:
         |  void f(String a) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertConsults(p, JS.C(23), fired = true)
     assert(!Differences.byId(JS.C(23)).status.isOpen)
   }
@@ -668,7 +702,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  class Inner { }
         |  Inner make() { return null; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(29), fired = true)
     assertEmits(p, "A#Inner")
   }
@@ -686,7 +721,8 @@ class CatalogAreaCSpec extends PortSuite:
         |class B {
         |  A.Inner held;
         |  void take(A.Inner i) { this.held = i; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertEmits(p, "A[?]#Inner")
     assertNotEmits(p, "A#Inner")
   }
@@ -699,7 +735,8 @@ class CatalogAreaCSpec extends PortSuite:
       """public class A {
         |  static class Nested { }
         |  Nested make() { return null; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.C(29), fired = true)
     assertEmits(p, "A.Nested")
     assertNotEmits(p, "A#Nested")
@@ -715,24 +752,28 @@ class CatalogAreaCSpec extends PortSuite:
   // -- the partition, asserted rather than left to a reader ---------------------------------------------------
 
   test("every JS-C row is wired, declared unmechanised, or owes nothing — and the residue is NAMED") {
-    val byKind = Differences.classes.groupBy(d => Differences.leaves(d.attaches) match
-      case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
-      case ls if ls.exists(_.isInstanceOf[Attaches.LoweredType])  => "lowered-type"
-      case ls if ls.exists(_.isInstanceOf[Attaches.RenderedType]) => "rendered-type"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Cited])        => "cited"
-      case _                                                      => "none")
+    val byKind = Differences.classes.groupBy(d =>
+      Differences.leaves(d.attaches) match
+        case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
+        case ls if ls.exists(_.isInstanceOf[Attaches.LoweredType])  => "lowered-type"
+        case ls if ls.exists(_.isInstanceOf[Attaches.RenderedType]) => "rendered-type"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Cited])        => "cited"
+        case _                                                      => "none"
+    )
     assertEquals(byKind.values.map(_.size).sum, Differences.classes.size)
     // THE CHUNK'S OWN BAR. Area C opened with all 47 rows on `Unmechanised` — a claim that nothing
     // was measuring any of them — and the audit point for this wave is whether the rows were really
     // instrumented or renamed to keep a lane green. This is that question in the exact form that can
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
-    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
+    assertEquals(
+      byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set.empty,
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
-        "nobody has built still says nothing is measuring it")
+        "nobody has built still says nothing is measuring it"
+    )
     // JS-C22 and JS-C23 were on that set and left it when the RISK COUNTER landed. The pair is the
     // worked example of the distinction `Unmechanised` is FOR: their sentence said no surface
     // existed to owe a consult, and what did not exist was a RESOLVER — the rendered call is a
@@ -748,6 +789,9 @@ class CatalogAreaCSpec extends PortSuite:
     assert(byKind.getOrElse("cited", Nil).nonEmpty, "no JS-C row is wired to the CITATION surface")
     // …and a row claiming NO obligation must not be one the registry calls Open: that would be a gap
     // no lane can see.
-    assertEquals(byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id), Nil,
-      "an Open row claiming NoObligation is a gap no lane can see")
+    assertEquals(
+      byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id),
+      Nil,
+      "an Open row claiming NoObligation is a gap no lane can see"
+    )
   }

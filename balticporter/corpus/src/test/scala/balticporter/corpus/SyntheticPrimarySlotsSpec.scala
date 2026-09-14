@@ -2,10 +2,10 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
-/** The SLOTS of a synthesised primary — where each parameter's TYPE comes from, and which classes
-  * may have one at all. */
+/** The SLOTS of a synthesised primary — where each parameter's TYPE comes from, and which classes may have one at all.
+  */
 class SyntheticPrimarySlotsSpec extends munit.FunSuite:
 
   private val src =
@@ -40,8 +40,9 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
   private val dropped = OmissionCheck.droppedSuperArgs(program)
 
   test("several PARAMFUL roots reaching ONE parent constructor synthesise — no nilary root needed") {
-    assert(clue(out).contains(
-      "class Narrowing protected (sup$0: java.lang.Object, sup$1: scala.Int) extends demo.Widened(sup$0, sup$1)"))
+    assert(
+      clue(out).contains("class Narrowing protected (sup$0: java.lang.Object, sup$1: scala.Int) extends demo.Widened(sup$0, sup$1)")
+    )
   }
 
   test("the slot types are the PARENT's FORMALS, not the argument types at the call site") {
@@ -130,9 +131,12 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
   private val fout   = new TirEmitter(fields).emit
 
   test("the leading `this.f = e` run becomes SLOTS, after the super slots and in declaration order") {
-    assert(clue(fout).contains(
-      "class Clean protected (sup$0: java.lang.Object, sup$1: scala.Int, " +
-      "f$n: scala.Int, f$tag: java.lang.String, f$spare: scala.Int) extends fields.Widened(sup$0, sup$1)"))
+    assert(
+      clue(fout).contains(
+        "class Clean protected (sup$0: java.lang.Object, sup$1: scala.Int, " +
+          "f$n: scala.Int, f$tag: java.lang.String, f$spare: scala.Int) extends fields.Widened(sup$0, sup$1)"
+      )
+    )
     // each root delegates with its own values, and the consumed statements are gone from its body
     assert(fout.contains("this(s, k, k * 2, s, 1)"))
     assert(!fout.contains("this.n = k * 2"))
@@ -239,8 +243,8 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
         |  Q(boolean b) { super(b ? "t" : "f"); }
         |}
         |""".stripMargin
-    val p2  = Pipeline.run(SpoonTir.fromSource(commented), Nil)
-    val o2  = new TirEmitter(p2).emit
+    val p2 = Pipeline.run(SpoonTir.fromSource(commented), Nil)
+    val o2 = new TirEmitter(p2).emit
     assert(clue(o2).contains("class Q protected (sup$0: java.lang.String) extends demo3.P(sup$0)"))
     assert(o2.contains("// the base wants a name, not an index"))
     // …and it sits above the delegation, not orphaned at the end of the constructor

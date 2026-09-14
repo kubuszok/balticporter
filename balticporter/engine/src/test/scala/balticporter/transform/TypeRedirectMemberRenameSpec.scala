@@ -10,9 +10,9 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------
 
-  /** An interface, two implementors, a sub-implementor and an external caller — the shape a
-    * `Disposable`-style redirect actually meets. NOTHING here has an unparsed parent, so the
-    * component is movable and every refusal below is caused by the thing it names. */
+  /** An interface, two implementors, a sub-implementor and an external caller — the shape a `Disposable`-style redirect actually meets. NOTHING here has an unparsed parent, so the component is
+    * movable and every refusal below is caused by the thing it names.
+    */
   private val clean =
     """package com.demo;
       |
@@ -38,24 +38,22 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** …and the same hierarchy with ONE implementor that also implements a type this program never
-    * parsed. `java.util.EventListener` is not in `ExternalSurface.jdkPlatform` — deliberately, its
-    * surface being no business of the engine's — so it is UNKNOWN, and unknown anchors. */
-  private val anchored = clean.replace(
-    "class Pooled implements Disposable {",
-    "class Pooled implements Disposable, java.util.EventListener {")
+  /** …and the same hierarchy with ONE implementor that also implements a type this program never parsed. `java.util.EventListener` is not in `ExternalSurface.jdkPlatform` — deliberately, its surface
+    * being no business of the engine's — so it is UNKNOWN, and unknown anchors.
+    */
+  private val anchored = clean.replace("class Pooled implements Disposable {", "class Pooled implements Disposable, java.util.EventListener {")
 
   private def parse(java: String): Program = SpoonTir.fromSource(java, "Demo.java")
 
-  private def phase(renames: Map[String, String],
-                    to: String = "java.lang.AutoCloseable"): TypeRedirectTransform =
+  private def phase(renames: Map[String, String], to: String = "java.lang.AutoCloseable"): TypeRedirectTransform =
     new TypeRedirectTransform(
-      redirects     = Map("com.demo.Disposable" -> to),
-      memberRenames = if renames.isEmpty then Map.empty else Map("com.demo.Disposable" -> renames))
+      redirects = Map("com.demo.Disposable" -> to),
+      memberRenames = if renames.isEmpty then Map.empty else Map("com.demo.Disposable" -> renames)
+    )
 
-  /** the BEFORE program is handed back with everything else on purpose: a rename rewrites
-    * `fullName` too, so "what is `com.demo.Buffer#dispose` called now" can only be asked of the
-    * SYMBOL the pre-phase program named, never of the post-phase name table. */
+  /** the BEFORE program is handed back with everything else on purpose: a rename rewrites `fullName` too, so "what is `com.demo.Buffer#dispose` called now" can only be asked of the SYMBOL the
+    * pre-phase program named, never of the post-phase name table.
+    */
   private def run(java: String, p: TypeRedirectTransform): Ported =
     val before       = parse(java)
     val (after, log) = Pipeline.runTraced(before, List(p))
@@ -77,16 +75,14 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
   // ---- 1. the happy path ---------------------------------------------------------------------
 
   test("every declaration of the component takes the TARGET's name, and the redirect follows") {
-    val ph = phase(Map("dispose" -> "close"))
-    val r  = run(clean, ph)
+    val ph  = phase(Map("dispose" -> "close"))
+    val r   = run(clean, ph)
     val out = r.out
 
     assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
 
     // the interface, both implementors and the sub-implementor — all of a component, or none
-    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose",
-         "com.demo.Pooled#dispose", "com.demo.Sub#dispose")
-      .foreach(f => assertEquals(r.nameOf(f), Some("close"), f))
+    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose", "com.demo.Pooled#dispose", "com.demo.Sub#dispose").foreach(f => assertEquals(r.nameOf(f), Some("close"), f))
 
     // …and the CALL SITE, for free: the emitter renders every reference through the symbol's name
     assert(clue(out).contains("d.close()"), "the call site did not follow the symbol")
@@ -112,8 +108,9 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
 
   test("a bound overload can be named precisely — the descriptor form works from day one") {
     val ph = new TypeRedirectTransform(
-      redirects     = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
-      memberRenames = Map("com.demo.Disposable" -> Map("dispose()" -> "close")))
+      redirects = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
+      memberRenames = Map("com.demo.Disposable" -> Map("dispose()" -> "close"))
+    )
     val r = run(clean, ph)
     assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
     assertEquals(r.nameOf("com.demo.Sub#dispose"), Some("close"))
@@ -124,8 +121,11 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
   test("ORDERING: after the redirect the component is SINGLETONS — the guarantee has nothing left") {
     val before = parse(clean)
     val pre    = OverrideGraph.build(before)
-    assertEquals(clue(pre.closureOf(sym(before, "com.demo.Buffer#dispose")).members).size, 4,
-      "the fixture must have a four-declaration component, or this test proves nothing")
+    assertEquals(
+      clue(pre.closureOf(sym(before, "com.demo.Buffer#dispose")).members).size,
+      4,
+      "the fixture must have a four-declaration component, or this test proves nothing"
+    )
 
     // redirect FIRST, exactly as a two-phase-in-series pipeline would
     val (after, _) = Pipeline.runTraced(before, List(phase(Map.empty)))
@@ -135,10 +135,11 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     // `Buffer` and `Sub` still have an OWNED parent edge between them; the interface and the other
     // implementor are gone from the component, because every parent edge to `Disposable` now
     // points at `java.lang.AutoCloseable`, which this program does not declare.
-    assert(!split.contains(sym(after, "com.demo.Disposable#dispose")),
-      "the interface's declaration is still in the component — the fixture did not redirect")
-    assert(!split.contains(sym(after, "com.demo.Pooled#dispose")),
-      "the second implementor is still in the component")
+    assert(
+      !split.contains(sym(after, "com.demo.Disposable#dispose")),
+      "the interface's declaration is still in the component — the fixture did not redirect"
+    )
+    assert(!split.contains(sym(after, "com.demo.Pooled#dispose")), "the second implementor is still in the component")
     assertEquals(clue(post.closureOf(sym(after, "com.demo.Pooled#dispose")).members).size, 1)
     assertEquals(clue(post.closureOf(sym(after, "com.demo.Disposable#dispose")).members).size, 1)
   }
@@ -150,21 +151,17 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     val before = parse(anchored)
     val log    = new DecisionLog
 
-    val preGraph = OverrideGraph.build(before)
-    val preReq   = List(MemberRenamer.Request(sym(before, "com.demo.Buffer#dispose"), "close",
-      Reason.Configured("type-redirect", "k"), "k"))
-    val (preOut, preRefusals) = MemberRenamer.rename(before, preGraph, preReq,
-      MemberRenamer.OnCollision.Refuse, log)
+    val preGraph              = OverrideGraph.build(before)
+    val preReq                = List(MemberRenamer.Request(sym(before, "com.demo.Buffer#dispose"), "close", Reason.Configured("type-redirect", "k"), "k"))
+    val (preOut, preRefusals) = MemberRenamer.rename(before, preGraph, preReq, MemberRenamer.OnCollision.Refuse, log)
     assertEquals(clue(preRefusals).size, 1, "the anchored component must refuse WHOLE")
     assert(preRefusals.head.why.contains("java.util.EventListener"), preRefusals.head.render)
     assertEquals(nameIn(before, preOut, "com.demo.Buffer#dispose"), Some("dispose"), "nothing moved")
 
-    val (after, _) = Pipeline.runTraced(before, List(phase(Map.empty)))
-    val postGraph  = OverrideGraph.build(after)
-    val postReq    = List(MemberRenamer.Request(sym(after, "com.demo.Buffer#dispose"), "close",
-      Reason.Configured("type-redirect", "k"), "k"))
-    val (postOut, postRefusals) = MemberRenamer.rename(after, postGraph, postReq,
-      MemberRenamer.OnCollision.Refuse, new DecisionLog)
+    val (after, _)              = Pipeline.runTraced(before, List(phase(Map.empty)))
+    val postGraph               = OverrideGraph.build(after)
+    val postReq                 = List(MemberRenamer.Request(sym(after, "com.demo.Buffer#dispose"), "close", Reason.Configured("type-redirect", "k"), "k"))
+    val (postOut, postRefusals) = MemberRenamer.rename(after, postGraph, postReq, MemberRenamer.OnCollision.Refuse, new DecisionLog)
 
     assertEquals(clue(postRefusals), Nil, "the anchor is no longer visible from this component")
     assertEquals(nameIn(after, postOut, "com.demo.Buffer#dispose"), Some("close"))
@@ -179,9 +176,9 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     val ph = phase(Map("dispose" -> "close"))
     val r  = run(anchored, ph)
 
-    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose",
-         "com.demo.Pooled#dispose", "com.demo.Sub#dispose")
-      .foreach(f => assertEquals(r.nameOf(f), Some("dispose"), s"$f moved under an anchor"))
+    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose", "com.demo.Pooled#dispose", "com.demo.Sub#dispose").foreach(f =>
+      assertEquals(r.nameOf(f), Some("dispose"), s"$f moved under an anchor")
+    )
 
     val fs = ph.policyReport.of(PolicyIssue.Unverifiable)
     assertEquals(clue(fs).size, 1, ph.policyReport.render)
@@ -201,14 +198,11 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     // right — one class cannot declare `close()` twice — but the KEY is the BASE's, inherited
     // through `surfaceFold`, so `PortRun`'s subject filter dropped the row and the port read
     // `policy 0` beside eight compile errors.
-    val colliding = clean.replace(
-      "class Pooled implements Disposable {",
-      "class Pooled implements Disposable {\n  protected void close() {}")
-    val ph = phase(Map("dispose" -> "close"))
-    val r  = run(colliding, ph)
+    val colliding = clean.replace("class Pooled implements Disposable {", "class Pooled implements Disposable {\n  protected void close() {}")
+    val ph        = phase(Map("dispose" -> "close"))
+    val r         = run(colliding, ph)
 
-    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose", "com.demo.Sub#dispose")
-      .foreach(f => assertEquals(r.nameOf(f), Some("dispose"), s"$f moved past a collision"))
+    List("com.demo.Disposable#dispose", "com.demo.Buffer#dispose", "com.demo.Sub#dispose").foreach(f => assertEquals(r.nameOf(f), Some("dispose"), s"$f moved past a collision"))
 
     val fs = ph.policyReport.of(PolicyIssue.Unverifiable)
     assertEquals(clue(fs).size, 1, ph.policyReport.render)
@@ -223,8 +217,9 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     // The negative half of the pair above: a MALFORMED entry really is the key's fault, so it stays
     // filterable to the module that declared it and keeps the sentence it always had.
     val ph = new TypeRedirectTransform(
-      redirects     = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
-      memberRenames = Map("com.demo.Buffer" -> Map("dispose" -> "close")))
+      redirects = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
+      memberRenames = Map("com.demo.Buffer" -> Map("dispose" -> "close"))
+    )
     run(clean, ph)
     val fs = ph.policyReport.of(PolicyIssue.Malformed)
     assertEquals(clue(fs).size, 1, ph.policyReport.render)
@@ -304,8 +299,9 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
 
   test("a `memberRenames` block for a type nothing REDIRECTS is malformed, not a silent no-op") {
     val ph = new TypeRedirectTransform(
-      redirects     = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
-      memberRenames = Map("com.demo.Buffer" -> Map("dispose" -> "close")))
+      redirects = Map("com.demo.Disposable" -> "java.lang.AutoCloseable"),
+      memberRenames = Map("com.demo.Buffer" -> Map("dispose" -> "close"))
+    )
     val r  = run(clean, ph)
     val fs = ph.policyReport.of(PolicyIssue.Malformed)
     assertEquals(clue(fs).size, 1, ph.policyReport.render)
@@ -344,21 +340,20 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
 
   test("no `memberRenames` is byte-identical to the phase before this feature existed") {
     val plain = new TirEmitter(parse(clean)).emit
-    val off = run(clean, new TypeRedirectTransform(Map.empty))
+    val off   = run(clean, new TypeRedirectTransform(Map.empty))
     assertEquals(off.out, plain)
     assertEquals(off.log.all, Nil)
 
     // …and a redirect WITHOUT renames emits exactly what a redirect alone always emitted
     val redirectOnly = run(clean, phase(Map.empty)).out
-    val withEmpty    = run(clean, new TypeRedirectTransform(
-      Map("com.demo.Disposable" -> "java.lang.AutoCloseable"), Map("com.demo.Disposable" -> Map.empty))).out
+    val withEmpty    = run(
+      clean,
+      new TypeRedirectTransform(Map("com.demo.Disposable" -> "java.lang.AutoCloseable"), Map("com.demo.Disposable" -> Map.empty))
+    ).out
     assertEquals(withEmpty, redirectOnly)
   }
 
   test("the SURFACE FINGERPRINT is unchanged for an entry with no renames (§1.5)") {
     assertEquals(new TypeRedirectTransform(Map("a.B" -> "c.D")).surfaceFingerprint, "a.B->c.D")
-    assertEquals(
-      new TypeRedirectTransform(Map("a.B" -> "c.D"), Map("a.B" -> Map("x" -> "y", "p" -> "q")))
-        .surfaceFingerprint,
-      "a.B->c.D[p=q,x=y]")
+    assertEquals(new TypeRedirectTransform(Map("a.B" -> "c.D"), Map("a.B" -> Map("x" -> "y", "p" -> "q"))).surfaceFingerprint, "a.B->c.D[p=q,x=y]")
   }

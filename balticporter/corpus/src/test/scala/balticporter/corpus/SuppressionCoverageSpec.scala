@@ -1,11 +1,11 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.transform.{NullabilityTransform, SuppressionPhase}
+import balticporter.transform.{ NullabilityTransform, SuppressionPhase }
 import balticporter.transform.NullabilityTransform.Target
 
-/** `SuppressionPhase` covers every body position the emitter can place an `.orNull` in — a
-  * constructor body renders as `def this` without annotations, so the CLASS carries the `@nowarn`. */
+/** `SuppressionPhase` covers every body position the emitter can place an `.orNull` in — a constructor body renders as `def this` without annotations, so the CLASS carries the `@nowarn`.
+  */
 class SuppressionCoverageSpec extends PortSuite:
 
   private val W = "lowlevel.Nullable"
@@ -83,14 +83,16 @@ class SuppressionCoverageSpec extends PortSuite:
     assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def pick\(p: lowlevel""")
   }
 
-
   test("an `.orNull` only inside an ANONYMOUS class annotates the anon member, not the enclosing one") {
     assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def run\(\)""")
     assertNotEmits(ported, "nowarn(\"msg=deprecated\")\n  def r()")
   }
 
   test("a LOCAL `val` with `.orNull` in a secondary constructor annotates that constructor") {
-    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def this\(p: lowlevel\.Nullable\[demo\.Actor\]\) = \{\n\s*this\(\)\n\s*val q""")
+    assertEmitsMatch(
+      ported,
+      """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def this\(p: lowlevel\.Nullable\[demo\.Actor\]\) = \{\n\s*this\(\)\n\s*val q"""
+    )
   }
 
   test("an `.orNull` in the primary's SUPER arguments annotates the class") {
@@ -101,7 +103,6 @@ class SuppressionCoverageSpec extends PortSuite:
     assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nprivate class AnonCtor")
     assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nclass AnonCtor")
   }
-
 
   test("a call to a class-file member annotated @Deprecated annotates the calling member") {
     assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def s\(in""")

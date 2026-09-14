@@ -3,71 +3,86 @@ package balticporter.transform
 import balticporter.catalog.FixKind
 import balticporter.tir.*
 
-/** The nullability boundary, counted: every annotated site the phase could not honour, every seam
-  * a wrapper retype opened and did not close, and every retype whose transparency the language
-  * does not grant (e.g. `T | Null` compiles at the declaration but a use at a plain abstract `T`
-  * does not — cost lands on uses, invisible at the declaration). Parameterised by the annotation
-  * policy; empty produces empty by arithmetic. */
+/** The nullability boundary, counted: every annotated site the phase could not honour, every seam a wrapper retype opened and did not close, and every retype whose transparency the language does not
+  * grant (e.g. `T | Null` compiles at the declaration but a use at a plain abstract `T` does not — cost lands on uses, invisible at the declaration). Parameterised by the annotation policy; empty
+  * produces empty by arithmetic.
+  */
 object NullabilityBoundaryCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "nullability-boundary"
 
-  /** The menu (`Remedy`, DESIGN.md §8.16). Two entries — everything else a port could restate
-    * already has a spelling (`NullabilityTransform(scope)`/`target`/`annotations`, or a build flag).
-    * `ScopedOut` records that the port read a held-back site and accepts the residue there, as
-    * opposed to deleting the scope entry; `AbstractTypeParameter` records accepting the use-site
-    * errors, the one of its three ways out no manifest key or build flag already states. */
+  /** The menu (`Remedy`, DESIGN.md §8.16). Two entries — everything else a port could restate already has a spelling (`NullabilityTransform(scope)`/`target`/`annotations`, or a build flag).
+    * `ScopedOut` records that the port read a held-back site and accepts the residue there, as opposed to deleting the scope entry; `AbstractTypeParameter` records accepting the use-site errors, the
+    * one of its three ways out no manifest key or build flag already states.
+    */
   def remedies: List[Remedy] = List(
     Remedy(
-      id = "accept-scoped-out", lane = Name, kind = Issue.ScopedOut.toString,
-      emissionAffecting = false, fix = FixKind.Parameterised,
+      id = "accept-scoped-out",
+      lane = Name,
+      kind = Issue.ScopedOut.toString,
+      emissionAffecting = false,
+      fix = FixKind.Parameterised,
       what = "the port states that this declaration is meant to keep its upstream type and marker — " +
         "the review outcome the count had no way to record, as opposed to deleting the scope entry, " +
-        "which is `NullabilityTransform(scope)`'s own spelling"),
+        "which is `NullabilityTransform(scope)`'s own spelling"
+    ),
     Remedy(
-      id = "accept-abstract-type-parameter", lane = Name, kind = Issue.AbstractTypeParameter.toString,
-      emissionAffecting = false, fix = FixKind.Parameterised,
+      id = "accept-abstract-type-parameter",
+      lane = Name,
+      kind = Issue.AbstractTypeParameter.toString,
+      emissionAffecting = false,
+      fix = FixKind.Parameterised,
       what = "the port ACCEPTS what this retype costs at the USES — the third of the three ways out " +
-        "the classification names, and the only one no manifest key or build flag already states"),
+        "the classification names, and the only one no manifest key or build flag already states"
+    )
   )
 
   /** Drains what this port selected (CLAUDE.md §5). */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
-    plan.drain(remedies, findings)(f =>
-      ResolutionPlan.Residue(f.issue.toString, f.at, f.subject, f.origin, f.detail))
+    plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.issue.toString, f.at, f.subject, f.origin, f.detail))
 
   /** What kind of boundary this is, which decides who fixes it (CLAUDE.md §1). */
   enum Issue:
     /** `@Null Object... rest` — a Scala vararg has no nullable form (`T*` cannot be `T* | Null`). */
     case VarargParameter
+
     /** the annotated type is a primitive, which cannot be null at all. */
     case PrimitiveType
-    /** the annotation carries element values at this site, so consuming it would silently drop
-      * them — and `@A` where the upstream wrote `@A(x)` is a different annotation. */
+
+    /** the annotation carries element values at this site, so consuming it would silently drop them — and `@A` where the upstream wrote `@A(x)` is a different annotation.
+      */
     case AnnotationArguments
-    /** the annotation sits where the declaration has no type occurrence to move — a TYPE, or a
-      * method-local, which is not surface at all. */
+
+    /** the annotation sits where the declaration has no type occurrence to move — a TYPE, or a method-local, which is not surface at all.
+      */
     case NotAValuePosition
-    /** WRAPPER mode only: the member is one end of an override pair, and a wrapper retype changes
-      * the signature, so moving one end alone breaks the other. */
+
+    /** WRAPPER mode only: the member is one end of an override pair, and a wrapper retype changes the signature, so moving one end alone breaks the other.
+      */
     case OverrideCrossing
+
     /** WRAPPER mode only: a wrapped value reached a slot whose formal this program does not have. */
     case UncoercibleSeam
-    /** UNION mode: the annotated type mentions an ABSTRACT TYPE PARAMETER, where the union is not
-      * transparent — retyped, and counted, because the cost lands on the USES and not here. */
+
+    /** UNION mode: the annotated type mentions an ABSTRACT TYPE PARAMETER, where the union is not transparent — retyped, and counted, because the cost lands on the USES and not here.
+      */
     case AbstractTypeParameter
-    /** the SCOPE's own closure: an ancestor this port scoped out declares a same-named annotated
-      * member, so its half of the override pair keeps the upstream type while this one moves. */
+
+    /** the SCOPE's own closure: an ancestor this port scoped out declares a same-named annotated member, so its half of the override pair keeps the upstream type while this one moves.
+      */
     case ScopedOutParent
-    /** the declaration carries a configured annotation and this port's `nullability` scope
-      * deliberately holds it back, so it keeps its upstream type and its upstream marker. */
+
+    /** the declaration carries a configured annotation and this port's `nullability` scope deliberately holds it back, so it keeps its upstream type and its upstream marker.
+      */
     case ScopedOut
-    /** WRAPPER mode only: retyping this parameter would make two OVERLOADS of the same member
-      * erase to one descriptor, which java's own erasure kept apart. */
+
+    /** WRAPPER mode only: retyping this parameter would make two OVERLOADS of the same member erase to one descriptor, which java's own erasure kept apart.
+      */
     case OverloadErasureClash
-    /** WRAPPER mode only: the formal to coerce against names a type variable that is not in scope
-      * where the call stands, so no ascription can be WRITTEN there. */
+
+    /** WRAPPER mode only: the formal to coerce against names a type variable that is not in scope where the call stands, so no ascription can be WRITTEN there.
+      */
     case UnwritableFormal
 
   object Issue:
@@ -157,23 +172,24 @@ object NullabilityBoundaryCheck extends RemedySource:
           "deleting the scope entry (and paying `AbstractTypeParameter`'s errors), or by staging " +
           "to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole exit disappears."
 
-  /** One boundary site. `unit` is the top-level symbol it belongs to (ownership, D2); `at` is the
-    * declaration for selection (`remedies`) and is deliberately a different symbol — they coincide
-    * only for a top-level type. Defaults to `SymId.None` rather than `unit`, so an unset finding is
-    * unselectable rather than selectable at the wrong granularity. */
-  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId,
-                           at: SymId = SymId.None):
-    def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
+  /** One boundary site. `unit` is the top-level symbol it belongs to (ownership, D2); `at` is the declaration for selection (`remedies`) and is deliberately a different symbol — they coincide only
+    * for a top-level type. Defaults to `SymId.None` rather than `unit`, so an unset finding is unselectable rather than selectable at the wrong granularity.
+    */
+  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId, at: SymId = SymId.None):
+    def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, subject,
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   /** Grouped one-line summary, worst family first, each with its §1 classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

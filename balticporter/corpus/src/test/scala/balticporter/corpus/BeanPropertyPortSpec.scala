@@ -49,18 +49,18 @@ class BeanPropertyPortSpec extends PortSuite:
 
   private val pairs = Map(
     "demo.Layer#opacity" -> "getOpacity/setOpacity",
-    "demo.Layer#name"    -> "getName",
+    "demo.Layer#name" -> "getName"
   )
 
   private def ported(extra: Map[String, String] = Map.empty) =
-    val phase = new BeanPropertyTransform(pairs ++ extra)
-    val before = SpoonTir.fromSource(src + "\n" + impl, "Demo.java")
+    val phase        = new BeanPropertyTransform(pairs ++ extra)
+    val before       = SpoonTir.fromSource(src + "\n" + impl, "Demo.java")
     val (after, log) = Pipeline.runTraced(before, List(phase))
     (phase, after, log, new TirEmitter(after, notes = log).emit)
 
-  /** the emitted CODE, with the porter notes stripped. A note names the UPSTREAM member on purpose
-    * (§4.575's `from=`), so any check that searches emitted text for an upstream name has to strip
-    * them first — the mistake `SubstitutionCheck.dangling` made on its first run with notes. */
+  /** the emitted CODE, with the porter notes stripped. A note names the UPSTREAM member on purpose (§4.575's `from=`), so any check that searches emitted text for an upstream name has to strip them
+    * first — the mistake `SubstitutionCheck.dangling` made on its first run with notes.
+    */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
 
@@ -102,9 +102,12 @@ class BeanPropertyPortSpec extends PortSuite:
 
   test("a pairs entry that NEVER FIRES reports through the binder — not as a silent no-op") {
     val (phase, _, log, out) = ported(Map("demo.Layer#missing" -> "getMissing/setMissing"))
-    val fs = phase.policyReport.findings
-    assertEquals(clue(fs).count(_.issue == PolicyIssue.NeverMatched), 2,
-      "both accessors of the entry named nothing, and each is its own bound key")
+    val fs                   = phase.policyReport.findings
+    assertEquals(
+      clue(fs).count(_.issue == PolicyIssue.NeverMatched),
+      2,
+      "both accessors of the entry named nothing, and each is its own bound key"
+    )
     assert(fs.forall(_.setting.contains("demo.Layer#missing")))
     assert(!out.contains("missing"), "NEVER INVENT A MEMBER")
     // …and the entries that DID fire are unaffected: a broken entry is not a broken phase.
@@ -120,8 +123,8 @@ class BeanPropertyPortSpec extends PortSuite:
   }
 
   test("EMPTY pairs leaves the port byte-identical") {
-    val plain = new TirEmitter(SpoonTir.fromSource(src + "\n" + impl, "Demo.java")).emit
-    val phase = new BeanPropertyTransform()
+    val plain        = new TirEmitter(SpoonTir.fromSource(src + "\n" + impl, "Demo.java")).emit
+    val phase        = new BeanPropertyTransform()
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(src + "\n" + impl, "Demo.java"), List(phase))
     assertEquals(new TirEmitter(after).emit, plain)
     assertEquals(log.all, Nil)
@@ -146,29 +149,26 @@ class BeanPropertyPortSpec extends PortSuite:
     }
     """
 
-  test("a collapsed `var` under BOTH an inherited field and an inherited parameterless `def` keeps\n" +
-       "     the IMPLEMENTATION — the rename would un-implement it, silently") {
+  test(
+    "a collapsed `var` under BOTH an inherited field and an inherited parameterless `def` keeps\n" +
+      "     the IMPLEMENTATION — the rename would un-implement it, silently"
+  ) {
     // `implementsInherited` asked `same.forall(parameterless def)`. With the same name reaching the
     // class from TWO directions — `Above`'s FIELD and `HasW`'s collapsed accessor — `forall` is
     // false, so the pass renamed the property to `w$shadow` and `Below` stopped implementing
     // `HasW.w`. Neither answer is free: renaming loses the implementation, keeping the name leaves a
     // `var` shadowing an inherited one.
-    val phase = new BeanPropertyTransform(
-      Map("demo.HasW#w" -> "getW/setW", "demo.Below#w" -> "getW/setW"),
-      Map("demo.Below#w" -> BeanPropertyTransform.Target.Var))
+    val phase        = new BeanPropertyTransform(Map("demo.HasW#w" -> "getW/setW", "demo.Below#w" -> "getW/setW"), Map("demo.Below#w" -> BeanPropertyTransform.Target.Var))
     val before       = SpoonTir.fromSource(mixed, "Mixed.java")
     val (after, log) = Pipeline.runTraced(before, List(phase))
     val out          = new TirEmitter(after, notes = log).emit
-    assert(!clue(out).contains("w$shadow"),
-      "the property was renamed out from under the interface member it implements")
+    assert(!clue(out).contains("w$shadow"), "the property was renamed out from under the interface member it implements")
     assert(out.contains("def w: scala.Int"), "the interface still declares the property")
   }
 
   test("emitted probe is written for a real compiler") {
     val (_, _, _, out) = ported()
-    val p = _root_.java.nio.file.Path
-      .of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"),
-          "BeanPropertyProbe.scala")
+    val p              = _root_.java.nio.file.Path.of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), "BeanPropertyProbe.scala")
     _root_.java.nio.file.Files.createDirectories(p.getParent)
     _root_.java.nio.file.Files.writeString(p, out)
     println(s"[bean-property-probe] wrote ${p.toAbsolutePath}")

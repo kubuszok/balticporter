@@ -1,8 +1,8 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{IdiomCandidate, IdiomCheck, IdiomKind, IdiomLog, IdiomVerdict, Origin, Sam, Tree}
-import balticporter.transform.{BeanPropertyTransform, ReturnThisCensus, SamLambda, SamLambdaTransform}
+import balticporter.tir.{ IdiomCandidate, IdiomCheck, IdiomKind, IdiomLog, IdiomVerdict, Origin, Sam, Tree }
+import balticporter.transform.{ BeanPropertyTransform, ReturnThisCensus, SamLambda, SamLambdaTransform }
 
 /** The idiom census phases and the three lanes they feed. */
 class IdiomCensusSpec extends PortSuite:
@@ -17,7 +17,9 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make(final String s) {
         |    return new Runnable() { public void run() { System.out.println(s); } };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
 
@@ -35,26 +37,36 @@ class IdiomCensusSpec extends PortSuite:
         |      public int compare(String a, String b) { return a.length() - b.length() + bias; }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#byLen")
   }
 
   test("an interface with TWO abstract methods is NotSam, and the refusal says so") {
-    val p = portAll(List(
-      "I.java" -> "interface I { void a(); void b(); }",
-      "C.java" -> """class C { I make(final int n) { return new I() {
-                    |  public void a() { System.out.println(n); }
-                    |  public void b() {}
-                    |}; } }""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "I.java" -> "interface I { void a(); void b(); }",
+        "C.java" -> """class C { I make(final int n) { return new I() {
+                      |  public void a() { System.out.println(n); }
+                      |  public void b() {}
+                      |}; } }""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NotSam", "C#make")
   }
 
   test("an anonymous subclass of a CLASS is NotSam — java's rule is interfaces only") {
-    val p = portAll(List(
-      "B.java" -> "abstract class B { abstract void go(); }",
-      "C.java" -> """class C { B make(final int n) { return new B() {
-                    |  void go() { System.out.println(n); }
-                    |}; } }""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "B.java" -> "abstract class B { abstract void go(); }",
+        "C.java" -> """class C { B make(final int n) { return new B() {
+                      |  void go() { System.out.println(n); }
+                      |}; } }""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NotSam", "C#make")
   }
 
@@ -81,7 +93,9 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { calls++; System.out.println(s + calls); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "BodyNotSingle", "C#make")
   }
 
@@ -94,15 +108,16 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { System.out.println(hi()); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "BodyNotSingle", "C#make")
   }
 
   test("an EMPTY anonymous body — the super-type-token idiom — is refused, not converted") {
     // `new I(){}` really has no members, which `AnonClass` states rather than confuses with "not an
     // anonymous class". There is no method to become a lambda.
-    val p = port(
-      """class C { Runnable make() { return new Runnable() {}; } }""", new SamLambdaTransform)
+    val p = port("""class C { Runnable make() { return new Runnable() {}; } }""", new SamLambdaTransform)
     assertIdiomRefuses(p, IdiomKind.SamLambda, "BodyNotSingle", "C#make")
   }
 
@@ -123,7 +138,9 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { System.out.println(this.toString() + s); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
   }
 
@@ -138,7 +155,9 @@ class IdiomCensusSpec extends PortSuite:
         |      public void run() { System.out.println(toString() + s); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
   }
 
@@ -148,85 +167,107 @@ class IdiomCensusSpec extends PortSuite:
     // anonymous class inherits UNCONDITIONALLY. A functional interface may also carry `default`
     // methods — `java.util.Comparator` ships six — and java binds a bare `helper()` inside the anon
     // to the INTERFACE's, through the anon instance.
-    val p = portAll(List(
-      "F.java" -> """interface F {
-                    |  void go();
-                    |  default int helper() { return 7; }
-                    |}""".stripMargin,
-      "C.java" -> """class C {
-                    |  F make(final int b) {
-                    |    return new F() { public void go() { System.out.println(helper() + b); } };
-                    |  }
-                    |}""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "F.java" -> """interface F {
+                      |  void go();
+                      |  default int helper() { return 7; }
+                      |}""".stripMargin,
+        "C.java" -> """class C {
+                      |  F make(final int b) {
+                      |    return new F() { public void go() { System.out.println(helper() + b); } };
+                      |  }
+                      |}""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "SelfReference", "C#make")
   }
 
-  test("…and an inherited interface CONSTANT is answered by the QUALIFIER, not by this guard —\n" +
-       "     which is why it CONVERTS and is still correct") {
+  test(
+    "…and an inherited interface CONSTANT is answered by the QUALIFIER, not by this guard —\n" +
+      "     which is why it CONVERTS and is still correct"
+  ) {
     // The other half of what an interface contributes, and it was PREDICTED as a second face of the
     // defect above and MEASURED not to be one. A field declared in an interface is implicitly
     // `public static final` (JLS 9.
-    val p = portAll(List(
-      "F.java" -> """interface F {
-                    |  int K = 3;
-                    |  void go();
-                    |}""".stripMargin,
-      "C.java" -> """class C {
-                    |  F make(final int b) {
-                    |    return new F() { public void go() { System.out.println(K + b); } };
-                    |  }
-                    |}""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "F.java" -> """interface F {
+                      |  int K = 3;
+                      |  void go();
+                      |}""".stripMargin,
+        "C.java" -> """class C {
+                      |  F make(final int b) {
+                      |    return new F() { public void go() { System.out.println(K + b); } };
+                      |  }
+                      |}""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
     assertEmits(p, "F.K")
   }
 
-  test("…and a member of an ENCLOSING anonymous class is NOT one of those, however it is declared —\n" +
-       "     java resolves a bare name INNERMOST-FIRST, and only the INNER anon's own members move") {
+  test(
+    "…and a member of an ENCLOSING anonymous class is NOT one of those, however it is declared —\n" +
+      "     java resolves a bare name INNERMOST-FIRST, and only the INNER anon's own members move"
+  ) {
     // The cell that decides how wide guard 4's complement may be, and it is a corpus shape rather
     // than an invented one: this is `Pixmap.downloadFromUrl`. The inner `Runnable`'s body calls
     // `failed(t)` — a member of the OUTER anonymous class, DECLARED by the interface that one
     // implements.
-    val p = portAll(List(
-      "L.java" -> """interface L {
-                    |  void handle(int code);
-                    |  void failed(java.lang.Throwable t);
-                    |}""".stripMargin,
-      "C.java" -> """class C {
-                    |  L make(final int b) {
-                    |    return new L() {
-                    |      public void handle(int code) {
-                    |        java.lang.Runnable r = new java.lang.Runnable() {
-                    |          public void run() {
-                    |            try { System.out.println(code + b); }
-                    |            catch (java.lang.Throwable t) { failed(t); }
-                    |          }
-                    |        };
-                    |        r.run();
-                    |      }
-                    |      public void failed(java.lang.Throwable t) { t.printStackTrace(); }
-                    |    };
-                    |  }
-                    |}""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "L.java" -> """interface L {
+                      |  void handle(int code);
+                      |  void failed(java.lang.Throwable t);
+                      |}""".stripMargin,
+        "C.java" -> """class C {
+                      |  L make(final int b) {
+                      |    return new L() {
+                      |      public void handle(int code) {
+                      |        java.lang.Runnable r = new java.lang.Runnable() {
+                      |          public void run() {
+                      |            try { System.out.println(code + b); }
+                      |            catch (java.lang.Throwable t) { failed(t); }
+                      |          }
+                      |        };
+                      |        r.run();
+                      |      }
+                      |      public void failed(java.lang.Throwable t) { t.printStackTrace(); }
+                      |    };
+                      |  }
+                      |}""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     // the OUTER anon has two members, so it is `BodyNotSingle`; the INNER one is the subject here.
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
 
-  test("…and a NESTED functional interface's own QUALIFIER is not mistaken for one of those —\n" +
-       "     an over-refusal here would decline a large share of the real population") {
+  test(
+    "…and a NESTED functional interface's own QUALIFIER is not mistaken for one of those —\n" +
+      "     an over-refusal here would decline a large share of the real population"
+  ) {
     // The cell that keeps guard 4's complement honest. `Outer.F` reaches the body as an `Ident`
     // whose symbol's OWNER is `Outer` — a TYPE, and not one of the site's enclosing types — which
     // is exactly the shape the guard refuses. It is a TYPE REFERENCE, not a member reference, and a
     // type reference re-resolves identically under a lambda.
-    val p = portAll(List(
-      "Outer.java" -> """public class Outer {
-                        |  public interface F { void go(); }
-                        |  public static final int K = 3;
-                        |}""".stripMargin,
-      "C.java" -> """class C {
-                    |  Outer.F make(final int b) {
-                    |    return new Outer.F() { public void go() { System.out.println(Outer.K + b); } };
-                    |  }
-                    |}""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "Outer.java" -> """public class Outer {
+                          |  public interface F { void go(); }
+                          |  public static final int K = 3;
+                          |}""".stripMargin,
+        "C.java" -> """class C {
+                      |  Outer.F make(final int b) {
+                      |    return new Outer.F() { public void go() { System.out.println(Outer.K + b); } };
+                      |  }
+                      |}""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
 
@@ -239,7 +280,9 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make() {
         |    return new Runnable() { public void run() { System.out.println(C.this.n); } };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
 
@@ -251,7 +294,9 @@ class IdiomCensusSpec extends PortSuite:
     val p = port(
       """class C { Runnable make() { return new Runnable() {
         |  public void run() { System.out.println("hi"); }
-        |}; } }""".stripMargin, new SamLambdaTransform)
+        |}; } }""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NonCapturing", "C#make")
   }
 
@@ -265,30 +310,36 @@ class IdiomCensusSpec extends PortSuite:
     assert(!why.toLowerCase.contains("hotspot"))
   }
 
-  test("…and a bare reference to an ENCLOSING INSTANCE MEMBER is a capture too — the node that is\n" +
-       "     not there, read at guard 5 instead of at guard 4") {
+  test(
+    "…and a bare reference to an ENCLOSING INSTANCE MEMBER is a capture too — the node that is\n" +
+      "     not there, read at guard 5 instead of at guard 4"
+  ) {
     // `isEnclosingBinding` asks for an owner whose DEFINITION is a `DefDef` — a local or a
     // parameter — so a bare reference to a MEMBER of an enclosing instance answers "not capturing",
     // and the site is refused under a reason that is not true: the lambda closes over that instance
     // and allocates at every evaluation, which is exactly what guard 5 is buying.
-    val p = portAll(List(
-      "L.java" -> """interface L {
-                    |  void handle(int code);
-                    |  void failed(java.lang.Throwable t);
-                    |}""".stripMargin,
-      "C.java" -> """class C {
-                    |  L make() {
-                    |    return new L() {
-                    |      public void handle(int code) {
-                    |        java.lang.Runnable r = new java.lang.Runnable() {
-                    |          public void run() { failed(null); }
-                    |        };
-                    |        r.run();
-                    |      }
-                    |      public void failed(java.lang.Throwable t) { t.printStackTrace(); }
-                    |    };
-                    |  }
-                    |}""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "L.java" -> """interface L {
+                      |  void handle(int code);
+                      |  void failed(java.lang.Throwable t);
+                      |}""".stripMargin,
+        "C.java" -> """class C {
+                      |  L make() {
+                      |    return new L() {
+                      |      public void handle(int code) {
+                      |        java.lang.Runnable r = new java.lang.Runnable() {
+                      |          public void run() { failed(null); }
+                      |        };
+                      |        r.run();
+                      |      }
+                      |      public void failed(java.lang.Throwable t) { t.printStackTrace(); }
+                      |    };
+                      |  }
+                      |}""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertNoGuard(p, "NonCapturing")
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#make")
   }
@@ -298,13 +349,17 @@ class IdiomCensusSpec extends PortSuite:
     // not on the owner's kind. A `static` member is reached without an instance, so a lambda naming
     // it captures nothing and MAY be the same object at two evaluations — which is precisely the
     // unspecified identity guard 5 refuses on.
-    val p = portAll(List(
-      "K.java" -> "class K { static int n = 1; }",
-      "C.java" -> """class C {
-                    |  Runnable make() {
-                    |    return new Runnable() { public void run() { System.out.println(K.n); } };
-                    |  }
-                    |}""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "K.java" -> "class K { static int n = 1; }",
+        "C.java" -> """class C {
+                      |  Runnable make() {
+                      |    return new Runnable() { public void run() { System.out.println(K.n); } };
+                      |  }
+                      |}""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "NonCapturing", "C#make")
   }
 
@@ -315,7 +370,9 @@ class IdiomCensusSpec extends PortSuite:
         |  Runnable make() {
         |    return new Runnable() { public void run() { System.out.println(C.this.n); } };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertNoGuard(p, "NonCapturing")
   }
 
@@ -325,8 +382,10 @@ class IdiomCensusSpec extends PortSuite:
       case IdiomVerdict.Refused(g, _) => g == guard
       case _                          => false)
     if hits.nonEmpty then
-      fail(s"a refusal under guard `$guard` was filed and should not have been:\n" +
-        hits.map("  " + _.render).mkString("\n"))
+      fail(
+        s"a refusal under guard `$guard` was filed and should not have been:\n" +
+          hits.map("  " + _.render).mkString("\n")
+      )
 
   // -------------------------------------------------------------------------------------------
   // guard 6 — serialization
@@ -336,11 +395,15 @@ class IdiomCensusSpec extends PortSuite:
     // Two different facts must not share one constructor: the type IS a functional interface and
     // the port declines the CONVERSION. Reported as `NotSam` a reader would look for a second
     // abstract method that is not there.
-    val p = portAll(List(
-      "S.java" -> "interface S extends java.io.Serializable { int f(int x); }",
-      "C.java" -> """class C { S make(final int b) { return new S() {
-                    |  public int f(int x) { return x + b; }
-                    |}; } }""".stripMargin), new SamLambdaTransform)
+    val p = portAll(
+      List(
+        "S.java" -> "interface S extends java.io.Serializable { int f(int x); }",
+        "C.java" -> """class C { S make(final int b) { return new S() {
+                      |  public int f(int x) { return x + b; }
+                      |}; } }""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "Serializable", "C#make")
   }
 
@@ -350,14 +413,21 @@ class IdiomCensusSpec extends PortSuite:
     // direction that converts". That is true of an UNREADABLE ancestor and says nothing about a
     // READABLE one seven links up: the walk answers `false`, the SAM answer is `Yes`, and the site
     // CONVERTS a serializable target.
-    val chain = (1 to 8).map(i =>
-      s"I$i.java" -> (if i == 1 then "interface I1 extends java.io.Serializable { }"
-                      else s"interface I$i extends I${i - 1} { }")).toList
-    val p = portAll(chain ++ List(
-      "S.java" -> "interface S extends I8 { int f(int x); }",
-      "C.java" -> """class C { S make(final int b) { return new S() {
-                    |  public int f(int x) { return x + b; }
-                    |}; } }""".stripMargin), new SamLambdaTransform)
+    val chain = (1 to 8)
+      .map(i =>
+        s"I$i.java" -> (if i == 1 then "interface I1 extends java.io.Serializable { }"
+                        else s"interface I$i extends I${i - 1} { }")
+      )
+      .toList
+    val p = portAll(
+      chain ++ List(
+        "S.java" -> "interface S extends I8 { int f(int x); }",
+        "C.java" -> """class C { S make(final int b) { return new S() {
+                      |  public int f(int x) { return x + b; }
+                      |}; } }""".stripMargin
+      ),
+      new SamLambdaTransform
+    )
     assertIdiomRefuses(p, IdiomKind.SamLambda, "Serializable", "C#make")
   }
 
@@ -366,16 +436,15 @@ class IdiomCensusSpec extends PortSuite:
   // -------------------------------------------------------------------------------------------
 
   test("a fluent setter returning the DECLARING class is SelfTyped") {
-    val p = port(
-      """class B { int x; B withX(int v) { this.x = v; return this; } }""", new ReturnThisCensus)
+    val p = port("""class B { int x; B withX(int v) { this.x = v; return this; } }""", new ReturnThisCensus)
     assertIdiomRefuses(p, IdiomKind.NarrowedReturn, "SelfTyped", "B#withX")
   }
 
   test("…and one returning a STRICT ANCESTOR is AncestorTyped — the bucket a wave would be FOR") {
-    val p = portAll(List(
-      "A.java" -> "class A { }",
-      "B.java" -> "class B extends A { int x; A withX(int v) { this.x = v; return this; } }"),
-      new ReturnThisCensus)
+    val p = portAll(
+      List("A.java" -> "class A { }", "B.java" -> "class B extends A { int x; A withX(int v) { this.x = v; return this; } }"),
+      new ReturnThisCensus
+    )
     assertIdiomRefuses(p, IdiomKind.NarrowedReturn, "AncestorTyped", "B#withX")
   }
 
@@ -384,12 +453,16 @@ class IdiomCensusSpec extends PortSuite:
       """class B {
         |  B other;
         |  B pick(boolean b) { if (b) { return this; } return this.other; }
-        |}""".stripMargin, new ReturnThisCensus)
+        |}""".stripMargin,
+      new ReturnThisCensus
+    )
     assertIdiomRefuses(p, IdiomKind.NarrowedReturn, "NotAlwaysThis", "B#pick")
   }
 
-  test("THE POPULATION is `return this`, never every method — a census's denominator must be one\n" +
-       "     a reader recognises") {
+  test(
+    "THE POPULATION is `return this`, never every method — a census's denominator must be one\n" +
+      "     a reader recognises"
+  ) {
     // The wrong denominator is not a cosmetic problem: filed for every `DefDef`, the lane reports
     // thousands of rows saying *this method does not return `this`*, which is true of almost every
     // method ever written, and a reader stops reading the number.
@@ -398,7 +471,9 @@ class IdiomCensusSpec extends PortSuite:
         |  int plain(int v) { return v + 1; }
         |  static B mk() { return new B(); }
         |  B self() { return this; }
-        |}""".stripMargin, new ReturnThisCensus)
+        |}""".stripMargin,
+      new ReturnThisCensus
+    )
     assertIdiomConsiders(p, IdiomKind.NarrowedReturn, "B#self")
     assertIdiomIgnores(p, IdiomKind.NarrowedReturn, "B#plain")
     assertIdiomIgnores(p, IdiomKind.NarrowedReturn, "B#mk")
@@ -418,18 +493,19 @@ class IdiomCensusSpec extends PortSuite:
         |  C self() { return this; }
         |  Runnable make() { return new Runnable() { public void run() { System.out.println(n); } }; }
         |}""".stripMargin
-    val bare  = port(src)
+    val bare     = port(src)
     val censused = port(src, new ReturnThisCensus)
     assertEquals(censused.out, bare.out)
     assert(clue(censused.idioms.size) > 0, "the phases must be inert, not idle")
   }
 
-  test("the three lanes are DISJOINT and their union is the log — `refused = 0` cannot be held by\n" +
-       "     converting nothing") {
+  test(
+    "the three lanes are DISJOINT and their union is the log — `refused = 0` cannot be held by\n" +
+      "     converting nothing"
+  ) {
     val log = new IdiomLog
     log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Converted, "a#m", "x", Origin.synthetic))
-    log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused("NotSam", "…"), "b#m", "x",
-      Origin.synthetic))
+    log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused("NotSam", "…"), "b#m", "x", Origin.synthetic))
     log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Residue("u"), "c#m", "x", Origin.synthetic))
     val sizes = IdiomCheck.Lanes.map(l => IdiomCheck.findings(log, l).size)
     assertEquals(sizes, List(1, 1, 1))
@@ -439,8 +515,7 @@ class IdiomCensusSpec extends PortSuite:
   test("the DENOMINATOR is recomputed and printed beside the numerator, per kind") {
     val log = new IdiomLog
     log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Converted, "a#m", "x", Origin.synthetic))
-    log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused("NotSam", "…"), "b#m", "x",
-      Origin.synthetic))
+    log.record(IdiomCandidate(IdiomKind.SamLambda, IdiomVerdict.Refused("NotSam", "…"), "b#m", "x", Origin.synthetic))
     val s = IdiomCheck.summary(log)
     assert(clue(s).contains("SamLambda: 2 considered, 1 converted, 1 refused"))
     // a kind that never ran has no row at all: "no phase" and "a phase that found nothing" are two
@@ -465,8 +540,10 @@ class IdiomCensusSpec extends PortSuite:
     assertEquals(new BeanPropertyTransform().idiomKinds, Set(IdiomKind.BeanCollapse))
   }
 
-  test("every lane carries a §1 CLASSIFICATION — an error an agent cannot classify costs a full\n" +
-       "     investigation (§4.45)") {
+  test(
+    "every lane carries a §1 CLASSIFICATION — an error an agent cannot classify costs a full\n" +
+      "     investigation (§4.45)"
+  ) {
     IdiomCheck.Lanes.foreach { l =>
       val c = IdiomCheck.classification(l)
       assert(clue(c).startsWith("§1(a) ENGINE"), s"$l does not classify itself")
@@ -478,8 +555,10 @@ class IdiomCensusSpec extends PortSuite:
     SamLambda.Guard.values.foreach { g =>
       val w = g.why
       assert(clue(w).nonEmpty, s"$g has no why")
-      assert(w.contains("PERMANENT") || w.contains("NOT a statement") ||
-             w.contains("does not implement") || w.contains("engine defect"),
-        s"$g's why does not say whether it is permanent: $w")
+      assert(
+        w.contains("PERMANENT") || w.contains("NOT a statement") ||
+          w.contains("does not implement") || w.contains("engine defect"),
+        s"$g's why does not say whether it is permanent: $w"
+      )
     }
   }

@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** SE8's DEFAULT METHODS on `List`, `Map` and `Collection` — the members every library written since
-  * 2014 uses as readily as `get`, and which the tables did not have. */
+/** SE8's DEFAULT METHODS on `List`, `Map` and `Collection` — the members every library written since 2014 uses as readily as `get`, and which the tables did not have.
+  */
 class CollectionsSe8MembersSpec extends PortSuite:
 
   private val src =
@@ -103,7 +103,9 @@ class CollectionsSe8MembersSpec extends PortSuite:
         |                     boolean retainAll(Object c) { return false; } }
         |  void use(Bag b) { b.sort(null); b.removeIf(null); b.removeAll(null); b.retainAll(null); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "b.sort(")
     assertEmits(p, "b.removeIf(")
     assertEmits(p, "b.removeAll(")
@@ -118,12 +120,18 @@ class CollectionsSe8MembersSpec extends PortSuite:
     // meets the compile error finds the reason and its citation instead of a wall. A refusal that
     // exists only as a missing `case` is indistinguishable from a mapping nobody has written yet.
     val refused = balticporter.tir.JdkSurfaceCheck.Refusals.map(_.api).toSet
-    assert(!clue(refused).contains("java.util.List#listIterator"),
-           "the `listIterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)")
-    assert(!clue(refused).contains("java.util.List#spliterator"),
-           "the `List#spliterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)")
-    assert(!clue(refused).contains("java.util.Set#spliterator"),
-           "the `Set#spliterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)")
+    assert(
+      !clue(refused).contains("java.util.List#listIterator"),
+      "the `listIterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)"
+    )
+    assert(
+      !clue(refused).contains("java.util.List#spliterator"),
+      "the `List#spliterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)"
+    )
+    assert(
+      !clue(refused).contains("java.util.Set#spliterator"),
+      "the `Set#spliterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)"
+    )
     assert(clue(refused).contains("java.util.Collection#spliterator"))
     val why = balticporter.tir.JdkSurfaceCheck.Refusals.filter(_.api.endsWith("#spliterator"))
     assert(why.forall(_.cite.contains("K23")))

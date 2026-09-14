@@ -2,9 +2,9 @@ package balticporter.tir
 
 /** Reports retyping phases with no accounting lane or with a named lane that did not record.
   *
-  * Reads `Pipeline.runTraced` observations (which phases moved owned declarations) and each
-  * phase's `Rewrite.accountedBy`. Does NOT count seams (those are the four boundary checks'
-  * job). One row per phase; §1(a) unparameterised. // ENGINE-LIMITS K5.6 */
+  * Reads `Pipeline.runTraced` observations (which phases moved owned declarations) and each phase's `Rewrite.accountedBy`. Does NOT count seams (those are the four boundary checks' job). One row per
+  * phase; §1(a) unparameterised. // ENGINE-LIMITS K5.6
+  */
 object RewriteCallSitesCheck:
 
   /** The check's name in `findings.tsv`. */
@@ -13,6 +13,7 @@ object RewriteCallSitesCheck:
   enum Issue:
     /** Phase moved declarations and claims no accounting lane. */
     case Unaccounted
+
     /** Phase names a lane that recorded nothing in this run. */
     case UnwiredAccounting
 
@@ -43,40 +44,49 @@ object RewriteCallSitesCheck:
 
   /** One phase's unanswered question. `subject` is the phase name. */
   final case class Finding(issue: Issue, phase: String, detail: String):
-    def render: String = s"$issue $phase — $detail"
+    def render: String              = s"$issue $phase — $detail"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, phase, "<pipeline>", 0, detail)
 
   /** Every retyping phase in this run that did not answer.
-    * @param recorded check names that recorded in this run (`None` = artifact layer off, which
-    *   disables the `UnwiredAccounting` lane but not `Unaccounted`).
+    * @param recorded
+    *   check names that recorded in this run (`None` = artifact layer off, which disables the `UnwiredAccounting` lane but not `Unaccounted`).
     */
   def check(log: RewriteLog, recorded: Option[Set[String]]): List[Finding] =
     log.all.flatMap { p =>
-      if !p.isAccounted then
-        List(Finding(Issue.Unaccounted, p.phase,
-          s"retyped ${p.retyped.size} owned declaration(s) and names no check lane"))
+      if !p.isAccounted then List(Finding(Issue.Unaccounted, p.phase, s"retyped ${p.retyped.size} owned declaration(s) and names no check lane"))
       else
         recorded.toList.flatMap(rec =>
-          p.accountedBy.toList.sorted.filterNot(rec).map(lane =>
-            Finding(Issue.UnwiredAccounting, p.phase,
-              s"names lane '$lane', which recorded nothing in this run " +
-                s"(it retyped ${p.retyped.size} owned declaration(s))")))
+          p.accountedBy.toList.sorted
+            .filterNot(rec)
+            .map(lane =>
+              Finding(
+                Issue.UnwiredAccounting,
+                p.phase,
+                s"names lane '$lane', which recorded nothing in this run " +
+                  s"(it retyped ${p.retyped.size} owned declaration(s))"
+              )
+            )
+        )
     }
 
   /** Grouped summary with §1 classification. The SCALE line is recomputed every run. */
   def summary(fs: List[Finding], log: RewriteLog, program: Program): String =
     val moves  = log.all.map(_.retyped.size).sum
     val usages = log.all.map(p => p.retyped.toList.map(s => program.usagesOf(s).size).sum).sum
-    val scale =
+    val scale  =
       s"  ${log.all.size} retyping phase(s), $moves declaration-move(s) with $usages recorded usage(s) — " +
         s"${log.all.count(_.isAccounted)} accounted"
     val body =
       if fs.isEmpty then "  none"
       else
-        fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-          val sites = vs.sortBy(_.phase).map("    " + _.render)
-          (head :: sites).mkString("\n")
-        }.mkString("\n")
+        fs.groupBy(_.issue)
+          .toList
+          .sortBy((_, v) => -v.size)
+          .map { (issue, vs) =>
+            val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+            val sites = vs.sortBy(_.phase).map("    " + _.render)
+            (head :: sites).mkString("\n")
+          }
+          .mkString("\n")
     s"$scale\n$body"

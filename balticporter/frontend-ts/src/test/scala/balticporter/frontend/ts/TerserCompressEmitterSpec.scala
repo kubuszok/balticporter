@@ -9,7 +9,7 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
     stream.close()
     Rast.readFile(json)
 
-  private lazy val astRast = loadRast("/rast/terser/lib/ast.rast.json")
+  private lazy val astRast   = loadRast("/rast/terser/lib/ast.rast.json")
   private lazy val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
 
   // -----------------------------------------------------------------------
@@ -17,27 +17,33 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("compress/index: extract DEFMETHOD entries (direct + IIFE)"):
-    val rast = loadRast("/rast/terser/lib/compress/index.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/index.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
-    println(s"compress/index: ${entries.size} DEFMETHOD entries: ${entries.map(e => s"${e.className}.${e.methodName}").mkString(", ")}")
+    println(
+      s"compress/index: ${entries.size} DEFMETHOD entries: ${entries.map(e => s"${e.className}.${e.methodName}").mkString(", ")}"
+    )
     // 14 direct DEFMETHODs extractable (1 uses a deeper IIFE pattern -- counted refusal)
     assert(entries.size >= 14, s"Expected >= 14 DEFMETHOD entries, got ${entries.size}")
 
   test("compress/inference: extract DEFMETHOD entries (IIFE-wrapped)"):
-    val rast = loadRast("/rast/terser/lib/compress/inference.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/inference.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
-    println(s"compress/inference: ${entries.size} DEFMETHOD entries: ${entries.map(e => s"${e.className}.${e.methodName}").take(5).mkString(", ")}...")
+    println(
+      s"compress/inference: ${entries.size} DEFMETHOD entries: ${entries.map(e => s"${e.className}.${e.methodName}").take(5).mkString(", ")}..."
+    )
     // 16 extractable (2 use deeper indirection -- counted refusals)
     assert(entries.size >= 10, s"Expected >= 10 DEFMETHOD entries, got ${entries.size}")
 
   test("compress/evaluate: extract DEFMETHOD entries"):
-    val rast = loadRast("/rast/terser/lib/compress/evaluate.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/evaluate.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
-    println(s"compress/evaluate: ${entries.size} DEFMETHOD entries: ${entries.map(e => s"${e.className}.${e.methodName}").mkString(", ")}")
+    println(
+      s"compress/evaluate: ${entries.size} DEFMETHOD entries: ${entries.map(e => s"${e.className}.${e.methodName}").mkString(", ")}"
+    )
     assert(entries.size >= 2, s"Expected >= 2 DEFMETHOD entries, got ${entries.size}")
 
   test("compress/global-defs: extract content (DEFMETHOD + free functions)"):
-    val rast = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
     val freeFns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     println(s"compress/global-defs: ${entries.size} DEFMETHODs, ${freeFns.size} free functions")
@@ -45,19 +51,19 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
     assert(entries.size + freeFns.size >= 0, "should extract something")
 
   test("compress/drop-side-effect-free: extract content"):
-    val rast = loadRast("/rast/terser/lib/compress/drop-side-effect-free.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/drop-side-effect-free.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
     val freeFns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     println(s"compress/drop-side-effect-free: ${entries.size} DEFMETHODs, ${freeFns.size} free functions")
 
   test("compress/drop-unused: extract DEFMETHOD entries"):
-    val rast = loadRast("/rast/terser/lib/compress/drop-unused.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/drop-unused.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
     println(s"compress/drop-unused: ${entries.size} DEFMETHOD entries")
     assert(entries.size >= 1, s"Expected >= 1 DEFMETHOD entries, got ${entries.size}")
 
   test("compress/reduce-vars: extract content"):
-    val rast = loadRast("/rast/terser/lib/compress/reduce-vars.rast.json")
+    val rast    = loadRast("/rast/terser/lib/compress/reduce-vars.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
     val freeFns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     println(s"compress/reduce-vars: ${entries.size} DEFMETHODs, ${freeFns.size} free functions")
@@ -68,17 +74,17 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
 
   test("compress/common: extract 22 free functions"):
     val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
-    val fns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
+    val fns  = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     assertEquals(fns.size, 22, s"Expected 22, got ${fns.size}: ${fns.map(_.name).mkString(", ")}")
 
   test("compress/tighten-body: extract 5 free functions"):
     val rast = loadRast("/rast/terser/lib/compress/tighten-body.rast.json")
-    val fns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
+    val fns  = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     assertEquals(fns.size, 5, s"Expected 5, got ${fns.size}: ${fns.map(_.name).mkString(", ")}")
 
   test("compress/inline: extract 6 free functions"):
     val rast = loadRast("/rast/terser/lib/compress/inline.rast.json")
-    val fns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
+    val fns  = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     assertEquals(fns.size, 6, s"Expected 6, got ${fns.size}: ${fns.map(_.name).mkString(", ")}")
 
   // -----------------------------------------------------------------------
@@ -86,25 +92,31 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("compress/index: body translation statistics"):
-    val rast = loadRast("/rast/terser/lib/compress/index.rast.json")
+    val rast         = loadRast("/rast/terser/lib/compress/index.rast.json")
     val (_, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "index", "CompressIndex", hierarchy)
-    println(s"compress/index: full=${summary.fullyTranslated} partial=${summary.partiallyTranslated} refused=${summary.refused} refusals=${summary.totalRefusalCount}")
+    println(
+      s"compress/index: full=${summary.fullyTranslated} partial=${summary.partiallyTranslated} refused=${summary.refused} refusals=${summary.totalRefusalCount}"
+    )
     // At minimum some bodies should translate (return_false, return_true, simple accesses)
     val totalMethods = summary.defmethodCount + summary.freeFunctionCount
     assert(totalMethods >= 15, s"Expected >= 15 methods, got $totalMethods")
 
   test("compress/inference: body translation statistics"):
-    val rast = loadRast("/rast/terser/lib/compress/inference.rast.json")
+    val rast         = loadRast("/rast/terser/lib/compress/inference.rast.json")
     val (_, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "inference", "Inference", hierarchy)
-    println(s"compress/inference: dm=${summary.defmethodCount} ff=${summary.freeFunctionCount} full=${summary.fullyTranslated} partial=${summary.partiallyTranslated} refused=${summary.refused} refusals=${summary.totalRefusalCount}")
+    println(
+      s"compress/inference: dm=${summary.defmethodCount} ff=${summary.freeFunctionCount} full=${summary.fullyTranslated} partial=${summary.partiallyTranslated} refused=${summary.refused} refusals=${summary.totalRefusalCount}"
+    )
     // DEFMETHOD entries include IIFE-wrapped ones; also has free functions
     val totalMethods = summary.defmethodCount + summary.freeFunctionCount
     assert(totalMethods >= 10, s"Expected >= 10 methods, got $totalMethods")
 
   test("compress/common: body translation statistics"):
-    val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
+    val rast         = loadRast("/rast/terser/lib/compress/common.rast.json")
     val (_, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitFreeFunctionModule(rast, "common", "CompressCommon", hierarchy)
-    println(s"compress/common: full=${summary.fullyTranslated} partial=${summary.partiallyTranslated} refused=${summary.refused} refusals=${summary.totalRefusalCount}")
+    println(
+      s"compress/common: full=${summary.fullyTranslated} partial=${summary.partiallyTranslated} refused=${summary.refused} refusals=${summary.totalRefusalCount}"
+    )
     assert(summary.freeFunctionCount >= 22, s"Expected >= 22 functions, got ${summary.freeFunctionCount}")
 
   // -----------------------------------------------------------------------
@@ -112,43 +124,39 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("compress/index: emitted output has DEFMETHOD methods"):
-    val rast = loadRast("/rast/terser/lib/compress/index.rast.json")
+    val rast        = loadRast("/rast/terser/lib/compress/index.rast.json")
     val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "index", "CompressIndex", hierarchy)
     assert(source.contains("object CompressIndex"), s"should emit CompressIndex object")
     assert(source.contains("package compress"), s"should be in compress package")
     // Should contain method definitions, not just stubs
     assert(!source.contains("RAST: body not translatable"), s"should have translated bodies, not stubs")
     // Should contain at least some of the known methods
-    assert(source.contains("optimize") || source.contains("equivalent_to") || source.contains("equivalentTo"),
-      s"should contain known compress methods")
+    assert(
+      source.contains("optimize") || source.contains("equivalent_to") || source.contains("equivalentTo"),
+      s"should contain known compress methods"
+    )
 
   test("compress/inference: emitted output has type inference methods"):
-    val rast = loadRast("/rast/terser/lib/compress/inference.rast.json")
+    val rast        = loadRast("/rast/terser/lib/compress/inference.rast.json")
     val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "inference", "Inference", hierarchy)
     assert(source.contains("object Inference"), s"should emit Inference object")
     // Should contain the type inference family
-    assert(source.contains("isBoolean") || source.contains("is_boolean"),
-      s"should contain is_boolean method")
-    assert(source.contains("isNumber") || source.contains("is_number"),
-      s"should contain is_number method")
-    assert(source.contains("isString") || source.contains("is_string"),
-      s"should contain is_string method")
+    assert(source.contains("isBoolean") || source.contains("is_boolean"), s"should contain is_boolean method")
+    assert(source.contains("isNumber") || source.contains("is_number"), s"should contain is_number method")
+    assert(source.contains("isString") || source.contains("is_string"), s"should contain is_string method")
 
   test("compress/common: emitted output has utility functions"):
-    val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
+    val rast        = loadRast("/rast/terser/lib/compress/common.rast.json")
     val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitFreeFunctionModule(rast, "common", "CompressCommon", hierarchy)
     assert(source.contains("object CompressCommon"), s"should emit CompressCommon object")
-    assert(source.contains("mergeSequence") || source.contains("merge_sequence"),
-      s"should contain merge_sequence function")
-    assert(source.contains("bestOf") || source.contains("best_of"),
-      s"should contain best_of function")
+    assert(source.contains("mergeSequence") || source.contains("merge_sequence"), s"should contain merge_sequence function")
+    assert(source.contains("bestOf") || source.contains("best_of"), s"should contain best_of function")
 
   test("compress/tighten-body: emitted output has functions"):
-    val rast = loadRast("/rast/terser/lib/compress/tighten-body.rast.json")
+    val rast        = loadRast("/rast/terser/lib/compress/tighten-body.rast.json")
     val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitFreeFunctionModule(rast, "tighten-body", "TightenBody", hierarchy)
     assert(source.contains("object TightenBody"), s"should emit TightenBody object")
-    assert(source.contains("tightenBody") || source.contains("tighten_body"),
-      s"should contain tighten_body function")
+    assert(source.contains("tightenBody") || source.contains("tighten_body"), s"should contain tighten_body function")
 
   // -----------------------------------------------------------------------
   // Batch emission and summary table
@@ -156,7 +164,7 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
 
   test("batch: emit all 10 compress modules with body translation"):
     val summaries = new scala.collection.mutable.ListBuffer[balticporter.corpus.terser.TerserCompressEmitter.ModuleTranslationSummary]
-    val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress")
+    val outDir    = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress")
     java.nio.file.Files.createDirectories(outDir)
 
     val results = balticporter.corpus.terser.TerserCompressEmitter.emitAll(loadRast, hierarchy)
@@ -178,45 +186,44 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       assert(java.nio.file.Files.exists(path), s"${mod.objectName}.scala should exist")
 
     // Report line counts
-    for (mod, source, _) <- results do
-      println(s"  ${mod.objectName}.scala: ${source.linesIterator.size} lines")
+    for (mod, source, _) <- results do println(s"  ${mod.objectName}.scala: ${source.linesIterator.size} lines")
 
   // -----------------------------------------------------------------------
   // Individual module emission verification
   // -----------------------------------------------------------------------
 
   test("compress/evaluate: emit with body translation"):
-    val rast = loadRast("/rast/terser/lib/compress/evaluate.rast.json")
+    val rast              = loadRast("/rast/terser/lib/compress/evaluate.rast.json")
     val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "evaluate", "Evaluate", hierarchy)
     assert(source.contains("object Evaluate"), s"should emit Evaluate object")
     println(s"compress/evaluate: ${summary.defmethodCount} DEFMETHODs, full=${summary.fullyTranslated}")
 
   test("compress/global-defs: emit with body translation"):
-    val rast = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
+    val rast              = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
     val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "global-defs", "GlobalDefs", hierarchy)
     assert(source.contains("object GlobalDefs"), s"should emit GlobalDefs object")
     println(s"compress/global-defs: ${summary.defmethodCount} DEFMETHODs, full=${summary.fullyTranslated}")
 
   test("compress/drop-side-effect-free: emit with body translation"):
-    val rast = loadRast("/rast/terser/lib/compress/drop-side-effect-free.rast.json")
+    val rast              = loadRast("/rast/terser/lib/compress/drop-side-effect-free.rast.json")
     val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "drop-side-effect-free", "DropSideEffectFree", hierarchy)
     assert(source.contains("object DropSideEffectFree"), s"should emit DropSideEffectFree object")
     println(s"compress/drop-side-effect-free: ${summary.defmethodCount} DEFMETHODs, full=${summary.fullyTranslated}")
 
   test("compress/drop-unused: emit with body translation"):
-    val rast = loadRast("/rast/terser/lib/compress/drop-unused.rast.json")
+    val rast              = loadRast("/rast/terser/lib/compress/drop-unused.rast.json")
     val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "drop-unused", "DropUnused", hierarchy)
     assert(source.contains("object DropUnused"), s"should emit DropUnused object")
     println(s"compress/drop-unused: ${summary.defmethodCount} DEFMETHODs, full=${summary.fullyTranslated}")
 
   test("compress/reduce-vars: emit with body translation"):
-    val rast = loadRast("/rast/terser/lib/compress/reduce-vars.rast.json")
+    val rast              = loadRast("/rast/terser/lib/compress/reduce-vars.rast.json")
     val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(rast, "reduce-vars", "ReduceVars", hierarchy)
     assert(source.contains("object ReduceVars"), s"should emit ReduceVars object")
     println(s"compress/reduce-vars: ${summary.defmethodCount} DEFMETHODs, full=${summary.fullyTranslated}")
 
   test("compress/inline: emit with body translation"):
-    val rast = loadRast("/rast/terser/lib/compress/inline.rast.json")
+    val rast              = loadRast("/rast/terser/lib/compress/inline.rast.json")
     val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitFreeFunctionModule(rast, "inline", "Inline", hierarchy)
     assert(source.contains("object Inline"), s"should emit Inline object")
     println(s"compress/inline: ${summary.freeFunctionCount} functions, full=${summary.fullyTranslated}")
@@ -228,18 +235,15 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   private val referenceRoot: java.nio.file.Path =
     // Classpath resource first (self-contained)
     val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
-    if cpRef != null && cpRef.getProtocol == "file" then
-      java.nio.file.Path.of(cpRef.toURI).getParent
+    if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
     else
       val candidates = List(
         sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
         Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg"))
       ).flatten
       val compressDir = "ssg-js/src/main/scala/ssg/js/compress"
-      candidates.map(_.resolve(compressDir))
-        .find(p => java.nio.file.Files.exists(p.resolve("Common.scala")))
-        .getOrElse(java.nio.file.Path.of("nonexistent"))
+      candidates.map(_.resolve(compressDir)).find(p => java.nio.file.Files.exists(p.resolve("Common.scala"))).getOrElse(java.nio.file.Path.of("nonexistent"))
 
   test("parity: findMethodBoundaries on synthetic input"):
     val source = List(
@@ -247,26 +251,26 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       "",
       "object Foo {",
       "",
-      "  def braced(x: Int): Int = {",       // line 4, braced body
+      "  def braced(x: Int): Int = {", // line 4, braced body
       "    x + 1",
       "  }",
       "",
-      "  def expression(x: Int): Int =",       // line 8, expression body
+      "  def expression(x: Int): Int =", // line 8, expression body
       "    x + 2",
       "",
-      "  def inline(x: Int): Int = x + 3",     // line 11, inline body
+      "  def inline(x: Int): Int = x + 3", // line 11, inline body
       "",
-      "  def multiLine(",                       // line 13, multi-line sig
+      "  def multiLine(", // line 13, multi-line sig
       "      a: Int,",
       "      b: Int,",
       "  ): Int = {",
       "    a + b",
       "  }",
       "",
-      "  private def priv(n: Int): Int =",      // line 20, private
+      "  private def priv(n: Int): Int =", // line 20, private
       "    n * 2",
       "",
-      "  def complex(x: Any): Boolean =",       // line 23, multi-line expression
+      "  def complex(x: Any): Boolean =", // line 23, multi-line expression
       "    x match {",
       "      case _: Int => true",
       "      case _ => false",
@@ -274,11 +278,11 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       "",
       "  val constant = 42",
       "",
-      "  def afterVal(x: Int): Int = x",        // line 31, after a val
-      "}",
+      "  def afterVal(x: Int): Int = x", // line 31, after a val
+      "}"
     )
     val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(source)
-    val names = methods.map(_.name)
+    val names   = methods.map(_.name)
     assertEquals(names, List("braced", "expression", "inline", "multiLine", "priv", "complex", "afterVal"))
     // Check braced method boundaries
     val braced = methods.find(_.name == "braced").get
@@ -303,15 +307,13 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
     assertEquals(complex.bodyEndLine, 27)
 
   test("parity: findMethodBoundaries on Common.scala"):
-    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then
-      println("SKIP: ssg reference not found at " + referenceRoot)
+    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then println("SKIP: ssg reference not found at " + referenceRoot)
     else
-      val source = new String(java.nio.file.Files.readAllBytes(referenceRoot.resolve("Common.scala")))
-      val lines = source.split("\n", -1).toList
+      val source  = new String(java.nio.file.Files.readAllBytes(referenceRoot.resolve("Common.scala")))
+      val lines   = source.split("\n", -1).toList
       val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
       println(s"Common.scala: found ${methods.size} methods:")
-      for m <- methods do
-        println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
+      for m <- methods do println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
       // Common.scala has around 20+ methods including private ones
       assert(methods.size >= 15, s"Expected >= 15 methods, got ${methods.size}")
       // Verify known methods exist
@@ -323,13 +325,11 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       assert(names.contains("walkParent"), "should find walkParent")
 
   test("parity: emitWithParity on Common.scala"):
-    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then
-      println("SKIP: ssg reference not found at " + referenceRoot)
+    if !java.nio.file.Files.exists(referenceRoot.resolve("Common.scala")) then println("SKIP: ssg reference not found at " + referenceRoot)
     else
-      val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
-      val refPath = referenceRoot.resolve("Common.scala")
-      val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(
-        rast, refPath, hierarchy, isDeFmethod = false)
+      val rast              = loadRast("/rast/terser/lib/compress/common.rast.json")
+      val refPath           = referenceRoot.resolve("Common.scala")
+      val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(rast, refPath, hierarchy, isDeFmethod = false)
 
       println(s"\n=== Parity-derive: Common.scala ===")
       println(s"Total methods: ${summary.totalMethods}")
@@ -337,8 +337,7 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       println(s"Reference bodies kept: ${summary.keptFromReference}")
       println(s"Total refusals: ${summary.refusalCount}")
       println(s"\nMatch details:")
-      for (name, src) <- summary.matchDetails do
-        println(s"  $name -> $src")
+      for (name, src) <- summary.matchDetails do println(s"  $name -> $src")
 
       // Source should contain the reference's package and imports
       assert(source.contains("package ssg"), "should preserve package")
@@ -347,8 +346,7 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
 
       // At least some methods should be matched from RAST (filtered down
       // by containsUncompilablePatterns — JS-API bodies are kept as reference)
-      assert(summary.matchedFromRast >= 3,
-        s"Expected >= 3 RAST matches, got ${summary.matchedFromRast}")
+      assert(summary.matchedFromRast >= 3, s"Expected >= 3 RAST matches, got ${summary.matchedFromRast}")
 
       // Write to output for inspection
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
@@ -358,18 +356,15 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       println(s"Line count: ${source.linesIterator.size}")
 
   test("parity: emitWithParity on GlobalDefs.scala"):
-    if !java.nio.file.Files.exists(referenceRoot.resolve("GlobalDefs.scala")) then
-      println("SKIP: ssg reference not found at " + referenceRoot)
+    if !java.nio.file.Files.exists(referenceRoot.resolve("GlobalDefs.scala")) then println("SKIP: ssg reference not found at " + referenceRoot)
     else
-      val rast = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
-      val refPath = referenceRoot.resolve("GlobalDefs.scala")
-      val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(
-        rast, refPath, hierarchy, isDeFmethod = true)
+      val rast              = loadRast("/rast/terser/lib/compress/global-defs.rast.json")
+      val refPath           = referenceRoot.resolve("GlobalDefs.scala")
+      val (source, summary) = balticporter.corpus.terser.TerserCompressEmitter.emitWithParity(rast, refPath, hierarchy, isDeFmethod = true)
 
       println(s"\n=== Parity-derive: GlobalDefs.scala ===")
       println(s"Total: ${summary.totalMethods}, RAST: ${summary.matchedFromRast}, Ref: ${summary.keptFromReference}")
-      for (name, src) <- summary.matchDetails do
-        println(s"  $name -> $src")
+      for (name, src) <- summary.matchDetails do println(s"  $name -> $src")
 
       assert(source.contains("object GlobalDefs"), "should preserve object name")
 
@@ -378,8 +373,7 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       java.nio.file.Files.writeString(outDir.resolve("GlobalDefs.scala"), source)
 
   test("parity: emitAllWithParity batch"):
-    if !java.nio.file.Files.exists(referenceRoot) then
-      println("SKIP: ssg reference not found at " + referenceRoot)
+    if !java.nio.file.Files.exists(referenceRoot) then println("SKIP: ssg reference not found at " + referenceRoot)
     else
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity")
       java.nio.file.Files.createDirectories(outDir)
@@ -404,22 +398,18 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
 
   private val ssgJsRoot: java.nio.file.Path =
     val cpRef = getClass.getResource("/reference/terser/scope/ScopeAnalysis.scala")
-    if cpRef != null && cpRef.getProtocol == "file" then
-      java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from scope/ to terser/
+    if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from scope/ to terser/
     else
       val candidates = List(
         sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
         Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg"))
       ).flatten
       val jsDir = "ssg-js/src/main/scala/ssg/js"
-      candidates.map(_.resolve(jsDir))
-        .find(p => java.nio.file.Files.exists(p.resolve("scope/ScopeAnalysis.scala")))
-        .getOrElse(java.nio.file.Path.of("nonexistent"))
+      candidates.map(_.resolve(jsDir)).find(p => java.nio.file.Files.exists(p.resolve("scope/ScopeAnalysis.scala"))).getOrElse(java.nio.file.Path.of("nonexistent"))
 
   test("non-compress: emitAllNonCompressWithParity batch"):
-    if !java.nio.file.Files.exists(ssgJsRoot) then
-      println("SKIP: ssg-js reference not found at " + ssgJsRoot)
+    if !java.nio.file.Files.exists(ssgJsRoot) then println("SKIP: ssg-js reference not found at " + ssgJsRoot)
     else
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-parity-noncompress")
       java.nio.file.Files.createDirectories(outDir)
@@ -442,33 +432,32 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
       println(s"Total RAST-derived bodies across all non-compress modules: $totalRast")
 
   test("non-compress: scope DEFMETHOD extraction"):
-    val rast = loadRast("/rast/terser/lib/scope.rast.json")
+    val rast    = loadRast("/rast/terser/lib/scope.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
     val freeFns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     println(s"scope.js: ${entries.size} DEFMETHODs, ${freeFns.size} free functions")
     assert(entries.size + freeFns.size >= 5, s"Expected >= 5 entries, got ${entries.size + freeFns.size}")
 
   test("non-compress: output DEFMETHOD + prototype extraction"):
-    val rast = loadRast("/rast/terser/lib/output.rast.json")
+    val rast    = loadRast("/rast/terser/lib/output.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
-    val protos = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
+    val protos  = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
     val freeFns = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     println(s"output.js: ${entries.size} DEFMETHODs, ${protos.size} prototype assignments, ${freeFns.size} free functions")
-    assert(entries.size + protos.size + freeFns.size >= 1,
-      s"Expected >= 1 entries, got ${entries.size + protos.size + freeFns.size}")
+    assert(entries.size + protos.size + freeFns.size >= 1, s"Expected >= 1 entries, got ${entries.size + protos.size + freeFns.size}")
 
   test("non-compress: size DEFMETHOD + prototype extraction"):
-    val rast = loadRast("/rast/terser/lib/size.rast.json")
+    val rast    = loadRast("/rast/terser/lib/size.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
-    val protos = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
+    val protos  = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
     println(s"size.js: ${entries.size} DEFMETHODs, ${protos.size} prototype assignments")
     // size.js uses DEFMETHOD but may also use prototype assignments
     assert(entries.size + protos.size >= 0, "size.js extraction should not crash")
 
   test("non-compress: equivalent-to DEFMETHOD + prototype extraction"):
-    val rast = loadRast("/rast/terser/lib/equivalent-to.rast.json")
+    val rast    = loadRast("/rast/terser/lib/equivalent-to.rast.json")
     val entries = balticporter.corpus.terser.TerserCompressEmitter.extractAllDefmethods(rast)
-    val protos = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
+    val protos  = dedicated.DefmethodBodyTranslator.extractPrototypeAssignments(rast)
     println(s"equivalent-to.js: ${entries.size} DEFMETHODs, ${protos.size} prototype assignments")
     assert(entries.size + protos.size >= 0, "equivalent-to.js extraction should not crash")
 
@@ -477,94 +466,157 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("body-translation: .TYPE comparison lowered to isInstanceOf"):
-    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
-      RastNode("ReturnStatement", 0, (0, 0), children = List(
-        RastNode("BinaryExpression", 0, (0, 0),
-          operator = Some("EqualsEqualsEqualsToken"),
+    val bodyBlock = RastNode(
+      "Block",
+      0,
+      (0, 0),
+      children = List(
+        RastNode(
+          "ReturnStatement",
+          0,
+          (0, 0),
           children = List(
-            RastNode("PropertyAccessExpression", 0, (0, 0), children = List(
-              RastNode("Identifier", 0, (0, 0), text = Some("node")),
-              RastNode("Identifier", 0, (0, 0), text = Some("TYPE")),
-            )),
-            RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("Binary"))),
-          ),
+            RastNode(
+              "BinaryExpression",
+              0,
+              (0, 0),
+              operator = Some("EqualsEqualsEqualsToken"),
+              children = List(
+                RastNode(
+                  "PropertyAccessExpression",
+                  0,
+                  (0, 0),
+                  children = List(
+                    RastNode("Identifier", 0, (0, 0), text = Some("node")),
+                    RastNode("Identifier", 0, (0, 0), text = Some("TYPE"))
+                  )
+                ),
+                RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("Binary")))
+              )
+            )
+          )
         )
-      ))
-    ))
-    val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", List("node"), bodyBlock)
+      )
+    )
+    val entry  = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", List("node"), bodyBlock)
     val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-    assert(result.scalaBody.contains("isInstanceOf[AstBinary]"),
-      s"Expected isInstanceOf[AstBinary] in: ${result.scalaBody}")
+    assert(result.scalaBody.contains("isInstanceOf[AstBinary]"), s"Expected isInstanceOf[AstBinary] in: ${result.scalaBody}")
     assert(result.isComplete, s"Should be complete, refusals: ${result.refusalReasons}")
 
   test("body-translation: make_node translated to new + field assignments"):
-    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
-      RastNode("ReturnStatement", 0, (0, 0), children = List(
-        RastNode("CallExpression", 0, (0, 0), children = List(
-          RastNode("Identifier", 0, (0, 0), text = Some("make_node")),
-          RastNode("Identifier", 0, (0, 0), text = Some("AST_Binary")),
-          RastNode("Identifier", 0, (0, 0), text = Some("self")),
-          RastNode("ObjectLiteralExpression", 0, (0, 0), children = List(
-            RastNode("PropertyAssignment", 0, (0, 0), children = List(
-              RastNode("Identifier", 0, (0, 0), text = Some("operator")),
-              RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("+"))),
-            )),
-            RastNode("PropertyAssignment", 0, (0, 0), children = List(
-              RastNode("Identifier", 0, (0, 0), text = Some("left")),
-              RastNode("Identifier", 0, (0, 0), text = Some("a")),
-            )),
-          )),
-        ))
-      ))
-    ))
-    val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", List("self"), bodyBlock)
+    val bodyBlock = RastNode(
+      "Block",
+      0,
+      (0, 0),
+      children = List(
+        RastNode(
+          "ReturnStatement",
+          0,
+          (0, 0),
+          children = List(
+            RastNode(
+              "CallExpression",
+              0,
+              (0, 0),
+              children = List(
+                RastNode("Identifier", 0, (0, 0), text = Some("make_node")),
+                RastNode("Identifier", 0, (0, 0), text = Some("AST_Binary")),
+                RastNode("Identifier", 0, (0, 0), text = Some("self")),
+                RastNode(
+                  "ObjectLiteralExpression",
+                  0,
+                  (0, 0),
+                  children = List(
+                    RastNode(
+                      "PropertyAssignment",
+                      0,
+                      (0, 0),
+                      children = List(
+                        RastNode("Identifier", 0, (0, 0), text = Some("operator")),
+                        RastNode("StringLiteral", 0, (0, 0), value = Some(RastValue.Str("+")))
+                      )
+                    ),
+                    RastNode(
+                      "PropertyAssignment",
+                      0,
+                      (0, 0),
+                      children = List(
+                        RastNode("Identifier", 0, (0, 0), text = Some("left")),
+                        RastNode("Identifier", 0, (0, 0), text = Some("a"))
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    val entry  = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", List("self"), bodyBlock)
     val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-    assert(result.scalaBody.contains("new AstBinary()"),
-      s"Expected 'new AstBinary()' in: ${result.scalaBody}")
-    assert(result.scalaBody.contains("operator = \"+\""),
-      s"Expected 'operator = \"+\"' in: ${result.scalaBody}")
+    assert(result.scalaBody.contains("new AstBinary()"), s"Expected 'new AstBinary()' in: ${result.scalaBody}")
+    assert(result.scalaBody.contains("operator = \"+\""), s"Expected 'operator = \"+\"' in: ${result.scalaBody}")
     assert(result.isComplete, s"Should be complete, refusals: ${result.refusalReasons}")
 
   test("body-translation: return undefined becomes null"):
-    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
-      RastNode("ReturnStatement", 0, (0, 0))
-    ))
-    val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", Nil, bodyBlock)
+    val bodyBlock = RastNode("Block",
+                             0,
+                             (0, 0),
+                             children = List(
+                               RastNode("ReturnStatement", 0, (0, 0))
+                             )
+    )
+    val entry  = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", Nil, bodyBlock)
     val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-    assert(result.scalaBody.contains("null") && !result.scalaBody.contains("()"),
-      s"Expected 'null' not '()' in: ${result.scalaBody}")
+    assert(
+      result.scalaBody.contains("null") && !result.scalaBody.contains("()"),
+      s"Expected 'null' not '()' in: ${result.scalaBody}"
+    )
 
   test("body-translation: has_flag mapped to CompressorFlags.hasFlag"):
-    val bodyBlock = RastNode("Block", 0, (0, 0), children = List(
-      RastNode("ReturnStatement", 0, (0, 0), children = List(
-        RastNode("CallExpression", 0, (0, 0), children = List(
-          RastNode("Identifier", 0, (0, 0), text = Some("has_flag")),
-          RastNode("Identifier", 0, (0, 0), text = Some("node")),
-          RastNode("Identifier", 0, (0, 0), text = Some("SQUEEZED")),
-        ))
-      ))
-    ))
-    val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", List("node"), bodyBlock)
+    val bodyBlock = RastNode(
+      "Block",
+      0,
+      (0, 0),
+      children = List(
+        RastNode(
+          "ReturnStatement",
+          0,
+          (0, 0),
+          children = List(
+            RastNode(
+              "CallExpression",
+              0,
+              (0, 0),
+              children = List(
+                RastNode("Identifier", 0, (0, 0), text = Some("has_flag")),
+                RastNode("Identifier", 0, (0, 0), text = Some("node")),
+                RastNode("Identifier", 0, (0, 0), text = Some("SQUEEZED"))
+              )
+            )
+          )
+        )
+      )
+    )
+    val entry  = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("AST_Node", "test", List("node"), bodyBlock)
     val result = dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-    assert(result.scalaBody.contains("CompressorFlags.hasFlag"),
-      s"Expected CompressorFlags.hasFlag in: ${result.scalaBody}")
+    assert(result.scalaBody.contains("CompressorFlags.hasFlag"), s"Expected CompressorFlags.hasFlag in: ${result.scalaBody}")
 
   test("body-translation: improved parity rate with reduced uncompilable patterns"):
-    if !java.nio.file.Files.exists(referenceRoot) then
-      println("SKIP: ssg reference not found at " + referenceRoot)
+    if !java.nio.file.Files.exists(referenceRoot) then println("SKIP: ssg reference not found at " + referenceRoot)
     else
-      val results = balticporter.corpus.terser.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
-      val summaries = results.map(_._3)
-      val totalRast = summaries.map(_.matchedFromRast).sum
+      val results      = balticporter.corpus.terser.TerserCompressEmitter.emitAllWithParity(loadRast, hierarchy, referenceRoot)
+      val summaries    = results.map(_._3)
+      val totalRast    = summaries.map(_.matchedFromRast).sum
       val totalMethods = summaries.map(_.totalMethods).sum
 
       println(s"\n=== Improved Parity Rate ===")
       println(balticporter.corpus.terser.TerserCompressEmitter.formatParitySummaryTable(summaries))
 
-      val pctRast = if totalMethods > 0 then (totalRast * 100.0 / totalMethods) else 0.0
+      val pctRast = if totalMethods > 0 then totalRast * 100.0 / totalMethods else 0.0
       println(f"Overall: $totalRast/$totalMethods (${pctRast}%.1f%%) bodies from RAST")
 
       // With reduced uncompilable patterns, we should get significantly more than before
       // Before: ~15% RAST rate. After: should be above 30%.
-      assert(totalRast >= 10,
-        s"Expected >= 10 RAST-derived bodies, got $totalRast")
+      assert(totalRast >= 10, s"Expected >= 10 RAST-derived bodies, got $totalRast")

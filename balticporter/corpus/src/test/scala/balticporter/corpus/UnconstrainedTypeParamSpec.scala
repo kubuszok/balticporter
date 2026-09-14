@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type —
-  * `ENGINE-LIMITS.md` G22. */
+/** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type — `ENGINE-LIMITS.md` G22.
+  */
 class UnconstrainedTypeParamSpec extends PortSuite:
 
   test("a type parameter constrained ONLY by its bound is pinned to that bound at the call") {
@@ -14,7 +14,8 @@ class UnconstrainedTypeParamSpec extends PortSuite:
         |  <T extends Map<String, ?>> T registry(String name) { return null; }
         |  boolean empty() { return registry("k").isEmpty(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "this.registry[java.util.Map[java.lang.String, ?]](\"k\").isEmpty()")
   }
 
@@ -26,7 +27,8 @@ class UnconstrainedTypeParamSpec extends PortSuite:
         |  <T extends Map<String, ?>> T pick(T seed) { return seed; }
         |  boolean empty(Map<String, String> m) { return pick(m).isEmpty(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertNotEmits(p, "this.pick[")
   }
 
@@ -39,7 +41,8 @@ class UnconstrainedTypeParamSpec extends PortSuite:
         |  <T extends Map<String, ?>> T registry(String name) { return null; }
         |  Map<String, Integer> counts() { Map<String, Integer> m = registry("k"); return m; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertNotEmits(p, "this.registry[")
   }
 
@@ -50,6 +53,7 @@ class UnconstrainedTypeParamSpec extends PortSuite:
         |  <T> T any(String name) { return null; }
         |  String show() { return any("k").toString(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertNotEmits(p, "this.any[")
   }

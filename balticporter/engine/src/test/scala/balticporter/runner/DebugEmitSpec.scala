@@ -1,16 +1,17 @@
 package balticporter.runner
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** `just debug-emit`, end to end: a Java source tree in, the named type's TIR and emitted Scala
-  * out, at the phase boundary asked for. */
+/** `just debug-emit`, end to end: a Java source tree in, the named type's TIR and emitted Scala out, at the phase boundary asked for.
+  */
 class DebugEmitSpec extends munit.FunSuite:
 
   /** one small tree, modelled once per test — Spoon is the expensive part. */
   private val sample: Path =
     val d = Files.createTempDirectory("bp-debug-emit")
     Files.createDirectories(d.resolve("p"))
-    Files.writeString(d.resolve("p/Sample.java"),
+    Files.writeString(
+      d.resolve("p/Sample.java"),
       """package p;
         |
         |import java.util.ArrayList;
@@ -23,7 +24,8 @@ class DebugEmitSpec extends munit.FunSuite:
         |        return items.size();
         |    }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     d
 
   private def emit(args: String*): String =
@@ -56,9 +58,8 @@ class DebugEmitSpec extends munit.FunSuite:
   }
 
   test("--dump-before and --dump-after bracket the same phase, and the TIR between them DIFFERS") {
-    val out = emit("--fqn", "p.Sample", "--fast", "--phases", "collections",
-      "--dump-before", "collections", "--dump-after", "collections")
-    val i = out.indexOf("===== TIR AFTER phase")
+    val out = emit("--fqn", "p.Sample", "--fast", "--phases", "collections", "--dump-before", "collections", "--dump-after", "collections")
+    val i   = out.indexOf("===== TIR AFTER phase")
     assert(i > 0, out)
     val before = out.substring(0, i)
     val after  = out.substring(i)
@@ -86,7 +87,8 @@ class DebugEmitSpec extends munit.FunSuite:
   test("resolution widened to every default-constructible phase, in the order given") {
     assertEquals(
       DebugEmit.phasesFor(List("mutable-params", "collections")).map(_.map(_.name)),
-      Right(List("reassigned-params->var", "java-collections->scala")))
+      Right(List("reassigned-params->var", "java-collections->scala"))
+    )
   }
 
   test("a phase that takes POLICY is refused, and told where policy lives") {
@@ -110,10 +112,11 @@ class DebugEmitSpec extends munit.FunSuite:
     // about phases that run in EVERY port and cannot be turned off, which is exactly §4.6's promise
     // ("is this phase even responsible" costs one run and no diff) failing for the two phases an
     // operator cannot switch off any other way.
-    assertEquals(DebugEmit.phasesFor(List("sam-anon->lambda")).map(_.map(_.name)),
-                 Right(List("sam-anon->lambda")))
-    assertEquals(DebugEmit.phasesFor(List("collections", "sam-anon->lambda")).map(_.map(_.name)),
-                 Right(List("java-collections->scala", "sam-anon->lambda")))
+    assertEquals(DebugEmit.phasesFor(List("sam-anon->lambda")).map(_.map(_.name)), Right(List("sam-anon->lambda")))
+    assertEquals(
+      DebugEmit.phasesFor(List("collections", "sam-anon->lambda")).map(_.map(_.name)),
+      Right(List("java-collections->scala", "sam-anon->lambda"))
+    )
   }
 
   test("…named by PortRun's own list, so the two doors cannot drift — and each call is a FRESH phase") {
@@ -127,15 +130,17 @@ class DebugEmitSpec extends munit.FunSuite:
     assert(!(a eq b), "two resolutions must not share one phase instance")
   }
 
-  test("…and an unknown name LISTS them beside the SPI's, or it sends the reader after a factory\n" +
-       "     that does not exist") {
+  test(
+    "…and an unknown name LISTS them beside the SPI's, or it sends the reader after a factory\n" +
+      "     that does not exist"
+  ) {
     val why = DebugEmit.phasesFor(List("no-such-phase")).swap.getOrElse("")
     assert(clue(why).contains("sam-anon->lambda"), "the woven half")
     assert(why.contains("collections"), "…and the SPI half")
   }
 
   test("the dump flags it sets are RESTORED — an unforked run must not leave one behind") {
-    val keys = List("balticporter.dumpTirBefore", "balticporter.dumpTirAfter", "balticporter.dumpOnly")
+    val keys   = List("balticporter.dumpTirBefore", "balticporter.dumpTirAfter", "balticporter.dumpOnly")
     val before = keys.map(k => k -> Option(System.getProperty(k)))
     emit("--fqn", "p.Sample", "--fast", "--phases", "collections", "--dump-after", "collections")
     assertEquals(keys.map(k => k -> Option(System.getProperty(k))), before)

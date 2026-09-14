@@ -2,9 +2,9 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `null` at a slot whose formal is a TYPE PARAMETER — java assigns it to every reference type and
-  * scala's `Null` is not a subtype of an unbounded `T`, so the faithful emission is the cast java
-  * performs implicitly. */
+/** `null` at a slot whose formal is a TYPE PARAMETER — java assigns it to every reference type and scala's `Null` is not a subtype of an unbounded `T`, so the faithful emission is the cast java
+  * performs implicitly.
+  */
 class NullAtTypeParamSpec extends PortSuite:
 
   test("a `null` at a callee's own variable, resolved through the RECEIVER's type arguments") {
@@ -15,7 +15,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Bag<V> values = new Bag<V>();
         |  void pad() { values.add(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `Bag<E>.add(E)` on a `Bag<V>` field says `E := V` exactly, and `V` is a type THIS class can
     // write. Without it the emitted `add(null)` is `Found: Null / Required: E`.
     assertEmits(p, "this.values.add(null.asInstanceOf[V])")
@@ -29,7 +30,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Bag<String> names = new Bag<String>();
         |  void pad() { names.add(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "this.names.add(null.asInstanceOf[java.lang.String])")
   }
 
@@ -43,7 +45,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Bag<String> names = new Bag<String>();
         |  void pad() { names.put(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `put`'s `<E>` is not `Bag`'s, so the receiver's `E := String` says nothing about this slot —
     // and substituting it would emit a cast to a type java never chose. The old arm declines too
     // (`resolveTypeParam("E")` finds nothing in `Use`), so the honest emission is the bare `null`.
@@ -57,7 +60,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |class Use {
         |  void pad(Bag<?> any) { any.add(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `?` is a capture, and rendering it would put a `?` where a real type has to go — the `?T`
     // stub this frontend refuses everywhere else. `receiverTypeArgs` excludes wildcards outright,
     // so this slot's answer comes from the ERASED-RECEIVER arm that was already here (G11) and
@@ -74,7 +78,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  static <Widget extends Actor> Cell<Widget> of(Widget w) { return new Cell<Widget>(); }
         |  static Cell<Actor> builder() { return of(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `of`'s `<Widget>` SHADOWS the class's, which is ordinary java, and java infers it as `Actor`
     // from the target type. The old guard asked whether the NAME resolved in scope — it does, to
     // the CLASS's `Widget` — and emitted `of(null.asInstanceOf[Widget])` from a `static` member,
@@ -91,7 +96,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  void put(N n) { }
         |  void clear() { this.put(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `put`'s formal IS this class's `N`, and `N` is nameable in `clear`. Without the cast the
     // emitted `put(null)` is `Found: Null / Required: N`.
     assertEmits(p, "this.put(null.asInstanceOf[N])")
@@ -105,7 +111,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  <T> Tree<T> make(String ref, T board) { return null; }
         |  <T> Tree<T> make(String ref) { return make(ref, null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the callee's `<T>` and the caller's `<T>` are two declarations with one name, and java infers
     // the callee's from the caller's return type — so the caller's IS what the slot wants, and it is
     // in scope. A same-DECLARATION test answers `no` here and costs `Found: Null / Required: T`,
@@ -121,7 +128,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Bag b = new Bag();
         |  void pad() { b.add(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "this.b.add(null)")
   }
 
@@ -133,7 +141,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Key(String n, T d, Factory<T> f) { }
         |  Key(String n) { this(n, null, k -> null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the ARGUMENT `null` has a formal (`T`) and was already cast; the lambda BODY has none —
     // java takes its type from `Factory<T>.make`'s result, and scala's `Null` is not a `T`.
     assertEmits(p, "null.asInstanceOf[T]")
@@ -149,7 +158,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Key2(String n, Maker<T> f) { }
         |  Key2(String n) { this(n, k -> null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `Maker<V>` declares NO abstract method — the SAM is `Fn.apply(): R`, and only composing the
     // adaptation through `extends Fn<String, V>` reaches `T` from it.
     assertEmits(p, "=> null.asInstanceOf[T]")
@@ -164,7 +174,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Key3(String n, Maker2<T> f) { }
         |  Key3(String n) { this(n, k -> null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "=> null.asInstanceOf[T]")
   }
 
@@ -180,7 +191,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Key4(String n, Maker3<T> f) { }
         |  Key4(String n) { this(n, k -> null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `Function.apply(T)` and `Maker3.apply(Holder)` are ONE method to java and two signatures to
     // Spoon — the shape a JVM bridge exists for. Counted as two, `Maker3` is not a SAM at all.
     assertEmits(p, "=> null.asInstanceOf[T]")
@@ -193,7 +205,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |class UseTwo {
         |  void take(TwoWay t) { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // same name, same arity, ONE declarer — no supertype edge, so nothing collapses and the
     // interface keeps both members.
     assertEmits(p, "def f(s: java.lang.String): scala.Unit")
@@ -207,7 +220,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |class Use {
         |  Factory<String> f = k -> null;
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `Null` conforms to every reference type; only an ABSTRACT one rejects it, so a cast here
     // would be noise on every `x -> null` in a corpus.
     assertEmits(p, "=> null")
@@ -224,7 +238,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Set2(Holder other) { if (other == null) s = ""; else s = other.all(); }
         |}
         |class Sub extends Set2 { }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the nilary constructor is promoted and its `this(null)` INLINED, substituting the argument at
     // every use of `other` — including a RECEIVER, where a bare scala `null` has no members.
     assertEmits(p, "null.asInstanceOf[demo.Holder].all()")
@@ -240,7 +255,8 @@ class NullAtTypeParamSpec extends PortSuite:
         |  Set3(String other) { s = other; }
         |}
         |class Sub3 extends Set3 { }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // only `null` takes its type from the slot (JLS 5.2); every other argument carries its own.
     assertEmits(p, """this.s = "x"""")
     assertNotEmits(p, "asInstanceOf[java.lang.String]")

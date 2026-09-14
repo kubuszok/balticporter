@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** JS-C51 — a `return` in a java CONSTRUCTOR body, once `CtorFunnel` has promoted that body into
-  * the CLASS BODY. */
+/** JS-C51 — a `return` in a java CONSTRUCTOR body, once `CtorFunnel` has promoted that body into the CLASS BODY.
+  */
 class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
 
   private def emit(src: String): String =
@@ -13,8 +13,8 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
 
   private val parent = "public class Effect { protected Effect(String label) {} }\n"
 
-  /** the promoted root's body RETURNS EARLY — two exits, one of them inside a loop, which is what a
-    * `boundary` would have had to be NAMED for and a `def` does not. */
+  /** the promoted root's body RETURNS EARLY — two exits, one of them inside a loop, which is what a `boundary` would have had to be NAMED for and a `def` does not.
+    */
   private val src =
     s"""package demo;
        |$parent
@@ -49,12 +49,16 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
     // `members.tsv` for a member java never had. Inside a block it is local to the construction
     // sequence, which is exactly what java's constructor body was.
     assert(!out.contains("def ctorBody$(): scala.Unit = {\n  }"), clue(out))
-    assert(clue(out).contains("{\n    def ctorBody$(): scala.Unit = {"),
-           "the `def` is not inside a block — as a class member it would be emitted surface")
+    assert(
+      clue(out).contains("{\n    def ctorBody$(): scala.Unit = {"),
+      "the `def` is not inside a block — as a class member it would be emitted surface"
+    )
     // …and the block opens a statement, so `joinStats` must have put the `;` in front of it or the
     // `{` reads as an anonymous-class body of the statement above (§4.58)
-    assert(clue(out).contains(";\n  {\n    def ctorBody$()"),
-           "the block was emitted without the separator that keeps it a statement")
+    assert(
+      clue(out).contains(";\n  {\n    def ctorBody$()"),
+      "the block was emitted without the separator that keeps it a statement"
+    )
   }
 
   test("the FIELDS stay where JLS 12.5 step 4 put them — above the wrapper, not inside it") {
@@ -73,7 +77,8 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
          |  int flags = 0;
          |  public Plain(String label, String[] params) { super(label); flags = params.length; }
          |}
-         |""".stripMargin)
+         |""".stripMargin
+    )
     assert(!plain.contains("ctorBody$"), clue(plain))
     assert(plain.contains("this.flags = params$p.length"), clue(plain))
   }
@@ -91,7 +96,8 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
          |    r = new Runnable() { public void run() { if (k == 0) return; System.out.print(k); } };
          |  }
          |}
-         |""".stripMargin)
+         |""".stripMargin
+    )
     assert(!installs.contains("ctorBody$"), clue(installs))
     // …and the `return` is still there, in the method java bound it to
     assert(installs.contains("return"))

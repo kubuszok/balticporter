@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
 /** A ported java enum IS a `java.lang.Enum` — the shape that says so, and the shapes that cannot. */
 class EnumJavaLangEnumSpec extends PortSuite:
@@ -25,7 +25,8 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  Flags(int bits) { this.bits = bits; }
         |  public int getBits() { return bits; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the promoted parameter carries the modifiers of the field it SUPERSEDES — `final int bits` is
     // package-private and final in java (`EnumPromotedParamFlagsSpec`).
     assert(clue(out).contains("enum Flags(private[en1] val bits: scala.Int) extends java.lang.Enum[Flags] with en1.Bits"))
@@ -60,7 +61,8 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  int refused()   { return Bodied.values().length; }
         |  int other(java.util.Map<String, String> m) { return m.values().size(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("en2.Kind.values.length"))
     // the REFUSED enum still emits `def values(): Array[Bodied]`, so its call site keeps java's own
     // shape. One rule, asked of the enum's own declaration, answering differently for two enums in
@@ -79,7 +81,8 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  ;
         |  public abstract int area(int w);
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("sealed abstract class Mode"))
     assert(out.contains("case object SQUARE extends Mode"))
     assert(!out.contains("java.lang.Enum[Mode]"))
@@ -98,7 +101,8 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  final String name;
         |  Dither(String name) { this.name = name; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("sealed abstract class Dither(private[en4] val name: java.lang.String)"))
     assertEquals(clue(fs).map(_.owner), List("en4.Dither"))
     assert(fs.head.detail.contains("`name`"))
@@ -111,17 +115,17 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  ;
         |  static int counter = 0;
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("sealed abstract class Holder"))
     assertEquals(clue(fs).map(_.owner), List("en5.Holder"))
     assert(fs.head.detail.contains("no constants"))
   }
 
   test("the COMPANION carries java's statics, and is emitted only where java gave it some") {
-    val (bare, _) = emit(
-      """package en6;
-        |enum Plain { A, B }
-        |""".stripMargin)
+    val (bare, _) = emit("""package en6;
+                           |enum Plain { A, B }
+                           |""".stripMargin)
     // no companion at all: the constants are the desugaring's, and an empty `object Plain {}` would
     // be a type a consumer can name that java never had.
     assert(clue(bare).contains("enum Plain extends java.lang.Enum[Plain]"))
@@ -134,7 +138,8 @@ class EnumJavaLangEnumSpec extends PortSuite:
         |  static final String TAG = "t";
         |  static Sized first() { return A; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(withStatics).contains("object Sized"))
     assert(withStatics.contains("def first()"))
   }

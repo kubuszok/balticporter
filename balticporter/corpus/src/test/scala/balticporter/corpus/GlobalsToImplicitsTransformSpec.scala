@@ -2,11 +2,11 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, Pipeline, Reason, RuleScope}
+import balticporter.tir.{ Decision, Pipeline, Reason, RuleScope }
 import balticporter.transform.*
 
-/** globals → context, at the MECHANISM level: the straight-line closure the predecessor pinned, kept
-  * as this replacement's regression floor, plus the two things the replacement REVERSED. */
+/** globals → context, at the MECHANISM level: the straight-line closure the predecessor pinned, kept as this replacement's regression floor, plus the two things the replacement REVERSED.
+  */
 class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
 
   private val src =
@@ -23,11 +23,13 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  private def holder(f: ContextHolder => ContextHolder = identity) = f(ContextHolder(
-    holder  = "demo.Config",
-    context = ContextType.Minted("demo.Ctx"),
-    members = Map("verbosity" -> "verbosity"),
-  ))
+  private def holder(f: ContextHolder => ContextHolder = identity) = f(
+    ContextHolder(
+      holder = "demo.Config",
+      context = ContextType.Minted("demo.Ctx"),
+      members = Map("verbosity" -> "verbosity")
+    )
+  )
 
   private def ported(h: ContextHolder) =
     val phase        = new GlobalsToImplicitsTransform(List(h))
@@ -118,7 +120,7 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
 
   test("a SCOPED-OUT declaration keeps the global, and says so") {
     val (_, _, l, o) = ported(holder(_.copy(scope = RuleScope.Everywhere(Set("demo.Logger")))))
-    val scoped = l.of(Decision.Kind.ScopedOut).map(_.subjectFqn)
+    val scoped       = l.of(Decision.Kind.ScopedOut).map(_.subjectFqn)
     assertEquals(clue(scoped), List("demo.Logger#log"))
     // …once: the holder key is `Reason.Configured`'s and is not restated in `detail`, or the porter
     // note beside the code reads `key=demo.Config key=demo.Config`.
@@ -136,10 +138,9 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
 
   // ---- CT11: static field holders ---------------------------------------------------------------
 
-  /** A class whose static field CONSTRUCTS a threaded type, and whose static method reads it. The
-    * field's initialiser cannot run at companion-initialisation time; the method's body is where
-    * the context first becomes available, so the field becomes a holder there. `Widget` reads
-    * `Config.verbosity` so that the growth threads it. */
+  /** A class whose static field CONSTRUCTS a threaded type, and whose static method reads it. The field's initialiser cannot run at companion-initialisation time; the method's body is where the
+    * context first becomes available, so the field becomes a holder there. `Widget` reads `Config.verbosity` so that the growth threads it.
+    */
   private val fieldHolderSrc =
     """package demo;
       |class Config {
@@ -154,10 +155,9 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** A class whose static field constructs a threaded type and has NO threaded method — the holder
-    * cannot fire and the engine refuses. `Widget` is threaded (reads `Config.verbosity`), but
-    * `Isolated.count()` does not use `SOLO` and does not read the holder, so no method on
-    * `Isolated` gets threaded. */
+  /** A class whose static field constructs a threaded type and has NO threaded method — the holder cannot fire and the engine refuses. `Widget` is threaded (reads `Config.verbosity`), but
+    * `Isolated.count()` does not use `SOLO` and does not read the holder, so no method on `Isolated` gets threaded.
+    */
   private val noHolderSrc =
     """package demo;
       |class Config {
@@ -174,10 +174,10 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
 
   test("CT11: static field constructing a threaded type becomes a holder with throwing accessor") {
     val h = ContextHolder(
-      holder  = "demo.Config",
+      holder = "demo.Config",
       context = ContextType.Minted("demo.Ctx"),
       members = Map("verbosity" -> "verbosity"),
-      attach  = ContextAttach.Class,
+      attach = ContextAttach.Class
     )
     val phase        = new GlobalsToImplicitsTransform(List(h))
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(fieldHolderSrc), List(phase))
@@ -193,15 +193,15 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
 
   test("CT11: static field with NO threaded method on the class is a counted unsuppliable-use") {
     val h = ContextHolder(
-      holder  = "demo.Config",
+      holder = "demo.Config",
       context = ContextType.Minted("demo.Ctx"),
       members = Map("verbosity" -> "verbosity"),
-      attach  = ContextAttach.Class,
+      attach = ContextAttach.Class
     )
-    val phase        = new GlobalsToImplicitsTransform(List(h))
-    val (after, _)   = Pipeline.runTraced(SpoonTir.fromSource(noHolderSrc), List(phase))
-    val seams        = phase.seams(after)
-    val soloSeams = seams.filter(_.subject.contains("SOLO"))
+    val phase      = new GlobalsToImplicitsTransform(List(h))
+    val (after, _) = Pipeline.runTraced(SpoonTir.fromSource(noHolderSrc), List(phase))
+    val seams      = phase.seams(after)
+    val soloSeams  = seams.filter(_.subject.contains("SOLO"))
     assert(clue(soloSeams).nonEmpty)
     assert(soloSeams.exists(_.kind == ContextSeamCheck.Kind.UnsuppliableUse))
   }
@@ -213,7 +213,14 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     // the phase builds its own `ContextNeed`; this reproduces it over the same inputs so a spec can
     // pin the derivation rather than only the emitted text.
     val statics = program.symbols.all.filter(s => s.fullName == "demo.Config#verbosity").map(_.id).toSet
-    val need = new ContextNeed(program, balticporter.tir.OverrideGraph.build(program), h,
-      statics.map(_ -> "verbosity").toMap, Set.empty, (_, _, _, _, _, _) => (), (_, _) => ())
+    val need    = new ContextNeed(
+      program,
+      balticporter.tir.OverrideGraph.build(program),
+      h,
+      statics.map(_ -> "verbosity").toMap,
+      Set.empty,
+      (_, _, _, _, _, _) => (),
+      (_, _) => ()
+    )
     need.grow()
     need.edges

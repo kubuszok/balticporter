@@ -37,6 +37,5 @@ class EnginePinSpec extends munit.FunSuite:
       val err = EnginePin.check(dir).swap.getOrElse(fail("a stale pin must be reported"))
       assert(err.contains("0.0.1-ancient"), clue(err))
       assert(err.contains(EngineInfo.version), clue(err))
-    finally
-      Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete)
+    finally Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete)
   }

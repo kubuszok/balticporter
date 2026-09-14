@@ -18,8 +18,7 @@ class MemberKeySpec extends munit.FunSuite:
 
   test("a PRECISE key carries its parameter spelling and round-trips") {
     val k = MemberKey.of("com.foo.Bar#baz(int,String,Class)")
-    assertEquals(k.descriptor.map(_.params),
-      Some(List(Param.Prim("int"), Param.Named("String"), Param.Named("Class"))))
+    assertEquals(k.descriptor.map(_.params), Some(List(Param.Prim("int"), Param.Named("String"), Param.Named("Class"))))
     assertEquals(k.render, "com.foo.Bar#baz(int,String,Class)")
   }
 
@@ -63,8 +62,7 @@ class MemberKeySpec extends munit.FunSuite:
     // `AppliedType(scala.Array, [Int])` and spell this member `copy(Array)`. That is a different
     // member key and must stay one, or the two spellings quietly become interchangeable again.
     assertNotEquals(MemberKey.of("com.foo.Owner#copy(Array)"), k)
-    assertEquals(MemberKey.of("com.foo.Owner#copy(Array)").descriptor.map(_.params),
-      Some(List(Param.Named("Array"))))
+    assertEquals(MemberKey.of("com.foo.Owner#copy(Array)").descriptor.map(_.params), Some(List(Param.Named("Array"))))
   }
 
   test("a nested array nests, and an array of a type variable is ordinary") {
@@ -108,8 +106,7 @@ class MemberKeySpec extends munit.FunSuite:
     assert(clue(why("com.foo.Bar#baz(int,,String)")).contains("empty parameter"))
     // A key with two `#`s now splits at the LAST one — `com.foo.Bar#b#z` is owner `com.foo.Bar#b`,
     // member `z`. This is how an enum constant's body member is named (T23).
-    assertEquals(clue(MemberKey.parse("com.foo.Bar#b#z")),
-      Right(MemberKey("com.foo.Bar#b", "z", scala.None)))
+    assertEquals(clue(MemberKey.parse("com.foo.Bar#b#z")), Right(MemberKey("com.foo.Bar#b", "z", scala.None)))
     assert(clue(why("com.foo.Bar#baz(?)")).contains("unreadable"))
   }
 
@@ -166,22 +163,21 @@ class MemberKeySpec extends munit.FunSuite:
     assert(!k.matches(MemberKey.of("com.foo.Bar#baz(int,String)").descriptor.get))
     assert(!k.matches(MemberKey.of("com.foo.Bar#baz(int,String,Object)").descriptor.get))
     // two DISTINCT simple names stay distinct — the leniency is about the PACKAGE and nothing else
-    assert(!MemberKey.of("X#m(java.util.List)").descriptor.get
-             .matches(MemberKey.of("X#m(Map)").descriptor.get))
+    assert(!MemberKey.of("X#m(java.util.List)").descriptor.get.matches(MemberKey.of("X#m(Map)").descriptor.get))
   }
 
   // -------------------------------------------------------------------------
   // D-c: the spelling is a function of the TYPE, not of a `Symbol.name`
   // -------------------------------------------------------------------------
 
-  /** A program holding both spellings of one value class: the frontend interns java's `boolean`
-    * under the scala fullName with java's own simple name, while a phase that MINTS the same type
-    * names it `Boolean`. Two symbols, one `fullName` — `ENGINE-LIMITS.md` D15. */
+  /** A program holding both spellings of one value class: the frontend interns java's `boolean` under the scala fullName with java's own simple name, while a phase that MINTS the same type names it
+    * `Boolean`. Two symbols, one `fullName` — `ENGINE-LIMITS.md` D15.
+    */
   private def twoBooleans: (Program, SymId, SymId, SymId) =
     val fromJava = Symbol(SymId(1), "boolean", "scala.Boolean", Flags(), SymId.None, TypeRepr.NoType)
     val fromMint = Symbol(SymId(2), "Boolean", "scala.Boolean", Flags(), SymId.None, TypeRepr.NoType)
     val boxed    = Symbol(SymId(3), "Boolean", "java.lang.Boolean", Flags(), SymId.None, TypeRepr.NoType)
-    val p = new Program(Nil, SymbolTable(List(fromJava, fromMint, boxed)), Xref.build(Nil), MemberIndex.empty)
+    val p        = new Program(Nil, SymbolTable(List(fromJava, fromMint, boxed)), Xref.build(Nil), MemberIndex.empty)
     (p, fromJava.id, fromMint.id, boxed.id)
 
   private def spell(p: Program, s: SymId): Param =
@@ -203,10 +199,9 @@ class MemberKeySpec extends munit.FunSuite:
     assertEquals(spell(p, boxed), Param.Named("Boolean"))
     assertNotEquals(spell(p, boxed), spell(p, fromMint))
     // …and an ARRAY of either keeps java's own spelling on both sides.
-    val arr = Symbol(SymId(4), "Array", "scala.Array", Flags(), SymId.None, TypeRepr.NoType)
-    val p2  = new Program(Nil, SymbolTable(p.symbols.all.toList :+ arr), Xref.build(Nil), MemberIndex.empty)
-    def arrOf(s: SymId) = Descriptor.paramOfType(p2, TypeRepr.AppliedType(
-      TypeRepr.TypeRef(TypeRepr.NoPrefix, arr.id), List(TypeRepr.TypeRef(TypeRepr.NoPrefix, s))))
+    val arr             = Symbol(SymId(4), "Array", "scala.Array", Flags(), SymId.None, TypeRepr.NoType)
+    val p2              = new Program(Nil, SymbolTable(p.symbols.all.toList :+ arr), Xref.build(Nil), MemberIndex.empty)
+    def arrOf(s: SymId) = Descriptor.paramOfType(p2, TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, arr.id), List(TypeRepr.TypeRef(TypeRepr.NoPrefix, s))))
     assertEquals(arrOf(fromMint), Param.Arr(Param.Prim("boolean")))
     assertEquals(arrOf(boxed), Param.Arr(Param.Named("Boolean")))
   }

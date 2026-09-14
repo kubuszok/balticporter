@@ -71,8 +71,8 @@ class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
   private val program = Pipeline.run(SpoonTir.fromSource(src), Nil)
   private val out     = new TirEmitter(program).emit
 
-  /** the emitted line index of the first line containing `s` — `-1` when absent, so a missing
-    * line fails the ordering assertion rather than passing it by accident. */
+  /** the emitted line index of the first line containing `s` — `-1` when absent, so a missing line fails the ordering assertion rather than passing it by accident.
+    */
   private def at(s: String): Int = out.linesIterator.indexWhere(_.contains(s))
 
   // the `$p` suffixes below are §4.55's promotion rename, asserted deliberately: C12's fix moves

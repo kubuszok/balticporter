@@ -1,10 +1,10 @@
 package balticporter.core
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** [[SubstitutionCheck]] is a LIFT, not a redesign — CHECK 1 and CHECK 2 were inline in
-  * `LibgdxCoreMigrate` and had to keep behaving exactly as they did. */
+/** [[SubstitutionCheck]] is a LIFT, not a redesign — CHECK 1 and CHECK 2 were inline in `LibgdxCoreMigrate` and had to keep behaving exactly as they did.
+  */
 class SubstitutionCheckSpec extends munit.FunSuite:
 
   // ---- the originals, copied verbatim from LibgdxCoreMigrate before the lift ----
@@ -15,9 +15,7 @@ class SubstitutionCheckSpec extends munit.FunSuite:
 
   /** `LibgdxCoreMigrate.scala:237–245` */
   private def originalCheck2(outDir: Path, subs: Substitutions): List[(String, Int)] =
-    val sources = Files.walk(outDir).iterator().asScala
-      .filter(p => p.toString.endsWith(".scala")).toList
-      .map(p => p -> Files.readString(p))
+    val sources = Files.walk(outDir).iterator().asScala.filter(p => p.toString.endsWith(".scala")).toList.map(p => p -> Files.readString(p))
     subs.dropTypes.toList.sorted.flatMap { fqn =>
       if Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")) then None
       else
@@ -38,18 +36,18 @@ class SubstitutionCheckSpec extends munit.FunSuite:
     assertEquals(
       SubstitutionCheck.emittedDroppedTypes(dir, subs).map(_.fqn).toSet,
       originalCheck1(dir, subs),
-      "CHECK 1 diverged from the inline original",
+      "CHECK 1 diverged from the inline original"
     )
     assertEquals(
       SubstitutionCheck.dangling(dir, subs).map(f => f.fqn -> f.references),
       originalCheck2(dir, subs),
-      "CHECK 2 diverged from the inline original",
+      "CHECK 2 diverged from the inline original"
     )
 
   test("clean tree — a dropped type with an injected replacement and no dangling reference") {
     val dir = tree(
       "com/x/Dropped.scala" -> "package com.x\nclass Dropped",
-      "com/x/User.scala"    -> "package com.x\nclass User { val d = new com.x.Dropped }",
+      "com/x/User.scala" -> "package com.x\nclass User { val d = new com.x.Dropped }"
     )
     val subs = Substitutions(dropTypes = Set("com.x.Dropped"))
     bothAgree(dir, subs)
@@ -70,11 +68,14 @@ class SubstitutionCheckSpec extends munit.FunSuite:
     val dir = tree(
       "com/x/A.scala" -> "package com.x\nclass A { def d: com.x.Dropped = ??? }",
       "com/x/B.scala" -> "package com.x\nclass B { def d: com.x.Dropped = ??? }",
-      "com/x/C.scala" -> "package com.x\nclass C",
+      "com/x/C.scala" -> "package com.x\nclass C"
     )
     val subs = Substitutions(dropTypes = Set("com.x.Dropped"))
     bothAgree(dir, subs)
-    assertEquals(SubstitutionCheck.dangling(dir, subs), List(SubstitutionCheck.Finding(SubstitutionCheck.Kind.Dangling, "com.x.Dropped", 2)))
+    assertEquals(
+      SubstitutionCheck.dangling(dir, subs),
+      List(SubstitutionCheck.Finding(SubstitutionCheck.Kind.Dangling, "com.x.Dropped", 2))
+    )
     assert(clue(SubstitutionCheck.dangling(dir, subs).head.render).contains("§1(b)/(c) per-library"))
   }
 
@@ -94,8 +95,8 @@ class SubstitutionCheckSpec extends munit.FunSuite:
 
   test("findings are sorted, so a report is stable run to run") {
     val dir = tree(
-      "com/x/Z.scala"   -> "package com.x\nclass Z",
-      "com/x/Ref.scala" -> "package com.x\nclass Ref { def a: com.x.Bbb = ???; def b: com.x.Aaa = ??? }",
+      "com/x/Z.scala" -> "package com.x\nclass Z",
+      "com/x/Ref.scala" -> "package com.x\nclass Ref { def a: com.x.Bbb = ???; def b: com.x.Aaa = ??? }"
     )
     val subs = Substitutions(dropTypes = Set("com.x.Bbb", "com.x.Aaa"))
     bothAgree(dir, subs)

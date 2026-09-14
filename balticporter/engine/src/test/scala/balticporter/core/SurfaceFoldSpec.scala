@@ -1,8 +1,8 @@
 package balticporter.core
 
 import balticporter.core.ManifestAgreement.Kind
-import balticporter.tir.{Phase, RuleScope}
-import balticporter.transform.{ClassTableTransform, NullabilityTransform, StaticForwarderTransform, TypeRedirectTransform}
+import balticporter.tir.{ Phase, RuleScope }
+import balticporter.transform.{ ClassTableTransform, NullabilityTransform, StaticForwarderTransform, TypeRedirectTransform }
 
 /** The merge contract — DESIGN.md §8.13, closing `ENGINE-LIMITS.md` D9. */
 class SurfaceFoldSpec extends munit.FunSuite:
@@ -21,36 +21,41 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("disjoint tables MERGE into one instance, at the base's pipeline position") {
-    val b   = base(List(new ClassTableTransform(Map("com.demo.W#of" -> "com.demo.T#classFor")),
-                        redirect("com.other.A" -> "com.dep.A")))
+    val b   = base(List(new ClassTableTransform(Map("com.demo.W#of" -> "com.demo.T#classFor")), redirect("com.other.A" -> "com.dep.A")))
     val dep = b.extendedBy(PortManifest("dep", surface = List(redirect("com.other.B" -> "com.dep.B"))))
 
     // one phase per NAME, and the redirect is still SECOND — a merge changes a table, never an order
     assertEquals(dep.effectiveSurface.map(_.name), List("class-table", "type-redirect"))
     assertEquals(
       dep.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.redirects }.get,
-      Map("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B"))
+      Map("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B")
+    )
     assertEquals(dep.surfaceFold.refusals, Nil)
     // …and NOTHING is reported: not the divergence, and not the base's absorbed phase as missing
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
   }
 
   test("`memberRenames` merge with the redirects, and an agreeing duplicate key is not a conflict") {
-    val b = base(List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
-      // the SAME redirect, spelled again — agreement, not drift — plus one of its own
-      Map("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B"),
-      Map("com.other.B" -> Map("free" -> "close"))))))
+    val b   = base(List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(
+          new TypeRedirectTransform(
+            // the SAME redirect, spelled again — agreement, not drift — plus one of its own
+            Map("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B"),
+            Map("com.other.B" -> Map("free" -> "close"))
+          )
+        )
+      )
+    )
     val merged = dep.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t }.get
-    assertEquals(merged.memberRenames,
-      Map("com.other.A" -> Map("dispose" -> "close"), "com.other.B" -> Map("free" -> "close")))
+    assertEquals(merged.memberRenames, Map("com.other.A" -> Map("dispose" -> "close"), "com.other.B" -> Map("free" -> "close")))
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
   }
 
   test("the fold is IDEMPOTENT and its instance is STABLE — a merged phase is built once") {
-    val dep = base(List(redirect("com.other.A" -> "com.dep.A")))
-      .extendedBy(PortManifest("dep", surface = List(redirect("com.other.B" -> "com.dep.B"))))
+    val dep = base(List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.other.B" -> "com.dep.B"))))
     // a `def` would hand the pipeline one instance and the policy report another (DESIGN.md §8.13)
     assert(dep.effectiveSurface.head eq dep.effectiveSurface.head)
     assertEquals(dep.effectiveSurface.map(_ eq dep.surfaceFold.phases.head), List(true))
@@ -87,8 +92,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("REFUSED: same key, different value is still a fatal SurfaceDivergence") {
-    val dep = base(List(redirect("com.other.A" -> "com.dep.A")))
-      .extendedBy(PortManifest("dep", surface = List(redirect("com.other.A" -> "com.dep.OTHER"))))
+    val dep = base(List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.other.A" -> "com.dep.OTHER"))))
     assertEquals(dep.effectiveSurface.size, 2, "a refused pair stays in the pipeline")
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
@@ -100,10 +104,13 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("REFUSED: two member renames of one member to two names") {
-    val b = base(List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "shutdown"))))))
+    val b   = base(List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "shutdown"))))
+      )
+    )
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
@@ -116,10 +123,13 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // the nilary form is one of them. Compared as raw strings the merge succeeded, and the drift
     // then arrived at `MemberRenamer` as its non-fatal two-claimants refusal: a `PolicyIssue`
     // where the merge contract owes a fatal `SurfaceDivergence`.
-    val b = base(List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose()" -> "shutdown"))))))
+    val b   = base(List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose()" -> "shutdown"))))
+      )
+    )
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
@@ -130,10 +140,13 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("…and two spellings of one member agreeing on the TARGET is not a conflict") {
-    val b = base(List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose()" -> "close"))))))
+    val b   = base(List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose" -> "close")))))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose()" -> "close"))))
+      )
+    )
     assertEquals(dep.surfaceFold.refusals, Nil)
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
   }
@@ -141,21 +154,25 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("a MALFORMED member segment still compares — the refusal may not depend on a parse") {
     // an unparseable segment falls back to its own text, so two modules disagreeing about it are
     // still refused rather than merged behind a `None`.
-    val b = base(List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose<T>" -> "close")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose<T>" -> "shutdown"))))))
+    val b   = base(List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose<T>" -> "close")))))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.A" -> Map("dispose<T>" -> "shutdown"))))
+      )
+    )
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
   }
 
   test("NO CONTRACT: a phase that declares no merge diverges exactly as it did before") {
     // `ClassTableTransform` gained a `MergeablePolicy` (c6f412f7); the contract-less example is now
     // `StaticForwarderTransform`, which declares none.
-    val dep = base(List(new StaticForwarderTransform(List(
-        StaticForwarderTransform.Forwarder("com.demo.W", "com.demo.T", Set("of"))))))
-      .extendedBy(PortManifest("dep",
-        surface = List(new StaticForwarderTransform(List(
-          StaticForwarderTransform.Forwarder("com.demo.W", "com.demo.OTHER", Set("of")))))))
+    val dep = base(List(new StaticForwarderTransform(List(StaticForwarderTransform.Forwarder("com.demo.W", "com.demo.T", Set("of")))))).extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(new StaticForwarderTransform(List(StaticForwarderTransform.Forwarder("com.demo.W", "com.demo.OTHER", Set("of")))))
+      )
+    )
     assertEquals(dep.effectiveSurface.size, 2)
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.NoContract))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
@@ -169,19 +186,22 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // of a contract-less phase ever made. Proving them equal is what licenses the dedup, so the
     // dedup is where the proof lands — and `effectiveSurface.size` is the assertion that sees it.
     val table = Map("com.demo.W#of" -> "com.demo.T#classFor")
-    val b   = base(List(new ClassTableTransform(table)))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
+    val b     = base(List(new ClassTableTransform(table)))
+    val dep   = b.extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
     assertEquals(dep.effectiveSurface.size, 1, "ONE instance runs — the pre-CT9 semantics, restored")
-    assertEquals(dep.effectiveSurface.map(PortManifest.fingerprint), fps(b),
-                 "…and it is the BASE's, at the base's position: a merge changes a table, never an order")
+    assertEquals(
+      dep.effectiveSurface.map(PortManifest.fingerprint),
+      fps(b),
+      "…and it is the BASE's, at the base's position: a merge changes a table, never an order"
+    )
     assertEquals(dep.surfaceFold.refusals, Nil, "equal policy is not drift, so it explains nothing")
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true), Nil)
   }
 
   test("…and the dedup does not make the base's phase `SurfaceMissing` — one instance IS the base's") {
     val table = Map("com.demo.W#of" -> "com.demo.T#classFor")
-    val b   = base(List(new ClassTableTransform(table)))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
+    val b     = base(List(new ClassTableTransform(table)))
+    val dep   = b.extendedBy(PortManifest("dep", surface = List(new ClassTableTransform(table))))
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
   }
 
@@ -189,19 +209,17 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // …and a phase that is not even a `SurfacePolicy` cannot be COMPARED, so equality is not assumed
   // -------------------------------------------------------------------------------------------
 
-  /** a parameterised phase that implements NEITHER contract — the shape whose fingerprint is its
-    * NAME, so two configurations of it render identically. Declared here rather than borrowed from
-    * a production phase: which engine phase happens to lack `SurfacePolicy` is a fact that should
-    * change (and F2 changed one), and a spec pinned to it would silently stop testing this. */
-  private final class Unreadable(val table: Map[String, String]) extends Phase:
+  /** a parameterised phase that implements NEITHER contract — the shape whose fingerprint is its NAME, so two configurations of it render identically. Declared here rather than borrowed from a
+    * production phase: which engine phase happens to lack `SurfacePolicy` is a fact that should change (and F2 changed one), and a spec pinned to it would silently stop testing this.
+    */
+  final private class Unreadable(val table: Map[String, String]) extends Phase:
     def name: String = "unreadable"
 
   test("UNVERIFIABLE: two instances of a phase with no `SurfacePolicy` are FATAL, however configured") {
     // The blind spot `PortManifest.fingerprint` documents, reached through the fold: these two
     // tables differ and the rendering cannot say so. Deduping would drop one policy silently —
     // CT9 Face B under a new name — so the engine refuses instead of guessing.
-    val dep = base(List(new Unreadable(Map("a" -> "1"))))
-      .extendedBy(PortManifest("dep", surface = List(new Unreadable(Map("a" -> "2")))))
+    val dep = base(List(new Unreadable(Map("a" -> "1")))).extendedBy(PortManifest("dep", surface = List(new Unreadable(Map("a" -> "2")))))
     assertEquals(dep.effectiveSurface.size, 2)
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Unverifiable))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
@@ -215,13 +233,14 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // The point of the entry: the engine cannot TELL that these agree. Reporting nothing here is
     // reporting nothing for every unreadable pair, since every unreadable pair looks like this one.
     val table = Map("a" -> "1")
-    val dep = base(List(new Unreadable(table)))
-      .extendedBy(PortManifest("dep", surface = List(new Unreadable(table))))
+    val dep   = base(List(new Unreadable(table))).extendedBy(PortManifest("dep", surface = List(new Unreadable(table))))
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Unverifiable))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
-    assert(clue(f.head.detail).contains("EQUAL AS RENDERED"),
-           "the message says the two fingerprints matched and that this is not evidence")
+    assert(
+      clue(f.head.detail).contains("EQUAL AS RENDERED"),
+      "the message says the two fingerprints matched and that this is not evidence"
+    )
   }
 
   test("ONE instance of an unreadable phase is untouched — this is a PAIR rule, not a phase ban") {
@@ -236,8 +255,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("INTRUSION: a merged-in subject the base EMITS is fatal, and is not a plain divergence") {
-    val dep = base(List(redirect("com.other.A" -> "com.dep.A")))
-      .extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    val dep = base(List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     // the merge STANDS — an intrusion is a statement about the base's OUTPUT, not a failure to
     // compose two policies, and a confirmed one stops the run at the gate (DESIGN.md §8.13)
@@ -255,15 +273,12 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // the shape every real consumer of this phase has: the base drops a type outright and a
     // dependent that still uses it re-points its references at a replacement it ships itself
     val dep = base(List(redirect("com.other.A" -> "com.dep.A")), drops = Set("com.demo.Widget"))
-      .extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
-        surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+      .extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"), surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.refusals, Nil)
     assertEquals(dep.effectiveSurface.size, 1)
     // …and the only thing left is the base's own drop key not having fired in a run with no
     // program at all, which is not a disagreement
-    assertEquals(
-      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget")).map(_.kind),
-      Nil)
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget")).map(_.kind), Nil)
   }
 
   // -------------------------------------------------------------------------------------------
@@ -282,11 +297,14 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // §1.5's asymmetry read correctly: a drop and its replacement are two decisions, and the second
     // one puts a file at that FQN. Re-pointing references at a type of this module's own would
     // compile alone and could not compile against the base — the very failure the screen is for.
-    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+    val b = PortManifest(
+      "base",
+      governs = Set("com.demo"),
+      dropTypes = Set("com.demo.Widget"),
       inject = List(injectRoot("com/demo/Widget.scala")),
-      surface = List(redirect("com.other.A" -> "com.dep.A")))
-    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
-      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+      surface = List(redirect("com.other.A" -> "com.dep.A"))
+    )
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"), surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget"))
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
@@ -294,11 +312,14 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("…and the SAME drop with no injection is admitted — nothing stands at the name") {
-    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+    val b = PortManifest(
+      "base",
+      governs = Set("com.demo"),
+      dropTypes = Set("com.demo.Widget"),
       inject = List(injectRoot("com/demo/Other.scala")), // a replacement for a DIFFERENT type
-      surface = List(redirect("com.other.A" -> "com.dep.A")))
-    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
-      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+      surface = List(redirect("com.other.A" -> "com.dep.A"))
+    )
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"), surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.refusals, Nil)
     assertEquals(dep.effectiveSurface.size, 1)
   }
@@ -307,24 +328,36 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // the two sides are in different namespaces: the drop key is upstream, the shim's FQN is where
     // the file sits in the port. Compared directly, this screen would never fire on a renaming
     // port — §4.56, the failure `PortMap`'s `Substituted` was bitten by.
-    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+    val b = PortManifest(
+      "base",
+      governs = Set("com.demo"),
+      dropTypes = Set("com.demo.Widget"),
       packageRenames = Map("com.demo" -> "sge"),
       inject = List(injectRoot("sge/Widget.scala")),
-      surface = List(redirect("com.other.A" -> "com.dep.A")))
+      surface = List(redirect("com.other.A" -> "com.dep.A"))
+    )
     assert(b.shipsInjectionAt("com.demo.Widget"), "upstream key, emitted file")
-    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
-      packageRenames = Map("com.demo" -> "sge"),
-      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        dropTypes = Set("com.demo.Widget"),
+        packageRenames = Map("com.demo" -> "sge"),
+        surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))
+      )
+    )
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
   }
 
   test("a base whose injection ROOT does not exist ships nothing — the run's own answer") {
-    val b = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"),
+    val b = PortManifest(
+      "base",
+      governs = Set("com.demo"),
+      dropTypes = Set("com.demo.Widget"),
       inject = List(java.nio.file.Path.of("/no/such/overrides")),
-      surface = List(redirect("com.other.A" -> "com.dep.A")))
+      surface = List(redirect("com.other.A" -> "com.dep.A"))
+    )
     assert(!b.shipsInjectionAt("com.demo.Widget"))
-    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
-      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"), surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.refusals, Nil)
   }
 
@@ -342,7 +375,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // declared a phase its base does not have was appended to the pipeline UNSCREENED — one
     // instance, so no divergence, and no merge, so no `added` to read. It could re-point any type
     // the base emits mechanically, which is the very thing `SurfaceIntrusion` says is fatal.
-    val b   = PortManifest("base", governs = Set("com.demo"))   // NO type-redirect of its own
+    val b   = PortManifest("base", governs = Set("com.demo")) // NO type-redirect of its own
     val dep = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.effectiveSurface.size, 1, "the phase still runs; the FINDING is what stops the run")
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
@@ -360,22 +393,16 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // CODE that the grep cannot see — and a fixture that names one is exactly what §1 forbids.
   test("…and the same screen admits it when the base DROPS the type") {
     val b   = PortManifest("base", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"))
-    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"),
-      surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    val dep = b.extendedBy(PortManifest("dep", dropTypes = Set("com.demo.Widget"), surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.refusals, Nil)
-    assertEquals(
-      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget")).map(_.kind),
-      Nil)
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, fired = Set("com.demo.Widget")).map(_.kind), Nil)
   }
 
   test("an unmerged intrusion is reported ONCE, and a refused merge is not reported twice") {
     // both channels can see one phase name: the divergence arm (two fingerprints) and the refusal
     // list. The intrusion finding is derived from the second only where the first did not fire.
-    val dep = base(List(redirect("com.other.A" -> "com.dep.A")))
-      .extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
-    assertEquals(
-      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind),
-      List(Kind.SurfaceIntrusion))
+    val dep = base(List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), List(Kind.SurfaceIntrusion))
   }
 
   // -------------------------------------------------------------------------------------------
@@ -387,13 +414,13 @@ class SurfaceFoldSpec extends munit.FunSuite:
   private def published(b: PortManifest, entries: PortMap.Entry*): ManifestAgreement.BasePort =
     ManifestAgreement.BasePort(b, Some(PortMap.Map0(b.name, "engine", entries.toList)), "run-latest")
 
-  private def emits(fqn: String)   = PortMap.Entry("type", fqn, fqn, PortMap.Disposition.Ported)
-  private def drops(fqn: String)   = PortMap.Entry("type", fqn, "", PortMap.Disposition.Dropped)
+  private def emits(fqn: String)                = PortMap.Entry("type", fqn, fqn, PortMap.Disposition.Ported)
+  private def drops(fqn: String)                = PortMap.Entry("type", fqn, "", PortMap.Disposition.Dropped)
   private def replaces(fqn: String, at: String) =
     PortMap.Entry("type", fqn, at, PortMap.Disposition.Substituted)
 
-  /** a dependent whose OWN declaration lives inside the base's claimed namespace — the whole of
-    * CT9 Face A. `com.demo.WidgetTest` is a test module's suite beside `com.demo.Widget`. */
+  /** a dependent whose OWN declaration lives inside the base's claimed namespace — the whole of CT9 Face A. `com.demo.WidgetTest` is a test module's suite beside `com.demo.Widget`.
+    */
   private def intruding(subject: String) =
     val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
     b -> b.extendedBy(PortManifest("dep", surface = List(redirect(subject -> "com.dep.X"))))
@@ -403,18 +430,19 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // modules and the base never parses the test tree at all. A drop is a statement about a type the
     // base HAS; this is a name it has never heard of, and the manifest cannot tell them apart.
     val (b, dep) = intruding("com.demo.WidgetTest")
-    assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.WidgetTest"),
-                 "the fold still names it — it is a CANDIDATE, screened by the layer holding the map")
-    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
-                                    ports = List(published(b, emits("com.demo.Widget"))))
+    assertEquals(
+      dep.surfaceFold.intrusions.map(_.subject),
+      List("com.demo.WidgetTest"),
+      "the fold still names it — it is a CANDIDATE, screened by the layer holding the map"
+    )
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = List(published(b, emits("com.demo.Widget"))))
     assertEquals(f.map(_.kind), Nil)
     assertEquals(dep.effectiveSurface.size, 1, "…and the merge stands, which is the point")
   }
 
   test("…and a key at an FQN the base's map EMITS is still REFUSED, with the map as the evidence") {
     val (b, dep) = intruding("com.demo.Widget")
-    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
-                                    ports = List(published(b, emits("com.demo.Widget"))))
+    val f        = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = List(published(b, emits("com.demo.Widget"))))
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(Kind.SurfaceIntrusion.fatal)
     assert(clue(f.head.detail).contains("published map emits it"))
@@ -423,17 +451,17 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("a map entry that is DROPPED admits — `nothing stands at that name`, read off the OUTPUT") {
     val (b, dep) = intruding("com.demo.Widget")
     assertEquals(
-      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
-                              ports = List(published(b, drops("com.demo.Widget")))).map(_.kind),
-      Nil)
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = List(published(b, drops("com.demo.Widget")))).map(_.kind),
+      Nil
+    )
   }
 
   test("…and a SUBSTITUTED one refuses: an injected replacement IS shared surface") {
     val (b, dep) = intruding("com.demo.Widget")
     assertEquals(
-      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
-                              ports = List(published(b, replaces("com.demo.Widget", "sge.Widget")))).map(_.kind),
-      List(Kind.SurfaceIntrusion))
+      ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = List(published(b, replaces("com.demo.Widget", "sge.Widget")))).map(_.kind),
+      List(Kind.SurfaceIntrusion)
+    )
   }
 
   test("NO USABLE MAP falls back to re-derivation — the answer that shipped, and it says so") {
@@ -441,8 +469,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // two take the same path. The fallback REFUSES, which is the safe direction for a screen, and it
     // is reported as weaker beside this finding rather than silently taken.
     val (b, dep) = intruding("com.demo.WidgetTest")
-    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
-                                    ports = List(ManifestAgreement.BasePort(b)))
+    val f        = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = List(ManifestAgreement.BasePort(b)))
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion, Kind.BaseMapMissing))
     assert(clue(f.head.detail).contains("no usable port map"))
     assert(!Kind.BaseMapMissing.fatal, "the operational half is loud, not fatal")
@@ -450,29 +477,24 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("…and a run that looked up no maps at all behaves identically — a base port asks nothing") {
     val (_, dep) = intruding("com.demo.WidgetTest")
-    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind),
-                 List(Kind.SurfaceIntrusion))
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), List(Kind.SurfaceIntrusion))
   }
 
   test("ONE finding per phase, whatever the number of subjects — one manifest mistake, one row") {
-    val b = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      redirect("com.demo.Widget" -> "com.dep.W", "com.demo.Gadget" -> "com.dep.G"))))
-    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true,
-                                    ports = List(published(b, emits("com.demo.Widget"), emits("com.demo.Gadget"))))
+    val b   = PortManifest("base", governs = Set("com.demo"), surface = List(redirect("com.other.A" -> "com.dep.A")))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.W", "com.demo.Gadget" -> "com.dep.G"))))
+    val f   = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true, ports = List(published(b, emits("com.demo.Widget"), emits("com.demo.Gadget"))))
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
     assert(clue(f.head.detail).contains("2 such subjects"))
   }
 
   test("`subjects` is every key's leading FQN — a rename OWNER counts as one") {
-    val p = new TypeRedirectTransform(
-      Map("com.other.A" -> "com.dep.A"), Map("com.other.B" -> Map("dispose" -> "close")))
+    val p = new TypeRedirectTransform(Map("com.other.A" -> "com.dep.A"), Map("com.other.B" -> Map("dispose" -> "close")))
     assertEquals(p.subjects, Set("com.other.A", "com.other.B"))
   }
 
   test("a base with NO governs claim screens nothing — no claim is not `everything`") {
-    val dep = PortManifest("base", surface = List(redirect("com.other.A" -> "com.dep.A")))
-      .extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
+    val dep = PortManifest("base", surface = List(redirect("com.other.A" -> "com.dep.A"))).extendedBy(PortManifest("dep", surface = List(redirect("com.demo.Widget" -> "com.dep.Widget"))))
     assertEquals(dep.surfaceFold.refusals, Nil)
     assertEquals(dep.effectiveSurface.size, 1)
   }
@@ -495,16 +517,12 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // `mirroring` inherits nothing, so there is no fold to read — the containment question is asked
     // through the phase's own `mergedWith` instead of a second notion of it (DESIGN.md §8.13).
     val b   = base(List(redirect("com.other.A" -> "com.dep.A")))
-    val ext = PortManifest("ext", governs = Set("com.dep"),
-      surface = List(redirect("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B"))).mirroring(b)
+    val ext = PortManifest("ext", governs = Set("com.dep"), surface = List(redirect("com.other.A" -> "com.dep.A", "com.other.B" -> "com.dep.B"))).mirroring(b)
     assertEquals(ManifestAgreement.check(Some(ext), Nil, foreignRoots = true).map(_.kind), Nil)
 
     // …and one that restates it WRONGLY is still caught, on the key it got wrong
-    val drift = PortManifest("ext",
-      surface = List(redirect("com.other.A" -> "com.dep.OTHER"))).mirroring(b)
-    assertEquals(
-      ManifestAgreement.check(Some(drift), Nil, foreignRoots = true).map(_.kind),
-      List(Kind.SurfaceMissing))
+    val drift = PortManifest("ext", surface = List(redirect("com.other.A" -> "com.dep.OTHER"))).mirroring(b)
+    assertEquals(ManifestAgreement.check(Some(drift), Nil, foreignRoots = true).map(_.kind), List(Kind.SurfaceMissing))
   }
 
   test("a subject is a key's leading FQN, cut at `#` — one body, the `dropMethods` convention") {
@@ -515,8 +533,8 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("one phase INSTANCE inherited through two paths is still folded once") {
     val shared = redirect("com.other.A" -> "com.dep.A")
-    val a = PortManifest("a", surface = List(shared))
-    val b = a.extendedBy(PortManifest("b", surface = List(shared)))
+    val a      = PortManifest("a", surface = List(shared))
+    val b      = a.extendedBy(PortManifest("b", surface = List(shared)))
     assertEquals(b.effectiveSurface.map(_ eq shared), List(true))
     assertEquals(b.surfaceFold.refusals, Nil)
   }
@@ -524,8 +542,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("the merged phase is a NEW value — neither input is mutated") {
     val mine  = redirect("com.other.A" -> "com.dep.A")
     val yours = redirect("com.other.B" -> "com.dep.B")
-    val dep = PortManifest("base", surface = List(mine))
-      .extendedBy(PortManifest("dep", surface = List(yours)))
+    val dep   = PortManifest("base", surface = List(mine)).extendedBy(PortManifest("dep", surface = List(yours)))
     assert(!(dep.effectiveSurface.head eq mine))
     assertEquals(mine.redirects, Map("com.other.A" -> "com.dep.A"))
     assertEquals(yours.redirects, Map("com.other.B" -> "com.dep.B"))
@@ -534,9 +551,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
   // NULLABILITY — the second phase to declare a merge, and the first whose policy is not a MAP
 
-  private def nullability(annotations: Set[String],
-                          target: NullabilityTransform.Target = NullabilityTransform.Target.Union,
-                          scope: RuleScope = RuleScope.Everywhere()): NullabilityTransform =
+  private def nullability(annotations: Set[String], target: NullabilityTransform.Target = NullabilityTransform.Target.Union, scope: RuleScope = RuleScope.Everywhere()): NullabilityTransform =
     new NullabilityTransform(annotations, target, scope)
 
   private def nulls(m: PortManifest): NullabilityTransform =
@@ -545,10 +560,8 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("the DEPENDENT-ADDS-AN-ANNOTATION shape: one instance, both annotation sets, base's position") {
     // the shape a second module actually needs — the base consumes its own marker, the dependent's
     // own sources are marked with a third party's, and neither belongs in the other's manifest
-    val b = base(List(redirect("com.other.A" -> "com.dep.A"),
-                      nullability(Set("com.demo.Null"))))
-    val dep = b.extendedBy(PortManifest("dep",
-      surface = List(nullability(Set("org.third.Nullable")))))
+    val b   = base(List(redirect("com.other.A" -> "com.dep.A"), nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("org.third.Nullable")))))
     assertEquals(dep.effectiveSurface.map(_.name), List("type-redirect", "nullability"))
     assertEquals(nulls(dep).annotations, Set("com.demo.Null", "org.third.Nullable"))
     assertEquals(dep.surfaceFold.refusals, Nil)
@@ -567,9 +580,10 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("`Everywhere` unions its EXCEPTS — every entry either module wrote is honoured") {
-    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("org.third.Nullable"), scope = RuleScope.Everywhere(Set("org.third.Bag"))))))
+    val b   = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
+    val dep = b.extendedBy(
+      PortManifest("dep", surface = List(nullability(Set("org.third.Nullable"), scope = RuleScope.Everywhere(Set("org.third.Bag")))))
+    )
     assertEquals(nulls(dep).scope, RuleScope.Everywhere(Set("com.demo.Box", "org.third.Bag")))
     assertEquals(dep.surfaceFold.refusals, Nil)
   }
@@ -579,9 +593,8 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // other, so honouring both inputs' entries makes the covered region shrink in the first case
     // and grow in the second. A merge written as "compose the region" is right for one and silently
     // wrong for the other.
-    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("com.demo.Box")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
+    val b   = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("com.demo.Box")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
     assertEquals(nulls(dep).scope, RuleScope.Only(Set("com.demo.Box", "org.third.Bag")))
     assert(!nulls(dep).scope.includes("com.other.Untouched"), "`Only` still names what it names")
     assertEquals(dep.surfaceFold.refusals, Nil)
@@ -590,18 +603,16 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("a DEFAULT-target dependent INHERITS the base's non-default target") {
     // A dependent at `Union` (the default) is not stating an opinion, so the base's `Named`
     // carries through unchanged — the merge takes the non-default side.
-    val b = base(List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("org.third.Nullable")))))                // Union default, no target opinion
+    val b   = base(List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("org.third.Nullable"))))) // Union default, no target opinion
     assertEquals(dep.effectiveSurface.map(_.name), List("nullability"))
     assertEquals(nulls(dep).target, NullabilityTransform.Target.Named("com.dep.Opt"))
     assertEquals(dep.surfaceFold.refusals, Nil)
   }
 
   test("REFUSED: two non-default TARGETS is a choice of emitted shape, not a composition") {
-    val b = base(List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.OptionTarget))))
+    val b   = base(List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.OptionTarget))))
     assertEquals(dep.effectiveSurface.size, 2, "a refused pair stays in the pipeline")
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
@@ -612,9 +623,8 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("REFUSED: an `Everywhere` base and an `Only` dependent point in OPPOSITE directions") {
-    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
+    val b   = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
@@ -625,18 +635,28 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // "the whole program" is what an unscoped instance says, and an `Only` merged into it would
     // silently move every declaration the `Only` side deliberately left out.
     val b   = base(List(nullability(Set("com.demo.Null"))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
   }
 
   test("REFUSED: a target clash AND a scope clash are reported TOGETHER, not one at a time") {
-    val b = base(List(nullability(Set("com.demo.Null"),
-      target = NullabilityTransform.Target.Named("com.dep.Opt"),
-      scope = RuleScope.Everywhere(Set("com.demo.Box")))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(
-      Set("com.demo.Null"), target = NullabilityTransform.Target.OptionTarget,
-      scope = RuleScope.Only(Set("org.third.Bag"))))))
+    val b = base(
+      List(
+        nullability(
+          Set("com.demo.Null"),
+          target = NullabilityTransform.Target.Named("com.dep.Opt"),
+          scope = RuleScope.Everywhere(Set("com.demo.Box"))
+        )
+      )
+    )
+    val dep = b.extendedBy(
+      PortManifest(
+        "dep",
+        surface = List(
+          nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.OptionTarget, scope = RuleScope.Only(Set("org.third.Bag")))
+        )
+      )
+    )
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
     assert(clue(f.head.detail).contains("TARGET"))
@@ -658,9 +678,10 @@ class SurfaceFoldSpec extends munit.FunSuite:
     // the failure this screen exists for, in nullability's own terms: the base emitted the type's
     // annotated members as `T | Null` and the dependent would hold its own overrides of them back —
     // half an override pair, two modules that each compile alone and cannot compile together.
-    val b = base(List(nullability(Set("com.demo.Null"))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Widget"))))))
+    val b   = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(
+      PortManifest("dep", surface = List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Widget")))))
+    )
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.Widget"))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
@@ -670,11 +691,9 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   test("…and an annotation FQN inside a base's claim is screened by the same rule") {
     val b   = base(List(nullability(Set("com.demo.Null"))))
-    val dep = b.extendedBy(PortManifest("dep",
-      surface = List(nullability(Set("com.demo.Null", "com.demo.MaybeNull")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("com.demo.Null", "com.demo.MaybeNull")))))
     assertEquals(dep.surfaceFold.intrusions.map(_.subject), List("com.demo.MaybeNull"))
-    assert(clue(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).head.detail)
-      .contains("com.demo.MaybeNull"))
+    assert(clue(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).head.detail).contains("com.demo.MaybeNull"))
   }
 
   test("`ownKeys` carries the dependent's own annotation, so a typo in it is reported HERE") {

@@ -32,8 +32,7 @@ class KeyValuesSpec extends munit.FunSuite:
     // A payload written by a NEWER engine must degrade to "I do not understand this key", never to
     // a parse failure that discards the keys this engine does understand — `DESIGN.md` §8.3's
     // per-question degradation, at the grammar rather than at the artifact.
-    assertEquals(KeyValues.parse("form=class fromTheFuture=7"),
-                 Map("form" -> "class", "fromTheFuture" -> "7"))
+    assertEquals(KeyValues.parse("form=class fromTheFuture=7"), Map("form" -> "class", "fromTheFuture" -> "7"))
     // a quote that never closes takes the rest of the payload and stops; the pairs before it stand.
     assertEquals(KeyValues.parse("""a=1 b="unclosed"""), Map("a" -> "1", "b" -> "unclosed"))
     // a trailing token with no `=` is not a pair, and is dropped rather than thrown on.

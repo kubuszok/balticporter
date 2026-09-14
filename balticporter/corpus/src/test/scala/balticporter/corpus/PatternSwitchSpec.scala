@@ -17,7 +17,8 @@ class PatternSwitchSpec extends PortSuite:
       |    };
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("a TYPE PATTERN label is a scala typed pattern, binding included") {
     assert(clue(patterns.out).contains("case s: java.lang.String =>"), patterns.out)
@@ -47,7 +48,8 @@ class PatternSwitchSpec extends PortSuite:
       |class Q {
       |  int f(Object o) { return switch (o) { case String s -> 1; case null, default -> 0; }; }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("`case null, default ->` is ONE arm that is both — read from getIncludesDefault") {
     // Decided from an empty label list it would render `case null` and leave the switch with no
@@ -69,7 +71,8 @@ class PatternSwitchSpec extends PortSuite:
         |    return switch (o) { case String v -> v; case Integer v -> v.toString(); default -> ""; };
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case v: java.lang.String =>"), p.out)
     assert(clue(p.out).contains("case v: java.lang.Integer =>"), p.out)
     assert(clue(p.out).contains("v.toString()"), p.out)
@@ -82,20 +85,24 @@ class PatternSwitchSpec extends PortSuite:
   /** the record itself, so a test can assert on the extractor the arms below NAME. */
   private val theRecord = port("package p;\npublic record Pt(int x, int y) { }\n")
 
-  /** three records plus a switch over them — several units, because a record pattern names a type
-    * the switch's own compilation unit does not declare, which is the shape a corpus has. */
-  private def switchOn(body: String) = portAll(List(
-    "Pt.java"  -> "package p;\npublic record Pt(int x, int y) { }\n",
-    "One.java" -> "package p;\npublic record One(String only) { }\n",
-    "Box.java" -> "package p;\npublic record Box(Object a, Pt b) { }\n",
-    "S.java"   -> s"package p;\nclass S {\n$body}\n"))
+  /** three records plus a switch over them — several units, because a record pattern names a type the switch's own compilation unit does not declare, which is the shape a corpus has.
+    */
+  private def switchOn(body: String) = portAll(
+    List(
+      "Pt.java" -> "package p;\npublic record Pt(int x, int y) { }\n",
+      "One.java" -> "package p;\npublic record One(String only) { }\n",
+      "Box.java" -> "package p;\npublic record Box(Object a, Pt b) { }\n",
+      "S.java" -> s"package p;\nclass S {\n$body}\n"
+    )
+  )
 
   test("a RECORD PATTERN is a scala CONSTRUCTOR pattern over the derived extractor") {
     val p = switchOn(
       """  int f(Object o) {
         |    return switch (o) { case Pt(int x, int y) -> x + y; default -> 0; };
         |  }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case p.Pt(x, y) =>"), p.out)
     assert(clue(p.out).contains("x + y"), p.out)
   }
@@ -108,7 +115,8 @@ class PatternSwitchSpec extends PortSuite:
       """  String f(Object o) {
         |    return switch (o) { case One(String s) -> s; default -> ""; };
         |  }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case p.One(s) =>"), p.out)
     assert(!clue(p.out).contains("case p.One(s: java.lang.String)"), p.out)
   }
@@ -120,7 +128,8 @@ class PatternSwitchSpec extends PortSuite:
       """  String f(Object o) {
         |    return switch (o) { case Box(String s, Pt q) -> s; default -> ""; };
         |  }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("s: java.lang.String"), p.out)
   }
 
@@ -129,7 +138,8 @@ class PatternSwitchSpec extends PortSuite:
       """  int f(Object o) {
         |    return switch (o) { case Box(Object a, Pt(int x, int y)) -> x + y; default -> 0; };
         |  }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case p.Box(a, p.Pt(x, y)) =>"), p.out)
   }
 
@@ -138,7 +148,8 @@ class PatternSwitchSpec extends PortSuite:
       """  int f(Object o) {
         |    return switch (o) { case Pt(var x, var y) -> x + y; default -> 0; };
         |  }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case p.Pt(x, y) =>"), p.out)
   }
 
@@ -147,7 +158,8 @@ class PatternSwitchSpec extends PortSuite:
       """  int f(Object o) {
         |    return switch (o) { case Pt(int x, int y) -> x; default -> 0; };
         |  }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(p.out).contains("compiletime.error"), p.out)
     assertConsults(p, balticporter.catalog.JS.S(10), fired = true)
     // …and the record itself carries the extractor this arm NAMES, which is what makes the pair a
@@ -159,21 +171,26 @@ class PatternSwitchSpec extends PortSuite:
   // A QUALIFIED ENUM CONSTANT label (JEP 441) — the OTHER way a switch STATEMENT becomes enhanced,
   // and the one no case label betrays. Both cells below are javac-verified (22.0.2):
 
-  /** the sealed interface, the enum that implements it, and a switch over the INTERFACE. Several
-    * units, because the shape needs a type the switch's own compilation unit does not declare. */
-  private def qualifiedEnumSwitch(selector: String, body: String) = portAll(List(
-    "Currency.java" -> "package p;\npublic sealed interface Currency permits Coin { }\n",
-    "Coin.java"     -> "package p;\npublic enum Coin implements Currency { HEADS, TAILS }\n",
-    "Q2.java"       -> s"package p;\nclass Q2 {\n  int f($selector c) {\n$body  }\n}\n"))
+  /** the sealed interface, the enum that implements it, and a switch over the INTERFACE. Several units, because the shape needs a type the switch's own compilation unit does not declare.
+    */
+  private def qualifiedEnumSwitch(selector: String, body: String) = portAll(
+    List(
+      "Currency.java" -> "package p;\npublic sealed interface Currency permits Coin { }\n",
+      "Coin.java" -> "package p;\npublic enum Coin implements Currency { HEADS, TAILS }\n",
+      "Q2.java" -> s"package p;\nclass Q2 {\n  int f($selector c) {\n$body  }\n}\n"
+    )
+  )
 
   test("a QUALIFIED ENUM label at a SUPERTYPE selector is an ENHANCED switch — no fall-out arm") {
-    val p = qualifiedEnumSwitch("Currency",
+    val p = qualifiedEnumSwitch(
+      "Currency",
       """    switch (c) {
         |      case Coin.HEADS: return 1;
         |      case Coin.TAILS: return 2;
         |    }
         |    return 0;
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case p.Coin.HEADS =>"), p.out)
     // javac throws MatchException here; scala's `match` throws MatchError. Both throw — and a
     // synthesised `case _ => ()` throws NOTHING, which is the silent half of §4.4.
@@ -186,12 +203,14 @@ class PatternSwitchSpec extends PortSuite:
   test("…and a qualified label at the ENUM'S OWN selector is CLASSIC, so the fall-out arm stays") {
     // Measured against javac: this one compiles, runs and falls out. Deciding "enhanced" from the
     // LABEL rather than from the selector's type would delete the arm java is exercising here.
-    val p = qualifiedEnumSwitch("Coin",
+    val p = qualifiedEnumSwitch(
+      "Coin",
       """    switch (c) {
         |      case Coin.HEADS: return 1;
         |    }
         |    return 7;
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case _ => ()"), p.out)
   }
 
@@ -207,6 +226,7 @@ class PatternSwitchSpec extends PortSuite:
         |    return 0;
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(p.out).contains("case _ => ()"), p.out)
   }

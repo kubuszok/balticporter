@@ -2,64 +2,63 @@ package balticporter.tir
 
 import TypeRepr.*
 
-/** Proves the goal: the TIR traces a type's usages in EVERY position (external type,
-  * type argument, member type, mixin, bound) and the xref RESPONDS after a phase
-  * rewrites the tree — the old symbol drops to zero usages, the new one inherits them
-  * all, and symbol signatures move too. */
+/** Proves the goal: the TIR traces a type's usages in EVERY position (external type, type argument, member type, mixin, bound) and the xref RESPONDS after a phase rewrites the tree — the old symbol
+  * drops to zero usages, the new one inherits them all, and symbol signatures move too.
+  */
 class XrefSpec extends munit.FunSuite:
 
   // ---- ids ----
-  private val FOO     = SymId(1)  // the one class we define
-  private val BASE    = SymId(2)  // external — primary supertype
-  private val WIDGET  = SymId(3)  // external — the type we trace, then rewrite
-  private val GADGET  = SymId(4)  // external — rewrite target
-  private val LIST    = SymId(5)  // external generic constructor
-  private val UNIT    = SymId(6)  // external
-  private val PRINTLN = SymId(7)  // external method
+  private val FOO     = SymId(1) // the one class we define
+  private val BASE    = SymId(2) // external — primary supertype
+  private val WIDGET  = SymId(3) // external — the type we trace, then rewrite
+  private val GADGET  = SymId(4) // external — rewrite target
+  private val LIST    = SymId(5) // external generic constructor
+  private val UNIT    = SymId(6) // external
+  private val PRINTLN = SymId(7) // external method
   private val W       = SymId(10) // val w: WIDGET
   private val WS      = SymId(11) // val ws: LIST[WIDGET]
   private val BND     = SymId(12) // val bounded: LIST[? <: WIDGET]
   private val RENDER  = SymId(13) // def render(): UNIT
 
-  private def named(id: SymId) = TypeRef(NoPrefix, id)
-  private val tWidget   = named(WIDGET)
-  private val tBase     = named(BASE)
-  private val tUnit     = named(UNIT)
-  private def tList(a: TypeRepr) = AppliedType(named(LIST), List(a))
-  private val tListWidget    = tList(tWidget)
-  private val tBoundedWidget = tList(TypeBounds(NoType, tWidget)) // LIST[? <: WIDGET]
+  private def named(id: SymId)    = TypeRef(NoPrefix, id)
+  private val tWidget             = named(WIDGET)
+  private val tBase               = named(BASE)
+  private val tUnit               = named(UNIT)
+  private def tList(a:  TypeRepr) = AppliedType(named(LIST), List(a))
+  private val tListWidget         = tList(tWidget)
+  private val tBoundedWidget      = tList(TypeBounds(NoType, tWidget)) // LIST[? <: WIDGET]
 
-  private val O  = Origin.synthetic
+  private val O               = Origin.synthetic
   private def tt(t: TypeRepr) = TypeTree(t, O)
-  /** an EXTERNAL symbol — `owner = SymId.None`, which is what makes it external (§4.56: ownership
-    * is decided by climbing the owner chain to a unit, never from the name). */
+
+  /** an EXTERNAL symbol — `owner = SymId.None`, which is what makes it external (§4.56: ownership is decided by climbing the owner chain to a unit, never from the name).
+    */
   private def sym(id: SymId, name: String, info: TypeRepr) =
     Symbol(id, name, name, Flags(), SymId.None, info)
 
-  /** …and a MEMBER of `Foo`, which must carry `Foo` as its owner or the whole engine reads it as an
-    * external: `StandardTraversal.mapSymbols` does not retype what the program does not own,
-    * because an external signature is a fact about a class file that no phase can move. A fixture
-    * that leaves the owner off is not a smaller program, it is a different one. */
+  /** …and a MEMBER of `Foo`, which must carry `Foo` as its owner or the whole engine reads it as an external: `StandardTraversal.mapSymbols` does not retype what the program does not own, because an
+    * external signature is a fact about a class file that no phase can move. A fixture that leaves the owner off is not a smaller program, it is a different one.
+    */
   private def member(id: SymId, name: String, info: TypeRepr) =
     Symbol(id, name, s"Foo#$name", Flags(), FOO, info)
 
   // ---- the program: class Foo extends Base with Widget { fields...; def render }
-  private val wDef   = Tree.ValDef(W, tt(tWidget), scala.None, O)
-  private val wsDef  = Tree.ValDef(WS, tt(tListWidget), scala.None, O)
-  private val bndDef = Tree.ValDef(BND, tt(tBoundedWidget), scala.None, O)
+  private val wDef      = Tree.ValDef(W, tt(tWidget), scala.None, O)
+  private val wsDef     = Tree.ValDef(WS, tt(tListWidget), scala.None, O)
+  private val bndDef    = Tree.ValDef(BND, tt(tBoundedWidget), scala.None, O)
   private val renderDef = Tree.DefDef(
     RENDER,
     paramss = List(Nil),
     returnTpt = tt(tUnit),
     rhs = Some(Tree.Apply(Tree.Ident(PRINTLN, tUnit, O), Nil, PRINTLN, tUnit, O)),
-    origin = O,
+    origin = O
   )
   private val foo = Tree.ClassDef(
     symbol = FOO,
     parents = List(tt(tBase), tt(tWidget)), // Base = Extends, Widget = Mixin
     selfType = scala.None,
     body = List(wDef, wsDef, bndDef, renderDef),
-    origin = O,
+    origin = O
   )
 
   private val symbols = SymbolTable(
@@ -74,7 +73,7 @@ class XrefSpec extends munit.FunSuite:
       member(W, "w", tWidget),
       member(WS, "ws", tListWidget),
       member(BND, "bounded", tBoundedWidget),
-      member(RENDER, "render", MethodType(Nil, tUnit)),
+      member(RENDER, "render", MethodType(Nil, tUnit))
     )
   )
 

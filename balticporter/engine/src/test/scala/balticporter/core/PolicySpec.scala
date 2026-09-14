@@ -2,13 +2,12 @@ package balticporter.core
 
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
-import balticporter.transform.{ClassTableTransform, StaticForwarderTransform}
+import balticporter.transform.{ ClassTableTransform, StaticForwarderTransform }
 
-/** A §1(b) rule's POLICY is a bag of strings the compiler cannot check, so a typo in it is a
-  * silent no-op: the phase runs, matches nothing, and the port keeps the very construct the policy
-  * was written to remove. These pin the complaint — and, just as importantly, pin that a CORRECT
-  * key produces no complaint, because a check that cries wolf is turned off and then it is not a
-  * check at all. */
+/** A §1(b) rule's POLICY is a bag of strings the compiler cannot check, so a typo in it is a silent no-op: the phase runs, matches nothing, and the port keeps the very construct the policy was
+  * written to remove. These pin the complaint — and, just as importantly, pin that a CORRECT key produces no complaint, because a check that cries wolf is turned off and then it is not a check at
+  * all.
+  */
 class PolicySpec extends munit.FunSuite:
 
   // ---- a tiny program: `com.x.Wrapper` with three statics, and one class that could call them.
@@ -21,9 +20,9 @@ class PolicySpec extends munit.FunSuite:
   private val STRING  = SymId(7)
   private val CLASS   = SymId(8)
 
-  private val O = Origin.synthetic
-  private def ref(id: SymId) = TypeRef(NoPrefix, id)
-  private def m(ps: TypeRepr*) = MethodType(ps.toList.zipWithIndex.map((t, i) => (s"p$i", t)), ref(STRING))
+  private val O                  = Origin.synthetic
+  private def ref(id: SymId)     = TypeRef(NoPrefix, id)
+  private def m(ps:   TypeRepr*) = MethodType(ps.toList.zipWithIndex.map((t, i) => (s"p$i", t)), ref(STRING))
 
   private val caller = Tree.ClassDef(CALLER, parents = Nil, selfType = None, body = Nil, origin = O)
   // The wrapper is a UNIT this program declares, so its members are OWNED (`Program.owned` climbs
@@ -37,26 +36,25 @@ class PolicySpec extends munit.FunSuite:
       Symbol(WRAPPER, "Wrapper", "com.x.Wrapper", Flags(), SymId.None, ref(WRAPPER)),
       Symbol(FORNAME, "forName", "com.x.Wrapper#forName", Flags(isStatic = true), WRAPPER, m(ref(STRING))),
       Symbol(SIMPLE1, "getSimpleName", "com.x.Wrapper#getSimpleName", Flags(isStatic = true), WRAPPER, m(ref(CLASS))),
-      Symbol(SIMPLE2, "getSimpleName", "com.x.Wrapper#getSimpleName(2)", Flags(isStatic = true), WRAPPER,
-             m(ref(CLASS), ref(STRING))),
+      Symbol(SIMPLE2, "getSimpleName", "com.x.Wrapper#getSimpleName(2)", Flags(isStatic = true), WRAPPER, m(ref(CLASS), ref(STRING))),
       Symbol(NOW, "now", "com.x.Wrapper#now", Flags(isStatic = true), WRAPPER, m()),
       Symbol(STRING, "String", "java.lang.String", Flags(), SymId.None, NoType),
-      Symbol(CLASS, "Class", "java.lang.Class", Flags(), SymId.None, NoType),
+      Symbol(CLASS, "Class", "java.lang.Class", Flags(), SymId.None, NoType)
     )
   )
 
   private val units = List(caller, wrapper)
   private def program(): Program = new Program(units, symbols, Xref.build(units), MemberIndex.empty)
 
-  /** BIND, then run — the order a `PortRun` uses, and the order a phase's report now depends on:
-    * the never-fired answer is a property of the policy and the program, so it is complete before
-    * the pipeline starts and says the same thing whether or not the phase ran. */
+  /** BIND, then run — the order a `PortRun` uses, and the order a phase's report now depends on: the never-fired answer is a property of the policy and the program, so it is complete before the
+    * pipeline starts and says the same thing whether or not the phase ran.
+    */
   private def bindAndRun[P <: Phase & PolicyBound](ph: P): Program =
     val p = program()
     ph.bindPolicy(new PolicyBinder(p, p.members))
     ph.run(p)
 
-  private def keys(r: PolicyReport)   = r.findings.map(_.key)
+  private def keys(r:   PolicyReport) = r.findings.map(_.key)
   private def issues(r: PolicyReport) = r.findings.map(_.issue)
 
   // -------------------------------------------------------------------------
@@ -76,13 +74,12 @@ class PolicySpec extends munit.FunSuite:
     assert(subs.dropsMethod("demo.C", "write", List("String")))
     assert(subs.dropsMethod("demo.C", "write", List("Int", "Class"))) // bare: any parameter list
     assert(subs.dropsMethod("demo.C", "<init>", List("Int")))
-    assert(!subs.dropsMethod("demo.C", "<init>", List("Long")))       // precise: that one only
+    assert(!subs.dropsMethod("demo.C", "<init>", List("Long"))) // precise: that one only
     assert(!subs.dropsMethod("demo.C", "read", Nil))
   }
 
   test("`keys` is every declared key in the one grammar a report quotes them in") {
-    assertEquals(Substitutions(dropTypes = Set("demo.A"), dropMethods = Set("demo.C#m")).keys,
-      Set("demo.A", "demo.C#m"))
+    assertEquals(Substitutions(dropTypes = Set("demo.A"), dropMethods = Set("demo.C#m")).keys, Set("demo.A", "demo.C#m"))
     assertEquals(Substitutions.none.keys, Set.empty[String])
   }
 
@@ -121,16 +118,14 @@ class PolicySpec extends munit.FunSuite:
   import StaticForwarderTransform.Forwarder
 
   test("a forwarder member that matched nothing is reported; one that fired is not") {
-    val ph = new StaticForwarderTransform(List(
-      Forwarder("com.x.Wrapper", "java.lang.Class", Set("forName", "getNaem"))))
+    val ph = new StaticForwarderTransform(List(Forwarder("com.x.Wrapper", "java.lang.Class", Set("forName", "getNaem"))))
     bindAndRun(ph)
     assertEquals(keys(ph.policyReport), List("com.x.Wrapper#getNaem"))
     assertEquals(issues(ph.policyReport), List(PolicyIssue.NeverMatched))
   }
 
   test("a forwarder WRAPPER that matched nothing is reported once, not once per member") {
-    val ph = new StaticForwarderTransform(List(
-      Forwarder("com.x.Wrpper", "java.lang.Class", Set("forName", "getSimpleName"))))
+    val ph = new StaticForwarderTransform(List(Forwarder("com.x.Wrpper", "java.lang.Class", Set("forName", "getSimpleName"))))
     bindAndRun(ph)
     assertEquals(keys(ph.policyReport), List("com.x.Wrpper"))
     assertEquals(ph.policyReport.findings.map(_.setting), List("Forwarder.wrapper"))
@@ -139,8 +134,7 @@ class PolicySpec extends munit.FunSuite:
   test("a member matched by NAME with overloads is diagnosed, and still rewritten") {
     // the latent edge: receiver-first is an assumption a name cannot carry. The engine says so
     // rather than guessing, because refusing correct rewrites would be the worse failure.
-    val ph = new StaticForwarderTransform(List(
-      Forwarder("com.x.Wrapper", "java.lang.Class", Set("getSimpleName"))))
+    val ph = new StaticForwarderTransform(List(Forwarder("com.x.Wrapper", "java.lang.Class", Set("getSimpleName"))))
     bindAndRun(ph)
     assertEquals(issues(ph.policyReport), List(PolicyIssue.Unverifiable))
     assert(clue(ph.policyReport.findings.head.detail).contains("2 overloads"))
@@ -150,8 +144,7 @@ class PolicySpec extends munit.FunSuite:
   test("a member with a KNOWN no-argument signature is EXCLUDED, not merely diagnosed") {
     // proved, not suspected: with no first argument there is no receiver, so the rewrite is
     // impossible rather than doubtful. Nothing is minted for it.
-    val ph  = new StaticForwarderTransform(List(
-      Forwarder("com.x.Wrapper", "java.lang.Class", Set("now"))))
+    val ph  = new StaticForwarderTransform(List(Forwarder("com.x.Wrapper", "java.lang.Class", Set("now"))))
     val out = bindAndRun(ph)
     assertEquals(issues(ph.policyReport), List(PolicyIssue.Malformed))
     assertEquals(out.symbols.all.size, program().symbols.all.size)
@@ -165,8 +158,8 @@ class PolicySpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
   test("reports are COLLECTED from the seams an orchestrator already holds, and classify the fix") {
-    val fwd  = new StaticForwarderTransform(List(Forwarder("com.x.Wrapper", "java.lang.Class", Set("getNaem"))))
-    val tbl  = new ClassTableTransform(Map("com.x.Wrapper#fromName" -> "com.x.Table#classFor"))
+    val fwd = new StaticForwarderTransform(List(Forwarder("com.x.Wrapper", "java.lang.Class", Set("getNaem"))))
+    val tbl = new ClassTableTransform(Map("com.x.Wrapper#fromName" -> "com.x.Table#classFor"))
     bindAndRun(fwd); bindAndRun(tbl)
 
     val all = PolicyReport.collect(fwd, tbl)

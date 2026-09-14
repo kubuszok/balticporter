@@ -1,8 +1,7 @@
 package balticporter.runtime
 
-/** The support types' BEHAVIOUR, which nothing checked while they were a string literal in a
-  * transform — they were only ever compiled as part of a port, and only the port's own tests could
-  * have caught a defect in them. CLAUDE.md §3: a green compile says nothing.
+/** The support types' BEHAVIOUR, which nothing checked while they were a string literal in a transform — they were only ever compiled as part of a port, and only the port's own tests could have
+  * caught a defect in them. CLAUDE.md §3: a green compile says nothing.
   */
 class JavaIteratorSpec extends munit.FunSuite:
 
@@ -14,11 +13,11 @@ class JavaIteratorSpec extends munit.FunSuite:
 
   test("an implementation that overrides remove() keeps its behaviour") {
     var removed = 0
-    val it = new JavaIterator[Int]:
-      private val u          = Iterator(1, 2)
-      def hasNext(): Boolean = u.hasNext
-      def next(): Int        = u.next()
-      override def remove(): Unit = removed += 1
+    val it      = new JavaIterator[Int]:
+      private val u = Iterator(1, 2)
+      def hasNext():         Boolean = u.hasNext
+      def next():            Int     = u.next()
+      override def remove(): Unit    = removed += 1
     it.next()
     it.remove()
     assertEquals(removed, 1)
@@ -34,12 +33,16 @@ class JavaIteratorSpec extends munit.FunSuite:
     // removed — the branch is harmless, and the fact is the reason it looks like it should work.
     // It is CLAUDE.md §4.5 again: `hasNext` and `hasNext()` are the SAME member to Scala, and
     // "neither has parameters" is the error you get.
-    assert(!compiletime.testing.typeChecks("""
+    assert(
+      !compiletime.testing.typeChecks(
+        """
       new scala.collection.Iterator[Int] with balticporter.runtime.JavaIterator[Int]:
         def hasNext: Boolean   = false
         def hasNext(): Boolean = false
         def next(): Int        = 0
-    """))
+    """
+      )
+    )
     assertEquals(JavaIterator.from(Iterator(7)).asScala.toList, List(7))
   }
 
@@ -133,10 +136,10 @@ class JavaIteratorSpec extends munit.FunSuite:
 
   test("removing(lambdas): generic form with custom remove callback") {
     // Simulates a map-like structure: keys and values in parallel arrays, remove by key.
-    val keys   = scala.collection.mutable.ArrayBuffer("a", "b", "c")
-    val values = scala.collection.mutable.ArrayBuffer(1, 2, 3)
+    val keys        = scala.collection.mutable.ArrayBuffer("a", "b", "c")
+    val values      = scala.collection.mutable.ArrayBuffer(1, 2, 3)
     var removedKeys = List.empty[String]
-    val it = JavaIterator.removing[Int](
+    val it          = JavaIterator.removing[Int](
       () => values.size,
       i => values(i),
       i => { removedKeys = keys(i) :: removedKeys; keys.remove(i); values.remove(i); () }
@@ -164,8 +167,12 @@ class JavaIteratorSpec extends munit.FunSuite:
     for x <- xs do sum += x
     assertEquals(sum, 6)
     assertEquals(xs.asScala.toList, List(1, 2, 3))
-    assert(!compiletime.testing.typeChecks("""
+    assert(
+      !compiletime.testing.typeChecks(
+        """
       val it: balticporter.runtime.JavaIterator[Int] = balticporter.runtime.JavaIterator.from(Iterator(1))
       it.foreach(_ => ())
-    """))
+    """
+      )
+    )
   }

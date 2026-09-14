@@ -2,10 +2,10 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
-/** A synthesised primary has to COEXIST with the class's real constructors and to be REACHABLE
-  * past them, and those are two different questions with two different tests. */
+/** A synthesised primary has to COEXIST with the class's real constructors and to be REACHABLE past them, and those are two different questions with two different tests.
+  */
 class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
 
   private val src =
@@ -47,13 +47,19 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
   }
 
   test("MARKER by ERASURE — same signature, nothing to collapse onto, so the arity changes") {
-    assert(clue(out).contains(
-      "class Marked protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Marked.Funnel) extends demo.Base(sup$0, sup$1)"))
+    assert(
+      clue(out).contains(
+        "class Marked protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Marked.Funnel) extends demo.Base(sup$0, sup$1)"
+      )
+    )
   }
 
   test("MARKER by APPLICABILITY — the C8 negative: the narrower real constructor must NOT win") {
-    assert(clue(out).contains(
-      "class DCache protected (sup$0: demo.BFont, sup$1: scala.Boolean, ctor$: DCache.Funnel) extends demo.BCache(sup$0, sup$1)"))
+    assert(
+      clue(out).contains(
+        "class DCache protected (sup$0: demo.BFont, sup$1: scala.Boolean, ctor$: DCache.Funnel) extends demo.BCache(sup$0, sup$1)"
+      )
+    )
     // the delegation writes THREE arguments, so `DCache(DFont, boolean)` — which is applicable to
     // two and more specific than the primary — is not in the candidate set. With two it delegated
     // to itself, which is an infinite recursion the compiler only caught because the other root
@@ -84,8 +90,8 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
     assertEquals(clue(out).sliding("class Funnel".length).count(_ == "class Funnel"), 2)
   }
 
-  /** COLLAPSE IS DECLINED WHERE ITS PROMOTION WOULD ESCAPE, and that is a correction to the
-    * ordering rather than an exception to it. */
+  /** COLLAPSE IS DECLINED WHERE ITS PROMOTION WOULD ESCAPE, and that is a correction to the ordering rather than an exception to it.
+    */
   test("COLLAPSE DECLINED — a pass-through root whose body would ESCAPE gets the marker instead") {
     val escaping =
       """package demo3;
@@ -102,8 +108,11 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
     // `Escaping(int, boolean)` HAS the slot signature and passes straight through, so the pre-
     // correction ordering promoted it — and `Escaping(int)` does not delegate to it, so `bump()`
     // ran on `new Escaping(5)` where java ran nothing.
-    assert(clue(o3).contains(
-      "class Escaping protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Escaping.Funnel) extends demo3.EBase(sup$0, sup$1)"))
+    assert(
+      clue(o3).contains(
+        "class Escaping protected (sup$0: scala.Int, sup$1: scala.Boolean, ctor$: Escaping.Funnel) extends demo3.EBase(sup$0, sup$1)"
+      )
+    )
     assert(o3.contains("protected final class Funnel"))
     // no java body became the class body, so there is nothing left to escape — and the check that
     // counts it agrees, because it is the same function the nomination asked.

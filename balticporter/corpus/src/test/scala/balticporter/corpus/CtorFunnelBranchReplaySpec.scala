@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
 /** A parent constructor whose whole body is ONE BRANCH is still a replayable `super(args)`. */
 class CtorFunnelBranchReplaySpec extends munit.FunSuite:
@@ -56,6 +56,5 @@ class CtorFunnelBranchReplaySpec extends munit.FunSuite:
 
   test("a branch that writes on ONE arm only is still refused, and still counted") {
     assert(refused.findFirstIn(clue(out)).isDefined)
-    assertEquals(dropped.map(f => (f.owner, f.detail)),
-                 List(("demo.HalfUser", "1 argument(s) discarded")))
+    assertEquals(dropped.map(f => (f.owner, f.detail)), List(("demo.HalfUser", "1 argument(s) discarded")))
   }

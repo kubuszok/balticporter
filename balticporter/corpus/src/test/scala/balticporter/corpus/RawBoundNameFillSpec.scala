@@ -2,14 +2,13 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A RAW BOUND'S NAME-FILL IS LICENSED PER SLOT — `ENGINE-LIMITS.md` G30, `CLAUDE.md` §4.56 read at
-  * a bound. */
+/** A RAW BOUND'S NAME-FILL IS LICENSED PER SLOT — `ENGINE-LIMITS.md` G30, `CLAUDE.md` §4.56 read at a bound.
+  */
 class RawBoundNameFillSpec extends PortSuite:
 
-  /** G30's site, reduced: `ReferencingNode<R extends NodeRepository<B>, B extends ReferenceNode>`
-    * over `ReferenceNode<R extends NodeRepository<B>, B extends Node, N extends Node>`. The names
-    * `R` and `B` line up and mean different things: `ReferenceNode`'s slot 1 asks for a `Node` and
-    * this `B` is declared a `ReferenceNode`. */
+  /** G30's site, reduced: `ReferencingNode<R extends NodeRepository<B>, B extends ReferenceNode>` over `ReferenceNode<R extends NodeRepository<B>, B extends Node, N extends Node>`. The names `R` and
+    * `B` line up and mean different things: `ReferenceNode`'s slot 1 asks for a `Node` and this `B` is declared a `ReferenceNode`.
+    */
   private val coincidence =
     """package demo;
       |class Node { }

@@ -3,27 +3,25 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, DecisionLog, Pipeline, Program}
+import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program }
 import balticporter.transform.CollectionsTransform
 
-/** The THIRD reified position — a generic type ARGUMENT a third party reads out of the class file's
-  * generic signature and CONSTRUCTS from (`ENGINE-LIMITS.md` K20). */
+/** The THIRD reified position — a generic type ARGUMENT a third party reads out of the class file's generic signature and CONSTRUCTS from (`ENGINE-LIMITS.md` K20).
+  */
 class CollectionsCarrierSpec extends PortSuite:
 
   private val Carrier = "com.fasterxml.jackson.core.type.TypeReference"
 
-  /** …as the emitter SPELLS it. `type` is a scala keyword, so the package segment is backticked —
-    * a reminder that an assertion over emitted text is an assertion about the emitter's rendering
-    * and not about the FQN a manifest writes. */
+  /** …as the emitter SPELLS it. `type` is a scala keyword, so the package segment is backticked — a reminder that an assertion over emitted text is an assertion about the emitter's rendering and not
+    * about the FQN a manifest writes.
+    */
   private val Emitted = "com.fasterxml.jackson.core.`type`.TypeReference"
 
-  /** …with the run's DECISION LOG, because `Pipeline` drains a phase's buffer into it (a phase
-    * instance re-run with a second phase list must not report the first run's rows) — and the
-    * emitter renders porter notes from that same log, which is the pairing `NoteCoverageCheck`
-    * holds a real run to. */
-  private def ported(source: String, carriers: Set[String] = Set(Carrier))
-      : (DecisionLog, Program, String) =
-    val ph            = new CollectionsTransform(reifiedCarriers = carriers)
+  /** …with the run's DECISION LOG, because `Pipeline` drains a phase's buffer into it (a phase instance re-run with a second phase list must not report the first run's rows) — and the emitter renders
+    * porter notes from that same log, which is the pairing `NoteCoverageCheck` holds a real run to.
+    */
+  private def ported(source: String, carriers: Set[String] = Set(Carrier)): (DecisionLog, Program, String) =
+    val ph             = new CollectionsTransform(reifiedCarriers = carriers)
     val (after, notes) = Pipeline.runTraced(SpoonTir.fromSource(source), List(ph))
     (notes, after, new TirEmitter(after, notes = notes).emit)
 
@@ -49,23 +47,33 @@ class CollectionsCarrierSpec extends PortSuite:
 
   test("a declared carrier's type ARGUMENT stays in java's namespace — field type and anon parent") {
     val (_, _, out) = ported(JacksonShape)
-    assert(clue(out).contains(s"$Emitted[java.util.Map[java.lang.String, java.lang.Object]]"),
-           "the argument jackson reads back out of the generic signature must name java's own type")
-    assert(!out.contains(s"$Emitted[scala.collection.mutable.Map"),
-           "retyped there, the port asks jackson to construct a trait — 0 compile errors, 10 failures")
+    assert(
+      clue(out).contains(s"$Emitted[java.util.Map[java.lang.String, java.lang.Object]]"),
+      "the argument jackson reads back out of the generic signature must name java's own type"
+    )
+    assert(
+      !out.contains(s"$Emitted[scala.collection.mutable.Map"),
+      "retyped there, the port asks jackson to construct a trait — 0 compile errors, 10 failures"
+    )
     // the anonymous subclass is a SECOND position and is the one that carries the signature at run
     // time: `new TypeReference<…>() {}` is what jackson reflects over.
-    assertEquals(clue(out).sliding(s"$Emitted[java.util.Map".length)
-                   .count(_ == s"$Emitted[java.util.Map"), 2,
-                 "the field's declared type and the `new` whose anonymous subclass CARRIES the\n                   signature jackson reflects over")
+    assertEquals(
+      clue(out).sliding(s"$Emitted[java.util.Map".length).count(_ == s"$Emitted[java.util.Map"),
+      2,
+      "the field's declared type and the `new` whose anonymous subclass CARRIES the\n                   signature jackson reflects over"
+    )
   }
 
   test("…and the declaration AROUND the carrier keeps the mapping") {
     val (_, _, out) = ported(JacksonShape)
-    assert(clue(out).contains("scala.collection.mutable.Map[java.lang.String, java.lang.Object]"),
-           "a per-ARGUMENT list is exactly what a RuleScope exclusion cannot express (K16)")
-    assert(out.contains("def toMap(") && out.contains("): scala.collection.mutable.Map["),
-           "the method's own result is a slot, and a slot is retyped")
+    assert(
+      clue(out).contains("scala.collection.mutable.Map[java.lang.String, java.lang.Object]"),
+      "a per-ARGUMENT list is exactly what a RuleScope exclusion cannot express (K16)"
+    )
+    assert(
+      out.contains("def toMap(") && out.contains("): scala.collection.mutable.Map["),
+      "the method's own result is a slot, and a slot is retyped"
+    )
   }
 
   // -------------------------------------------------------------------------
@@ -74,18 +82,24 @@ class CollectionsCarrierSpec extends PortSuite:
 
   test("the value is BRIDGED where the carrier is used — the external-producer seam, not new machinery") {
     val (_, _, out) = ported(JacksonShape)
-    assert(clue(out).contains("balticporter.runtime.JavaCollections.fromJava(mapper.convertValue("),
-           "the call now really returns java's map while the slot claims scala's; a live view " +
-             "bridges it, and `asScala` writes through so the caller's mutations are not lost")
+    assert(
+      clue(out).contains("balticporter.runtime.JavaCollections.fromJava(mapper.convertValue("),
+      "the call now really returns java's map while the slot claims scala's; a live view " +
+        "bridges it, and `asScala` writes through so the caller's mutations are not lost"
+    )
   }
 
   test("…and with NO carrier declared the same source is the defect K20 measured") {
     val (_, _, out) = ported(JacksonShape, carriers = Set.empty)
-    assert(clue(out).contains(s"$Emitted[scala.collection.mutable.Map"),
-           "the pre-K20 behaviour, by the same code path: an empty list is a no-op")
-    assert(!out.contains("JavaCollections.fromJava(mapper.convertValue("),
-           "and nothing bridges, because the result type OCCURS in the carrier argument and the " +
-             "call therefore reads as a generic pass-through")
+    assert(
+      clue(out).contains(s"$Emitted[scala.collection.mutable.Map"),
+      "the pre-K20 behaviour, by the same code path: an empty list is a no-op"
+    )
+    assert(
+      !out.contains("JavaCollections.fromJava(mapper.convertValue("),
+      "and nothing bridges, because the result type OCCURS in the carrier argument and the " +
+        "call therefore reads as a generic pass-through"
+    )
   }
 
   // -------------------------------------------------------------------------
@@ -99,10 +113,14 @@ class CollectionsCarrierSpec extends PortSuite:
         |class T {
         |  static final TypeReference<String> S = new TypeReference<String>() {};
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains(s"$Emitted[java.lang.String]"))
-    assertEquals(log.all.count(_.kind == Decision.Kind.ReifiedTypeArg), 0,
-                 "preserving a `String` decided nothing; a row for it would be noise in every port")
+    assertEquals(
+      log.all.count(_.kind == Decision.Kind.ReifiedTypeArg),
+      0,
+      "preserving a `String` decided nothing; a row for it would be noise in every port"
+    )
   }
 
   test("an UNDECLARED carrier is retyped — the list is POLICY, never a guess from a name") {
@@ -113,9 +131,12 @@ class CollectionsCarrierSpec extends PortSuite:
         |class T {
         |  static final Token<Map<String, Object>> T1 = new Token<Map<String, Object>>() {};
         |}
-        |""".stripMargin)
-    assert(clue(out).contains("Token[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]"),
-           "a phase concluding `this looks like a super-type token` from a name is §4.56's failure")
+        |""".stripMargin
+    )
+    assert(
+      clue(out).contains("Token[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]"),
+      "a phase concluding `this looks like a super-type token` from a name is §4.56's failure"
+    )
   }
 
   test("java.lang.Class is a carrier the ENGINE carries — no port declares it") {
@@ -125,12 +146,18 @@ class CollectionsCarrierSpec extends PortSuite:
         |class T {
         |  Class<Map<String, Object>> held;
         |}
-        |""".stripMargin, carriers = Set.empty)
-    assert(clue(out).contains("java.lang.Class[java.util.Map[java.lang.String, java.lang.Object]]"),
-           "`Class<T>`'s argument names the class the JVM will be asked for, in every codebase")
-    assertEquals(log.all.filter(_.kind == Decision.Kind.ReifiedTypeArg)
-                   .map(_.reason.className).distinct, List("universal"),
-                 "a port cannot turn this one off and must not be sent to its manifest to try")
+        |""".stripMargin,
+      carriers = Set.empty
+    )
+    assert(
+      clue(out).contains("java.lang.Class[java.util.Map[java.lang.String, java.lang.Object]]"),
+      "`Class<T>`'s argument names the class the JVM will be asked for, in every codebase"
+    )
+    assertEquals(
+      log.all.filter(_.kind == Decision.Kind.ReifiedTypeArg).map(_.reason.className).distinct,
+      List("universal"),
+      "a port cannot turn this one off and must not be sent to its manifest to try"
+    )
   }
 
   // -------------------------------------------------------------------------
@@ -139,13 +166,19 @@ class CollectionsCarrierSpec extends PortSuite:
 
   test("the preservation is RECORDED per declaration, with the entry an agent would edit") {
     val (log, _, out) = ported(JacksonShape)
-    val rows = log.all.filter(_.kind == Decision.Kind.ReifiedTypeArg)
+    val rows          = log.all.filter(_.kind == Decision.Kind.ReifiedTypeArg)
     assert(clue(rows.map(_.render)).nonEmpty)
-    assert(rows.exists(_.subjectFqn.endsWith("MAP_TYPE_REF")),
-           "the field is the declaration whose emitted type a reader is looking at")
+    assert(
+      rows.exists(_.subjectFqn.endsWith("MAP_TYPE_REF")),
+      "the field is the declaration whose emitted type a reader is looking at"
+    )
     assertEquals(rows.map(_.reason.className).distinct, List("configured"))
-    assert(rows.forall(_.reason.detail.contains(Carrier)),
-           "the key is the manifest entry VERBATIM — it is the string an agent edits (§4.575)")
-    assert(clue(out).contains("/* porter: reified-type-arg reason=configured"),
-           "the question is asked at a line of Scala, so the answer is emitted beside it (§4.575)")
+    assert(
+      rows.forall(_.reason.detail.contains(Carrier)),
+      "the key is the manifest entry VERBATIM — it is the string an agent edits (§4.575)"
+    )
+    assert(
+      clue(out).contains("/* porter: reified-type-arg reason=configured"),
+      "the question is asked at a line of Scala, so the answer is emitted beside it (§4.575)"
+    )
   }

@@ -6,8 +6,8 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-/** The scala-shaped call rewrites are refused on a SHIM receiver — and a library's OWN SUBTYPE of a
-  * shim is a shim receiver (`CLAUDE.md` §4.5, §4.56). */
+/** The scala-shaped call rewrites are refused on a SHIM receiver — and a library's OWN SUBTYPE of a shim is a shim receiver (`CLAUDE.md` §4.5, §4.56).
+  */
 class ShimSubtypeAritySpec extends PortSuite:
 
   private val src =

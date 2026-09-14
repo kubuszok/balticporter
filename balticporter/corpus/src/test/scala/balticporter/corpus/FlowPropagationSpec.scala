@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Program, SymId, TypeRepr}
+import balticporter.tir.{ Program, SymId, TypeRepr }
 import balticporter.transform.FlowPropagation
 
 /** [[FlowPropagation]] on its own — the shared second half of every retyping rule. */
@@ -23,21 +23,23 @@ class FlowPropagationSpec extends PortSuite:
   private def program: Program = balticporter.testkit.PortFixture.parse(src)
 
   private def isInt(p: Program)(id: SymId): Boolean =
-    p.symbolOf(id).exists(s =>
-      s.info match
-        case TypeRepr.TypeRef(_, t)            => p.symbolOf(t).exists(_.fullName == "scala.Int")
-        case TypeRepr.MethodType(_, r, _)      => isIntType(p, r)
-        case t                                 => isIntType(p, t))
+    p.symbolOf(id)
+      .exists(s =>
+        s.info match
+          case TypeRepr.TypeRef(_, t)       => p.symbolOf(t).exists(_.fullName == "scala.Int")
+          case TypeRepr.MethodType(_, r, _) => isIntType(p, r)
+          case t                            => isIntType(p, t)
+      )
 
   private def isIntType(p: Program, t: TypeRepr): Boolean = t match
-    case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "scala.Int")
+    case TypeRepr.TypeRef(_, s)               => p.symbolOf(s).exists(_.fullName == "scala.Int")
     case TypeRepr.AppliedType(tc, List(elem)) =>
       isArrayHead(p, tc) && isIntType(p, elem)
     case _ => false
 
   private def isArrayHead(p: Program, t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "scala.Array")
-    case _ => false
+    case _                      => false
 
   private def idOf(p: Program, fqn: String): SymId =
     p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(SymId.None)
@@ -46,12 +48,12 @@ class FlowPropagationSpec extends PortSuite:
     FlowPropagation.grow(p, Set(idOf(p, seedFqn)), isInt(p)).flatMap(p.symbolOf).map(_.fullName)
 
   test("a field seed reaches its GETTER (return), its SETTER's parameter and a local it initialises") {
-    val p = program
+    val p     = program
     val grown = grownFrom(p, "demo.Sprite#layer")
-    assert(clue(grown).contains("demo.Sprite#layer"))    // the seed itself
-    assert(grown.contains("demo.Sprite#getLayer"))       // `return layer`
-    assert(grown.contains("demo.Sprite#copy"))           // `return c`, the local's own chain
-    assert(grown.contains("c"))                          // `int c = layer` — a local, named bare
+    assert(clue(grown).contains("demo.Sprite#layer")) // the seed itself
+    assert(grown.contains("demo.Sprite#getLayer")) // `return layer`
+    assert(grown.contains("demo.Sprite#copy")) // `return c`, the local's own chain
+    assert(grown.contains("c")) // `int c = layer` — a local, named bare
     // …and the setter's PARAMETER, under its full name `Class#method#param` (until wave 2.8 the
     // frontend qualified a parameter against its method BEFORE the method's own record was set and
     // the name was `?#l`; [[balticporter.tir.RuleScope]] decides scope through the OWNER chain and
@@ -60,7 +62,7 @@ class FlowPropagationSpec extends PortSuite:
   }
 
   test("ARITHMETIC is not a pure move — the chain BREAKS, which is the whole point") {
-    val p = program
+    val p     = program
     val grown = grownFrom(p, "demo.Sprite#layer")
     // `derived = layer + 1` yields a plain int; a rule that propagated through it would have no
     // boundary left to coerce at, and an opaque type would be an alias.

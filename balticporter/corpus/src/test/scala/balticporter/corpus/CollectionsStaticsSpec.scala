@@ -3,9 +3,9 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** The seams of `CollectionsTransform` that `CollectionsTransformSpec` does not reach — the
-  * `staticRewrite` TABLE, the copy constructor, the blanket shim refusal and the per-kind rewrites
-  * that had no spec at all. */
+/** The seams of `CollectionsTransform` that `CollectionsTransformSpec` does not reach — the `staticRewrite` TABLE, the copy constructor, the blanket shim refusal and the per-kind rewrites that had no
+  * spec at all.
+  */
 class CollectionsStaticsSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ class CollectionsStaticsSpec extends PortSuite:
         |  Map<String, Integer> rm(Map<String, Integer> m) { return Collections.unmodifiableMap(m); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p2, "balticporter.runtime.JavaCollections.unmodifiableList(xs)")
     assertEmits(p2, "balticporter.runtime.JavaCollections.unmodifiableSet(s)")
@@ -83,7 +83,7 @@ class CollectionsStaticsSpec extends PortSuite:
         |  Map<String, Integer> sm(String k, Integer v) { return Collections.singletonMap(k, v); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "balticporter.runtime.JavaCollections.emptyList()")
     assertEmits(p, "balticporter.runtime.JavaCollections.emptyMap()")
@@ -161,7 +161,7 @@ class CollectionsStaticsSpec extends PortSuite:
         |  Map<Integer, String> merged(List<String> xs)  { return xs.stream().collect(Collectors.toMap(String::length, Function.identity(), (a, b) -> b)); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "balticporter.runtime.JavaCollections.toSet(xs)")
     assertEmitsMatch(p, """JavaCollections\.toMap\(xs, [^\n]*identity\(\)\)""")

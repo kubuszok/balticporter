@@ -1,24 +1,29 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy }
 import balticporter.tir.*
 
-/** Renames a member to a name the port CHOOSES — reaches [[MemberRenamer]] for a free-form rename
-  * (unlike [[TypeRedirectTransform]]'s, dictated by its redirect target). `OnCollision.Refuse`: a
-  * collision is reported, never silently resolved. Base-anchored (excludes this run's own emitted
-  * units). `runsBefore("type-redirect")` frees a name before a redirect could collide with it;
-  * `package-rename` stays last. Empty `renames` is a no-op. `{{{ renames { "com.foo.Stream#close(int)" = "closeAt" } }}}` */
-final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
-                                  /** also give the members the REFERENCE port gives a `@targetName` that JVM
-                                    * name (`RunScope.derived`, DESIGN.md §8.30); off is the no-op. */
-                                  val derive: Boolean = false)
-    extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
+/** Renames a member to a name the port CHOOSES — reaches [[MemberRenamer]] for a free-form rename (unlike [[TypeRedirectTransform]]'s, dictated by its redirect target). `OnCollision.Refuse`: a
+  * collision is reported, never silently resolved. Base-anchored (excludes this run's own emitted units). `runsBefore("type-redirect")` frees a name before a redirect could collide with it;
+  * `package-rename` stays last. Empty `renames` is a no-op. `{{{ renames { "com.foo.Stream#close(int)" = "closeAt" } }}}`
+  */
+final class MemberRenameTransform(
+  val renames: Map[String, String] = Map.empty,
+  /** also give the members the REFERENCE port gives a `@targetName` that JVM name (`RunScope.derived`, DESIGN.md §8.30); off is the no-op.
+    */
+  val derive: Boolean = false
+) extends Phase,
+      PolicySource,
+      SurfacePolicy,
+      MergeablePolicy,
+      PolicyBound:
 
   def name: String = MemberRenameTransform.Name
+
   /** member -> the JVM name the reference gives it; bound only when `derive` is on. */
   private var derivedTargetNames: Map[SymId, String] = Map.empty
-  private var derivedFieldNames: Map[SymId, String]  = Map.empty
-  private var derivedRenames: Map[SymId, String]     = Map.empty
+  private var derivedFieldNames:  Map[SymId, String] = Map.empty
+  private var derivedRenames:     Map[SymId, String] = Map.empty
 
   /** exactly two edges needed; see the class note for why no others are declared. */
   override def runsBefore: Set[String] = Set("type-redirect", "package-rename")
@@ -31,28 +36,35 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
 
   def subjects: Set[String] = renames.keySet.map(MergeablePolicy.subjectOf)
 
-  /** DESIGN.md §8.13. Independent member keys union; one member with two names refuses. Compared
-    * by parsed name via [[MemberKey.mayNameSame]], not by map key — `X#close` and `X#close()` may
-    * be one member, and over-refusal is the safe direction here. */
+  /** DESIGN.md §8.13. Independent member keys union; one member with two names refuses. Compared by parsed name via [[MemberKey.mayNameSame]], not by map key — `X#close` and `X#close()` may be one
+    * member, and over-refusal is the safe direction here.
+    */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: MemberRenameTransform =>
       val clashes = for
-        (theirs, to)   <- o.renames.toList
-        (mine, to2)    <- renames.toList
+        (theirs, to) <- o.renames.toList
+        (mine, to2) <- renames.toList
         if MemberKey.mayNameSame(mine, theirs) && to != to2
       yield (mine, to2, theirs, to)
       if clashes.nonEmpty then
-        Left(clashes.sorted.distinct.map { (mine, to2, theirs, to) =>
-          val how =
-            if mine == theirs then s""""$mine""""
-            else s""""$mine" and "$theirs", which may be ONE member (a bare key is every overload)"""
-          s"""both modules rename $how, to "$to2" and "$to""""
-        }.mkString("; ") +
-          " — two answers for one member is a rewrite whose outcome depends on which manifest was read")
+        Left(
+          clashes.sorted.distinct
+            .map { (mine, to2, theirs, to) =>
+              val how =
+                if mine == theirs then s""""$mine""""
+                else s""""$mine" and "$theirs", which may be ONE member (a bare key is every overload)"""
+              s"""both modules rename $how, to "$to2" and "$to""""
+            }
+            .mkString("; ") +
+            " — two answers for one member is a rewrite whose outcome depends on which manifest was read"
+        )
       else
-        Right(MergeablePolicy.Merged(
-          new MemberRenameTransform(renames ++ o.renames, derive || o.derive),
-          (o.renames.keySet -- renames.keySet).map(MergeablePolicy.subjectOf)))
+        Right(
+          MergeablePolicy.Merged(
+            new MemberRenameTransform(renames ++ o.renames, derive || o.derive),
+            (o.renames.keySet -- renames.keySet).map(MergeablePolicy.subjectOf)
+          )
+        )
     case other =>
       Left(s"`${other.name}` is not a `MemberRenameTransform`, so there is no table to compose")
 
@@ -60,13 +72,13 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
 
   /** the entries that parsed and bound — one row per declaration each key named. */
   private var boundRenames: List[MemberRenameTransform.Entry] = Nil
-  private var records: List[PolicyBinder.Record]              = Nil
+  private var records:      List[PolicyBinder.Record]         = Nil
 
   /** malformed keys and values — findings about the key. */
   private var ownFindings: List[PolicyFinding] = Nil
 
-  /** which units this run emits; read at [[run]] to base-anchor the graph, defaulted to
-    * [[RunScope.whole]] for a phase constructed in a spec. */
+  /** which units this run emits; read at [[run]] to base-anchor the graph, defaulted to [[RunScope.whole]] for a phase constructed in a spec.
+    */
   private var scope: RunScope = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit =
@@ -77,18 +89,19 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
         bad += PolicyFinding(name, MemberRenameTransform.Setting, key, PolicyIssue.Malformed, what)
         Nil
       MemberKey.parse(key) match
-        case Left(m)                                       => refuse(m.what)
-        case Right(_) if newName.isEmpty                   => refuse("the new name is empty, which names nothing")
+        case Left(m)                                               => refuse(m.what)
+        case Right(_) if newName.isEmpty                           => refuse("the new name is empty, which names nothing")
         case Right(_) if !MemberRenamer.isValidMemberName(newName) =>
-          refuse(s"`$newName` is not a valid Scala member name — this phase changes NAMES and " +
-            "never shapes, so a value must be either an alphanumeric identifier, a symbolic operator " +
-            "(`+`, `*`, `<=`), or a prefix operator (`unary_-`). A value carrying a `#`, a parameter " +
-            "list, a `.` or whitespace names an act it does not perform (an arity change is " +
-            "`bean-properties`; a re-point is `type-redirect`)")
+          refuse(
+            s"`$newName` is not a valid Scala member name — this phase changes NAMES and " +
+              "never shapes, so a value must be either an alphanumeric identifier, a symbolic operator " +
+              "(`+`, `*`, `<=`), or a prefix operator (`unary_-`). A value carrying a `#`, a parameter " +
+              "list, a `.` or whitespace names an act it does not perform (an arity change is " +
+              "`bean-properties`; a re-point is `type-redirect`)"
+          )
         case Right(mk) =>
           // flatMap(_.sym), not map: a hit with no symbol is a dropped member — a no-op, not a finding.
-          val hits = binder.bindMembers(name, MemberRenameTransform.Setting, mk.render)
-            .toOption.getOrElse(Nil).flatMap(_.sym)
+          val hits = binder.bindMembers(name, MemberRenameTransform.Setting, mk.render).toOption.getOrElse(Nil).flatMap(_.sym)
           // unary_- (and the other prefix operators) is valid only on a nullary method.
           if MemberRenamer.isUnaryName(newName) then
             val nonNullary = hits.flatMap(binder.program.symbolOf).filter { s =>
@@ -97,26 +110,27 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
                 case _                                 => false
             }
             if nonNullary.nonEmpty then
-              refuse(s"`$newName` is a prefix operator and may only target a nullary method, " +
-                s"but ${nonNullary.map(_.fullName).sorted.mkString(", ")} " +
-                s"${if nonNullary.sizeIs == 1 then "takes" else "take"} parameters")
+              refuse(
+                s"`$newName` is a prefix operator and may only target a nullary method, " +
+                  s"but ${nonNullary.map(_.fullName).sorted.mkString(", ")} " +
+                  s"${if nonNullary.sizeIs == 1 then "takes" else "take"} parameters"
+              )
             else List(MemberRenameTransform.Entry(mk.render, newName, hits))
-          else
-            List(MemberRenameTransform.Entry(mk.render, newName, hits))
+          else List(MemberRenameTransform.Entry(mk.render, newName, hits))
     }
     ownFindings = bad.toList
     records = binder.recordsFor(name)
     if derive then
       derivedTargetNames = binder.run.derived.targetNames
-      derivedFieldNames  = binder.run.derived.fieldNames
-      derivedRenames     = binder.run.derived.renames
+      derivedFieldNames = binder.run.derived.fieldNames
+      derivedRenames = binder.run.derived.renames
 
   /** refusals this run made — reset per run, since a phase instance is reused across translations. */
   private var runFindings: List[PolicyFinding] = Nil
 
-  /** Declared keys that named nothing, malformed entries, and every refusal this run made.
-    * Refusals are `About.ThisRun`, the rest `About.TheKey` — a key inherited from a base is not
-    * a string this module can edit. CLAUDE.md §4.45 */
+  /** Declared keys that named nothing, malformed entries, and every refusal this run made. Refusals are `About.ThisRun`, the rest `About.TheKey` — a key inherited from a base is not a string this
+    * module can edit. CLAUDE.md §4.45
+    */
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(ownFindings ++ runFindings)
 
@@ -127,36 +141,42 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty,
     val live = boundRenames.filter(_.hits.nonEmpty)
     // a derive-only run (no configured rename) still annotates the reference's target names
     val configured = live.flatMap(_.hits).toSet
-    val fieldMoves = (derivedFieldNames ++ derivedRenames)
-      .filter((id, _) => program.owned(id) && scope.emitsSymbol(program, id) && !configured(id))
+    val fieldMoves = (derivedFieldNames ++ derivedRenames).filter((id, _) => program.owned(id) && scope.emitsSymbol(program, id) && !configured(id))
     if live.isEmpty && derivedTargetNames.isEmpty && fieldMoves.isEmpty then program
     else
       // units this run does not emit; RunScope.whole yields the empty set (single-module/spec).
       val baseUnits = program.units.map(_.symbol).filterNot(scope.emits).toSet
       val graph     = OverrideGraph.build(program, baseUnits = baseUnits)
-      val requests  = live.flatMap(e => e.hits.map(h =>
-        MemberRenamer.Request(h, e.newName, Reason.Configured(name, e.key), e.key, e.key))) ++
+      val requests  = live.flatMap(e => e.hits.map(h => MemberRenamer.Request(h, e.newName, Reason.Configured(name, e.key), e.key, e.key))) ++
         // one request per override component: the derived rows name every declaration of it
-        fieldMoves.toList.sortBy(_._1.raw).filter { (id, to) =>
-          !graph.closureOf(id).members.exists(o => o != id && o.raw < id.raw && fieldMoves.get(o).contains(to))
-        }.map { (id, to) =>
-          val key = "derive:" + program.symbolOf(id).map(_.fullName).getOrElse(id.raw)
-          MemberRenamer.Request(id, to, Reason.Configured(name, key), key, key)
-        }
+        fieldMoves.toList
+          .sortBy(_._1.raw)
+          .filter { (id, to) =>
+            !graph.closureOf(id).members.exists(o => o != id && o.raw < id.raw && fieldMoves.get(o).contains(to))
+          }
+          .map { (id, to) =>
+            val key = "derive:" + program.symbolOf(id).map(_.fullName).getOrElse(id.raw)
+            MemberRenamer.Request(id, to, Reason.Configured(name, key), key, key)
+          }
       val (renamed, refusals) =
         if requests.isEmpty then (program, Nil)
         else MemberRenamer.rename(program, graph, requests, MemberRenamer.OnCollision.Refuse, decisions)
       refusals.map(_.request.key).distinct.foreach { k =>
         val why = refusals.find(_.request.key == k).map(_.why).getOrElse("refused")
-        runFindings :+= PolicyFinding(name, MemberRenameTransform.Setting, k, PolicyIssue.Unverifiable,
+        runFindings :+= PolicyFinding(
+          name,
+          MemberRenameTransform.Setting,
+          k,
+          PolicyIssue.Unverifiable,
           s"$why — so this rename did NOT happen and the member keeps its upstream name",
-          PolicyFinding.About.ThisRun)
+          PolicyFinding.About.ThisRun
+        )
       }
       // a symbolic member name must carry @targetName(originalJavaName) for JVM binary compat.
-      val applied = live.filter(e => !refusals.exists(_.request.key == e.key))
+      val applied         = live.filter(e => !refusals.exists(_.request.key == e.key))
       val symbolicEntries = applied.filter(e => MemberRenamer.isSymbolic(e.newName))
-      val symbolicNames = symbolicEntries.flatMap(e => e.hits.map(h => h -> program.symbolOf(h).map(_.name).getOrElse(""))).toMap
-      val names = symbolicNames ++ derivedTargetNames
+      val symbolicNames   = symbolicEntries.flatMap(e => e.hits.map(h => h -> program.symbolOf(h).map(_.name).getOrElse(""))).toMap
+      val names           = symbolicNames ++ derivedTargetNames
       if names.isEmpty then renamed
       else MemberRenameTransform.addTargetNameAnnotations(renamed, names)
 
@@ -167,24 +187,24 @@ object MemberRenameTransform:
   val Setting: String = "MemberRenameTransform(renames)"
 
   /** one entry that parsed and bound: canonical key, new name, every declaration the key named. */
-  private[transform] final case class Entry(key: String, newName: String, hits: List[SymId])
+  final private[transform] case class Entry(key: String, newName: String, hits: List[SymId])
 
-  /** is this a bare member name? A whitelist rather than a blacklist of separators, so a value
-    * reaching the symbol table can't emit unparseable text. Deprecated for
-    * [[MemberRenamer.isValidMemberName]], which also admits symbolic names. */
+  /** is this a bare member name? A whitelist rather than a blacklist of separators, so a value reaching the symbol table can't emit unparseable text. Deprecated for
+    * [[MemberRenamer.isValidMemberName]], which also admits symbolic names.
+    */
   private[transform] def isPlain(v: String): Boolean =
     v.nonEmpty && !v.head.isDigit && v.forall(c => c.isLetterOrDigit || c == '_' || c == '$')
 
-  /** Adds `@scala.annotation.targetName("<javaName>")` to every symbol renamed to a symbolic
-    * name, reading the java name from the ORIGINAL (pre-rename) program, for JVM binary
-    * compatibility and `-Werror`-clean output. */
+  /** Adds `@scala.annotation.targetName("<javaName>")` to every symbol renamed to a symbolic name, reading the java name from the ORIGINAL (pre-rename) program, for JVM binary compatibility and
+    * `-Werror`-clean output.
+    */
   private[transform] def addTargetNameAnnotations(
-      renamed: Program,
-      /** member -> the JVM name it carries: a symbolic rename's original java name, or the reference's */
-      names: Map[SymId, String],
+    renamed: Program,
+    /** member -> the JVM name it carries: a symbolic rename's original java name, or the reference's */
+    names: Map[SymId, String]
   ): Program =
     // find or create a symbol for scala.annotation.targetName in the table.
-    val existingId = renamed.symbols.all.find(_.fullName == "scala.annotation.targetName").map(_.id)
+    val existingId    = renamed.symbols.all.find(_.fullName == "scala.annotation.targetName").map(_.id)
     val targetNameSym = existingId.getOrElse {
       // a fresh id below every existing one, staying clear of SymId.None and the minter's counter.
       val minId = renamed.symbols.all.map(_.id.raw).minOption.getOrElse(0)
@@ -193,19 +213,14 @@ object MemberRenameTransform:
     val annotated = renamed.symbols.all.map { s =>
       if names.contains(s.id) then
         val origName = names(s.id)
-        val annot = Annot(
-          tpe    = TypeRepr.TypeRef(TypeRepr.NoPrefix, targetNameSym),
-          args   = List("value" -> Tree.Literal(
-            Constant.StringC(origName),
-            TypeRepr.TypeRef(TypeRepr.NoPrefix, SymId.None),
-            Origin.synthetic)),
-          origin = Origin.synthetic,
+        val annot    = Annot(
+          tpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, targetNameSym),
+          args = List("value" -> Tree.Literal(Constant.StringC(origName), TypeRepr.TypeRef(TypeRepr.NoPrefix, SymId.None), Origin.synthetic)),
+          origin = Origin.synthetic
         )
         s.copy(annotations = s.annotations :+ annot)
       else s
     }
     val allSyms = if existingId.isDefined then annotated
-                  else annotated ++ List(Symbol(
-                    targetNameSym, "targetName", "scala.annotation.targetName",
-                    Flags(), SymId.None, TypeRepr.NoType))
+    else annotated ++ List(Symbol(targetNameSym, "targetName", "scala.annotation.targetName", Flags(), SymId.None, TypeRepr.NoType))
     renamed.rebuilt(symbols = SymbolTable(allSyms))

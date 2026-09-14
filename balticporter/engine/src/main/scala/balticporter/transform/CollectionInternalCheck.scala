@@ -2,11 +2,10 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The collections residue INSIDE the program — sites where java's own subtyping carried a value
-  * across an edge the mapping has no image for. `CollectionBoundaryCheck` sees only the JDK's own
-  * half of a slot; this counts the third population where BOTH sides are the phase's own output.
-  * Distinct from [[CollectionClosureCheck]] (about TYPES): this is about SITES where both ends map
-  * to unrelated targets. Empty mapping is a no-op. CLAUDE.md §1's third-population para; K2.5 */
+/** The collections residue INSIDE the program — sites where java's own subtyping carried a value across an edge the mapping has no image for. `CollectionBoundaryCheck` sees only the JDK's own half of
+  * a slot; this counts the third population where BOTH sides are the phase's own output. Distinct from [[CollectionClosureCheck]] (about TYPES): this is about SITES where both ends map to unrelated
+  * targets. Empty mapping is a no-op. CLAUDE.md §1's third-population para; K2.5
+  */
 object CollectionInternalCheck:
 
   /** The check's name in `findings.tsv`. */
@@ -14,11 +13,12 @@ object CollectionInternalCheck:
 
   /** what kind of in-program seam this is. */
   enum Issue:
-    /** one of the callee's own type variables is bound, inside a single argument list, to types on
-      * opposite sides of a broken edge. */
+    /** one of the callee's own type variables is bound, inside a single argument list, to types on opposite sides of a broken edge.
+      */
     case SplitTypeVariable
-    /** one side is a type the PROGRAM declares whose own emitted ancestry lies on the far side of a
-      * broken edge from the slot. */
+
+    /** one side is a type the PROGRAM declares whose own emitted ancestry lies on the far side of a broken edge from the slot.
+      */
     case DeclaredSubtype
 
   object Issue:
@@ -42,41 +42,54 @@ object CollectionInternalCheck:
           "`coerce` a factory for the pair — never a cast, which is a `ClassCastException` with a " +
           "green compile."
 
-  /** one in-program seam site. `edge` is java's own relation that carried the value
-    * (`java.util.HashSet <: java.util.Collection`); `targets` is what the two ends became. Both are
-    * printed — the edge says why the source compiled, the targets say why the port does not. */
-  final case class Finding(issue: Issue, slot: String, edge: String, targets: String,
-                           origin: Origin, enclosing: SymId):
-    def detail: String = s"$slot: java's $edge became $targets, which are unrelated"
-    def render: String = s"$issue $slot — $edge became $targets  (${origin.javaPath}:${origin.line})"
+  /** one in-program seam site. `edge` is java's own relation that carried the value (`java.util.HashSet <: java.util.Collection`); `targets` is what the two ends became. Both are printed — the edge
+    * says why the source compiled, the targets say why the port does not.
+    */
+  final case class Finding(issue: Issue, slot: String, edge: String, targets: String, origin: Origin, enclosing: SymId):
+    def detail:                         String              = s"$slot: java's $edge became $targets, which are unrelated"
+    def render:                         String              = s"$issue $slot — $edge became $targets  (${origin.javaPath}:${origin.line})"
     def report(using program: Program): CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString,
+      CheckReport.Finding(
+        Name,
+        issue.toString,
         program.symbolOf(enclosing).map(_.fullName).getOrElse("?"),
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+        CheckReport.relativise(origin.javaPath),
+        origin.line,
+        detail
+      )
 
-  /** Every in-program seam in `program`, which must be the program AFTER the phase ran. `mapped`,
-    * `targetOf` and `standalone` are the phase's own policy, read back (§4.56). Held to units the
-    * run EMITS — a dependent's `Program` carries its base's units, whose seams are the base's
-    * finding (ENGINE-LIMITS D2). */
-  def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String],
-            targetOf: String => String, standalone: Set[String]): List[Finding] =
+  /** Every in-program seam in `program`, which must be the program AFTER the phase ran. `mapped`, `targetOf` and `standalone` are the phase's own policy, read back (§4.56). Held to units the run
+    * EMITS — a dependent's `Program` carries its base's units, whose seams are the base's finding (ENGINE-LIMITS D2).
+    */
+  def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targetOf: String => String, standalone: Set[String]): List[Finding] =
     // broken edges: a java subtype pair both of whose ends the mapping covers, whose two targets
     // sit on opposite sides of the standalone split. The label a target pair is reported under is
     // derived deterministically (sorted sub, most-general reachable sup) so it does not vary by run.
     val edges: Map[(String, String), String] =
-      mapped.toList.sorted.flatMap { sub =>
-        CollectionClosureCheck.supertypesOf(sub).filter(mapped.contains).flatMap { sup =>
-          val (tSub, tSup) = (targetOf(sub), targetOf(sup))
-          Option.when(tSub != tSup && standalone.contains(tSub) != standalone.contains(tSup))(
-            (tSub, tSup) -> s"$sub <: $sup")
-        }.groupBy(_._1).view.mapValues(_.last._2).toList
-      }.groupBy(_._1).view.mapValues(_.head._2).toMap
+      mapped.toList.sorted
+        .flatMap { sub =>
+          CollectionClosureCheck
+            .supertypesOf(sub)
+            .filter(mapped.contains)
+            .flatMap { sup =>
+              val (tSub, tSup) = (targetOf(sub), targetOf(sup))
+              Option.when(tSub != tSup && standalone.contains(tSub) != standalone.contains(tSup))((tSub, tSup) -> s"$sub <: $sup")
+            }
+            .groupBy(_._1)
+            .view
+            .mapValues(_.last._2)
+            .toList
+        }
+        .groupBy(_._1)
+        .view
+        .mapValues(_.head._2)
+        .toMap
 
     if edges.isEmpty then Nil
     else
-      val out     = collection.mutable.ListBuffer[Finding]()
-      val graph   = OverrideGraph.build(program)
-      val targets = mapped.map(targetOf) ++ standalone
+      val out       = collection.mutable.ListBuffer[Finding]()
+      val graph     = OverrideGraph.build(program)
+      val targets   = mapped.map(targetOf) ++ standalone
       given Program = program
 
       def fqn(t: TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
@@ -86,13 +99,12 @@ object CollectionInternalCheck:
         edges.get((a, b)).orElse(edges.get((b, a)))
 
       def brokenT(a: TypeRepr, b: TypeRepr): Option[(String, String)] =
-        for
-          x <- fqn(a); y <- fqn(b); e <- broken(x, y)
+        for x <- fqn(a); y <- fqn(b); e <- broken(x, y)
         yield (e, s"$x / $y")
 
-      /** every type a class the PROGRAM declares was emitted UNDER — read from the tree, not a name
-        * test (§4.56). Asked only of a program-declared head — an external type's ancestry is a
-        * class-file fact this run cannot read (§4.6). */
+      /** every type a class the PROGRAM declares was emitted UNDER — read from the tree, not a name test (§4.56). Asked only of a program-declared head — an external type's ancestry is a class-file
+        * fact this run cannot read (§4.6).
+        */
       def ancestry(h: SymId): List[String] =
         graph.externalAncestorsOf(h) ++
           graph.ancestorsOf(h).flatMap(program.symbolOf).map(_.fullName)
@@ -100,11 +112,10 @@ object CollectionInternalCheck:
       def found(issue: Issue, slot: String, e: (String, String), origin: Origin, enclosing: SymId): Unit =
         out += Finding(issue, slot, e._1, e._2, origin, enclosing)
 
-      /** a slot where the VALUE is a type the program declares, so the boundary lane read it as
-        * `Other` and filed nothing. Conformance is asked FIRST — a library's own collection may
-        * carry both ends of the split as parents, so a correct slot must not report as a seam. */
-      def declaredSlot(kind: String, expected: TypeRepr, actual: TypeRepr, origin: Origin,
-                       enclosing: SymId): Unit =
+      /** a slot where the VALUE is a type the program declares, so the boundary lane read it as `Other` and filed nothing. Conformance is asked FIRST — a library's own collection may carry both ends
+        * of the split as parents, so a correct slot must not report as a seam.
+        */
+      def declaredSlot(kind: String, expected: TypeRepr, actual: TypeRepr, origin: Origin, enclosing: SymId): Unit =
         for
           h <- headSym(actual) if program.owns(h)
           e <- fqn(expected)
@@ -118,38 +129,49 @@ object CollectionInternalCheck:
 
         override def transformApply(t: Tree.Apply)(using Program): Term =
           typeVariableSplit(t)
-          program.symbolOf(t.method).map(_.info).collect {
-            case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
-            case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
-          }.filter(_.sizeIs == t.args.size)
-            .foreach(fs => t.args.zip(fs).foreach((a, f) =>
-              declaredSlot("argument", f, a.tpe, a.origin, t.method)))
+          program
+            .symbolOf(t.method)
+            .map(_.info)
+            .collect {
+              case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+              case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+            }
+            .filter(_.sizeIs == t.args.size)
+            .foreach(fs => t.args.zip(fs).foreach((a, f) => declaredSlot("argument", f, a.tpe, a.origin, t.method)))
           t
 
-        /** java bound one type variable from two arguments; the mapping sent the two java types to
-          * unrelated targets. Which variables are the CALL's to bind is read from OWNERSHIP, never
-          * a name (§4.56) — a class's own type parameter is fixed by the receiver and skipped. */
+        /** java bound one type variable from two arguments; the mapping sent the two java types to unrelated targets. Which variables are the CALL's to bind is read from OWNERSHIP, never a name
+          * (§4.56) — a class's own type parameter is fixed by the receiver and skipped.
+          */
         private def typeVariableSplit(t: Tree.Apply)(using Program): Unit =
-          program.symbolOf(t.method).map(_.info).collect {
-            case TypeRepr.MethodType(ps, _, _) if ps.sizeIs == t.args.size => ps.map(_._2)
-          }.foreach { formals =>
-            val bound = collection.mutable.LinkedHashMap.empty[SymId, TypeRepr]
-            formals.zip(t.args).foreach((f, a) => bind(t.method, f, a.tpe, bound, a.origin, t.method))
-          }
+          program
+            .symbolOf(t.method)
+            .map(_.info)
+            .collect {
+              case TypeRepr.MethodType(ps, _, _) if ps.sizeIs == t.args.size => ps.map(_._2)
+            }
+            .foreach { formals =>
+              val bound = collection.mutable.LinkedHashMap.empty[SymId, TypeRepr]
+              formals.zip(t.args).foreach((f, a) => bind(t.method, f, a.tpe, bound, a.origin, t.method))
+            }
 
-        /** structural first-order binding — the seam is the SECOND binding: a variable already
-          * bound to one end of a broken edge, met again at the other. */
-        private def bind(owner: SymId, formal: TypeRepr, actual: TypeRepr,
-                         bound: collection.mutable.LinkedHashMap[SymId, TypeRepr],
-                         origin: Origin, callee: SymId)(using Program): Unit =
+        /** structural first-order binding — the seam is the SECOND binding: a variable already bound to one end of a broken edge, met again at the other.
+          */
+        private def bind(owner: SymId, formal: TypeRepr, actual: TypeRepr, bound: collection.mutable.LinkedHashMap[SymId, TypeRepr], origin: Origin, callee: SymId)(using Program): Unit =
           formal match
             case TypeRepr.TypeRef(_, s) if program.symbolOf(s).exists(_.owner == owner) =>
               bound.get(s) match
                 case Some(prev) =>
                   brokenT(prev, actual).foreach(e =>
-                    found(Issue.SplitTypeVariable,
-                          s"type variable ${program.symbolOf(s).map(_.name).getOrElse("?")}" +
-                            s" of ${calleeName(callee)}", e, origin, callee))
+                    found(
+                      Issue.SplitTypeVariable,
+                      s"type variable ${program.symbolOf(s).map(_.name).getOrElse("?")}" +
+                        s" of ${calleeName(callee)}",
+                      e,
+                      origin,
+                      callee
+                    )
+                  )
                 case None => bound(s) = actual
             case TypeRepr.AppliedType(tc, fs) =>
               actual match
@@ -163,14 +185,13 @@ object CollectionInternalCheck:
           t
 
         override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
-          t.rhs.foreach(b => CollectionBoundaryCheck.returnsIn(b).foreach(r =>
-            r.expr.foreach(e => declaredSlot("return", t.returnTpt.tpe, e.tpe, r.origin, t.symbol))))
+          t.rhs.foreach(b => CollectionBoundaryCheck.returnsIn(b).foreach(r => r.expr.foreach(e => declaredSlot("return", t.returnTpt.tpe, e.tpe, r.origin, t.symbol))))
           t
 
         override def transformTerm(t: Term)(using Program): Term =
           t match
             case a: Tree.Assign => declaredSlot("assignment", a.lhs.tpe, a.rhs.tpe, a.origin, SymId.None)
-            case _              => ()
+            case _ => ()
           t
 
       units.foreach(u => StandardTraversal.mapClassDef(scan, u))
@@ -188,9 +209,12 @@ object CollectionInternalCheck:
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.groupBy(f => (f.slot, f.edge, f.targets)).toList.sortBy((_, v) => -v.size).take(10)
-          .map { case ((slot, e, tg), ss) => s"    ${ss.size} × $slot: $e became $tg" }
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.groupBy(f => (f.slot, f.edge, f.targets)).toList.sortBy((_, v) => -v.size).take(10).map { case ((slot, e, tg), ss) => s"    ${ss.size} × $slot: $e became $tg" }
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

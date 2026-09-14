@@ -2,8 +2,8 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** §0.4's UNATTRIBUTABLE ARMS — fallbacks that answer with a VALUE indistinguishable from a real
-  * answer. */
+/** §0.4's UNATTRIBUTABLE ARMS — fallbacks that answer with a VALUE indistinguishable from a real answer.
+  */
 class UnattributableArmsSpec extends munit.FunSuite:
 
   private def rendered(java: String): String =
@@ -15,10 +15,11 @@ class UnattributableArmsSpec extends munit.FunSuite:
       """package p;
         |import java.util.Map;
         |public class Raw { public Map m; public Map<String, Integer> g; }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // two type arguments on the raw use, not zero. This is the behaviour the bare `catch` could
     // silently lose and the reason its default was never neutral.
-    assert(text.contains("java.util.Map[") , s"the raw use lost its arity entirely:\n$text")
+    assert(text.contains("java.util.Map["), s"the raw use lost its arity entirely:\n$text")
     val rawLine = text.linesIterator.find(_.contains("m ")).getOrElse("")
     assert(!rawLine.matches(".*java\\.util\\.Map[^\\[].*"), s"raw `Map` emitted un-applied: $rawLine")
   }

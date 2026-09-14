@@ -2,11 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The two tables `CollectionsTransform.strippedOverrides` decides an `override` modifier from,
-  * asserted against what they are quoting — `ENGINE-LIMITS.md` K28. */
+/** The two tables `CollectionsTransform.strippedOverrides` decides an `override` modifier from, asserted against what they are quoting — `ENGINE-LIMITS.md` K28.
+  */
 class MintedParentSurfaceSpec extends munit.FunSuite:
 
-  import CollectionsTransform.{OverridesShim, OverridesTarget}
+  import CollectionsTransform.{ OverridesShim, OverridesTarget }
 
   private def sig(name: String, params: Param*): OverrideGraph.Signature =
     OverrideGraph.Signature(name, Some(Descriptor(params.toList)), params.size, approximate = false)
@@ -21,8 +21,7 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
 
   test("a Map target declares the members java's Map shares with it") {
     val row = OverridesTarget(CollectionsTransform.Kind.Map.toString)
-    List("size", "isEmpty", "clear", "keySet", "keys", "values", "iterator")
-      .foreach(n => assert(declares(row, sig(n)), s"$n should keep its override on a scala Map"))
+    List("size", "isEmpty", "clear", "keySet", "keys", "values", "iterator").foreach(n => assert(declares(row, sig(n)), s"$n should keep its override on a scala Map"))
     assert(declares(row, sig("put", Param.Named("K"), Param.Named("V"))))
   }
 
@@ -47,8 +46,11 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
   test("a Map target declares NONE of java's five Map-only members — the E037 family") {
     val row = OverridesTarget(CollectionsTransform.Kind.Map.toString)
     List("containsKey", "containsValue", "entrySet", "putAll", "forEach").foreach(n =>
-      assert(!declares(row, sig(n, Param.Named("Object"))) && !declares(row, sig(n)),
-             s"$n has no counterpart on a scala Map and its override must be stripped"))
+      assert(
+        !declares(row, sig(n, Param.Named("Object"))) && !declares(row, sig(n)),
+        s"$n has no counterpart on a scala Map and its override must be stripped"
+      )
+    )
   }
 
   test("a Map target does NOT declare java's `get`/`remove`, which take Object where scala takes K") {
@@ -59,8 +61,7 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
 
   test("a Set target does not declare the four java Collection bulk members") {
     val row = OverridesTarget(CollectionsTransform.Kind.Set.toString)
-    List("containsAll", "removeAll", "retainAll", "addAll").foreach(n =>
-      assert(!declares(row, sig(n, Param.Named("Collection")))))
+    List("containsAll", "removeAll", "retainAll", "addAll").foreach(n => assert(!declares(row, sig(n, Param.Named("Collection")))))
     assert(!declares(row, sig("toArray")))
     assert(!declares(row, sig("contains", Param.Named("Object"))))
     assert(!declares(row, sig("remove", Param.Named("Object"))))
@@ -69,8 +70,7 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
   test("a shim declares NOTHING beyond java's own interface — the absence really is proof") {
     assert(!declares(OverridesShim(CollectionsTransform.JavaIterableFqn), sig("forEach", Param.Named("Consumer"))))
     assert(!declares(OverridesShim(CollectionsTransform.JavaIterableFqn), sig("spliterator")))
-    assert(!declares(OverridesShim(CollectionsTransform.JavaIteratorFqn),
-                     sig("forEachRemaining", Param.Named("Consumer"))))
+    assert(!declares(OverridesShim(CollectionsTransform.JavaIteratorFqn), sig("forEachRemaining", Param.Named("Consumer"))))
   }
 
   // -------------------------------------------------------------------------------------------
@@ -80,21 +80,24 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
   test("`remove` on a Buffer keeps the INDEX overload and strips the VALUE one") {
     List(CollectionsTransform.Kind.Seq, CollectionsTransform.Kind.Stack).foreach { k =>
       val row = OverridesTarget(k.toString)
-      assert(declares(row, sig("remove", Param.Prim("int"))),
-             s"$k: java's remove(int) IS scala's Buffer.remove(Int) and must keep its override")
-      assert(!declares(row, sig("remove", Param.Named("Object"))),
-             s"$k: java's by-value remove has no counterpart on a Buffer — E038 if the modifier stays")
+      assert(
+        declares(row, sig("remove", Param.Prim("int"))),
+        s"$k: java's remove(int) IS scala's Buffer.remove(Int) and must keep its override"
+      )
+      assert(
+        !declares(row, sig("remove", Param.Named("Object"))),
+        s"$k: java's by-value remove has no counterpart on a Buffer — E038 if the modifier stays"
+      )
     }
   }
 
   test("a Buffer target strips every java List member scala spells otherwise") {
     val row = OverridesTarget(CollectionsTransform.Kind.Seq.toString)
-    assert(!declares(row, sig("get", Param.Prim("int"))))          // scala's is `apply`
+    assert(!declares(row, sig("get", Param.Prim("int")))) // scala's is `apply`
     assert(!declares(row, sig("set", Param.Prim("int"), Param.Named("E")))) // scala's is `update`
-    assert(!declares(row, sig("add", Param.Named("E"))))           // scala's is `addOne`/`append`
+    assert(!declares(row, sig("add", Param.Named("E")))) // scala's is `addOne`/`append`
     assert(!declares(row, sig("sort", Param.Named("Comparator")))) // scala's is `sortInPlace`
-    List("listIterator", "spliterator", "subList", "replaceAll", "containsAll", "indexOf",
-         "lastIndexOf", "toArray").foreach(n => assert(!declares(row, sig(n))))
+    List("listIterator", "spliterator", "subList", "replaceAll", "containsAll", "indexOf", "lastIndexOf", "toArray").foreach(n => assert(!declares(row, sig(n))))
   }
 
   // -------------------------------------------------------------------------------------------
@@ -102,8 +105,7 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("every shim row is keyed on a target the phase actually mints") {
-    OverridesShim.keys.foreach(k =>
-      assert(CollectionsTransform.standaloneTargets(k), s"$k is not a standalone target of this phase"))
+    OverridesShim.keys.foreach(k => assert(CollectionsTransform.standaloneTargets(k), s"$k is not a standalone target of this phase"))
   }
 
   test("no row exists for a kind that cannot BE a parent — Entry is uninheritable, Opt is an alias") {
@@ -121,9 +123,12 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
     // `scala.collection.Iterable`, which declares `iterator`. That is the whole argument, and it is
     // exactly the size of `OverridesShim`'s row.
     SubsumesShim.values.flatten.toSet.foreach { sh =>
-      assertEquals(clue(OverridesShim(sh)).map(_.name), Set("iterator"),
-                   s"$sh declares more than the one member a scala Iterable answers for — " +
-                     "dropping that clause is a `Not Found` at whatever else it has")
+      assertEquals(
+        clue(OverridesShim(sh)).map(_.name),
+        Set("iterator"),
+        s"$sh declares more than the one member a scala Iterable answers for — " +
+          "dropping that clause is a `Not Found` at whatever else it has"
+      )
     }
   }
 
@@ -137,10 +142,8 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
 
   test("every subsumption row is keyed on a kind that can BE a parent, and names a real shim") {
     SubsumesShim.foreach { (k, shims) =>
-      assert(OverridesTarget.contains(k),
-             s"$k has no overridable surface here, so it cannot be claimed to subsume anything")
-      shims.foreach(sh => assert(CollectionsTransform.standaloneTargets(sh),
-                                 s"$sh is not a standalone target — nothing is minting it as a shim"))
+      assert(OverridesTarget.contains(k), s"$k has no overridable surface here, so it cannot be claimed to subsume anything")
+      shims.foreach(sh => assert(CollectionsTransform.standaloneTargets(sh), s"$sh is not a standalone target — nothing is minting it as a shim"))
     }
     assert(!SubsumesShim.contains(CollectionsTransform.Kind.Entry.toString))
     assert(!SubsumesShim.contains(CollectionsTransform.Kind.Opt.toString))

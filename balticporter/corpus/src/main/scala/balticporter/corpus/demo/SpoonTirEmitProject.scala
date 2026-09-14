@@ -7,26 +7,29 @@ import balticporter.runner.M0Pipeline
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Step-3 gate: emit a whole (small, dependency-free) library through the TIR to Scala and
-  * run scalac over it. Burn-down harness — run, read the errors, fix the emitter, repeat.
+/** Step-3 gate: emit a whole (small, dependency-free) library through the TIR to Scala and run scalac over it. Burn-down harness — run, read the errors, fix the emitter, repeat.
   *
-  *   corpus/runMain balticporter.corpus.demo.SpoonTirEmitProject [lib]   (default noise4j)
+  * corpus/runMain balticporter.corpus.demo.SpoonTirEmitProject [lib] (default noise4j)
   */
 object SpoonTirEmitProject:
 
   def main(args: Array[String]): Unit =
-    val lib      = args.headOption.getOrElse("noise4j")
+    val lib       = args.headOption.getOrElse("noise4j")
     val transform = args.contains("--transform")
-    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
-    val base     = repoRoot.resolve(s"../sge/original-src/$lib").normalize
-    val files = Files.walk(base).iterator().asScala
+    val repoRoot  = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+    val base      = repoRoot.resolve(s"../sge/original-src/$lib").normalize
+    val files     = Files
+      .walk(base)
+      .iterator()
+      .asScala
       .filter(p => p.toString.endsWith(".java"))
       .map(p => base.relativize(p).toString)
       .filterNot(f => f.contains("/test/") || f.endsWith("package-info.java") || f.endsWith("module-info.java"))
-      .toList.sorted
+      .toList
+      .sorted
 
     val types = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
     val raw   = SpoonTir.fromTypes(types)
@@ -48,8 +51,8 @@ object SpoonTirEmitProject:
     println(s"[emit] $lib: ${program.units.size} units, ${program.symbols.all.size} symbols -> $outDir")
 
     M0Pipeline.compileGate("3.8.4", List(outDir)) match
-      case Right(())  => println(s"[emit] $lib: SCALAC GREEN")
-      case Left(err)  =>
+      case Right(()) => println(s"[emit] $lib: SCALAC GREEN")
+      case Left(err) =>
         // dotty emits one `-- [E<code>] <Kind> Error:` header per diagnostic (strip ANSI first).
         val plain = err.replaceAll("\\[[0-9;]*m", "")
         val errs  = plain.linesIterator.filter(l => l.contains(".scala:") && l.matches(".*\\[E\\d+\\].*")).toList

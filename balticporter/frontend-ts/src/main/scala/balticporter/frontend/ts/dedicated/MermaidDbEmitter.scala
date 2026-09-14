@@ -1,24 +1,22 @@
 package balticporter.corpus.mermaid
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue}
+import balticporter.frontend.ts.{ RastFile, RastNode, RastType, RastValue }
 import scala.collection.mutable
 
 /** Genuine RAST-based emitter for Mermaid Db modules.
   *
-  * Reads the Resolved AST and produces a Scala class matching the
-  * ssg-mermaid hand-port conventions. The TS "Db" pattern is a module
-  * with mutable state (`let` vars), arrow-function accessors/mutators,
-  * and an exported `db` object that bundles them.
+  * Reads the Resolved AST and produces a Scala class matching the ssg-mermaid hand-port conventions. The TS "Db" pattern is a module with mutable state (`let` vars), arrow-function
+  * accessors/mutators, and an exported `db` object that bundles them.
   *
   * Translation:
-  *   - `let x: T = init`      -> `var x: T = init`
+  *   - `let x: T = init` -> `var x: T = init`
   *   - `const fn = () => expr` -> `def fn(): R = expr`
-  *   - `data.field`            -> field (module-level state becomes `this`)
-  *   - `structuredClone(d)`    -> copy the defaults (in `clear()`)
-  *   - `commonClear()`         -> inline reset of common fields
-  *   - exported `db` object    -> determines the class's public API
+  *   - `data.field` -> field (module-level state becomes `this`)
+  *   - `structuredClone(d)` -> copy the defaults (in `clear()`)
+  *   - `commonClear()` -> inline reset of common fields
+  *   - exported `db` object -> determines the class's public API
   *
   * DESIGN.md: this is a TS frontend emitter, not an engine phase.
   */
@@ -26,27 +24,27 @@ object MermaidDbEmitter {
 
   /** A module-level mutable variable (from a `let` declaration). */
   private case class StateVar(
-      name: String,
-      tsType: Option[String],
-      scalaType: String,
-      initExpr: String,
-      defaultExpr: String, // for clear()
+    name:        String,
+    tsType:      Option[String],
+    scalaType:   String,
+    initExpr:    String,
+    defaultExpr: String // for clear()
   )
 
   /** An arrow function (from a `const fn = (...) => ...` declaration). */
   private case class DbMethod(
-      name: String,
-      params: List[(String, String)], // (name, scalaType)
-      returnType: String,
-      body: List[String], // lines of Scala code
-      isGetter: Boolean,
-      isSetter: Boolean,
+    name:       String,
+    params:     List[(String, String)], // (name, scalaType)
+    returnType: String,
+    body:       List[String], // lines of Scala code
+    isGetter:   Boolean,
+    isSetter:   Boolean
   )
 
   /** A class declared inside the module. */
   private case class InnerClass(
-      name: String,
-      fields: List[(String, String, Option[String])], // (name, type, default)
+    name:   String,
+    fields: List[(String, String, Option[String])] // (name, type, default)
   )
 
   // -- commonDb functions that the Db class inherits --------------------------
@@ -57,36 +55,39 @@ object MermaidDbEmitter {
     "getDiagramTitle",
     "getAccDescription",
     "setAccDescription",
-    "commonClear",
+    "commonClear"
   )
 
   // -- Public API -------------------------------------------------------------
 
   /** Emits a Scala Db class from a RAST file following the Mermaid Db pattern.
     *
-    * @param rast        the parsed RAST file
-    * @param className   e.g. "PacketDb"
-    * @param pkg         e.g. "packet"
-    * @param extraImports additional imports to add
-    * @return the complete Scala source
+    * @param rast
+    *   the parsed RAST file
+    * @param className
+    *   e.g. "PacketDb"
+    * @param pkg
+    *   e.g. "packet"
+    * @param extraImports
+    *   additional imports to add
+    * @return
+    *   the complete Scala source
     */
   def emitDb(
-      rast: RastFile,
-      className: String,
-      pkg: String,
-      extraImports: List[String] = Nil,
+    rast:         RastFile,
+    className:    String,
+    pkg:          String,
+    extraImports: List[String] = Nil
   ): String = {
     val analysis = analyzeModule(rast)
-    val sb = new StringBuilder
+    val sb       = new StringBuilder
 
     // Header
     sb.append(header(rast.path, s"$className.scala"))
     sb.append(s"package ssg\npackage mermaid\npackage diagrams\npackage $pkg\n\n")
 
     // Imports
-    val needsMutable = analysis.stateVars.exists(v =>
-      v.scalaType.contains("mutable.") || v.scalaType.contains("ArrayBuffer") || v.scalaType.contains("Map")
-    ) || analysis.innerClasses.nonEmpty
+    val needsMutable = analysis.stateVars.exists(v => v.scalaType.contains("mutable.") || v.scalaType.contains("ArrayBuffer") || v.scalaType.contains("Map")) || analysis.innerClasses.nonEmpty
     if (needsMutable) sb.append("import scala.collection.mutable\n")
     for (imp <- extraImports) sb.append(s"import $imp\n")
     if (needsMutable || extraImports.nonEmpty) sb.append("\n")
@@ -102,24 +103,22 @@ object MermaidDbEmitter {
     sb.append(s"final class $className {\n\n")
 
     // State variables as fields
-    for (v <- analysis.stateVars) {
+    for (v <- analysis.stateVars)
       sb.append(s"  var ${padField(safeName(v.name), analysis.stateVars)}: ${v.scalaType} = ${v.initExpr}\n")
-    }
     if (analysis.stateVars.nonEmpty) sb.append("\n")
 
     // Common fields (accTitle, accDescription, title) if not already declared
     val declaredNames = analysis.stateVars.map(_.name).toSet
-    val commonFields = List(
+    val commonFields  = List(
       ("title", "String", "\"\""),
       ("accTitle", "String", "\"\""),
-      ("accDescription", "String", "\"\""),
+      ("accDescription", "String", "\"\"")
     )
     val missingCommon = commonFields.filterNot(f => declaredNames.contains(f._1))
     if (missingCommon.nonEmpty) {
       val allVars = analysis.stateVars ++ missingCommon.map(f => StateVar(f._1, None, f._2, f._3, f._3))
-      for ((name, tpe, default) <- missingCommon) {
+      for ((name, tpe, default) <- missingCommon)
         sb.append(s"  var ${padField(name, allVars)}: $tpe = $default\n")
-      }
       sb.append("\n")
     }
 
@@ -139,36 +138,35 @@ object MermaidDbEmitter {
   // -- Module analysis --------------------------------------------------------
 
   private case class ModuleAnalysis(
-      stateVars: List[StateVar],
-      methods: List[DbMethod],
-      innerClasses: List[InnerClass],
-      exportedNames: Set[String],
-      defaultDataObjects: Map[String, Map[String, String]], // name -> field -> init
-      moduleStateNames: Set[String], // names of `let` vars (module-level state)
+    stateVars:          List[StateVar],
+    methods:            List[DbMethod],
+    innerClasses:       List[InnerClass],
+    exportedNames:      Set[String],
+    defaultDataObjects: Map[String, Map[String, String]], // name -> field -> init
+    moduleStateNames:   Set[String] // names of `let` vars (module-level state)
   )
 
   private def analyzeModule(rast: RastFile): ModuleAnalysis = {
-    val stateVars = mutable.ListBuffer.empty[StateVar]
-    val methods = mutable.ListBuffer.empty[DbMethod]
-    val innerClasses = mutable.ListBuffer.empty[InnerClass]
-    val exportedNames = mutable.Set.empty[String]
+    val stateVars          = mutable.ListBuffer.empty[StateVar]
+    val methods            = mutable.ListBuffer.empty[DbMethod]
+    val innerClasses       = mutable.ListBuffer.empty[InnerClass]
+    val exportedNames      = mutable.Set.empty[String]
     val defaultDataObjects = mutable.Map.empty[String, Map[String, String]]
-    val moduleStateNames = mutable.Set.empty[String]
+    val moduleStateNames   = mutable.Set.empty[String]
 
-    for (node <- rast.nodes) {
+    for (node <- rast.nodes)
       node.kind match {
         case "VariableStatement" =>
           val decls = extractVarDecls(node)
           for (d <- decls) {
-            val name = nameOf(d)
+            val name  = nameOf(d)
             val flags = d.flags
 
             if (name == "db" || name == "default") {
               // Export object: extract the property names
-              val objLit = findChild(d, "ObjectLiteralExpression")
-                .orElse(findChild(d, "AsExpression").flatMap(a => findChild(a, "ObjectLiteralExpression")))
+              val objLit = findChild(d, "ObjectLiteralExpression").orElse(findChild(d, "AsExpression").flatMap(a => findChild(a, "ObjectLiteralExpression")))
               objLit.foreach { obj =>
-                for (prop <- obj.children) {
+                for (prop <- obj.children)
                   prop.kind match {
                     case "ShorthandPropertyAssignment" =>
                       val pName = nameOf(prop)
@@ -178,21 +176,20 @@ object MermaidDbEmitter {
                       exportedNames += pName
                     case _ => ()
                   }
-                }
               }
             } else if (flags.contains("let") || flags.contains("var")) {
               // Mutable state variable
               moduleStateNames += name
-              val tsType = resolveTypeAnnotation(d, rast)
-              val scalaType = tsTypeNodeToScala(d, rast)
-              val initExpr = resolveInitExpr(d, rast, moduleStateNames.toSet)
+              val tsType      = resolveTypeAnnotation(d, rast)
+              val scalaType   = tsTypeNodeToScala(d, rast)
+              val initExpr    = resolveInitExpr(d, rast, moduleStateNames.toSet)
               val defaultExpr = resolveDefaultExpr(d, rast, moduleStateNames.toSet)
               stateVars += StateVar(name, tsType, scalaType, initExpr, defaultExpr)
             } else if (flags.contains("const")) {
               // Check if arrow function
-              val arrowFn = findChild(d, "ArrowFunction")
+              val arrowFn  = findChild(d, "ArrowFunction")
               val funcExpr = findChild(d, "FunctionExpression")
-              val fn = arrowFn.orElse(funcExpr)
+              val fn       = arrowFn.orElse(funcExpr)
 
               fn match {
                 case Some(f) =>
@@ -200,20 +197,18 @@ object MermaidDbEmitter {
                   methods += method
                 case None =>
                   // Check if it's a default data object
-                  val objLit = findChild(d, "ObjectLiteralExpression")
-                    .orElse(findChild(d, "AsExpression").flatMap(a => findChild(a, "ObjectLiteralExpression")))
+                  val objLit = findChild(d, "ObjectLiteralExpression").orElse(findChild(d, "AsExpression").flatMap(a => findChild(a, "ObjectLiteralExpression")))
                   objLit.foreach { obj =>
                     val fields = mutable.Map.empty[String, String]
-                    for (prop <- obj.children) {
+                    for (prop <- obj.children)
                       if (prop.kind == "PropertyAssignment") {
-                        val key = nameOf(prop)
+                        val key   = nameOf(prop)
                         val value = prop.children.lastOption.map(c => emitExprSimple(c, rast, moduleStateNames.toSet)).getOrElse("???")
                         fields(key) = value
                       } else if (prop.kind == "ShorthandPropertyAssignment") {
                         val key = nameOf(prop)
                         fields(key) = key
                       }
-                    }
                     if (fields.nonEmpty) {
                       defaultDataObjects(name) = fields.toMap
                     }
@@ -227,11 +222,11 @@ object MermaidDbEmitter {
           innerClasses += cls
 
         case "FunctionDeclaration" =>
-          val name = nameOf(node)
-          val params = node.children.filter(_.kind == "Parameter")
-          val body = findChild(node, "Block")
+          val name       = nameOf(node)
+          val params     = node.children.filter(_.kind == "Parameter")
+          val body       = findChild(node, "Block")
           val returnType = inferReturnTypeFromNode(node, rast)
-          val paramList = params.map { p =>
+          val paramList  = params.map { p =>
             val pName = nameOf(p)
             val pType = inferParamTypeFromNode(p, rast)
             (pName, pType)
@@ -241,10 +236,9 @@ object MermaidDbEmitter {
 
         case "ExportAssignment" =>
           // export default { ... }
-          val objLit = findChild(node, "ObjectLiteralExpression")
-            .orElse(findChild(node, "AsExpression").flatMap(a => findChild(a, "ObjectLiteralExpression")))
+          val objLit = findChild(node, "ObjectLiteralExpression").orElse(findChild(node, "AsExpression").flatMap(a => findChild(a, "ObjectLiteralExpression")))
           objLit.foreach { obj =>
-            for (prop <- obj.children) {
+            for (prop <- obj.children)
               prop.kind match {
                 case "ShorthandPropertyAssignment" =>
                   exportedNames += nameOf(prop)
@@ -252,12 +246,10 @@ object MermaidDbEmitter {
                   exportedNames += nameOf(prop)
                 case _ => ()
               }
-            }
           }
 
         case _ => ()
       }
-    }
 
     ModuleAnalysis(
       stateVars.toList,
@@ -265,19 +257,19 @@ object MermaidDbEmitter {
       innerClasses.toList,
       exportedNames.toSet,
       defaultDataObjects.toMap,
-      moduleStateNames.toSet,
+      moduleStateNames.toSet
     )
   }
 
   // -- Function analysis ------------------------------------------------------
 
   private def analyzeFunction(
-      name: String,
-      fn: RastNode,
-      rast: RastFile,
-      stateNames: Set[String],
+    name:       String,
+    fn:         RastNode,
+    rast:       RastFile,
+    stateNames: Set[String]
   ): DbMethod = {
-    val params = fn.children.filter(_.kind == "Parameter")
+    val params     = fn.children.filter(_.kind == "Parameter")
     val returnType = inferReturnTypeFromNode(fn, rast)
 
     val paramList = params.flatMap { p =>
@@ -290,10 +282,11 @@ object MermaidDbEmitter {
           elements.map { elem =>
             val eName = nameOf(elem)
             val eType = inferParamTypeFromNode(elem, rast) match {
-              case "Any" => inferParamTypeFromNode(p, rast) match {
-                case "Any" => "Any"
-                case _ => "Any" // individual fields from destructured type
-              }
+              case "Any" =>
+                inferParamTypeFromNode(p, rast) match {
+                  case "Any" => "Any"
+                  case _     => "Any" // individual fields from destructured type
+                }
               case t => t
             }
             (eName, eType)
@@ -311,11 +304,13 @@ object MermaidDbEmitter {
     val bodyNode = {
       val block = fn.children.find(_.kind == "Block")
       block.orElse {
-        fn.children.filterNot(c =>
-          c.kind == "Parameter" || isTypeKeyword(c.kind) ||
-            c.kind == "TypeReference" || c.kind == "ArrayType" ||
-            c.kind == "UnionType" || c.kind == "FunctionType"
-        ).lastOption
+        fn.children
+          .filterNot(c =>
+            c.kind == "Parameter" || isTypeKeyword(c.kind) ||
+              c.kind == "TypeReference" || c.kind == "ArrayType" ||
+              c.kind == "UnionType" || c.kind == "FunctionType"
+          )
+          .lastOption
       }
     }
 
@@ -337,19 +332,17 @@ object MermaidDbEmitter {
   // -- Class analysis ---------------------------------------------------------
 
   private def analyzeClass(node: RastNode, rast: RastFile): InnerClass = {
-    val name = nameOf(node)
+    val name   = nameOf(node)
     val fields = mutable.ListBuffer.empty[(String, String, Option[String])]
 
     // Look for constructor parameters
-    for (child <- node.children) {
+    for (child <- node.children)
       child.kind match {
         case "Constructor" =>
           for (param <- child.children.filter(_.kind == "Parameter")) {
-            val pName = nameOf(param)
-            val pType = inferParamTypeFromNode(param, rast)
-            val default = param.children.find(c =>
-              c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference"
-            ).map(d => emitExprSimple(d, rast, Set.empty))
+            val pName    = nameOf(param)
+            val pType    = inferParamTypeFromNode(param, rast)
+            val default  = param.children.find(c => c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference").map(d => emitExprSimple(d, rast, Set.empty))
             val isPublic = param.flags.contains("PublicKeyword")
             if (isPublic) {
               fields += ((pName, pType, default))
@@ -361,7 +354,6 @@ object MermaidDbEmitter {
           fields += ((pName, pType, None))
         case _ => ()
       }
-    }
 
     InnerClass(name, fields.toList)
   }
@@ -381,7 +373,7 @@ object MermaidDbEmitter {
   @annotation.nowarn("msg=unused")
   private def emitMethod(sb: StringBuilder, m: DbMethod, analysis: ModuleAnalysis): Unit = {
     val paramStr = m.params.map { case (n, t) => s"${safeName(n)}: $t" }.mkString(", ")
-    val retStr = if (m.returnType == "Unit") ": Unit" else s": ${m.returnType}"
+    val retStr   = if (m.returnType == "Unit") ": Unit" else s": ${m.returnType}"
 
     if (m.body.size == 1 && !m.body.head.contains("\n")) {
       // Single-expression method
@@ -389,29 +381,26 @@ object MermaidDbEmitter {
       sb.append(s"    ${m.body.head}\n")
     } else {
       sb.append(s"  def ${m.name}($paramStr)$retStr = {\n")
-      for (line <- m.body) {
+      for (line <- m.body)
         sb.append(s"    $line\n")
-      }
       sb.append("  }\n")
     }
   }
 
   private def emitClear(
-      sb: StringBuilder,
-      analysis: ModuleAnalysis,
-      missingCommon: List[(String, String, String)],
+    sb:            StringBuilder,
+    analysis:      ModuleAnalysis,
+    missingCommon: List[(String, String, String)]
   ): Unit = {
     sb.append("  def clear(): Unit = {\n")
 
     // Reset all state vars
-    for (v <- analysis.stateVars) {
+    for (v <- analysis.stateVars)
       sb.append(s"    ${safeName(v.name)} = ${v.defaultExpr}\n")
-    }
 
     // Reset common fields
-    for ((name, _, default) <- missingCommon) {
+    for ((name, _, default) <- missingCommon)
       sb.append(s"    $name = $default\n")
-    }
 
     sb.append("  }\n")
   }
@@ -420,10 +409,8 @@ object MermaidDbEmitter {
 
   /** Emits a RAST expression as a simple Scala expression string.
     *
-    * This is a recursive walk of the expression tree, translating
-    * TypeScript idioms to Scala. Module-level state references
-    * (identifiers in `stateNames`) are left as bare names since they
-    * become fields on `this`.
+    * This is a recursive walk of the expression tree, translating TypeScript idioms to Scala. Module-level state references (identifiers in `stateNames`) are left as bare names since they become
+    * fields on `this`.
     */
   private def emitExprSimple(node: RastNode, rast: RastFile, stateNames: Set[String]): String = {
     node.kind match {
@@ -440,7 +427,7 @@ object MermaidDbEmitter {
       case "StringLiteral" =>
         node.value match {
           case Some(RastValue.Str(s)) => s"\"${escapeScala(s)}\""
-          case _ => "\"\""
+          case _                      => "\"\""
         }
 
       case "NumericLiteral" =>
@@ -450,17 +437,17 @@ object MermaidDbEmitter {
           case _ => "0"
         }
 
-      case "TrueKeyword" => "true"
+      case "TrueKeyword"  => "true"
       case "FalseKeyword" => "false"
-      case "NullKeyword" => "null"
-      case "ThisKeyword" => "this"
+      case "NullKeyword"  => "null"
+      case "ThisKeyword"  => "this"
       case "SuperKeyword" => "super"
 
       case "PropertyAccessExpression" =>
         val parts = node.children
         if (parts.size >= 2) {
           val receiver = emitExprSimple(parts.head, rast, stateNames)
-          val prop = parts.last.text.getOrElse("")
+          val prop     = parts.last.text.getOrElse("")
           // Module-level state: `data.packet` -> `packet` if `data` is the state
           if (stateNames.contains(receiver) && isCompoundState(receiver, rast)) {
             prop
@@ -473,13 +460,13 @@ object MermaidDbEmitter {
 
       case "CallExpression" =>
         val callee = node.children.headOption
-        val args = node.children.drop(1)
+        val args   = node.children.drop(1)
 
         callee match {
           case Some(pa) if pa.kind == "PropertyAccessExpression" =>
-            val parts = pa.children
+            val parts    = pa.children
             val receiver = if (parts.nonEmpty) emitExprSimple(parts.head, rast, stateNames) else "???"
-            val method = if (parts.size >= 2) parts.last.text.getOrElse("") else ""
+            val method   = if (parts.size >= 2) parts.last.text.getOrElse("") else ""
 
             // Special translations
             method match {
@@ -527,7 +514,7 @@ object MermaidDbEmitter {
             }
 
           case _ =>
-            val calleeStr = callee.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+            val calleeStr   = callee.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
             val emittedArgs = args.map(a => emitExprSimple(a, rast, stateNames))
             s"$calleeStr(${emittedArgs.mkString(", ")})"
         }
@@ -535,15 +522,15 @@ object MermaidDbEmitter {
       case "BinaryExpression" =>
         val children = node.children
         if (children.size >= 2) {
-          val left = emitExprSimple(children(0), rast, stateNames)
+          val left  = emitExprSimple(children(0), rast, stateNames)
           val right = emitExprSimple(children(1), rast, stateNames)
-          val op = tsOpToScala(node.operator.getOrElse("???"))
+          val op    = tsOpToScala(node.operator.getOrElse("???"))
           if (op == "=") s"$left = $right"
           else s"$left $op $right"
         } else "???"
 
       case "PrefixUnaryExpression" =>
-        val op = tsOpToScala(node.operator.getOrElse(""))
+        val op      = tsOpToScala(node.operator.getOrElse(""))
         val operand = node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
         s"$op$operand"
 
@@ -554,7 +541,7 @@ object MermaidDbEmitter {
       case "ConditionalExpression" =>
         val ch = node.children
         if (ch.size >= 3) {
-          val cond = emitExprSimple(ch(0), rast, stateNames)
+          val cond  = emitExprSimple(ch(0), rast, stateNames)
           val thenE = emitExprSimple(ch(1), rast, stateNames)
           val elseE = emitExprSimple(ch(2), rast, stateNames)
           s"if ($cond) $thenE else $elseE"
@@ -568,7 +555,7 @@ object MermaidDbEmitter {
       case "ObjectLiteralExpression" =>
         val fields = node.children.collect {
           case pa if pa.kind == "PropertyAssignment" =>
-            val key = nameOf(pa)
+            val key   = nameOf(pa)
             val value = pa.children.lastOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
             s"\"$key\" -> $value"
         }
@@ -577,12 +564,12 @@ object MermaidDbEmitter {
 
       case "NewExpression" =>
         val className = node.children.headOption.flatMap(_.text).getOrElse("???")
-        val args = node.children.drop(1).map(a => emitExprSimple(a, rast, stateNames))
+        val args      = node.children.drop(1).map(a => emitExprSimple(a, rast, stateNames))
         className match {
-          case "Map" => "mutable.Map.empty"
-          case "Set" => "mutable.Set.empty"
+          case "Map"             => "mutable.Map.empty"
+          case "Set"             => "mutable.Set.empty"
           case _ if args.isEmpty => s"new $className()"
-          case _ => s"new $className(${args.mkString(", ")})"
+          case _                 => s"new $className(${args.mkString(", ")})"
         }
 
       case "TemplateExpression" =>
@@ -591,18 +578,18 @@ object MermaidDbEmitter {
       case "NoSubstitutionTemplateLiteral" =>
         val text = node.value match {
           case Some(RastValue.Str(s)) => escapeScala(s)
-          case _ => ""
+          case _                      => ""
         }
         s"\"$text\""
 
       case "ArrowFunction" =>
         val params = node.children.filter(_.kind == "Parameter")
-        val body = node.children.find(c =>
+        val body   = node.children.find(c =>
           c.kind == "Block" || (c.kind != "Parameter" && !isTypeKeyword(c.kind) &&
             c.kind != "TypeReference" && c.kind != "ArrayType")
         )
         val paramList = params.map(p => nameOf(p)).mkString(", ")
-        val bodyStr = body.map(b => emitExprSimple(b, rast, stateNames)).getOrElse("???")
+        val bodyStr   = body.map(b => emitExprSimple(b, rast, stateNames)).getOrElse("???")
         if (params.size == 1) s"$paramList => $bodyStr"
         else s"($paramList) => $bodyStr"
 
@@ -621,11 +608,11 @@ object MermaidDbEmitter {
 
       case "PostfixUnaryExpression" =>
         val operand = node.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
-        val op = node.operator.getOrElse("")
+        val op      = node.operator.getOrElse("")
         op match {
-          case "PlusPlusToken" => s"{ val _p = $operand; $operand += 1; _p }"
+          case "PlusPlusToken"   => s"{ val _p = $operand; $operand += 1; _p }"
           case "MinusMinusToken" => s"{ val _p = $operand; $operand -= 1; _p }"
-          case _ => s"$operand /* postfix $op */"
+          case _                 => s"$operand /* postfix $op */"
         }
 
       case "SpreadElement" =>
@@ -665,7 +652,7 @@ object MermaidDbEmitter {
   /** Emits the statements of a Block as a list of Scala lines. */
   private def emitBlockLines(block: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
     val lines = mutable.ListBuffer.empty[String]
-    for (stmt <- block.children) {
+    for (stmt <- block.children)
       stmt.kind match {
         case "ReturnStatement" =>
           val expr = stmt.children.headOption
@@ -685,12 +672,10 @@ object MermaidDbEmitter {
         case "VariableStatement" =>
           val decls = extractVarDecls(stmt)
           for (d <- decls) {
-            val name = safeName(nameOf(d))
+            val name    = safeName(nameOf(d))
             val isConst = d.flags.contains("const")
-            val kw = if (isConst) "val" else "var"
-            val init = d.children.find(c =>
-              c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference"
-            )
+            val kw      = if (isConst) "val" else "var"
+            val init    = d.children.find(c => c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference")
             init.foreach { i =>
               lines += s"$kw $name = ${emitExprSimple(i, rast, stateNames)}"
             }
@@ -738,13 +723,12 @@ object MermaidDbEmitter {
         case _ =>
           lines += s"// TODO: ${stmt.kind}"
       }
-    }
     lines.toList
   }
 
   private def emitIfLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
     val lines = mutable.ListBuffer.empty[String]
-    val ch = node.children
+    val ch    = node.children
     if (ch.size >= 2) {
       val cond = emitExprSimple(ch(0), rast, stateNames)
       lines += s"if ($cond) {"
@@ -780,12 +764,12 @@ object MermaidDbEmitter {
   private def emitTemplateExpr(node: RastNode, rast: RastFile, stateNames: Set[String]): String = {
     val sb = new StringBuilder
     sb.append("s\"")
-    for (child <- node.children) {
+    for (child <- node.children)
       child.kind match {
         case "TemplateHead" =>
           child.value.foreach {
             case RastValue.Str(s) => sb.append(escapeInterpolation(s))
-            case _ => ()
+            case _                => ()
           }
         case "TemplateSpan" =>
           val expr = child.children.headOption
@@ -798,12 +782,11 @@ object MermaidDbEmitter {
           tail.foreach { t =>
             t.value.foreach {
               case RastValue.Str(s) => sb.append(escapeInterpolation(s))
-              case _ => ()
+              case _                => ()
             }
           }
         case _ => ()
       }
-    }
     sb.append("\"")
     sb.toString
   }
@@ -811,51 +794,45 @@ object MermaidDbEmitter {
   // -- Type resolution --------------------------------------------------------
 
   private def resolveTypeAnnotation(decl: RastNode, rast: RastFile): Option[String] = {
-    val typeNode = decl.children.find(c =>
-      c.kind == "TypeReference" || isTypeKeyword(c.kind) || c.kind == "ArrayType" || c.kind == "UnionType"
-    )
+    val typeNode = decl.children.find(c => c.kind == "TypeReference" || isTypeKeyword(c.kind) || c.kind == "ArrayType" || c.kind == "UnionType")
     typeNode.map(t => tsTypeNodeToScalaStr(t, rast))
   }
 
   private def tsTypeNodeToScala(decl: RastNode, rast: RastFile): String = {
-    val typeNode = decl.children.find(c =>
-      c.kind == "TypeReference" || isTypeKeyword(c.kind) || c.kind == "ArrayType" || c.kind == "UnionType"
-    )
+    val typeNode = decl.children.find(c => c.kind == "TypeReference" || isTypeKeyword(c.kind) || c.kind == "ArrayType" || c.kind == "UnionType")
     typeNode match {
       case Some(t) => tsTypeNodeToScalaStr(t, rast)
-      case None =>
+      case None    =>
         // Fall back to the RAST type map
         decl.`type`.flatMap(rast.types.get) match {
           case Some(rt) => rastTypeToScala(rt, rast)
-          case None => "Any"
+          case None     => "Any"
         }
     }
   }
 
-  private def tsTypeNodeToScalaStr(node: RastNode, rast: RastFile): String = {
+  private def tsTypeNodeToScalaStr(node: RastNode, rast: RastFile): String =
     node.kind match {
-      case "StringKeyword" => "String"
-      case "NumberKeyword" => "Double"
-      case "BooleanKeyword" => "Boolean"
-      case "VoidKeyword" => "Unit"
-      case "AnyKeyword" => "Any"
-      case "NeverKeyword" => "Nothing"
-      case "NullKeyword" => "Null"
+      case "StringKeyword"    => "String"
+      case "NumberKeyword"    => "Double"
+      case "BooleanKeyword"   => "Boolean"
+      case "VoidKeyword"      => "Unit"
+      case "AnyKeyword"       => "Any"
+      case "NeverKeyword"     => "Nothing"
+      case "NullKeyword"      => "Null"
       case "UndefinedKeyword" => "Unit"
-      case "TypeReference" =>
+      case "TypeReference"    =>
         val name = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("Any")
         name match {
           case "Array" =>
-            val typeArg = node.children.find(c => c.kind != "Identifier")
-              .map(c => tsTypeNodeToScalaStr(c, rast)).getOrElse("Any")
+            val typeArg = node.children.find(c => c.kind != "Identifier").map(c => tsTypeNodeToScalaStr(c, rast)).getOrElse("Any")
             s"mutable.ArrayBuffer[$typeArg]"
           case "Map" =>
             val typeArgs = node.children.filter(c => c.kind != "Identifier").map(c => tsTypeNodeToScalaStr(c, rast))
             if (typeArgs.size >= 2) s"mutable.Map[${typeArgs(0)}, ${typeArgs(1)}]"
             else "mutable.Map[String, Any]"
           case "Set" =>
-            val typeArg = node.children.find(c => c.kind != "Identifier")
-              .map(c => tsTypeNodeToScalaStr(c, rast)).getOrElse("Any")
+            val typeArg = node.children.find(c => c.kind != "Identifier").map(c => tsTypeNodeToScalaStr(c, rast)).getOrElse("Any")
             s"mutable.Set[$typeArg]"
           case "Record" =>
             val typeArgs = node.children.filter(c => c.kind != "Identifier").map(c => tsTypeNodeToScalaStr(c, rast))
@@ -863,8 +840,7 @@ object MermaidDbEmitter {
             else "mutable.Map[String, Any]"
           case "Required" | "RequiredDeep" | "Readonly" =>
             // Unwrap utility types
-            node.children.find(c => c.kind != "Identifier")
-              .map(c => tsTypeNodeToScalaStr(c, rast)).getOrElse("Any")
+            node.children.find(c => c.kind != "Identifier").map(c => tsTypeNodeToScalaStr(c, rast)).getOrElse("Any")
           case other => other
         }
       case "ArrayType" =>
@@ -879,23 +855,22 @@ object MermaidDbEmitter {
         } else types.mkString(" | ")
       case _ => "Any"
     }
-  }
 
-  private def rastTypeToScala(rt: RastType, rast: RastFile): String = {
+  private def rastTypeToScala(rt: RastType, rast: RastFile): String =
     rt.kind match {
-      case "string" => "String"
-      case "number" => "Double"
-      case "boolean" => "Boolean"
-      case "void" => "Unit"
+      case "string"             => "String"
+      case "number"             => "Double"
+      case "boolean"            => "Boolean"
+      case "void"               => "Unit"
       case "null" | "undefined" => "Null"
-      case "any" => "Any"
-      case "never" => "Nothing"
-      case "array" =>
+      case "any"                => "Any"
+      case "never"              => "Nothing"
+      case "array"              =>
         val elemType = rt.elementType.flatMap(rast.types.get).map(t => rastTypeToScala(t, rast)).getOrElse("Any")
         s"mutable.ArrayBuffer[$elemType]"
       case "reference" =>
         // Generic type reference: Map<string, SankeyNode>, Array<PacketWord>, etc.
-        val target = rt.target.flatMap(rast.types.get)
+        val target   = rt.target.flatMap(rast.types.get)
         val typeArgs = rt.typeArguments.getOrElse(Nil).flatMap(rast.types.get).map(t => rastTypeToScala(t, rast))
         val baseName = target.map(_.text).getOrElse(rt.text.takeWhile(_ != '<'))
         baseName match {
@@ -921,7 +896,7 @@ object MermaidDbEmitter {
           "mutable.Map[String, Any]"
         } else "Any"
       case "function" =>
-        val params = rt.parameters.getOrElse(Nil)
+        val params  = rt.parameters.getOrElse(Nil)
         val retType = rt.returnType.flatMap(rast.types.get).map(t => rastTypeToScala(t, rast)).getOrElse("Any")
         if (params.isEmpty) s"() => $retType"
         else {
@@ -930,16 +905,13 @@ object MermaidDbEmitter {
         }
       case _ => "Any"
     }
-  }
 
   private def inferReturnTypeFromNode(fn: RastNode, rast: RastFile): String = {
     // Check for explicit return type annotation
-    val typeNode = fn.children.find(c =>
-      isTypeKeyword(c.kind) || c.kind == "TypeReference" || c.kind == "ArrayType" || c.kind == "UnionType"
-    )
+    val typeNode = fn.children.find(c => isTypeKeyword(c.kind) || c.kind == "TypeReference" || c.kind == "ArrayType" || c.kind == "UnionType")
     typeNode match {
       case Some(t) if t.kind != "Parameter" => tsTypeNodeToScalaStr(t, rast)
-      case _ =>
+      case _                                =>
         // Fall back to RAST type
         fn.`type`.flatMap(rast.types.get) match {
           case Some(rt) if rt.kind == "function" =>
@@ -950,12 +922,10 @@ object MermaidDbEmitter {
   }
 
   private def inferParamTypeFromNode(param: RastNode, rast: RastFile): String = {
-    val typeNode = param.children.find(c =>
-      c.kind == "TypeReference" || isTypeKeyword(c.kind) || c.kind == "ArrayType" || c.kind == "UnionType"
-    )
+    val typeNode = param.children.find(c => c.kind == "TypeReference" || isTypeKeyword(c.kind) || c.kind == "ArrayType" || c.kind == "UnionType")
     typeNode match {
       case Some(t) => tsTypeNodeToScalaStr(t, rast)
-      case None =>
+      case None    =>
         param.`type`.flatMap(rast.types.get).map(t => rastTypeToScala(t, rast)).getOrElse("Any")
     }
   }
@@ -972,7 +942,7 @@ object MermaidDbEmitter {
         val expr = emitExprSimple(n, rast, stateNames)
         // Handle common patterns
         expr match {
-          case s if s.contains("structuredClone") => resolveStructuredClone(n, rast, stateNames)
+          case s if s.contains("structuredClone")               => resolveStructuredClone(n, rast, stateNames)
           case s if s.startsWith("DEFAULT_") && s.contains(".") =>
             // DEFAULT_PIE_DB.sections -> use the default
             resolveDefaultPropertyAccess(n, rast, stateNames)
@@ -981,13 +951,13 @@ object MermaidDbEmitter {
       case None =>
         // Use type default
         tsTypeNodeToScala(decl, rast) match {
-          case "String" => "\"\""
-          case "Double" | "Int" => "0"
-          case "Boolean" => "false"
+          case "String"                       => "\"\""
+          case "Double" | "Int"               => "0"
+          case "Boolean"                      => "false"
           case t if t.contains("ArrayBuffer") => "mutable.ArrayBuffer.empty"
-          case t if t.contains("Map") => "mutable.Map.empty"
-          case t if t.contains("Set") => "mutable.Set.empty"
-          case _ => "???"
+          case t if t.contains("Map")         => "mutable.Map.empty"
+          case t if t.contains("Set")         => "mutable.Set.empty"
+          case _                              => "???"
         }
     }
   }
@@ -995,23 +965,23 @@ object MermaidDbEmitter {
   private def resolveDefaultExpr(decl: RastNode, rast: RastFile, stateNames: Set[String]): String = {
     // For clear(): the default value to reset to
     val scalaType = tsTypeNodeToScala(decl, rast)
-    val initExpr = resolveInitExpr(decl, rast, stateNames)
+    val initExpr  = resolveInitExpr(decl, rast, stateNames)
 
     // If the init is a structuredClone or property access, the default is the same
     scalaType match {
-      case "String" => "\"\""
-      case "Double" | "Int" => "0"
-      case "Boolean" => "false"
+      case "String"                       => "\"\""
+      case "Double" | "Int"               => "0"
+      case "Boolean"                      => "false"
       case t if t.contains("ArrayBuffer") => "mutable.ArrayBuffer.empty"
-      case t if t.contains("Map") =>
+      case t if t.contains("Map")         =>
         if (initExpr.contains("Map.empty") || initExpr.contains("Map()")) initExpr
         else "mutable.Map.empty"
       case t if t.contains("Set") => "mutable.Set.empty"
-      case _ => initExpr // fall back to the init expression
+      case _                      => initExpr // fall back to the init expression
     }
   }
 
-  private def resolveStructuredClone(node: RastNode, rast: RastFile, stateNames: Set[String]): String = {
+  private def resolveStructuredClone(node: RastNode, rast: RastFile, stateNames: Set[String]): String =
     // structuredClone(defaultData) -> use the default's initial value
     node.kind match {
       case "CallExpression" =>
@@ -1019,38 +989,35 @@ object MermaidDbEmitter {
         arg.map(a => emitExprSimple(a, rast, stateNames)).getOrElse("???")
       case _ => emitExprSimple(node, rast, stateNames)
     }
-  }
 
   private def resolveDefaultPropertyAccess(node: RastNode, rast: RastFile, stateNames: Set[String]): String = {
     // DEFAULT_PIE_DB.sections -> Map.empty, DEFAULT_PIE_DB.showData -> false
     val scalaType = node.`type`.flatMap(rast.types.get).map(t => rastTypeToScala(t, rast)).getOrElse("Any")
     scalaType match {
-      case "String" => "\"\""
-      case "Double" | "Int" => "0"
-      case "Boolean" => "false"
+      case "String"                       => "\"\""
+      case "Double" | "Int"               => "0"
+      case "Boolean"                      => "false"
       case t if t.contains("ArrayBuffer") => "mutable.ArrayBuffer.empty"
-      case t if t.contains("Map") => "mutable.Map.empty"
-      case _ => emitExprSimple(node, rast, stateNames)
+      case t if t.contains("Map")         => "mutable.Map.empty"
+      case _                              => emitExprSimple(node, rast, stateNames)
     }
   }
 
-  /** Checks if a state variable holds compound data (an object with sub-fields).
-    * Used to decide whether `data.packet` should become just `packet`. */
+  /** Checks if a state variable holds compound data (an object with sub-fields). Used to decide whether `data.packet` should become just `packet`.
+    */
   private def isCompoundState(name: String, rast: RastFile): Boolean = {
     import scala.util.boundary
     import scala.util.boundary.break
     boundary {
-      for (node <- rast.nodes) {
+      for (node <- rast.nodes)
         if (node.kind == "VariableStatement") {
           val decls = extractVarDecls(node)
-          for (d <- decls) {
+          for (d <- decls)
             if (nameOf(d) == name) {
               val typeRef = d.children.find(_.kind == "TypeReference")
               break(typeRef.isDefined)
             }
-          }
         }
-      }
       false
     }
   }
@@ -1104,12 +1071,12 @@ object MermaidDbEmitter {
   /** Emits a for-of loop as a Scala for comprehension. */
   private def emitForOfLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
     val lines = mutable.ListBuffer.empty[String]
-    val ch = node.children
+    val ch    = node.children
     // ForOfStatement: children are [VariableDeclarationList|Identifier, expression, Block]
     if (ch.size >= 3) {
-      val bindingNode = ch(0)
+      val bindingNode  = ch(0)
       val iterableExpr = emitExprSimple(ch(1), rast, stateNames)
-      val body = ch(2)
+      val body         = ch(2)
 
       val varName = if (bindingNode.kind == "VariableDeclarationList") {
         val decls = bindingNode.children.filter(_.kind == "VariableDeclaration")
@@ -1134,11 +1101,11 @@ object MermaidDbEmitter {
   /** Emits a for-in loop as a Scala for comprehension over keys. */
   private def emitForInLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
     val lines = mutable.ListBuffer.empty[String]
-    val ch = node.children
+    val ch    = node.children
     if (ch.size >= 3) {
       val bindingNode = ch(0)
-      val objExpr = emitExprSimple(ch(1), rast, stateNames)
-      val body = ch(2)
+      val objExpr     = emitExprSimple(ch(1), rast, stateNames)
+      val body        = ch(2)
 
       val varName = if (bindingNode.kind == "VariableDeclarationList") {
         val decls = bindingNode.children.filter(_.kind == "VariableDeclaration")
@@ -1160,7 +1127,7 @@ object MermaidDbEmitter {
   /** Emits a C-style for loop as a Scala while loop. */
   private def emitForLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
     val lines = mutable.ListBuffer.empty[String]
-    val ch = node.children
+    val ch    = node.children
     // ForStatement children: [init, condition, increment, body]
     // Some may be missing (EmptyStatement/null)
     if (ch.size >= 4) {
@@ -1173,10 +1140,8 @@ object MermaidDbEmitter {
       if (init.kind == "VariableDeclarationList") {
         val decls = init.children.filter(_.kind == "VariableDeclaration")
         for (d <- decls) {
-          val name = safeName(nameOf(d))
-          val initVal = d.children.find(c =>
-            c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference"
-          ).map(i => emitExprSimple(i, rast, stateNames)).getOrElse("0")
+          val name    = safeName(nameOf(d))
+          val initVal = d.children.find(c => c.kind != "Identifier" && !isTypeKeyword(c.kind) && c.kind != "TypeReference").map(i => emitExprSimple(i, rast, stateNames)).getOrElse("0")
           lines += s"var $name = $initVal"
         }
       } else if (init.kind != "EmptyStatement" && init.kind != "OmittedExpression") {
@@ -1184,7 +1149,8 @@ object MermaidDbEmitter {
       }
 
       // Condition
-      val condStr = if (cond.kind == "EmptyStatement" || cond.kind == "OmittedExpression") "true"
+      val condStr =
+        if (cond.kind == "EmptyStatement" || cond.kind == "OmittedExpression") "true"
         else emitExprSimple(cond, rast, stateNames)
 
       lines += s"while ($condStr) {"
@@ -1212,52 +1178,50 @@ object MermaidDbEmitter {
   /** Emits a switch statement as a Scala match expression. */
   private def emitSwitchLines(node: RastNode, rast: RastFile, stateNames: Set[String]): List[String] = {
     val lines = mutable.ListBuffer.empty[String]
-    val ch = node.children
+    val ch    = node.children
     if (ch.size >= 2) {
-      val selector = emitExprSimple(ch(0), rast, stateNames)
+      val selector  = emitExprSimple(ch(0), rast, stateNames)
       val caseBlock = ch(1) // CaseBlock
 
       lines += s"$selector match {"
-      for (clause <- caseBlock.children) {
+      for (clause <- caseBlock.children)
         clause.kind match {
           case "CaseClause" =>
-            val caseExpr = clause.children.headOption
-              .map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
+            val caseExpr = clause.children.headOption.map(c => emitExprSimple(c, rast, stateNames)).getOrElse("???")
             // If it's a string or numeric literal, use it directly; otherwise wrap in backticks
             val casePattern = caseExpr match {
-              case s if s.startsWith("\"") => s
+              case s if s.startsWith("\"")                              => s
               case s if s.headOption.exists(c => c.isDigit || c == '-') => s
-              case s => s"`$s`"
+              case s                                                    => s"`$s`"
             }
             lines += s"  case $casePattern =>"
             // Remaining children are statement list
-            for (stmt <- clause.children.drop(1)) {
+            for (stmt <- clause.children.drop(1))
               if (stmt.kind == "BreakStatement") {
                 // Skip break - Scala match doesn't need it
               } else {
                 val stmtLines = emitBlockLines(
                   RastNode(kind = "Block", kindCode = 0, pos = (0, 0), children = List(stmt)),
-                  rast, stateNames,
+                  rast,
+                  stateNames
                 )
                 for (l <- stmtLines) lines += s"    $l"
               }
-            }
           case "DefaultClause" =>
             lines += "  case _ =>"
-            for (stmt <- clause.children) {
+            for (stmt <- clause.children)
               if (stmt.kind == "BreakStatement") {
                 // Skip
               } else {
                 val stmtLines = emitBlockLines(
                   RastNode(kind = "Block", kindCode = 0, pos = (0, 0), children = List(stmt)),
-                  rast, stateNames,
+                  rast,
+                  stateNames
                 )
                 for (l <- stmtLines) lines += s"    $l"
               }
-            }
           case _ => ()
         }
-      }
       lines += "}"
     }
     lines.toList
@@ -1265,36 +1229,72 @@ object MermaidDbEmitter {
 
   /** Escapes Scala reserved words used as identifiers. */
   private def safeName(name: String): String = {
-    val reserved = Set("type", "class", "object", "trait", "val", "var", "def",
-      "import", "package", "match", "case", "if", "else", "while", "for",
-      "do", "return", "throw", "try", "catch", "finally", "yield", "new",
-      "extends", "with", "super", "this", "abstract", "final", "sealed",
-      "private", "protected", "override", "implicit", "lazy", "forSome",
-      "macro", "true", "false", "null")
+    val reserved = Set(
+      "type",
+      "class",
+      "object",
+      "trait",
+      "val",
+      "var",
+      "def",
+      "import",
+      "package",
+      "match",
+      "case",
+      "if",
+      "else",
+      "while",
+      "for",
+      "do",
+      "return",
+      "throw",
+      "try",
+      "catch",
+      "finally",
+      "yield",
+      "new",
+      "extends",
+      "with",
+      "super",
+      "this",
+      "abstract",
+      "final",
+      "sealed",
+      "private",
+      "protected",
+      "override",
+      "implicit",
+      "lazy",
+      "forSome",
+      "macro",
+      "true",
+      "false",
+      "null"
+    )
     if (reserved.contains(name)) s"`$name`"
     else name
   }
 
   private def tsOpToScala(op: String): String = op match {
-    case "EqualsEqualsEqualsToken" => "=="
+    case "EqualsEqualsEqualsToken"      => "=="
     case "ExclamationEqualsEqualsToken" => "!="
-    case "EqualsEqualsToken" => "=="
-    case "ExclamationEqualsToken" => "!="
-    case "AmpersandAmpersandToken" => "&&"
-    case "BarBarToken" => "||"
-    case "PlusToken" => "+"
-    case "MinusToken" => "-"
-    case "AsteriskToken" => "*"
-    case "SlashToken" => "/"
-    case "PercentToken" => "%"
-    case "LessThanToken" => "<"
-    case "GreaterThanToken" => ">"
-    case "LessThanEqualsToken" => "<="
-    case "GreaterThanEqualsToken" => ">="
-    case "EqualsToken" => "="
-    case "PlusEqualsToken" => "+="
-    case "MinusEqualsToken" => "-="
-    case "ExclamationToken" => "!"
-    case other => other
+    case "EqualsEqualsToken"            => "=="
+    case "ExclamationEqualsToken"       => "!="
+    case "AmpersandAmpersandToken"      => "&&"
+    case "BarBarToken"                  => "||"
+    case "PlusToken"                    => "+"
+    case "MinusToken"                   => "-"
+    case "AsteriskToken"                => "*"
+    case "SlashToken"                   => "/"
+    case "PercentToken"                 => "%"
+    case "LessThanToken"                => "<"
+    case "GreaterThanToken"             => ">"
+    case "LessThanEqualsToken"          => "<="
+    case "GreaterThanEqualsToken"       => ">="
+    case "EqualsToken"                  => "="
+    case "PlusEqualsToken"              => "+="
+    case "MinusEqualsToken"             => "-="
+    case "ExclamationToken"             => "!"
+    case other                          => other
   }
 }

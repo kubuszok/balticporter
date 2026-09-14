@@ -9,33 +9,35 @@ import balticporter.core.BExpr.*
 object ScalaPrinter:
 
   def print(
-      unit: BUnit,
-      prov: Provenance,
-      sentinels: Set[String] = Set.empty,
-      registry: Option[CtorRegistry] = None,
-      ctorOverrides: Map[String, CtorOverride] = Map.empty,
+    unit:          BUnit,
+    prov:          Provenance,
+    sentinels:     Set[String] = Set.empty,
+    registry:      Option[CtorRegistry] = None,
+    ctorOverrides: Map[String, CtorOverride] = Map.empty
   ): String =
     new Printer(MemberClashPass(widenFields(unit, registry), registry), prov, sentinels, registry, ctorOverrides).result()
 
   /** Widen private non-final fields assigned by subclass effect-replay to `protected`. */
   private def widenFields(unit: BUnit, registry: Option[CtorRegistry]): BUnit =
     registry match
-      case None => unit
+      case None      => unit
       case Some(reg) =>
         val w = reg.widenedFields
         if w.isEmpty then unit
         else
-          unit.copy(types = unit.types.map { t =>
-            val fqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
-            t.copy(fields = t.fields.map { f =>
-              if w((fqcn, f.name)) then f.copy(mods = f.mods.copy(vis = Vis.Protected)) else f
-            })
-          })
+          unit.copy(
+            types = unit.types.map { t =>
+              val fqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
+              t.copy(fields = t.fields.map { f =>
+                if w((fqcn, f.name)) then f.copy(mods = f.mods.copy(vis = Vis.Protected)) else f
+              })
+            }
+          )
 
 /** Classes whose no-arg path equals the null sentinel (transitive). */
 object SentinelRegistry:
   def compute(units: List[BUnit]): Set[String] =
-    var acc = Set.empty[String]
+    var acc     = Set.empty[String]
     var changed = true
     while changed do
       changed = false
@@ -53,18 +55,18 @@ object SentinelRegistry:
       }
     acc
 
-/** Declaration-level ctor override: `headerSuffix` after `class Name[tparams]`,
-  * `body` lines at the top of the class body. Engine emits the rest as usual. */
+/** Declaration-level ctor override: `headerSuffix` after `class Name[tparams]`, `body` lines at the top of the class body. Engine emits the rest as usual.
+  */
 final case class CtorOverride(headerSuffix: String, body: List[String])
 
-private final class Printer(
-    unit: BUnit,
-    prov: Provenance,
-    sentinels: Set[String],
-    registry: Option[CtorRegistry],
-    ctorOverrides: Map[String, CtorOverride] = Map.empty,
+final private class Printer(
+  unit:          BUnit,
+  prov:          Provenance,
+  sentinels:     Set[String],
+  registry:      Option[CtorRegistry],
+  ctorOverrides: Map[String, CtorOverride] = Map.empty
 ):
-  private val sb = new StringBuilder
+  private val sb     = new StringBuilder
   private var indent = 0
 
   private def line(s: String = ""): Unit =
@@ -102,13 +104,58 @@ private final class Printer(
   // ---- names & types ---------------------------------------------------------
 
   private val keywords = Set(
-    "abstract", "case", "catch", "class", "def", "do", "else", "enum", "export", "extends",
-    "false", "final", "finally", "for", "given", "if", "implicit", "import", "lazy", "match",
-    "new", "null", "object", "override", "package", "private", "protected", "return", "sealed",
-    "super", "then", "throw", "trait", "true", "try", "type", "val", "var", "while", "with", "yield",
-    "macro", "forSome",
+    "abstract",
+    "case",
+    "catch",
+    "class",
+    "def",
+    "do",
+    "else",
+    "enum",
+    "export",
+    "extends",
+    "false",
+    "final",
+    "finally",
+    "for",
+    "given",
+    "if",
+    "implicit",
+    "import",
+    "lazy",
+    "match",
+    "new",
+    "null",
+    "object",
+    "override",
+    "package",
+    "private",
+    "protected",
+    "return",
+    "sealed",
+    "super",
+    "then",
+    "throw",
+    "trait",
+    "true",
+    "try",
+    "type",
+    "val",
+    "var",
+    "while",
+    "with",
+    "yield",
+    "macro",
+    "forSome",
     // soft keywords: always safe to backtick
-    "using", "extension", "inline", "opaque", "transparent", "derives", "end", "infix",
+    "using",
+    "extension",
+    "inline",
+    "opaque",
+    "transparent",
+    "derives",
+    "end",
+    "infix"
   )
 
   private def id(name: String): String =
@@ -120,9 +167,16 @@ private final class Printer(
 
   /** Boxed types whose simple names collide with Scala primitives; never shortened. */
   private val collidingJavaLang = Set(
-    "java.lang.Long", "java.lang.Double", "java.lang.Float", "java.lang.Boolean",
-    "java.lang.Byte", "java.lang.Short", "java.lang.Character",
-    "java.lang.StringBuilder", "java.lang.Iterable", "java.lang.Cloneable",
+    "java.lang.Long",
+    "java.lang.Double",
+    "java.lang.Float",
+    "java.lang.Boolean",
+    "java.lang.Byte",
+    "java.lang.Short",
+    "java.lang.Character",
+    "java.lang.StringBuilder",
+    "java.lang.Iterable",
+    "java.lang.Cloneable"
   )
 
   /** Inner (non-static) class qnames in this unit; referable only by simple name. */
@@ -137,34 +191,39 @@ private final class Printer(
   private def refName(q0: String): String =
     if innerQNames.contains(q0) then return id(q0.substring(q0.lastIndexOf('$') + 1))
     // local classes: strip block-counter prefix (Outer$1MyParams -> MyParams)
-    val lastSeg0 = q0.substring(q0.lastIndexOf('$') + 1)
+    val lastSeg0      = q0.substring(q0.lastIndexOf('$') + 1)
     val localStripped = lastSeg0.dropWhile(_.isDigit)
-    if q0.contains('$') && lastSeg0.headOption.exists(_.isDigit) && localStripped.nonEmpty then
-      return id(localStripped)
+    if q0.contains('$') && lastSeg0.headOption.exists(_.isDigit) && localStripped.nonEmpty then return id(localStripped)
     // Spoon qualifies nested types as Outer$Inner; the companion encoding makes that Outer.Inner
-    val q = q0.replace('$', '.')
+    val q    = q0.replace('$', '.')
     val name =
       if q == BType.ObjectQ then "Any"
       else if q == "java.lang.String" then "String"
       else if collidingJavaLang.contains(q) then q
       else if pkgOfQ(q) == "java.lang" then q.substring("java.lang.".length)
-      else if q.startsWith(unit.pkg + ".") && pkgOfQ(q0).length <= unit.pkg.length then
-        q.substring(unit.pkg.length + 1)
+      else if q.startsWith(unit.pkg + ".") && pkgOfQ(q0).length <= unit.pkg.length then q.substring(unit.pkg.length + 1)
       else q
     // Scala keywords can appear as Java package segments (e.g. jackson.core.type)
     name.split('.').map(id).mkString(".")
 
   private val primMap = Map(
-    "void" -> "Unit", "int" -> "Int", "long" -> "Long", "double" -> "Double", "float" -> "Float",
-    "boolean" -> "Boolean", "char" -> "Char", "byte" -> "Byte", "short" -> "Short",
+    "void" -> "Unit",
+    "int" -> "Int",
+    "long" -> "Long",
+    "double" -> "Double",
+    "float" -> "Float",
+    "boolean" -> "Boolean",
+    "char" -> "Char",
+    "byte" -> "Byte",
+    "short" -> "Short"
   )
 
   private def tpe(t: BType): String = t match
-    case BType.Prim(n)       => primMap.getOrElse(n, unsupported(s"primitive $n"))
-    case BType.Ref(q, Nil)   => refName(q)
-    case BType.Ref(q, args)  => s"${refName(q)}[${args.map(tpe).mkString(", ")}]"
-    case BType.Arr(e)        => s"Array[${arrElem(e)}]"
-    case BType.TVar(n)       => n
+    case BType.Prim(n)      => primMap.getOrElse(n, unsupported(s"primitive $n"))
+    case BType.Ref(q, Nil)  => refName(q)
+    case BType.Ref(q, args) => s"${refName(q)}[${args.map(tpe).mkString(", ")}]"
+    case BType.Arr(e)       => s"Array[${arrElem(e)}]"
+    case BType.TVar(n)      => n
     case BType.Wild(up, lo) =>
       (up, lo) match
         case (Some(u), None) => s"? <: ${tpe(u)}"
@@ -183,7 +242,7 @@ private final class Printer(
   private var nestedDepth = 0
 
   private def visPrefix(m: Mods): String = m.vis match
-    case Vis.Public => ""
+    case Vis.Public  => ""
     case Vis.Private =>
       if nestedDepth > 0 && unit.pkg.nonEmpty then s"private[$innermostPkg] " else "private "
     case Vis.Protected      => if unit.pkg.isEmpty then "protected " else s"protected[$innermostPkg] "
@@ -229,11 +288,9 @@ private final class Printer(
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
       val dArgs =
-        if sc.targetTypes.length == sc.delegateArgs.length then
-          sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(a, Some(tt))).mkString(", ")
+        if sc.targetTypes.length == sc.delegateArgs.length then sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(a, Some(tt))).mkString(", ")
         else sc.delegateArgs.map(delegateArg).mkString(", ")
-      if sc.body.isEmpty then
-        line(s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) = this($dArgs)")
+      if sc.body.isEmpty then line(s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) = this($dArgs)")
       else
         line(s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) = {")
         indent += 1; line(s"this($dArgs)"); sc.body.foreach(stmt); indent -= 1; line("}")
@@ -248,12 +305,16 @@ private final class Printer(
         line()
       case FieldLine.SentinelVal(f, pname, default) =>
         trivia(f.leading)
-        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
+        line(
+          s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}"
+        )
         line()
       case FieldLine.CondInit(f, pname, whenSome, whenNull) =>
         trivia(f.leading)
         val kw = if f.mods.isFinal then "val" else "var"
-        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
+        line(
+          s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}"
+        )
         line()
       case FieldLine.DefaultInit(f) =>
         trivia(f.leading)
@@ -291,7 +352,7 @@ private final class Printer(
       val reassignedStatics = assignedFieldNames(t.staticInit)
       t.staticFields.foreach { f =>
         trivia(f.leading)
-        val kw = if f.mods.isFinal && !reassignedStatics(f.name) then "val" else "var"
+        val kw  = if f.mods.isFinal && !reassignedStatics(f.name) then "val" else "var"
         val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
         line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
         line()
@@ -318,7 +379,7 @@ private final class Printer(
       case Select(_, n)                     => Some(n)
       case _                                => None
     def walk(ss: List[BStmt]): Unit = ss.foreach(s => walkK(s.k))
-    def walkK(k: BStmtK): Unit = k match
+    def walkK(k: BStmtK):      Unit = k match
       case BStmtK.Assign(lhs, _, _)  => fieldName(lhs).foreach(out += _)
       case BStmtK.If(_, tb, eb)      => walk(tb); eb.foreach(walk)
       case BStmtK.While(_, b)        => walk(b)
@@ -353,20 +414,15 @@ private final class Printer(
     // private class: ctor cannot be less private
     val primaryVis =
       if t.mods.vis == Vis.Private then ""
-      else
-        plan.primaryMods
-          .map(m => visPrefix(m).trim)
-          .filter(_.nonEmpty)
-          .map(v => s" $v ")
-          .getOrElse("")
+      else plan.primaryMods.map(m => visPrefix(m).trim).filter(_.nonEmpty).map(v => s" $v ").getOrElse("")
     val reParams = reassignedParams(plan.primaryBody, plan.primaryParams.map(_.p.name).toSet)
-    val primary = plan.primaryParams match
+    val primary  = plan.primaryParams match
       case Nil => ""
       case ps  => primaryVis + "(" + ps.map(paramStr(_, t.methods, reParams)).mkString(", ") + ")"
     val ext = (t.superClass, plan.superArgs) match
       case (None, _) if t.interfaces.isEmpty => ""
-      case (None, _)         => " extends " + t.interfaces.map(tpe).mkString(" with ")
-      case (Some(s), args)   =>
+      case (None, _)                         => " extends " + t.interfaces.map(tpe).mkString(" with ")
+      case (Some(s), args)                   =>
         val sup = tpe(s) + (if args.isEmpty then "" else "(" + args.map(delegateArg).mkString(", ") + ")")
         " extends " + (sup :: t.interfaces.map(tpe)).mkString(" with ")
 
@@ -387,12 +443,16 @@ private final class Printer(
         line()
       case FieldLine.SentinelVal(f, pname, default) =>
         trivia(f.leading)
-        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
+        line(
+          s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}"
+        )
         line()
       case FieldLine.CondInit(f, pname, whenSome, whenNull) =>
         trivia(f.leading)
         val kw = if f.mods.isFinal then "val" else "var"
-        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
+        line(
+          s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}"
+        )
         line()
       case FieldLine.DefaultInit(f) =>
         trivia(f.leading)
@@ -403,8 +463,8 @@ private final class Printer(
       trivia(sc.leading)
       // reassigned aux-ctor params: rename to `_p`, add `var p = _p` after delegation
       val reassigned = reassignedParams(sc.body, sc.params.map(_.name).toSet)
-      val paramStrs = sc.params.map(p => if reassigned(p.name) then paramOf(p.copy(name = "_" + p.name)) else paramOf(p))
-      val sig = s"${visPrefix(sc.mods)}def this(${paramStrs.mkString(", ")}) ="
+      val paramStrs  = sc.params.map(p => if reassigned(p.name) then paramOf(p.copy(name = "_" + p.name)) else paramOf(p))
+      val sig        = s"${visPrefix(sc.mods)}def this(${paramStrs.mkString(", ")}) ="
       def fixArg(a: BExpr): BExpr =
         if reassigned.isEmpty then a
         else
@@ -413,8 +473,7 @@ private final class Printer(
             case e                                           => e
           }
       val dArgs =
-        if sc.targetTypes.length == sc.delegateArgs.length then
-          sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(fixArg(a), Some(tt))).mkString(", ")
+        if sc.targetTypes.length == sc.delegateArgs.length then sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(fixArg(a), Some(tt))).mkString(", ")
         else sc.delegateArgs.map(a => delegateArg(fixArg(a))).mkString(", ")
       if sc.body.isEmpty then
         line(sig)
@@ -479,7 +538,7 @@ private final class Printer(
 
   /** A type carrying a wildcard anywhere. */
   private def hasWildType(x: BType): Boolean = x match
-    case _: BType.Wild    => true
+    case _: BType.Wild => true
     case BType.Ref(_, as) => as.exists(hasWildType)
     case BType.Arr(e2)    => hasWildType(e2)
     case _                => false
@@ -496,14 +555,14 @@ private final class Printer(
       // ascribe null to disambiguate overloaded targets; cast for type-variable targets
       case (Lit(LitKind.NullL, _), Some(t: BType.TVar))                    => s"null.asInstanceOf[${tpe(t)}]"
       case (Lit(LitKind.NullL, _), Some(t)) if !t.isInstanceOf[BType.Prim] => s"(null: ${tpe(t)})"
-      case _                                                   => expr(stripped)
+      case _                                                               => expr(stripped)
 
   private def paramStr(p: CtorPlan.Param): String = paramStr(p, Nil, Set.empty)
 
   private def paramStr(p: CtorPlan.Param, methods: List[BMethod], reassigned: Set[String] = Set.empty): String =
     p.promoted match
       // promoted field reassigned in ctor body: var, not val
-      case Some(f)                               => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}${if reassigned.contains(p.p.name) then "var" else "val"} ${id(p.p.name)}: ${tpe(p.p.tpe)}"
+      case Some(f) => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}${if reassigned.contains(p.p.name) then "var" else "val"} ${id(p.p.name)}: ${tpe(p.p.tpe)}"
       // reassigned plain param: private var (Scala params are val)
       case None if reassigned.contains(p.p.name) => s"private var ${paramOf(p.p)}"
       case None                                  => paramOf(p.p)
@@ -521,13 +580,13 @@ private final class Printer(
       def exprScan(e: BExpr): Unit =
         BirTransform.mapExpr(e) { x =>
           x match
-            case AssignExpr(t, _) => isTarget(t).foreach(out += _)
+            case AssignExpr(t, _)    => isTarget(t).foreach(out += _)
             case IncDecExpr(t, _, _) => isTarget(t).foreach(out += _)
-            case _                => ()
+            case _                   => ()
           x
         }
       def walk(ss: List[BStmt]): Unit = ss.foreach(s => walkK(s.k))
-      def walkK(k: BStmtK): Unit = k match
+      def walkK(k: BStmtK):      Unit = k match
         case BStmtK.Assign(lhs, rhs, _) =>
           isTarget(lhs) match
             case Some(n) => out += n
@@ -558,12 +617,13 @@ private final class Printer(
     else tpe(p.tpe)
     s"${id(p.name)}: $t"
 
-  /** @BeanProperty for public fields (restores JVM-visible getters).
-    * Skipped when the class already declares the bean method. */
+  /** @BeanProperty
+    *   for public fields (restores JVM-visible getters). Skipped when the class already declares the bean method.
+    */
   private def beanPrefix(f: BField, methods: List[BMethod]): String =
     if f.mods.vis != Vis.Public then ""
     else
-      val cap = f.name.capitalize
+      val cap   = f.name.capitalize
       val clash = methods.exists(m => m.name == s"get$cap" || m.name == s"is$cap" || m.name == s"set$cap")
       if clash then "" else "@scala.beans.BeanProperty "
 
@@ -588,7 +648,7 @@ private final class Printer(
     }
     val sig = s"${mods.result()}def ${id(m.name)}${tparamsStr(m.tparams)}(${paramStrs.mkString(", ")}): ${tpe(m.ret)}"
     m.body match
-      case None => line(sig)
+      case None       => line(sig)
       case Some(body) =>
         line(sig + " = {")
         indent += 1
@@ -607,17 +667,17 @@ private final class Printer(
   /** Ascribe `return null` to T-typed return, recursing into control-flow. */
   private def ascribeReturnNulls(s: BStmt, ret: BType): BStmt =
     def r(x: BStmt) = ascribeReturnNulls(x, ret)
-    val k = s.k match
+    val k           = s.k match
       case BStmtK.Return(Some(Lit(LitKind.NullL, _))) => BStmtK.Return(Some(Cast(ret, Lit(LitKind.NullL, "null"))))
-      case BStmtK.If(c, t, e)        => BStmtK.If(c, t.map(r), e.map(_.map(r)))
-      case BStmtK.While(c, b)        => BStmtK.While(c, b.map(r))
-      case BStmtK.DoWhile(b, c)      => BStmtK.DoWhile(b.map(r), c)
-      case BStmtK.Block(b)           => BStmtK.Block(b.map(r))
-      case BStmtK.Try(b, cs, f)      => BStmtK.Try(b.map(r), cs.map(c => c.copy(body = c.body.map(r))), f.map(_.map(r)))
-      case BStmtK.Boundary(b, l)     => BStmtK.Boundary(b.map(r), l)
-      case BStmtK.Synchronized(l, b) => BStmtK.Synchronized(l, b.map(r))
-      case BStmtK.Match(scr, cases)  => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(r))))
-      case other                     => other
+      case BStmtK.If(c, t, e)                         => BStmtK.If(c, t.map(r), e.map(_.map(r)))
+      case BStmtK.While(c, b)                         => BStmtK.While(c, b.map(r))
+      case BStmtK.DoWhile(b, c)                       => BStmtK.DoWhile(b.map(r), c)
+      case BStmtK.Block(b)                            => BStmtK.Block(b.map(r))
+      case BStmtK.Try(b, cs, f)                       => BStmtK.Try(b.map(r), cs.map(c => c.copy(body = c.body.map(r))), f.map(_.map(r)))
+      case BStmtK.Boundary(b, l)                      => BStmtK.Boundary(b.map(r), l)
+      case BStmtK.Synchronized(l, b)                  => BStmtK.Synchronized(l, b.map(r))
+      case BStmtK.Match(scr, cases)                   => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(r))))
+      case other                                      => other
     s.copy(k = k)
 
   /** True inside a lambda boundary: `return e` prints as `boundary.break(e)`. */
@@ -641,16 +701,16 @@ private final class Printer(
   private def hasReturn(stmts: List[BStmt]): Boolean =
     stmts.exists { s =>
       s.k match
-        case BStmtK.Return(_)       => true
-        case BStmtK.If(_, t, e)     => hasReturn(t) || e.exists(hasReturn)
-        case BStmtK.While(_, b)     => hasReturn(b)
-        case BStmtK.DoWhile(b, _)   => hasReturn(b)
-        case BStmtK.Block(b)        => hasReturn(b)
-        case BStmtK.Boundary(b, _)  => hasReturn(b)
-        case BStmtK.Match(_, cs)    => cs.exists(cc => hasReturn(cc.body))
-        case BStmtK.Try(b, cs, f)   => hasReturn(b) || cs.exists(cc => hasReturn(cc.body)) || f.exists(hasReturn)
+        case BStmtK.Return(_)          => true
+        case BStmtK.If(_, t, e)        => hasReturn(t) || e.exists(hasReturn)
+        case BStmtK.While(_, b)        => hasReturn(b)
+        case BStmtK.DoWhile(b, _)      => hasReturn(b)
+        case BStmtK.Block(b)           => hasReturn(b)
+        case BStmtK.Boundary(b, _)     => hasReturn(b)
+        case BStmtK.Match(_, cs)       => cs.exists(cc => hasReturn(cc.body))
+        case BStmtK.Try(b, cs, f)      => hasReturn(b) || cs.exists(cc => hasReturn(cc.body)) || f.exists(hasReturn)
         case BStmtK.Synchronized(_, b) => hasReturn(b)
-        case _                      => false
+        case _                         => false
     }
 
   /** Prints a method body; a trailing `return e` prints as `e`. */
@@ -669,7 +729,7 @@ private final class Printer(
         val kw = if effFinal then "val" else "var"
         // wildcard-typed locals: skip annotation, let inference handle it
         def wildIn(x: BType): Boolean = x match
-          case _: BType.Wild    => true
+          case _: BType.Wild => true
           case BType.Ref(_, as) => as.exists(wildIn)
           case BType.Arr(e2)    => wildIn(e2)
           case _                => false
@@ -679,18 +739,18 @@ private final class Printer(
         def topWild(x: BType): Boolean = x.isInstanceOf[BType.Wild]
         // calls/constructors needing type inference context keep the annotation
         val ctorInit = init.exists(e => e.isInstanceOf[Call] || e.isInstanceOf[New] || e.isInstanceOf[NewArray])
-        val skip = synthetic || (wildIn(t) && !(ctorInit && !topWild(t)))
-        val ann = if skip && init.isDefined then "" else s": ${tpe(t)}"
-        val rhs = init.map(expr).getOrElse(defaultOf(t))
+        val skip     = synthetic || (wildIn(t) && !(ctorInit && !topWild(t)))
+        val ann      = if skip && init.isDefined then "" else s": ${tpe(t)}"
+        val rhs      = init.map(expr).getOrElse(defaultOf(t))
         line(s"$kw ${id(name)}$ann = $rhs")
-      case BStmtK.ExprStmt(e) => line(expr(e))
+      case BStmtK.ExprStmt(e)          => line(expr(e))
       case BStmtK.Assign(lhs, rhs, op) =>
         line(s"${expr(lhs)} ${op.getOrElse("")}= ${expr(rhs)}")
       case BStmtK.If(c, t, e) =>
         line(s"if (${expr(c)}) {")
         indent += 1; t.foreach(stmt); indent -= 1
         e match
-          case None => line("}")
+          case None      => line("}")
           case Some(els) =>
             line("} else {")
             indent += 1; els.foreach(stmt); indent -= 1
@@ -698,7 +758,7 @@ private final class Printer(
       case BStmtK.Return(None)    => line(if lambdaBoundaryActive then "scala.util.boundary.break()" else "return")
       case BStmtK.Return(Some(e)) => line(if lambdaBoundaryActive then s"scala.util.boundary.break(${expr(e)})" else s"return ${expr(e)}")
       case BStmtK.Throw(e)        => line(s"throw ${expr(e)}")
-      case BStmtK.While(c, b) =>
+      case BStmtK.While(c, b)     =>
         line(s"while (${expr(c)}) {")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
@@ -741,8 +801,8 @@ private final class Printer(
           case Some(l) => line(s"scala.util.boundary { (${id(l)}: scala.util.boundary.Label[Unit]) ?=>")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
-      case BStmtK.LoopBreak(None)    => line("scala.util.boundary.break()")
-      case BStmtK.LoopBreak(Some(l)) => line(s"scala.util.boundary.break()(using ${id(l)})")
+      case BStmtK.LoopBreak(None)         => line("scala.util.boundary.break()")
+      case BStmtK.LoopBreak(Some(l))      => line(s"scala.util.boundary.break()(using ${id(l)})")
       case BStmtK.Match(scrutinee, cases) =>
         line(s"${expr(scrutinee)} match {")
         indent += 1
@@ -765,31 +825,31 @@ private final class Printer(
       case BStmtK.Empty => ()
 
   private def defaultOf(t: BType): String = t match
-    case BType.Prim("boolean")                          => "false"
-    case BType.Prim("float")                            => "0.0f"
-    case BType.Prim("double")                           => "0.0d"
-    case BType.Prim("long")                             => "0L"
-    case BType.Prim("char")                             => "'\\u0000'"
-    case BType.Prim(_)                                  => "0"
-    case _                                              => "null"
+    case BType.Prim("boolean") => "false"
+    case BType.Prim("float")   => "0.0f"
+    case BType.Prim("double")  => "0.0d"
+    case BType.Prim("long")    => "0L"
+    case BType.Prim("char")    => "'\\u0000'"
+    case BType.Prim(_)         => "0"
+    case _                     => "null"
 
   // ---- expressions -----------------------------------------------------------
 
   private def expr(e: BExpr): String = e match
-    case Lit(_, raw)   => raw
+    case Lit(_, raw)                          => raw
     case Ident(n, RefKind.StaticField(owner)) => s"${refName(owner)}.${id(n)}"
     // explicit `this.` to defeat Scala's block scoping of same-named locals
-    case Ident(n, RefKind.OwnField) => s"this.${id(n)}"
+    case Ident(n, RefKind.OwnField)          => s"this.${id(n)}"
     case Ident(n, RefKind.OuterField(outer)) => s"${id(outer)}.this.${id(n)}"
-    case Ident(n, RefKind.EnclosingField) => id(n) // bare: resolved lexically from an anon/local class
-    case Ident(n, _)                => id(n)
-    case This          => "this"
-    case Select(r, n)  => s"${expr(r)}.${id(n)}"
-    case ArrayLength(a) => s"${expr(a)}.length"
-    case ArrayAccess(a, i) => s"${expr(a)}(${expr(i)})"
-    case Typed(inner, _) => expr(inner)
-    case AssignExpr(l, r) => s"{ ${expr(l)} = ${expr(r)}; ${expr(l)} }"
-    case IncDecExpr(t, op, post) =>
+    case Ident(n, RefKind.EnclosingField)    => id(n) // bare: resolved lexically from an anon/local class
+    case Ident(n, _)                         => id(n)
+    case This                                => "this"
+    case Select(r, n)                        => s"${expr(r)}.${id(n)}"
+    case ArrayLength(a)                      => s"${expr(a)}.length"
+    case ArrayAccess(a, i)                   => s"${expr(a)}(${expr(i)})"
+    case Typed(inner, _)                     => expr(inner)
+    case AssignExpr(l, r)                    => s"{ ${expr(l)} = ${expr(r)}; ${expr(l)} }"
+    case IncDecExpr(t, op, post)             =>
       if post then s"{ val tmp$$ = ${expr(t)}; ${expr(t)} $op= 1; tmp$$ }"
       else s"{ ${expr(t)} $op= 1; ${expr(t)} }"
 
@@ -803,22 +863,22 @@ private final class Printer(
 
     case New(t, args, anon, formals) =>
       // strip wildcards from instantiation type args (let inference handle them)
-      val newT = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
+      val newT    = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
       val argsStr =
         if args.isEmpty && anon.isDefined then ""
         else s"(${adaptedArgs(args, formals, Some(t.qname)).mkString(", ")})"
       // `new Object()` -> `new Object()` (Any has no constructor)
       val typeStr = if BType.isObject(BType.Ref(t.qname, Nil)) then "Object" else tpe(newT)
-      val base = s"new $typeStr$argsStr"
+      val base    = s"new $typeStr$argsStr"
       anon match
-        case None => base
-        case Some(BAnonBody(Nil, Nil, Nil)) => base + " {}"
+        case None                                   => base
+        case Some(BAnonBody(Nil, Nil, Nil))         => base + " {}"
         case Some(BAnonBody(fields, methods, init)) =>
           val body = captured {
             indent += 1
             fields.foreach { f =>
               trivia(f.leading)
-              val kw = if f.mods.isFinal then "val" else "var"
+              val kw  = if f.mods.isFinal then "val" else "var"
               val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
               line(s"${beanPrefix(f, methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
             }
@@ -833,24 +893,24 @@ private final class Printer(
         else inits.map(expr)
       s"Array[${arrElem(el)}](${items.mkString(", ")})"
     case NewArray(el, List(dim), None) => s"new Array[${arrElem(el)}](${expr(dim)})"
-    case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")
+    case NewArray(_, dims, None)       => unsupported(s"multi-dimensional array (${dims.length} dims)")
 
     case Binary(op, l, r, concat) =>
       // Scala needs a String left operand for concat; wrap non-obvious cases
       def obviouslyString(x: BExpr): Boolean = x match
-        case Lit(LitKind.StringL, _)      => true
-        case Binary(_, _, _, true)        => true
+        case Lit(LitKind.StringL, _)                    => true
+        case Binary(_, _, _, true)                      => true
         case Typed(i, BType.Ref("java.lang.String", _)) => true
-        case Typed(i, _)                  => obviouslyString(i)
-        case _                            => false
+        case Typed(i, _)                                => obviouslyString(i)
+        case _                                          => false
       if concat && !obviouslyString(l) then s"(String.valueOf(${expr(l)}) $op ${expr(r)})"
       else s"(${expr(l)} $op ${expr(r)})"
     case Unary(op, e1, true) => s"($op${expr(e1)})"
     case Unary(op, _, false) => unsupported(s"postfix operator $op")
-    case Ternary(c, t, e1)    => s"(if (${expr(c)}) ${expr(t)} else ${expr(e1)})"
+    case Ternary(c, t, e1)   => s"(if (${expr(c)}) ${expr(t)} else ${expr(e1)})"
 
     case CtorRef(t, formals) =>
-      val ps = formals.zipWithIndex.map((ft, i) => s"p$i$$: ${tpe(ft)}")
+      val ps   = formals.zipWithIndex.map((ft, i) => s"p$i$$: ${tpe(ft)}")
       val args = formals.indices.map(i => s"p$i$$").mkString(", ")
       // strip wildcards from instantiation type args
       val ctorT = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
@@ -864,19 +924,19 @@ private final class Printer(
     case UnboundMethodRef(recvT, name, formals) =>
       // annotate receiver only when precise (wildcards would widen SAM inference)
       def precise(x: BType): Boolean = x match
-        case _: BType.Wild    => false
+        case _: BType.Wild => false
         case BType.Ref(_, as) => as.forall(precise)
         case BType.Arr(e2)    => precise(e2)
         case _                => true
       val recvP = if precise(recvT) then s"recv$$: ${tpe(recvT)}" else "recv$"
-      val ps = recvP :: formals.indices.map(i => s"p$i$$").toList
-      val args = formals.indices.map(i => s"p$i$$").mkString(", ")
+      val ps    = recvP :: formals.indices.map(i => s"p$i$$").toList
+      val args  = formals.indices.map(i => s"p$i$$").mkString(", ")
       s"((${ps.mkString(", ")}) => recv$$.${id(name)}($args))"
 
     case Lambda(ps, body, pts) =>
       // annotate lambda params with SAM types when available and wildcard-free
       val useTypes = pts.length == ps.length && pts.nonEmpty && !pts.exists(hasWildType)
-      val plist =
+      val plist    =
         if useTypes then "(" + ps.zip(pts).map((p, t) => s"${id(p)}: ${tpe(t)}").mkString(", ") + ")"
         else
           ps match
@@ -886,11 +946,11 @@ private final class Printer(
         case Right(e)                                     => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.Return(Some(e))))) => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.ExprStmt(e))))     => s"($plist => ${expr(e)})"
-        case Left(stmts0) =>
+        case Left(stmts0)                                 =>
           // strip tail returns; wrap non-tail returns in boundary.break
-          val stmts = stripTailReturns(stmts0)
+          val stmts         = stripTailReturns(stmts0)
           val needsBoundary = hasReturn(stmts)
-          val bodyStr = captured {
+          val bodyStr       = captured {
             indent += 1
             val saved = lambdaBoundaryActive
             lambdaBoundaryActive = needsBoundary
@@ -910,7 +970,7 @@ private final class Printer(
       s"(${expr(e1)}: ${tpe(t)})"
     case Cast(t, e1)       => s"${expr(e1)}.asInstanceOf[${tpe(t)}]"
     case InstanceOf(e1, t) => s"${expr(e1)}.isInstanceOf[${tpe(t)}]"
-    case ClassLit(t) =>
+    case ClassLit(t)       =>
       t match
         case BType.Ref(_, args) if args.nonEmpty =>
           // generic class literal: cast to Class[AnyRef] (Java's raw Class is erased)
@@ -927,8 +987,7 @@ private final class Printer(
             case e               => (e, None)
           (a, at, f) match
             // varargs into varargs-of-arrays: materialize as one element, not spread
-            case (Ident(_, RefKind.Param(true)), srcT, Formal(BType.Arr(el), true))
-                if !srcT.exists(_.isInstanceOf[BType.Arr]) =>
+            case (Ident(_, RefKind.Param(true)), srcT, Formal(BType.Arr(el), true)) if !srcT.exists(_.isInstanceOf[BType.Arr]) =>
               val conv = expr(a) + ".toArray"
               if BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
             // varargs into varargs: spread

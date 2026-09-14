@@ -5,10 +5,9 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.MutableParamsTransform
 
-/** `MutableParamsTransform` finds a reassigned parameter by SCANNING the method body, and the scan
-  * used to be a hand-rolled recursion over a hand-maintained list of node kinds — the thing
-  * CLAUDE.md §3 bans, and the shape of two of the four silent defects this project has found. Each
-  * method below is a Java form that list did not reach. */
+/** `MutableParamsTransform` finds a reassigned parameter by SCANNING the method body, and the scan used to be a hand-rolled recursion over a hand-maintained list of node kinds — the thing CLAUDE.md
+  * §3 bans, and the shape of two of the four silent defects this project has found. Each method below is a Java form that list did not reach.
+  */
 class MutableParamsScanSpec extends munit.FunSuite:
 
   private val src =
@@ -95,11 +94,13 @@ class MutableParamsScanSpec extends munit.FunSuite:
   }
 
   private def superArgsOf(cls: String) =
-    ctorOut.linesIterator.filter(l => l.contains(s"class $cls ") && l.contains("extends demo.Sup("))
+    ctorOut.linesIterator
+      .filter(l => l.contains(s"class $cls ") && l.contains("extends demo.Sup("))
       .map { l =>
         val a = l.substring(l.indexOf("extends demo.Sup(") + "extends demo.Sup(".length)
         a.substring(0, a.indexOf(')'))
-      }.toList
+      }
+      .toList
 
   test("a constructor's delegation reads the PARAMETER SLOT, never the var declared below it") {
     // the var really is there and really is declared BELOW the extends clause…
@@ -113,8 +114,8 @@ class MutableParamsScanSpec extends munit.FunSuite:
     assert(!ctorOut.linesIterator.filter(_.contains("class Plain")).exists(_.contains("$arg")), clue(ctorOut))
   }
 
-  /** JLS 14.20 — java's EXCEPTION parameter is reassignable too (only a multi-catch's is
-    * implicitly final); scala's is a pattern binding, i.e. a `val`. */
+  /** JLS 14.20 — java's EXCEPTION parameter is reassignable too (only a multi-catch's is implicitly final); scala's is a pattern binding, i.e. a `val`.
+    */
   private val catchSrc =
     """package demo;
       |class Handler {

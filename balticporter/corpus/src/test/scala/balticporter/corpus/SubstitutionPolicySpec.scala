@@ -1,11 +1,11 @@
 package balticporter.corpus
 
-import balticporter.core.{PolicyIssue, PolicyReport, Substitutions}
+import balticporter.core.{ PolicyIssue, PolicyReport, Substitutions }
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.PolicyBinder
 
-/** The unmatched-key report END TO END — now derived from the BINDING rather than from a tally the
-  * policy value accumulated while the frontend consulted it. */
+/** The unmatched-key report END TO END — now derived from the BINDING rather than from a tally the policy value accumulated while the frontend consulted it.
+  */
 class SubstitutionPolicySpec extends munit.FunSuite:
 
   private val src =
@@ -37,24 +37,29 @@ class SubstitutionPolicySpec extends munit.FunSuite:
   }
 
   test("dropMethods: bare, overload-precise and constructor keys are each credited or reported") {
-    val r = report(Substitutions(dropMethods = Set(
-      "demo.Reflect#write",             // fires: both overloads
-      "demo.Reflect#nameOf(Class)",     // fires: overload-precise
-      "demo.Reflect#<init>(int)",       // fires: one constructor
-      "demo.Reflect#<init>(double)",    // never: no such constructor
-      "demo.Reflect#raed",              // never: typo
-      "demo.Missing#gone",              // never: the owner is not in the port at all
-    )))
-    assertEquals(r.keys,
-      Set("demo.Reflect#<init>(double)", "demo.Reflect#raed", "demo.Missing#gone"))
+    val r = report(
+      Substitutions(
+        dropMethods = Set(
+          "demo.Reflect#write", // fires: both overloads
+          "demo.Reflect#nameOf(Class)", // fires: overload-precise
+          "demo.Reflect#<init>(int)", // fires: one constructor
+          "demo.Reflect#<init>(double)", // never: no such constructor
+          "demo.Reflect#raed", // never: typo
+          "demo.Missing#gone" // never: the owner is not in the port at all
+        )
+      )
+    )
+    assertEquals(r.keys, Set("demo.Reflect#<init>(double)", "demo.Reflect#raed", "demo.Missing#gone"))
     // THE PROPERTY THE INDEX EXISTS FOR: every one of the three keys that FIRED names a member the
     // frontend has already removed, so nothing in the program can be asked about it.
   }
 
   test("a policy whose every key fires reports NOTHING — the check must not cry wolf") {
-    val r = report(Substitutions(
-      dropTypes   = Set("demo.Keeper"),
-      dropMethods = Set("demo.Reflect#write", "demo.Reflect#<init>(long)"),
-    ))
+    val r = report(
+      Substitutions(
+        dropTypes = Set("demo.Keeper"),
+        dropMethods = Set("demo.Reflect#write", "demo.Reflect#<init>(long)")
+      )
+    )
     assertEquals(r.render, "  none")
   }

@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A call through an ERASED RECEIVER whose declared result is a RAW generic — the node's type must
-  * say what the emitted scala HAS, not what java's expression meant. */
+/** A call through an ERASED RECEIVER whose declared result is a RAW generic — the node's type must say what the emitted scala HAS, not what java's expression meant.
+  */
 class ErasedReceiverResultSpec extends PortSuite:
 
   private val pooled =

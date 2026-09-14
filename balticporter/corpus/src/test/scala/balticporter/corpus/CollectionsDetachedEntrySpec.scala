@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** K5.7's OTHER half — a `Tuple2` is impossible as a PARENT and exact at a SLOT, and which of the
-  * two a class gets is decided by a CAPABILITY the class either has or has not. */
+/** K5.7's OTHER half — a `Tuple2` is impossible as a PARENT and exact at a SLOT, and which of the two a class gets is decided by a CAPABILITY the class either has or has not.
+  */
 class CollectionsDetachedEntrySpec extends PortSuite:
 
   /** the library's own refusal at `setValue`, and a slot typed at the interface. */
@@ -51,7 +51,9 @@ class CollectionsDetachedEntrySpec extends PortSuite:
         |  public V setValue(V x) { throw new IllegalStateException("setValue not supported"); }
         |}
         |class Holder<K, V> { Map.Entry<K, V> get(K k, V v) { return new Duo<K, V>(k, v); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // TWO facts at once, and both are flexmark's own shape. The interface hop is §4.56's fast-path
     // rule (`Pair implements Paired`, `Paired extends Map.Entry`), and the EXCEPTION CLASS is not
     // pinned: what licenses the projection is that no write can happen, and a body whose first act
@@ -72,7 +74,9 @@ class CollectionsDetachedEntrySpec extends PortSuite:
         |  public V setValue(V x) { V old = v; v = x; return old; }
         |}
         |class Holder<K, V> { Map.Entry<K, V> get(K k, V v) { return new Cell<K, V>(k, v); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // java runs this member and callers read the value back through the entry. A copy here compiles
     // and silently drops every later write — `CLAUDE.md` §4.4's defect class — so the honest answer
     // is the compile error the slot already had.
@@ -94,7 +98,9 @@ class CollectionsDetachedEntrySpec extends PortSuite:
         |  }
         |}
         |class Holder<K, V> { Map.Entry<K, V> get(K k, V v) { return new Guarded<K, V>(k, v, false); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the capability test is asked of the FIRST thing the body does, and not of whether a `throw`
     // appears in it: this member refuses for one receiver state and writes for another, so the class
     // writes through.
@@ -111,7 +117,9 @@ class CollectionsDetachedEntrySpec extends PortSuite:
         |  public K getKey() { return k; }
         |}
         |class Holder<K, V> { Map.Entry<K, V> get(Half<K, V> h) { return h; } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // an abstract member says nothing about what an implementor does, and the conservative arm is
     // the one that leaves the seam. Reading it as "no write happens here" would project every
     // subclass, including one that writes.
@@ -130,7 +138,9 @@ class CollectionsDetachedEntrySpec extends PortSuite:
         |  public V setValue(V x) { return inner.setValue(x); }
         |}
         |class Holder<K, V> { Map.Entry<K, V> get(Delegating<K, V> d) { return d; } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // `refuseOnTarget` replaces this body with java's own optional-operation exception, because the
     // mapping retyped `inner` to a `Tuple2` and REMOVED the call it delegated to. Read off the
     // MAPPED tree, that throw would read exactly like the library's own and would license a
@@ -144,6 +154,8 @@ class CollectionsDetachedEntrySpec extends PortSuite:
     // the projection's licence is a member the target CANNOT carry, so a target listed as
     // uninheritable with no such member would be one this derivation silently never fires for.
     CollectionsTransform.UninheritableTargets.foreach: tgt =>
-      assert(CollectionsTransform.UnsupportedOnTarget.get(tgt).exists(_.nonEmpty),
-             s"$tgt is uninheritable and names no unsupported member")
+      assert(
+        CollectionsTransform.UnsupportedOnTarget.get(tgt).exists(_.nonEmpty),
+        s"$tgt is uninheritable and names no unsupported member"
+      )
   }

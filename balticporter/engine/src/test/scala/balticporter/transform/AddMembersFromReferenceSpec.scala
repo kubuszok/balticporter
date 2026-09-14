@@ -3,12 +3,12 @@ package balticporter.transform
 import java.nio.file.Files
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, PolicyBinder, RunScope}
+import balticporter.tir.{ Pipeline, PolicyBinder, RunScope }
 import balticporter.verify.ReferenceSources
 
-/** `AddMembersTransform.fromReference`: a hand port's own member is spliced VERBATIM from the
-  * reference tree by name — class or companion as the reference has it, the imports it mentions
-  * ahead of it (DESIGN.md §8.30). */
+/** `AddMembersTransform.fromReference`: a hand port's own member is spliced VERBATIM from the reference tree by name — class or companion as the reference has it, the imports it mentions ahead of it
+  * (DESIGN.md §8.30).
+  */
 class AddMembersFromReferenceSpec extends munit.FunSuite:
   private val javaSrc =
     """package com.demo;
@@ -48,14 +48,13 @@ class AddMembersFromReferenceSpec extends munit.FunSuite:
     assert(clue(lookup.index.keys.toList.sorted).contains("/Poly/vertex"), clue(lookup.unparseable.toList))
     // an abstract member (a declaration) is indexed too
     assert(lookup.index.contains("/Shape/area"))
-    val scope   = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, referenceSource = Some(lookup))
+    val scope        = RunScope.of(program.units.map(_.symbol).toSet, Map.empty, referenceSource = Some(lookup))
     val (after, log) = Pipeline.runTraced(program, List(phase), new PolicyBinder(program, program.members, scope))
     (new TirEmitter(after, notes = log).emit, phase)
 
   test("a listed name is spliced where the reference declares it, with the imports it mentions") {
     withReference { dir =>
-      val (out, phase) = emitted(new AddMembersTransform(fromReference =
-        Map("com.demo.Poly" -> List("vertex", "buffered", "unit"))), dir)
+      val (out, phase) = emitted(new AddMembersTransform(fromReference = Map("com.demo.Poly" -> List("vertex", "buffered", "unit"))), dir)
       assert(clue(out).contains("def vertex(i: Int): Int = i * 2"))
       // `buffered` mentions `ArrayBuffer`, so that import rides ahead of it; `Nullable` is not mentioned
       assert(out.contains("import scala.collection.mutable.ArrayBuffer"))
@@ -70,8 +69,10 @@ class AddMembersFromReferenceSpec extends munit.FunSuite:
   test("a name the reference does not declare is a counted finding; so is a run without a reference") {
     withReference { dir =>
       val (_, phase) = emitted(new AddMembersTransform(fromReference = Map("com.demo.Poly" -> List("nothing"))), dir)
-      assert(phase.policyReport.findings.exists(_.detail.contains("declares no `nothing`")),
-        phase.policyReport.findings.mkString("\n"))
+      assert(
+        phase.policyReport.findings.exists(_.detail.contains("declares no `nothing`")),
+        phase.policyReport.findings.mkString("\n")
+      )
     }
     val program = SpoonTir.fromSource(javaSrc, "Poly.java")
     val phase   = new AddMembersTransform(fromReference = Map("com.demo.Poly" -> List("vertex")))

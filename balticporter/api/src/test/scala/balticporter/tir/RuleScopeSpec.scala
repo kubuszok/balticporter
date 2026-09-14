@@ -90,11 +90,10 @@ class RuleScopeSpec extends munit.FunSuite:
   // symbols — the owner climb
   // -------------------------------------------------------------------------
 
-  /** a four-level table, with the two names the frontend actually produces for the kinds a name-only
-    * test cannot place (both established by running `FlowPropagationSpec` against `SpoonTir`, not by
-    * reading it): a PARAMETER was `?#p` before wave 2.8's frontend fix (it is `Class#method#p` now — this
-    * fixture keeps the old spelling on purpose, because the scope rule must not READ it), and a
-    * method-LOCAL is its bare simple name. */
+  /** a four-level table, with the two names the frontend actually produces for the kinds a name-only test cannot place (both established by running `FlowPropagationSpec` against `SpoonTir`, not by
+    * reading it): a PARAMETER was `?#p` before wave 2.8's frontend fix (it is `Class#method#p` now — this fixture keeps the old spelling on purpose, because the scope rule must not READ it), and a
+    * method-LOCAL is its bare simple name.
+    */
   private def program: Program =
     val cls   = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
     val meth  = Symbol(SymId(2), "m", "com.foo.Bar#m", Flags(), cls.id, TypeRepr.MethodType(Nil, TypeRepr.NoType))
@@ -106,7 +105,7 @@ class RuleScopeSpec extends munit.FunSuite:
   private def sym(p: Program, fqn: String): Symbol = p.symbols.all.find(_.fullName == fqn).get
 
   test("a method-LOCAL is placed through its OWNERS — its own fullName is a bare simple name") {
-    val p = program
+    val p     = program
     val local = sym(p, "i")
     assertEquals(local.fullName, "i") // the fact that makes a name-only test insufficient
     assert(RuleScope.Only(Set("com.foo.Bar")).includes(p, local))
@@ -119,17 +118,17 @@ class RuleScopeSpec extends munit.FunSuite:
     val p     = program
     val param = sym(p, "?#p")
     assert(!RuleScope.Only(Set("com.foo.Bar")).includes(param.fullName)) // the name alone: no
-    assert(RuleScope.Only(Set("com.foo.Bar#m")).includes(p, param))      // through the owner: yes
+    assert(RuleScope.Only(Set("com.foo.Bar#m")).includes(p, param)) // through the owner: yes
     assert(RuleScope.Only(Set("com.foo.Bar")).includes(p, param))
     assert(!RuleScope.Everywhere(Set("com.foo.Bar#m")).includes(p, param))
   }
 
   test("a PARAMETER the frontend names `Class#m#p` is placed by that name — one parameter can be fenced alone") {
-    val cls   = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
-    val meth  = Symbol(SymId(2), "m", "com.foo.Bar#m", Flags(), cls.id, TypeRepr.MethodType(Nil, TypeRepr.NoType))
-    val p1    = Symbol(SymId(3), "p", "com.foo.Bar#m#p", Flags(isParam = true), meth.id, TypeRepr.NoType)
-    val q1    = Symbol(SymId(4), "q", "com.foo.Bar#m#q", Flags(isParam = true), meth.id, TypeRepr.NoType)
-    val prog  = new Program(Nil, SymbolTable(List(cls, meth, p1, q1)), Xref.build(Nil), MemberIndex.empty)
+    val cls  = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
+    val meth = Symbol(SymId(2), "m", "com.foo.Bar#m", Flags(), cls.id, TypeRepr.MethodType(Nil, TypeRepr.NoType))
+    val p1   = Symbol(SymId(3), "p", "com.foo.Bar#m#p", Flags(isParam = true), meth.id, TypeRepr.NoType)
+    val q1   = Symbol(SymId(4), "q", "com.foo.Bar#m#q", Flags(isParam = true), meth.id, TypeRepr.NoType)
+    val prog = new Program(Nil, SymbolTable(List(cls, meth, p1, q1)), Xref.build(Nil), MemberIndex.empty)
     assert(!RuleScope.Everywhere(Set("com.foo.Bar#m#p")).includes(prog, p1))
     assert(RuleScope.Everywhere(Set("com.foo.Bar#m#p")).includes(prog, q1))
     assert(RuleScope.Only(Set("com.foo.Bar#m#p")).includes(prog, p1))

@@ -1,12 +1,11 @@
 package balticporter.sbtgen
 
-import java.nio.file.{Files, Path}
-import balticporter.core.{EngineInfo, EnginePin, RuntimeArtifact, RuntimeMode}
+import java.nio.file.{ Files, Path }
+import balticporter.core.{ EngineInfo, EnginePin, RuntimeArtifact, RuntimeMode }
 import balticporter.tir.Phase
 import balticporter.transform.CollectionsTransform
 
-/** `emitPort` is the seam where the ORCHESTRATOR — not the caller — decides how the runtime
-  * reaches the port. Every assertion here is about something the caller did NOT say.
+/** `emitPort` is the seam where the ORCHESTRATOR — not the caller — decides how the runtime reaches the port. Every assertion here is about something the caller did NOT say.
   */
 class SbtGenRuntimeSpec extends munit.FunSuite:
 
@@ -19,7 +18,7 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
     scalaVersion = "3.8.4",
     sbtVersion = "2.0.3",
     deps = Nil,
-    engineFingerprint = EngineInfo.fingerprint,
+    engineFingerprint = EngineInfo.fingerprint
   )
 
   private def withRoot(f: Path => Unit): Unit =
@@ -29,9 +28,12 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
 
   test("a run whose phases need the runtime declares the dependency the caller never mentioned") {
     withRoot { root =>
-      val plan = SbtGen.emitPort(root, spec, List(new Inert, new CollectionsTransform))
+      val plan  = SbtGen.emitPort(root, spec, List(new Inert, new CollectionsTransform))
       val build = Files.readString(root.resolve("build.sbt"))
-      assert(build.contains(s""""${RuntimeArtifact.organization}" %% "${RuntimeArtifact.artifact}" % "${RuntimeArtifact.version}""""), clue(build))
+      assert(
+        build.contains(s""""${RuntimeArtifact.organization}" %% "${RuntimeArtifact.artifact}" % "${RuntimeArtifact.version}""""),
+        clue(build)
+      )
       // …and did NOT also vendor the sources: exactly one delivery.
       assert(!Files.exists(SbtGen.managedMain(root).resolve("balticporter/runtime/JavaIterator.scala")))
       assertEquals(plan.mode, RuntimeMode.Dependency)
@@ -49,13 +51,15 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
 
   test("--vendored-runtime adds no dependency and carries the sources in the PLAN, unwritten") {
     withRoot { root =>
-      val plan = SbtGen.emitPort(root, spec, List(new CollectionsTransform), RuntimeMode.Vendored)
+      val plan  = SbtGen.emitPort(root, spec, List(new CollectionsTransform), RuntimeMode.Vendored)
       val build = Files.readString(root.resolve("build.sbt"))
       assert(!build.contains(RuntimeArtifact.artifact), clue(build))
       // eleven — the phase's whole `runtimeTypes`; `RuntimePlanSpec` enumerates them and says why.
       assertEquals(plan.sources.size, 11)
-      assertEquals(plan.sources.get(s"${RuntimeArtifact.Package}.JavaIterator"),
-                   Some(RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator")))
+      assertEquals(
+        plan.sources.get(s"${RuntimeArtifact.Package}.JavaIterator"),
+        Some(RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
+      )
       // …and this did NOT write them. The build generator cannot know which source set the run is
       // producing, and it guessed `main`: a `sourceSet = Test` port with a generated project
       // vendored the whole runtime into BOTH trees, defining every support type twice. The run
@@ -104,12 +108,16 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
   test("a dependency's own repository reaches the generated build, ONCE, named from its URL") {
     withRoot { root =>
       val snaps = "https://central.sonatype.com/repository/maven-snapshots"
-      val s = spec.copy(deps = List(
-        SbtGen.Dep.of(balticporter.catalog.ArtifactDep("com.example", "a", "1.0-SNAPSHOT",
-          balticporter.catalog.CrossKind.Platform, Some(snaps))),
-        SbtGen.Dep.of(balticporter.catalog.ArtifactDep("com.example", "b", "1.0-SNAPSHOT",
-          balticporter.catalog.CrossKind.Platform, Some(snaps))),
-      ))
+      val s     = spec.copy(
+        deps = List(
+          SbtGen.Dep.of(
+            balticporter.catalog.ArtifactDep("com.example", "a", "1.0-SNAPSHOT", balticporter.catalog.CrossKind.Platform, Some(snaps))
+          ),
+          SbtGen.Dep.of(
+            balticporter.catalog.ArtifactDep("com.example", "b", "1.0-SNAPSHOT", balticporter.catalog.CrossKind.Platform, Some(snaps))
+          )
+        )
+      )
       SbtGen.emit(root, s)
       val build = Files.readString(root.resolve("build.sbt"))
       val entry = s"""resolvers += "central.sonatype.com-repository-maven-snapshots" at "$snaps""""

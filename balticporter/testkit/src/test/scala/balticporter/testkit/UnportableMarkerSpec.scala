@@ -9,13 +9,22 @@ class UnportableMarkerSpec extends PortSuite:
 
   /** wraps the body of `go` in an OPEN marker, as a frontend mint site would. */
   private class Mint extends Phase:
-    def name: String = "test/mint"
+    def name:                                                       String      = "test/mint"
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if !p.symbolOf(d.symbol).exists(_.name == "go") then d
-      else d.copy(rhs = d.rhs.map(r =>
-        Tree.Unportable.open(r, UnportableKind.UnmodelledNodeKind("CtSwitchExpression"),
-          Some(balticporter.catalog.DiffId(balticporter.catalog.Area.S, 9)),
-          "a switch EXPRESSION, which the frontend has no arm for", r.tpe, r.origin)))
+      else
+        d.copy(
+          rhs = d.rhs.map(r =>
+            Tree.Unportable.open(
+              r,
+              UnportableKind.UnmodelledNodeKind("CtSwitchExpression"),
+              Some(balticporter.catalog.DiffId(balticporter.catalog.Area.S, 9)),
+              "a switch EXPRESSION, which the frontend has no arm for",
+              r.tpe,
+              r.origin
+            )
+          )
+        )
 
   // a `lazy val`, not a `def`: `Ported.emitter` is a value that RECORDS as it renders (§5.1), so a
   // fresh fixture per call would hand each test an emitter that has emitted nothing.
@@ -28,18 +37,16 @@ class UnportableMarkerSpec extends PortSuite:
     // every marker in a program onto ONE key, and the conservation check would then report nothing
     // while looking correct.
     val t = Tree.Literal(Constant.UnitC, TypeRepr.NoType, Origin.synthetic)
-    intercept[IllegalArgumentException](
-      Tree.Unportable.open(t, UnportableKind.FrontendBlindSpot, scala.None, "x",
-        TypeRepr.NoType, Origin.synthetic))
+    intercept[IllegalArgumentException](Tree.Unportable.open(t, UnportableKind.FrontendBlindSpot, scala.None, "x", TypeRepr.NoType, Origin.synthetic))
   }
 
   // -- the traversal -------------------------------------------------------------------------
 
-  /** a phase that renames nothing and rewrites every `Literal(IntC)` — the shape that must reach
-    * INSIDE an approximation, or a later whole-program transform can never be what fixes it. */
+  /** a phase that renames nothing and rewrites every `Literal(IntC)` — the shape that must reach INSIDE an approximation, or a later whole-program transform can never be what fixes it.
+    */
   private class BumpInts extends Phase:
-    def name: String = "test/bump-ints"
-    override def transformTerm(t: Term)(using Program): Term = t match
+    def name:                                           String = "test/bump-ints"
+    override def transformTerm(t: Term)(using Program): Term   = t match
       case l @ Tree.Literal(Constant.IntC(n), _, _) => l.copy(const = Constant.IntC(n + 100))
       case other                                    => other
 
@@ -49,14 +56,16 @@ class UnportableMarkerSpec extends PortSuite:
     assertEquals(ms.size, 1, "the marker must survive a phase that does not know about markers")
     // the literal INSIDE the marked region was rewritten, which is the property that makes keeping
     // a marked tree worth anything at all.
-    assert(TirPrinter.program(TirPrinter.Style.canonical)(using p.after).contains("101"),
-      "the phase did not reach inside the marker")
+    assert(
+      TirPrinter.program(TirPrinter.Style.canonical)(using p.after).contains("101"),
+      "the phase did not reach inside the marker"
+    )
   }
 
   test("a phase that matches for a SHAPE simply fails to match a wrapped one — marker-preserved") {
     // The safe default, stated as a fixture: `BumpInts` matches a `Literal` and the marked body is
     // a `Return`, so nothing about the marker itself is disturbed and it is still Open.
-    val p  = port(src, new Mint, new BumpInts)
+    val p = port(src, new Mint, new BumpInts)
     assert(MarkerCheck.inventory(p.after, p.after.units).forall(_.marker.state.isOpen))
   }
 
@@ -64,17 +73,17 @@ class UnportableMarkerSpec extends PortSuite:
 
   /** the defect the check exists for: a phase that DELETES a marked subtree. */
   private class EraseBodies extends Phase:
-    def name: String = "test/erase-bodies"
+    def name:                                                       String      = "test/erase-bodies"
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if !p.symbolOf(d.symbol).exists(_.name == "go") then d
       else d.copy(rhs = d.rhs.map(r => Tree.Literal(Constant.IntC(0), r.tpe, r.origin)))
 
   /** …and the act that is NOT that defect: an explicit discharge. */
   private class DischargeMarkers extends Phase:
-    def name: String = "test/discharge"
-    override def transformTerm(t: Term)(using Program): Term = t match
+    def name:                                           String = "test/discharge"
+    override def transformTerm(t: Term)(using Program): Term   = t match
       case m: Tree.Unportable => m.resolved(name, "the fixture decided this shape is expressible")
-      case other              => other
+      case other => other
 
   test("an ERASED marker is a finding — the emitted code is identical and nothing else can see it") {
     val p  = port(src, new Mint, new EraseBodies)
@@ -94,19 +103,18 @@ class UnportableMarkerSpec extends PortSuite:
     assertEquals(MarkerCheck.check(minted.after, p.after, p.after.units).filter(_.kind == "erased"), Nil)
     val inv = MarkerCheck.inventory(p.after, p.after.units)
     assertEquals(inv.size, 1)
-    assertEquals(inv.head.marker.state, MarkerState.Resolved("test/discharge",
-      "the fixture decided this shape is expressible"))
+    assertEquals(inv.head.marker.state, MarkerState.Resolved("test/discharge", "the fixture decided this shape is expressible"))
   }
 
   test("a marker whose whole DECLARATION is gone is not an erasure — no exemption list needed") {
     // §6.5's own risk row. The owner answers it: if the declaration is gone then so is everything
     // in it, and the marker went WITH the code rather than being taken out of it.
     class DropTheMethod extends Phase:
-      def name: String = "test/drop-method"
+      def name:                                                           String        = "test/drop-method"
       override def transformClassDef(c: Tree.ClassDef)(using p: Program): Tree.ClassDef =
         c.copy(body = c.body.filterNot {
           case d: Tree.DefDef => p.symbolOf(d.symbol).exists(_.name == "go")
-          case _              => false
+          case _ => false
         })
     val minted = port(src, new Mint)
     val p      = port(src, new Mint, new DropTheMethod)
@@ -142,8 +150,10 @@ class UnportableMarkerSpec extends PortSuite:
 
   test("BEST EFFORT renders the approximation inside deterministic fences, with a file banner") {
     val p = port(src, new Mint)
-    assert(p.bestEffortOut.contains("/* balticporter:unportable unmodelled-node-kind(CtSwitchExpression) JS-S09"),
-      p.bestEffortOut)
+    assert(
+      p.bestEffortOut.contains("/* balticporter:unportable unmodelled-node-kind(CtSwitchExpression) JS-S09"),
+      p.bestEffortOut
+    )
     assert(p.bestEffortOut.contains("/* balticporter:end-unportable */"))
     // the APPROXIMATION is inside the fence — a comment cannot change program shape, which is what
     // makes the fence admissible at all, and the whole point of the mode is that an operator can
@@ -173,12 +183,13 @@ class UnportableMarkerSpec extends PortSuite:
 
   test("a fence may never OPEN or CLOSE a comment — Scala block comments NEST (§4.58)") {
     class MintNasty extends Phase:
-      def name: String = "test/mint-nasty"
+      def name:                                                        String      = "test/mint-nasty"
       override def transformDefDef(d: Tree.DefDef)(using pr: Program): Tree.DefDef =
         if !pr.symbolOf(d.symbol).exists(_.name == "go") then d
-        else d.copy(rhs = d.rhs.map(r =>
-          Tree.Unportable.open(r, UnportableKind.FrontendBlindSpot, scala.None,
-            "see the /* marker */ in the source", r.tpe, r.origin)))
+        else
+          d.copy(
+            rhs = d.rhs.map(r => Tree.Unportable.open(r, UnportableKind.FrontendBlindSpot, scala.None, "see the /* marker */ in the source", r.tpe, r.origin))
+          )
     val out = port(src, new MintNasty).bestEffortOut
     assert(!out.contains("see the /* marker */"), out)
     assert(out.contains("see the / * marker * /"), out)

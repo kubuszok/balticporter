@@ -1,18 +1,21 @@
 package balticporter.sbtgen
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-import balticporter.core.{EngineInfo, EnginePin, RuntimeArtifact, RuntimeMode, RuntimePlan}
+import balticporter.core.{ EngineInfo, EnginePin, RuntimeArtifact, RuntimeMode, RuntimePlan }
 import balticporter.tir.Phase
 
 /** Emit the sbt 2.0 project skeleton for a translated module. Byte-deterministic. */
 object SbtGen:
 
-  /** @param crossScala `%%` -- cross-versioned by the port's scalaVersion.
-    * @param crossPlatform `%%%` -- cross-versioned by Scala.js/Native version as well.
-    * @param resolver custom resolver URL when the default set does not have the artifact. */
-  final case class Dep(org: String, artifact: String, version: String, crossScala: Boolean = false,
-                       crossPlatform: Boolean = false, resolver: Option[String] = None):
+  /** @param crossScala
+    *   `%%` -- cross-versioned by the port's scalaVersion.
+    * @param crossPlatform
+    *   `%%%` -- cross-versioned by Scala.js/Native version as well.
+    * @param resolver
+    *   custom resolver URL when the default set does not have the artifact.
+    */
+  final case class Dep(org: String, artifact: String, version: String, crossScala: Boolean = false, crossPlatform: Boolean = false, resolver: Option[String] = None):
     def sbtString: String =
       val sep = if crossPlatform then "%%%" else if crossScala then "%%" else "%"
       s""""$org" $sep "$artifact" % "$version""""
@@ -21,23 +24,25 @@ object SbtGen:
     def apply(c: RuntimeArtifact.Coordinates): Dep = Dep(c.organization, c.artifact, c.version, c.crossScala)
 
     def of(d: balticporter.catalog.ArtifactDep): Dep = Dep(
-      d.org, d.name, d.rev,
-      crossScala    = d.cross == balticporter.catalog.CrossKind.Scala,
+      d.org,
+      d.name,
+      d.rev,
+      crossScala = d.cross == balticporter.catalog.CrossKind.Scala,
       crossPlatform = d.cross == balticporter.catalog.CrossKind.Platform,
-      resolver      = d.resolver,
+      resolver = d.resolver
     )
 
   /** @param runtime derived by [[emitPort]] from the phases that ran; never set by hand. */
   final case class ProjectSpec(
-      moduleName: String,
-      organization: String,
-      scalaVersion: String,
-      sbtVersion: String,
-      deps: List[Dep],
-      testDeps: List[Dep] = Nil,
-      testFramework: Option[String] = None, // e.g. com.novocode.junit.JUnitFramework fingerprint line
-      engineFingerprint: String,
-      runtime: RuntimePlan = RuntimePlan.none,
+    moduleName:        String,
+    organization:      String,
+    scalaVersion:      String,
+    sbtVersion:        String,
+    deps:              List[Dep],
+    testDeps:          List[Dep] = Nil,
+    testFramework:     Option[String] = None, // e.g. com.novocode.junit.JUnitFramework fingerprint line
+    engineFingerprint: String,
+    runtime:           RuntimePlan = RuntimePlan.none
   ):
     def allDeps: List[Dep] = deps ++ runtime.dependency.map(Dep.apply).toList
 
@@ -54,15 +59,16 @@ object SbtGen:
   def managedResources(root: Path, config: String): Path =
     managedRoot(root).resolve(config).resolve("resources")
 
-  /** Emit the skeleton with runtime delivery derived from the phases that ran. Does NOT write
-    * vendored sources -- `PortRun` handles that into the correct source set; a caller with no
-    * `PortRun` writes them via `plan.writeSources(dir)`.
-    * @return the plan (carries `concreteMembers` for the emitter and `sources` for vendoring) */
+  /** Emit the skeleton with runtime delivery derived from the phases that ran. Does NOT write vendored sources -- `PortRun` handles that into the correct source set; a caller with no `PortRun` writes
+    * them via `plan.writeSources(dir)`.
+    * @return
+    *   the plan (carries `concreteMembers` for the emitter and `sources` for vendoring)
+    */
   def emitPort(
-      root: Path,
-      spec: ProjectSpec,
-      phases: List[Phase],
-      mode: RuntimeMode = RuntimeMode.Dependency,
+    root:   Path,
+    spec:   ProjectSpec,
+    phases: List[Phase],
+    mode:   RuntimeMode = RuntimeMode.Dependency
   ): RuntimePlan =
     val plan = RuntimePlan.of(phases, mode)
     emit(root, spec.copy(runtime = plan))
@@ -73,24 +79,18 @@ object SbtGen:
     Files.createDirectories(managedMain(root))
     Files.writeString(
       root.resolve("project/build.properties"),
-      s"sbt.version=${spec.sbtVersion}\n",
+      s"sbt.version=${spec.sbtVersion}\n"
     )
     Files.writeString(root.resolve(".gitignore"), gitignore)
     if spec.testDeps.nonEmpty then Files.createDirectories(managedTest(root))
     EnginePin.write(root, EnginePin.current(spec.runtime))
     val resolvers = resolverBlock(spec.allDeps ++ spec.testDeps)
-    val deps =
+    val deps      =
       if spec.allDeps.isEmpty then ""
-      else
-        spec.allDeps
-          .map(d => s"  ${d.sbtString},")
-          .mkString("\nlibraryDependencies ++= Seq(\n", "\n", "\n)\n")
+      else spec.allDeps.map(d => s"  ${d.sbtString},").mkString("\nlibraryDependencies ++= Seq(\n", "\n", "\n)\n")
     val testDeps =
       if spec.testDeps.isEmpty then ""
-      else
-        spec.testDeps
-          .map(d => s"  ${d.sbtString} % Test,")
-          .mkString("\nlibraryDependencies ++= Seq(\n", "\n", "\n)\n")
+      else spec.testDeps.map(d => s"  ${d.sbtString} % Test,").mkString("\nlibraryDependencies ++= Seq(\n", "\n", "\n)\n")
     Files.writeString(
       root.resolve("build.sbt"),
       s"""// Generated by Baltic Porter (${spec.engineFingerprint}) — DO NOT EDIT; regenerate instead.
@@ -109,18 +109,22 @@ object SbtGen:
          |Test / fork := true
          |Test / javaOptions ++= Seq("-Duser.language=en", "-Duser.country=US")
          |$managedSources$resolvers
-         |$deps$testDeps""".stripMargin,
+         |$deps$testDeps""".stripMargin
     )
 
-  /** Emit `resolvers` entries for dependencies with custom resolver URLs.
-    * Empty when every coordinate resolves from the default set. Name is derived from the URL. */
+  /** Emit `resolvers` entries for dependencies with custom resolver URLs. Empty when every coordinate resolves from the default set. Name is derived from the URL.
+    */
   def resolverBlock(deps: List[Dep]): String =
     deps.flatMap(_.resolver).distinct.sorted match
       case Nil => ""
       case rs  =>
         rs.map(u => s"""resolvers += "${resolverName(u)}" at "$u"""")
-          .mkString("\n// …and WHERE they resolve from: a coordinate published outside the default\n" +
-            "// resolver set is a coordinate this build otherwise cannot fetch.\n", "\n", "\n")
+          .mkString(
+            "\n// …and WHERE they resolve from: a coordinate published outside the default\n" +
+              "// resolver set is a coordinate this build otherwise cannot fetch.\n",
+            "\n",
+            "\n"
+          )
 
   /** Stable label derived from a repository URL: scheme dropped, non-alnum folded to `-`. */
   def resolverName(url: String): String =

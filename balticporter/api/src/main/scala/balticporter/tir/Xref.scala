@@ -1,10 +1,9 @@
 package balticporter.tir
 
-/** Builds the whole-program [[XrefIndex]] by walking every unit's TREE, so it RESPONDS to
-  * phase/plugin rewrites as soon as the pipeline rebuilds it. Every occurrence carries a
-  * [[UsageKind]] naming its position; descends both tree structure AND `TypeRepr`. Externals need
-  * no `definitionOf` — they appear as bare `TypeRef` usages. Known gap: class-level F-bounds are
-  * not yet distinct tree nodes (method/poly signatures ARE walked). */
+/** Builds the whole-program [[XrefIndex]] by walking every unit's TREE, so it RESPONDS to phase/plugin rewrites as soon as the pipeline rebuilds it. Every occurrence carries a [[UsageKind]] naming
+  * its position; descends both tree structure AND `TypeRepr`. Externals need no `definitionOf` — they appear as bare `TypeRef` usages. Known gap: class-level F-bounds are not yet distinct tree nodes
+  * (method/poly signatures ARE walked).
+  */
 object Xref:
   def build(units: List[Tree.ClassDef]): XrefIndex =
     val defs   = collection.mutable.Map.empty[SymId, Definition]
@@ -14,8 +13,7 @@ object Xref:
     var enclosing: SymId = SymId.None
 
     def rec(sym: SymId, kind: UsageKind, site: Tree): Unit =
-      if sym != SymId.None then
-        usages.getOrElseUpdate(sym, collection.mutable.ListBuffer.empty) += Usage(kind, site, enclosing)
+      if sym != SymId.None then usages.getOrElseUpdate(sym, collection.mutable.ListBuffer.empty) += Usage(kind, site, enclosing)
 
     def within[A](d: SymId)(body: => A): A =
       val saved = enclosing
@@ -37,10 +35,10 @@ object Xref:
       // so re-labelling is its own thirteen-port cycle; a consumer needing position asks `u.site`.
       case TypeRepr.AppliedType(tycon, args) =>
         walkType(tycon, UsageKind.Tycon, site); args.foreach(walkType(_, UsageKind.TypeArg, site))
-      case TypeRepr.AndType(l, r)        => walkType(l, UsageKind.Mixin, site); walkType(r, UsageKind.Mixin, site)
-      case TypeRepr.OrType(l, r)         => walkType(l, kind, site); walkType(r, kind, site)
-      case TypeRepr.ByNameType(u)        => walkType(u, kind, site)
-      case TypeRepr.TypeBounds(lo, hi)   => walkType(lo, UsageKind.Bound, site); walkType(hi, UsageKind.Bound, site)
+      case TypeRepr.AndType(l, r)               => walkType(l, UsageKind.Mixin, site); walkType(r, UsageKind.Mixin, site)
+      case TypeRepr.OrType(l, r)                => walkType(l, kind, site); walkType(r, kind, site)
+      case TypeRepr.ByNameType(u)               => walkType(u, kind, site)
+      case TypeRepr.TypeBounds(lo, hi)          => walkType(lo, UsageKind.Bound, site); walkType(hi, UsageKind.Bound, site)
       case TypeRepr.Refinement(parent, _, info) =>
         walkType(parent, kind, site); walkType(info, UsageKind.MemberType, site)
       case TypeRepr.MethodType(params, res, _) =>
@@ -50,9 +48,9 @@ object Xref:
       case TypeRepr.TypeLambda(params, body) =>
         params.foreach((_, b) => walkType(b, UsageKind.Bound, site)); walkType(body, kind, site)
       case TypeRepr.ConstantType(Constant.ClassOfC(tp)) => walkType(tp, kind, site)
-      case TypeRepr.ConstantType(_)      => ()
-      case TypeRepr.ParamRef(_, _)       => () // binder-local index, names no symbol
-      case TypeRepr.NoPrefix | TypeRepr.NoType => ()
+      case TypeRepr.ConstantType(_)                     => ()
+      case TypeRepr.ParamRef(_, _)                      => () // binder-local index, names no symbol
+      case TypeRepr.NoPrefix | TypeRepr.NoType          => ()
 
     // --- descend the tree structure ---
     def walkTypeDef(td: Tree.TypeDef): Unit =
@@ -69,8 +67,8 @@ object Xref:
         cd.parents.zipWithIndex.foreach { case (p, i) =>
           val k = if i == 0 then UsageKind.Extends else UsageKind.Mixin
           p match
-            case tt: TypeTree => walkType(tt.tpe, k, tt)
-            case term: Term   => walkType(term.tpe, k, term); walkTerm(term)
+            case tt:   TypeTree => walkType(tt.tpe, k, tt)
+            case term: Term     => walkType(term.tpe, k, term); walkTerm(term)
         }
         cd.selfType.foreach(tt => walkType(tt.tpe, UsageKind.SelfType, tt))
       }
@@ -79,7 +77,7 @@ object Xref:
 
     def walkStat(s: Statement): Unit = s match
       case c: Tree.ClassDef => walkClassDef(c)
-      case d: Tree.DefDef =>
+      case d: Tree.DefDef   =>
         defOf(d)
         within(d.symbol) {
           d.tparams.foreach(walkTypeDef)
@@ -87,9 +85,9 @@ object Xref:
           walkType(d.returnTpt.tpe, UsageKind.MemberType, d.returnTpt)
           d.rhs.foreach(walkTerm)
         }
-      case v: Tree.ValDef   => walkValDef(v)
+      case v:  Tree.ValDef  => walkValDef(v)
       case td: Tree.TypeDef => walkTypeDef(td)
-      case t: Term          => walkTerm(t)
+      case t:  Term         => walkTerm(t)
 
     def walkValDef(v: Tree.ValDef): Unit =
       defOf(v)
@@ -99,18 +97,18 @@ object Xref:
       }
 
     def walkTerm(t: Term): Unit = t match
-      case i @ Tree.Ident(sym, _, _)        => rec(sym, UsageKind.TermRef, i)
-      case s @ Tree.Select(qual, sym, _, _) => rec(sym, UsageKind.TermRef, s); walkTerm(qual)
+      case i @ Tree.Ident(sym, _, _)               => rec(sym, UsageKind.TermRef, i)
+      case s @ Tree.Select(qual, sym, _, _)        => rec(sym, UsageKind.TermRef, s); walkTerm(qual)
       case a @ Tree.Apply(fun, args, method, _, _) =>
         rec(method, UsageKind.Call, a)
         fun match
-          case _: Tree.Ident              => ()                      // method ident already recorded as Call
-          case Tree.Select(qual, _, _, _) => walkTerm(qual)          // record receiver, not the method twice
+          case _: Tree.Ident => () // method ident already recorded as Call
+          case Tree.Select(qual, _, _, _) => walkTerm(qual) // record receiver, not the method twice
           case other                      => walkTerm(other)
         args.foreach(walkTerm)
       case Tree.TypeApply(fun, targs, _, _) =>
         walkTerm(fun); targs.foreach(tt => walkType(tt.tpe, UsageKind.TypeArg, tt))
-      case n @ Tree.New(tpt, _, _, anon)    =>
+      case n @ Tree.New(tpt, _, _, anon) =>
         walkType(tpt.tpe, UsageKind.Instantiate, n)
         // an anonymous class's members are real declarations with real usages — index them, or
         // every check derived from this index (portability, rewrite-trace) is blind inside them.
@@ -120,25 +118,25 @@ object Xref:
       // captured separately via `walkType`'s `ThisType` case.
       case _: Tree.This | _: Tree.Super     => ()
       case Tree.Typed(expr, tpt, _, _)      => walkTerm(expr); walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
-      case Tree.Assign(lhs, rhs, _, _, _)      => walkTerm(lhs); walkTerm(rhs)
+      case Tree.Assign(lhs, rhs, _, _, _)   => walkTerm(lhs); walkTerm(rhs)
       case Tree.Block(stats, expr, _, _, _) => stats.foreach(walkStat); walkTerm(expr)
       // the SAM method's result type is a type the EMITTED code names (the nested `def`'s), so it
       // is a usage exactly as an ascription's target is — and registering it is what keeps the
       // count STILL where a conversion consumed the `DefDef` that used to name it.
       case Tree.Lambda(params, body, _, _, rt) =>
         params.foreach(walkValDef); rt.foreach(t => walkType(t.tpe, UsageKind.TypeRefPos, t)); walkTerm(body)
-      case Tree.If(c, th, el, _, _)         => walkTerm(c); walkTerm(th); walkTerm(el)
-      case Tree.Repeated(elems, _, _)       => elems.foreach(walkTerm)
-      case Tree.Spread(e, _, _)             => walkTerm(e)
-      case Tree.Return(e, _, _)             => e.foreach(walkTerm)
-      case Tree.While(c, b, _, _, _)           => walkTerm(c); walkTerm(b)
-      case Tree.Throw(e, _, _)              => walkTerm(e)
-      case io @ Tree.InstanceOf(e, tpt, _, _) => walkTerm(e); walkType(tpt.tpe, UsageKind.TypeRefPos, io)
-      case Tree.ArrayAccess(a, i, _, _)     => walkTerm(a); walkTerm(i)
-      case Tree.ArrayLength(a, _, _)        => walkTerm(a)
+      case Tree.If(c, th, el, _, _)                 => walkTerm(c); walkTerm(th); walkTerm(el)
+      case Tree.Repeated(elems, _, _)               => elems.foreach(walkTerm)
+      case Tree.Spread(e, _, _)                     => walkTerm(e)
+      case Tree.Return(e, _, _)                     => e.foreach(walkTerm)
+      case Tree.While(c, b, _, _, _)                => walkTerm(c); walkTerm(b)
+      case Tree.Throw(e, _, _)                      => walkTerm(e)
+      case io @ Tree.InstanceOf(e, tpt, _, _)       => walkTerm(e); walkType(tpt.tpe, UsageKind.TypeRefPos, io)
+      case Tree.ArrayAccess(a, i, _, _)             => walkTerm(a); walkTerm(i)
+      case Tree.ArrayLength(a, _, _)                => walkTerm(a)
       case na @ Tree.NewArray(el, dims, init, _, _) =>
         walkType(el.tpe, UsageKind.Instantiate, na); dims.foreach(walkTerm); init.foreach(_.foreach(walkTerm))
-      case Tree.ForEach(b, it, body, _, _, _)  => walkValDef(b); walkTerm(it); walkTerm(body)
+      case Tree.ForEach(b, it, body, _, _, _)    => walkValDef(b); walkTerm(it); walkTerm(body)
       case Tree.For(init, c, upd, body, _, _, _) =>
         init.foreach(walkStat); c.foreach(walkTerm); upd.foreach(walkStat); walkTerm(body)
       case Tree.Try(res, body, catches, fin, _, _, _) =>
@@ -157,7 +155,7 @@ object Xref:
       case _: Tree.Break | _: Tree.Continue => () // control-flow leaves, no symbol refs
       // a `yield` is a jump like the two above and names no symbol of its own — but it CARRIES a
       // value, and that value names everything an ordinary expression does.
-      case Tree.Yield(v, _, _)              => walkTerm(v)
+      case Tree.Yield(v, _, _) => walkTerm(v)
       // a TYPE PATTERN is a runtime type test that BINDS: the type is a reference exactly as an
       // `instanceof`'s is, and the binder is a local whose USES are ordinary `Ident`s the walk
       // already reaches. Nothing records a `Definition` for it because it is not one — a pattern is
@@ -168,26 +166,26 @@ object Xref:
       case rp @ Tree.RecordPattern(tpt, ps, _, _) =>
         walkType(tpt.tpe, UsageKind.TypeRefPos, rp); ps.foreach(walkTerm)
       // an UNCONDITIONAL component binding names no type at all — that is what makes it that node.
-      case Tree.BindPattern(_, _, _)        => ()
+      case Tree.BindPattern(_, _, _) => ()
       // a java label is not a symbol; everything it names is in the statement under it
-      case Tree.Labeled(_, s, _, _)         => walkTerm(s)
-      case Tree.Assert(c, m, _, _)          => walkTerm(c); m.foreach(walkTerm)
-      case Tree.IncDec(t, _, _, _, _)       => walkTerm(t)
-      case Tree.DoWhile(b, c, _, _, _)         => walkTerm(b); walkTerm(c)
-      case Tree.Synchronized(l, b, _, _)    => walkTerm(l); walkTerm(b)
+      case Tree.Labeled(_, s, _, _)      => walkTerm(s)
+      case Tree.Assert(c, m, _, _)       => walkTerm(c); m.foreach(walkTerm)
+      case Tree.IncDec(t, _, _, _, _)    => walkTerm(t)
+      case Tree.DoWhile(b, c, _, _, _)   => walkTerm(b); walkTerm(c)
+      case Tree.Synchronized(l, b, _, _) => walkTerm(l); walkTerm(b)
       // a comment carries no references; the statement under it carries all of them
-      case Tree.Commented(_, s)             => walkTerm(s)
+      case Tree.Commented(_, s)                          => walkTerm(s)
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
-      case _: Tree.Literal                  => ()
+      case _: Tree.Literal => ()
       // the ready-made text names nothing the xref can see; its HOLES are ordinary terms and name
       // everything they always did. A usage that occurs only inside a hole would read as dead code
       // to every consumer of this index if the walk stopped at the node.
-      case o: Tree.Opaque                   => o.holes.foreach(walkTerm)
+      case o: Tree.Opaque => o.holes.foreach(walkTerm)
       // the approximation is ordinary program text and names ordinary symbols. Stopping at the
       // wrapper would make every symbol used only inside a marked region read as DEAD to
       // `usagesOf` — and "is anything still using this?" is the question the drop suggestions, the
       // vacation assertion and the boundary checks all ask.
-      case m: Tree.Unportable               => walkTerm(m.inner)
+      case m: Tree.Unportable => walkTerm(m.inner)
 
     units.foreach(walkClassDef)
     new XrefIndex(defs.toMap, usages.view.mapValues(_.toList).toMap)

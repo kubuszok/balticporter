@@ -1,6 +1,6 @@
 package balticporter.emit
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 class InjectedSurfaceSpec extends munit.FunSuite:
 
@@ -8,14 +8,14 @@ class InjectedSurfaceSpec extends munit.FunSuite:
     val dir = Files.createTempDirectory("injected-surface-test")
     try body(dir)
     finally
-      Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
-        .forEach(Files.deleteIfExists(_))
+      Files.walk(dir).sorted(java.util.Comparator.reverseOrder()).forEach(Files.deleteIfExists(_))
 
   test("parses trait with wildcard parameter type") {
     withTempDir { root =>
       val pkg = root.resolve("sge/utils")
       Files.createDirectories(pkg)
-      Files.writeString(pkg.resolve("Pool.scala"),
+      Files.writeString(
+        pkg.resolve("Pool.scala"),
         """package sge.utils
           |
           |trait Pool[A] {
@@ -23,7 +23,8 @@ class InjectedSurfaceSpec extends munit.FunSuite:
           |  def obtain(): A
           |  def getFree: Int
           |}
-          |""".stripMargin)
+          |""".stripMargin
+      )
 
       val surface = InjectedSurface.fromRoots(List(root))
 
@@ -54,14 +55,16 @@ class InjectedSurfaceSpec extends munit.FunSuite:
     withTempDir { root =>
       val pkg = root.resolve("sge/utils")
       Files.createDirectories(pkg)
-      Files.writeString(pkg.resolve("ImmutableArray.scala"),
+      Files.writeString(
+        pkg.resolve("ImmutableArray.scala"),
         """package sge.utils
           |
           |trait ImmutableArray[A] {
           |  def iterator: Iterator[A]
           |  def size: Int
           |}
-          |""".stripMargin)
+          |""".stripMargin
+      )
 
       val surface = InjectedSurface.fromRoots(List(root))
 
@@ -86,13 +89,15 @@ class InjectedSurfaceSpec extends munit.FunSuite:
     withTempDir { root =>
       val pkg = root.resolve("sge/utils")
       Files.createDirectories(pkg)
-      Files.writeString(pkg.resolve("Pool.scala"),
+      Files.writeString(
+        pkg.resolve("Pool.scala"),
         """package sge.utils
           |
           |trait Pool[A] {
           |  def freeAll(objects: DynamicArray[? <: A]): Unit
           |}
-          |""".stripMargin)
+          |""".stripMargin
+      )
 
       val surface = InjectedSurface.fromRoots(List(root))
 
@@ -115,14 +120,16 @@ class InjectedSurfaceSpec extends munit.FunSuite:
     withTempDir { root =>
       val pkg = root.resolve("test/pkg")
       Files.createDirectories(pkg)
-      Files.writeString(pkg.resolve("Parent.scala"),
+      Files.writeString(
+        pkg.resolve("Parent.scala"),
         """package test.pkg
           |
           |trait Parent[A] {
           |  def foo(x: Buffer[? <: A]): Unit
           |  def bar: Int
           |}
-          |""".stripMargin)
+          |""".stripMargin
+      )
 
       val surface = InjectedSurface.fromRoots(List(root))
 

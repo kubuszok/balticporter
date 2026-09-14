@@ -1,10 +1,10 @@
 package balticporter.testkit
 
-import balticporter.catalog.{Attaches, Differences, JS, Status}
-import balticporter.tir.{CastConversionCheck, Phase, Program, Term, Tree, TypeRepr}
+import balticporter.catalog.{ Attaches, Differences, JS, Status }
+import balticporter.tir.{ CastConversionCheck, Phase, Program, Term, Tree, TypeRepr }
 
-/** THE `JS-E` EDGE-CASE SUITE — one test per expression row the engine wires, at the shape the row
-  * is about. */
+/** THE `JS-E` EDGE-CASE SUITE — one test per expression row the engine wires, at the shape the row is about.
+  */
 class CatalogAreaESpec extends PortSuite:
 
   // -- JS-E01: `==` on references is IDENTITY in java; scala's `==` calls `equals` ----------------
@@ -119,12 +119,14 @@ class CatalogAreaESpec extends PortSuite:
   // -- JS-E17: compound assignment and ++/-- evaluate the LVALUE ONCE (F7) -----------------------
 
   test("JS-E17 — array index with a CALL: subexpressions bound, each evaluated once") {
-    val p = port("""
+    val p = port(
+      """
       public class E17a {
         int[] a; int seq;
         int next() { return seq++; }
         void f() { a[next()] += 5; }
-      }""")
+      }"""
+    )
     assertConsults(p, JS.E(17), fired = true)
     // the index `next()` is bound to a temporary
     assertEmits(p, "$lv1")
@@ -133,12 +135,14 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   test("JS-E17 — field select through a CALL: qualifier bound") {
-    val p = port("""
+    val p = port(
+      """
       public class E17b {
         int x;
         static E17b get() { return new E17b(); }
         static void f() { get().x += 3; }
-      }""")
+      }"""
+    )
     assertConsults(p, JS.E(17), fired = true)
     assertEmits(p, "$lv1")
   }
@@ -147,12 +151,14 @@ class CatalogAreaESpec extends PortSuite:
     // The expression path goes through CtUnaryOperator -> incDecOf -> Tree.IncDec.
     // JS-E17 is NOT owed at CtUnaryOperator (it attaches to CtOperatorAssignment), but the
     // emitter's Tree.IncDec arm still binds the target. Assert on emitted text.
-    val p = port("""
+    val p = port(
+      """
       public class E17c {
         int[] a; int seq;
         int next() { return seq++; }
         int f() { return a[next()]++; }
-      }""")
+      }"""
+    )
     // the IncDec arm binds the target
     assertEmits(p, "$lv1")
     // post-increment yields the value BEFORE the update
@@ -160,12 +166,14 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   test("JS-E17 — pre-increment with non-trivial target") {
-    val p = port("""
+    val p = port(
+      """
       public class E17d {
         int[] a;
         int next() { return 0; }
         int f() { return ++a[next()]; }
-      }""")
+      }"""
+    )
     assertEmits(p, "$lv1")
     // pre-increment: the bound lvalue is incremented then read back
     assertEmits(p, "this.a($lv1) += 1; this.a($lv1)")
@@ -184,26 +192,30 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   test("JS-E17 — field.items compound multiply: non-trivial index bound") {
-    val p = port("""
+    val p = port(
+      """
       public class E17g {
         float[] items;
         int colOffset;
         void f(int o) {
           items[(o + colOffset) + 1] *= 0.5f;
         }
-      }""")
+      }"""
+    )
     assertConsults(p, JS.E(17), fired = true)
     // the index expression (o + colOffset) + 1 is non-trivial, so binding occurs
     assertEmits(p, "$lv")
   }
 
   test("JS-E17 — narrowing cast preserved with bound lvalue") {
-    val p = port("""
+    val p = port(
+      """
       public class E17f {
         byte[] a; int seq;
         int next() { return seq++; }
         void f() { a[next()] += 3; }
-      }""")
+      }"""
+    )
     assertConsults(p, JS.E(17), fired = true)
     assertEmits(p, "$lv1")
     // the narrowing cast must survive
@@ -220,12 +232,15 @@ class CatalogAreaESpec extends PortSuite:
       val name = "identity-rebuild"
       // override transformTerm to trigger mapTerm's copy path on every node
       override def transformTerm(t: Term)(using Program): Term = t
-    val p = port("""
+    val p = port(
+      """
       public class E17h {
         int[] a; int seq;
         int next() { return seq++; }
         void f() { a[next()] += 5; }
-      }""", identity)
+      }""",
+      identity
+    )
     assertConsults(p, JS.E(17), fired = true)
     // the compound field survived the phase rebuild, so binding still fires
     assertEmits(p, "$lv1")
@@ -252,7 +267,8 @@ class CatalogAreaESpec extends PortSuite:
     val p = port(
       """public class E {
         |  Number f(String s) { return s.matches("d+") ? Long.valueOf(s) : Double.valueOf(s); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.E(5), fired = true)
     // BOTH branches, and the `Double` one is the half a coercion rule that only fixes cross-type
     // unboxing would miss — leaving the `if` at a lub of `Double` and `scala.Double`.
@@ -301,7 +317,8 @@ class CatalogAreaESpec extends PortSuite:
     val p = port(
       """public class E {
         |  float f(boolean b, float g) { return b ? (float) Math.asin(g) : g * 0.5f; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.E(5))
     assertEmits(p, "asInstanceOf[scala.Float]")
     assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
@@ -315,7 +332,8 @@ class CatalogAreaESpec extends PortSuite:
     val p = port(
       """public class E {
         |  float f(boolean b, double d, float g) { return b ? (float)(double) d : g; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.E(5))
     assertEmits(p, "d.asInstanceOf[scala.Double].asInstanceOf[scala.Float]")
     assertNotEmits(p, "asInstanceOf[scala.Float].asInstanceOf[scala.Float].asInstanceOf[scala.Float]")
@@ -340,7 +358,8 @@ class CatalogAreaESpec extends PortSuite:
     val p = port(
       """public class E {
         |  public Object f(double d) { return (long) Math.ceil(d); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.E(6))
     assertEmits(p, "asInstanceOf[scala.Long].asInstanceOf[java.lang.Long]")
     assertNotEmits(p, "java.lang.Double")
@@ -358,7 +377,8 @@ class CatalogAreaESpec extends PortSuite:
         |  Object l(double v) { return (long) v; }
         |  Object f(double v) { return (float) v; }
         |  Object i(double v) { return (int) v; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertEmits(p, "asInstanceOf[scala.Byte].asInstanceOf[java.lang.Byte]")
     assertEmits(p, "asInstanceOf[scala.Short].asInstanceOf[java.lang.Short]")
     assertEmits(p, "asInstanceOf[scala.Char].asInstanceOf[java.lang.Character]")
@@ -374,7 +394,8 @@ class CatalogAreaESpec extends PortSuite:
       """public class E {
         |  double f(Object o) { return (double) o; }
         |  int g(Number n)    { return (int) n; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     // …and the consult is REACHED and does not fire, which is the assertion that separates "java
     // does no conversion here" from "nobody asked": `Object` and `Number` are not wrappers, so the
     // cell this row can check is not this one.
@@ -414,8 +435,8 @@ class CatalogAreaESpec extends PortSuite:
     // decides a cast from the type the operand has IN THE JAVA (`SpoonTir.castOf`), so a wrapper at
     // a primitive target is already `v.doubleValue()` before the emitter sees it.
     val retype = new Phase:
-      def name: String = "spec/retype-operand"
-      override def transformIdent(i: Tree.Ident)(using p: Program): Term =
+      def name:                                                     String = "spec/retype-operand"
+      override def transformIdent(i: Tree.Ident)(using p: Program): Term   =
         val long = p.symbols.all.find(_.fullName == "java.lang.Long").map(_.id)
         if p.symbolOf(i.sym).exists(_.name == "o") && long.isDefined
         then i.copy(tpe = TypeRepr.TypeRef(TypeRepr.NoPrefix, long.get))
@@ -506,21 +527,23 @@ class CatalogAreaESpec extends PortSuite:
     val p = portAll(List("A.java" -> a, "B.java" -> b), new balticporter.transform.TestFrameworkTransform())
     assertCites(p, JS.E(7), about = "A#check")
     val at = p.catalog.citedAt(JS.E(7))
-    assert(!at.exists(_.contains("<init>")) && !at.exists(_.contains("untouched")),
-      s"the widening is in `check` and the citation names a member the phase never touched: $at")
+    assert(
+      !at.exists(_.contains("<init>")) && !at.exists(_.contains("untouched")),
+      s"the widening is in `check` and the citation names a member the phase never touched: $at"
+    )
   }
-
-
 
   // -- the partition, asserted rather than left to a reader ---------------------------------------
 
   test("every JS-E row is either wired, declared unmechanised, or owes nothing — and says which") {
-    val byKind = Differences.expressions.groupBy(_.attaches match
-      case _: Attaches.Lowered      => "lowered"
-      case _: Attaches.Rendered     => "rendered"
-      case _: Attaches.Cited        => "cited"
-      case _: Attaches.Unmechanised => "unmechanised"
-      case _                        => "none")
+    val byKind = Differences.expressions.groupBy(
+      _.attaches match
+        case _: Attaches.Lowered      => "lowered"
+        case _: Attaches.Rendered     => "rendered"
+        case _: Attaches.Cited        => "cited"
+        case _: Attaches.Unmechanised => "unmechanised"
+        case _ => "none"
+    )
     // Every row is in exactly one bucket by construction; what this asserts is that no bucket has
     // silently swallowed the others. A wave that marked area E `Unmechanised` to keep a lane green
     // is what this test exists to catch.
@@ -531,6 +554,5 @@ class CatalogAreaESpec extends PortSuite:
     // handled-by-construction. A row with an open status and no obligation would be a gap nothing
     // counts.
     val silentlyExcused = byKind.getOrElse("none", Nil).filter(d => d.status.isOpen)
-    assertEquals(silentlyExcused.map(_.id), Nil,
-      "an Open row claiming NoObligation is a gap no lane can see")
+    assertEquals(silentlyExcused.map(_.id), Nil, "an Open row claiming NoObligation is a gap no lane can see")
   }

@@ -3,25 +3,23 @@ package balticporter.core
 import balticporter.core.PortMap.Disposition
 import balticporter.tir.SrcMap
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 class PortMapSpec extends munit.FunSuite:
 
   private def member(unit: String, m: String, path: String = "") =
-    SrcMap.Entry(unit, m, "def", 1, 2,
-                 if path.isEmpty then s"${unit.replace('.', '/')}.java" else path, 10, "d0")
+    SrcMap.Entry(unit, m, "def", 1, 2, if path.isEmpty then s"${unit.replace('.', '/')}.java" else path, 10, "d0")
 
   private def build(
-      emitted: List[String] = Nil,
-      members: List[SrcMap.Entry] = Nil,
-      dropTypes: Set[String] = Set.empty,
-      dropMethods: Set[String] = Set.empty,
-      injected: Set[String] = Set.empty,
-      bodies: Set[String] = Set.empty,
-      renames: Map[String, String] = Map.empty,
-      typeShapes: Map[String, String] = Map.empty,
-  ) = PortMap.of("m", "eng", emitted, SrcMap.Recording(members), dropTypes, dropMethods, injected, bodies, renames,
-                  typeShapes = typeShapes)
+    emitted:     List[String] = Nil,
+    members:     List[SrcMap.Entry] = Nil,
+    dropTypes:   Set[String] = Set.empty,
+    dropMethods: Set[String] = Set.empty,
+    injected:    Set[String] = Set.empty,
+    bodies:      Set[String] = Set.empty,
+    renames:     Map[String, String] = Map.empty,
+    typeShapes:  Map[String, String] = Map.empty
+  ) = PortMap.of("m", "eng", emitted, SrcMap.Recording(members), dropTypes, dropMethods, injected, bodies, renames, typeShapes = typeShapes)
 
   test("the SEARCH PATH is several roots, nearest first — §4.45's consumer has no run tree") {
     // An agent in another repository points a published Baltic Porter at its own java. Its base's map
@@ -39,15 +37,13 @@ class PortMapSpec extends munit.FunSuite:
     publish(there, "the-base")
 
     assertEquals(PortMap.discoverIn(List(here), Set.empty).map(_.module), List("mine"))
-    assertEquals(PortMap.discoverIn(List(here, there), Set.empty).map(_.module).sorted,
-                 List("mine", "the-base"))
+    assertEquals(PortMap.discoverIn(List(here, there), Set.empty).map(_.module).sorted, List("mine", "the-base"))
     // an extra root can only ADD a base, never shadow the run's own tree: first wins per module,
     // exactly as two directories under ONE root already do.
     publish(there, "mine")
     val both = PortMap.discoverIn(List(here, there), Set.empty)
     assertEquals(both.map(_.module).sorted, List("mine", "the-base"))
-    assert(clue(both.find(_.module == "mine").map(_.path.toString))
-             .exists(_.startsWith(RealPath.str(here))), RealPath.str(here))
+    assert(clue(both.find(_.module == "mine").map(_.path.toString)).exists(_.startsWith(RealPath.str(here))), RealPath.str(here))
     // …and `exclude` still holds, so a run cannot discover ITSELF as its own base
     assertEquals(PortMap.discoverIn(List(here, there), Set("mine")).map(_.module), List("the-base"))
     // a root that does not exist is not an error — an unset flag must be a no-op by arithmetic
@@ -64,8 +60,7 @@ class PortMapSpec extends munit.FunSuite:
     try
       System.setProperty("balticporter.baseReports", "from-the-operator")
       assertEquals(PortMap.searchPath(Nil).map(_.getFileName.toString), List("from-the-operator"))
-      assertEquals(PortMap.searchPath(List(Path.of("from-the-port"))).map(_.getFileName.toString),
-                   List("from-the-port"))
+      assertEquals(PortMap.searchPath(List(Path.of("from-the-port"))).map(_.getFileName.toString), List("from-the-port"))
     finally
       prev match
         case Some(v) => System.setProperty("balticporter.baseReports", v)
@@ -106,11 +101,14 @@ class PortMapSpec extends munit.FunSuite:
   test("a DROPPED type and a SUBSTITUTED type are distinguished by what stands at the name") {
     // The distinction is the entire content of the entry for a dependent: one means "call it and
     // get a different implementation", the other means "every call must already be gone".
-    val m = build(dropTypes = Set("p.Gone", "p.Replaced"), injected = Set("p.Replaced"))
+    val m      = build(dropTypes = Set("p.Gone", "p.Replaced"), injected = Set("p.Replaced"))
     val byName = m.types.map(e => e.upstream -> e).toMap
     assertEquals(byName("p.Gone").disposition, Disposition.Dropped)
-    assertEquals(byName("p.Gone").emitted, "p.Gone",
-      "a Dropped entry carries the emitted-namespace name so a dependent's PublishedSurface can find it")
+    assertEquals(
+      byName("p.Gone").emitted,
+      "p.Gone",
+      "a Dropped entry carries the emitted-namespace name so a dependent's PublishedSurface can find it"
+    )
     assertEquals(byName("p.Replaced").disposition, Disposition.Substituted)
     assertEquals(byName("p.Replaced").emitted, "p.Replaced")
   }
@@ -123,29 +121,35 @@ class PortMapSpec extends munit.FunSuite:
     // `sge.utils.ReflectionPool` that the base drops and injects.
     val m = build(
       dropTypes = Set("p.Gone", "p.Replaced"),
-      injected  = Set("p.Replaced"),
-      typeShapes = Map("p.Replaced" -> "form=trait"),
+      injected = Set("p.Replaced"),
+      typeShapes = Map("p.Replaced" -> "form=trait")
     )
     val byName = m.types.map(e => e.upstream -> e).toMap
     assertEquals(byName("p.Replaced").disposition, Disposition.Substituted)
-    assertEquals(byName("p.Replaced").shape, "form=trait",
-      "a Substituted entry must carry its shape so a dependent's contract question is answerable")
-    assert(byName("p.Replaced").typeShape.isDefined,
-      "parseType must return Some for a Substituted row with a shape payload")
-    assertEquals(byName("p.Gone").shape, "form=class",
-      "a Dropped entry carries a minimal shape so a dependent's PublishedSurface finds it")
+    assertEquals(
+      byName("p.Replaced").shape,
+      "form=trait",
+      "a Substituted entry must carry its shape so a dependent's contract question is answerable"
+    )
+    assert(byName("p.Replaced").typeShape.isDefined, "parseType must return Some for a Substituted row with a shape payload")
+    assertEquals(
+      byName("p.Gone").shape,
+      "form=class",
+      "a Dropped entry carries a minimal shape so a dependent's PublishedSurface finds it"
+    )
   }
 
   test("a dropped-only type carries a minimal shape so a dependent can find it (D16 amended)") {
     val m = build(dropTypes = Set("p.Gone"), injected = Set.empty)
     val e = m.types.find(_.upstream == "p.Gone").get
     assertEquals(e.disposition, Disposition.Dropped)
-    assertEquals(e.shape, "form=class",
-      "a Dropped entry carries a minimal shape so PublishedSurface.typeShape returns Published, not Unknown")
-    assertEquals(e.emitted, "p.Gone",
-      "the emitted-namespace name so typeRows includes the entry")
-    assert(e.typeShape.isDefined,
-      "parseType must return Some for a Dropped row with a shape payload")
+    assertEquals(
+      e.shape,
+      "form=class",
+      "a Dropped entry carries a minimal shape so PublishedSurface.typeShape returns Published, not Unknown"
+    )
+    assertEquals(e.emitted, "p.Gone", "the emitted-namespace name so typeRows includes the entry")
+    assert(e.typeShape.isDefined, "parseType must return Some for a Dropped row with a shape payload")
   }
 
   test("an injected type that replaces nothing is ADDED, not Substituted") {
@@ -161,14 +165,17 @@ class PortMapSpec extends munit.FunSuite:
     // an unrelated-looking `Added` with nothing joining them.
     val m = build(
       dropTypes = Set("up.stream.Gone", "up.stream.Replaced"),
-      injected  = Set("out.Replaced", "out.Helper"),
-      renames   = Map("up.stream" -> "out"),
+      injected = Set("out.Replaced", "out.Helper"),
+      renames = Map("up.stream" -> "out")
     )
     val byUpstream = m.types.filter(_.upstream.nonEmpty).map(e => e.upstream -> e).toMap
 
     assertEquals(byUpstream("up.stream.Replaced").disposition, Disposition.Substituted)
-    assertEquals(byUpstream("up.stream.Replaced").emitted, "out.Replaced",
-      "the emitted half of the row must be the name the injection actually ships under")
+    assertEquals(
+      byUpstream("up.stream.Replaced").emitted,
+      "out.Replaced",
+      "the emitted half of the row must be the name the injection actually ships under"
+    )
 
     // the drop with NO replacement carries the EMITTED-namespace name for the dependent's lookup
     assertEquals(byUpstream("up.stream.Gone").disposition, Disposition.Dropped)
@@ -184,8 +191,8 @@ class PortMapSpec extends munit.FunSuite:
     // entry, or a drop would be paired with an injection that has nothing to do with it.
     val m = build(
       dropTypes = Set("up.streaming.Gone"),
-      injected  = Set("out.Gone"),
-      renames   = Map("up.stream" -> "out"),
+      injected = Set("out.Gone"),
+      renames = Map("up.stream" -> "out")
     )
     val e = m.types.find(_.upstream == "up.streaming.Gone").get
     assertEquals(e.disposition, Disposition.Dropped)
@@ -197,10 +204,18 @@ class PortMapSpec extends munit.FunSuite:
     // `port.ui.X` genuinely ambiguous, and every shared type then becomes unfindable to a
     // dependent — which looks the base up BY UPSTREAM NAME. Same rule as the provenance header
     // (CLAUDE.md §4.57): take the path from `Origin`, never reconstruct it from the FQN.
-    val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2,
-      "up/stream/lib/ui/Widget.java", 10, "d0")
-    val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map("up.stream.lib" -> "port"))
+    val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2, "up/stream/lib/ui/Widget.java", 10, "d0")
+    val m        = PortMap.of(
+      "m",
+      "eng",
+      List("port.ui.Widget"),
+      SrcMap.Recording(List(srcEntry)),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map("up.stream.lib" -> "port")
+    )
     val t = m.types.head
     assertEquals(t.upstream, "up.stream.lib.ui.Widget")
     assertEquals(t.emitted, "port.ui.Widget")
@@ -215,18 +230,25 @@ class PortMapSpec extends munit.FunSuite:
     // sees the PACKAGE renames cannot invert it. The `upstream` column then carries the post-rename
     // name (`up.stream.lib.ui.SgeWidget`), and every consumer that joins the map to the pre-rename
     // program fails to match: `ownedByBase`, `followMemberRenames`, `baseMemberUpstream`.
-    val srcEntry = SrcMap.Entry("port.ui.SgeWidget", "port.ui.SgeWidget#draw(Batch)", "def", 1, 2,
-      "up/stream/lib/ui/Widget.java", 10, "d0")
+    val srcEntry = SrcMap.Entry("port.ui.SgeWidget", "port.ui.SgeWidget#draw(Batch)", "def", 1, 2, "up/stream/lib/ui/Widget.java", 10, "d0")
     // The FULL rename table: package rename AND type rename composed.
     val fullRenames = Map(
-      "up.stream.lib"                    -> "port",            // package rename
-      "up.stream.lib.ui.Widget"          -> "port.ui.SgeWidget", // type rename, composed
+      "up.stream.lib" -> "port", // package rename
+      "up.stream.lib.ui.Widget" -> "port.ui.SgeWidget" // type rename, composed
     )
-    val m = PortMap.of("m", "eng", List("port.ui.SgeWidget"), SrcMap.Recording(List(srcEntry)),
-      Set.empty, Set.empty, Set.empty, Set.empty, fullRenames)
+    val m = PortMap.of(
+      "m",
+      "eng",
+      List("port.ui.SgeWidget"),
+      SrcMap.Recording(List(srcEntry)),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      fullRenames
+    )
     val t = m.types.head
-    assertEquals(t.upstream, "up.stream.lib.ui.Widget",
-      "upstream must be java's OWN FQN, not the post-type-rename name")
+    assertEquals(t.upstream, "up.stream.lib.ui.Widget", "upstream must be java's OWN FQN, not the post-type-rename name")
     assertEquals(t.emitted, "port.ui.SgeWidget")
     assertEquals(t.disposition, Disposition.Renamed)
     // the member follows: its owner is the upstream type's FQN, not the renamed one
@@ -237,17 +259,23 @@ class PortMapSpec extends munit.FunSuite:
     // `List$ListStyle` -> `SgeList$ListStyle`: both the outer and the inner must carry the upstream
     // FQN. The inner's emitted name is `port.ui.SgeList$ListStyle` and its upstream must be
     // `up.stream.lib.ui.List$ListStyle`.
-    val srcOuter = SrcMap.Entry("port.ui.SgeList", "port.ui.SgeList#draw()", "def", 1, 2,
-      "up/stream/lib/ui/List.java", 10, "d0")
-    val srcInner = SrcMap.Entry("port.ui.SgeList$ListStyle", "port.ui.SgeList$ListStyle#font", "val", 1, 2,
-      "up/stream/lib/ui/List.java", 20, "d1")
+    val srcOuter    = SrcMap.Entry("port.ui.SgeList", "port.ui.SgeList#draw()", "def", 1, 2, "up/stream/lib/ui/List.java", 10, "d0")
+    val srcInner    = SrcMap.Entry("port.ui.SgeList$ListStyle", "port.ui.SgeList$ListStyle#font", "val", 1, 2, "up/stream/lib/ui/List.java", 20, "d1")
     val fullRenames = Map(
-      "up.stream.lib"                   -> "port",
-      "up.stream.lib.ui.List"           -> "port.ui.SgeList",
+      "up.stream.lib" -> "port",
+      "up.stream.lib.ui.List" -> "port.ui.SgeList"
     )
-    val m = PortMap.of("m", "eng", List("port.ui.SgeList", "port.ui.SgeList$ListStyle"),
+    val m = PortMap.of(
+      "m",
+      "eng",
+      List("port.ui.SgeList", "port.ui.SgeList$ListStyle"),
       SrcMap.Recording(List(srcOuter, srcInner)),
-      Set.empty, Set.empty, Set.empty, Set.empty, fullRenames)
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      fullRenames
+    )
     val outer = m.types.find(_.emitted == "port.ui.SgeList").get
     assertEquals(outer.upstream, "up.stream.lib.ui.List")
     val inner = m.types.find(_.emitted == "port.ui.SgeList$ListStyle").get
@@ -261,11 +289,17 @@ class PortMapSpec extends munit.FunSuite:
     // A type whose upstream FQN is in `dropTypes` is genuinely DROPPED — even if a phantom of it
     // appears in `emittedTypes` due to a namespace mismatch in the caller's filter. `PortMap.of`
     // filters `typeEntries` against `dropTypes` by upstream name, so only the Dropped row remains.
-    val m = PortMap.of("m", "eng", List("port.A"),
+    val m = PortMap.of(
+      "m",
+      "eng",
+      List("port.A"),
       SrcMap.Recording(List(member("port.A", "port.A#f()"))),
-      dropTypes = Set("up.A"), dropMethods = Set.empty,
-      injectedFqns = Set.empty, bodyKeys = Set.empty,
-      renames = Map("up" -> "port"))
+      dropTypes = Set("up.A"),
+      dropMethods = Set.empty,
+      injectedFqns = Set.empty,
+      bodyKeys = Set.empty,
+      renames = Map("up" -> "port")
+    )
     val typeRows = m.types.filter(_.upstream == "up.A")
     assertEquals(typeRows.size, 1, s"exactly one row for upstream 'up.A': $typeRows")
     assertEquals(typeRows.head.disposition, Disposition.Dropped)
@@ -276,10 +310,18 @@ class PortMapSpec extends munit.FunSuite:
     // maven layout, and reading the whole of it as a package published
     // `mod.src.main.java.up.stream.lib.ui.Widget` for 9,261 of one port's 9,370 rows. Nothing in
     // that port could see it: the column is READ only by a dependent, and it had none.
-    val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2,
-      "mod/src/main/java/up/stream/lib/ui/Widget.java", 10, "d0")
-    val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map("up.stream.lib" -> "port"))
+    val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2, "mod/src/main/java/up/stream/lib/ui/Widget.java", 10, "d0")
+    val m        = PortMap.of(
+      "m",
+      "eng",
+      List("port.ui.Widget"),
+      SrcMap.Recording(List(srcEntry)),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map("up.stream.lib" -> "port")
+    )
     assertEquals(m.types.head.upstream, "up.stream.lib.ui.Widget")
     assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
   }
@@ -291,8 +333,17 @@ class PortMapSpec extends munit.FunSuite:
     // `com.badlogic.gdx.graphics.list` it replaced, and not a better one. The truncation needs the
     // unrenamed name to be QUALIFIED; a bare one says nothing about where the package starts.
     val srcEntry = SrcMap.Entry("port.ui.Widget", "list", "val", 1, 2, "up/stream/lib/ui/Widget.java", 10, "d0")
-    val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map("up.stream.lib" -> "port"))
+    val m        = PortMap.of(
+      "m",
+      "eng",
+      List("port.ui.Widget"),
+      SrcMap.Recording(List(srcEntry)),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map("up.stream.lib" -> "port")
+    )
     assertEquals(m.members.head.upstream, "up.stream.lib.ui.list")
   }
 
@@ -303,8 +354,17 @@ class PortMapSpec extends munit.FunSuite:
     // — including its leading directories, which is the honest answer when nothing can say where
     // the package starts.
     val srcEntry = SrcMap.Entry("out.T", "out.T#m()", "def", 1, 2, "mod/src/main/java/a/x/T.java", 10, "d0")
-    val m = PortMap.of("m", "eng", List("out.T"), SrcMap.Recording(List(srcEntry)),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map("a.x" -> "out", "b.y" -> "out"))
+    val m        = PortMap.of(
+      "m",
+      "eng",
+      List("out.T"),
+      SrcMap.Recording(List(srcEntry)),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map("a.x" -> "out", "b.y" -> "out")
+    )
     assertEquals(m.types.head.upstream, "mod.src.main.java.a.x.T")
   }
 
@@ -320,7 +380,7 @@ class PortMapSpec extends munit.FunSuite:
     val m = build(
       emitted = List("p.C"),
       members = List(member("p.C", "p.C#make(Class<T>)"), member("p.C", "p.C#plain()")),
-      bodies  = Set("p.C#make(Class)"), // the MANIFEST spelling, not the srcmap one
+      bodies = Set("p.C#make(Class)") // the MANIFEST spelling, not the srcmap one
     )
     val byName = m.members.map(e => e.upstream -> e).toMap
     assert(clue(byName("p.C#make(Class)")).body)
@@ -332,7 +392,7 @@ class PortMapSpec extends munit.FunSuite:
       emitted = List("p.C"),
       members = List(member("p.C", "p.C#f(Class<T>)")),
       dropTypes = Set("p.Gone"),
-      dropMethods = Set("p.C#old(int)"),
+      dropMethods = Set("p.C#old(int)")
     )
     val text = PortMap.render(m)
     val tmp  = java.nio.file.Files.createTempDirectory("portmap")
@@ -353,13 +413,29 @@ class PortMapSpec extends munit.FunSuite:
 
   test("schema 3: a type row carries what was EMITTED, and it round-trips") {
     val shape = balticporter.tir.Surface.TypeShape(
-      form = "object", companion = true, statics = List("b", "a"),
-      primary = Some(balticporter.tir.Descriptor(List(
-        balticporter.tir.Param.Prim("int"), balticporter.tir.Param.Named("String")))),
-      primaryKind = "synthesised-primary", primaryVis = "protected", disambiguator = "marker",
-      parents = List("p.P"), flags = List("final", "abstract"), vis = "public")
-    val m = PortMap.of("m", "eng", List("p.C"), SrcMap.Recording(Nil), Set.empty, Set.empty,
-      Set.empty, Set.empty, Map.empty, typeShapes = Map("p.C" -> balticporter.tir.Surface.render(shape)))
+      form = "object",
+      companion = true,
+      statics = List("b", "a"),
+      primary = Some(balticporter.tir.Descriptor(List(balticporter.tir.Param.Prim("int"), balticporter.tir.Param.Named("String")))),
+      primaryKind = "synthesised-primary",
+      primaryVis = "protected",
+      disambiguator = "marker",
+      parents = List("p.P"),
+      flags = List("final", "abstract"),
+      vis = "public"
+    )
+    val m = PortMap.of(
+      "m",
+      "eng",
+      List("p.C"),
+      SrcMap.Recording(Nil),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map.empty,
+      typeShapes = Map("p.C" -> balticporter.tir.Surface.render(shape))
+    )
     val row = m.types.find(_.emitted == "p.C").get
     assertEquals(row.typeShape, Some(shape.copy(statics = List("a", "b"), flags = List("abstract", "final"))))
     // the payload is sorted and in the porter-note grammar — the SAME grammar, not a ninth one.
@@ -389,9 +465,15 @@ class PortMapSpec extends munit.FunSuite:
     val tmp  = Files.createTempDirectory("portmap2")
     val old  = tmp.resolve("port-map.tsv")
     // a genuine schema-2 file: the header's version, no `policy=`, and eight columns per row.
-    Files.writeString(old, text.replace(s"schema=${PortMap.Schema}", "schema=2")
-      .replace("\tpolicy=", "\tlegacy=").split('\n')
-      .map(l => if l.startsWith("#") then l.stripSuffix("\tshape") else l.stripSuffix("\t")).mkString("\n"))
+    Files.writeString(
+      old,
+      text
+        .replace(s"schema=${PortMap.Schema}", "schema=2")
+        .replace("\tpolicy=", "\tlegacy=")
+        .split('\n')
+        .map(l => if l.startsWith("#") then l.stripSuffix("\tshape") else l.stripSuffix("\t"))
+        .mkString("\n")
+    )
     val back = PortMap.read(old)
     assert(clue(back).isRight, "an older schema is READ")
     val m0 = back.toOption.get
@@ -406,9 +488,8 @@ class PortMapSpec extends munit.FunSuite:
     // the map is `Fresh` and WRONG, which is D4's signature failure re-entering through the
     // artifact built to prevent it.
     val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
-    val m = m0.copy(policy = PortMap.policyDigest(List("rename[a->b]")))
-    assertEquals(PortMap.freshness(m, "eng", List(root), PortMap.policyDigest(List("rename[a->b]"))),
-                 PortMap.Freshness.Fresh)
+    val m             = m0.copy(policy = PortMap.policyDigest(List("rename[a->b]")))
+    assertEquals(PortMap.freshness(m, "eng", List(root), PortMap.policyDigest(List("rename[a->b]"))), PortMap.Freshness.Fresh)
     PortMap.freshness(m, "eng", List(root), PortMap.policyDigest(List("rename[a->c]"))) match
       case PortMap.Freshness.Stale(r) =>
         assert(clue(r).contains("MANIFEST has changed"))
@@ -430,8 +511,7 @@ class PortMapSpec extends munit.FunSuite:
     // `java.lang.CharSequence` gained the member in 23. The engine, the java and the policy were
     // all provably unchanged — so this spec asserts exactly that shape, with the other three
     // fingerprints held EQUAL and only the JDK moved.
-    val m = build(emitted = List("p.C"), members = List(member("p.C", "p.C#f()")))
-      .copy(jdk = "22")
+    val m = build(emitted = List("p.C"), members = List(member("p.C", "p.C#f()"))).copy(jdk = "22")
     assert(clue(PortMap.render(m)).contains("\tjdk=22"))
     val tmp = Files.createTempDirectory("portmap-jdk")
     Files.writeString(tmp.resolve("port-map.tsv"), PortMap.render(m))
@@ -442,15 +522,13 @@ class PortMapSpec extends munit.FunSuite:
 
   test("a map published on ANOTHER JDK is a verdict of its OWN — both versions named, and it is not `Stale`") {
     val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
-    val m = m0.copy(jdk = "24")
+    val m             = m0.copy(jdk = "24")
     // every other fingerprint agrees: same engine, same java on disk, same (absent) policy.
-    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh,
-                 "with no JDK to compare against, nothing is claimed")
+    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh, "with no JDK to compare against, nothing is claimed")
     assertEquals(PortMap.freshness(m, "eng", List(root), jdk = "24"), PortMap.Freshness.Fresh)
     // …and the mismatch is a case of its own, carrying BOTH versions as data. A `Stale(String)`
     // could not, and its remedy ("re-run the base") is not this one's ("re-run it on this JDK").
-    assertEquals(PortMap.freshness(m, "eng", List(root), jdk = "22"),
-                 PortMap.Freshness.JdkMismatch("24", "22"))
+    assertEquals(PortMap.freshness(m, "eng", List(root), jdk = "22"), PortMap.Freshness.JdkMismatch("24", "22"))
   }
 
   test("a map with NO `jdk=` is UNVERIFIED, never agreement — 'the field did not exist' is not 'we agreed'") {
@@ -471,9 +549,18 @@ class PortMapSpec extends munit.FunSuite:
     val java = root.resolve("p/C.java")
     Files.createDirectories(java.getParent)
     Files.writeString(java, body)
-    val m = PortMap.of("base", "eng", List("p.C"),
+    val m = PortMap.of(
+      "base",
+      "eng",
+      List("p.C"),
       SrcMap.Recording(List(member("p.C", "p.C#f()"))),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty, sourceRoot = Some(root))
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map.empty,
+      sourceRoot = Some(root)
+    )
     (root, java, m)
 
   test("R1 FALSIFIER: change one base member's body and the map is reported STALE, not used") {
@@ -517,9 +604,18 @@ class PortMapSpec extends munit.FunSuite:
     val java = root.resolve("mod/src/main/java/p/C.java")
     Files.createDirectories(java.getParent)
     Files.writeString(java, body)
-    val m = PortMap.of("base", "eng", List("p.C"),
+    val m = PortMap.of(
+      "base",
+      "eng",
+      List("p.C"),
       SrcMap.Recording(List(member("p.C", "p.C#f()", "mod/src/main/java/p/C.java"))),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty, sourceRoot = Some(root))
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map.empty,
+      sourceRoot = Some(root)
+    )
     (root, java, m)
 
   test("a base whose root is a CHECKOUT is verifiable from a dependent's MODULE roots") {
@@ -529,7 +625,7 @@ class PortMapSpec extends munit.FunSuite:
     // SUFFIX of the published path by construction (the package is in the `upstream` column), so
     // nothing is guessed and no schema column is added.
     val (root, java, m) = checkoutBase("package p; class C { int f() { return 1; } }")
-    val moduleRoot = root.resolve("mod/src/main/java")
+    val moduleRoot      = root.resolve("mod/src/main/java")
     assertEquals(PortMap.freshness(m, "eng", List(moduleRoot)), PortMap.Freshness.Fresh)
     // …and it is a real check rather than a shrug: the file still has to MATCH.
     Files.writeString(java, "package p; class C { int f() { return 2; } }")
@@ -544,7 +640,7 @@ class PortMapSpec extends munit.FunSuite:
     // never published, and answer `Fresh` or `Stale` about it — so ambiguity keeps `Unverified`,
     // which is the value that means "I could not check".
     val (root, _, m) = checkoutBase("package p; class C { int f() { return 1; } }")
-    val other = Files.createTempDirectory("portmap-decoy")
+    val other        = Files.createTempDirectory("portmap-decoy")
     Files.createDirectories(other.resolve("p"))
     Files.writeString(other.resolve("p/C.java"), "package p; class C { int f() { return 99; } }")
     PortMap.freshness(m, "eng", List(root.resolve("mod/src/main/java"), other)) match
@@ -568,11 +664,18 @@ class PortMapSpec extends munit.FunSuite:
     val root = Files.createTempDirectory("portmap-synth")
     Files.createDirectories(root.resolve("p"))
     Files.writeString(root.resolve("p/C.java"), "package p; class C {}")
-    val m = PortMap.of("base", "eng", List("p.C"),
-      SrcMap.Recording(List(
-        member("p.C", "p.C#f()"),
-        SrcMap.Entry("p.C", "p.C#synth()", "def", 1, 2, "<synthetic>", 0, "d1"))),
-      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty, sourceRoot = Some(root))
+    val m = PortMap.of(
+      "base",
+      "eng",
+      List("p.C"),
+      SrcMap.Recording(List(member("p.C", "p.C#f()"), SrcMap.Entry("p.C", "p.C#synth()", "def", 1, 2, "<synthetic>", 0, "d1"))),
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Set.empty,
+      Map.empty,
+      sourceRoot = Some(root)
+    )
     assertEquals(m.javaPaths, List("p/C.java"))
     assertEquals(m.files, 1)
     assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh)
@@ -587,9 +690,10 @@ class PortMapSpec extends munit.FunSuite:
     def put(dir: String, run: String, module: String, marker: String): Unit =
       val d = reports.resolve(s"$dir/$run")
       Files.createDirectories(d)
-      Files.writeString(d.resolve("port-map.tsv"),
-        PortMap.render(PortMap.of(module, "eng", List(marker), SrcMap.Recording(Nil),
-          Set.empty, Set.empty, Set.empty, Set.empty, Map.empty)))
+      Files.writeString(
+        d.resolve("port-map.tsv"),
+        PortMap.render(PortMap.of(module, "eng", List(marker), SrcMap.Recording(Nil), Set.empty, Set.empty, Set.empty, Set.empty, Map.empty))
+      )
 
     put("BaseMigrate", "baseline", "base", "p.Old")
     put("BaseMigrate", "run-latest", "base", "p.New")

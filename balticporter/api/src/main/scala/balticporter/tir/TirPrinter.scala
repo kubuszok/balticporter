@@ -1,27 +1,26 @@
 package balticporter.tir
 
-/** A readable, STABLE rendering of the TIR — for comparing two phases' output. Unlike case-class
-  * `toString` (opaque INTERNING-ORDER-dependent `SymId` integers, `TypeRepr` graphs inline):
-  * [[Style.debug]] prints `fullName#id`, [[Style.canonical]] the name alone; types print once in
-  * surface syntax. Total over `Tree`/`TypeRepr` (a missing case is a compiler warning — CLAUDE.md
-  * §3). `ParamRef` renders binder-relative, never recursing into its binder (non-terminating). */
+/** A readable, STABLE rendering of the TIR — for comparing two phases' output. Unlike case-class `toString` (opaque INTERNING-ORDER-dependent `SymId` integers, `TypeRepr` graphs inline):
+  * [[Style.debug]] prints `fullName#id`, [[Style.canonical]] the name alone; types print once in surface syntax. Total over `Tree`/`TypeRepr` (a missing case is a compiler warning — CLAUDE.md §3).
+  * `ParamRef` renders binder-relative, never recursing into its binder (non-terminating).
+  */
 object TirPrinter:
 
-  /** `showIds`: append `#<SymId>` to every symbol. Interning-order dependent — debugging only,
-    * never in a persisted artifact. `showOrigins`: append the Java source location; line numbers
-    * move when upstream whitespace does, so this too is off in the canonical form.
-    * `showTrivia`: render the original Java comments each node carries — see [[Style.canonical]]. */
-  final case class Style(showIds: Boolean = true, showOrigins: Boolean = false, showTypes: Boolean = true,
-                         showTrivia: Boolean = true)
+  /** `showIds`: append `#<SymId>` to every symbol. Interning-order dependent — debugging only, never in a persisted artifact. `showOrigins`: append the Java source location; line numbers move when
+    * upstream whitespace does, so this too is off in the canonical form. `showTrivia`: render the original Java comments each node carries — see [[Style.canonical]].
+    */
+  final case class Style(showIds: Boolean = true, showOrigins: Boolean = false, showTypes: Boolean = true, showTrivia: Boolean = true)
   object Style:
     /** what you read on a terminal while diagnosing one phase. */
     val debug: Style = Style(showIds = true, showOrigins = true)
-    /** what you DIFF: no ids, no line numbers, no clock — and no trivia. A dump answers "what did
-      * this phase do to the tree", and 400 lines of Javadoc would bury twelve moved nodes.
-      * [[digest]] does NOT use this style — see there. */
+
+    /** what you DIFF: no ids, no line numbers, no clock — and no trivia. A dump answers "what did this phase do to the tree", and 400 lines of Javadoc would bury twelve moved nodes. [[digest]] does
+      * NOT use this style — see there.
+      */
     val canonical: Style = Style(showIds = false, showOrigins = false, showTrivia = false)
-    /** canonical PLUS trivia: everything that reaches the emitted file and nothing that does not.
-      * The identity a content digest must be taken over. */
+
+    /** canonical PLUS trivia: everything that reaches the emitted file and nothing that does not. The identity a content digest must be taken over.
+      */
     val identity: Style = canonical.copy(showTrivia = true)
 
   // ---------------------------------------------------------------------------
@@ -33,23 +32,20 @@ object TirPrinter:
     tree(sb, t, 0, style)
     sb.result()
 
-  /** the deterministic form: names, no ids, no origins. The unit of a run-over-run semantic diff
-    * (DESIGN.md §2.6). */
+  /** the deterministic form: names, no ids, no origins. The unit of a run-over-run semantic diff (DESIGN.md §2.6).
+    */
   def canonical(t: Tree)(using Program): String = render(t, Style.canonical)
 
-  /** sha-256 of the unit's IDENTITY form, hex — stable across runs, changes exactly when anything
-    * reaching the emitted file changes. NOT `sha256(canonical(t))` (that excludes trivia):
-    * `TirCacheKey` keys the action cache on this, and the cache stores EMITTED TEXT, so a
-    * comment-only edit must not produce a cache HIT that re-serves the old comment. */
+  /** sha-256 of the unit's IDENTITY form, hex — stable across runs, changes exactly when anything reaching the emitted file changes. NOT `sha256(canonical(t))` (that excludes trivia): `TirCacheKey`
+    * keys the action cache on this, and the cache stores EMITTED TEXT, so a comment-only edit must not produce a cache HIT that re-serves the old comment.
+    */
   def digest(t: Tree)(using Program): String = sha256(render(t, Style.identity))
 
   def sha256(s: String): String =
-    java.security.MessageDigest.getInstance("SHA-256")
-      .digest(s.getBytes(java.nio.charset.StandardCharsets.UTF_8))
-      .map(b => f"${b & 0xff}%02x").mkString
+    java.security.MessageDigest.getInstance("SHA-256").digest(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)).map(b => f"${b & 0xff}%02x").mkString
 
-  /** the whole program, units in `fullName` order — order must not depend on the frontend's file
-    * walk or every diff is noise. */
+  /** the whole program, units in `fullName` order — order must not depend on the frontend's file walk or every diff is noise.
+    */
   def program(style: Style = Style.canonical)(using p: Program): String =
     p.units.map(u => (nameOf(u.symbol), u)).sortBy(_._1).map((_, u) => render(u, style)).mkString("\n")
 
@@ -78,20 +74,20 @@ object TirPrinter:
   // ---------------------------------------------------------------------------
 
   def tpe(t: TypeRepr, style: Style = Style.debug)(using Program): String = t match
-    case TypeRepr.NoPrefix              => "<noprefix>"
-    case TypeRepr.NoType                => "<notype>"
-    case TypeRepr.ConstantType(c)       => s"${const(c, style)}.type"
+    case TypeRepr.NoPrefix                      => "<noprefix>"
+    case TypeRepr.NoType                        => "<notype>"
+    case TypeRepr.ConstantType(c)               => s"${const(c, style)}.type"
     case TypeRepr.TypeRef(TypeRepr.NoPrefix, s) => sym(s, style)
-    case TypeRepr.TypeRef(p, s)         => s"${tpe(p, style)}::${sym(s, style)}"
+    case TypeRepr.TypeRef(p, s)                 => s"${tpe(p, style)}::${sym(s, style)}"
     case TypeRepr.TermRef(TypeRepr.NoPrefix, s) => s"${sym(s, style)}.type"
-    case TypeRepr.TermRef(p, s)         => s"${tpe(p, style)}::${sym(s, style)}.type"
-    case TypeRepr.ThisType(c)           => s"${sym(c, style)}.this"
-    case TypeRepr.SuperType(a, b)       => s"${tpe(a, style)}.super[${tpe(b, style)}]"
-    case TypeRepr.AppliedType(tc, as)   => s"${tpe(tc, style)}[${as.map(tpe(_, style)).mkString(", ")}]"
-    case TypeRepr.AndType(l, r)         => s"(${tpe(l, style)} & ${tpe(r, style)})"
-    case TypeRepr.OrType(l, r)          => s"(${tpe(l, style)} | ${tpe(r, style)})"
-    case TypeRepr.ByNameType(u)         => s"=> ${tpe(u, style)}"
-    case b: TypeRepr.TypeBounds         => s"?${bounds(b, style)}"
+    case TypeRepr.TermRef(p, s)                 => s"${tpe(p, style)}::${sym(s, style)}.type"
+    case TypeRepr.ThisType(c)                   => s"${sym(c, style)}.this"
+    case TypeRepr.SuperType(a, b)               => s"${tpe(a, style)}.super[${tpe(b, style)}]"
+    case TypeRepr.AppliedType(tc, as)           => s"${tpe(tc, style)}[${as.map(tpe(_, style)).mkString(", ")}]"
+    case TypeRepr.AndType(l, r)                 => s"(${tpe(l, style)} & ${tpe(r, style)})"
+    case TypeRepr.OrType(l, r)                  => s"(${tpe(l, style)} | ${tpe(r, style)})"
+    case TypeRepr.ByNameType(u)                 => s"=> ${tpe(u, style)}"
+    case b: TypeRepr.TypeBounds => s"?${bounds(b, style)}"
     case TypeRepr.Refinement(p, n, i)   => s"${tpe(p, style)} { $n: ${tpe(i, style)} }"
     case TypeRepr.MethodType(ps, r, im) =>
       val using_ = if im then "using " else ""
@@ -113,17 +109,17 @@ object TirPrinter:
     lo + hi
 
   def const(c: Constant, style: Style = Style.debug)(using Program): String = c match
-    case Constant.BoolC(v)   => v.toString
-    case Constant.ByteC(v)   => s"${v}b"
-    case Constant.ShortC(v)  => s"${v}s"
-    case Constant.CharC(v)   => s"'${escape(v.toString)}'"
-    case Constant.IntC(v)    => v.toString
-    case Constant.LongC(v)   => s"${v}L"
-    case Constant.FloatC(v)  => s"${v}f"
-    case Constant.DoubleC(v) => s"${v}d"
-    case Constant.StringC(v) => s""""${escape(v)}""""
-    case Constant.NullC      => "null"
-    case Constant.UnitC      => "()"
+    case Constant.BoolC(v)    => v.toString
+    case Constant.ByteC(v)    => s"${v}b"
+    case Constant.ShortC(v)   => s"${v}s"
+    case Constant.CharC(v)    => s"'${escape(v.toString)}'"
+    case Constant.IntC(v)     => v.toString
+    case Constant.LongC(v)    => s"${v}L"
+    case Constant.FloatC(v)   => s"${v}f"
+    case Constant.DoubleC(v)  => s"${v}d"
+    case Constant.StringC(v)  => s""""${escape(v)}""""
+    case Constant.NullC       => "null"
+    case Constant.UnitC       => "()"
     case Constant.ClassOfC(t) => s"classOf[${tpe(t, style)}]"
 
   private def escape(s: String): String =
@@ -145,8 +141,8 @@ object TirPrinter:
   private def line(sb: StringBuilder, indent: Int, text: String): Unit =
     sb.append(pad(indent)).append(text).append('\n')
 
-  /** a named group of children, printed only when non-empty — an always-printed empty group is
-    * noise in every diff. */
+  /** a named group of children, printed only when non-empty — an always-printed empty group is noise in every diff.
+    */
   private def group(sb: StringBuilder, indent: Int, label: String, xs: List[Tree], style: Style)(using Program): Unit =
     if xs.nonEmpty then
       line(sb, indent, label)
@@ -156,10 +152,9 @@ object TirPrinter:
     line(sb, indent, label)
     tree(sb, t, indent + 1, style)
 
-  /** a node's carried comments, as one escaped line each — printed only under a style that asks
-    * for them ([[Style.canonical]] does not; [[Style.identity]] does). Escaped rather than
-    * reproduced, because a multi-line Javadoc printed raw would break the indent-per-line format
-    * this whole rendering is diffable BECAUSE of. */
+  /** a node's carried comments, as one escaped line each — printed only under a style that asks for them ([[Style.canonical]] does not; [[Style.identity]] does). Escaped rather than reproduced,
+    * because a multi-line Javadoc printed raw would break the indent-per-line format this whole rendering is diffable BECAUSE of.
+    */
   private def trivia(sb: StringBuilder, indent: Int, label: String, ts: List[Trivia], style: Style): Unit =
     if style.showTrivia && ts.nonEmpty then
       line(sb, indent, label)
@@ -168,10 +163,12 @@ object TirPrinter:
   def tree(sb: StringBuilder, t: Tree, indent: Int, style: Style)(using p: Program): Unit = t match
     // ---- definitions ----
     case d: Tree.ClassDef =>
-      val f = p.symbolOf(d.symbol).map(_.flags)
+      val f    = p.symbolOf(d.symbol).map(_.flags)
       val kind =
-        if f.exists(_.isTrait) then "trait" else if f.exists(_.isModule) then "object"
-        else if f.exists(_.isEnum) then "enum" else "class"
+        if f.exists(_.isTrait) then "trait"
+        else if f.exists(_.isModule) then "object"
+        else if f.exists(_.isEnum) then "enum"
+        else "class"
       line(sb, indent, s"ClassDef $kind ${sym(d.symbol, style)}${origin(d.origin, style)}")
       trivia(sb, indent + 1, "unitLeading", d.unitLeading, style)
       trivia(sb, indent + 1, "leading", d.leading, style)
@@ -230,7 +227,11 @@ object TirPrinter:
       sub(sb, indent + 1, "fun", x.fun, style)
       group(sb, indent + 1, "args", x.args.map(y => y: Tree), style)
     case x: Tree.TypeApply =>
-      line(sb, indent, s"TypeApply [${x.targs.map(a => tpe(a.tpe, style)).mkString(", ")}]${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      line(
+        sb,
+        indent,
+        s"TypeApply [${x.targs.map(a => tpe(a.tpe, style)).mkString(", ")}]${ofType(x.tpe, style)}${origin(x.origin, style)}"
+      )
       sub(sb, indent + 1, "fun", x.fun, style)
     case x: Tree.Assign =>
       val cmp = x.compound.fold("")((op, n) => s" compound=$op${n.fold("")(t => s" narrow=${ofType(t, style)}")}")
@@ -383,9 +384,12 @@ object TirPrinter:
       // never ships and a resolved one renders as its inner, so the two are indistinguishable
       // downstream of here.
       val st = x.state match
-        case MarkerState.Open                => "OPEN"
-        case MarkerState.Resolved(by, how)   => s"resolved by $by: $how"
-      line(sb, indent, s"Unportable [$st] ${x.kind.label}${x.diff.fold("")(d => s" $d")} " +
-        s"${"\""}${escape(x.what)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}")
+        case MarkerState.Open              => "OPEN"
+        case MarkerState.Resolved(by, how) => s"resolved by $by: $how"
+      line(
+        sb,
+        indent,
+        s"Unportable [$st] ${x.kind.label}${x.diff.fold("")(d => s" $d")} " +
+          s"${"\""}${escape(x.what)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}"
+      )
       sub(sb, indent + 1, "inner", x.inner, style)
-

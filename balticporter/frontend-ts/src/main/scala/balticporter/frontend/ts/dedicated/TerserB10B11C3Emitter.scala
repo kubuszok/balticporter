@@ -1,21 +1,17 @@
 package balticporter.corpus.terser
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{ RastFile, RastNode, RastValue }
 import scala.collection.mutable
 
-/** Emitters for B10 (terser tokenizer skeleton), B11 (terser options),
-  * and C3 (compress module skeletons).
+/** Emitters for B10 (terser tokenizer skeleton), B11 (terser options), and C3 (compress module skeletons).
   *
-  * B10: Token constants are extractable from RAST. The tokenizer scanning
-  * logic is too imperative for mechanical translation (counted refusal).
+  * B10: Token constants are extractable from RAST. The tokenizer scanning logic is too imperative for mechanical translation (counted refusal).
   *
-  * B11: OutputOptions already exists in TerserEmitter. CompressorOptions
-  * and MinifyOptions are added here.
+  * B11: OutputOptions already exists in TerserEmitter. CompressorOptions and MinifyOptions are added here.
   *
-  * C3: Compress module skeletons with DEFMETHOD extraction summaries.
-  * Full body translation requires DefmethodBodyTranslator (B8).
+  * C3: Compress module skeletons with DEFMETHOD extraction summaries. Full body translation requires DefmethodBodyTranslator (B8).
   */
 object TerserB10B11C3Emitter:
 
@@ -25,8 +21,7 @@ object TerserB10B11C3Emitter:
 
   /** Emit Token.scala — token type constants extracted from parse.js RAST.
     *
-    * The upstream `parse.js` defines token types as string constants and
-    * keyword/operator/punctuation sets. These are extractable from RAST.
+    * The upstream `parse.js` defines token types as string constants and keyword/operator/punctuation sets. These are extractable from RAST.
     */
   def emitTokenConstants(@annotation.nowarn("msg=unused") file: RastFile): String =
     val sb = new StringBuilder
@@ -121,9 +116,7 @@ object TerserB10B11C3Emitter:
 
   /** Emit Tokenizer skeleton — class structure with scanning method signatures.
     *
-    * The full tokenizer body (1034 lines) is too imperative for RAST-based
-    * translation. This emits the class structure and method signatures.
-    * Body translation is a counted refusal.
+    * The full tokenizer body (1034 lines) is too imperative for RAST-based translation. This emits the class structure and method signatures. Body translation is a counted refusal.
     */
   def emitTokenizerSkeleton(@annotation.nowarn("msg=unused") file: RastFile): String =
     val sb = new StringBuilder
@@ -295,7 +288,7 @@ object TerserB10B11C3Emitter:
                 if args.size >= 2 then
                   val methodName = args.head.value match
                     case Some(RastValue.Str(s)) => s
-                    case _ => args.head.text.getOrElse("unknown")
+                    case _                      => args.head.text.getOrElse("unknown")
                   methods += methodName
               // Pattern 2: node.DEFMETHOD("name", func) — the actual terser pattern
               else if callee.kind == "PropertyAccessExpression" then
@@ -305,7 +298,7 @@ object TerserB10B11C3Emitter:
                   if args.nonEmpty then
                     val methodName = args.head.value match
                       case Some(RastValue.Str(s)) => s
-                      case _ => args.head.text.getOrElse("unknown")
+                      case _                      => args.head.text.getOrElse("unknown")
                     methods += methodName
         walk(node.children)
     walk(file.nodes)
@@ -313,12 +306,11 @@ object TerserB10B11C3Emitter:
 
   /** Emit a compress module skeleton from RAST DEFMETHOD extraction.
     *
-    * Produces an object with method stubs matching the hand-port pattern.
-    * Full body translation requires DefmethodBodyTranslator.
+    * Produces an object with method stubs matching the hand-port pattern. Full body translation requires DefmethodBodyTranslator.
     */
   def emitCompressModuleSkeleton(file: RastFile, moduleName: String, objectName: String): String =
     val (_, count, methods) = extractCompressModuleSummary(file, moduleName)
-    val sb = new StringBuilder
+    val sb                  = new StringBuilder
     sb.append(s"package ssg\npackage js\npackage compress\n\n")
     sb.append(s"import ssg.js.ast._\n\n")
     sb.append(s"/** $objectName — compress module skeleton.\n")
@@ -330,7 +322,6 @@ object TerserB10B11C3Emitter:
     for method <- methods do
       sb.append(s"  // DEFMETHOD: $method\n")
       sb.append(s"  // def $method(node: AstNode): AstNode = ??? // RAST: body not translatable\n\n")
-    if methods.isEmpty then
-      sb.append("  // No DEFMETHOD entries found in RAST\n\n")
+    if methods.isEmpty then sb.append("  // No DEFMETHOD entries found in RAST\n\n")
     sb.append("}\n")
     sb.toString

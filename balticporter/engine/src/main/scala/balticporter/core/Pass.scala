@@ -2,13 +2,14 @@ package balticporter.core
 
 import balticporter.core.BExpr.*
 
-/** Pure BUnit -> BUnit pass. `id@version` joins the action-cache fingerprint.
-  * // DESIGN.md §2.4 */
+/** Pure BUnit -> BUnit pass. `id@version` joins the action-cache fingerprint. // DESIGN.md §2.4
+  */
 trait BirPass:
   /** stable id, e.g. "vocab/apply" or "ssg/package-rename". */
   def id: String
+
   /** bumped on ANY behavior change — this is a cache-correctness contract. */
-  def version: Int
+  def version:          Int
   def run(unit: BUnit): BUnit
 
 object PassPipeline:
@@ -19,8 +20,8 @@ object PassPipeline:
   def run(passes: List[BirPass], unit: BUnit): BUnit =
     passes.foldLeft(unit)((u, p) => p.run(u))
 
-/** Rewrites every qualified-name occurrence in a unit: type positions and qname-carrying
-  * expression fields (call owners, static receivers/fields, class literals, method/ctor refs). */
+/** Rewrites every qualified-name occurrence in a unit: type positions and qname-carrying expression fields (call owners, static receivers/fields, class literals, method/ctor refs).
+  */
 object QNameMap:
 
   def apply(u: BUnit)(f: String => String): BUnit =
@@ -43,7 +44,7 @@ object QNameMap:
           case Recv.Static(o) => Recv.Static(f(o))
           case r              => r
         Call(recv2, n, args, formals.map(_.map(fm => fm.copy(tpe = t(fm.tpe)))), ownerQ.map(f))
-      case Ident(n, RefKind.StaticField(o))  => Ident(n, RefKind.StaticField(f(o)))
+      case Ident(n, RefKind.StaticField(o)) => Ident(n, RefKind.StaticField(f(o)))
       case n: New =>
         n.copy(
           tpe = mtr(n.tpe)(f),
@@ -52,35 +53,35 @@ object QNameMap:
             b.copy(
               fields = b.fields.map(fl => fl.copy(tpe = t(fl.tpe))),
               methods = b.methods.map(fixMethod(_)(f)),
-              init = b.init.map(fixStmt(_)(f)),
+              init = b.init.map(fixStmt(_)(f))
             )
-          ),
+          )
         )
-      case NewArray(el, d, i)                => NewArray(t(el), d, i)
-      case Cast(tp, e)                       => Cast(t(tp), e)
-      case InstanceOf(e, tp)                 => InstanceOf(e, t(tp))
-      case ClassLit(tp)                      => ClassLit(t(tp))
-      case Typed(e, tp)                      => Typed(e, t(tp))
-      case MethodRef(Left(owner), n)         => MethodRef(Left(f(owner)), n)
-      case CtorRef(tp, fo)                   => CtorRef(mtr(tp)(f), fo.map(t))
-      case UnboundMethodRef(rt, n, fo)       => UnboundMethodRef(t(rt), n, fo.map(t))
-      case e                                 => e
+      case NewArray(el, d, i)          => NewArray(t(el), d, i)
+      case Cast(tp, e)                 => Cast(t(tp), e)
+      case InstanceOf(e, tp)           => InstanceOf(e, t(tp))
+      case ClassLit(tp)                => ClassLit(t(tp))
+      case Typed(e, tp)                => Typed(e, t(tp))
+      case MethodRef(Left(owner), n)   => MethodRef(Left(f(owner)), n)
+      case CtorRef(tp, fo)             => CtorRef(mtr(tp)(f), fo.map(t))
+      case UnboundMethodRef(rt, n, fo) => UnboundMethodRef(t(rt), n, fo.map(t))
+      case e                           => e
     }
 
   /** second walk: BType fields on statements that the expression mapper can't see. */
   private def fixStmt(s: BStmt)(f: String => String): BStmt =
     def fs(x: BStmt) = fixStmt(x)(f)
-    val k = s.k match
+    val k            = s.k match
       case BStmtK.LocalVar(n, tp, i, ef) => BStmtK.LocalVar(n, mt(tp)(f), i, ef)
       case BStmtK.If(c, a, b)            => BStmtK.If(c, a.map(fs), b.map(_.map(fs)))
       case BStmtK.While(c, b)            => BStmtK.While(c, b.map(fs))
       case BStmtK.DoWhile(b, c)          => BStmtK.DoWhile(b.map(fs), c)
       case BStmtK.Block(b)               => BStmtK.Block(b.map(fs))
-      case BStmtK.Try(b, cs, fin) =>
+      case BStmtK.Try(b, cs, fin)        =>
         BStmtK.Try(
           b.map(fs),
           cs.map(c => BCatch(c.param, c.types.map(mt(_)(f)), c.body.map(fs))),
-          fin.map(_.map(fs)),
+          fin.map(_.map(fs))
         )
       case BStmtK.Boundary(b, l)     => BStmtK.Boundary(b.map(fs), l)
       case BStmtK.Match(scr, cases)  => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(fs))))
@@ -94,7 +95,7 @@ object QNameMap:
       tparams = m.tparams.map(tp => tp.copy(upper = tp.upper.map(mt(_)(f)))),
       params = m.params.map(p => p.copy(tpe = mt(p.tpe)(f))),
       ret = mt(m.ret)(f),
-      body = m.body.map(_.map(fixStmt(_)(f))),
+      body = m.body.map(_.map(fixStmt(_)(f)))
     )
 
   private def mapDecl(t: BTypeDecl)(f: String => String): BTypeDecl =
@@ -111,5 +112,5 @@ object QNameMap:
       staticInit = e.staticInit.map(fixStmt(_)(f)),
       instanceInit = e.instanceInit.map(fixStmt(_)(f)),
       nested = e.nested.map(mapDecl(_)(f)),
-      inner = e.inner.map(mapDecl(_)(f)),
+      inner = e.inner.map(mapDecl(_)(f))
     )

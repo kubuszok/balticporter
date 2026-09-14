@@ -79,14 +79,14 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
 
   test("hardcoded oracle: Inference.isBoolean"):
     val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcoded()
-    val sig = oracle.get("Inference", "isBoolean")
+    val sig    = oracle.get("Inference", "isBoolean")
     assert(sig.isDefined, "should find isBoolean")
     assertEquals(sig.get.returnType, "Boolean")
     assertEquals(sig.get.params.head.tpe, "AstNode")
 
   test("hardcoded oracle: Common.mergeSequence"):
     val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcoded()
-    val sig = oracle.get("Common", "mergeSequence")
+    val sig    = oracle.get("Common", "mergeSequence")
     assert(sig.isDefined, "should find mergeSequence")
     assertEquals(sig.get.returnType, "ArrayBuffer[AstNode]")
     assertEquals(sig.get.params(0).tpe, "ArrayBuffer[AstNode]")
@@ -109,7 +109,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
 
   test("emitter oracle: CompressCommon maps to Common"):
     val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
-    val sig = oracle.get("Common", "mergeSequence")
+    val sig    = oracle.get("Common", "mergeSequence")
     assert(sig.isDefined, "should find via reference name")
 
   // -----------------------------------------------------------------------
@@ -141,10 +141,8 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
       // Print statistics
       println(s"File-based oracle: ${oracle.methods.size} method signatures extracted")
       val byObj = oracle.methods.groupBy(_._1._1)
-      for (obj, sigs) <- byObj.toList.sortBy(_._1) do
-        println(s"  $obj: ${sigs.size} methods")
-    else
-      println("SKIP: ssg-js reference not available")
+      for (obj, sigs) <- byObj.toList.sortBy(_._1) do println(s"  $obj: ${sigs.size} methods")
+    else println("SKIP: ssg-js reference not available")
 
   // -----------------------------------------------------------------------
   // Integration: emitter with oracle produces typed output
@@ -157,14 +155,18 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     stream.close()
     Rast.readFile(json)
 
-  private lazy val astRast = loadRast("/rast/terser/lib/ast.rast.json")
+  private lazy val astRast   = loadRast("/rast/terser/lib/ast.rast.json")
   private lazy val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
 
   test("emitter with oracle: Inference methods have typed signatures"):
-    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
-    val rast = loadRast("/rast/terser/lib/compress/inference.rast.json")
+    val oracle      = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
+    val rast        = loadRast("/rast/terser/lib/compress/inference.rast.json")
     val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(
-      rast, "inference", "Inference", hierarchy, Some(oracle)
+      rast,
+      "inference",
+      "Inference",
+      hierarchy,
+      Some(oracle)
     )
     // isBoolean should have Boolean return type, not Any
     assert(source.contains(": Boolean"), s"should contain Boolean return type")
@@ -179,10 +181,14 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     }
 
   test("emitter with oracle: Common methods have typed signatures"):
-    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
-    val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
+    val oracle      = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
+    val rast        = loadRast("/rast/terser/lib/compress/common.rast.json")
     val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitFreeFunctionModule(
-      rast, "common", "CompressCommon", hierarchy, Some(oracle)
+      rast,
+      "common",
+      "CompressCommon",
+      hierarchy,
+      Some(oracle)
     )
     // mergeSequence should have ArrayBuffer[AstNode] return type
     assert(source.contains("ArrayBuffer[AstNode]"), s"should contain ArrayBuffer[AstNode]")
@@ -209,8 +215,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
       if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
       else java.nio.file.Path.of("/nonexistent")
     }
-    if !java.nio.file.Files.exists(refRoot) then
-      println("SKIP: ssg-js reference not available")
+    if !java.nio.file.Files.exists(refRoot) then println("SKIP: ssg-js reference not available")
     else
       val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildForEmitter(refRoot)
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress-fileoracle")
@@ -225,11 +230,16 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
       assertEquals(results.size, 10, "should emit all 10 compress modules")
       reportTypeCoverage("file-based", results)
 
-  private def reportTypeCoverage(label: String, results: List[(balticporter.corpus.terser.TerserCompressEmitter.CompressModule, String, balticporter.corpus.terser.TerserCompressEmitter.ModuleTranslationSummary)]): Unit =
-    var typedParams = 0
-    var anyParams = 0
+  private def reportTypeCoverage(
+    label:   String,
+    results: List[
+      (balticporter.corpus.terser.TerserCompressEmitter.CompressModule, String, balticporter.corpus.terser.TerserCompressEmitter.ModuleTranslationSummary)
+    ]
+  ): Unit =
+    var typedParams  = 0
+    var anyParams    = 0
     var typedReturns = 0
-    var anyReturns = 0
+    var anyReturns   = 0
     for (_, source, _) <- results do
       for line <- source.linesIterator if line.trim.startsWith("def ") do
         if line.contains(": Any =") || line.contains(": Any =") then anyReturns += 1
@@ -243,5 +253,4 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     println(s"  Typed returns: $typedReturns, Any returns: $anyReturns")
     println(s"  Typed params: $typedParams, Any params: $anyParams")
 
-    for (mod, source, _) <- results do
-      println(s"  ${mod.objectName}.scala: ${source.linesIterator.size} lines")
+    for (mod, source, _) <- results do println(s"  ${mod.objectName}.scala: ${source.linesIterator.size} lines")

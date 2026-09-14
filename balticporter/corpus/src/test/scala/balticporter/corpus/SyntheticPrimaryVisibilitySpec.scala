@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A SYNTHESISED primary is `protected` — and the fact that decides it was written down BACKWARDS
-  * in this engine's own source for as long as the synthesis existed. */
+/** A SYNTHESISED primary is `protected` — and the fact that decides it was written down BACKWARDS in this engine's own source for as long as the synthesis existed.
+  */
 class SyntheticPrimaryVisibilitySpec extends munit.FunSuite:
 
   private val src =

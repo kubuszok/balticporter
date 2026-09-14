@@ -52,7 +52,10 @@ class RecordSpec extends PortSuite:
   test("toString is java's FORMAT, not a case class's — the three ways they differ") {
     // javac: `Point[x=1, y=2]`. A scala case class: `Point(1,2)`. Bracket, field names, space.
     val p = rec("")
-    assertEmits(p, """"Point[" + "x=" + java.lang.String.valueOf(this.x$field) + ", " + "y=" + java.lang.String.valueOf(this.y$field) + "]"""")
+    assertEmits(
+      p,
+      """"Point[" + "x=" + java.lang.String.valueOf(this.x$field) + ", " + "y=" + java.lang.String.valueOf(this.y$field) + "]""""
+    )
   }
 
   test("hashCode is javac's 31-fold from zero, per component, through the WRAPPER's static") {
@@ -65,7 +68,10 @@ class RecordSpec extends PortSuite:
     val p = rec("", "public record Mixed(double d, float f, String s)")
     assertEmits(p, "java.lang.Double.compare(this.d$field, that$rec.d$field) == 0")
     assertEmits(p, "java.lang.Float.compare(this.f$field, that$rec.f$field) == 0")
-    assertEmits(p, "java.util.Objects.equals(this.s$field.asInstanceOf[java.lang.Object], that$rec.s$field.asInstanceOf[java.lang.Object])")
+    assertEmits(
+      p,
+      "java.util.Objects.equals(this.s$field.asInstanceOf[java.lang.Object], that$rec.s$field.asInstanceOf[java.lang.Object])"
+    )
   }
 
   test("a member the RECORD declares replaces the derived one — by SIGNATURE") {
@@ -160,7 +166,10 @@ class RecordSpec extends PortSuite:
   test("a COMPACT constructor gets JLS 8.10.4's appended field assignments") {
     // Spoon models the written body and not the appended half, so every backing field kept its
     // default and every accessor answered `0` — with a green compile.
-    val p = rec("", "public record Point(int x, int y)\n  { if (x < 0) throw new IllegalArgumentException(\"neg\"); }\npublic record Unused(int q)")
+    val p = rec(
+      "",
+      "public record Point(int x, int y)\n  { if (x < 0) throw new IllegalArgumentException(\"neg\"); }\npublic record Unused(int q)"
+    )
     assertEmits(p, "this.x$field = x$p")
     assertEmits(p, "this.y$field = y$p")
     // …AFTER the validation, which is what lets a compact constructor normalise its arguments.
@@ -187,8 +196,11 @@ class RecordSpec extends PortSuite:
     // `(bo, du, fl, lo, in, ch, sh, by)`. The funnel promotes those into the emitted class's own
     // parameter list while every translated `new Prims(…)` keeps java's argument order.
     val p = port("package p;\npublic record Prims(boolean bo, byte by, short sh, char ch, int in, long lo, float fl, double du) { }\n")
-    assertEmits(p, "final class Prims(bo$p: scala.Boolean, by$p: scala.Byte, sh$p: scala.Short, ch$p: scala.Char, " +
-      "in$p: scala.Int, lo$p: scala.Long, fl$p: scala.Float, du$p: scala.Double)")
+    assertEmits(
+      p,
+      "final class Prims(bo$p: scala.Boolean, by$p: scala.Byte, sh$p: scala.Short, ch$p: scala.Char, " +
+        "in$p: scala.Int, lo$p: scala.Long, fl$p: scala.Float, du$p: scala.Double)"
+    )
   }
 
   test("a NESTED record gets a canonical constructor and accessors that read the FIELD") {
@@ -212,11 +224,11 @@ class RecordSpec extends PortSuite:
     var y$field: scala.Int = 0
     this.x$field = x$p
     this.y$field = y$p
-    def x(): scala.Int = this.x$field
-    def y(): scala.Int = this.y$field
+    def x():                               scala.Int     = this.x$field
+    def y():                               scala.Int     = this.y$field
     override def equals(o$rec: scala.Any): scala.Boolean = o$rec match
       case that$rec: Pt => this.x$field == that$rec.x$field && this.y$field == that$rec.y$field
-      case _            => false
+      case _ => false
     override def hashCode(): scala.Int =
       var hash$rec: scala.Int = 0
       hash$rec = hash$rec * 31 + java.lang.Integer.hashCode(this.x$field)
@@ -231,7 +243,7 @@ class RecordSpec extends PortSuite:
   /** the emitted image of `record Ref(String s, double d)` — the reference and float arms. */
   final class Ref(s$p: java.lang.String, d$p: scala.Double) extends java.lang.Record:
     var s$field: java.lang.String = null
-    var d$field: scala.Double = 0.0d
+    var d$field: scala.Double     = 0.0d
     this.s$field = s$p
     this.d$field = d$p
     override def equals(o$rec: scala.Any): scala.Boolean = o$rec match
@@ -252,10 +264,10 @@ class RecordSpec extends PortSuite:
   final class One1(only$p: java.lang.String) extends java.lang.Record:
     var only$field: java.lang.String = null
     this.only$field = only$p
-    def only(): java.lang.String = this.only$field
-    override def equals(o$rec: scala.Any): scala.Boolean = o$rec.isInstanceOf[One1]
-    override def hashCode(): scala.Int = 0
-    override def toString(): java.lang.String = "One[]"
+    def only():                            java.lang.String = this.only$field
+    override def equals(o$rec: scala.Any): scala.Boolean    = o$rec.isInstanceOf[One1]
+    override def hashCode():               scala.Int        = 0
+    override def toString():               java.lang.String = "One[]"
 
   object One1:
     def unapply(r$rec: One1): scala.Tuple1[java.lang.String] = scala.Tuple1(r$rec.only())
@@ -269,8 +281,8 @@ class RecordSpec extends PortSuite:
   }
 
   test("PROBE: toString, hashCode and equals answer exactly what javac's record answers") {
-    assertEquals(new Pt(1, 2).toString, "Pt[x=1, y=2]")   // javac: Pt[x=1, y=2]
-    assertEquals(new Pt(1, 2).hashCode(), 33)              // javac: 33
+    assertEquals(new Pt(1, 2).toString, "Pt[x=1, y=2]") // javac: Pt[x=1, y=2]
+    assertEquals(new Pt(1, 2).hashCode(), 33) // javac: 33
     assertEquals(new Ref("ab", 1.5d).hashCode(), 1073313791) // javac: 1073313791
     assertEquals(new Ref(null, 1.5d).toString, "Ref[s=null, d=1.5]") // javac: Ref[s=null, d=1.5]
     assert(new Pt(1, 2).equals(new Pt(1, 2)))
@@ -301,21 +313,21 @@ class RecordSpec extends PortSuite:
   // THE TWO DECONSTRUCTION RESIDUES — measured in both languages, recorded rather than repaired
   // ---------------------------------------------------------------------------------------------
 
-  /** the emitted image of a record whose accessors are OBSERVABLE — the shape the two probes below
-    * need, and the shape java permits (an explicit accessor is JLS 8.10.3's own allowance). */
+  /** the emitted image of a record whose accessors are OBSERVABLE — the shape the two probes below need, and the shape java permits (an explicit accessor is JLS 8.10.3's own allowance).
+    */
   final class Obs(a$p: java.lang.Object, b$p: java.lang.Object) extends java.lang.Record:
     var a$field: java.lang.Object = null
     var b$field: java.lang.Object = null
     this.a$field = a$p
     this.b$field = b$p
-    def a(): java.lang.Object = { Obs.log += "a"; this.a$field }
-    def b(): java.lang.Object = { Obs.log += "b"; this.b$field }
-    override def equals(o$rec: scala.Any): scala.Boolean = o$rec match
+    def a():                               java.lang.Object = { Obs.log += "a"; this.a$field }
+    def b():                               java.lang.Object = { Obs.log += "b"; this.b$field }
+    override def equals(o$rec: scala.Any): scala.Boolean    = o$rec match
       case that$rec: Obs =>
         java.util.Objects.equals(this.a$field, that$rec.a$field) &&
         java.util.Objects.equals(this.b$field, that$rec.b$field)
       case _ => false
-    override def hashCode(): scala.Int = 0
+    override def hashCode(): scala.Int        = 0
     override def toString(): java.lang.String = "Obs[]"
 
   object Obs:
@@ -338,10 +350,10 @@ class RecordSpec extends PortSuite:
   final class Boom(a$p: java.lang.Object) extends java.lang.Record:
     var a$field: java.lang.Object = null
     this.a$field = a$p
-    def a(): java.lang.Object = throw new java.lang.IllegalStateException("boom")
-    override def equals(o$rec: scala.Any): scala.Boolean = o$rec.isInstanceOf[Boom]
-    override def hashCode(): scala.Int = 0
-    override def toString(): java.lang.String = "Boom[]"
+    def a():                               java.lang.Object = throw new java.lang.IllegalStateException("boom")
+    override def equals(o$rec: scala.Any): scala.Boolean    = o$rec.isInstanceOf[Boom]
+    override def hashCode():               scala.Int        = 0
+    override def toString():               java.lang.String = "Boom[]"
 
   object Boom:
     def unapply(r$rec: Boom): scala.Tuple1[java.lang.Object] = scala.Tuple1(r$rec.a())
@@ -358,9 +370,8 @@ class RecordSpec extends PortSuite:
     assertEquals(t.getMessage, "boom")
   }
 
-  /** the emitted image of
-    * `record Del(int x, int y) { Del(int x) { this(x, 0); } public Del { x = x * 2; } }` —
-    * a normalising COMPACT constructor beside a DELEGATING one, both construction paths. */
+  /** the emitted image of `record Del(int x, int y) { Del(int x) { this(x, 0); } public Del { x = x * 2; } }` — a normalising COMPACT constructor beside a DELEGATING one, both construction paths.
+    */
   final class Del(private var x$p: scala.Int, y$p: scala.Int) extends java.lang.Record:
     var x$field: scala.Int = 0
     var y$field: scala.Int = 0
@@ -368,12 +379,12 @@ class RecordSpec extends PortSuite:
     x$p = x$p * 2
     this.x$field = x$p
     this.y$field = y$p
-    def x(): scala.Int = this.x$field
-    def y(): scala.Int = this.y$field
+    def x():                               scala.Int     = this.x$field
+    def y():                               scala.Int     = this.y$field
     override def equals(o$rec: scala.Any): scala.Boolean = o$rec match
       case that$rec: Del => this.x$field == that$rec.x$field && this.y$field == that$rec.y$field
-      case _             => false
-    override def hashCode(): scala.Int = 0
+      case _ => false
+    override def hashCode(): scala.Int        = 0
     override def toString(): java.lang.String =
       "Del[" + "x=" + java.lang.String.valueOf(this.x$field) + ", " + "y=" + java.lang.String.valueOf(this.y$field) + "]"
 

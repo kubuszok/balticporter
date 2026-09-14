@@ -3,9 +3,9 @@ package balticporter.runner
 import balticporter.core.*
 import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.RuleScope
-import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, StaticForwarderTransform, TypeRedirectTransform}
+import balticporter.transform.{ ClassTableTransform, CollectionsTransform, MutableParamsTransform, StaticForwarderTransform, TypeRedirectTransform }
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** Cross-port composition, over a genuine TWO-PORT fixture. */
@@ -20,45 +20,62 @@ class ManifestSpec extends munit.FunSuite:
   private def twoModules(): (Path, Path, Path) =
     val root = Files.createTempDirectory("manifest")
     val base = root.resolve("base")
-    writeJava(base, "com/demo/Widget.java",
+    writeJava(
+      base,
+      "com/demo/Widget.java",
       """package com.demo;
         |public class Widget {
         |  public int size;
         |  public java.util.List<String> labels() { return null; }
-        |}""".stripMargin)
-    writeJava(base, "com/demo/Gadget.java",
+        |}""".stripMargin
+    )
+    writeJava(
+      base,
+      "com/demo/Gadget.java",
       """package com.demo;
-        |public class Gadget { public Widget w = new Widget(); }""".stripMargin)
+        |public class Gadget { public Widget w = new Widget(); }""".stripMargin
+    )
     val dep = root.resolve("dep")
-    writeJava(dep, "com/demo2/Uses.java",
+    writeJava(
+      dep,
+      "com/demo2/Uses.java",
       """package com.demo2;
         |import com.demo.Widget;
-        |public class Uses { public Widget w = new Widget(); }""".stripMargin)
+        |public class Uses { public Widget w = new Widget(); }""".stripMargin
+    )
     (root, base, dep)
 
   private def emitted(out: Path): List[String] =
     if !Files.exists(out) then Nil
-    else Files.walk(out).iterator().asScala.filter(_.toString.endsWith(".scala"))
-      .map(p => out.relativize(p).toString.replace('\\', '/')).toList.sorted
+    else Files.walk(out).iterator().asScala.filter(_.toString.endsWith(".scala")).map(p => out.relativize(p).toString.replace('\\', '/')).toList.sorted
 
-  /** the agreement findings that say the two modules DISAGREE, as opposed to the operational notes
-    * about how the check was answered. */
+  /** the agreement findings that say the two modules DISAGREE, as opposed to the operational notes about how the check was answered.
+    */
   private def disagreements(r: PortResult): List[ManifestAgreement.Finding] =
-    r.report.manifest.filterNot(f =>
-      f.kind == Kind.BaseMapMissing || f.kind == Kind.BaseMapStale || f.kind == Kind.BaseMapUnverified)
+    r.report.manifest.filterNot(f => f.kind == Kind.BaseMapMissing || f.kind == Kind.BaseMapStale || f.kind == Kind.BaseMapUnverified)
 
   private def runBase(root: Path, base: Path, m: PortManifest): PortResult =
-    PortRun("base", root.resolve("port-base"), SourceSet.Main,
-      FrontendConfig(base, List("com/demo/Widget.java", "com/demo/Gadget.java"), Nil), Nil,
-      manifest = Some(m)).execute()
+    PortRun(
+      "base",
+      root.resolve("port-base"),
+      SourceSet.Main,
+      FrontendConfig(base, List("com/demo/Widget.java", "com/demo/Gadget.java"), Nil),
+      Nil,
+      manifest = Some(m)
+    ).execute()
 
   private def runDependent(root: Path, base: Path, dep: Path, m: PortManifest): PortResult =
-    PortRun("dependent", root.resolve("port-dep"), SourceSet.Main,
-      FrontendConfig(dep, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(base)), Nil,
-      manifest = Some(m)).execute()
+    PortRun(
+      "dependent",
+      root.resolve("port-dep"),
+      SourceSet.Main,
+      FrontendConfig(dep, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(base)),
+      Nil,
+      manifest = Some(m)
+    ).execute()
 
-  /** the run ABORTS on a fatal disagreement, having first printed every finding to stderr — so
-    * what a caller sees is captured here rather than reconstructed. */
+  /** the run ABORTS on a fatal disagreement, having first printed every finding to stderr — so what a caller sees is captured here rather than reconstructed.
+    */
   private def caught(f: => Any): String =
     val buf = new java.io.ByteArrayOutputStream
     val old = System.err
@@ -80,14 +97,15 @@ class ManifestSpec extends munit.FunSuite:
     // collapse to one (the base's), which is what the pipeline did before it ordered instances.
     val phase = new CollectionsTransform
     val own   = new MutableParamsTransform
-    val core = PortManifest("core",
-      dropTypes      = Set("com.demo.Widget"),
-      dropMethods    = Set("com.demo.Widget#labels"),
+    val core  = PortManifest(
+      "core",
+      dropTypes = Set("com.demo.Widget"),
+      dropMethods = Set("com.demo.Widget#labels"),
       packageRenames = Map("com.demo" -> "org.port"),
-      surface        = List(phase),
-      inject         = List(Path.of("/base/overrides")))
-    val ext = core.extendedBy(PortManifest("ext",
-      dropTypes = Set("com.demo2.Own"), surface = List(own), inject = List(Path.of("/ext/overrides"))))
+      surface = List(phase),
+      inject = List(Path.of("/base/overrides"))
+    )
+    val ext = core.extendedBy(PortManifest("ext", dropTypes = Set("com.demo2.Own"), surface = List(own), inject = List(Path.of("/ext/overrides"))))
 
     assertEquals(ext.effectiveDropTypes, Set("com.demo.Widget", "com.demo2.Own"))
     assertEquals(ext.effectiveDropMethods, Set("com.demo.Widget#labels"))
@@ -121,11 +139,15 @@ class ManifestSpec extends munit.FunSuite:
 
   test("a manifest and a raw policy are mutually exclusive — a run may never hold two policies") {
     val (root, base, _) = twoModules()
-    val e = intercept[IllegalArgumentException] {
-      PortRun("base", root.resolve("p"), SourceSet.Main,
+    val e               = intercept[IllegalArgumentException] {
+      PortRun(
+        "base",
+        root.resolve("p"),
+        SourceSet.Main,
         FrontendConfig(base, List("com/demo/Widget.java"), Nil),
         phases = List(new CollectionsTransform),
-        manifest = Some(PortManifest("core"))).execute()
+        manifest = Some(PortManifest("core"))
+      ).execute()
     }
     assert(clue(e.getMessage).contains("SUPPLIES"))
   }
@@ -136,10 +158,8 @@ class ManifestSpec extends munit.FunSuite:
 
   test("matching manifests: the dependent inherits, emits only its own units, and agrees") {
     val (root, base, dep) = twoModules()
-    val core = PortManifest("core",
-      governs = Set("com.demo"), surface = List(new CollectionsTransform),
-      packageRenames = Map("com.demo" -> "org.port"))
-    val b = runBase(root, base, core)
+    val core              = PortManifest("core", governs = Set("com.demo"), surface = List(new CollectionsTransform), packageRenames = Map("com.demo" -> "org.port"))
+    val b                 = runBase(root, base, core)
     assertEquals(emitted(b.outDir), List("org/port/Gadget.scala", "org/port/Widget.scala"))
     assertEquals(b.report.manifest, Nil, "a BASE port has no shared surface, so the check is a no-op")
 
@@ -157,10 +177,9 @@ class ManifestSpec extends munit.FunSuite:
 
   test("a dropped base type is inherited: tagged here, not emitted here, and not this module's to replace") {
     val (root, base, dep) = twoModules()
-    val inject = root.resolve("base-overrides")
+    val inject            = root.resolve("base-overrides")
     writeJava(inject, "com/demo/Widget.scala", "package com.demo\nclass Widget { def size: Int = 0 }")
-    val core = PortManifest("core", governs = Set("com.demo"),
-      dropTypes = Set("com.demo.Widget"), inject = List(inject))
+    val core = PortManifest("core", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"), inject = List(inject))
     runBase(root, base, core)
 
     val d = runDependent(root, base, dep, core.extendedBy(PortManifest("ext")))
@@ -176,9 +195,9 @@ class ManifestSpec extends munit.FunSuite:
 
   test("MISMATCH: divergent package rename") {
     val (root, base, dep) = twoModules()
-    val core = PortManifest("core", governs = Set("com.demo"), packageRenames = Map("com.demo" -> "org.port"))
-    val drift = PortManifest("ext", packageRenames = Map("com.demo" -> "org.somewhere.else")).mirroring(core)
-    val msg = caught(runDependent(root, base, dep, drift))
+    val core              = PortManifest("core", governs = Set("com.demo"), packageRenames = Map("com.demo" -> "org.port"))
+    val drift             = PortManifest("ext", packageRenames = Map("com.demo" -> "org.somewhere.else")).mirroring(core)
+    val msg               = caught(runDependent(root, base, dep, drift))
     assert(clue(msg).contains("fatal"))
     // stated twice: from the declarations, and from what the run actually emitted the type as
     assert(clue(msg).contains("RenameDivergence"))
@@ -187,19 +206,18 @@ class ManifestSpec extends munit.FunSuite:
 
   test("MISMATCH: the base leaves the shared namespace in place and the dependent moves it") {
     val (root, base, dep) = twoModules()
-    val core  = PortManifest("core", governs = Set("com.demo"))
-    val drift = PortManifest("ext", packageRenames = Map("com.demo" -> "org.port")).mirroring(core)
+    val core              = PortManifest("core", governs = Set("com.demo"))
+    val drift             = PortManifest("ext", packageRenames = Map("com.demo" -> "org.port")).mirroring(core)
     assert(clue(caught(runDependent(root, base, dep, drift))).contains("RenameOverride"))
   }
 
   test("MISMATCH: a type dropped by the base and not by the dependent") {
     val (root, base, dep) = twoModules()
-    val inject = root.resolve("base-overrides")
+    val inject            = root.resolve("base-overrides")
     writeJava(inject, "com/demo/Widget.scala", "package com.demo\nclass Widget { def size: Int = 0 }")
-    val core  = PortManifest("core", governs = Set("com.demo"),
-      dropTypes = Set("com.demo.Widget"), inject = List(inject))
+    val core  = PortManifest("core", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"), inject = List(inject))
     val drift = PortManifest("ext").mirroring(core)
-    val msg = caught(runDependent(root, base, dep, drift))
+    val msg   = caught(runDependent(root, base, dep, drift))
     // the STATIC layer sees the missing declaration…
     assert(clue(msg).contains("MissingDrop"))
     // …and the DYNAMIC layer sees what it caused: a resolution-root type tagged `Substituted` in
@@ -209,20 +227,20 @@ class ManifestSpec extends munit.FunSuite:
 
   test("MISMATCH: a type the base emits, dropped by the dependent") {
     val (root, base, dep) = twoModules()
-    val core  = PortManifest("core", governs = Set("com.demo"))
-    val inject = root.resolve("ext-overrides")
+    val core              = PortManifest("core", governs = Set("com.demo"))
+    val inject            = root.resolve("ext-overrides")
     writeJava(inject, "com/demo/Widget.scala", "package com.demo\nclass Widget { def size: Int = 0 }")
     val drift = PortManifest("ext", dropTypes = Set("com.demo.Widget"), inject = List(inject)).mirroring(core)
-    val msg = caught(runDependent(root, base, dep, drift))
+    val msg   = caught(runDependent(root, base, dep, drift))
     assert(clue(msg).contains("ExtraDrop"))
     assert(clue(msg).contains("TagUnexpected"))
   }
 
   test("MISMATCH: divergent collection retyping") {
     val (root, base, dep) = twoModules()
-    val core  = PortManifest("core", governs = Set("com.demo"), surface = List(new CollectionsTransform))
-    val drift = PortManifest("ext").mirroring(core)
-    val msg = caught(runDependent(root, base, dep, drift))
+    val core              = PortManifest("core", governs = Set("com.demo"), surface = List(new CollectionsTransform))
+    val drift             = PortManifest("ext").mirroring(core)
+    val msg               = caught(runDependent(root, base, dep, drift))
     assert(clue(msg).contains("SurfaceMissing"))
     assert(clue(msg).contains("java-collections->scala"))
   }
@@ -233,17 +251,20 @@ class ManifestSpec extends munit.FunSuite:
     // types the base DROPS, which is what the `governs` screen requires of an added subject
     // (DESIGN.md §8.13).
     val (root, base, dep) = twoModules()
-    val core = PortManifest("core", governs = Set("com.demo"),
+    val core              = PortManifest(
+      "core",
+      governs = Set("com.demo"),
       dropTypes = Set("com.demo.Widget", "com.demo.Gadget"),
-      surface   = List(new TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo2.MyWidget"))))
-    val ext = core.extendedBy(PortManifest("ext",
-      surface = List(new TypeRedirectTransform(Map("com.demo.Gadget" -> "com.demo2.MyGadget")))))
+      surface = List(new TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo2.MyWidget")))
+    )
+    val ext = core.extendedBy(PortManifest("ext", surface = List(new TypeRedirectTransform(Map("com.demo.Gadget" -> "com.demo2.MyGadget")))))
 
     // ONE phase in the effective pipeline, holding BOTH tables
     assertEquals(ext.effectiveSurface.map(_.name), List("type-redirect"))
     assertEquals(
       ext.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.redirects }.get,
-      Map("com.demo.Widget" -> "com.demo2.MyWidget", "com.demo.Gadget" -> "com.demo2.MyGadget"))
+      Map("com.demo.Widget" -> "com.demo2.MyWidget", "com.demo.Gadget" -> "com.demo2.MyGadget")
+    )
 
     val d = runDependent(root, base, dep, ext)
     assert(clue(disagreements(d)).forall(!_.kind.fatal))
@@ -254,19 +275,24 @@ class ManifestSpec extends munit.FunSuite:
 
   test("MISMATCH: one phase, twice, configured differently") {
     val (root, base, dep) = twoModules()
-    val core  = PortManifest("core", governs = Set("com.demo"),
-      surface = List(new ClassTableTransform(Map("com.demo.Widget#of" -> "com.demo.T#classFor"))))
-    val drift = core.extendedBy(PortManifest("ext",
-      surface = List(new ClassTableTransform(Map("com.demo.Widget#of" -> "com.demo.OTHER#classFor")))))
-    val msg = caught(runDependent(root, base, dep, drift))
+    val core              = PortManifest("core", governs = Set("com.demo"), surface = List(new ClassTableTransform(Map("com.demo.Widget#of" -> "com.demo.T#classFor"))))
+    val drift             = core.extendedBy(PortManifest("ext", surface = List(new ClassTableTransform(Map("com.demo.Widget#of" -> "com.demo.OTHER#classFor")))))
+    val msg               = caught(runDependent(root, base, dep, drift))
     assert(clue(msg).contains("SurfaceDivergence"))
   }
 
   test("MISMATCH: a dependent port that names no base at all") {
     val (root, base, dep) = twoModules()
     // no manifest whatsoever — the state every port in this repository was in before this check
-    val bare = caught(PortRun("dependent", root.resolve("p1"), SourceSet.Main,
-      FrontendConfig(dep, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(base)), Nil).execute())
+    val bare = caught(
+      PortRun(
+        "dependent",
+        root.resolve("p1"),
+        SourceSet.Main,
+        FrontendConfig(dep, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(base)),
+        Nil
+      ).execute()
+    )
     assert(clue(bare).contains("NoBaseDeclared"))
     // a manifest that declares no `bases` is no better, and says so
     val empty = caught(runDependent(root, base, dep, PortManifest("ext")))
@@ -275,8 +301,13 @@ class ManifestSpec extends munit.FunSuite:
 
   test("self-resolution is not a dependency: a port resolving against its OWN root needs no base") {
     val (root, base, _) = twoModules()
-    val r = PortRun("base", root.resolve("p"), SourceSet.Main,
-      FrontendConfig(base, List("com/demo/Widget.java"), Nil, resolutionRoots = List(base)), Nil).execute()
+    val r               = PortRun(
+      "base",
+      root.resolve("p"),
+      SourceSet.Main,
+      FrontendConfig(base, List("com/demo/Widget.java"), Nil, resolutionRoots = List(base)),
+      Nil
+    ).execute()
     assertEquals(r.report.manifest, Nil)
   }
 
@@ -284,15 +315,15 @@ class ManifestSpec extends munit.FunSuite:
   // the check as a pure function — every branch, without a filesystem
   // -------------------------------------------------------------------------
 
-  private val core = PortManifest("core", governs = Set("com.demo"),
-    dropTypes = Set("com.demo.Widget"), packageRenames = Map("com.demo" -> "org.port"))
+  private val core = PortManifest("core", governs = Set("com.demo"), dropTypes = Set("com.demo.Widget"), packageRenames = Map("com.demo" -> "org.port"))
 
   test("an agreeing dependent produces nothing, on either layer") {
     val renameOnly = PortManifest("core", governs = Set("com.demo"), packageRenames = Map("com.demo" -> "org.port"))
-    val m = renameOnly.extendedBy(PortManifest("ext"))
-    val shared = List(
+    val m          = renameOnly.extendedBy(PortManifest("ext"))
+    val shared     = List(
       ManifestAgreement.SharedType("com.demo.Widget", "org.port.Widget", substituted = false),
-      ManifestAgreement.SharedType("com.demo.Gadget", "org.port.Gadget", substituted = false))
+      ManifestAgreement.SharedType("com.demo.Gadget", "org.port.Gadget", substituted = false)
+    )
     assertEquals(ManifestAgreement.check(Some(m), shared, foreignRoots = true), Nil)
   }
 
@@ -302,7 +333,7 @@ class ManifestSpec extends munit.FunSuite:
   }
 
   test("an inherited key that never fired is reported, and is NOT fatal") {
-    val m = core.extendedBy(PortManifest("ext"))
+    val m  = core.extendedBy(PortManifest("ext"))
     val fs = ManifestAgreement.check(Some(m), Nil, foreignRoots = true)
     assertEquals(fs.map(_.kind), List(Kind.InheritedKeyNeverFired))
     assertEquals(fs.map(_.base), List("core"))
@@ -315,26 +346,29 @@ class ManifestSpec extends munit.FunSuite:
     // java/<pkg>` being the same package as `src/main/java/<pkg>` — so a screen that reads the
     // claim alone makes every key such a module declares about its OWN members an intrusion, and
     // leaves it no way to comply. §1.
-    val base = PortManifest("core", governs = Set("com.demo"))
-    val m    = base.extendedBy(PortManifest("ext", dropMethods = Set("com.demo.OwnTest#helper()")))
+    val base                              = PortManifest("core", governs = Set("com.demo"))
+    val m                                 = base.extendedBy(PortManifest("ext", dropMethods = Set("com.demo.OwnTest#helper()")))
     def run(entries: List[PortMap.Entry]) =
-      ManifestAgreement.check(Some(m), Nil, foreignRoots = true, fired = Set("com.demo.OwnTest#helper()"),
-        ports = List(ManifestAgreement.BasePort(base, Some(PortMap.Map0("core", "e", entries)))))
+      ManifestAgreement.check(
+        Some(m),
+        Nil,
+        foreignRoots = true,
+        fired = Set("com.demo.OwnTest#helper()"),
+        ports = List(ManifestAgreement.BasePort(base, Some(PortMap.Map0("core", "e", entries))))
+      )
     def entry(kind: String, upstream: String) =
       PortMap.Entry(kind, upstream, upstream, PortMap.Disposition.Ported)
 
     // the base's map holds ONLY its own type, so the dependent's drop touches nothing of it.
     assertEquals(run(List(entry("type", "com.demo.Widget"))).map(_.kind), Nil)
     // …and the moment the base really does emit that type, the intrusion is fatal again.
-    assertEquals(
-      run(List(entry("type", "com.demo.Widget"), entry("type", "com.demo.OwnTest"))).map(_.kind),
-      List(Kind.ExtraDrop))
+    assertEquals(run(List(entry("type", "com.demo.Widget"), entry("type", "com.demo.OwnTest"))).map(_.kind), List(Kind.ExtraDrop))
     // NO MAP is not "no claim": an unpublished base is already reported on its own, and the
     // namespace is then the only answer that exists — so the screen keeps the pre-map behaviour.
     assertEquals(
-      ManifestAgreement.check(Some(m), Nil, foreignRoots = true, fired = Set("com.demo.OwnTest#helper()"),
-        ports = List(ManifestAgreement.BasePort(base))).map(_.kind),
-      List(Kind.ExtraDrop))
+      ManifestAgreement.check(Some(m), Nil, foreignRoots = true, fired = Set("com.demo.OwnTest#helper()"), ports = List(ManifestAgreement.BasePort(base))).map(_.kind),
+      List(Kind.ExtraDrop)
+    )
   }
 
   test("every finding renders its §1 classification — an agent must not have to investigate to act") {
@@ -342,8 +376,7 @@ class ManifestSpec extends munit.FunSuite:
   }
 
   test("a fingerprint is stable across two equal policies and separates two different ones") {
-    def fwd(ms: Set[String]) = new StaticForwarderTransform(List(
-      StaticForwarderTransform.Forwarder("com.demo.W", "java.lang.Class", ms)))
+    def fwd(ms: Set[String]) = new StaticForwarderTransform(List(StaticForwarderTransform.Forwarder("com.demo.W", "java.lang.Class", ms)))
     assertEquals(PortManifest.fingerprint(fwd(Set("a", "b"))), PortManifest.fingerprint(fwd(Set("b", "a"))))
     assertNotEquals(PortManifest.fingerprint(fwd(Set("a"))), PortManifest.fingerprint(fwd(Set("a", "b"))))
     // a phase with NO parameter declares an EMPTY policy, so two instances in a base chain compare
@@ -359,7 +392,7 @@ class ManifestSpec extends munit.FunSuite:
     assertEquals(collections, PortManifest.fingerprint(new CollectionsTransform), "not stable")
     assertNotEquals(
       PortManifest.fingerprint(new CollectionsTransform),
-      PortManifest.fingerprint(new CollectionsTransform(RuleScope.Everywhere(Set("com.demo.Bridge")))),
+      PortManifest.fingerprint(new CollectionsTransform(RuleScope.Everywhere(Set("com.demo.Bridge"))))
     )
   }
 

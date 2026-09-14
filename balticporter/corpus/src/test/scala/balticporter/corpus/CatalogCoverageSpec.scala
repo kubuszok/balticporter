@@ -1,15 +1,16 @@
 package balticporter.corpus
 
-import balticporter.catalog.{Attaches, CatalogLog, Differences, Dispatch, DiffId, JS, Lowering, Obligations, Status}
+import balticporter.catalog.{ Attaches, CatalogLog, DiffId, Differences, Dispatch, JS, Lowering, Obligations, Status }
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{CatalogCheck, Origin}
+import balticporter.tir.{ CatalogCheck, Origin }
 
 /** THE COVERAGE LANES, AND THE PROOF THAT THEY CAN FAIL. */
 class CatalogCoverageSpec extends munit.FunSuite:
 
   private val origin = Origin("Snippet.java", 1, 1)
-  /** a FRESH stand-in for the Java node being lowered — `Lowering.of`'s `subject`, which joins the
-    * two dispatches of ONE node by identity. A `def`, so every call site is a different node. */
+
+  /** a FRESH stand-in for the Java node being lowered — `Lowering.of`'s `subject`, which joins the two dispatches of ONE node by identity. A `def`, so every call site is a different node.
+    */
   private def node: AnyRef = new Object
 
   // -------------------------------------------------------------------------------------------
@@ -17,7 +18,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("an arm that CONSULTS its attached row leaves no hole") {
-    val log = new CatalogLog
+    val log          = new CatalogLog
     given CatalogLog = log
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node) {
       Obligations.consult(JS.E(3), origin)(scala.None)
@@ -35,7 +36,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // The `_ => false`-style probe every check in this engine owes. `Lowering.of` is entered
     // exactly as the frontend enters it and the body simply declines to ask — which is the defect
     // shape, written down.
-    val log = new CatalogLog
+    val log          = new CatalogLog
     given CatalogLog = log
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     val holes = log.undischarged
@@ -48,7 +49,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
   }
 
   test("…and the hole is one finding per ROW, however many sites produced it") {
-    val log = new CatalogLog
+    val log          = new CatalogLog
     given CatalogLog = log
     (1 to 40).foreach(_ => Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(()))
     // one finding per ROW — two rows attach here, and each is reported once with 40 sites behind it.
@@ -62,16 +63,18 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // The inner dispatch opens a scope of its own, so every consult happens there; a row attached at
     // the STATEMENT dispatch of such a kind would be reported as a hole at every one of those nodes
     // while the arm had in fact considered it.
-    val log = new CatalogLog
+    val log          = new CatalogLog
     given CatalogLog = log
-    val one = node
+    val one          = node
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, one) {
       Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, one) {
         Obligations.consult(JS.E(3), origin)(scala.None)
       }
     }
-    assert(!log.undischarged.map(_.id).contains(JS.E(3)),
-      "the inner dispatch consulted it for this very node — the outer scope has no hole to report")
+    assert(
+      !log.undischarged.map(_.id).contains(JS.E(3)),
+      "the inner dispatch consulted it for this very node — the outer scope has no hole to report"
+    )
     assertEquals(log.consulted(JS.E(3)), 1, "and it is counted ONCE: two scopes, one consideration")
   }
 
@@ -79,7 +82,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // The negative that makes the rule above a rule rather than a leak. `if (x) y += 1` puts a
     // second `CtOperatorAssignment` INSIDE a statement scope on the same line and of the same kind,
     // so anything reading `at` or `kind` would take the child's consult for the parent's.
-    val log = new CatalogLog
+    val log          = new CatalogLog
     given CatalogLog = log
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node) {
       Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node) {
@@ -88,8 +91,10 @@ class CatalogCoverageSpec extends munit.FunSuite:
     }
     // (JS-E04 and JS-E17 are holes here too — the inner scope owes both and this probe consults
     // neither — which is not what this assertion is about.)
-    assert(log.undischarged.map(_.id).contains(JS.E(3)),
-      "a different node consulted it; this statement's own obligation is still owed")
+    assert(
+      log.undischarged.map(_.id).contains(JS.E(3)),
+      "a different node consulted it; this statement's own obligation is still owed"
+    )
   }
 
   test("the DISPATCH is part of the key — JS-E03 is owed at a statement and JS-E04 at an expression") {
@@ -110,7 +115,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     }
     // Both JS-E03 and JS-E17 are `Handled` now, so an expression dispatch that consults both
     // leaves nothing owed and does not raise.
-    val alsoFatal = new CatalogLog(fatal = true)
+    val alsoFatal    = new CatalogLog(fatal = true)
     given CatalogLog = alsoFatal
     Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node) {
       Obligations.consult(JS.E(4), origin)(scala.None)
@@ -129,7 +134,8 @@ class CatalogCoverageSpec extends munit.FunSuite:
     log
 
   test("a real lowering reaches the JS-E rows the frontend wires, and reports the one it does not") {
-    val log = lower("""
+    val log = lower(
+      """
       public class S {
         int f(Object a, Object b, int i, byte c, String s) {
           boolean same = a == b;
@@ -144,7 +150,8 @@ class CatalogCoverageSpec extends munit.FunSuite:
           return k;
         }
       }
-    """)
+    """
+    )
     // consulted AND fired: the difference was considered here and it applied.
     List(JS.E(1), JS.E(2), JS.E(3), JS.E(14), JS.E(15)).foreach { id =>
       assert(log.consulted(id) > 0, s"$id was never consulted")
@@ -185,7 +192,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
   }
 
   test("the `consulted` lane counts rows and not sites, and moves with the wiring") {
-    val log = lower("public class S { boolean f(Object a, Object b) { return a == b; } }")
+    val log     = lower("public class S { boolean f(Object a, Object b) { return a == b; } }")
     val reached = CatalogCheck.consulted(log).map(_.owner).toSet
     assert(reached.contains(JS.E(1).toString))
     // JS-E03 attaches at the STATEMENT dispatch and this snippet has no compound assignment, so it
@@ -208,9 +215,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // coverage and can never fail.
     // …and through `leaves`, because a row may attach at more than one place: an `Attaches.Both`
     val dispatched = balticporter.frontend.spoon.SpoonKinds.lowered.map(_.name).toSet
-    val bad = Differences.all.flatMap(d =>
-      Differences.leaves(d.attaches).collect { case Attaches.Lowered(k, _) => (d.id, k) })
-      .filterNot((_, k) => dispatched.contains(k))
+    val bad        = Differences.all.flatMap(d => Differences.leaves(d.attaches).collect { case Attaches.Lowered(k, _) => (d.id, k) }).filterNot((_, k) => dispatched.contains(k))
     assertEquals(bad, Nil, s"attached to a kind no arm lowers: $bad")
   }
 
@@ -221,8 +226,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
       case SpoonKinds.Claim.Lowered(b) => b
       case _                           => ""
     val fromClaim =
-      Set(Option.when(by.contains("stmtKind"))(Dispatch.Statement),
-          Option.when(by.contains("exprNoCast"))(Dispatch.Expression)).flatten
+      Set(Option.when(by.contains("stmtKind"))(Dispatch.Statement), Option.when(by.contains("exprNoCast"))(Dispatch.Expression)).flatten
     if fromClaim.nonEmpty then fromClaim
     else
       // …and a kind that is NEITHER — a `CtMethod`, a `CtField` — is reached at neither TERM
@@ -235,11 +239,12 @@ class CatalogCoverageSpec extends munit.FunSuite:
         catch { case _: ClassNotFoundException => scala.None }
       resolve("spoon.reflect.code").orElse(resolve("spoon.reflect.declaration")) match
         case scala.None => Set.empty
-        case Some(cls)  => Set(
-          Option.when(classOf[spoon.reflect.code.CtStatement].isAssignableFrom(cls))(Dispatch.Statement),
-          Option.when(classOf[spoon.reflect.code.CtExpression[?]].isAssignableFrom(cls))(Dispatch.Expression),
-          Option.when(classOf[spoon.reflect.declaration.CtTypeMember].isAssignableFrom(cls))(Dispatch.Declaration),
-        ).flatten
+        case Some(cls)  =>
+          Set(
+            Option.when(classOf[spoon.reflect.code.CtStatement].isAssignableFrom(cls))(Dispatch.Statement),
+            Option.when(classOf[spoon.reflect.code.CtExpression[?]].isAssignableFrom(cls))(Dispatch.Expression),
+            Option.when(classOf[spoon.reflect.declaration.CtTypeMember].isAssignableFrom(cls))(Dispatch.Declaration)
+          ).flatten
 
   test("…and about the DISPATCH — a kind only a statement arm reaches owes nothing as an expression") {
     // The guard above validates the KIND and stops there, so `Lowered("CtAssert", Expression)` — a
@@ -254,8 +259,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
         case one             => Set(one)
       // `Declaration` is asked and answered by the same rule as the other two — a kind that is not
       // a `CtTypeMember` claiming it is exactly the failure this test is about, one column over.
-      Option.when(!asked.subsetOf(legal))(
-        s"$id attaches $k/$disp, and $k is reached at ${legal.mkString("{", ", ", "}")}")
+      Option.when(!asked.subsetOf(legal))(s"$id attaches $k/$disp, and $k is reached at ${legal.mkString("{", ", ", "}")}")
 
     // …through `leaves`, for the reason the KIND guard above states and this one did not follow:
     // an `Attaches.Both` is not an `Attaches.Lowered`, so a top-level `match` skipped the lowering
@@ -263,24 +267,28 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // about, since a `Both` exists precisely because one row is decided at more than one place.
     // The two guards are one rule read at two columns and had two different answers.
     val bad = Differences.all.flatMap(d =>
-      Differences.leaves(d.attaches).collect {
-        case Attaches.Lowered(k, disp) => complaint(d.id.toString, k, disp)
-      }.flatten)
+      Differences
+        .leaves(d.attaches)
+        .collect { case Attaches.Lowered(k, disp) =>
+          complaint(d.id.toString, k, disp)
+        }
+        .flatten
+    )
     assertEquals(bad, Nil, bad.mkString("\n"))
 
     // THE NEGATIVE, through the same function the sweep runs — a probe that poked at the derivation
     // instead would prove the derivation and nothing about the guard. `CtAssert` is a `CtStatement`
     // and not a `CtExpression`, and `SpoonTir` lowers it in `stmtKind`.
-    assert(complaint("JS-X99", "CtAssert", Dispatch.Expression).isDefined,
-      "a statement-only kind claimed at the expression dispatch must be reported")
+    assert(
+      complaint("JS-X99", "CtAssert", Dispatch.Expression).isDefined,
+      "a statement-only kind claimed at the expression dispatch must be reported"
+    )
     assert(complaint("JS-X99", "CtAssert", Dispatch.Either).isDefined)
     assert(complaint("JS-X99", "CtAssert", Dispatch.Statement).isEmpty)
     assertEquals(legalDispatches(SpoonKinds.byName("CtAssert")), Set(Dispatch.Statement))
-    assertEquals(legalDispatches(SpoonKinds.byName("CtOperatorAssignment")),
-      Set(Dispatch.Statement, Dispatch.Expression))
+    assertEquals(legalDispatches(SpoonKinds.byName("CtOperatorAssignment")), Set(Dispatch.Statement, Dispatch.Expression))
     assertEquals(legalDispatches(SpoonKinds.byName("CtBinaryOperator")), Set(Dispatch.Expression))
     // a kind whose claim names a HELPER rather than either dispatcher — answered by the hierarchy.
-    assertEquals(legalDispatches(SpoonKinds.byName("CtInvocation")),
-      Set(Dispatch.Statement, Dispatch.Expression))
+    assertEquals(legalDispatches(SpoonKinds.byName("CtInvocation")), Set(Dispatch.Statement, Dispatch.Expression))
     assertEquals(legalDispatches(SpoonKinds.byName("CtLiteral")), Set(Dispatch.Expression))
   }

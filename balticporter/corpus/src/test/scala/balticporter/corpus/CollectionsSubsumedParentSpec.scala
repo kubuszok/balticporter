@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, Pipeline, PorterNote, Reason}
+import balticporter.tir.{ Decision, Pipeline, PorterNote, Reason }
 import balticporter.transform.CollectionsTransform
 
 /** A MINTED PARENT ANOTHER MINTED PARENT SUBSUMES is dropped — `ENGINE-LIMITS.md` K28.1. */
@@ -66,8 +66,7 @@ class CollectionsSubsumedParentSpec extends PortSuite:
     new TirEmitter(after).emit
 
   private def decisions: List[Decision] =
-    Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform()))._2
-      .of(Decision.Kind.SubsumedParent)
+    Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform()))._2.of(Decision.Kind.SubsumedParent)
 
   // -------------------------------------------------------------------------
   // the positives
@@ -75,14 +74,18 @@ class CollectionsSubsumedParentSpec extends PortSuite:
 
   test("a Map class implementing Iterable<Map.Entry> emits ONE parent, the scala Map") {
     val out = ported
-    assert(out.contains("class OMap[K <: java.lang.Object, V <: java.lang.Object] extends scala.collection.mutable.Map[K, V] {"),
-           s"OMap kept the subsumed shim parent\n--- emitted ---\n$out")
+    assert(
+      out.contains("class OMap[K <: java.lang.Object, V <: java.lang.Object] extends scala.collection.mutable.Map[K, V] {"),
+      s"OMap kept the subsumed shim parent\n--- emitted ---\n$out"
+    )
   }
 
   test("…and a Set class the same, at the other kind") {
     val out = ported
-    assert(out.contains("class OSet[E <: java.lang.Object] private[demo] () extends scala.collection.mutable.Set[E] {"),
-           s"OSet kept the subsumed shim parent\n--- emitted ---\n$out")
+    assert(
+      out.contains("class OSet[E <: java.lang.Object] private[demo] () extends scala.collection.mutable.Set[E] {"),
+      s"OSet kept the subsumed shim parent\n--- emitted ---\n$out"
+    )
   }
 
   test("the drop is a RECORDED decision, universal, naming what took the relation over") {
@@ -104,22 +107,30 @@ class CollectionsSubsumedParentSpec extends PortSuite:
 
   test("NEGATIVE — a DIFFERENT element is a relation the target does not carry, and is silent") {
     val out = ported
-    assert(out.contains("class Wrong[K <: java.lang.Object, V <: java.lang.Object] private[demo] () extends scala.collection.mutable.Map[K, V] with balticporter.runtime.JavaIterable[java.lang.String]"),
-           s"Wrong lost an Iterable<String> clause a mutable.Map does not answer for\n--- emitted ---\n$out")
+    assert(
+      out.contains(
+        "class Wrong[K <: java.lang.Object, V <: java.lang.Object] private[demo] () extends scala.collection.mutable.Map[K, V] with balticporter.runtime.JavaIterable[java.lang.String]"
+      ),
+      s"Wrong lost an Iterable<String> clause a mutable.Map does not answer for\n--- emitted ---\n$out"
+    )
     assert(!clue(decisions.map(_.subjectFqn)).exists(_.endsWith("Wrong")))
   }
 
   test("NEGATIVE — a shim the target does NOT subsume stays, whatever else the class extends") {
     val out = ported
-    assert(out.contains("balticporter.runtime.JavaCollection[E]"),
-           s"Both lost its java.util.Collection clause, which no scala collection is a subtype of" +
-             s"\n--- emitted ---\n$out")
+    assert(
+      out.contains("balticporter.runtime.JavaCollection[E]"),
+      s"Both lost its java.util.Collection clause, which no scala collection is a subtype of" +
+        s"\n--- emitted ---\n$out"
+    )
     assert(!clue(decisions.map(_.subjectFqn)).exists(_.endsWith("Both")))
   }
 
   test("NEGATIVE — a shim with NO kind parent beside it has nothing to be subsumed by") {
     val out = ported
-    assert(out.contains("class Plain[E <: java.lang.Object] private[demo] () extends balticporter.runtime.JavaIterable[E]"),
-           s"Plain lost the only parent it had\n--- emitted ---\n$out")
+    assert(
+      out.contains("class Plain[E <: java.lang.Object] private[demo] () extends balticporter.runtime.JavaIterable[E]"),
+      s"Plain lost the only parent it had\n--- emitted ---\n$out"
+    )
     assert(!clue(decisions.map(_.subjectFqn)).exists(_.endsWith("Plain")))
   }

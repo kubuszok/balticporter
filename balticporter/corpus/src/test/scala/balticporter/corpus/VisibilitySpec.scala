@@ -165,8 +165,7 @@ class VisibilitySpec extends PortSuite:
     assertEquals(w.detail.get("from"), Some("private"))
     assertEquals(w.detail.get("to"), Some("public"))
     // …and the rename beside it carries the SAME `clash`, so the two rows read as one act
-    assert(p.emitter.ownDecisions.exists(d =>
-      d.kind == Decision.Kind.RenamedMember && d.detail.get("clash") == Some("field-vs-method")))
+    assert(p.emitter.ownDecisions.exists(d => d.kind == Decision.Kind.RenamedMember && d.detail.get("clash") == Some("field-vs-method")))
   }
 
   test("…and a renamed field that was ALREADY public records nothing — no row for a non-change") {
@@ -186,15 +185,18 @@ class VisibilitySpec extends PortSuite:
     val p = port(
       """package demo.util;
         |public class Parent { public Object data; }
-        |""".stripMargin,
+        |""".stripMargin
     )
-    val q = portAll(List(
-      "Parent.java" -> """package demo.util;
-        |public class Parent { public Object data; }
-        |""".stripMargin,
-      "Child.java" -> """package demo.util;
-        |public class Child extends Parent { protected float[] data; }
-        |""".stripMargin))
+    val q = portAll(
+      List(
+        "Parent.java" -> """package demo.util;
+                           |public class Parent { public Object data; }
+                           |""".stripMargin,
+        "Child.java" -> """package demo.util;
+                          |public class Child extends Parent { protected float[] data; }
+                          |""".stripMargin
+      )
+    )
     assertEmits(q, "data$shadow")
     assertEquals(causes(q), List("member-rename"))
     assertEquals(widenings(q).head.detail.get("clash"), Some("shadows-inherited"))
@@ -206,20 +208,22 @@ class VisibilitySpec extends PortSuite:
     // P5/P14: the child can keep neither bare `protected` nor its own package's qualifier — both
     // are "has weaker access privileges" — but it CAN name any ENCLOSING package, and the nearest
     // common one covers the parent's boundary while still enclosing the child.
-    val p = portAll(List(
-      "Parent.java" ->
-        """package demo.a.q;
-          |public class Parent {
-          |  protected void hook() {}
-          |}
-          |""".stripMargin,
-      "Child.java" ->
-        """package demo.a.r;
-          |public class Child extends demo.a.q.Parent {
-          |  protected void hook() {}
-          |}
-          |""".stripMargin,
-    ))
+    val p = portAll(
+      List(
+        "Parent.java" ->
+          """package demo.a.q;
+            |public class Parent {
+            |  protected void hook() {}
+            |}
+            |""".stripMargin,
+        "Child.java" ->
+          """package demo.a.r;
+            |public class Child extends demo.a.q.Parent {
+            |  protected void hook() {}
+            |}
+            |""".stripMargin
+      )
+    )
     assertEmits(p, "protected[q] def hook()")
     assertEmits(p, "protected[a] override def hook()")
     assertEquals(causes(p), List("x-pkg-protected-override"))
@@ -230,60 +234,66 @@ class VisibilitySpec extends PortSuite:
     // overloads freely, so one key can name SEVERAL parent members. Held one-per-key, the index kept
     // whichever came last in the parent's body: `hook(Object)` is public, so it constrains nothing,
     // and the `protected` `hook(String)` the child really overrides was simply not in the list.
-    val p = portAll(List(
-      "Parent.java" ->
-        """package demo.a.q;
-          |public class Parent {
-          |  protected void hook(String s) {}
-          |  public void hook(Object o) { hook(String.valueOf(o)); }
-          |}
-          |""".stripMargin,
-      "Child.java" ->
-        """package demo.a.r;
-          |public class Child extends demo.a.q.Parent {
-          |  protected void hook(String s) {}
-          |}
-          |""".stripMargin,
-    ))
+    val p = portAll(
+      List(
+        "Parent.java" ->
+          """package demo.a.q;
+            |public class Parent {
+            |  protected void hook(String s) {}
+            |  public void hook(Object o) { hook(String.valueOf(o)); }
+            |}
+            |""".stripMargin,
+        "Child.java" ->
+          """package demo.a.r;
+            |public class Child extends demo.a.q.Parent {
+            |  protected void hook(String s) {}
+            |}
+            |""".stripMargin
+      )
+    )
     assertEmits(p, "protected[q] def hook(s: java.lang.String)")
     assertEmits(p, "protected[a] override def hook(s: java.lang.String)")
     assertEquals(causes(p), List("x-pkg-protected-override"))
   }
 
   test("a child NESTED under the parent's package keeps the PARENT's qualifier") {
-    val p = portAll(List(
-      "Parent.java" ->
-        """package demo.a.q;
-          |public class Parent {
-          |  protected void hook() {}
-          |}
-          |""".stripMargin,
-      "Child.java" ->
-        """package demo.a.q.sub;
-          |public class Child extends demo.a.q.Parent {
-          |  protected void hook() {}
-          |}
-          |""".stripMargin,
-    ))
+    val p = portAll(
+      List(
+        "Parent.java" ->
+          """package demo.a.q;
+            |public class Parent {
+            |  protected void hook() {}
+            |}
+            |""".stripMargin,
+        "Child.java" ->
+          """package demo.a.q.sub;
+            |public class Child extends demo.a.q.Parent {
+            |  protected void hook() {}
+            |}
+            |""".stripMargin
+      )
+    )
     assertEmits(p, "protected[q] override def hook()")
     assertEquals(causes(p), List("x-pkg-protected-override"))
   }
 
   test("a SAME-PACKAGE override keeps the ordinary qualifier and records nothing") {
-    val p = portAll(List(
-      "Parent.java" ->
-        """package demo.a.q;
-          |public class Parent {
-          |  protected void hook() {}
-          |}
-          |""".stripMargin,
-      "Child.java" ->
-        """package demo.a.q;
-          |public class Child extends Parent {
-          |  protected void hook() {}
-          |}
-          |""".stripMargin,
-    ))
+    val p = portAll(
+      List(
+        "Parent.java" ->
+          """package demo.a.q;
+            |public class Parent {
+            |  protected void hook() {}
+            |}
+            |""".stripMargin,
+        "Child.java" ->
+          """package demo.a.q;
+            |public class Child extends Parent {
+            |  protected void hook() {}
+            |}
+            |""".stripMargin
+      )
+    )
     assertEmits(p, "protected[q] override def hook()")
     assertEquals(causes(p), Nil)
   }
@@ -322,20 +332,22 @@ class VisibilitySpec extends PortSuite:
     // `private override` is both illegal and contradictory. A package-private one DOES override
     // within its package (P10) and needs the keyword — so the rule is scoped to the LEVEL, never
     // to the presence of a qualifier.
-    val p = portAll(List(
-      "Parent.java" ->
-        """package demo.a;
-          |public class Parent {
-          |  void shared() {}
-          |}
-          |""".stripMargin,
-      "Child.java" ->
-        """package demo.a;
-          |public class Child extends Parent {
-          |  void shared() {}
-          |}
-          |""".stripMargin,
-    ))
+    val p = portAll(
+      List(
+        "Parent.java" ->
+          """package demo.a;
+            |public class Parent {
+            |  void shared() {}
+            |}
+            |""".stripMargin,
+        "Child.java" ->
+          """package demo.a;
+            |public class Child extends Parent {
+            |  void shared() {}
+            |}
+            |""".stripMargin
+      )
+    )
     assertEmits(p, "private[a] override def shared()")
   }
 
@@ -343,21 +355,23 @@ class VisibilitySpec extends PortSuite:
     // P11: `export P.*` publishes a forwarder at the EXPORTING object's visibility, so a
     // same-package companion re-exporting a `private[p]` static hands it to every package —
     // silently undoing the mapping for exactly the members java scoped most tightly.
-    val p = portAll(List(
-      "Base.java" ->
-        """package demo.a;
-          |public class Base {
-          |  static final int SECRET = 1;
-          |  public static final int OPEN = 2;
-          |  public int f;
-          |}
-          |""".stripMargin,
-      "Sub.java" ->
-        """package demo.a;
-          |public class Sub extends Base {
-          |  public int g;
-          |}
-          |""".stripMargin,
-    ))
+    val p = portAll(
+      List(
+        "Base.java" ->
+          """package demo.a;
+            |public class Base {
+            |  static final int SECRET = 1;
+            |  public static final int OPEN = 2;
+            |  public int f;
+            |}
+            |""".stripMargin,
+        "Sub.java" ->
+          """package demo.a;
+            |public class Sub extends Base {
+            |  public int g;
+            |}
+            |""".stripMargin
+      )
+    )
     assertEmitsMatch(p, """export demo\.a\.Base\.\{SECRET => _, \*\}""")
   }

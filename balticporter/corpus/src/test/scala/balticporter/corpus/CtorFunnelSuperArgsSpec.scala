@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
 /** `OmissionCheck.droppedSuperArgs` must shadow the EMITTER's decision, one constructor at a time. */
 class CtorFunnelSuperArgsSpec extends munit.FunSuite:
@@ -84,8 +84,7 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
     // `Holder` is the case where the loss is REAL: a wall the replay cannot express either. Its
     // nilary root carries nothing to lose and must NOT be reported; its `super(cap)` must be.
     assert(lost.findFirstIn(clue(out)).isDefined)
-    assertEquals(dropped.map(f => (f.owner, f.detail)),
-                 List(("demo.Holder", "1 argument(s) discarded")))
+    assertEquals(dropped.map(f => (f.owner, f.detail)), List(("demo.Holder", "1 argument(s) discarded")))
   }
 
   test("the PROMOTED primary is never reported — its arguments are in the `extends` clause") {

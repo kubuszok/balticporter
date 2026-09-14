@@ -2,10 +2,11 @@ package balticporter.runtime
 
 /** `java.util.ListIterator`, as Scala — java's interface, not scala's. */
 trait JavaListIterator[A] extends JavaIterator[A] {
-  def hasPrevious(): Boolean
-  def previous(): A
-  def nextIndex(): Int
+  def hasPrevious():   Boolean
+  def previous():      A
+  def nextIndex():     Int
   def previousIndex(): Int
+
   /** `java.util.ListIterator.set`/`add` — ABSTRACT, as java declares them. */
   def set(e: A): Unit
   def add(e: A): Unit
@@ -19,19 +20,19 @@ object JavaListIterator {
   def over[A](buf: scala.collection.mutable.Buffer[A]): JavaListIterator[A] = over(buf, 0)
 
   def over[A](buf: scala.collection.mutable.Buffer[A], from: Int): JavaListIterator[A] = {
-    if from < 0 || from > buf.size then
-      throw new IndexOutOfBoundsException(s"Index: $from, Size: ${buf.size}")
+    if from < 0 || from > buf.size then throw new IndexOutOfBoundsException(s"Index: $from, Size: ${buf.size}")
     new JavaListIterator[A] with Wrapping {
       private var cursor: Int = from
+
       /** the index `next()`/`previous()` last returned, or -1 when neither may be acted on. */
       private var last: Int = -1
 
       def wrapped: Any = buf
 
-      def hasNext(): Boolean     = cursor < buf.size
-      def hasPrevious(): Boolean = cursor > 0
-      def nextIndex(): Int       = cursor
-      def previousIndex(): Int   = cursor - 1
+      def hasNext():       Boolean = cursor < buf.size
+      def hasPrevious():   Boolean = cursor > 0
+      def nextIndex():     Int     = cursor
+      def previousIndex(): Int     = cursor - 1
 
       def next(): A = {
         if cursor >= buf.size then throw new NoSuchElementException()

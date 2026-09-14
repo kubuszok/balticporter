@@ -4,8 +4,8 @@ import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason, RuleScope}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
+import balticporter.tir.{ Decision, Pipeline, PorterNote, Program, Reason, RuleScope }
+import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 
 /** WHERE `CollectionsTransform` applies — its [[RuleScope]], in both directions. */
 class CollectionsScopeSpec extends PortSuite:
@@ -33,10 +33,9 @@ class CollectionsScopeSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  /** The other half of a scope, and the one an audit had to execute to find: IN-SCOPE code that
-    * REACHES a scoped-out declaration. `Client` moves; `Bridge`'s two fields do not, and every
-    * mention of them in `Client` is a node whose `tpe` the position-blind `transformType` remapped
-    * anyway. */
+  /** The other half of a scope, and the one an audit had to execute to find: IN-SCOPE code that REACHES a scoped-out declaration. `Client` moves; `Bridge`'s two fields do not, and every mention of
+    * them in `Client` is a node whose `tpe` the position-blind `transformType` remapped anyway.
+    */
   private val callSrc =
     """package demo;
       |import java.util.*;
@@ -64,7 +63,7 @@ class CollectionsScopeSpec extends PortSuite:
 
   test("the DEFAULT scope emits byte-for-byte what the unparameterised phase emitted") {
     val (ph, _, withDefault) = ported(RuleScope.Everywhere())
-    val bare = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
+    val bare                 = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
     assertEquals(withDefault, bare)
     assertEquals(ph.scopedOut, Set.empty)
     assert(ph.policyReport.isEmpty)
@@ -74,7 +73,7 @@ class CollectionsScopeSpec extends PortSuite:
 
   test("a scope whose entries match NOTHING is the same no-op — the excluded set is empty by arithmetic") {
     val (ph, _, out) = ported(RuleScope.Everywhere(Set("demo.NoSuchType")))
-    val bare = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
+    val bare         = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
     assertEquals(out, bare)
     assertEquals(ph.scopedOut, Set.empty)
   }
@@ -161,7 +160,7 @@ class CollectionsScopeSpec extends PortSuite:
     // and reports ZERO: the one seam a scope is guaranteed to create would be the one seam
     // invisible to the check written to find it. `actualOf` reads the declaration instead.
     val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Model#getLegacy")))
-    val scoped = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
+    val scoped         = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
     assert(clue(scoped).exists(f => f.actual == "java.util.List" && f.expected.startsWith("scala.collection.")))
   }
 
@@ -196,8 +195,11 @@ class CollectionsScopeSpec extends PortSuite:
     // of the TYPE and false of the value, because `asJava` is a live view in both directions.
     val (ph, after, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
     assert(clue(out).contains("b.raw.addAll(balticporter.runtime.JavaCollections.toJava(mine))"))
-    assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0,
-                 "a bridged slot is not a residue — counting it would be a number nobody can act on")
+    assertEquals(
+      ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut),
+      0,
+      "a bridged slot is not a residue — counting it would be a number nobody can act on"
+    )
   }
 
   test("…while the PRODUCER direction of the same scope is still COUNTED, and blames the scope") {
@@ -205,15 +207,14 @@ class CollectionsScopeSpec extends PortSuite:
     // blind: `Model.getLegacy` is held back, so it HANDS BACK a `java.util.List` where the port's
     // own code expects a `Buffer`. Nothing at the call site can change what a declaration returns.
     val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Model#getLegacy")))
-    val scoped = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
+    val scoped         = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
     assert(clue(scoped).nonEmpty, "the scope opened a slot; the check must see it AND blame the scope")
-    assert(clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ScopedOut))
-             .contains("PRODUCES"))
+    assert(clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ScopedOut)).contains("PRODUCES"))
   }
 
   test("the same source under the DEFAULT scope is byte-for-byte the unscoped port, and counts zero") {
     val (ph, after, out) = ported(RuleScope.Everywhere(), callSrc)
-    val bare = new TirEmitter(Pipeline.run(SpoonTir.fromSource(callSrc), List(new CollectionsTransform))).emit
+    val bare             = new TirEmitter(Pipeline.run(SpoonTir.fromSource(callSrc), List(new CollectionsTransform))).emit
     assertEquals(out, bare)
     assert(clue(out).contains("++="), "with nothing excluded the rewrite still fires everywhere")
     assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0)
@@ -234,7 +235,7 @@ class CollectionsScopeSpec extends PortSuite:
     // A knob that reads as configured and does nothing is the §1(b) silent no-op exactly; ownership
     // is structural (`Program.owned`), and the report says which knob the author actually wants.
     val (ph, _, out) = ported(RuleScope.Everywhere(Set("java.util.List")))
-    val bare = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
+    val bare         = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
     assertEquals(out, bare, "an entry that names no DECLARATION cannot change the emitted port")
     assertEquals(ph.scopedOut, Set.empty)
     val fs = ph.policyReport.of(PolicyIssue.NeverMatched)
@@ -245,14 +246,14 @@ class CollectionsScopeSpec extends PortSuite:
 
   test("the same holds for Only — a JDK entry admits nothing, and says so") {
     val (ph, _, out) = ported(RuleScope.Only(Set("java.util.List")))
-    val nothing = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform(RuleScope.Only(Set.empty))))).emit
+    val nothing      = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform(RuleScope.Only(Set.empty))))).emit
     assertEquals(out, nothing, "nothing was admitted, so this is `Only(Set.empty)`")
     assertEquals(ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key), List("java.util.List"))
   }
 
   test("an entry that named nothing is a §1(b) NeverMatched finding — a silent no-op policy is the failure") {
     val (ph, _, _) = ported(RuleScope.Everywhere(Set("demo.Bridge", "demo.Typo")))
-    val fs = ph.policyReport.of(PolicyIssue.NeverMatched)
+    val fs         = ph.policyReport.of(PolicyIssue.NeverMatched)
     assertEquals(fs.map(_.key), List("demo.Typo"))
     assert(clue(fs.head.render).contains("§1(b)"))
   }
@@ -297,6 +298,6 @@ class CollectionsScopeSpec extends PortSuite:
     assert(clue(new CollectionsTransform().surfaceFingerprint).startsWith(";mapping="))
     assertNotEquals(
       new CollectionsTransform(RuleScope.Only(Set("demo.Model"))).surfaceFingerprint,
-      new CollectionsTransform(RuleScope.Everywhere(Set("demo.Model"))).surfaceFingerprint,
+      new CollectionsTransform(RuleScope.Everywhere(Set("demo.Model"))).surfaceFingerprint
     )
   }

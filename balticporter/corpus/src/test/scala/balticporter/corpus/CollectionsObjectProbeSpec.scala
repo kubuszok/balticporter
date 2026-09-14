@@ -3,13 +3,13 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** Java's UNTYPED PROBE — `Map.get`, `Map.containsKey`, `Map.remove`, `Collection.contains` and
-  * `Set.remove` all take an `Object`, and the retyping moves the receiver to a scala collection
-  * whose members are typed at the element. */
+/** Java's UNTYPED PROBE — `Map.get`, `Map.containsKey`, `Map.remove`, `Collection.contains` and `Set.remove` all take an `Object`, and the retyping moves the receiver to a scala collection whose
+  * members are typed at the element.
+  */
 class CollectionsObjectProbeSpec extends PortSuite:
 
-  /** face 1 — the IMPLEMENTING side. `Ledger` is java's `Map<String, T>`, so its own signatures are
-    * java's erased ones and every body delegates to a field this phase retyped. */
+  /** face 1 — the IMPLEMENTING side. `Ledger` is java's `Map<String, T>`, so its own signatures are java's erased ones and every body delegates to a field this phase retyped.
+    */
   private val implementing =
     """package demo;
       |import java.util.*;
@@ -30,11 +30,10 @@ class CollectionsObjectProbeSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  /** face 2 — the FRONTEND's coercion, at a call whose receiver is an ordinary retyped map. The key
-    * is a type parameter, so `typeParamToObject` widens it off `Map.get(Object)`'s declared formal.
+  /** face 2 — the FRONTEND's coercion, at a call whose receiver is an ordinary retyped map. The key is a type parameter, so `typeParamToObject` widens it off `Map.get(Object)`'s declared formal.
     *
-    * …and face 3 beside it, the SET half: `Set.remove`/`contains` are declared over `Object` for the
-    * same reason `Map.get` is. */
+    * …and face 3 beside it, the SET half: `Set.remove`/`contains` are declared over `Object` for the same reason `Map.get` is.
+    */
   private val coerced =
     """package demo;
       |import java.util.*;
@@ -88,7 +87,9 @@ class CollectionsObjectProbeSpec extends PortSuite:
         |  boolean holds(Set<String> s, String e)  { return s.contains(e); }
         |  boolean drops(Set<String> s, String e)  { return s.remove(e); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the whole point of the guard: a probe that FITS goes on taking the ordinary rewrite, so the
     // emitted text of every port that has no such seam is byte-for-byte what it was.
     assertEmits(p, "m.getOrElse(\"alpha\"")
@@ -108,7 +109,9 @@ class CollectionsObjectProbeSpec extends PortSuite:
         |  Object at(Map<Object, Object> m, Object o) { return m.get(o); }
         |  boolean held(Set<Object> s, Object o)      { return s.contains(o); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // `Object` at an `Object` slot conforms, so widening it would be a helper call for nothing —
     // and the guard asks exactly that question rather than "is the argument an `Object`".
     assertNotEmits(p, "JavaCollections.mapGet(")
@@ -126,7 +129,9 @@ class CollectionsObjectProbeSpec extends PortSuite:
         |  boolean ask(Roster r, Object o) { return r.contains(o); }
         |  Object fetch(Roster r, Object o) { return r.get(o); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // §4.56: the arms are keyed on the receiver's KIND, which is this phase's own record. A
     // library's own `contains(Object)` is not a JDK member and the probe question never arises.
     assertEmits(p, "r.contains(o)")

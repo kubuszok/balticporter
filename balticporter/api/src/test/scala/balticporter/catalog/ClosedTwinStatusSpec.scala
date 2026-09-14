@@ -1,14 +1,14 @@
 package balticporter.catalog
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** STATUS ENFORCEMENT RULE (i): **a row whose twin names a CLOSED `ENGINE-LIMITS.md` entry may not
-  * claim `Open`.** */
+/** STATUS ENFORCEMENT RULE (i): **a row whose twin names a CLOSED `ENGINE-LIMITS.md` entry may not claim `Open`.**
+  */
 class ClosedTwinStatusSpec extends munit.FunSuite:
 
-  /** Walk up from the working directory. A forked test JVM's cwd is the SUBPROJECT, not the
-    * repository root, so a relative path with a fixed number of `..` segments is a path that breaks
-    * the next time a module moves — which is exactly what the repository restructure did. */
+  /** Walk up from the working directory. A forked test JVM's cwd is the SUBPROJECT, not the repository root, so a relative path with a fixed number of `..` segments is a path that breaks the next
+    * time a module moves — which is exactly what the repository restructure did.
+    */
   private lazy val limits: Path =
     def up(p: Path, fuel: Int): Option[Path] =
       if fuel == 0 || p == null then scala.None
@@ -16,13 +16,15 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
         val c = p.resolve("ENGINE-LIMITS.md")
         if Files.isRegularFile(c) then Some(c) else up(p.getParent, fuel - 1)
     up(Path.of("").toAbsolutePath, 8).getOrElse(
-      fail("ENGINE-LIMITS.md was not found above " + Path.of("").toAbsolutePath +
-        " — this spec reads the committed file and must never be skipped for its absence"))
+      fail(
+        "ENGINE-LIMITS.md was not found above " + Path.of("").toAbsolutePath +
+          " — this spec reads the committed file and must never be skipped for its absence"
+      )
+    )
 
-  /** id -> CLOSED / OPEN / AMBIGUOUS / UNMARKED, from the file's own shape: `### <ID>. <heading>`
-    * (the trailing dot is optional — several ids are written `### K5.6 A cast …`), and the marker is
-    * read from the heading OR from the entry's first paragraph, because the file uses both
-    * conventions. */
+  /** id -> CLOSED / OPEN / AMBIGUOUS / UNMARKED, from the file's own shape: `### <ID>. <heading>` (the trailing dot is optional — several ids are written `### K5.6 A cast …`), and the marker is read
+    * from the heading OR from the entry's first paragraph, because the file uses both conventions.
+    */
   private lazy val verdicts: Map[String, String] =
     val lines = Files.readAllLines(limits).toArray(Array.empty[String]).toList
     val out   = collection.mutable.LinkedHashMap.empty[String, String]
@@ -49,8 +51,9 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     out.toMap
 
   private def engineLimitTwins: List[(DiffId, String, Status)] =
-    Differences.all.collect { case d if d.twin.isInstanceOf[Twin.EngineLimit] =>
-      (d.id, d.twin.asInstanceOf[Twin.EngineLimit].id, d.status)
+    Differences.all.collect {
+      case d if d.twin.isInstanceOf[Twin.EngineLimit] =>
+        (d.id, d.twin.asInstanceOf[Twin.EngineLimit].id, d.status)
     }
 
   test("the ENGINE-LIMITS parse finds the ids the catalog actually cites, and reads their markers") {
@@ -114,8 +117,7 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
 
   test("a row claiming Open carries a twin — the rule above can only see a row that has one") {
     val untwinned = Differences.all.collect { case d if d.status.isOpen && d.twin == Twin.NoTwin => d.id.toString }
-    assertEquals(untwinned, Nil,
-      s"an Open row owes a pointer at the record that would contradict it: ${untwinned.mkString(", ")}")
+    assertEquals(untwinned, Nil, s"an Open row owes a pointer at the record that would contradict it: ${untwinned.mkString(", ")}")
   }
 
   // -------------------------------------------------------------------------------------------
@@ -151,7 +153,7 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
         Option.when(d.title.trim.isEmpty)(s"${d.id} has no title"),
         Option.when(d.jls.trim.isEmpty)(s"${d.id} has no JLS citation"),
         Option.when(d.scala.trim.isEmpty)(s"${d.id} has no Scala-side citation"),
-        Option.when(d.evidence.trim.isEmpty)(s"${d.id} has no evidence"),
+        Option.when(d.evidence.trim.isEmpty)(s"${d.id} has no evidence")
       ).flatten
     }
     assertEquals(bad, Nil, bad.mkString("\n"))
@@ -162,12 +164,15 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     // did not locate it, and for some there is genuinely no normative text. Making it a prefix means
     // the gap is a number that can go DOWN, instead of a sentence in a document nobody re-reads.
     val uncited = Differences.all.filter(_.scala.startsWith("UNCITED"))
-    println(s"[catalog] Scala-side citation gap: ${uncited.size} of ${Differences.all.size} " +
-      "language rows (diffed as `catalog(uncited)`, in every port's counts.tsv)")
-    val malformed = Differences.all
-      .filter(d => d.scala.toUpperCase.startsWith("UNCITED") && !d.scala.startsWith("UNCITED"))
-      .map(_.id.toString)
-    assertEquals(malformed, Nil,
+    println(
+      s"[catalog] Scala-side citation gap: ${uncited.size} of ${Differences.all.size} " +
+        "language rows (diffed as `catalog(uncited)`, in every port's counts.tsv)"
+    )
+    val malformed = Differences.all.filter(d => d.scala.toUpperCase.startsWith("UNCITED") && !d.scala.startsWith("UNCITED")).map(_.id.toString)
+    assertEquals(
+      malformed,
+      Nil,
       s"the marker is the literal prefix `UNCITED`; these rows spell it otherwise and are counted " +
-        s"as CITED: ${malformed.mkString(", ")}")
+        s"as CITED: ${malformed.mkString(", ")}"
+    )
   }

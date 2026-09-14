@@ -2,17 +2,16 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, Pipeline}
+import balticporter.tir.{ Decision, Pipeline }
 
-/** A `private` a CONSTRUCTOR writes is widened for a subclass THIS RUN CANNOT SEE —
-  * `ENGINE-LIMITS.md` C15. */
+/** A `private` a CONSTRUCTOR writes is widened for a subclass THIS RUN CANNOT SEE — `ENGINE-LIMITS.md` C15.
+  */
 class CtorFunnelExternalReplaySpec extends munit.FunSuite:
 
-  /** Every class below extends `Base` and its roots reach THREE DIFFERENT `Base` constructors,
-    * which is the shape `CtorFunnel` answers with shape (2) NO-ARG ROOT — the nilary root promoted
-    * and the fields left as declared members. Roots that all reach ONE parent constructor get a
-    * SYNTHESISED primary instead, and the fields become its `val`s, where there is no modifier for
-    * this pass to move and nothing to read off the emitted text. */
+  /** Every class below extends `Base` and its roots reach THREE DIFFERENT `Base` constructors, which is the shape `CtorFunnel` answers with shape (2) NO-ARG ROOT — the nilary root promoted and the
+    * fields left as declared members. Roots that all reach ONE parent constructor get a SYNTHESISED primary instead, and the fields become its `val`s, where there is no modifier for this pass to move
+    * and nothing to read off the emitted text.
+    */
   private val src =
     """package demo;
       |public class Base {
@@ -86,12 +85,11 @@ class CtorFunnelExternalReplaySpec extends munit.FunSuite:
   private val emitter = new TirEmitter(program)
   private val out     = emitter.emit
 
-  /** the emitted declaration line for one field, whichever class it is in — read off the emitted
-    * TEXT rather than off the planner's set, so the assertion fails against an engine that computes
-    * the set and never renders it. */
+  /** the emitted declaration line for one field, whichever class it is in — read off the emitted TEXT rather than off the planner's set, so the assertion fails against an engine that computes the set
+    * and never renders it.
+    */
   private def declOf(field: String): String =
-    out.linesIterator.find(l => l.contains(s"var $field:") || l.contains(s"val $field:"))
-      .getOrElse(fail(s"no declaration of `$field` in\n$out"))
+    out.linesIterator.find(l => l.contains(s"var $field:") || l.contains(s"val $field:")).getOrElse(fail(s"no declaration of `$field` in\n$out"))
 
   test("a private field a PARAMFUL constructor writes loses `private` — the C15 widening") {
     assert(!clue(declOf("n")).contains("private"), "the field a cross-module replay must reach")
@@ -108,24 +106,28 @@ class CtorFunnelExternalReplaySpec extends munit.FunSuite:
   }
 
   test("a private METHOD a constructor calls is NOT widened — a method is half of an override contract") {
-    assert(out.linesIterator.exists(_.trim.startsWith("private def init(")),
-           s"a widened method would oblige every override below it, in modules this run cannot reach:\n$out")
+    assert(
+      out.linesIterator.exists(_.trim.startsWith("private def init(")),
+      s"a widened method would oblige every override below it, in modules this run cannot reach:\n$out"
+    )
   }
 
   test("a PROTECTED member read through a non-`this` prefix is widened; one written via `this` is not") {
-    assert(!clue(declOf("viaPrefix")).contains("protected"),
-           "scala refuses a protected member at a prefix typed as the DECLARING class")
-    assert(clue(declOf("ownOnly")).contains("protected"),
-           "`this.p = 3` is a subclass's own access and needs nothing")
+    assert(
+      !clue(declOf("viaPrefix")).contains("protected"),
+      "scala refuses a protected member at a prefix typed as the DECLARING class"
+    )
+    assert(clue(declOf("ownOnly")).contains("protected"), "`this.p = 3` is a subclass's own access and needs nothing")
   }
 
   test("the widening is RECORDED, and its note says which run's subclass it is about") {
     // read off the emitter's OWN log — the value a run drains into `decisions.tsv` and the one
     // `NoteCoverageCheck` holds the emitted text against. The emitted note itself is rendered from
     // the log the RUN supplies, which a bare emitter does not have.
-    val rows = emitter.ownDecisions
-      .filter(d => d.kind == Decision.Kind.WidenedVisibility &&
-                   d.detail.get("cause").contains("ctor-replay-widening"))
+    val rows = emitter.ownDecisions.filter(d =>
+      d.kind == Decision.Kind.WidenedVisibility &&
+        d.detail.get("cause").contains("ctor-replay-widening")
+    )
     assertEquals(clue(rows).size, 2)
     assert(rows.forall(_.detail.get("scope").contains("dependent-modules")))
     assertEquals(rows.count(_.detail.get("from").contains("private")), 1)

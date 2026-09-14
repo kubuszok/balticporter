@@ -2,12 +2,12 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A STATIC member of a generic class cannot name the class's type parameters — java's rule, and
-  * scala's too once the member lands in the companion object. */
+/** A STATIC member of a generic class cannot name the class's type parameters — java's rule, and scala's too once the member lands in the companion object.
+  */
 class StaticTypeParamScopeSpec extends PortSuite:
 
-  /** the shape the fill exists for: a nested generic whose parameters are named like the enclosing
-    * class's, referenced RAW from both an instance and a static member of that class. */
+  /** the shape the fill exists for: a nested generic whose parameters are named like the enclosing class's, referenced RAW from both an instance and a static member of that class.
+    */
   private val nested =
     """package demo;
       |class Store<K, V> {

@@ -9,11 +9,10 @@ class PipelineOrderSpec extends munit.FunSuite:
       case l @ Tree.Literal(Constant.IntC(v), _, _) => l.copy(const = Constant.IntC(v + by))
       case other                                    => other
 
-  private class Named(val name: String, override val runsAfter: Set[String] = Set.empty,
-                      override val runsBefore: Set[String] = Set.empty) extends Phase
+  private class Named(val name: String, override val runsAfter: Set[String] = Set.empty, override val runsBefore: Set[String] = Set.empty) extends Phase
 
   private def literals(p: Program): List[Int] =
-    val out = collection.mutable.ListBuffer[Int]()
+    val out     = collection.mutable.ListBuffer[Int]()
     val collect = new Phase:
       def name = "collect"
       override def transformTerm(t: Term)(using Program): Term =
@@ -71,8 +70,7 @@ class PipelineOrderSpec extends munit.FunSuite:
     // so the moment `m` has run there is nothing left holding `z` back — and putting `a` in front of
     // it (which a FIFO does, because `a` was in the initial ready set and `z` was not) inverts a
     // declaration order the port wrote and nothing asked to invert.
-    val ps = List(new Named("z"), new Named("m", runsBefore = Set("z")), new Named("a"),
-                  new Named("k", runsAfter = Set("a")))
+    val ps = List(new Named("z"), new Named("m", runsBefore = Set("z")), new Named("a"), new Named("k", runsAfter = Set("a")))
     assertEquals(Pipeline.order(ps).map(_.name), List("m", "z", "a", "k"))
   }
 
@@ -90,22 +88,22 @@ class PipelineOrderSpec extends munit.FunSuite:
     val second = new Named("second")
     val last   = new Named("last")
     val before = Pipeline.order(List(first, second, last)).map(_.name)
-    val after  = Pipeline.order(List(new Named("added", runsBefore = Set("last")), first, second, last))
-      .map(_.name)
+    val after  = Pipeline.order(List(new Named("added", runsBefore = Set("last")), first, second, last)).map(_.name)
     assertEquals(before, List("first", "second", "last"))
     assertEquals(after, List("added", "first", "second", "last"))
     assertEquals(after.filter(before.contains), before)
   }
 
-  test("…and the general property: an INERT phase prepended with any subset of edges preserves the\n" +
-       "     relative order of every phase that was already there") {
+  test(
+    "…and the general property: an INERT phase prepended with any subset of edges preserves the\n" +
+      "     relative order of every phase that was already there"
+  ) {
     // stated as the property rather than as the one case, because the case is only the instance
     // somebody happened to hit. Three pipelines, each with a different constrained/unconstrained mix.
     val pipelines = List(
       List(new Named("c", runsBefore = Set("d")), new Named("b"), new Named("d"), new Named("a")),
-      List(new Named("p"), new Named("q", runsAfter = Set("p")), new Named("r"),
-           new Named("s", runsBefore = Set("r"))),
-      List(new Named("x", runsBefore = Set("y")), new Named("y"), new Named("z", runsAfter = Set("y"))),
+      List(new Named("p"), new Named("q", runsAfter = Set("p")), new Named("r"), new Named("s", runsBefore = Set("r"))),
+      List(new Named("x", runsBefore = Set("y")), new Named("y"), new Named("z", runsAfter = Set("y")))
     )
     pipelines.foreach { ps =>
       val before = Pipeline.order(ps).map(_.name)

@@ -1,12 +1,12 @@
 package balticporter.frontend.spoon
 
-import balticporter.core.{FrontendConfig, Substitutions}
+import balticporter.core.{ FrontendConfig, Substitutions }
 import balticporter.tir.*
 
 import java.nio.file.Files
 
-/** The [[MemberIndex]] the frontend publishes — and the ONE property that cannot be got anywhere
-  * else: '''a DROPPED member is still an answer.''' */
+/** The [[MemberIndex]] the frontend publishes — and the ONE property that cannot be got anywhere else: '''a DROPPED member is still an answer.'''
+  */
 class MemberIndexSpec extends munit.FunSuite:
 
   private def tree(subs: Substitutions)(files: (String, String)*): Program =
@@ -30,7 +30,7 @@ class MemberIndexSpec extends munit.FunSuite:
       |}""".stripMargin
 
   test("every executable the frontend WALKED is in the index, dropped or not") {
-    val p = tree(Substitutions.none)(source)
+    val p    = tree(Substitutions.none)(source)
     val keys = p.members.all.map(_._1.render).toSet
     assert(clue(keys).contains("com.demo.Reflect#<init>()"))
     assert(keys.contains("com.demo.Reflect#<init>(int,Class)"))
@@ -45,13 +45,17 @@ class MemberIndexSpec extends munit.FunSuite:
   }
 
   test("a DROPPED member is in the index with NO symbol — and nothing in the program has its name") {
-    val p = tree(Substitutions(dropMethods = Set(
-      "com.demo.Reflect#make(Class)",              // one overload of two
-      "com.demo.Reflect#<init>(int,Class)",        // a constructor, droppable only precisely
-    )))(source)
+    val p = tree(
+      Substitutions(
+        dropMethods = Set(
+          "com.demo.Reflect#make(Class)", // one overload of two
+          "com.demo.Reflect#<init>(int,Class)" // a constructor, droppable only precisely
+        )
+      )
+    )(source)
 
     val dropped = p.members.exact(MemberKey.of("com.demo.Reflect#make(Class)")).head
-    assertEquals(dropped.sym, scala.None)   // THE POINT: nothing to resolve against the program
+    assertEquals(dropped.sym, scala.None) // THE POINT: nothing to resolve against the program
     assertEquals(dropped.dropped, true)
     val ctor = p.members.exact(MemberKey.of("com.demo.Reflect#<init>(int,Class)")).head
     assertEquals(ctor.dropped, true)
@@ -70,7 +74,7 @@ class MemberIndexSpec extends munit.FunSuite:
   }
 
   test("a BARE key drops every overload, and the index says so for each") {
-    val p = tree(Substitutions(dropMethods = Set("com.demo.Reflect#make")))(source)
+    val p    = tree(Substitutions(dropMethods = Set("com.demo.Reflect#make")))(source)
     val both = p.members.overloads("com.demo.Reflect", "make")
     assertEquals(both.size, 2)
     assert(both.forall(_._2.dropped), clue(both.map(x => x._1.render -> x._2.dropped)))
@@ -83,15 +87,17 @@ class MemberIndexSpec extends munit.FunSuite:
     // of the index, the binder found the symbol in the program, found the owner among the walked
     // types, and concluded STRUCTURALLY that the engine had minted it — refusing a hand-written
     // Java block as `SyntheticTarget`, which is the opposite of true.
-    val p = tree(Substitutions.none)("com/demo/Init.java" ->
-      """package com.demo;
-        |public class Init {
-        |  public static int a;
-        |  public static int b;
-        |  static { a = 1; }
-        |  static { b = 2; }
-        |  { }
-        |}""".stripMargin)
+    val p = tree(Substitutions.none)(
+      "com/demo/Init.java" ->
+        """package com.demo;
+          |public class Init {
+          |  public static int a;
+          |  public static int b;
+          |  static { a = 1; }
+          |  static { b = 2; }
+          |  { }
+          |}""".stripMargin
+    )
     val clinits = p.members.exact(MemberKey.of("com.demo.Init#<clinit>()"))
     // TWO static blocks, TWO entries: they share one identity in this grammar, and a map keyed by
     // it would have kept one of them without saying so.
@@ -111,6 +117,8 @@ class MemberIndexSpec extends munit.FunSuite:
 
   test("`overloads` is the ambiguity report's input and is stably ordered") {
     val p = tree(Substitutions.none)(source)
-    assertEquals(p.members.overloads("com.demo.Reflect", "make").map(_._1.render),
-      List("com.demo.Reflect#make(Class)", "com.demo.Reflect#make(String)"))
+    assertEquals(
+      p.members.overloads("com.demo.Reflect", "make").map(_._1.render),
+      List("com.demo.Reflect#make(Class)", "com.demo.Reflect#make(String)")
+    )
   }

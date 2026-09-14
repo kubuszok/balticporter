@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** java's two `Set`-typed VIEWS of a map — `keySet()` and `entrySet()` — at the type the retyping
-  * declares. */
+/** java's two `Set`-typed VIEWS of a map — `keySet()` and `entrySet()` — at the type the retyping declares.
+  */
 class CollectionsMapViewsSpec extends PortSuite:
 
   private val src =
@@ -44,8 +44,7 @@ class CollectionsMapViewsSpec extends PortSuite:
     // the view is a `Kind.Set` value like any other, so `coerce` reaches its ordinary `fromSet`
     // factory. That composition is the whole argument for fixing this at the rewrite: the seam this
     // used to leave was `CollectionBoundaryCheck`'s standing "shim against scala" example.
-    assertEmits(p,
-      "balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.keySetView(this.m))")
+    assertEmits(p, "balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.keySetView(this.m))")
   }
 
   test("an ARGUMENT slot takes it with nothing added") {

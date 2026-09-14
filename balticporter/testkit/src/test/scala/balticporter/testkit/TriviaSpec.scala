@@ -2,8 +2,8 @@ package balticporter.testkit
 
 import balticporter.tir.*
 
-/** The comment-preservation spec, end to end: Java source → `SpoonTir` → `Pipeline` (with a phase
-  * that really rewrites, to prove pass-through) → `TirEmitter`. */
+/** The comment-preservation spec, end to end: Java source → `SpoonTir` → `Pipeline` (with a phase that really rewrites, to prove pass-through) → `TirEmitter`.
+  */
 class TriviaSpec extends munit.FunSuite:
 
   private val java =
@@ -51,9 +51,9 @@ class TriviaSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** A phase that really rewrites a term: every `3` becomes `4`. If `StandardTraversal` unwrapped
-    * `Tree.Commented` instead of rebuilding it, the literal would still change and every comment
-    * inside a body would disappear — so this is what makes "the comments survived" mean something. */
+  /** A phase that really rewrites a term: every `3` becomes `4`. If `StandardTraversal` unwrapped `Tree.Commented` instead of rebuilding it, the literal would still change and every comment inside a
+    * body would disappear — so this is what makes "the comments survived" mean something.
+    */
   private val bumpThrees = new Phase:
     def name = "trivia-spec/bump-threes"
     override def transformTerm(t: Term)(using Program): Term = t match
@@ -157,7 +157,7 @@ class TriviaSpec extends munit.FunSuite:
       "Adds one to everything.",
       "leading comment on a statement",
       "a comment on a NESTED statement",
-      "hoisted out of an expression",
+      "hoisted out of an expression"
     )
     each.foreach(c => assertEquals(occurrences(out, c), 1, s"'$c' in:\n$out"))
   }
@@ -174,9 +174,9 @@ class TriviaSpec extends munit.FunSuite:
 
   test("emitted comment delimiters are balanced for Scala's NESTING block comments") {
     // strip string literals first: `"*/ is not a delimiter in a string"` is code, not a comment.
-    val code  = out.replaceAll("\"(\\\\.|[^\"\\\\])*\"", "\"\"")
-    var depth = 0
-    var i     = 0
+    val code   = out.replaceAll("\"(\\\\.|[^\"\\\\])*\"", "\"\"")
+    var depth  = 0
+    var i      = 0
     var inLine = false
     while i < code.length do
       if inLine then
@@ -207,11 +207,10 @@ class TriviaSpec extends munit.FunSuite:
 
   // ---- the no-comment case is byte-identical to the pre-trivia world ----
 
-  /** The emitted probe, written to this module's own `target/trivia-probe/` on every run, so an
-    * operator can put a real compiler over it (`scala-cli compile --server=false
-    * testkit/target/trivia-probe`). "Comments cannot break syntax" is a claim about a PARSER, and
-    * the specs above are string assertions; this is how the claim gets checked by the only
-    * authority on it. */
+  /** The emitted probe, written to this module's own `target/trivia-probe/` on every run, so an operator can put a real compiler over it (`scala-cli compile --server=false
+    * testkit/target/trivia-probe`). "Comments cannot break syntax" is a claim about a PARSER, and the specs above are string assertions; this is how the claim gets checked by the only authority on
+    * it.
+    */
   test("emitted probe is written for a real compiler") {
     val p = _root_.java.nio.file.Path.of("target", "trivia-probe", "Probe.scala")
     _root_.java.nio.file.Files.createDirectories(p.getParent)
@@ -220,10 +219,10 @@ class TriviaSpec extends munit.FunSuite:
   }
 
   test("a source with no comments mints no Commented node and no leading trivia") {
-    val bare = PortFixture.parse("package demo; public class Bare { public int f(int n) { int t = n; return t; } }")
+    val bare      = PortFixture.parse("package demo; public class Bare { public int f(int n) { int t = n; return t; } }")
     given Program = bare
     var wrapped   = 0
-    val scan = new Phase:
+    val scan      = new Phase:
       def name = "trivia-spec/count-wrappers"
       override def transformTerm(t: Term)(using Program): Term =
         t match { case _: Tree.Commented => wrapped += 1; case _ => () }

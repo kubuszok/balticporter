@@ -6,8 +6,8 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-/** The four `java.util` rows whose absence off the JVM is a LINK error and whose answer is not a
-  * stdlib type: `EnumMap`, `EnumSet` and the three primitive `Optional`s. */
+/** The four `java.util` rows whose absence off the JVM is a LINK error and whose answer is not a stdlib type: `EnumMap`, `EnumSet` and the three primitive `Optional`s.
+  */
 class CollectionsEnumOptionalSpec extends PortSuite:
 
   private val src =
@@ -76,8 +76,8 @@ class CollectionsEnumOptionalSpec extends PortSuite:
   test("a primitive Optional becomes the Option ALIAS, and its members are renamed") {
     assert(clue(out).contains("balticporter.runtime.JavaOptionalInt"))
     assert(!out.contains("java.util.OptionalInt"))
-    assert(clue(out).contains("this.limit.isDefined"))     // isPresent, PARAMETERLESS
-    assert(clue(out).contains("this.limit.get"))           // getAsInt, likewise
+    assert(clue(out).contains("this.limit.isDefined")) // isPresent, PARAMETERLESS
+    assert(clue(out).contains("this.limit.get")) // getAsInt, likewise
   }
 
   test("`orElse` is the ONE member of that family that is not a rename — java evaluates its default") {

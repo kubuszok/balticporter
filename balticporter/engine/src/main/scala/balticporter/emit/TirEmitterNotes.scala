@@ -1,7 +1,7 @@
 package balticporter.emit
 
-import balticporter.catalog.{CatalogLog, JS, Obligations, Rendering, Typing}
-import balticporter.core.{EngineInfo, Provenance, Substituted}
+import balticporter.catalog.{ CatalogLog, JS, Obligations, Rendering, Typing }
+import balticporter.core.{ EngineInfo, Provenance, Substituted }
 import balticporter.tir.*
 
 /** Source map / trivia recovery / porter-note bookkeeping / statics & naming helpers split out of TirEmitter (context diet S1). */
@@ -11,7 +11,7 @@ private[emit] trait TirEmitterNotes:
   // Source map: member -> emitted line range -> Java Origin. // DESIGN.md §6.3
   // Positions recovered by searching finished text for remembered slot strings (pre-order).
 
-  private[emit] final class Slot(val member: String, val kind: String, val origin: Origin, val indent: Int):
+  final private[emit] class Slot(val member: String, val kind: String, val origin: Origin, val indent: Int):
     var text: String = ""
   private[emit] val slots   = collection.mutable.ArrayBuffer.empty[Slot]
   private[emit] val stmtSeq = collection.mutable.Map.empty[String, Int]
@@ -29,36 +29,39 @@ private[emit] trait TirEmitterNotes:
   private[emit] def recordMemberShape(key: String, st: Statement): Unit =
     val symId = st match
       case d: Definition => Some(d.symbol)
-      case _             => scala.None
+      case _ => scala.None
     symId.foreach { id =>
       val m = sym(id)
       recordedMemberShapes(key) = Surface.MemberShape(
         // Emitted simple name, only where it differs from Java's.
-        name      = renamedMembers.get(id).filter(_ != m.name).map(_ => m.name).getOrElse(""),
-        vis       = visOf(m, currentOwnerSym),
+        name = renamedMembers.get(id).filter(_ != m.name).map(_ => m.name).getOrElse(""),
+        vis = visOf(m, currentOwnerSym),
         // Static members land in the companion.
         placement = if m.flags.isStatic then "companion" else "class",
         // Whether this member is a collapsed bean pair and into which shape; a `def` emitted with NO
         // parameter clause is `parenless` whatever phase dropped it — read off the DECLARATION (K51 x).
-        form      = collapsedForms.getOrElse(id, st match
-          case d: Tree.DefDef if d.paramss.isEmpty && !isInitBlock(d) => "parenless"
-          case _                                                     => ""),
+        form = collapsedForms.getOrElse(id,
+                                        st match
+                                          case d: Tree.DefDef if d.paramss.isEmpty && !isInitBlock(d) => "parenless"
+                                          case _ => ""
+        )
       )
     }
 
   /** Collapsed bean properties by symbol, from phase decisions (not emitter's own renames). */
   private[emit] lazy val collapsedForms: Map[SymId, String] =
     notes.all.iterator.collect {
-      case d if d.kind == Decision.Kind.CollapsedProperty && d.subject != SymId.None &&
-                d.detail.get("form").exists(_.nonEmpty) =>
+      case d
+          if d.kind == Decision.Kind.CollapsedProperty && d.subject != SymId.None &&
+            d.detail.get("form").exists(_.nonEmpty) =>
         d.subject -> d.detail("form")
       // NullaryArity: dropped `()` is `form=parenless`.
       case d if d.kind == Decision.Kind.ParenlessConversion && d.subject != SymId.None =>
         d.subject -> "parenless"
     }.toMap
 
-  /** Stable member identity: `owner#name(paramTypes)` for defs, `owner#name` for others,
-    * ordinal for unsymboled statements. */
+  /** Stable member identity: `owner#name(paramTypes)` for defs, `owner#name` for others, ordinal for unsymboled statements.
+    */
   private[emit] def memberKey(s: Statement): String =
     val owner = classStack.lastOption.map(x => sym(x).fullName).getOrElse("?")
     s match
@@ -76,7 +79,7 @@ private[emit] trait TirEmitterNotes:
       if isInitBlock(d) then "init" else if sym(d.symbol).name == "<init>" then "ctor" else "def"
     case _: Tree.ValDef  => "val"
     case _: Tree.TypeDef => "type"
-    case _               => "stmt"
+    case _ => "stmt"
 
   /** Simple type rendering for overload disambiguation in member keys. */
   private[emit] def shortTpe(t: TypeRepr): String = t match
@@ -92,55 +95,55 @@ private[emit] trait TirEmitterNotes:
   private[emit] def recoverTrivia(cd: Tree.ClassDef, text: String): String =
     val path = cd.origin.javaPath
     if path.isEmpty || path == "<synthetic>" || path == "<unknown>" then text
-    else javaSource(path) match
-      case scala.None                 => text
-      case Some(java) if java.isEmpty => text
-      case Some(java) =>
-        // WHICH comments are this unit's. A java file may declare several top-level types and
-        // becomes that many scala files; without a window each of them would recover the others'
-        // comments, and the same comment would land in every one.
-        val here    = program.units.filter(_.origin.javaPath == path).sortBy(_.origin.line)
-        val idx     = here.indexWhere(_.symbol == cd.symbol)
-        val from    = if idx <= 0 then 0 else cd.origin.line
-        val until   = if idx >= 0 && idx + 1 < here.size then here(idx + 1).origin.line else Int.MaxValue
-        val members = anchorMembers.getOrElse(CommentAnchor.key(path), Nil)
-        val lines   = java.linesIterator.toArray
-        // PRESENCE is tested through the check's own normalisation — the shared function, never a
-        // fork of it, or the emitter and the check disagree about what "already there" means. And
-        // the engine's own commentary is stripped first: a porter note names an upstream FQN on
-        // purpose, and a marker names an upstream PATH, so either can match a comment that is not
-        // actually in the file.
-        val hay  = TriviaCheck.normalize(TriviaMark.stripAll(text))
-        val seen = collection.mutable.Set.empty[String]
-        val put  = collection.mutable.ListBuffer.empty[(Int, String)]
-        balticporter.core.CommentScanner.scanAt(java).foreach { a =>
-          val line = a.line(java)
-          val body = TriviaCheck.normalize(a.text)
-          if body.nonEmpty && line >= from && line < until && !hay.contains(body) && seen.add(body) then
-            val endLine = line + a.text.count(_ == '\n')
-            val owner   = CommentAnchor.owner(lines, line, endLine, members)
-            // a member the port drops has no declaration for its javadoc to sit above, and putting
-            // it in the file anyway would document a member that is not there.
-            if owner.forall(_.emitted) then
-              val at   = slots.lastIndexWhere(s => s.origin.javaPath == path && s.origin.line <= line)
-              val lvl  = if at >= 0 then slots(at).indent else 0
-              val kind = a.kind match
-                case balticporter.core.TriviaKind.Line    => TriviaKind.Line
-                case balticporter.core.TriviaKind.Block   => TriviaKind.Block
-                case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
-              val where = provenance.map(p => sourcePathOf(Origin(path, line, 0), p)).getOrElse(path)
-              // …rendered through `triviaText`, so §4.58's rules hold for a recovered comment
-              // exactly as for a placed one: a block comment Scala would NEST on goes out
-              // line-by-line as `//`, and the indent is re-derived rather than reproduced.
-              put += at -> (ind(lvl) + TriviaMark.render(where, line) + "\n" + triviaText(Trivia(kind, a.text), lvl))
-        }
-        if put.isEmpty then text else splice(text, put.toList)
+    else
+      javaSource(path) match
+        case scala.None                 => text
+        case Some(java) if java.isEmpty => text
+        case Some(java)                 =>
+          // WHICH comments are this unit's. A java file may declare several top-level types and
+          // becomes that many scala files; without a window each of them would recover the others'
+          // comments, and the same comment would land in every one.
+          val here    = program.units.filter(_.origin.javaPath == path).sortBy(_.origin.line)
+          val idx     = here.indexWhere(_.symbol == cd.symbol)
+          val from    = if idx <= 0 then 0 else cd.origin.line
+          val until   = if idx >= 0 && idx + 1 < here.size then here(idx + 1).origin.line else Int.MaxValue
+          val members = anchorMembers.getOrElse(CommentAnchor.key(path), Nil)
+          val lines   = java.linesIterator.toArray
+          // PRESENCE is tested through the check's own normalisation — the shared function, never a
+          // fork of it, or the emitter and the check disagree about what "already there" means. And
+          // the engine's own commentary is stripped first: a porter note names an upstream FQN on
+          // purpose, and a marker names an upstream PATH, so either can match a comment that is not
+          // actually in the file.
+          val hay  = TriviaCheck.normalize(TriviaMark.stripAll(text))
+          val seen = collection.mutable.Set.empty[String]
+          val put  = collection.mutable.ListBuffer.empty[(Int, String)]
+          balticporter.core.CommentScanner.scanAt(java).foreach { a =>
+            val line = a.line(java)
+            val body = TriviaCheck.normalize(a.text)
+            if body.nonEmpty && line >= from && line < until && !hay.contains(body) && seen.add(body) then
+              val endLine = line + a.text.count(_ == '\n')
+              val owner   = CommentAnchor.owner(lines, line, endLine, members)
+              // a member the port drops has no declaration for its javadoc to sit above, and putting
+              // it in the file anyway would document a member that is not there.
+              if owner.forall(_.emitted) then
+                val at   = slots.lastIndexWhere(s => s.origin.javaPath == path && s.origin.line <= line)
+                val lvl  = if at >= 0 then slots(at).indent else 0
+                val kind = a.kind match
+                  case balticporter.core.TriviaKind.Line    => TriviaKind.Line
+                  case balticporter.core.TriviaKind.Block   => TriviaKind.Block
+                  case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
+                val where = provenance.map(p => sourcePathOf(Origin(path, line, 0), p)).getOrElse(path)
+                // …rendered through `triviaText`, so §4.58's rules hold for a recovered comment
+                // exactly as for a placed one: a block comment Scala would NEST on goes out
+                // line-by-line as `//`, and the indent is re-derived rather than reproduced.
+                put += at -> (ind(lvl) + TriviaMark.render(where, line) + "\n" + triviaText(Trivia(kind, a.text), lvl))
+          }
+          if put.isEmpty then text else splice(text, put.toList)
 
-  /** Insert each rendered block after the slot it anchors on (`-1` = after everything the unit
-    * emitted). Slot positions come from the SAME forward-cursor search `srcMapOf` uses, so an
-    * anchor and a source-map entry can never disagree. An ENCLOSING slot gains the insertion too
-    * (slots nest, so inserting after a nested member falls inside the enclosing class's recorded
-    * string — measured as 2 UNLOCATABLE members before this was fixed). */
+  /** Insert each rendered block after the slot it anchors on (`-1` = after everything the unit emitted). Slot positions come from the SAME forward-cursor search `srcMapOf` uses, so an anchor and a
+    * source-map entry can never disagree. An ENCLOSING slot gains the insertion too (slots nest, so inserting after a nested member falls inside the enclosing class's recorded string — measured as 2
+    * UNLOCATABLE members before this was fixed).
+    */
   private[emit] def splice(text: String, put: List[(Int, String)]): String =
     val starts = Array.fill(slots.size)(-1)
     val ends   = Array.fill(slots.size)(-1)
@@ -150,13 +153,15 @@ private[emit] trait TirEmitterNotes:
         val at = text.indexOf(s.text, cursor)
         if at >= 0 then { cursor = at + 1; starts(k) = at; ends(k) = at + s.text.length }
     }
-    val ins = put.zipWithIndex.map { case ((slot, rendered), n) =>
-      val off = if slot >= 0 && slot < ends.length && ends(slot) >= 0 then ends(slot) else text.length
-      (off, n, "\n" + rendered)
-    // back to front, so an earlier insertion cannot move a later offset — for the unit text and
-    // for each slot's own copy alike. Stable within one offset: several comments anchored on one
-    // member keep their source order.
-    }.sortBy((off, n, _) => (-off, -n))
+    val ins = put.zipWithIndex
+      .map { case ((slot, rendered), n) =>
+        val off = if slot >= 0 && slot < ends.length && ends(slot) >= 0 then ends(slot) else text.length
+        (off, n, "\n" + rendered)
+      // back to front, so an earlier insertion cannot move a later offset — for the unit text and
+      // for each slot's own copy alike. Stable within one offset: several comments anchored on one
+      // member keep their source order.
+      }
+      .sortBy((off, n, _) => (-off, -n))
     val sb = new java.lang.StringBuilder(text)
     ins.foreach { (off, _, s) =>
       sb.insert(off, s)
@@ -168,9 +173,9 @@ private[emit] trait TirEmitterNotes:
     }
     sb.toString
 
-  /** Locate every remembered member in the finished unit text. The unit itself is always entry
-    * one, spanning the whole file: a line that falls between members (a brace, a blank line, the
-    * package clause) then still resolves to the right Java FILE instead of to nothing. */
+  /** Locate every remembered member in the finished unit text. The unit itself is always entry one, spanning the whole file: a line that falls between members (a brace, a blank line, the package
+    * clause) then still resolves to the right Java FILE instead of to nothing.
+    */
   private[emit] def srcMapOf(unit: String, cd: Tree.ClassDef, text: String): List[SrcMap.Entry] =
     val root   = SrcMap.sourceRootOf(unit, cd.origin.javaPath)
     val starts = collection.mutable.ArrayBuffer(0)
@@ -182,9 +187,17 @@ private[emit] trait TirEmitterNotes:
       while lo < hi do { val mid = (lo + hi + 1) / 2; if ls(mid) <= off then lo = mid else hi = mid - 1 }
       lo + 1
     val out = collection.mutable.ListBuffer(
-      SrcMap.Entry(unit, unit, "class", 1, lineOf(math.max(0, text.length - 1)),
-                   SrcMap.relativise(cd.origin.javaPath, root), cd.origin.line,
-                   TirPrinter.sha256(text).take(16)))
+      SrcMap.Entry(
+        unit,
+        unit,
+        "class",
+        1,
+        lineOf(math.max(0, text.length - 1)),
+        SrcMap.relativise(cd.origin.javaPath, root),
+        cd.origin.line,
+        TirPrinter.sha256(text).take(16)
+      )
+    )
     var cursor = 0
     slots.foreach { s =>
       if s.text.nonEmpty then
@@ -196,20 +209,26 @@ private[emit] trait TirEmitterNotes:
         else
           cursor = at + 1
           val st = lineOf(at)
-          out += SrcMap.Entry(unit, s.member, s.kind, st, st + s.text.count(_ == '\n'),
-                              SrcMap.relativise(s.origin.javaPath, root), s.origin.line,
-                              TirPrinter.sha256(s.text).take(16))
+          out += SrcMap.Entry(
+            unit,
+            s.member,
+            s.kind,
+            st,
+            st + s.text.count(_ == '\n'),
+            SrcMap.relativise(s.origin.javaPath, root),
+            s.origin.line,
+            TirPrinter.sha256(s.text).take(16)
+          )
     }
     out.toList
 
-  /** The attribution + do-not-edit banner, in the same shape the BIR printer has always emitted —
-    * one header, so a port that still runs both backends produces one kind of file. Empty when no
-    * [[Provenance]] was given. The "Ported from" line names the ORIGINAL JAVA FILE from the unit's
-    * own `Origin`, never reconstructed from its package: a renamed/nested type does not live at
-    * the path its FQN suggests, and `Origin` is what still points at the upstream file. */
+  /** The attribution + do-not-edit banner, in the same shape the BIR printer has always emitted — one header, so a port that still runs both backends produces one kind of file. Empty when no
+    * [[Provenance]] was given. The "Ported from" line names the ORIGINAL JAVA FILE from the unit's own `Origin`, never reconstructed from its package: a renamed/nested type does not live at the path
+    * its FQN suggests, and `Origin` is what still points at the upstream file.
+    */
   private[emit] def header(cd: Tree.ClassDef): String = provenance match
     case scala.None => ""
-    case Some(p) =>
+    case Some(p)    =>
       s"""|/*
           | * Generated by Baltic Porter ${EngineInfo.version} — DO NOT EDIT; regenerate instead.
           | *
@@ -219,12 +238,11 @@ private[emit] trait TirEmitterNotes:
           | */
           |""".stripMargin
 
-  /** Repo-relative source path for headers. Compares via `toRealPath` (CLAUDE.md §5.4).
-    * Falls back to raw path with warning when unconfigured. */
+  /** Repo-relative source path for headers. Compares via `toRealPath` (CLAUDE.md §5.4). Falls back to raw path with warning when unconfigured.
+    */
   private[emit] def sourcePathOf(o: Origin, p: Provenance): String =
     val raw = o.javaPath
-    if raw.isEmpty || raw == "<synthetic>" || raw == "<unknown>" then
-      "<unknown — the frontend recorded no source origin for this unit>"
+    if raw.isEmpty || raw == "<synthetic>" || raw == "<unknown>" then "<unknown — the frontend recorded no source origin for this unit>"
     else
       val root   = p.sourceRoot.stripSuffix("/")
       val marker = p.sourcePathPrefix.stripSuffix("/")
@@ -238,8 +256,7 @@ private[emit] trait TirEmitterNotes:
           else scala.None
         else scala.None
       val rel2 = rel.orElse {
-        if marker.nonEmpty && raw.contains(marker + "/") then
-          Some(raw.substring(raw.indexOf(marker + "/") + marker.length + 1))
+        if marker.nonEmpty && raw.contains(marker + "/") then Some(raw.substring(raw.indexOf(marker + "/") + marker.length + 1))
         else scala.None
       }
       rel2 match
@@ -262,8 +279,8 @@ private[emit] trait TirEmitterNotes:
       case _                           => None
     allDeclaredClasses.foreach { cd =>
       cd.parents.foreach {
-        case tt: TypeTree => headSym(tt.tpe).foreach(acc += _)
-        case term: Term   => headSym(term.tpe).foreach(acc += _)
+        case tt:   TypeTree => headSym(tt.tpe).foreach(acc += _)
+        case term: Term     => headSym(term.tpe).foreach(acc += _)
       }
     }
     acc.toSet
@@ -276,20 +293,20 @@ private[emit] trait TirEmitterNotes:
       case TypeRepr.AppliedType(tc, _) => headSym(tc)
       case _                           => None
     val collect = new Phase:
-      def name: String = "emit/instantiated-types"
-      override def transformNew(t: Tree.New)(using Program): Term =
+      def name:                                              String = "emit/instantiated-types"
+      override def transformNew(t: Tree.New)(using Program): Term   =
         headSym(t.tpt.tpe).foreach(acc += _)
         t
     given Program = program
     program.units.foreach(u => StandardTraversal.mapClassDef(collect, u))
     acc.toSet
 
-  /** Type symbols named in type positions elsewhere (declaration types + class literals).
-    * Prevents collapsing to `object`. Excludes self-references via owner chain;
-    * class literals in own unit DO count (log-tag idiom). */
+  /** Type symbols named in type positions elsewhere (declaration types + class literals). Prevents collapsing to `object`. Excludes self-references via owner chain; class literals in own unit DO
+    * count (log-tag idiom).
+    */
   private[emit] lazy val typeNamedElsewhere: Set[SymId] =
     given Program = program
-    val out = collection.mutable.Set[SymId]()
+    val out       = collection.mutable.Set[SymId]()
 
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s)      => Some(s)
@@ -298,20 +315,19 @@ private[emit] trait TirEmitterNotes:
 
     /** Enclosing symbols from `s` up through its owner chain. */
     def enclosing(s: SymId): Set[SymId] =
-      Iterator.iterate(Option(s))(_.flatMap(program.symbolOf(_).map(_.owner)))
-        .take(64).takeWhile(o => o.isDefined && o.get != SymId.None).flatten.toSet
+      Iterator.iterate(Option(s))(_.flatMap(program.symbolOf(_).map(_.owner))).take(64).takeWhile(o => o.isDefined && o.get != SymId.None).flatten.toSet
 
     def typesIn(t: TypeRepr): Set[SymId] =
-      val seen = collection.mutable.Set[SymId]()
+      val seen    = collection.mutable.Set[SymId]()
       val collect = new Phase:
-        def name: String = "emit/type-named-elsewhere"
+        def name:                                               String   = "emit/type-named-elsewhere"
         override def transformType(x: TypeRepr)(using Program): TypeRepr =
           headSym(x).foreach(seen += _); x
       StandardTraversal.mapType(collect, t)
       seen.toSet
 
     // (1) declaration types, every symbol the program has.
-    program.symbols.all.foreach { s => out ++= typesIn(s.info) -- enclosing(s.id) }
+    program.symbols.all.foreach(s => out ++= typesIn(s.info) -- enclosing(s.id))
 
     // (2) class literals (own unit NOT subtracted -- log-tag idiom).
     program.units.foreach { u =>
@@ -331,15 +347,20 @@ private[emit] trait TirEmitterNotes:
         val fqn = program.symbolOf(s).map(_.fullName).getOrElse("?")
         surface.typeShape(s) match
           case Surface.Answer.Published(shape, module) if shape.form == "object" =>
-            List(Surface.Gap(fqn,
-              s"$module emitted this type as a bare `object` (its every member is static), and this " +
-                "module names it in a TYPE position. An `object` supplies a VALUE and no value is a " +
-                "type, so the two modules cannot compile together",
-              Some(module), fatal = false,
-              fix = s"§1(b) PER-LIBRARY, IN THE BASE: nothing in this module can repair it — $module is " +
-                "already emitted. Either that module keeps the type a `class` (its statics move to a " +
-                "companion, so every `X.member` call site is unchanged), or this module stops naming it " +
-                "as a type"))
+            List(
+              Surface.Gap(
+                fqn,
+                s"$module emitted this type as a bare `object` (its every member is static), and this " +
+                  "module names it in a TYPE position. An `object` supplies a VALUE and no value is a " +
+                  "type, so the two modules cannot compile together",
+                Some(module),
+                fatal = false,
+                fix = s"§1(b) PER-LIBRARY, IN THE BASE: nothing in this module can repair it — $module is " +
+                  "already emitted. Either that module keeps the type a `class` (its statics move to a " +
+                  "companion, so every `X.member` call site is unchanged), or this module stops naming it " +
+                  "as a type"
+              )
+            )
           // Non-published types are ordinary (JDK) and not reported here.
           case _ => Nil
       }
@@ -352,9 +373,9 @@ private[emit] trait TirEmitterNotes:
   /** head symbols of a class's parent types (extends + mixins). */
   private[emit] def parentSymsOf(cd: Tree.ClassDef): List[SymId] =
     def headSym(t: TypeRepr): Option[SymId] = t match
-      case TypeRepr.TypeRef(_, s) => Some(s)
+      case TypeRepr.TypeRef(_, s)      => Some(s)
       case TypeRepr.AppliedType(tc, _) => headSym(tc)
-      case _ => None
+      case _                           => None
     cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case term: Term => headSym(term.tpe) }
 
   /** Statics for a type: reads base's published `statics=` for non-owned types. // DESIGN.md §8.3 */
@@ -362,16 +383,21 @@ private[emit] trait TirEmitterNotes:
     if surface.owns(s) then scala.None
     else
       surface.typeShape(s) match
-        case Surface.Answer.Own                 => scala.None
-        case Surface.Answer.Published(shape, _) => Some(shape.statics.map(esc).toSet)
+        case Surface.Answer.Own                  => scala.None
+        case Surface.Answer.Published(shape, _)  => Some(shape.statics.map(esc).toSet)
         case Surface.Answer.Unknown(why, module) =>
-          surface.gap(Surface.Gap(sym(s).fullName,
-            why + " — this run re-exports its companion, so it needs the static NAMES that companion " +
-              "delivers; the local derivation over the base's java stands, and it does not see a " +
-              "static the base renamed or dropped",
-            module, fatal = false,
-            fix = "§1(b) PER-LIBRARY: declare the module that emits this type as a base " +
-              "(`base = \"…\"`) and re-run it with this engine so its port map carries `statics=`"))
+          surface.gap(
+            Surface.Gap(
+              sym(s).fullName,
+              why + " — this run re-exports its companion, so it needs the static NAMES that companion " +
+                "delivers; the local derivation over the base's java stands, and it does not see a " +
+                "static the base renamed or dropped",
+              module,
+              fatal = false,
+              fix = "§1(b) PER-LIBRARY: declare the module that emits this type as a base " +
+                "(`base = \"…\"`) and re-run it with this engine so its port map carries `statics=`"
+            )
+          )
           scala.None
 
   /** our-own types that have at least one `static` member (so a companion `object` holds it). */
@@ -394,15 +420,15 @@ private[emit] trait TirEmitterNotes:
           case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name)
           // a SPLICED companion member has no symbol; its name rides on the node (§1(b))
           case o: Tree.Opaque if o.companionMember.isDefined => esc(o.companionMember.get)
-        }.toSet)
+        }.toSet
+      )
     allDeclaredClasses.foreach(scan); m.toMap
 
   /** Static names delivered by companion re-export of `s`, mapped to declaring type. */
   private[emit] def staticOwnersOf(s: SymId, seen: Set[SymId] = Set.empty): Map[String, SymId] =
     if seen(s) then Map.empty
     else
-      val inherited = parentsBySym.getOrElse(s, Nil)
-        .foldLeft(Map.empty[String, SymId])((acc, p) => staticOwnersOf(p, seen + s) ++ acc)
+      val inherited = parentsBySym.getOrElse(s, Nil).foldLeft(Map.empty[String, SymId])((acc, p) => staticOwnersOf(p, seen + s) ++ acc)
       inherited ++ ownStaticsBySym.getOrElse(s, Set.empty).map(_ -> s).toMap
 
   /** Each type's static members by emitted name, with their symbol. */
@@ -411,8 +437,9 @@ private[emit] trait TirEmitterNotes:
     def scan(cd: Tree.ClassDef): Unit =
       // Exclude static initializer blocks (`<clinit>` cannot be a Scala identifier).
       m(cd.symbol) = cd.body.collect {
-        case d: Definition if sym(d.symbol).flags.isStatic &&
-          (!d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef])) =>
+        case d: Definition
+            if sym(d.symbol).flags.isStatic &&
+              (!d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef])) =>
           esc(sym(d.symbol).name) -> d.symbol
       }.toMap
     allDeclaredClasses.foreach(scan); m.toMap
@@ -420,8 +447,7 @@ private[emit] trait TirEmitterNotes:
   /** Non-public statics to exclude from companion re-export (prevents visibility leak). */
   private[emit] def nonPublicStatics(delivered: Map[String, SymId]): Set[String] =
     delivered.collect {
-      case (n, owner) if ownStaticSymsBySym.getOrElse(owner, Map.empty).get(n)
-        .exists(id => visPlan.getOrElse(id, Visibility.Vis.Public) != Visibility.Vis.Public) => n
+      case (n, owner) if ownStaticSymsBySym.getOrElse(owner, Map.empty).get(n).exists(id => visPlan.getOrElse(id, Visibility.Vis.Public) != Visibility.Vis.Public) => n
     }.toSet
 
   /** Each type's parent symbols. */
@@ -440,7 +466,7 @@ private[emit] trait TirEmitterNotes:
     }
 
   // ---- names ----
-  private[emit] def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
+  private[emit] def sym(id:   SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
   private[emit] def local(id: SymId): String = esc(sym(id).name)
 
   /** A method symbol's declared parameter types, or empty for non-method info. */
@@ -459,9 +485,9 @@ private[emit] trait TirEmitterNotes:
     }
     buf.toMap
 
-  /** Whether the callee for `memberName` on `typeSym` has parens. Walks ancestry,
-    * falls back to injected surface, externalParenless, subtypes, then runtime shims.
-    * Default `false` (parenless, as for extension methods). */
+  /** Whether the callee for `memberName` on `typeSym` has parens. Walks ancestry, falls back to injected surface, externalParenless, subtypes, then runtime shims. Default `false` (parenless, as for
+    * extension methods).
+    */
   private[emit] def calleeHasParens(typeSym: SymId, memberName: String): Boolean =
     def checkMember(owner: SymId): Option[Boolean] =
       membersByOwnerName.get((owner, memberName)).flatMap { ids =>
@@ -473,7 +499,7 @@ private[emit] trait TirEmitterNotes:
           case id =>
             sym(id).info match
               case _: TypeRepr.MethodType => true
-              case _                     => false
+              case _ => false
         }
       }
 
@@ -482,15 +508,12 @@ private[emit] trait TirEmitterNotes:
       else
         checkMember(s).orElse {
           val newSeen = seen + s
-          parentsBySym.getOrElse(s, Nil).iterator
-            .filterNot(newSeen)
-            .flatMap(a => walkAncestors(a, newSeen))
-            .nextOption()
+          parentsBySym.getOrElse(s, Nil).iterator.filterNot(newSeen).flatMap(a => walkAncestors(a, newSeen)).nextOption()
         }
 
     walkAncestors(typeSym, Set.empty).getOrElse {
       // Fallbacks: (0) injected surface, (0.5) externalParenless, (1) subtypes, (2) runtime shims.
-      val ownerFqn = program.symbolOf(typeSym).map(_.fullName).getOrElse("")
+      val ownerFqn     = program.symbolOf(typeSym).map(_.fullName).getOrElse("")
       val fromInjected = injectedSurface.memberHasParens(ownerFqn, memberName)
       if fromInjected.isDefined then fromInjected.get
       // Fallback 0.5: manifest-declared external parenless members.
@@ -501,7 +524,7 @@ private[emit] trait TirEmitterNotes:
         // Fallback 1: check program-declared subtypes
         val fromSubtype = parentsBySym.iterator.exists { case (child, parents) =>
           program.owns(child) && parents.exists(visited) &&
-            checkMember(child).contains(true)
+          checkMember(child).contains(true)
         }
         if fromSubtype then true
         else
@@ -528,10 +551,10 @@ private[emit] trait TirEmitterNotes:
   private[emit] def isUnresolvedTypeVar(t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => Symbol.isUnresolvedTypeVar(sym(s).fullName)
     case _                      => false
-  /** a TYPE symbol's rendered name. FULLY QUALIFIED by default: fully-qualified references and NO
-    * imports deletes the whole import-decision bug class (a reference becomes a context-free
-    * function of the owner chain). Unqualified only for type params and a type declared in THIS
-    * unit. Human-readable imports are a separate, optional beautification backend. */
+
+  /** a TYPE symbol's rendered name. FULLY QUALIFIED by default: fully-qualified references and NO imports deletes the whole import-decision bug class (a reference becomes a context-free function of
+    * the owner chain). Unqualified only for type params and a type declared in THIS unit. Human-readable imports are a separate, optional beautification backend.
+    */
   private[emit] def typeSym(id: SymId): String =
     val s = sym(id)
     // an UNRESOLVED type variable is a marker and not a name — never print it (see
@@ -558,23 +581,21 @@ private[emit] trait TirEmitterNotes:
     // `TextFieldClickListener` exactly as Java did. The projection is not merely verbose here, it
     // is illegal: `TextField#TextFieldClickListener` needs `TextField` to be an immutable path.
     else if inheritedNested(s.owner) then esc(s.name)
-    else nestedPath(id)                                             // non-static inner class elsewhere → `Outer#Inner`
+    else nestedPath(id) // non-static inner class elsewhere → `Outer#Inner`
 
   /** is `owner` an ancestor of some class we are currently rendering inside? */
   private[emit] def inheritedNested(owner: SymId): Boolean =
     owner != SymId.None && classStack.exists(c => c != owner && ancestorsOf(c).contains(owner))
 
-  /** the path to a NESTED type, choosing a separator PER LEVEL: `.` for a java `static` nested
-    * class (lowered into the companion `object`), `#` for a genuine inner class (a projection). A
-    * blanket `fullName.replace('$', '#')` gets a MIXED chain wrong. Falls back to the blanket form
-    * whenever an owner symbol is unknown, so this can only ever add precision. */
+  /** the path to a NESTED type, choosing a separator PER LEVEL: `.` for a java `static` nested class (lowered into the companion `object`), `#` for a genuine inner class (a projection). A blanket
+    * `fullName.replace('$', '#')` gets a MIXED chain wrong. Falls back to the blanket form whenever an owner symbol is unknown, so this can only ever add precision.
+    */
   private[emit] def nestedPath(id: SymId): String =
     def go(x: SymId): Option[String] =
       val sx = sym(x)
       if !sx.fullName.contains('$') then Some(escPath(sx.fullName))
       else if sx.owner == SymId.None || program.symbolOf(sx.owner).isEmpty then None
-      else go(sx.owner).map(p =>
-        if sx.flags.isStatic then s"$p.${esc(sx.name)}" else s"$p${outerFill(sx.owner)}#${esc(sx.name)}")
+      else go(sx.owner).map(p => if sx.flags.isStatic then s"$p.${esc(sx.name)}" else s"$p${outerFill(sx.owner)}#${esc(sx.name)}")
     // The fallback fires exactly when an owner is UNKNOWN, which for a type we do not define means
     // an external/JDK one. Name those with `.`: a Java nested type is reached as `Outer.Inner` in
     // Scala, and a `#` projection is not even available — it needs the prefix to be an immutable
@@ -583,30 +604,29 @@ private[emit] trait TirEmitterNotes:
       val sep = if program.definitionOf(id).isEmpty then '.' else '#'
       escPath(sym(id).fullName).replace('$', sep)
 
-  /** THE `[?, …]` A PROJECTION'S PREFIX NEEDS when the enclosing class is GENERIC. `Outer#Inner`
-    * is not a legal projection where `Outer` takes type parameters (scalac needs a TYPE, not an
-    * unapplied constructor) — java writes exactly this for an inner class referred to RAW. `?` per
-    * parameter is the hand port's own rendering of every raw generic (§3.5); filling from the
-    * enclosing scope would invent an instantiation java did not write. Empty for a non-generic owner. */
+  /** THE `[?, …]` A PROJECTION'S PREFIX NEEDS when the enclosing class is GENERIC. `Outer#Inner` is not a legal projection where `Outer` takes type parameters (scalac needs a TYPE, not an unapplied
+    * constructor) — java writes exactly this for an inner class referred to RAW. `?` per parameter is the hand port's own rendering of every raw generic (§3.5); filling from the enclosing scope would
+    * invent an instantiation java did not write. Empty for a non-generic owner.
+    */
   private[emit] def outerFill(owner: SymId): String =
-    program.definitionOf(owner).collect { case c: Tree.ClassDef => c.tparams.size }
-      .filter(_ > 0).map(n => List.fill(n)("?").mkString("[", ", ", "]")).getOrElse("")
+    program.definitionOf(owner).collect { case c: Tree.ClassDef => c.tparams.size }.filter(_ > 0).map(n => List.fill(n)("?").mkString("[", ", ", "]")).getOrElse("")
 
-  /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`).
-    * A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the
-    * prefix would need type arguments, which the reference does not carry. */
+  /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`). A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the prefix
+    * would need type arguments, which the reference does not carry.
+    */
   private[emit] def isInnerClass(id: SymId): Boolean =
     val s = sym(id)
     !s.flags.isStatic && s.owner != SymId.None && s.fullName.contains('$') &&
-      !program.symbolOf(s.owner).exists(_.flags.isModule) &&
-      program.definitionOf(s.owner).exists { case c: Tree.ClassDef => c.tparams.isEmpty; case _ => false }
+    !program.symbolOf(s.owner).exists(_.flags.isModule) &&
+    program.definitionOf(s.owner).exists { case c: Tree.ClassDef => c.tparams.isEmpty; case _ => false }
 
-  /** inside an `extends` clause or a `new`, where a type projection is not legal — render inner
-    * classes by their simple (in-scope) name there. */
+  /** inside an `extends` clause or a `new`, where a type projection is not legal — render inner classes by their simple (in-scope) name there.
+    */
   private[emit] var namedInner = false
   private[emit] def byName[A](f: => String): String =
     val prev = namedInner; namedInner = true
-    try f finally namedInner = prev
+    try f
+    finally namedInner = prev
 
   private[emit] def ind(n: Int): String = "  " * n
 
@@ -628,14 +648,12 @@ private[emit] trait TirEmitterNotes:
   private[emit] def triviaText(t: Trivia, i: Int): String =
     val lines = t.text.replace("\r\n", "\n").replace("\r", "\n").split("\n", -1).toList
     t.kind match
-      case TriviaKind.Line                 => ind(i) + lines.head.trim
-      case _ if nests(t)                   => lines.map(l => (ind(i) + "//" + l).stripTrailing()).mkString("\n")
-      case _                               =>
+      case TriviaKind.Line => ind(i) + lines.head.trim
+      case _ if nests(t)   => lines.map(l => (ind(i) + "//" + l).stripTrailing()).mkString("\n")
+      case _               =>
         val rest   = lines.tail
         val filled = rest.filter(_.trim.nonEmpty)
         val cut    = filled.map(_.takeWhile(c => c == ' ' || c == '\t').length).minOption.getOrElse(0)
         val gutter = filled.nonEmpty && filled.forall(_.trim.startsWith("*"))
         val pre    = ind(i) + (if gutter then " " else "")
-        ((ind(i) + lines.head.trim) :: rest.map(l => if l.trim.isEmpty then "" else (pre + l.drop(cut)).stripTrailing()))
-          .mkString("\n")
-
+        ((ind(i) + lines.head.trim) :: rest.map(l => if l.trim.isEmpty then "" else (pre + l.drop(cut)).stripTrailing())).mkString("\n")

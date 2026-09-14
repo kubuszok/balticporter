@@ -1,12 +1,12 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, PortManifest, SurfaceFold}
+import balticporter.core.{ MergeablePolicy, PortManifest, SurfaceFold }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, DecisionLog, Pipeline, Program, Reason}
+import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program, Reason }
 
-/** AddMembersTransform — the §1(b) mechanism for appending hand-port members to a mechanically
-  * translated class. */
+/** AddMembersTransform — the §1(b) mechanism for appending hand-port members to a mechanically translated class.
+  */
 class AddMembersTransformSpec extends munit.FunSuite:
   import AddMembersTransform.MemberSpec
 
@@ -44,9 +44,8 @@ class AddMembersTransformSpec extends munit.FunSuite:
   // ---- merge: independent owners union ----
 
   test("independent owners from base and dependent merge into one instance") {
-    val b = base(List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")))))
-    val dep = b.extendedBy(PortManifest("dep",
-      surface = List(amt("com.dep.B" -> List(spec("bar", 2, "def bar(a: Int, b: Int): Int = a + b"))))))
+    val b   = base(List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(amt("com.dep.B" -> List(spec("bar", 2, "def bar(a: Int, b: Int): Int = a + b"))))))
 
     assertEquals(dep.surfaceFold.refusals, Nil)
     val eff = dep.effectiveSurface.collect { case t: AddMembersTransform => t }
@@ -59,9 +58,8 @@ class AddMembersTransformSpec extends munit.FunSuite:
   // ---- merge: same owner+name refuses ----
 
   test("same owner and member name refuses — two members at the same declaration is a conflict") {
-    val b = base(List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")))))
-    val dep = b.extendedBy(PortManifest("dep",
-      surface = List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: String = \"x\""))))))
+    val b   = base(List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: String = \"x\""))))))
 
     assert(clue(dep.surfaceFold.refusals).nonEmpty)
     assert(dep.surfaceFold.refusals.head.cause == SurfaceFold.Cause.Conflict)
@@ -73,9 +71,8 @@ class AddMembersTransformSpec extends munit.FunSuite:
   // ---- merge: same owner, different members, union ----
 
   test("same owner with different member names merges into one instance") {
-    val b = base(List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")))))
-    val dep = b.extendedBy(PortManifest("dep",
-      surface = List(amt("com.demo.A" -> List(spec("bar", 1, "def bar(x: Int): Unit = ()"))))))
+    val b   = base(List(amt("com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(amt("com.demo.A" -> List(spec("bar", 1, "def bar(x: Int): Unit = ()"))))))
 
     assertEquals(dep.surfaceFold.refusals, Nil)
     val eff = dep.effectiveSurface.collect { case t: AddMembersTransform => t }
@@ -88,7 +85,7 @@ class AddMembersTransformSpec extends munit.FunSuite:
   test("subjects returns the owner FQNs for the governs screen") {
     val t = amt(
       "com.demo.A" -> List(spec("foo", 0, "val foo: Int = 0")),
-      "com.demo.B" -> List(spec("bar", 1, "def bar(x: Int): Unit = ()")),
+      "com.demo.B" -> List(spec("bar", 1, "def bar(x: Int): Unit = ()"))
     )
     assertEquals(t.subjects, Set("com.demo.A", "com.demo.B"))
   }
@@ -102,16 +99,19 @@ class AddMembersTransformSpec extends munit.FunSuite:
         |  public int x = 1;
         |}""".stripMargin
 
-    val phase = amt("com.demo.Engine" -> List(
-      spec("factories", 0,
-        "protected val factories: scala.collection.mutable.HashMap[Class[?], () => ?] = scala.collection.mutable.HashMap.empty",
-        "factory registry"),
-      spec("register", 2,
-        "def register[T](cls: Class[T], f: () => T): Unit = factories.put(cls, f)",
-        "register factory"),
-    ))
+    val phase = amt(
+      "com.demo.Engine" -> List(
+        spec(
+          "factories",
+          0,
+          "protected val factories: scala.collection.mutable.HashMap[Class[?], () => ?] = scala.collection.mutable.HashMap.empty",
+          "factory registry"
+        ),
+        spec("register", 2, "def register[T](cls: Class[T], f: () => T): Unit = factories.put(cls, f)", "register factory")
+      )
+    )
 
-    val ported = run(java, phase)
+    val ported    = run(java, phase)
     val decisions = ported.log.all.filter(_.kind == Decision.Kind.AddedMember)
     assertEquals(clue(decisions.size), 2)
     assert(decisions.exists(_.detail("member") == "factories"))
@@ -134,12 +134,19 @@ class AddMembersTransformSpec extends munit.FunSuite:
         |  public int x = 1;
         |}""".stripMargin
 
-    val phase = amt("com.demo.Widget" -> List(
-      MemberSpec("apply", 0, "def apply(): Widget = new Widget()",
-        Reason.Configured("add-members", "com.demo.Widget#apply"), Some("factory"), static = true),
-      MemberSpec("twice", 0, "def twice: Int = x * 2",
-        Reason.Configured("add-members", "com.demo.Widget#twice"), Some("instance")),
-    ))
+    val phase = amt(
+      "com.demo.Widget" -> List(
+        MemberSpec(
+          "apply",
+          0,
+          "def apply(): Widget = new Widget()",
+          Reason.Configured("add-members", "com.demo.Widget#apply"),
+          Some("factory"),
+          static = true
+        ),
+        MemberSpec("twice", 0, "def twice: Int = x * 2", Reason.Configured("add-members", "com.demo.Widget#twice"), Some("instance"))
+      )
+    )
 
     val ported = run(java, phase)
     val out    = ported.out
@@ -154,8 +161,7 @@ class AddMembersTransformSpec extends munit.FunSuite:
 
   test("static is part of the fingerprint and of the merge key") {
     val inst = amt("com.demo.A" -> List(spec("foo", 0, "def foo: Int = 0")))
-    val stat = amt("com.demo.A" -> List(
-      MemberSpec("foo", 0, "def foo: Int = 0", Reason.Configured("add-members", "x"), None, static = true)))
+    val stat = amt("com.demo.A" -> List(MemberSpec("foo", 0, "def foo: Int = 0", Reason.Configured("add-members", "x"), None, static = true)))
     assert(clue(inst.surfaceFingerprint) != clue(stat.surfaceFingerprint))
     // …so the two are INDEPENDENT keys and compose rather than refusing
     val dep = base(List(inst)).extendedBy(PortManifest("dep", surface = List(stat)))

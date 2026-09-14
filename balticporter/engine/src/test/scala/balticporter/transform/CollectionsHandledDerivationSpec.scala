@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** The phase's HANDLED TABLES against the phase's own arms — a bijection, both directions. */
 class CollectionsHandledDerivationSpec extends munit.FunSuite:
@@ -8,7 +8,8 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
   private val engineDir: String =
     val is = Option(getClass.getClassLoader.getResourceAsStream("balticporter/engine-source-dir.txt"))
       .getOrElse(fail("balticporter/engine-source-dir.txt is missing — engine's Test resourceGenerator did not run"))
-    try new String(is.readAllBytes(), "UTF-8").trim finally is.close()
+    try new String(is.readAllBytes(), "UTF-8").trim
+    finally is.close()
 
   private val source: String =
     Files.readString(Path.of(engineDir).resolve("balticporter/transform/CollectionsTransform.scala"))
@@ -17,9 +18,9 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
   private val callsSource: String =
     Files.readString(Path.of(engineDir).resolve("balticporter/transform/CollectionsCalls.scala"))
 
-  /** the text of ONE function's arms: from its `def` to the next TOP-LEVEL doc comment (two spaces
-    * of indent). A doc comment nested inside the function is indented four and cannot end the cut,
-    * which is what lets `rewrite`'s `onShim` note stay where it is. */
+  /** the text of ONE function's arms: from its `def` to the next TOP-LEVEL doc comment (two spaces of indent). A doc comment nested inside the function is indented four and cannot end the cut, which
+    * is what lets `rewrite`'s `onShim` note stay where it is.
+    */
   private def region(src: String, defLine: String): String =
     val from = src.indexOf(defLine)
     assert(from >= 0, s"`$defLine` is not in the source — the derivation reads the wrong shape")
@@ -30,25 +31,23 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
   private val staticArms   = region(callsSource, "private[transform] def staticRewrite")
   private val instanceArms = region(callsSource, "private[transform] def rewrite(k: Kind")
 
-  /** every `"owner#name"` STRING LITERAL in the static arms — which is exactly how `staticRewrite`
-    * identifies a receiver-less JDK member — PLUS the static-FIELD table, which is the same question
-    * asked of the other node kind. */
+  /** every `"owner#name"` STRING LITERAL in the static arms — which is exactly how `staticRewrite` identifies a receiver-less JDK member — PLUS the static-FIELD table, which is the same question
+    * asked of the other node kind.
+    */
   private def staticLiterals: Set[String] =
     """"(java\.[A-Za-z0-9_.$]+#[A-Za-z0-9_]+)"""".r.findAllMatchIn(staticArms).map(_.group(1)).toSet ++
       CollectionsTransform.StaticFieldFactories.keySet
 
-  /** every member NAME an instance arm is keyed on: the string literals in the first element of a
-    * `case ("name" | "other", …)` head. */
+  /** every member NAME an instance arm is keyed on: the string literals in the first element of a `case ("name" | "other", …)` head.
+    */
   private def instanceArmNames: Set[String] =
-    """(?m)^\s*case \((("[A-Za-z0-9_]+"(\s*\|\s*)?)+),""".r
-      .findAllMatchIn(instanceArms)
-      .flatMap(m => """"([A-Za-z0-9_]+)"""".r.findAllMatchIn(m.group(1)).map(_.group(1)))
-      .toSet
+    """(?m)^\s*case \((("[A-Za-z0-9_]+"(\s*\|\s*)?)+),""".r.findAllMatchIn(instanceArms).flatMap(m => """"([A-Za-z0-9_]+)"""".r.findAllMatchIn(m.group(1)).map(_.group(1))).toSet
 
-  /** …plus the `parenless` set, which is an arm of its own (`case (n, Nil, _) if parenless(n)`) and
-    * is declared outside the region above. */
+  /** …plus the `parenless` set, which is an arm of its own (`case (n, Nil, _) if parenless(n)`) and is declared outside the region above.
+    */
   private def parenlessNames: Set[String] =
-    """(?s)private\[transform\] val parenless = Set\((.*?)\)""".r.findFirstMatchIn(callsSource)
+    """(?s)private\[transform\] val parenless = Set\((.*?)\)""".r
+      .findFirstMatchIn(callsSource)
       .map(m => """"([A-Za-z0-9_]+)"""".r.findAllMatchIn(m.group(1)).map(_.group(1)).toSet)
       .getOrElse(fail("could not find the `parenless` set — the derivation is reading the wrong shape"))
 
@@ -62,18 +61,22 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
 
   test("handledStatics ⊇ every `owner#name` the arms match — no arm is missing from the table") {
     val missing = staticLiterals -- CollectionsTransform.handledStatics
-    assert(missing.isEmpty,
+    assert(
+      missing.isEmpty,
       s"""${missing.size} member(s) are matched by a `CollectionsTransform` arm and absent from
          |`handledStatics`, so `jdk-surface` will report them as the port's JDK wall:
-         |${missing.toList.sorted.map("  " + _).mkString("\n")}""".stripMargin)
+         |${missing.toList.sorted.map("  " + _).mkString("\n")}""".stripMargin
+    )
   }
 
   test("…and ⊆ — no table entry names an arm that is not there") {
     val stale = CollectionsTransform.handledStatics -- staticLiterals
-    assert(stale.isEmpty,
+    assert(
+      stale.isEmpty,
       s"""${stale.size} `handledStatics` entry(ies) match no arm in `CollectionsTransform`, so
          |`jdk-surface` will report a mapping the phase does not have:
-         |${stale.toList.sorted.map("  " + _).mkString("\n")}""".stripMargin)
+         |${stale.toList.sorted.map("  " + _).mkString("\n")}""".stripMargin
+    )
   }
 
   test("handledInstance's union is exactly the instance arms' names, both directions") {
@@ -100,6 +103,8 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
     val m = CollectionsTransform.jdkMapping(ran = true)
     assertEquals(m.types.keySet, CollectionsTransform.typeMap.keySet)
     assertEquals(m.types("java.util.List"), ("scala.collection.mutable.Buffer", "Seq"))
-    assert(clue(m.shimMembers).get(CollectionsTransform.JavaIteratorFqn).exists(_.contains("remove")),
-      "the shim member map is not reaching the check — `java.util.Iterator#remove` would read as a hole")
+    assert(
+      clue(m.shimMembers).get(CollectionsTransform.JavaIteratorFqn).exists(_.contains("remove")),
+      "the shim member map is not reaching the check — `java.util.Iterator#remove` would read as a hole"
+    )
   }

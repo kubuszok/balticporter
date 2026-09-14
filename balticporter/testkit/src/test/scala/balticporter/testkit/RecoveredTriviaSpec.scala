@@ -64,7 +64,8 @@ class RecoveredTriviaSpec extends munit.FunSuite:
         |        return t;
         |    }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("start at zero"), o)
     assertEquals(occurrences(o, "start at zero"), 1, o)
   }
@@ -77,7 +78,8 @@ class RecoveredTriviaSpec extends munit.FunSuite:
         |    public Nest() { this(1); /* see the /* marker */ }
         |    public Nest(int w) { this.w = w; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("see the"), o)
     val line = o.linesIterator.find(_.contains("see the /* marker")).getOrElse("")
     assert(line.trim.startsWith("//"), s"[$line] in:\n$o")
@@ -117,9 +119,7 @@ class RecoveredTriviaSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val o = out(java)
-    List("the field", "the nilary one", "the real one", "done initialising",
-         "a leading statement comment", "and a trailing one")
-      .foreach(c => assertEquals(occurrences(o, c), 1, s"'$c' in:\n$o"))
+    List("the field", "the nilary one", "the real one", "done initialising", "a leading statement comment", "and a trailing one").foreach(c => assertEquals(occurrences(o, c), 1, s"'$c' in:\n$o"))
     // and the check agrees, over TEXT: nothing lost.
     val r = TriviaCheck.check(List(TriviaCheck.Unit("Snippet.java", o)), Map.empty, _ => Some(java))
     assertEquals(r.lost, Nil, r.lost.map(_.render).mkString("\n"))
@@ -169,7 +169,7 @@ class RecoveredTriviaSpec extends munit.FunSuite:
     assert(!o.contains("Documentation of the member this port drops"), o)
 
     val members = CommentAnchor.membersOf(p.after)
-    val r = TriviaCheck.check(List(TriviaCheck.Unit("Snippet.java", o)), members, _ => Some(dropped))
+    val r       = TriviaCheck.check(List(TriviaCheck.Unit("Snippet.java", o)), members, _ => Some(dropped))
     assertEquals(r.lost, Nil, r.lost.map(_.render).mkString("\n"))
     assertEquals(r.deliberate.size, 1, r.deliberate.map(_.render).mkString("\n"))
     assert(r.deliberate.head.detail.contains("Documentation of the member"), r.deliberate.head.render)

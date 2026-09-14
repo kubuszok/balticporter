@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A context member path may hop through a nullary METHOD (`graphics.getGL20()`): the getter the
-  * port has not turned into a property yet. */
+/** A context member path may hop through a nullary METHOD (`graphics.getGL20()`): the getter the port has not turned into a property yet.
+  */
 class ContextPathHopSpec extends munit.FunSuite:
   private val java =
     """package com.demo;
@@ -22,20 +22,26 @@ class ContextPathHopSpec extends munit.FunSuite:
       |""".stripMargin
 
   test("a `seg()` hop is emitted as a call on the previous hop") {
-    val phase = new GlobalsToImplicitsTransform(holders = List(ContextHolder(
-      holder   = "com.demo.Gdx",
-      context  = ContextType.Injected("com.demo.Ctx"),
-      members  = Map("graphics" -> "graphics", "gl" -> "graphics.getGL20()"),
-      attach   = ContextAttach.Class,
-      reader   = ContextReader.Summon,
-      boundary = ContextBoundary.Refuse)))
+    val phase = new GlobalsToImplicitsTransform(
+      holders = List(
+        ContextHolder(
+          holder = "com.demo.Gdx",
+          context = ContextType.Injected("com.demo.Ctx"),
+          members = Map("graphics" -> "graphics", "gl" -> "graphics.getGL20()"),
+          attach = ContextAttach.Class,
+          reader = ContextReader.Summon,
+          boundary = ContextBoundary.Refuse
+        )
+      )
+    )
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(java, "Demo.java"), List(phase))
-    val out = new TirEmitter(after, notes = log).emit
-    assert(clue(out).contains(".graphics.getGL20().glClear(1)"),
-      out.linesIterator.filter(_.contains("glClear")).mkString("\n"))
+    val out          = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains(".graphics.getGL20().glClear(1)"), out.linesIterator.filter(_.contains("glClear")).mkString("\n"))
     // a WRITE through the hop is the bean setter's call
-    assert(out.contains(".graphics.setGL20(x)"),
-      out.linesIterator.filter(l => l.contains("setGL20") || l.contains("getGL20 =")).mkString("\n"))
+    assert(
+      out.contains(".graphics.setGL20(x)"),
+      out.linesIterator.filter(l => l.contains("setGL20") || l.contains("getGL20 =")).mkString("\n")
+    )
   }
 
   test("a read whose member an earlier phase WRAPPED is unwrapped at the hop") {
@@ -53,15 +59,20 @@ class ContextPathHopSpec extends munit.FunSuite:
         |  void clear () { Gdx.gl30.glClear(1); }
         |}
         |""".stripMargin
-    val phase = new GlobalsToImplicitsTransform(holders = List(ContextHolder(
-      holder   = "com.demo.Gdx",
-      context  = ContextType.Injected("com.demo.Ctx"),
-      members  = Map("graphics" -> "graphics", "gl30" -> "graphics.gl30"),
-      attach   = ContextAttach.Class,
-      reader   = ContextReader.Summon,
-      boundary = ContextBoundary.Refuse)))
+    val phase = new GlobalsToImplicitsTransform(
+      holders = List(
+        ContextHolder(
+          holder = "com.demo.Gdx",
+          context = ContextType.Injected("com.demo.Ctx"),
+          members = Map("graphics" -> "graphics", "gl30" -> "graphics.gl30"),
+          attach = ContextAttach.Class,
+          reader = ContextReader.Summon,
+          boundary = ContextBoundary.Refuse
+        )
+      )
+    )
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(wrapped, "Demo.java"), List(phase))
-    val out = new TirEmitter(after, notes = log).emit
+    val out          = new TirEmitter(after, notes = log).emit
     assert(clue(out).contains(".graphics.getGL30().orNull != null"))
     assert(out.contains(".graphics.getGL30().orNull.glClear(1)"))
   }

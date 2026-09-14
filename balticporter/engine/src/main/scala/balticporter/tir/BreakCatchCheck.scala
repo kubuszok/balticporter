@@ -2,8 +2,8 @@ package balticporter.tir
 
 /** Jumps (`break`/`continue`) that cross a Break-compatible `catch` without a re-throw guard.
   *
-  * Walks the tree independently of the emitter; disagrees exactly when the emitter missed a
-  * crossing. Findings are §1(a) engine gaps. // CLAUDE.md §4.4 */
+  * Walks the tree independently of the emitter; disagrees exactly when the emitter missed a crossing. Findings are §1(a) engine gaps. // CLAUDE.md §4.4
+  */
 object BreakCatchCheck:
 
   val Name = "break-catch"
@@ -21,20 +21,22 @@ object BreakCatchCheck:
           "(`TirEmitter.tryStr`/`crossesCatch`). A finding here means this walk sees a crossing " +
           "the emitter's boundary state did not — fix `crossesCatch`, not the port."
 
-  /** @param jump  the java jump that crosses — `break`, `continue`, `break L`, `continue L`
-    * @param caught the arm that would swallow it, as emitted */
+  /** @param jump
+    *   the java jump that crosses — `break`, `continue`, `break L`, `continue L`
+    * @param caught
+    *   the arm that would swallow it, as emitted
+    */
   final case class Finding(issue: Issue, owner: String, jump: String, caught: String, origin: Origin):
     def detail: String =
       s"`$jump` leaves this try, and `catch ($caught)` matches scala.util.boundary.Break — " +
         "java's jump is not catchable, so the handler runs for a condition java never had"
-    def render: String = s"$issue $owner: $jump vs catch($caught)  (${origin.javaPath}:${origin.line})"
+    def render: String              = s"$issue $owner: $jump vs catch($caught)  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
-        origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** @param guarded which `try`s the emitter guarded, keyed by [[Tree.Try.id]] (not `Origin`,
-    *                which is not unique across `try`s; not object identity, since the traversal
-    *                rebuilds nodes). `_ => false` reproduces the un-repaired engine.
+  /** @param guarded
+    *   which `try`s the emitter guarded, keyed by [[Tree.Try.id]] (not `Origin`, which is not unique across `try`s; not object identity, since the traversal rebuilds nodes). `_ => false` reproduces
+    *   the un-repaired engine.
     */
   def check(program: Program, units: List[Tree.ClassDef], guarded: Tree.Try => Boolean): List[Finding] =
     given Program = program
@@ -44,10 +46,9 @@ object BreakCatchCheck:
     // owner name per try (keyed by Origin -- safe here since it only decides the label, not
     // whether to report)
     val ownerOf = collection.mutable.Map.empty[Origin, String]
-    val claim = (s: SymId, t: Option[Term]) =>
-      t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
-    val owners = new Phase:
-      def name: String = "break-catch/owner"
+    val claim   = (s: SymId, t: Option[Term]) => t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
+    val owners  = new Phase:
+      def name:                                                    String      = "break-catch/owner"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { claim(d.symbol, d.rhs); d }
       override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef = { claim(v.symbol, v.rhs); v }
     StandardTraversal.mapClassDef(owners, u)
@@ -62,21 +63,25 @@ object BreakCatchCheck:
     StandardTraversal.scanClassDef(u, ()) { (_, t) =>
       t match
         case tr: Tree.Try => tries += tr
-        case _            => ()
+        case _ => ()
       if Jumps.isLoop(t) then
         val ts = triesIn(t)
         underLoop ++= ts
         underJumpable ++= ts
-        Jumps.loopLabel(t).foreach(l => ts.foreach { o =>
-          brkLabels(o) = brkLabels(o) + l
-          contLabels(o) = contLabels(o) + l
-        })
+        Jumps
+          .loopLabel(t)
+          .foreach(l =>
+            ts.foreach { o =>
+              brkLabels(o) = brkLabels(o) + l
+              contLabels(o) = contLabels(o) + l
+            }
+          )
       else
         t match
-          case _: Tree.Match    => underJumpable ++= triesIn(t)
+          case _: Tree.Match => underJumpable ++= triesIn(t)
           // non-loop label: `break L` only (`continue` needs a loop)
-          case l: Tree.Labeled  => triesIn(l.stmt).foreach(o => brkLabels(o) = brkLabels(o) + l.name)
-          case _                => ()
+          case l: Tree.Labeled => triesIn(l.stmt).foreach(o => brkLabels(o) = brkLabels(o) + l.name)
+          case _ => ()
       ()
     }
 
@@ -100,7 +105,7 @@ object BreakCatchCheck:
     StandardTraversal.scanTerm(t, Set.empty[TryId]) { (acc, x) =>
       x match
         case tr: Tree.Try => acc + tr.id
-        case _            => acc
+        case _ => acc
     }
 
   /** Same subtree's `try` origins (for the owner-name table keyed by `Origin`). */
@@ -108,7 +113,7 @@ object BreakCatchCheck:
     StandardTraversal.scanTerm(t, Set.empty[Origin]) { (acc, x) =>
       x match
         case tr: Tree.Try => acc + tr.origin
-        case _            => acc
+        case _ => acc
     }
 
   private def fqn(s: SymId)(using program: Program): String =
@@ -123,8 +128,12 @@ object BreakCatchCheck:
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

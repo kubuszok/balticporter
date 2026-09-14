@@ -5,9 +5,9 @@ import balticporter.tir.*
 /** THE FIRST MINT SITE (`DESIGN.md` §6.5): `SpoonTir.unsupported`'s two default dispatch arms. */
 class UnloweredNodeSpec extends munit.FunSuite:
 
-  /** every term this program holds, `StandardTraversal` doing the walking (`CLAUDE.md` §3: never a
-    * private recursion — two of the four silent defects were hand-rolled walks that stopped one
-    * node short). */
+  /** every term this program holds, `StandardTraversal` doing the walking (`CLAUDE.md` §3: never a private recursion — two of the four silent defects were hand-rolled walks that stopped one node
+    * short).
+    */
   private def scan[A](p: Program)(f: PartialFunction[Term, A]): List[A] =
     given Program = p
     p.units.flatMap { cd =>
@@ -16,12 +16,14 @@ class UnloweredNodeSpec extends munit.FunSuite:
         case v: Tree.ValDef   => v.rhs.toList
         case n: Tree.ClassDef => terms(n)
         case t: Term          => List(t)
-        case _                => Nil
+        case _ => Nil
       }
-      terms(cd).flatMap(t => StandardTraversal.scanTerm(t, List.empty[A]) {
-        case (acc, x) if f.isDefinedAt(x) => f(x) :: acc
-        case (acc, _)                     => acc
-      })
+      terms(cd).flatMap(t =>
+        StandardTraversal.scanTerm(t, List.empty[A]) {
+          case (acc, x) if f.isDefinedAt(x) => f(x) :: acc
+          case (acc, _)                     => acc
+        }
+      )
     }
 
   private def markers(p: Program): List[Tree.Unportable] = scan(p) { case m: Tree.Unportable => m }
@@ -39,7 +41,8 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |  public int untouched(int a) { return a + 1; }
         |  public int pick(Object o) { return switch (o) { case Pt(int x, int y) -> x; default -> 7; }; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
 
     assertEquals(markers(p), Nil)
     // …and the POSITIVE beside it, so "nothing was minted" cannot be "nothing was translated": the
@@ -63,7 +66,8 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |  public int untouched(int a) { return a + 1; }
         |  public int f(Object o) { return switch (o) { case dep.Rec(int x, int y) -> x; default -> 0; }; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val ms = markers(p)
     assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
     assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtRecordPattern"))
@@ -81,14 +85,16 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |  public record Line(Pt a, Pt b) {}
         |  public int f(Object o) { return switch (o) { case Line(Pt(int x, int y), Pt b) -> x + y; default -> 0; }; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(markers(p), Nil)
     assertEquals(scan(p) { case rp: Tree.RecordPattern => rp }.size, 2)
   }
 
   test("a TYPE PATTERN case label mints NOTHING — `JS-S10`'s lowered half, and the negative is the evidence") {
     val p = SpoonTir.fromSource(
-      "package p; public class S3 { public int f(Object o) { return switch (o) { case String s -> s.length(); default -> 0; }; } }")
+      "package p; public class S3 { public int f(Object o) { return switch (o) { case String s -> s.length(); default -> 0; }; } }"
+    )
     assertEquals(markers(p), Nil)
     assertEquals(scan(p) { case tp: Tree.TypePattern => tp }.size, 1)
   }
@@ -97,8 +103,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
     // `SpoonKinds` used to file `CtUnnamedPattern` as a refusal on both pattern paths. It is not
     // reachable at all: `case Object _ ->` is built as a `CtTypePattern` named `_`, which is exactly
     // scala's own `case _: T`. The kind is `NeverVisited` now, and this is the fixture that says so.
-    val p = SpoonTir.fromSource(
-      "package p; public class S4 { public int f(Object o) { return switch (o) { case Object _ -> 1; default -> 0; }; } }")
+    val p = SpoonTir.fromSource("package p; public class S4 { public int f(Object o) { return switch (o) { case Object _ -> 1; default -> 0; }; } }")
     assertEquals(markers(p), Nil)
     assertEquals(scan(p) { case tp: Tree.TypePattern => tp }.size, 1)
   }
@@ -115,7 +120,8 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |  public int untouched(int a) { return a + 1; }
         |  public boolean f(Object o) { return o instanceof String s && s.length() > 2; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
 
     val ms = markers(p)
     assertEquals(ms.size, 1, s"expected exactly one marker, got ${ms.map(_.what)}")
@@ -130,8 +136,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
   }
 
   test("an ORDINARY `instanceof` is untouched — the marker arm is a narrowing, not a refusal") {
-    val p = SpoonTir.fromSource(
-      "package p; public class I2 { public boolean f(Object o) { return o instanceof String; } }")
+    val p = SpoonTir.fromSource("package p; public class I2 { public boolean f(Object o) { return o instanceof String; } }")
     assertEquals(markers(p), Nil)
     assertEquals(scan(p) { case i: Tree.InstanceOf => i }.size, 1)
   }
@@ -145,12 +150,11 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |public class Sw2 {
         |  public int pick(int a) { return switch (a) { case 1 -> 2; default -> 7; }; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(markers(p), Nil)
-    assertEquals(SpoonKinds.byName("CtSwitchExpression").claim,
-      SpoonKinds.Claim.Lowered("SpoonTir.switchExpr"))
+    assertEquals(SpoonKinds.byName("CtSwitchExpression").claim, SpoonKinds.Claim.Lowered("SpoonTir.switchExpr"))
   }
-
 
   test("SpoonKinds.nameOf resolves an implementation to its MOST SPECIFIC registered interface") {
     // `CtSwitchExpressionImpl` implements `CtSwitchExpression` AND `CtExpression`; answering the
@@ -162,17 +166,16 @@ class UnloweredNodeSpec extends munit.FunSuite:
   }
 
   test("a construct the frontend DOES lower mints nothing — the fixture proves the negative") {
-    val p = SpoonTir.fromSource(
-      "package p; public class Ok { public int f(int a) { switch (a) { case 1: return 2; } return 0; } }")
+    val p = SpoonTir.fromSource("package p; public class Ok { public int f(int a) { switch (a) { case 1: return 2; } return 0; } }")
     assertEquals(markers(p), Nil)
   }
 
   // -------------------------------------------------------------------------------------------
   // THE OPERATOR ARMS — a blind spot INSIDE a kind the frontend dispatches on.
 
-  /** every constant of a Spoon operator enum, READ FROM THE JAR — never a hand-written list, for
-    * `NodeKindTotalitySpec`'s reason: a set written down here is one that stops being a measurement
-    * the first time the dependency moves. */
+  /** every constant of a Spoon operator enum, READ FROM THE JAR — never a hand-written list, for `NodeKindTotalitySpec`'s reason: a set written down here is one that stops being a measurement the
+    * first time the dependency moves.
+    */
   private def constants(fqn: String): Set[String] =
     Class.forName(fqn).getEnumConstants.map(_.toString).toSet
 
@@ -183,14 +186,36 @@ class UnloweredNodeSpec extends munit.FunSuite:
     // nobody would go looking for, so this is where a dependency bump is meant to stop.
     assertEquals(
       constants("spoon.reflect.code.BinaryOperatorKind"),
-      Set("OR", "AND", "BITOR", "BITXOR", "BITAND", "EQ", "NE", "LT", "GT", "LE", "GE",
-          "SL", "SR", "USR", "PLUS", "MINUS", "MUL", "DIV", "MOD", "INSTANCEOF"),
+      Set(
+        "OR",
+        "AND",
+        "BITOR",
+        "BITXOR",
+        "BITAND",
+        "EQ",
+        "NE",
+        "LT",
+        "GT",
+        "LE",
+        "GE",
+        "SL",
+        "SR",
+        "USR",
+        "PLUS",
+        "MINUS",
+        "MUL",
+        "DIV",
+        "MOD",
+        "INSTANCEOF"
+      ),
       "spoon's binary operator kinds moved — `SpoonTir.opText` enumerates them, and the new one " +
-        "mints a FrontendBlindSpot marker until an arm is written for it")
+        "mints a FrontendBlindSpot marker until an arm is written for it"
+    )
     assertEquals(
       constants("spoon.reflect.code.UnaryOperatorKind"),
       Set("POS", "NEG", "NOT", "COMPL", "PREINC", "PREDEC", "POSTINC", "POSTDEC"),
-      "spoon's unary operator kinds moved — `SpoonTir`'s unary arm enumerates them")
+      "spoon's unary operator kinds moved — `SpoonTir`'s unary arm enumerates them"
+    )
   }
 
   test("no operator java HAS is APPLIED under a `?`-named symbol — the shape the default emitted") {
@@ -212,13 +237,14 @@ class UnloweredNodeSpec extends munit.FunSuite:
         |    return t || u ? r : 0;
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(markers(p), Nil)
-    val applied = scan(p) { case a: Tree.Apply => a }
-      .flatMap(a => p.symbolOf(a.method)).map(_.name).distinct
-    assertEquals(applied.filter(_.startsWith("?")), Nil,
-      s"an operator was applied under a `?`-named symbol: $applied")
+    val applied = scan(p) { case a: Tree.Apply => a }.flatMap(a => p.symbolOf(a.method)).map(_.name).distinct
+    assertEquals(applied.filter(_.startsWith("?")), Nil, s"an operator was applied under a `?`-named symbol: $applied")
     // …and the positive, so the assertion above is not passing on an empty walk.
-    assert(applied.contains("+") && applied.contains(">>>") && applied.contains("^"),
-      s"the walk did not reach the operators at all: $applied")
+    assert(
+      applied.contains("+") && applied.contains(">>>") && applied.contains("^"),
+      s"the walk did not reach the operators at all: $applied"
+    )
   }

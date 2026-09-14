@@ -16,7 +16,8 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |  abstract <B extends Builder<B, T>> B getBuilder();
         |  T twice(CharSequence c) { return getBuilder().add(c).add(c).toSequence(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `B` is the METHOD's own and becomes `?`; `T` is the enclosing class's and is written.
     assertEmits(p, "this.getBuilder().asInstanceOf[demo.Builder[?, T]].add(c).add(c).toSequence()")
   }
@@ -34,7 +35,8 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |abstract class RichBase<U extends CharSequence> implements Rich<U> {
         |  U twice(CharSequence c) { return getBuilder().add(c).add(c).toSequence(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `Rich`'s `T` and `RichBase`'s `U` are DIFFERENT declarations, so "is this literally the
     // variable in scope?" answers no — and the receiver's `Rich<U>` says `T := U` exactly.
     assertEmits(p, "asInstanceOf[demo.Builder2[?, U]]")
@@ -48,7 +50,8 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |  <T extends Map<String, ?>> T getRegistry(String n) { return null; }
         |  boolean empty() { return getRegistry("x").isEmpty(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "getRegistry[java.util.Map[java.lang.String, ?]]")
     assertNotEmits(p, "getRegistry(\"x\").asInstanceOf[")
   }
@@ -61,7 +64,8 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |  abstract <B extends Builder3<B, T>> B getBuilder();
         |  Object keep() { Object o = getBuilder(); return o; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // an assignment gives java AND scala a target, so neither language is guessing.
     assertNotEmits(p, "asInstanceOf[demo.Builder3[")
   }
@@ -74,7 +78,8 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |  abstract <B extends Builder4<B, T>> B reuse(B b);
         |  T twice(Builder4 b) { return reuse(b).toSequence(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertNotEmits(p, "reuse(b).asInstanceOf[demo.Builder4[")
   }
 
@@ -86,7 +91,8 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |class Use5 {
         |  CharSequence go(Rich5 raw) { return raw.getBuilder().toSequence(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // a RAW receiver says nothing about `T`, so `receiverTypeArgs` is empty and the pin declines —
     // the call keeps its error rather than gaining a type this scope cannot write (§4.6).
     assertNotEmits(p, "asInstanceOf[demo.Builder5[")

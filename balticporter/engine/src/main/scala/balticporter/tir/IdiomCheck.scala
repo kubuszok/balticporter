@@ -1,9 +1,8 @@
 package balticporter.tir
 
-/** Three idiom lanes from one [[IdiomLog]]: converted, refused (naming the guard), and
-  * unrewritten-usage residue. Required of every port (including a phase-less one — records zero).
-  * Data comes from the phases, never a second walk. [[summary]] recomputes the denominator per
-  * kind on every run. */
+/** Three idiom lanes from one [[IdiomLog]]: converted, refused (naming the guard), and unrewritten-usage residue. Required of every port (including a phase-less one — records zero). Data comes from
+  * the phases, never a second walk. [[summary]] recomputes the denominator per kind on every run.
+  */
 object IdiomCheck:
 
   val Converted = "idiom(converted)"
@@ -14,9 +13,9 @@ object IdiomCheck:
   val Lanes: List[String] = List(Converted, Refused, Residue)
 
   private def lane(v: IdiomVerdict): String = v match
-    case IdiomVerdict.Converted    => Converted
-    case IdiomVerdict.Refused(_,_) => Refused
-    case IdiomVerdict.Residue(_)   => Residue
+    case IdiomVerdict.Converted     => Converted
+    case IdiomVerdict.Refused(_, _) => Refused
+    case IdiomVerdict.Residue(_)    => Residue
 
   /** Per-lane §1 classification. */
   def classification(l: String): String = l match
@@ -42,16 +41,15 @@ object IdiomCheck:
   def findings(log: IdiomLog, l: String): List[CheckReport.Finding] =
     log.all.filter(c => lane(c.verdict) == l).zipWithIndex.map { (c, i) =>
       val kindPair = s"kind=${c.kind}"
-      val detail = c.verdict match
+      val detail   = c.verdict match
         case IdiomVerdict.Converted     => s"$kindPair — ${c.what}"
         case IdiomVerdict.Refused(g, w) => s"$kindPair guard=$g — ${c.what}; $w"
         case IdiomVerdict.Residue(w)    => s"$kindPair — ${c.what}; unrewritten: $w"
-      CheckReport.Finding(l, c.kind.toString, c.subject,
-        CheckReport.relativise(c.origin.javaPath), c.origin.line, detail, seq = i)
+      CheckReport.Finding(l, c.kind.toString, c.subject, CheckReport.relativise(c.origin.javaPath), c.origin.line, detail, seq = i)
     }
 
-  /** Scale line per kind, recomputed every run. `ran` distinguishes "phase ran, found nothing"
-    * (prints `0 considered`) from "no phase" (no row). */
+  /** Scale line per kind, recomputed every run. `ran` distinguishes "phase ran, found nothing" (prints `0 considered`) from "no phase" (no row).
+    */
   def summary(log: IdiomLog, ran: Set[IdiomKind] = Set.empty): String =
     val byKind = log.all.groupBy(_.kind)
     val kinds  = IdiomKind.values.toList.filter(k => ran.contains(k) || byKind.contains(k))
@@ -68,6 +66,6 @@ object IdiomCheck:
 
   /** Refusal population grouped by guard. */
   def refusalsByGuard(log: IdiomLog): List[String] =
-    log.all.collect { case IdiomCandidate(k, IdiomVerdict.Refused(g, _), _, _, _) => (k, g) }
-      .groupBy(identity).toList.sortBy((kg, cs) => (kg._1.toString, -cs.size, kg._2))
-      .map { case ((k, g), cs) => s"  $k $g: ${cs.size}" }
+    log.all.collect { case IdiomCandidate(k, IdiomVerdict.Refused(g, _), _, _, _) => (k, g) }.groupBy(identity).toList.sortBy((kg, cs) => (kg._1.toString, -cs.size, kg._2)).map { case ((k, g), cs) =>
+      s"  $k $g: ${cs.size}"
+    }

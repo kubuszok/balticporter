@@ -3,7 +3,7 @@ package balticporter.runner
 import balticporter.core.*
 import balticporter.tir.*
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** THE EMISSION GATE (`DESIGN.md` §6.4) — a port with an OPEN marker does not get written. */
@@ -17,58 +17,71 @@ class EmissionGateSpec extends munit.FunSuite:
   private def fixture(): (Path, Path) =
     val root = Files.createTempDirectory("emission-gate")
     val src  = root.resolve("java")
-    java(src, "com/demo/Plain.java",
+    java(
+      src,
+      "com/demo/Plain.java",
       """package com.demo;
-        |public class Plain { public int twice(int a) { return a + a; } }""".stripMargin)
+        |public class Plain { public int twice(int a) { return a + a; } }""".stripMargin
+    )
     (root, src)
 
-  /** the same, plus a SECOND type the port can drop — the fixture the gate's own remediation
-    * describes ("drop the declarations that use them and inject replacements"). */
+  /** the same, plus a SECOND type the port can drop — the fixture the gate's own remediation describes ("drop the declarations that use them and inject replacements").
+    */
   private def fixtureWithDroppable(): (Path, Path) =
     val (root, src) = fixture()
-    java(src, "com/demo/Doomed.java",
+    java(
+      src,
+      "com/demo/Doomed.java",
       """package com.demo;
-        |public class Doomed { public int thrice(int a) { return a + a + a; } }""".stripMargin)
+        |public class Doomed { public int thrice(int a) { return a + a + a; } }""".stripMargin
+    )
     (root, src)
 
-  /** mints an OPEN marker at `member`'s body — standing in for a frontend refusal point, which is
-    * what §6.5 adopts first and which no fixture Java can reach on demand. */
+  /** mints an OPEN marker at `member`'s body — standing in for a frontend refusal point, which is what §6.5 adopts first and which no fixture Java can reach on demand.
+    */
   private class Mint(member: String = "twice") extends Phase:
-    def name: String = "test/mint"
+    def name:                                                       String      = "test/mint"
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if !p.symbolOf(d.symbol).exists(_.name == member) then d
-      else d.copy(rhs = d.rhs.map(r =>
-        Tree.Unportable.open(r, UnportableKind.ConstructorTopology, scala.None,
-          "the fixture's stand-in for a construct with no faithful Scala", r.tpe, r.origin)))
+      else
+        d.copy(
+          rhs = d.rhs.map(r =>
+            Tree.Unportable.open(
+              r,
+              UnportableKind.ConstructorTopology,
+              scala.None,
+              "the fixture's stand-in for a construct with no faithful Scala",
+              r.tpe,
+              r.origin
+            )
+          )
+        )
 
-  private def run(root: Path, src: Path, phases: List[Phase], bestEffort: Boolean = false,
-                  files: List[String] = List("com/demo/Plain.java"),
-                  subs: Substitutions = Substitutions.none): PortRun =
+  private def run(root: Path, src: Path, phases: List[Phase], bestEffort: Boolean = false, files: List[String] = List("com/demo/Plain.java"), subs: Substitutions = Substitutions.none): PortRun =
     PortRun(
-      label      = "demo",
-      portRoot   = root.resolve("port"),
-      sourceSet  = SourceSet.Main,
-      frontend   = FrontendConfig(src, files, Nil),
-      phases     = phases,
-      subs       = subs,
-      bestEffort = bestEffort,
+      label = "demo",
+      portRoot = root.resolve("port"),
+      sourceSet = SourceSet.Main,
+      frontend = FrontendConfig(src, files, Nil),
+      phases = phases,
+      subs = subs,
+      bestEffort = bestEffort
     )
 
   private def scalaFiles(dir: Path): List[String] =
     if !Files.exists(dir) then Nil
-    else Files.walk(dir).iterator().asScala.filter(_.toString.endsWith(".scala"))
-      .map(p => dir.relativize(p).toString.replace('\\', '/')).toList.sorted
+    else Files.walk(dir).iterator().asScala.filter(_.toString.endsWith(".scala")).map(p => dir.relativize(p).toString.replace('\\', '/')).toList.sorted
 
   test("with NO markers the run is exactly what it always was — the gate is a no-op") {
     val (root, src) = fixture()
-    val r = run(root, src, Nil).execute()
+    val r           = run(root, src, Nil).execute()
     assertEquals(scalaFiles(r.outDir), List("com/demo/Plain.scala"))
   }
 
   test("an OPEN marker REFUSES the deliverable emission, and nothing is written") {
     val (root, src) = fixture()
-    val port = run(root, src, List(new Mint))
-    val e    = intercept[RuntimeException](port.execute())
+    val port        = run(root, src, List(new Mint))
+    val e           = intercept[RuntimeException](port.execute())
     assert(e.getMessage.contains("EMISSION REFUSED"), e.getMessage)
     assert(e.getMessage.contains("1 open unportability marker(s)"), e.getMessage)
     // the message carries the §1 classification of the fix, because an error an agent cannot
@@ -85,7 +98,7 @@ class EmissionGateSpec extends munit.FunSuite:
     // leaves yesterday's tree in place ships yesterday's port with today's gate reporting a refusal
     // — the two facts never meet, because the compile succeeds.
     val (root, src) = fixture()
-    val ok = run(root, src, Nil).execute()
+    val ok          = run(root, src, Nil).execute()
     assertEquals(scalaFiles(ok.outDir), List("com/demo/Plain.scala"))
 
     val port = run(root, src, List(new Mint))
@@ -95,7 +108,7 @@ class EmissionGateSpec extends munit.FunSuite:
 
   test("…and BEST EFFORT removes it too — the degraded tree is not a replacement for it") {
     val (root, src) = fixture()
-    val ok = run(root, src, Nil).execute()
+    val ok          = run(root, src, Nil).execute()
     assertEquals(scalaFiles(ok.outDir), List("com/demo/Plain.scala"))
 
     val port = run(root, src, List(new Mint), bestEffort = true)
@@ -110,9 +123,13 @@ class EmissionGateSpec extends munit.FunSuite:
     // advice — forever — while the `markers` lane, which IS scoped to the emitted units, reports
     // zero. One run, two answers, and the port has no way out. One drop filter, both readers.
     val (root, src) = fixtureWithDroppable()
-    val port = run(root, src, List(new Mint("thrice")),
+    val port        = run(
+      root,
+      src,
+      List(new Mint("thrice")),
       files = List("com/demo/Plain.java", "com/demo/Doomed.java"),
-      subs  = Substitutions(dropTypes = Set("com.demo.Doomed")))
+      subs = Substitutions(dropTypes = Set("com.demo.Doomed"))
+    )
     val r = port.execute()
     assertEquals(scalaFiles(r.outDir), List("com/demo/Plain.scala"))
     assertEquals(r.dropped, 1)
@@ -120,7 +137,7 @@ class EmissionGateSpec extends munit.FunSuite:
 
   test("BEST EFFORT writes instead — to its OWN directory, with a sentinel, and still ends nonzero") {
     val (root, src) = fixture()
-    val port = run(root, src, List(new Mint), bestEffort = true)
+    val port        = run(root, src, List(new Mint), bestEffort = true)
     // the run still FAILS: degraded output is a diagnostic, never a delivery. What changes is that
     // there is something to read.
     val e = intercept[RuntimeException](port.execute())
@@ -128,8 +145,10 @@ class EmissionGateSpec extends munit.FunSuite:
 
     assertEquals(scalaFiles(port.outDir), Nil, "the deliverable tree must stay empty")
     assertEquals(scalaFiles(port.bestEffortDir), List("com/demo/Plain.scala"))
-    assert(Files.isRegularFile(port.bestEffortDir.resolve("BALTICPORTER-BEST-EFFORT")),
-      "a directory name is not enough — a directory gets copied")
+    assert(
+      Files.isRegularFile(port.bestEffortDir.resolve("BALTICPORTER-BEST-EFFORT")),
+      "a directory name is not enough — a directory gets copied"
+    )
 
     val text = Files.readString(port.bestEffortDir.resolve("com/demo/Plain.scala"))
     assert(text.contains("BEST-EFFORT OUTPUT"), text)
@@ -140,10 +159,10 @@ class EmissionGateSpec extends munit.FunSuite:
   test("a DISCHARGED marker passes the gate — the discharge is what the state is for") {
     val (root, src) = fixture()
     class Discharge extends Phase:
-      def name: String = "test/discharge"
-      override def transformTerm(t: Term)(using Program): Term = t match
+      def name:                                           String = "test/discharge"
+      override def transformTerm(t: Term)(using Program): Term   = t match
         case m: Tree.Unportable => m.resolved(name, "the fixture answered it")
-        case other              => other
+        case other => other
     val r = run(root, src, List(new Mint, new Discharge)).execute()
     assertEquals(scalaFiles(r.outDir), List("com/demo/Plain.scala"))
     val text = Files.readString(r.outDir.resolve("com/demo/Plain.scala"))

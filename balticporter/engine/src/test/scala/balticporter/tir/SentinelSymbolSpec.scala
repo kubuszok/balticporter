@@ -1,7 +1,7 @@
 package balticporter.tir
 
-/** SENTINEL SYMBOLS — the marker's shape from before there was a marker, COUNTED rather than
-  * converted. */
+/** SENTINEL SYMBOLS — the marker's shape from before there was a marker, COUNTED rather than converted.
+  */
 class SentinelSymbolSpec extends munit.FunSuite:
 
   private def programWith(syms: List[Symbol], units: List[Tree.ClassDef]): Program =
@@ -68,12 +68,10 @@ class SentinelSymbolSpec extends munit.FunSuite:
     val param = Symbol(parId, "actual", "?#actual", Flags(), SymId.None, TypeRepr.NoType)
     val cls   = Symbol(clsId, "Holder", "p.Holder", Flags(), SymId.None, TypeRepr.NoType)
     val mem   = Symbol(defId, "get", "p.Holder#get", Flags(), clsId, TypeRepr.NoType)
-    val dd    = Tree.DefDef(defId, Nil, TypeTree(TypeRepr.NoType, o),
-      Some(Tree.Ident(parId, TypeRepr.NoType, o)), o)
+    val dd    = Tree.DefDef(defId, Nil, TypeTree(TypeRepr.NoType, o), Some(Tree.Ident(parId, TypeRepr.NoType, o)), o)
     val unit  = Tree.ClassDef(clsId, Nil, scala.None, List(dd), o)
     val p     = programWith(List(cls, mem, param), List(unit))
-    assertEquals(MarkerCheck.sentinels(p, p.units), Nil,
-      "a member whose OWNER could not be named is not an unresolvable name")
+    assertEquals(MarkerCheck.sentinels(p, p.units), Nil, "a member whose OWNER could not be named is not an unresolvable name")
   }
 
   test("the `?var$` sentinel is recognised too, and named as a variable rather than a type") {
@@ -84,8 +82,7 @@ class SentinelSymbolSpec extends munit.FunSuite:
     val stub  = Symbol(varId, "count", MarkerCheck.VarSentinelPrefix + "count", Flags(), SymId.None, TypeRepr.NoType)
     val cls   = Symbol(clsId, "V", "p.V", Flags(), SymId.None, TypeRepr.NoType)
     val mem   = Symbol(defId, "run", "p.V#run", Flags(), clsId, TypeRepr.NoType)
-    val dd    = Tree.DefDef(defId, Nil, TypeTree(TypeRepr.NoType, o),
-      Some(Tree.Ident(varId, TypeRepr.NoType, o)), o)
+    val dd    = Tree.DefDef(defId, Nil, TypeTree(TypeRepr.NoType, o), Some(Tree.Ident(varId, TypeRepr.NoType, o)), o)
     val unit  = Tree.ClassDef(clsId, Nil, scala.None, List(dd), o)
     val p     = programWith(List(cls, mem, stub), List(unit))
     val fs    = MarkerCheck.sentinels(p, p.units)

@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.catalog.JS
 import balticporter.testkit.PortSuite
 
-/** JS-E20 — `int.class` is statically `Class<Integer>` (JLS 15.8.2), so a `Class<T>` slot takes it
-  * where `classOf[Int]` (`Class[Int]`) is refused. */
+/** JS-E20 — `int.class` is statically `Class<Integer>` (JLS 15.8.2), so a `Class<T>` slot takes it where `classOf[Int]` (`Class[Int]`) is refused.
+  */
 class PrimitiveClassLiteralSpec extends PortSuite:
 
   private val java =

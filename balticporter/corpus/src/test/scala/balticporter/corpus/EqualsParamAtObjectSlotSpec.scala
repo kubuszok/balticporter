@@ -2,9 +2,9 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `ENGINE-LIMITS.md` G8.9 — the frontend widens a java `equals(Object)`'s parameter to `scala.Any`
-  * so that it OVERRIDES `Object.equals` instead of clashing with it, and every forwarding of that
-  * parameter to an `Object` slot then has an argument scala types as strictly wider. */
+/** `ENGINE-LIMITS.md` G8.9 — the frontend widens a java `equals(Object)`'s parameter to `scala.Any` so that it OVERRIDES `Object.equals` instead of clashing with it, and every forwarding of that
+  * parameter to an `Object` slot then has an argument scala types as strictly wider.
+  */
 class EqualsParamAtObjectSlotSpec extends PortSuite:
 
   test("a widened `equals` parameter forwarded to an `Object` slot is cast") {
@@ -17,7 +17,8 @@ class EqualsParamAtObjectSlotSpec extends PortSuite:
         |  public CharSequence subSequence(int a, int b) { return this; }
         |  @Override public boolean equals(Object o) { return Util.same(this, o); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "override def equals(o: scala.Any)")
     assertEmits(p, "same(this, o.asInstanceOf[java.lang.Object])")
   }
@@ -29,7 +30,8 @@ class EqualsParamAtObjectSlotSpec extends PortSuite:
         |class Holder2 {
         |  boolean check(Object o) { return Util2.same(this, o); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // nothing was widened, so nothing needs boxing — the cast would be noise on every `Object`
     // parameter in a corpus.
     assertEmits(p, "same(this, o)")
@@ -43,7 +45,8 @@ class EqualsParamAtObjectSlotSpec extends PortSuite:
         |class Holder3 {
         |  boolean equals(Object o, int depth) { return Util3.same(this, o); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "def equals(o: java.lang.Object, depth: scala.Int)")
     assertNotEmits(p, "o.asInstanceOf[java.lang.Object]")
   }

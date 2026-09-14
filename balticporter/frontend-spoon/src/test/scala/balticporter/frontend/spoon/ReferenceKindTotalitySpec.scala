@@ -2,17 +2,18 @@ package balticporter.frontend.spoon
 
 import scala.jdk.CollectionConverters.*
 
-/** REFERENCE-KIND TOTALITY — [[NodeKindTotalitySpec]]'s argument at the THIRD Spoon package, which
-  * is where the catalog's fourth obligation surface gets its keys. */
+/** REFERENCE-KIND TOTALITY — [[NodeKindTotalitySpec]]'s argument at the THIRD Spoon package, which is where the catalog's fourth obligation surface gets its keys.
+  */
 class ReferenceKindTotalitySpec extends munit.FunSuite:
 
-  /** Every `Ct*` interface name under `spoon.reflect.reference`, read from the jar `CtReference`
-    * was loaded from. */
+  /** Every `Ct*` interface name under `spoon.reflect.reference`, read from the jar `CtReference` was loaded from.
+    */
   private lazy val declared: Set[String] =
     val loc = classOf[spoon.reflect.reference.CtReference].getProtectionDomain.getCodeSource.getLocation
     val zf  = java.util.zip.ZipFile(java.nio.file.Path.of(loc.toURI).toFile)
     try
-      zf.entries().asScala
+      zf.entries()
+        .asScala
         .map(_.getName)
         .filter(_.startsWith("spoon/reflect/reference/"))
         .filter(_.endsWith(".class"))
@@ -38,11 +39,13 @@ class ReferenceKindTotalitySpec extends munit.FunSuite:
     val claimed    = SpoonKinds.byRefName.keySet
     val unclaimed  = (producible -- claimed).toList.sorted
     val phantom    = (claimed -- producible).toList.sorted
-    assertEquals(unclaimed, Nil,
+    assertEquals(
+      unclaimed,
+      Nil,
       "these Spoon reference kinds have no entry in SpoonKinds.references — say what the frontend " +
-        s"does with each, or exclude it with the test that put it there: ${unclaimed.mkString(", ")}")
-    assertEquals(phantom, Nil,
-      s"SpoonKinds.references claims kinds the jar does not have: ${phantom.mkString(", ")}")
+        s"does with each, or exclude it with the test that put it there: ${unclaimed.mkString(", ")}"
+    )
+    assertEquals(phantom, Nil, s"SpoonKinds.references claims kinds the jar does not have: ${phantom.mkString(", ")}")
   }
 
   test("the EXCLUSION set is about kinds that exist") {
@@ -53,8 +56,7 @@ class ReferenceKindTotalitySpec extends munit.FunSuite:
   test("no reference kind is claimed twice, and every catalog pointer resolves") {
     val dupes = SpoonKinds.references.groupBy(_.name).filter(_._2.sizeIs > 1).keys.toList.sorted
     assertEquals(dupes, Nil, dupes.mkString(", "))
-    val dangling = SpoonKinds.references.flatMap(_.catalog)
-      .filterNot(balticporter.catalog.Differences.byId.contains)
+    val dangling = SpoonKinds.references.flatMap(_.catalog).filterNot(balticporter.catalog.Differences.byId.contains)
     assertEquals(dangling, Nil, s"a reference kind points at a catalog row that does not exist: ${dangling.mkString(", ")}")
   }
 
@@ -65,8 +67,7 @@ class ReferenceKindTotalitySpec extends munit.FunSuite:
     // and reports `unreached` on every port forever — a failure indistinguishable from a branch the
     // corpus does not exercise.
     val phantom = (balticporter.catalog.Differences.loweredTypeKinds -- SpoonKinds.byRefName.keySet).toList.sorted
-    assertEquals(phantom, Nil,
-      s"these rows attach to a Spoon reference kind the registry does not have: ${phantom.mkString(", ")}")
+    assertEquals(phantom, Nil, s"these rows attach to a Spoon reference kind the registry does not have: ${phantom.mkString(", ")}")
   }
 
   test("a row may only attach where an arm can CONSULT it — the LOWERED reference kinds") {
@@ -75,11 +76,13 @@ class ReferenceKindTotalitySpec extends munit.FunSuite:
     // sit on `mechanised` reading `unreached` on every port forever. That is `JS-G39`'s defect
     // exactly — a row whose surface can never be reached, with no hole and no lower consult count
     // to give it away — and here it is a compile-time-cheap assertion instead.
-    val notLowered = balticporter.catalog.Differences.loweredTypeKinds.toList.sorted.filterNot(k =>
-      SpoonKinds.byRefName.get(k).exists(_.claim.isInstanceOf[SpoonKinds.Claim.Lowered]))
-    assertEquals(notLowered, Nil,
+    val notLowered = balticporter.catalog.Differences.loweredTypeKinds.toList.sorted.filterNot(k => SpoonKinds.byRefName.get(k).exists(_.claim.isInstanceOf[SpoonKinds.Claim.Lowered]))
+    assertEquals(
+      notLowered,
+      Nil,
       "these rows attach to a reference kind `SpoonTir.tpe` never dispatches on, so the obligation " +
-        s"could never be owed: ${notLowered.mkString(", ")}")
+        s"could never be owed: ${notLowered.mkString(", ")}"
+    )
   }
 
   test("`refNameOf` answers the MOST SPECIFIC kind — the wildcard/type-parameter pair") {
@@ -87,12 +90,12 @@ class ReferenceKindTotalitySpec extends munit.FunSuite:
     // shared with `nameOf` rather than copied: `CtWildcardReferenceImpl` EXTENDS
     // `CtTypeParameterReferenceImpl`, so a resolver answering the first registered supertype would
     // key every wildcard as a type variable and hand it the wrong arm's obligations.
-    assertEquals(SpoonKinds.refNameOf(classOf[spoon.support.reflect.reference.CtWildcardReferenceImpl]),
-      "CtWildcardReference")
-    assertEquals(SpoonKinds.refNameOf(classOf[spoon.support.reflect.reference.CtTypeParameterReferenceImpl]),
-      "CtTypeParameterReference")
-    assertEquals(SpoonKinds.refNameOf(classOf[spoon.support.reflect.reference.CtTypeReferenceImpl[?]]),
-      "CtTypeReference")
+    assertEquals(SpoonKinds.refNameOf(classOf[spoon.support.reflect.reference.CtWildcardReferenceImpl]), "CtWildcardReference")
+    assertEquals(
+      SpoonKinds.refNameOf(classOf[spoon.support.reflect.reference.CtTypeParameterReferenceImpl]),
+      "CtTypeParameterReference"
+    )
+    assertEquals(SpoonKinds.refNameOf(classOf[spoon.support.reflect.reference.CtTypeReferenceImpl[?]]), "CtTypeReference")
     // …and the two registries stay apart: a NODE kind is not a reference kind, and asking the
     // reference registry for one must not answer a registered name.
     assert(!SpoonKinds.byRefName.contains(SpoonKinds.nameOf(classOf[spoon.support.reflect.code.CtInvocationImpl[?]])))
@@ -100,7 +103,9 @@ class ReferenceKindTotalitySpec extends munit.FunSuite:
 
   test("the accounting, printed — derived from the jar, stated as a constant nowhere") {
     val producible = declared -- SpoonKinds.refExcluded
-    println(s"[spoon-refs] jar=${declared.size} excluded=${SpoonKinds.refExcluded.size} " +
-      s"producible=${producible.size} (registry=${SpoonKinds.references.size})")
+    println(
+      s"[spoon-refs] jar=${declared.size} excluded=${SpoonKinds.refExcluded.size} " +
+        s"producible=${producible.size} (registry=${SpoonKinds.references.size})"
+    )
     assertEquals(SpoonKinds.references.size, producible.size)
   }

@@ -2,11 +2,11 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Decision, Pipeline}
+import balticporter.tir.{ Decision, Pipeline }
 import balticporter.transform.TestFrameworkTransform
 
-/** JUnit 4 CONSTRUCTS A FRESH TEST OBJECT PER `@Test`; MUnit runs one suite instance
-  * (`ENGINE-LIMITS.md` X4, `CLAUDE.md` §4.4). */
+/** JUnit 4 CONSTRUCTS A FRESH TEST OBJECT PER `@Test`; MUnit runs one suite instance (`ENGINE-LIMITS.md` X4, `CLAUDE.md` §4.4).
+  */
 class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
 
   private def emit(java: String): (String, TestFrameworkTransform) =
@@ -15,22 +15,24 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     (new TirEmitter(after).emit, ph)
 
   private def decisions(java: String): List[Decision] =
-    Pipeline.runTraced(SpoonTir.fromSource(java), List(new TestFrameworkTransform))._2
-      .of(Decision.Kind.RebuiltPerTest)
+    Pipeline.runTraced(SpoonTir.fromSource(java), List(new TestFrameworkTransform))._2.of(Decision.Kind.RebuiltPerTest)
 
-  /** the body of the emitted `bpFreshState`, as its statement lines — brace-balanced, because an
-    * instance initialiser block renders as a nested `{ … }` and a `takeWhile` on the closing line
-    * would silently stop at it and report a PREFIX of the sequence as the whole of it. */
+  /** the body of the emitted `bpFreshState`, as its statement lines — brace-balanced, because an instance initialiser block renders as a nested `{ … }` and a `takeWhile` on the closing line would
+    * silently stop at it and report a PREFIX of the sequence as the whole of it.
+    */
   private def rebuild(out: String): List[String] =
     val at = out.indexOf("def bpFreshState()")
     assert(at >= 0, clue(out))
     val lines = out.substring(at).linesIterator.drop(1).toList
     var depth = 1
     val kept  = List.newBuilder[String]
-    lines.iterator.takeWhile { l =>
-      depth += l.count(_ == '{') - l.count(_ == '}')
-      if depth > 0 then { kept += l.trim; true } else false
-    }.foreach(_ => ())
+    lines.iterator
+      .takeWhile { l =>
+        depth += l.count(_ == '{') - l.count(_ == '}')
+        if depth > 0 then { kept += l.trim; true }
+        else false
+      }
+      .foreach(_ => ())
     kept.result().filter(_.nonEmpty)
 
   // ------------------------------------------------------------------ state --
@@ -85,7 +87,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  @Test public void one() { mutated = 42; touched = "x"; flag = true; }
         |  @Test public void two() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(rebuild(out), List("mutated = 0", "touched = null", "flag = false"))
   }
 
@@ -100,7 +103,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  @Test public void one() { shared++; mine++; }
         |  @Test public void two() { shared++; mine++; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(rebuild(out), List("mine = 0", "mine = 0"))
     assert(!rebuild(out).exists(_.contains("shared")), clue(out))
   }
@@ -119,7 +123,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  private int b = 5;
         |  @Test public void one() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val body = rebuild(out)
     assert(body.indexOf("a = 1") < body.indexOf("this.a = 2"), clue(body))
     assert(body.indexOf("this.a = 2") < body.indexOf("b = 5"), clue(body))
@@ -136,7 +141,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  public CtorTest() { seen = seen + 1; }
         |  @Test public void one() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val body = rebuild(out)
     assertEquals(body, List("seen = 0", "seen = 3", "this.seen = this.seen + 1"))
   }
@@ -151,7 +157,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  @Before public void setUp() { seen = seen * 10; }
         |  @Test public void one() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val one = out.substring(out.indexOf("test(\"one\")"))
     assert(one.indexOf("bpFreshState()") < one.indexOf("setUp()"), clue(one))
   }
@@ -166,7 +173,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  @BeforeClass public static void once() { }
         |  @Test public void one() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the class body initialises NOTHING — junit runs @BeforeClass before the first construction,
     // and MUnit constructs the suite before beforeAll(), so an un-hoisted initialiser would run on
     // the wrong side of it (and once more than java ran it).
@@ -193,8 +201,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     // probed: `Base.ctor sees sub=null` on the SECOND test too. Zeroing on the way down would show
     // the superclass the previous test's value, which is X4 one level in.
     val (out, _) = emit(hierarchySrc)
-    val sub = out.substring(out.indexOf("class SubTest"))
-    val body = rebuild(sub)
+    val sub      = out.substring(out.indexOf("class SubTest"))
+    val body     = rebuild(sub)
     assertEquals(body, List("subField = null", "super.bpFreshState()", "subField = \"sub\""))
     assert(sub.contains("override def bpFreshState()"), clue(sub))
     // …and the base declares the member the subclass overrides, though it declares no @Test at all:
@@ -215,9 +223,9 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         sawInBase += String.valueOf(peek)
       def peek: String = null
     class Sub extends Base:
-      var subField: String = scala.compiletime.uninitialized
-      override def peek: String = subField
-      override def bpFreshState(): Unit =
+      var subField:                String = scala.compiletime.uninitialized
+      override def peek:           String = subField
+      override def bpFreshState(): Unit   =
         subField = null
         super.bpFreshState()
         subField = "sub"
@@ -244,7 +252,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  public ParamCtorTest(String spec) { this.spec = spec; }
         |  @Test public void one() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains("bpFreshState"))
     val fs = ph.findings.filter(_.construct == "fresh-state(constructor)")
     assertEquals(fs.size, 1)
@@ -261,7 +270,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  public DelegatingTest(int k) { n = k; }
         |  @Test public void one() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val fs = ph.findings.filter(_.construct == "fresh-state(constructor)")
     assertEquals(fs.size, 1)
     assert(clue(fs.head.advice).contains("declares 2 constructors"))
@@ -274,7 +284,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |public class StatelessTest {
         |  @Test public void one() { org.junit.Assert.assertEquals(1, 1); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains("bpFreshState"))
   }
 
@@ -287,7 +298,8 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
         |  private static java.util.List<Object> kept = new java.util.ArrayList<Object>();
         |  @Test public void one() { kept.add(this); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val fs = ph.findings.filter(_.construct == "fresh-state(instance-escape)")
     assertEquals(fs.size, 1)
     assert(clue(fs.head.advice).contains("object identity is not"))
@@ -313,8 +325,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
   }
 
   test("…and every converted test says its body opens by rebuilding") {
-    val ds = Pipeline.runTraced(SpoonTir.fromSource(sharedFieldSrc), List(new TestFrameworkTransform))._2
-      .of(Decision.Kind.RetypedSignature)
+    val ds = Pipeline.runTraced(SpoonTir.fromSource(sharedFieldSrc), List(new TestFrameworkTransform))._2.of(Decision.Kind.RetypedSignature)
     assert(ds.nonEmpty)
     assert(ds.forall(_.detail("rebuilt") == "bpFreshState"), clue(ds.map(_.detail("rebuilt"))))
   }
@@ -341,11 +352,12 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     val after = Pipeline.run(SpoonTir.fromSource(droppedFieldSrc), List(ph))
     val out   = new TirEmitter(after).emit
     assert(clue(out).contains("def bpFreshState()"), "the method should still exist (for `kept`)")
-    val body  = rebuild(out)
-    assert(!body.exists(_.contains("watcher")),
-      s"dropped field 'watcher' must NOT appear in bpFreshState body: ${body.mkString("\n")}")
-    assert(body.exists(_.contains("kept")),
-      "non-dropped field 'kept' must still appear in bpFreshState body")
+    val body = rebuild(out)
+    assert(
+      !body.exists(_.contains("watcher")),
+      s"dropped field 'watcher' must NOT appear in bpFreshState body: ${body.mkString("\n")}"
+    )
+    assert(body.exists(_.contains("kept")), "non-dropped field 'kept' must still appear in bpFreshState body")
   }
 
   test("P11: an empty dropFields set changes nothing") {
@@ -353,6 +365,5 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     val after = Pipeline.run(SpoonTir.fromSource(droppedFieldSrc), List(ph))
     val out   = new TirEmitter(after).emit
     val body  = rebuild(out)
-    assert(body.exists(_.contains("watcher")),
-      "with empty dropFields, watcher should be in bpFreshState body")
+    assert(body.exists(_.contains("watcher")), "with empty dropFields, watcher should be in bpFreshState body")
   }

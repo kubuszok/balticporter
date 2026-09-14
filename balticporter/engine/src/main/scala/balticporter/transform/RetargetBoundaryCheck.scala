@@ -2,11 +2,10 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The RETARGET boundary, in the direction subtyping does not cover — every value the JDK
-  * PRODUCES at a retargeted type, counted. A retarget licenses a value flowing INTO a slot; it
-  * says nothing about the JDK HANDING one BACK — a direction `CollectionBoundaryCheck` cannot see
-  * since `transformType` already moved both sides of the slot. Counts three shapes (producer
-  * reference, static receiver, cast); synthesises no coercion (ENGINE-LIMITS K14). */
+/** The RETARGET boundary, in the direction subtyping does not cover — every value the JDK PRODUCES at a retargeted type, counted. A retarget licenses a value flowing INTO a slot; it says nothing
+  * about the JDK HANDING one BACK — a direction `CollectionBoundaryCheck` cannot see since `transformType` already moved both sides of the slot. Counts three shapes (producer reference, static
+  * receiver, cast); synthesises no coercion (ENGINE-LIMITS K14).
+  */
 object RetargetBoundaryCheck:
 
   /** The check's name in `findings.tsv`. */
@@ -15,13 +14,16 @@ object RetargetBoundaryCheck:
   enum Issue:
     /** the JDK's own member hands back a value at the SOURCE type, into a slot the phase moved. */
     case ExternalProducer
+
     /** a static receiver still naming the java source type, under a node type that moved. */
     case StaticReceiver
-    /** a cast TO the retarget target from something that is not one — a runtime `ClassCastException`
-      * with a green compile. */
+
+    /** a cast TO the retarget target from something that is not one — a runtime `ClassCastException` with a green compile.
+      */
     case CastToTarget
-    /** `remove()` on a `JavaIterator` bridged from a retarget target's own `iterator` — the bridge
-      * has no handle on the collection, so `remove` refuses at run time (a counted REFUSAL). */
+
+    /** `remove()` on a `JavaIterator` bridged from a retarget target's own `iterator` — the bridge has no handle on the collection, so `remove` refuses at run time (a counted REFUSAL).
+      */
     case IteratorRemove
 
   object Issue:
@@ -51,21 +53,26 @@ object RetargetBoundaryCheck:
           "OVER THE COLLECTION (index-tracking, calling the target's own remove), which is a " +
           "runtime shim the bridge does not have yet (ENGINE-LIMITS.md K34)."
 
-  /** one producer-direction site. `produced` is the java type the value really has; `slot` is what
-    * the emitted code now says. */
-  final case class Finding(issue: Issue, what: String, produced: String, slot: String,
-                           origin: Origin, enclosing: SymId):
-    def detail: String = s"$what: produces $produced / emitted as $slot"
-    def render: String = s"$issue $what — produces $produced / emitted as $slot  (${origin.javaPath}:${origin.line})"
+  /** one producer-direction site. `produced` is the java type the value really has; `slot` is what the emitted code now says.
+    */
+  final case class Finding(issue: Issue, what: String, produced: String, slot: String, origin: Origin, enclosing: SymId):
+    def detail:                         String              = s"$what: produces $produced / emitted as $slot"
+    def render:                         String              = s"$issue $what — produces $produced / emitted as $slot  (${origin.javaPath}:${origin.line})"
     def report(using program: Program): CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, program.symbolOf(enclosing).map(_.fullName).getOrElse("?"),
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(
+        Name,
+        issue.toString,
+        program.symbolOf(enclosing).map(_.fullName).getOrElse("?"),
+        CheckReport.relativise(origin.javaPath),
+        origin.line,
+        detail
+      )
 
   def check(program: Program, retargeted: Map[String, String]): List[Finding] =
     check(program, program.units, retargeted)
 
-  /** …restricted to units the run EMITS — a dependent's `Program` holds its base's units too, whose
-    * sites are the base's finding (ENGINE-LIMITS D2). */
+  /** …restricted to units the run EMITS — a dependent's `Program` holds its base's units too, whose sites are the base's finding (ENGINE-LIMITS D2).
+    */
   def check(program: Program, units: List[Tree.ClassDef], retargeted: Map[String, String]): List[Finding] =
     if retargeted.isEmpty then Nil
     else
@@ -77,23 +84,23 @@ object RetargetBoundaryCheck:
         retargeted.groupBy(_._2).map((t, e) => t -> e.keys.toList.sorted.mkString("/"))
       given Program = program
 
-      def fqn(t: TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
+      def fqn(t:      TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
       def targeted(t: TypeRepr): Option[String] = fqn(t).filter(sourceOf.contains)
-      def isMethod(s: SymId): Boolean =
+      def isMethod(s: SymId):    Boolean        =
         program.symbolOf(s).exists(_.info.isInstanceOf[TypeRepr.MethodType | TypeRepr.PolyType])
 
-      /** the value at this site is produced OUTSIDE this program — `Program.owns` (§4.56). A base's
-        * declaration retyped by this run's phase still agrees with its signature. */
+      /** the value at this site is produced OUTSIDE this program — `Program.owns` (§4.56). A base's declaration retyped by this run's phase still agrees with its signature.
+        */
       def external(s: SymId): Boolean = s != SymId.None && !program.owns(s)
 
-      /** a CONSTRUCTOR application is never a producer, whatever `owns` says: `new Comparator<T>(){…}`
-        * constructs its value at the retyped type, but an anonymous class's `<init>` does not climb
-        * to a unit symbol and reads as external — excluded structurally (CLAUDE.md §3). */
+      /** a CONSTRUCTOR application is never a producer, whatever `owns` says: `new Comparator<T>(){…}` constructs its value at the retyped type, but an anonymous class's `<init>` does not climb to a
+        * unit symbol and reads as external — excluded structurally (CLAUDE.md §3).
+        */
       def constructs(t: Tree.Apply): Boolean =
         t.fun.isInstanceOf[Tree.New] || program.symbolOf(t.method).exists(_.name == "<init>")
 
       def fullNameOf(s: SymId): Option[String] = program.symbolOf(s).map(_.fullName)
-      val iteratorFromFqn   = "balticporter.runtime.JavaIterator.from"
+      val iteratorFromFqn = "balticporter.runtime.JavaIterator.from"
       val iteratorRemoveFqn = "balticporter.runtime.JavaIterator#remove"
 
       val scan = new Phase:
@@ -101,14 +108,13 @@ object RetargetBoundaryCheck:
 
         // per enclosing MEMBER, the retarget sources whose `iterator` this member bridged through
         // `JavaIterator.from`; a `remove()` on a `JavaIterator` in the same member attributes to them.
-        private var bridgedHere: List[String] = Nil
+        private var bridgedHere: List[String]          = Nil
         private var removesHere: List[(Origin, SymId)] = Nil
 
         override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
           bridgedHere = Nil; removesHere = Nil
           val r = super.transformDefDef(d)
-          for src <- bridgedHere.distinct; (o, m) <- removesHere do
-            out += Finding(Issue.IteratorRemove, "iterator remove", src, retargeted(src), o, m)
+          for src <- bridgedHere.distinct; (o, m) <- removesHere do out += Finding(Issue.IteratorRemove, "iterator remove", src, retargeted(src), o, m)
           r
 
         override def transformApply(t: Tree.Apply)(using Program): Term =
@@ -117,11 +123,8 @@ object RetargetBoundaryCheck:
               case Tree.Select(recv, _, _, _) :: Nil =>
                 targeted(recv.tpe).foreach(tt => bridgedHere ::= sourceOf(tt))
               case _ => ()
-          if fullNameOf(t.method).contains(iteratorRemoveFqn) then
-            removesHere ::= (t.origin, t.method)
-          if external(t.method) && !constructs(t) then
-            targeted(t.tpe).foreach(tt => out += Finding(Issue.ExternalProducer, "call",
-              sourceOf(tt), tt, t.origin, t.method))
+          if fullNameOf(t.method).contains(iteratorRemoveFqn) then removesHere ::= (t.origin, t.method)
+          if external(t.method) && !constructs(t) then targeted(t.tpe).foreach(tt => out += Finding(Issue.ExternalProducer, "call", sourceOf(tt), tt, t.origin, t.method))
           // the RECEIVER half: a static access is an `Ident` of the TYPE's own symbol, which
           // `transformType` never reaches. Read off the call so only a receiver position counts.
           t.fun match
@@ -136,9 +139,7 @@ object RetargetBoundaryCheck:
 
         override def transformSelect(t: Tree.Select)(using Program): Term =
           // fields only — a method's `Select` is the `fun` of the `Apply` above.
-          if external(t.sym) && !isMethod(t.sym) then
-            targeted(t.tpe).foreach(tt => out += Finding(Issue.ExternalProducer, "field read",
-              sourceOf(tt), tt, t.origin, t.sym))
+          if external(t.sym) && !isMethod(t.sym) then targeted(t.tpe).foreach(tt => out += Finding(Issue.ExternalProducer, "field read", sourceOf(tt), tt, t.origin, t.sym))
           t
 
         override def transformTerm(t: Term)(using Program): Term =
@@ -165,9 +166,12 @@ object RetargetBoundaryCheck:
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.groupBy(f => (f.what, f.produced, f.slot)).toList.sortBy((_, v) => -v.size).take(10)
-          .map { case ((what, p, s), ss) => s"    ${ss.size} × $what: produces $p / emitted as $s" }
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.groupBy(f => (f.what, f.produced, f.slot)).toList.sortBy((_, v) => -v.size).take(10).map { case ((what, p, s), ss) => s"    ${ss.size} × $what: produces $p / emitted as $s" }
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

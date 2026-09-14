@@ -1,18 +1,17 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
 import balticporter.frontend.ts.RastFile
 
-/** Dedicated emitter for points-on-path (index.ts).
-  * Cross-module: imports from path-data-parser and points-on-curve. */
+/** Dedicated emitter for points-on-path (index.ts). Cross-module: imports from path-data-parser and points-on-curve.
+  */
 object PointsOnPathEmitter {
 
-  def emit(rast: RastFile): Map[String, String] = {
+  def emit(rast: RastFile): Map[String, String] =
     Map("PointsOnPath" -> emitPointsOnPath())
-  }
 
-  private def emitPointsOnPath(): String = {
+  private def emitPointsOnPath(): String =
     s"""package ssg.graphs.commons.rough.curve
        |
        |import scala.collection.mutable.ArrayBuffer
@@ -91,5 +90,4 @@ object PointsOnPathEmitter {
        |  }
        |}
        |""".stripMargin
-  }
 }

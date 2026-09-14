@@ -3,15 +3,15 @@ package balticporter.corpus
 import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.testkit.{PortSuite, Ported}
-import balticporter.tir.{Decision, Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform, RetargetBoundaryCheck, TypeRedirectTransform}
+import balticporter.testkit.{ PortSuite, Ported }
+import balticporter.tir.{ Decision, Phase, Pipeline, PolicyBinder, RunScope, UsageKind }
+import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform, RetargetBoundaryCheck, TypeRedirectTransform }
 
 import java.nio.file.Files
 
-/** The java→scala collections transform: retypes every collection occurrence and rewrites
-  * the common call shapes, whole-program and symbol-driven. Asserts both the xref (the old
-  * type is vacated, the new one inherits its positions) and the emitted Scala. */
+/** The java→scala collections transform: retypes every collection occurrence and rewrites the common call shapes, whole-program and symbol-driven. Asserts both the xref (the old type is vacated, the
+  * new one inherits its positions) and the emitted Scala.
+  */
 class CollectionsTransformSpec extends PortSuite:
 
   private val src =
@@ -41,7 +41,7 @@ class CollectionsTransformSpec extends PortSuite:
     p.symbols.all.find(_.fullName == full).map(_.id)
 
   test("retypes every java.util.List occurrence to scala Buffer (whole-program)") {
-    val listId   = id(before, "java.util.List").getOrElse(fail("no java.util.List"))
+    val listId = id(before, "java.util.List").getOrElse(fail("no java.util.List"))
     // before: java.util.List is used (field type, type arg positions); after: vacated.
     assert(before.usagesOf(listId).nonEmpty)
     assertEquals(after.usagesOf(listId), Nil)
@@ -55,25 +55,25 @@ class CollectionsTransformSpec extends PortSuite:
     assert(out.contains("new scala.collection.mutable.ArrayBuffer["))
     assert(out.contains("scala.collection.mutable.HashMap["))
     assert(out.contains("scala.collection.mutable.HashSet["))
-    assert(out.contains("this.items += s"))          // List.add     -> +=
-    assert(out.contains("this.seen += s"))           // Set.add      -> +=
+    assert(out.contains("this.items += s")) // List.add     -> +=
+    assert(out.contains("this.seen += s")) // Set.add      -> +=
     // `Map.put` maps to scala's `put`, NOT `update`: java's returns the PREVIOUS value and
     // `update` returns Unit, so `if (map.put(k, v) != null)` became a comparison against Unit at
     // every site. This assertion tracked the superseded `update` shape and had been red since that
     // fix landed — a red engine test is a gate that has stopped reporting.
-    assert(clue(out).contains("this.counts.put(s,"))       // Map.put -> put(_, _).getOrElse(null)
-    assert(out.contains("this.items(0)"))            // List.get(i)  -> apply
-    assert(out.contains("this.counts.getOrElse(s, null.asInstanceOf["))   // Map.get -> getOrElse(_, null: V)
-    assert(out.contains("this.counts.getOrElse(s, 0.asInstanceOf["))      // getOrDefault -> getOrElse(_, d: V)
-    assert(out.contains("this.counts.contains(s)"))  // containsKey  -> contains
-    assert(out.contains("this.seen -= s"))           // Set.remove   -> -=
+    assert(clue(out).contains("this.counts.put(s,")) // Map.put -> put(_, _).getOrElse(null)
+    assert(out.contains("this.items(0)")) // List.get(i)  -> apply
+    assert(out.contains("this.counts.getOrElse(s, null.asInstanceOf[")) // Map.get -> getOrElse(_, null: V)
+    assert(out.contains("this.counts.getOrElse(s, 0.asInstanceOf[")) // getOrDefault -> getOrElse(_, d: V)
+    assert(out.contains("this.counts.contains(s)")) // containsKey  -> contains
+    assert(out.contains("this.seen -= s")) // Set.remove   -> -=
     // same reason as `put` above: java's `Map.remove` RETURNS the removed value, which `-=`
     // discards, so it maps to scala's `remove(_).getOrElse(null)`.
-    assert(clue(out).contains("this.counts.remove(s)"))    // Map.remove -> remove(_).getOrElse(null)
-    assert(out.contains("this.items ++= more"))      // addAll       -> ++=
-    assert(out.contains("this.items.isEmpty\n") || out.contains("this.items.isEmpty "))  // drop ()
-    assert(out.contains("for (s <- this.items)"))    // for-each over retyped collection
-    assert(!out.contains("java.util."))              // nothing left un-migrated
+    assert(clue(out).contains("this.counts.remove(s)")) // Map.remove -> remove(_).getOrElse(null)
+    assert(out.contains("this.items ++= more")) // addAll       -> ++=
+    assert(out.contains("this.items.isEmpty\n") || out.contains("this.items.isEmpty ")) // drop ()
+    assert(out.contains("for (s <- this.items)")) // for-each over retyped collection
+    assert(!out.contains("java.util.")) // nothing left un-migrated
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -168,8 +168,7 @@ class CollectionsTransformSpec extends PortSuite:
     // One arm keyed on `java.util.Collection#stream` serves all of them because that is the
     // DECLARING type of the method, which is what the frontend resolves — not the receiver's
     // written type. Every one becomes the collapsed `filtered(…asScalaBuffer, …)`.
-    assertEquals(clue(p.out).sliding("JavaCollection.filtered(".length)
-                   .count(_ == "JavaCollection.filtered("), 16)
+    assertEquals(clue(p.out).sliding("JavaCollection.filtered(".length).count(_ == "JavaCollection.filtered("), 16)
     // and nothing survives as a java stream call.
     assertNotEmits(p, "java.util.stream.Collectors.toList()")
     assertNotEmits(p, ".stream()")
@@ -177,9 +176,9 @@ class CollectionsTransformSpec extends PortSuite:
     // IS, not by one entry in a table applied to every kind (see `streamSource`). Emitting
     // `asScalaBuffer` unconditionally was three uncompilable sites on liqp that no check saw,
     // because the collapse fired and nothing reported an untranslated chain.
-    assertEmits(p, "c.asScalaBuffer")      // a `Collection`/`AbstractCollection` slot IS the shim
-    assertEmits(p, "c.toBuffer")           // a `Set` copies — every collapsed operation takes a Buffer
-    assertEmitsMatch(p, """filtered\(c, p\.""")  // a `List`/`Deque`/`Queue` slot already IS the sequence
+    assertEmits(p, "c.asScalaBuffer") // a `Collection`/`AbstractCollection` slot IS the shim
+    assertEmits(p, "c.toBuffer") // a `Set` copies — every collapsed operation takes a Buffer
+    assertEmitsMatch(p, """filtered\(c, p\.""") // a `List`/`Deque`/`Queue` slot already IS the sequence
     // `Own extends AbstractCollection<T>` keeps ITS OWN type, which this phase never minted — the
     // accessor comes from the DECLARING type's target, and it is right because `Own` really does
     // extend `JavaCollection` after the retyping.
@@ -200,7 +199,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertNotEmits(p, "JavaCollection.filtered(")
     assertEmits(p, "s.lines().filter(")
@@ -225,7 +224,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     // the SOURCE still collapses — it is the slot that does not follow. `f` is a `java.util.List`,
     // so it retypes to a `Buffer` and IS the sequence: no accessor is added, because
@@ -289,7 +288,7 @@ class CollectionsTransformSpec extends PortSuite:
     val p = port(slots, new CollectionsTransform)
     // `java.util.Set` IS a `java.util.Collection`, so a `mutable.Set` must reach a Collection slot.
     // A DISTINCT NAME, never an overload of `from`: every candidate is a `scala.collection.Iterable`.
-    assertEmits(p, "return balticporter.runtime.JavaCollection.fromSet(s)")   // return
+    assertEmits(p, "return balticporter.runtime.JavaCollection.fromSet(s)") // return
     assertEmits(p, "this.take(balticporter.runtime.JavaCollection.fromSet(s))") // argument
     assertEmits(p, "val c: balticporter.runtime.JavaCollection[java.lang.String] = balticporter.runtime.JavaCollection.fromSet(s)") // declaration
     assertEmits(p, "this.fld = balticporter.runtime.JavaCollection.fromSet(s)") // assignment
@@ -310,17 +309,15 @@ class CollectionsTransformSpec extends PortSuite:
         |  void argColl(Map<String,String> m) { takeColl(m.entrySet()); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     // `entrySet()` is now a LIVE `mutable.Set` view of the mappings, so BOTH slots take an ordinary
     // `Kind.Set` source and the two arms that serve a set serve them. This test used to pin the
     // opposite for the second one — "there is no `Collection` view of a map" — and that sentence was
     // about the MAP, which really is not a collection; the VIEW is, and it reproduces java's own
     // `entrySet().
-    assertEmits(p,
-      "this.takeIt(balticporter.runtime.JavaIterable.from(balticporter.runtime.JavaCollections.entrySetView(m)))")
-    assertEmits(p,
-      "this.takeColl(balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.entrySetView(m)))")
+    assertEmits(p, "this.takeIt(balticporter.runtime.JavaIterable.from(balticporter.runtime.JavaCollections.entrySetView(m)))")
+    assertEmits(p, "this.takeColl(balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.entrySetView(m)))")
     assertNotEmits(p, "JavaCollection.from(m)")
     assertNotEmits(p, "this.takeColl(m)")
   }
@@ -339,10 +336,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  void argMapKeys(Map<String,String> m) { take(m.keySet()); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
-    assertEmits(p,
-      "this.take(balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.keySetView(m)))")
+    assertEmits(p, "this.take(balticporter.runtime.JavaCollection.fromSet(balticporter.runtime.JavaCollections.keySetView(m)))")
     assertNotEmits(p, "this.take(m.keySet)")
   }
 
@@ -399,7 +395,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  List<Serializable> mixed() { return Arrays.asList(98, "97", true); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "JavaCollections.asList[java.io.Serializable](98, \"97\", true)")
   }
@@ -415,7 +411,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  List<?> anon(String a) { return Arrays.asList(a); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertNotEmits(p, "asList[?]")
   }
@@ -471,7 +467,10 @@ class CollectionsTransformSpec extends PortSuite:
     // the element form IS rewritten, so what reaches the slot is the runtime helper's `Buffer` and
     // the wrap is exactly right. A blanket "never wrap an `asList`" would have taken this too.
     val p = port(refusedIntoShimSlot, new CollectionsTransform)
-    assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asList[java.lang.String](a, b)))")
+    assertEmits(
+      p,
+      "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asList[java.lang.String](a, b)))"
+    )
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -518,7 +517,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  void copy(Map<String, ?> src, Map<String, Object> dst) { dst.putAll(src); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "dst ++= src")
   }
@@ -539,7 +538,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  boolean none(List<String> xs) { return xs.stream().noneMatch(s -> s.isEmpty()); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "xs.exists(")
     assertEmits(p, "xs.forall(")
@@ -557,7 +556,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Map<String, Object> make() { return new ConcurrentHashMap<String, Object>(); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     // `TrieMap` and not `mutable.HashMap`: the concurrency is the whole reason the java names this
     // type, and downgrading it would compile and lose thread-safety silently.
@@ -627,7 +626,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  @Override public Set<Map.Entry<String, String>> entrySet() { return super.entrySet(); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "super.entrySet()")
     assertNotEmits(p, "<- this)")
@@ -642,7 +641,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  @Override public Set<Map.Entry<String, String>> entrySet() { return super.entrySet(); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "return super.entrySet()")
     // …the RETURN, not the bare call: K28.1's bridge synthesises `iterator` over `entrySet()` on
@@ -669,7 +668,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Collection<V> narrow(Object o) { return (Collection<V>) o; }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "asInstanceOf[balticporter.runtime.JavaCollection[")
     // and it targets the SHIM, not the java type the port no longer produces.
@@ -688,17 +687,16 @@ class CollectionsTransformSpec extends PortSuite:
         |  Object widen(ArrayList<String> xs) { return (Collection<String>) xs; }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertNotEmits(p, "asInstanceOf[balticporter.runtime.JavaCollection[")
     assertNotEmits(p, "asInstanceOf[java.util.Collection")
   }
 
-  /** the same rule one slot along: a WIDENING the java formal required, which the retyped scala
-    * formal does not accept. Java declares `Map.get`/`remove`/`containsKey` over `Object`, so a
-    * TYPE-VARIABLE key arrives at this phase already wrapped in `asInstanceOf[java.lang.Object]`
-    * — correct for the java call, and `Found: Object / Required: K` once the receiver is a scala
-    * `Map[K, V]`. ENGINE-LIMITS K5.6: a phase that retypes owns the coercions around what it moved. */
+  /** the same rule one slot along: a WIDENING the java formal required, which the retyped scala formal does not accept. Java declares `Map.get`/`remove`/`containsKey` over `Object`, so a
+    * TYPE-VARIABLE key arrives at this phase already wrapped in `asInstanceOf[java.lang.Object]` — correct for the java call, and `Found: Object / Required: K` once the receiver is a scala
+    * `Map[K, V]`. ENGINE-LIMITS K5.6: a phase that retypes owns the coercions around what it moved.
+    */
   private val genericMap =
     """package demo;
       |import java.util.HashMap;
@@ -740,7 +738,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Object[] into(Object[] a) { return xs.toArray(a); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.xs)")
     assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.ys)")
@@ -763,7 +761,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  String[] typed() { return xs.toArray(new String[xs.size()]); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "balticporter.runtime.JavaCollections.toArray(this.xs, new scala.Array[java.lang.String](")
     assertNotEmits(p, "asInstanceOf[scala.Array[java.lang.Object]]")
@@ -784,7 +782,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Adapter take(Collection<String> c) { return take(c.toArray(EMPTY)); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     // the call is UNCHANGED apart from its argument — still java's `toArray` on the shim…
     assertEmits(p, "c.toArray(Adapter.EMPTY)")
@@ -805,7 +803,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Object[] take(Collection<String> c) { return c.toArray((Object[]) new String[0]); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "asInstanceOf[scala.Array[java.lang.Object]]")
   }
@@ -826,7 +824,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  boolean here(String k)    { return this.containsKey(k); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "this.getOrElse(k,")
     assertEmits(p, "this ++= m")
@@ -848,7 +846,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  void walk() { for (Map.Entry<String, Integer> e : super.entrySet()) { } }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     // TRANSLATED, because `super` stays a selection qualifier
     assertEmits(p, "super.++=(m)")
@@ -879,7 +877,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  String once(String k, String v) { return m.putIfAbsent(k, v); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "balticporter.runtime.JavaCollections.subList(this.xs, 0, n)")
     assertEmits(p, "balticporter.runtime.JavaCollections.putIfAbsent(this.m, k, v)")
@@ -905,13 +903,11 @@ class CollectionsTransformSpec extends PortSuite:
       f.toString
     }
     val javac = javax.tools.ToolProvider.getSystemJavaCompiler
-    assertEquals(javac.run(null, null, null, List("-d", cls.toString) ++ files*), 0,
-                 "the fixture's own java did not compile")
+    assertEquals(javac.run(null, null, null, List("-d", cls.toString) ++ files*), 0, "the fixture's own java did not compile")
     val srcRoot = root.resolve("src")
     Files.createDirectories(srcRoot.resolve("demo"))
     Files.writeString(srcRoot.resolve("demo/Snippet.java"), java)
-    val before = SpoonTir.fromTypes(
-      SpoonTir.buildModel(FrontendConfig(srcRoot, List("demo/Snippet.java"), List(cls)), lenient = true))
+    val before = SpoonTir.fromTypes(SpoonTir.buildModel(FrontendConfig(srcRoot, List("demo/Snippet.java"), List(cls)), lenient = true))
     Ported(before, Pipeline.run(before, phases.toList), phases.toList, Map("Snippet.java" -> java))
 
   test("an EXTERNAL producer is wrapped, so the value really becomes what its node already claims") {
@@ -922,7 +918,9 @@ class CollectionsTransformSpec extends PortSuite:
         |class Ext {
         |  Map<String, String> env() { return System.getenv(); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     // the wrap needs no evidence of WHICH java type it was: `fromJava` is overloaded and scalac
     // resolves it against the real static type from the class file.
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(java.lang.System.getenv())")
@@ -936,19 +934,23 @@ class CollectionsTransformSpec extends PortSuite:
     // an E134 naming the HELPER rather than the boundary.
     val ph = new CollectionsTransform
     val p  = portAgainst(
-      List("ext/Conv.java" ->
-        """package ext;
-          |public class Conv {
-          |  public static class Token<T> {}
-          |  public <T> T convert(Object from, Token<T> to) { return null; }
-          |}""".stripMargin),
+      List(
+        "ext/Conv.java" ->
+          """package ext;
+            |public class Conv {
+            |  public static class Token<T> {}
+            |  public <T> T convert(Object from, Token<T> to) { return null; }
+            |}""".stripMargin
+      ),
       """package demo;
         |import java.util.*;
         |class Uses3 {
         |  static final ext.Conv.Token<Map<String, Object>> TOK = new ext.Conv.Token<Map<String, Object>>();
         |  Map<String, Object> read(ext.Conv c, Object o) { return c.convert(o, TOK); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertNotEmits(p, "fromJava")
     // …and the suppression is COUNTED, in the lane that says the refusal rests on a guess.
     val fs = ph.boundary(p.after).filter(_.slot.startsWith("external result (unverified pass-through"))
@@ -962,11 +964,13 @@ class CollectionsTransformSpec extends PortSuite:
     // `Found: Buffer[LNode] / Required: Stream[? <: LNode]`. `toStream` is the faithful answer for
     // the same reason `toJava` is at the universal slot — java's value there really WAS a `Stream`.
     val p = portAgainst(
-      List("ext/Sink.java" ->
-        """package ext;
-          |public class Sink {
-          |  public static <T> java.util.stream.Stream<T> take(java.util.stream.Stream<? extends T> s) { return null; }
-          |}""".stripMargin),
+      List(
+        "ext/Sink.java" ->
+          """package ext;
+            |public class Sink {
+            |  public static <T> java.util.stream.Stream<T> take(java.util.stream.Stream<? extends T> s) { return null; }
+            |}""".stripMargin
+      ),
       """package demo;
         |import java.util.*;
         |class Feeds {
@@ -975,7 +979,9 @@ class CollectionsTransformSpec extends PortSuite:
         |    return ext.Sink.take(xs.stream().map(s -> s.trim()));
         |  }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.toStream(")
   }
 
@@ -985,12 +991,14 @@ class CollectionsTransformSpec extends PortSuite:
     // `java.util.List`, the position-blind retyping moved the SELECT's node type to `Buffer`, and
     // both the boundary check and the JDK-surface check then read a scala collection on both sides.
     val p = portAgainst(
-      List("ext/Ctx.java" ->
-        """package ext;
-          |public class Ctx {
-          |  public java.util.List<String> children = new java.util.ArrayList<String>();
-          |  public java.util.List<String> childList() { return children; }
-          |}""".stripMargin),
+      List(
+        "ext/Ctx.java" ->
+          """package ext;
+            |public class Ctx {
+            |  public java.util.List<String> children = new java.util.ArrayList<String>();
+            |  public java.util.List<String> childList() { return children; }
+            |}""".stripMargin
+      ),
       """package demo;
         |class Walk {
         |  int count(ext.Ctx c) {
@@ -999,7 +1007,9 @@ class CollectionsTransformSpec extends PortSuite:
         |    return n;
         |  }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(c.children)")
   }
 
@@ -1010,11 +1020,13 @@ class CollectionsTransformSpec extends PortSuite:
     // separates them exactly: a method's `info` is a `MethodType`, and only a field carries a plain
     // type — a fact no method can have.
     val p = portAgainst(
-      List("ext/Ctx2.java" ->
-        """package ext;
-          |public class Ctx2 {
-          |  public java.util.List<String> childList() { return new java.util.ArrayList<String>(); }
-          |}""".stripMargin),
+      List(
+        "ext/Ctx2.java" ->
+          """package ext;
+            |public class Ctx2 {
+            |  public java.util.List<String> childList() { return new java.util.ArrayList<String>(); }
+            |}""".stripMargin
+      ),
       """package demo;
         |class Walk2 {
         |  int count(ext.Ctx2 c) {
@@ -1023,7 +1035,9 @@ class CollectionsTransformSpec extends PortSuite:
         |    return n;
         |  }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the CALL is wrapped by `externalProducer`, once, around the whole application — never around
     // the selection inside it.
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(c.childList())")
@@ -1032,14 +1046,18 @@ class CollectionsTransformSpec extends PortSuite:
 
   test("…and a field of a type the phase does NOT retype is left alone — the negative test") {
     val p = portAgainst(
-      List("ext/Box.java" ->
-        """package ext;
-          |public class Box { public String label = ""; }""".stripMargin),
+      List(
+        "ext/Box.java" ->
+          """package ext;
+            |public class Box { public String label = ""; }""".stripMargin
+      ),
       """package demo;
         |class Reads {
         |  String of(ext.Box b) { return b.label; }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "fromJava")
   }
 
@@ -1053,7 +1071,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  String greet() { return java.lang.System.getProperty("user.name").trim(); }
         |  int size(String s) { return s.length(); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "fromJava")
   }
 
@@ -1069,7 +1089,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  Set<String> keys() { return m.keySet(); }
         |  int n() { return m.size(); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "fromJava")
   }
 
@@ -1088,7 +1110,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Map<String, Object> here() { return local.get(); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertNotEmits(p, "fromJava")
   }
@@ -1101,24 +1123,31 @@ class CollectionsTransformSpec extends PortSuite:
     // `E134 None of the overloaded alternatives of method fromJava`.
     val ph = new CollectionsTransform
     val p  = portAgainst(
-      List("ext/Prod.java" ->
-        """package ext;
-          |public class Prod {
-          |  public java.util.ArrayList<String> made() { return new java.util.ArrayList<String>(); }
-          |  public java.util.Map.Entry<String, String> pair() { return null; }
-          |}""".stripMargin),
+      List(
+        "ext/Prod.java" ->
+          """package ext;
+            |public class Prod {
+            |  public java.util.ArrayList<String> made() { return new java.util.ArrayList<String>(); }
+            |  public java.util.Map.Entry<String, String> pair() { return null; }
+            |}""".stripMargin
+      ),
       """package demo;
         |class Uses {
         |  java.util.ArrayList<String> made(ext.Prod p) { return p.made(); }
         |  java.util.Map.Entry<String, String> pair(ext.Prod p) { return p.pair(); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     // a CONCRETE list: the node claims `ArrayBuffer`, and `fromJava` makes a `Buffer`.
     // a `Map.Entry`: the node claims `Tuple2`, and `fromJava` has no overload at all.
     assertNotEmits(p, "fromJava")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
-    assertEquals(clue(fs).count(_.slot.startsWith("external result")), 2,
-                 "both refusals must be counted — an uncounted refusal is indistinguishable from no seam")
+    assertEquals(
+      clue(fs).count(_.slot.startsWith("external result")),
+      2,
+      "both refusals must be counted — an uncounted refusal is indistinguishable from no seam"
+    )
   }
 
   test("a CONCRETE collection head at the callee's declared result disproves the pass-through guess") {
@@ -1128,12 +1157,14 @@ class CollectionsTransformSpec extends PortSuite:
     // nothing, which is the pre-K15 state at the very calls K15 was built for.
     val ph = new CollectionsTransform
     val p  = portAgainst(
-      List("ext/Holder.java" ->
-        """package ext;
-          |public class Holder<T> {
-          |  public T get() { return null; }
-          |  public java.util.List<String> names() { return new java.util.ArrayList<String>(); }
-          |}""".stripMargin),
+      List(
+        "ext/Holder.java" ->
+          """package ext;
+            |public class Holder<T> {
+            |  public T get() { return null; }
+            |  public java.util.List<String> names() { return new java.util.ArrayList<String>(); }
+            |}""".stripMargin
+      ),
       """package demo;
         |import java.util.*;
         |class Names {
@@ -1141,13 +1172,14 @@ class CollectionsTransformSpec extends PortSuite:
         |  List<String> names() { return holder.names(); }
         |  List<String> value()  { return holder.get(); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     // `names()` — the class file SAYS `java.util.List`, so the value crossing the call is java's.
     assertEmits(p, "balticporter.runtime.JavaCollections.fromJava(this.holder.names())")
     // `get()` — a type-variable result, so the member is signature-less and the guess is right.
     assertNotEmits(p, "fromJava(this.holder.get())")
-    assertEquals(ph.boundary(p.after)
-                   .count(_.slot.startsWith("external result (unverified pass-through")), 1)
+    assertEquals(ph.boundary(p.after).count(_.slot.startsWith("external result (unverified pass-through")), 1)
   }
 
   test("…and where the STRUCTURAL GUESS is all there is, the suppression is COUNTED in its own lane") {
@@ -1163,7 +1195,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  Map<String, Object> checked(Map<String, Object> m) { return Objects.requireNonNull(m); }
         |  Map<String, Object> here() { return local.get(); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertNotEmits(p, "fromJava")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
     assertEquals(clue(fs).count(_.slot.startsWith("external result (unverified pass-through")), 2)
@@ -1189,7 +1223,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  // mention the pass never runs and this fixture passes for the wrong reason — it did.
         |  void feed(Iterable<String> xs) { for (String s : xs) { items.add(s); } }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "this.items ++= other.items")
     assertEmits(p, "this.seen ++= other.seen")
     assertNotEmits(p, "JavaCollection.from")
@@ -1210,7 +1246,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  private final List<String> xs = new ArrayList<String>();
         |  String joined() { return String.join(",", xs); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.toJava(this.xs)")
     assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
   }
@@ -1233,7 +1271,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  // \u2026and a value the phase did NOT retype is untouched at the same kind of slot.
         |  String plain(String s) { return String.valueOf(s); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertEmits(p, "java.lang.String.valueOf(balticporter.runtime.JavaCollections.toJava(this.xs))")
     assertEmits(p, "println(balticporter.runtime.JavaCollections.toJava(this.m))")
     assertEmits(p, "java.lang.String.valueOf(s)")
@@ -1255,7 +1295,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  private final Map<String, List<String>> deep = new HashMap<String, List<String>>();
         |  String shown() { return String.valueOf(deep); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertNotEmits(p, "toJava")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
     assertEquals(clue(fs).count(_.expected == "java.lang.Object"), 1)
@@ -1275,7 +1317,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  void take(Object o) { }
         |  void go() { take(xs); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertEmits(p, "this.take(this.xs)")
     assertNotEmits(p, "toJava")
     assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
@@ -1294,12 +1338,15 @@ class CollectionsTransformSpec extends PortSuite:
         |  private final List<String> xs = new ArrayList<String>();
         |  void go(demo.Unknown u) { u.take(xs); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee)
     assert(clue(fs).nonEmpty, "an argument at a signature-less external callee must be counted")
     assert(clue(fs.head.slot).contains("no signature"))
-    assert(clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ExternalCallee))
-             .contains("\u00a71(a)"))
+    assert(
+      clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ExternalCallee)).contains("\u00a71(a)")
+    )
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -1320,7 +1367,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  boolean has(Map<?, ?> m, String k) { return m.containsKey(k); }
         |  Object drop(Map<?, ?> m, String k) { return m.remove(k); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, k)")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapContainsKey(m, k)")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapRemove(m, k)")
@@ -1342,7 +1391,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  boolean has(String k) { return m.containsKey(k); }
         |  Integer drop(String k) { return m.remove(k); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "mapGet")
     assertNotEmits(p, "mapContainsKey")
     assertNotEmits(p, "mapRemove")
@@ -1362,7 +1413,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  Object v(Map<String, ?> m) { return m.get("k"); }
         |  Object k(Map<?, String> m) { return m.get("k"); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "getOrElse")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, \"k\")")
   }
@@ -1381,7 +1434,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  String at(Class<?> c) { return handlers.get(c); }
         |  boolean has(Class<?> c) { return handlers.containsKey(c); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "getOrElse")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(this.handlers, c)")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapContainsKey(this.handlers, c)")
@@ -1404,7 +1459,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  Rect at(Item i) { return rects.get(i); }
         |  boolean has(Item i) { return rects.containsKey(i); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "mapGet")
     assertNotEmits(p, "mapContainsKey")
     assertEmits(p, "this.rects.contains(i)")
@@ -1425,7 +1482,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  List<Box<?>> at(String k) { return m.get(k); }
         |  boolean has(String k) { return m.containsKey(k); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "mapGet")
     assertNotEmits(p, "mapContainsKey")
     assertEmits(p, "this.m.getOrElse(k, null.asInstanceOf[scala.collection.mutable.Buffer[demo.Box[?]]])")
@@ -1446,7 +1505,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  String at(Class<String> c) { return handlers.get(c); }
         |  boolean has(Class<String> c) { return handlers.containsKey(c); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertNotEmits(p, "mapGet")
     assertNotEmits(p, "mapContainsKey")
     assertEmits(p, "this.handlers.getOrElse(c, null.asInstanceOf[java.lang.String])")
@@ -1475,7 +1536,9 @@ class CollectionsTransformSpec extends PortSuite:
         |    public V setValue(V v) { return e.setValue(v); }
         |  }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertEmits(p, "extends java.util.Map.Entry[K, V]")
     assertNotEmits(p, "extends scala.Tuple2")
     // …AND THE OTHER HALF OF THE SAME REFUSAL. Keeping java's parent makes the `extends` clause
@@ -1485,8 +1548,9 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "override def setValue(v: V): V = throw new java.lang.UnsupportedOperationException(")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
     assertEquals(clue(fs).map(_.slot).sorted, List("member (implements) setValue", "parent (implements)"))
-    assert(clue(CollectionBoundaryCheck.Issue.classification(
-             CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("§1(a)"))
+    assert(
+      clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("§1(a)")
+    )
   }
 
   test("…but a SELF-CONTAINED setValue keeps its own body — the phase broke nothing to point at") {
@@ -1508,8 +1572,10 @@ class CollectionsTransformSpec extends PortSuite:
         |    public V setValue(V nv) { V old = v; v = nv; return old; }
         |  }
         |}
-        |""".stripMargin, ph)
-    assertEmits(p, "extends java.util.Map.Entry[K, V]")   // the PARENT half is unchanged
+        |""".stripMargin,
+      ph
+    )
+    assertEmits(p, "extends java.util.Map.Entry[K, V]") // the PARENT half is unchanged
     assertNotEmits(p, "UnsupportedOperationException")
     assertEmits(p, "this.v = nv")
     // …and only the parent seam is counted: nothing was refused at a member.
@@ -1538,7 +1604,9 @@ class CollectionsTransformSpec extends PortSuite:
         |    void setValue(int a, int b) { this.x = a; this.y = b; }
         |  }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     // the interface's member is refused (its body IS a write-through the mapping removed)…
     assertEmits(p, "override def setValue(v: V): V = throw new java.lang.UnsupportedOperationException(")
     // …and the overload keeps its own body.
@@ -1555,12 +1623,12 @@ class CollectionsTransformSpec extends PortSuite:
     // throw-instead cannot do and a `SimpleEntry` stand-in would get right while writing to a
     // detached copy (K2).
     final class Pair[K, V](k: K, private var v: V) extends java.util.Map.Entry[K, V]:
-      def getKey(): K            = k
-      def getValue(): V          = v
-      def setValue(nv: V): V     = { val old = v; v = nv; old }
+      def getKey():        K = k
+      def getValue():      V = v
+      def setValue(nv: V): V = { val old = v; v = nv; old }
     val p = new Pair[String, Int]("k", 1)
-    assertEquals(p.setValue(2), 1)   // the PREVIOUS value, not the new one
-    assertEquals(p.getValue(), 2)    // …and the write took effect
+    assertEquals(p.setValue(2), 1) // the PREVIOUS value, not the new one
+    assertEquals(p.getValue(), 2) // …and the write took effect
     assertEquals(p.setValue(3), 2)
   }
 
@@ -1579,7 +1647,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  Plain(Map.Entry<K, V> e) { this.e = e; }
         |  V setValue(V v) { return e.setValue(v); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertEmits(p, "this.e.setValue(v)")
     assertNotEmits(p, "UnsupportedOperationException")
     assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent), 0)
@@ -1598,7 +1668,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  int first() { for (Map.Entry<String, Integer> e : m.entrySet()) { return e.getValue(); } return 0; }
         |  Integer of(Map.Entry<String, Integer> e) { return e.getValue(); }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     // the DECLARED entry moved…
     assertEmits(p, "def of(e: scala.Tuple2[java.lang.String, java.lang.Integer])")
     // …and both `getValue` calls became the pair's accessor, which only holds if it did.
@@ -1622,9 +1694,12 @@ class CollectionsTransformSpec extends PortSuite:
         |  Map<String, Integer> tuned = new HashMap<String, Integer>(64, 0.9f);
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
-    assertEmits(p, "new scala.collection.mutable.HashMap[java.lang.String, java.lang.Integer](64, scala.collection.mutable.HashMap.defaultLoadFactor)")
+    assertEmits(
+      p,
+      "new scala.collection.mutable.HashMap[java.lang.String, java.lang.Integer](64, scala.collection.mutable.HashMap.defaultLoadFactor)"
+    )
     assertEmits(p, "new scala.collection.mutable.HashSet[java.lang.String](8, scala.collection.mutable.HashSet.defaultLoadFactor)")
     // the SEQUENCE targets are the ones the note in `copyConstructor` is right about: scala's
     // `ArrayBuffer(Int)` means what java's `ArrayList(int)` means, so nothing is added.
@@ -1647,7 +1722,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  Integer any(Object o) { return m.get(o); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(this.m, o)")
     assertNotEmits(p, "this.m.getOrElse(o,")
@@ -1673,7 +1748,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "((self$) => self$._1)")
     assertNotEmits(p, "self$.getKey()")
@@ -1692,7 +1767,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "self$.label()")
   }
@@ -1718,7 +1793,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "m.put(e._1, v)")
     assertNotEmits(p, "e.setValue(v)")
@@ -1737,7 +1812,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  V put(V v) { return e.setValue(v); }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "this.e.setValue(v)")
   }
@@ -1756,7 +1831,7 @@ class CollectionsTransformSpec extends PortSuite:
         |  }
         |}
         |""".stripMargin,
-      new CollectionsTransform,
+      new CollectionsTransform
     )
     assertEmits(p, "e.setValue(\"x\")")
   }
@@ -1768,22 +1843,26 @@ class CollectionsTransformSpec extends PortSuite:
   test("a RETARGET Entry's .key/.value field accesses become ._1/._2 on Tuple2") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.MyEntry" -> "scala.Tuple2"),
-      retargetRewrites = Map("demo.MyEntry" -> Map(
-        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("scala.Tuple2", "apply"))))
-    val p = portAll(List(
-      "MyEntry.java" ->
-        """package demo;
-          |public class MyEntry<K, V> {
-          |  public K key;
-          |  public V value;
-          |  public MyEntry() { this.key = null; this.value = null; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  String first(MyEntry<String, Integer> e) { return e.key; }
-          |  Integer second(MyEntry<String, Integer> e) { return e.value; }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.MyEntry" -> Map(("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("scala.Tuple2", "apply")))
+    )
+    val p = portAll(
+      List(
+        "MyEntry.java" ->
+          """package demo;
+            |public class MyEntry<K, V> {
+            |  public K key;
+            |  public V value;
+            |  public MyEntry() { this.key = null; this.value = null; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  String first(MyEntry<String, Integer> e) { return e.key; }
+            |  Integer second(MyEntry<String, Integer> e) { return e.value; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "e._1")
     assertEmits(p, "e._2")
     assertNotEmits(p, "e.key")
@@ -1793,21 +1872,25 @@ class CollectionsTransformSpec extends PortSuite:
   test("a RETARGET arity-0 Entry constructor emits Tuple2(null, null)") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.MyEntry" -> "scala.Tuple2"),
-      retargetRewrites = Map("demo.MyEntry" -> Map(
-        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("scala.Tuple2", "apply"))))
-    val p = portAll(List(
-      "MyEntry.java" ->
-        """package demo;
-          |public class MyEntry<K, V> {
-          |  public K key;
-          |  public V value;
-          |  public MyEntry() { this.key = null; this.value = null; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  MyEntry<String, Integer> make() { return new MyEntry<String, Integer>(); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.MyEntry" -> Map(("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("scala.Tuple2", "apply")))
+    )
+    val p = portAll(
+      List(
+        "MyEntry.java" ->
+          """package demo;
+            |public class MyEntry<K, V> {
+            |  public K key;
+            |  public V value;
+            |  public MyEntry() { this.key = null; this.value = null; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  MyEntry<String, Integer> make() { return new MyEntry<String, Integer>(); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "scala.Tuple2.apply")
     assertEmits(p, "null.asInstanceOf[")
     assertNotEmits(p, "new scala.Tuple2()")
@@ -1816,44 +1899,53 @@ class CollectionsTransformSpec extends PortSuite:
   test("a RETARGET Construct with dropTrailing drops the trailing arguments") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.Holder" -> "demo.Target"),
-      retargetRewrites = Map("demo.Holder" -> Map(
-        ("<init>", 4) -> CollectionsTransform.RetargetRewrite.Construct("demo.Target", "apply", dropTrailing = 2))))
-    val p = portAll(List(
-      "Holder.java" ->
-        """package demo;
-          |public class Holder<K, V> {
-          |  public Holder(boolean ordered, int cap, Class<K> mk, Class<V> mv) {}
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<K, V> {
-          |  public static <K, V> Target<K, V> apply(boolean ordered, int cap) { return null; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  Holder<String, Integer> make() { return new Holder<String, Integer>(true, 16, String.class, Integer.class); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map(
+        "demo.Holder" -> Map(("<init>", 4) -> CollectionsTransform.RetargetRewrite.Construct("demo.Target", "apply", dropTrailing = 2))
+      )
+    )
+    val p = portAll(
+      List(
+        "Holder.java" ->
+          """package demo;
+            |public class Holder<K, V> {
+            |  public Holder(boolean ordered, int cap, Class<K> mk, Class<V> mv) {}
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<K, V> {
+            |  public static <K, V> Target<K, V> apply(boolean ordered, int cap) { return null; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  Holder<String, Integer> make() { return new Holder<String, Integer>(true, 16, String.class, Integer.class); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "demo.Target.apply")
     assertEmitsMatch(p, """Target\.apply(\[.*?\])?\(.*?true.*?16.*?\)""")
     assertNotEmits(p, "String.class")
   }
 
   test("a classOf literal at a retarget type is rewritten to the target type") {
-    val ph = new CollectionsTransform(
-      retarget = Map("demo.ObjMap" -> "demo.LlsMap"))
-    val p = portAll(List(
-      "ObjMap.java" ->
-        """package demo;
-          |public class ObjMap<K, V> {}""".stripMargin,
-      "LlsMap.java" ->
-        """package demo;
-          |public class LlsMap<K, V> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  Class<?> c() { return ObjMap.class; }
-          |}""".stripMargin), ph)
+    val ph = new CollectionsTransform(retarget = Map("demo.ObjMap" -> "demo.LlsMap"))
+    val p  = portAll(
+      List(
+        "ObjMap.java" ->
+          """package demo;
+            |public class ObjMap<K, V> {}""".stripMargin,
+        "LlsMap.java" ->
+          """package demo;
+            |public class LlsMap<K, V> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  Class<?> c() { return ObjMap.class; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "classOf[demo.LlsMap")
     assertNotEmits(p, "classOf[demo.ObjMap")
   }
@@ -1862,23 +1954,26 @@ class CollectionsTransformSpec extends PortSuite:
     // A classOf whose inner type is a JDK-table source (java.util.List) must NOT be retyped.
     // K20's contract: a reified carrier holds java's own class, and `fromJava` bridges at the
     // use.  The retarget entry for ObjMap must still sync -- both cases in one test.
-    val ph = new CollectionsTransform(
-      retarget = Map("demo.ObjMap" -> "demo.LlsMap"))
-    val p = portAll(List(
-      "ObjMap.java" ->
-        """package demo;
-          |public class ObjMap<K, V> {}""".stripMargin,
-      "LlsMap.java" ->
-        """package demo;
-          |public class LlsMap<K, V> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |import java.util.*;
-          |class Uses {
-          |  Class<?> retarget() { return ObjMap.class; }
-          |  Class<?> jdkList()  { return List.class; }
-          |  Class<?> jdkMap()   { return Map.class; }
-          |}""".stripMargin), ph)
+    val ph = new CollectionsTransform(retarget = Map("demo.ObjMap" -> "demo.LlsMap"))
+    val p  = portAll(
+      List(
+        "ObjMap.java" ->
+          """package demo;
+            |public class ObjMap<K, V> {}""".stripMargin,
+        "LlsMap.java" ->
+          """package demo;
+            |public class LlsMap<K, V> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |import java.util.*;
+            |class Uses {
+            |  Class<?> retarget() { return ObjMap.class; }
+            |  Class<?> jdkList()  { return List.class; }
+            |  Class<?> jdkMap()   { return Map.class; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // retarget entry: synced to the target
     assertEmits(p, "classOf[demo.LlsMap")
     assertNotEmits(p, "classOf[demo.ObjMap")
@@ -1896,25 +1991,29 @@ class CollectionsTransformSpec extends PortSuite:
   test("BoolDispatch with a literal true calls the onTrue target") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> {
-          |  public boolean remove(T value, boolean identity) { return false; }
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {
-          |  public boolean removeByRef(T value) { return false; }
-          |  public boolean removeByVal(T value) { return false; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean test(Coll<String> c) { return c.remove("x", true); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Coll" -> Map(("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal")))
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> {
+            |  public boolean remove(T value, boolean identity) { return false; }
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {
+            |  public boolean removeByRef(T value) { return false; }
+            |  public boolean removeByVal(T value) { return false; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean test(Coll<String> c) { return c.remove("x", true); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, ".removeByRef(")
     assertNotEmits(p, ".removeByVal(")
   }
@@ -1922,25 +2021,29 @@ class CollectionsTransformSpec extends PortSuite:
   test("BoolDispatch with a literal false calls the onFalse target") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> {
-          |  public boolean remove(T value, boolean identity) { return false; }
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {
-          |  public boolean removeByRef(T value) { return false; }
-          |  public boolean removeByVal(T value) { return false; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean test(Coll<String> c) { return c.remove("x", false); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Coll" -> Map(("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal")))
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> {
+            |  public boolean remove(T value, boolean identity) { return false; }
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {
+            |  public boolean removeByRef(T value) { return false; }
+            |  public boolean removeByVal(T value) { return false; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean test(Coll<String> c) { return c.remove("x", false); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, ".removeByVal(")
     assertNotEmits(p, ".removeByRef(")
   }
@@ -1948,25 +2051,29 @@ class CollectionsTransformSpec extends PortSuite:
   test("BoolDispatch with a NON-LITERAL flag emits if/else with F7 evaluate-once binding") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> {
-          |  public boolean remove(T value, boolean identity) { return false; }
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {
-          |  public boolean removeByRef(T value) { return false; }
-          |  public boolean removeByVal(T value) { return false; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean test(Coll<String> c, boolean flag) { return c.remove("x", flag); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Coll" -> Map(("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal")))
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> {
+            |  public boolean remove(T value, boolean identity) { return false; }
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {
+            |  public boolean removeByRef(T value) { return false; }
+            |  public boolean removeByVal(T value) { return false; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean test(Coll<String> c, boolean flag) { return c.remove("x", flag); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // Both branch targets appear in the emitted if/else
     assertEmits(p, "removeByRef")
     assertEmits(p, "removeByVal")
@@ -1989,27 +2096,33 @@ class CollectionsTransformSpec extends PortSuite:
     // The Applied form constructs an AppliedType(Tuple2, List(K, V)) from the source's args.
     val ph = new CollectionsTransform(
       retarget = Map("demo.Entries" -> "demo.DArr"),
-      retargetTypeArgs = Map("demo.Entries" -> List(
-        CollectionsTransform.RetargetArg.Applied("demo.Pair",
-          List(CollectionsTransform.RetargetArg.SourceArg(0),
-               CollectionsTransform.RetargetArg.SourceArg(1))))))
-    val p = portAll(List(
-      "Entries.java" ->
-        """package demo;
-          |public class Entries<K, V> {}""".stripMargin,
-      "DArr.java" ->
-        """package demo;
-          |public class DArr<T> {}""".stripMargin,
-      "Pair.java" ->
-        """package demo;
-          |public class Pair<A, B> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  Entries<String, Integer> e;
-          |  void take(DArr<Pair<String, Integer>> x) {}
-          |  void test() { take(e); }
-          |}""".stripMargin), ph)
+      retargetTypeArgs = Map(
+        "demo.Entries" -> List(
+          CollectionsTransform.RetargetArg.Applied("demo.Pair", List(CollectionsTransform.RetargetArg.SourceArg(0), CollectionsTransform.RetargetArg.SourceArg(1)))
+        )
+      )
+    )
+    val p = portAll(
+      List(
+        "Entries.java" ->
+          """package demo;
+            |public class Entries<K, V> {}""".stripMargin,
+        "DArr.java" ->
+          """package demo;
+            |public class DArr<T> {}""".stripMargin,
+        "Pair.java" ->
+          """package demo;
+            |public class Pair<A, B> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  Entries<String, Integer> e;
+            |  void take(DArr<Pair<String, Integer>> x) {}
+            |  void test() { take(e); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // The field type is retargetted: Entries<String, Integer> -> DArr[Pair[String, Integer]]
     assertEmits(p, "demo.DArr[demo.Pair[java.lang.String, java.lang.Integer]]")
     assertNotEmits(p, "demo.Entries")
@@ -2021,25 +2134,34 @@ class CollectionsTransformSpec extends PortSuite:
     // but its inner args CAN be all-FixedType; the outer Applied needs resolveRetargetArg.
     val ph = new CollectionsTransform(
       retarget = Map("demo.IntEntries" -> "demo.DArr"),
-      retargetTypeArgs = Map("demo.IntEntries" -> List(
-        CollectionsTransform.RetargetArg.Applied("demo.Pair",
-          List(CollectionsTransform.RetargetArg.FixedType("scala.Int"),
-               CollectionsTransform.RetargetArg.FixedType("scala.Int"))))))
-    val p = portAll(List(
-      "IntEntries.java" ->
-        """package demo;
-          |public class IntEntries {}""".stripMargin,
-      "DArr.java" ->
-        """package demo;
-          |public class DArr<T> {}""".stripMargin,
-      "Pair.java" ->
-        """package demo;
-          |public class Pair<A, B> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  IntEntries e;
-          |}""".stripMargin), ph)
+      retargetTypeArgs = Map(
+        "demo.IntEntries" -> List(
+          CollectionsTransform.RetargetArg.Applied(
+            "demo.Pair",
+            List(CollectionsTransform.RetargetArg.FixedType("scala.Int"), CollectionsTransform.RetargetArg.FixedType("scala.Int"))
+          )
+        )
+      )
+    )
+    val p = portAll(
+      List(
+        "IntEntries.java" ->
+          """package demo;
+            |public class IntEntries {}""".stripMargin,
+        "DArr.java" ->
+          """package demo;
+            |public class DArr<T> {}""".stripMargin,
+        "Pair.java" ->
+          """package demo;
+            |public class Pair<A, B> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  IntEntries e;
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "demo.DArr[demo.Pair[scala.Int, scala.Int]]")
     assertNotEmits(p, "demo.IntEntries")
   }
@@ -2051,44 +2173,51 @@ class CollectionsTransformSpec extends PortSuite:
     // and not on its own (`asInstanceOf[?]` is a syntax error).
     val ph = new CollectionsTransform(
       retarget = Map("demo.ObjMap" -> "demo.LlsMap"),
-      retargetRewrites = Map("demo.ObjMap" -> Map(
-        ("entries", 0) -> CollectionsTransform.RetargetRewrite.ForEach("foreachEntry", 2),
-        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("demo.LlsMap", "apply"))))
-    val p = portAll(List(
-      "Base.java" ->
-        """package demo;
-          |public class Base<T> {}""".stripMargin,
-      "Entry.java" ->
-        """package demo;
-          |public class Entry<K, V> {
-          |  public K key;
-          |  public V value;
-          |}""".stripMargin,
-      "ObjMap.java" ->
-        """package demo;
-          |public class ObjMap<K, V> implements Iterable<Entry<K, V>> {
-          |  public java.util.Iterator<Entry<K, V>> iterator() { return null; }
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
-          |}""".stripMargin,
-      "LlsMap.java" ->
-        """package demo;
-          |public class LlsMap<K, V> {
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  Base<?> find(ObjMap<String, Base<?>> map, String name) {
-          |    for (Entry<String, Base<?>> e : map) {
-          |      if (name.equals(e.key)) return e.value;
-          |    }
-          |    return null;
-          |  }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map(
+        "demo.ObjMap" -> Map(
+          ("entries", 0) -> CollectionsTransform.RetargetRewrite.ForEach("foreachEntry", 2),
+          ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("demo.LlsMap", "apply")
+        )
+      )
+    )
+    val p = portAll(
+      List(
+        "Base.java" ->
+          """package demo;
+            |public class Base<T> {}""".stripMargin,
+        "Entry.java" ->
+          """package demo;
+            |public class Entry<K, V> {
+            |  public K key;
+            |  public V value;
+            |}""".stripMargin,
+        "ObjMap.java" ->
+          """package demo;
+            |public class ObjMap<K, V> implements Iterable<Entry<K, V>> {
+            |  public java.util.Iterator<Entry<K, V>> iterator() { return null; }
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+            |}""".stripMargin,
+        "LlsMap.java" ->
+          """package demo;
+            |public class LlsMap<K, V> {
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  Base<?> find(ObjMap<String, Base<?>> map, String name) {
+            |    for (Entry<String, Base<?>> e : map) {
+            |      if (name.equals(e.key)) return e.value;
+            |    }
+            |    return null;
+            |  }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // The boundary type must use `?`, not `scala.Any`
     assertEmitsMatch(p, """boundary\[demo\.Base\[\?\]\]""")
     assertNotEmits(p, "boundary[demo.Base[scala.Any]]")
-  
 
   }
   test("nested map iterator types: a stored Entries cursor, values().next(), parenless hasNext") {
@@ -2099,48 +2228,52 @@ class CollectionsTransformSpec extends PortSuite:
         "demo.MyMap" -> "lowlevel.util.ObjectMap",
         "demo.MyMap$Entries" -> "scala.collection.Iterator",
         "demo.MyMap$Values" -> "scala.collection.Iterator",
-        "demo.MyMap$Entry" -> "scala.Tuple2"),
+        "demo.MyMap$Entry" -> "scala.Tuple2"
+      ),
       retargetRewrites = Map(
-        "demo.MyMap" -> Map(
-          ("entries", 0) -> ForEach("foreachEntry", 2),
-          ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray")),
+        "demo.MyMap" -> Map(("entries", 0) -> ForEach("foreachEntry", 2), ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray")),
         "demo.MyMap$Entries" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
-        "demo.MyMap$Values"  -> Map(("hasNext", 0) -> Chain(List("hasNext")))),
-      retargetTypeArgs = Map(
-        "demo.MyMap$Entries" -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1))))))
-    val p = portAll(List(
-      "MyMap.java" ->
-        """package demo;
-          |public class MyMap<K, V> {
-          |  public static class Entry<K, V> { public K key; public V value; }
-          |  public static class Entries<K, V> implements java.util.Iterator<Entry<K, V>> {
-          |    public boolean hasNext() { return false; }
-          |    public Entry<K, V> next() { return null; }
-          |  }
-          |  public static class Values<V> implements java.util.Iterator<V> {
-          |    public boolean hasNext() { return false; }
-          |    public V next() { return null; }
-          |  }
-          |  public Entries<K, V> entries() { return new Entries<K, V>(); }
-          |  public Values<V> values() { return new Values<V>(); }
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> f) {}
-          |  public void foreachValue(java.util.function.Consumer<V> f) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  int walk(MyMap<String, Integer> m) {
-          |    int n = 0;
-          |    MyMap.Entries<String, Integer> it = m.entries();
-          |    while (it.hasNext()) { MyMap.Entry<String, Integer> e = it.next(); n += e.value; }
-          |    return n;
-          |  }
-          |  Integer first(MyMap<String, Integer> m) { return m.values().next(); }
-          |}""".stripMargin), ph)
-    assertEmits(p, "scala.collection.Iterator[")     // the stored cursor's declared type
-    assertEmits(p, ".iterator }")                    // the entries snapshot ends in its iterator
-    assertEmits(p, ".iterator.next()")               // values().next(): one-shot cursor call
-    assertNotEmits(p, "it.hasNext()")                // parenless on scala's Iterator
+        "demo.MyMap$Values" -> Map(("hasNext", 0) -> Chain(List("hasNext")))
+      ),
+      retargetTypeArgs = Map("demo.MyMap$Entries" -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1)))))
+    )
+    val p = portAll(
+      List(
+        "MyMap.java" ->
+          """package demo;
+            |public class MyMap<K, V> {
+            |  public static class Entry<K, V> { public K key; public V value; }
+            |  public static class Entries<K, V> implements java.util.Iterator<Entry<K, V>> {
+            |    public boolean hasNext() { return false; }
+            |    public Entry<K, V> next() { return null; }
+            |  }
+            |  public static class Values<V> implements java.util.Iterator<V> {
+            |    public boolean hasNext() { return false; }
+            |    public V next() { return null; }
+            |  }
+            |  public Entries<K, V> entries() { return new Entries<K, V>(); }
+            |  public Values<V> values() { return new Values<V>(); }
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> f) {}
+            |  public void foreachValue(java.util.function.Consumer<V> f) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  int walk(MyMap<String, Integer> m) {
+            |    int n = 0;
+            |    MyMap.Entries<String, Integer> it = m.entries();
+            |    while (it.hasNext()) { MyMap.Entry<String, Integer> e = it.next(); n += e.value; }
+            |    return n;
+            |  }
+            |  Integer first(MyMap<String, Integer> m) { return m.values().next(); }
+            |}""".stripMargin
+      ),
+      ph
+    )
+    assertEmits(p, "scala.collection.Iterator[") // the stored cursor's declared type
+    assertEmits(p, ".iterator }") // the entries snapshot ends in its iterator
+    assertEmits(p, ".iterator.next()") // values().next(): one-shot cursor call
+    assertNotEmits(p, "it.hasNext()") // parenless on scala's Iterator
     assertNotEmits(p, "m.entries()")
   }
 
@@ -2148,20 +2281,34 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.Arr" -> "lowlevel.util.DynamicArray"),
-      retargetRewrites = Map("demo.Arr" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply",
-          typeVarEvidence = Some("lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]")))))
-    val p = portAll(List(
-      "Arr.java" ->
-        """package demo;
-          |public class Arr<T> { public Arr() {} }""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses<E> {
-          |  Arr<E> generic() { return new Arr<E>(); }
-          |  Arr<String> concrete() { return new Arr<String>(); }
-          |}""".stripMargin), ph)
-    assertEmits(p, "{ given lowlevel.MkArray[E] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[E]]; lowlevel.util.DynamicArray.apply[E]() }")
+      retargetRewrites = Map(
+        "demo.Arr" -> Map(
+          ("<init>", 0) -> Construct(
+            "lowlevel.util.DynamicArray",
+            "apply",
+            typeVarEvidence = Some("lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]")
+          )
+        )
+      )
+    )
+    val p = portAll(
+      List(
+        "Arr.java" ->
+          """package demo;
+            |public class Arr<T> { public Arr() {} }""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses<E> {
+            |  Arr<E> generic() { return new Arr<E>(); }
+            |  Arr<String> concrete() { return new Arr<String>(); }
+            |}""".stripMargin
+      ),
+      ph
+    )
+    assertEmits(
+      p,
+      "{ given lowlevel.MkArray[E] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[E]]; lowlevel.util.DynamicArray.apply[E]() }"
+    )
     assertNotEmits(p, "given lowlevel.MkArray[java.lang.String]")
   }
 
@@ -2172,8 +2319,8 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     def phase(): CollectionsTransform = new CollectionsTransform(
       retarget = Map("demo.RMap" -> "lowlevel.util.Thing"),
-      retargetRewrites = Map("demo.RMap" -> Map(
-        ("put", 2) -> Template("$recv.put($0, lowlevel.Nullable($1))"))))
+      retargetRewrites = Map("demo.RMap" -> Map(("put", 2) -> Template("$recv.put($0, lowlevel.Nullable($1))")))
+    )
     val sources = List(
       "RMap.java" ->
         """package demo;
@@ -2188,51 +2335,59 @@ class CollectionsTransformSpec extends PortSuite:
         """package demo;
           |class Uses {
           |  void call(Sub s, String k, Integer v) { s.put(k, v); }
-          |}""".stripMargin)
+          |}""".stripMargin
+    )
     val before = SpoonTir.fromSources(sources)
 
     // control: no drop declared -- owner fallback fires, reproducing the defect (fixture sanity check).
     val (afterNoGuard, _) = Pipeline.runTraced(before, List(phase()), new PolicyBinder(before, before.members))
-    val outNoGuard = new TirEmitter(afterNoGuard).emit
+    val outNoGuard        = new TirEmitter(afterNoGuard).emit
     assert(clue(outNoGuard).contains(".put(k, lowlevel.Nullable(v))"))
 
     // fix: `demo.Sub` is dropped-with-injection -- no retarget rewrite may fire on it.
-    val runScope = RunScope.of(before.units.map(_.symbol).toSet, Map.empty,
-      ownSubstituted = Set("demo.Sub"))
+    val runScope   = RunScope.of(before.units.map(_.symbol).toSet, Map.empty, ownSubstituted = Set("demo.Sub"))
     val (after, _) = Pipeline.runTraced(before, List(phase()), new PolicyBinder(before, before.members, runScope))
-    val out = new TirEmitter(after).emit
+    val out        = new TirEmitter(after).emit
     assert(clue(out).contains(".put(k, v)"))
     assert(!out.contains("lowlevel.Nullable("))
   }
 
   test("a use-site wildcard at an invariant retarget target strips to its (ground) upper bound, at a CAST only") {
     val ph = new CollectionsTransform(retarget = Map("demo.M" -> "lowlevel.util.ObjectMap"))
-    val p = portAll(List(
-      "M.java" ->
-        """package demo;
-          |public class M<K, V> {
-          |  public void putAll(M<? extends K, ? extends V> other) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void merge(M<String, Integer> a, M<String, Integer> b) { a.putAll(b); }
-          |}""".stripMargin), ph)
+    val p  = portAll(
+      List(
+        "M.java" ->
+          """package demo;
+            |public class M<K, V> {
+            |  public void putAll(M<? extends K, ? extends V> other) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void merge(M<String, Integer> a, M<String, Integer> b) { a.putAll(b); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "b.asInstanceOf[lowlevel.util.ObjectMap[java.lang.String, java.lang.Integer]]")
     assertNotEmits(p, "asInstanceOf[lowlevel.util.ObjectMap[?")
   }
 
   test("…and a DECLARED parameter keeps its wildcard — an invariant target's use-site `?` is valid Scala") {
     val ph = new CollectionsTransform(retarget = Map("demo.M" -> "lowlevel.util.ObjectMap"))
-    val p = portAll(List(
-      "M.java" ->
-        """package demo;
-          |public class M<K, V> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void read(M<? extends String, ? extends Integer> m) {}
-          |}""".stripMargin), ph)
+    val p  = portAll(
+      List(
+        "M.java" ->
+          """package demo;
+            |public class M<K, V> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void read(M<? extends String, ? extends Integer> m) {}
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "? <: java.lang.String")
   }
 
@@ -2242,7 +2397,8 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.OSet" -> "lowlevel.util.OrderedSet"),
-      retargetRewrites = Map("demo.OSet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+      retargetRewrites = Map("demo.OSet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator"))))
+    )
     val java = List(
       "OSet.java" ->
         """package demo;
@@ -2254,7 +2410,8 @@ class CollectionsTransformSpec extends PortSuite:
           |class Sel<T> implements Iterable<T> {
           |  final OSet<T> selected = new OSet<T>();
           |  public java.util.Iterator<T> iterator() { return selected.iterator(); }
-          |}""".stripMargin)
+          |}""".stripMargin
+    )
     if nullary then portAll(java, ph, new NullaryArityTransform(balticporter.tir.RuleScope.Only(Set("demo"))))
     else portAll(java, ph)
 
@@ -2275,41 +2432,48 @@ class CollectionsTransformSpec extends PortSuite:
       retarget = Map(
         "demo.MySet" -> "lowlevel.util.OrderedSet",
         "demo.MySet$MySetIter" -> "scala.collection.Iterator",
-        "demo.Arr" -> "lowlevel.util.DynamicArray"),
+        "demo.Arr" -> "lowlevel.util.DynamicArray"
+      ),
       retargetRewrites = Map(
-        "demo.MySet" -> Map(
-          ("iterator", 0) -> Chain(List("orderedItems", "iterator"))),
+        "demo.MySet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator"))),
         "demo.MySet$MySetIter" -> Map(
           ("hasNext", 0) -> Chain(List("hasNext")),
-          ("toArray", 0) -> Template("{ @scala.annotation.nowarn(\"msg=unused local definition\") given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
-          ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }")),
-        "demo.Arr" -> Map(
-          ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"))),
-      retargetTypeArgs = Map(
-        "demo.MySet$MySetIter" -> List(SourceArg(0))))
-    val p = portAll(List(
-      "Arr.java" ->
-        """package demo;
-          |public class Arr<T> { public Arr() {} public void add(T t) {} }""".stripMargin,
-      "MySet.java" ->
-        """package demo;
-          |public class MySet<T> implements Iterable<T> {
-          |  public static class MySetIter<T> implements java.util.Iterator<T> {
-          |    public Arr<T> toArray() { return new Arr<T>(); }
-          |    public Arr<T> toArray(Arr<T> a) { return a; }
-          |    public boolean hasNext() { return false; }
-          |    public T next() { return null; }
-          |  }
-          |  public MySetIter<T> iterator() { return new MySetIter<T>(); }
-          |  public Object[] orderedItems;
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses<T> {
-          |  Arr<T> collect(MySet<T> s) { return s.iterator().toArray(); }
-          |  Arr<T> collectInto(MySet<T> s, Arr<T> a) { return s.iterator().toArray(a); }
-          |  java.util.Iterator<T> asIter(MySet<T> s) { return s.iterator(); }
-          |}""".stripMargin), ph)
+          ("toArray", 0) -> Template(
+            "{ @scala.annotation.nowarn(\"msg=unused local definition\") given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"
+          ),
+          ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }")
+        ),
+        "demo.Arr" -> Map(("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"))
+      ),
+      retargetTypeArgs = Map("demo.MySet$MySetIter" -> List(SourceArg(0)))
+    )
+    val p = portAll(
+      List(
+        "Arr.java" ->
+          """package demo;
+            |public class Arr<T> { public Arr() {} public void add(T t) {} }""".stripMargin,
+        "MySet.java" ->
+          """package demo;
+            |public class MySet<T> implements Iterable<T> {
+            |  public static class MySetIter<T> implements java.util.Iterator<T> {
+            |    public Arr<T> toArray() { return new Arr<T>(); }
+            |    public Arr<T> toArray(Arr<T> a) { return a; }
+            |    public boolean hasNext() { return false; }
+            |    public T next() { return null; }
+            |  }
+            |  public MySetIter<T> iterator() { return new MySetIter<T>(); }
+            |  public Object[] orderedItems;
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses<T> {
+            |  Arr<T> collect(MySet<T> s) { return s.iterator().toArray(); }
+            |  Arr<T> collectInto(MySet<T> s, Arr<T> a) { return s.iterator().toArray(a); }
+            |  java.util.Iterator<T> asIter(MySet<T> s) { return s.iterator(); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // toArray(0): builds a DynamicArray from the iterator via foreach
     assertEmits(p, "foreach(bpR.add)")
     assertEmits(p, "lowlevel.util.DynamicArray")
@@ -2328,10 +2492,15 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetArg.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.CharArr" -> "lowlevel.util.DynamicArray"),
-      retargetTypeArgs = Map("demo.CharArr" -> List(FixedType("scala.Char"))))
-    val p = portAll(List(
-      "CharArr.java" -> "package demo;\npublic class CharArr {}",
-      "U.java" -> "package demo;\nclass U { Object o; boolean f() { return o instanceof CharArr; } }"), ph)
+      retargetTypeArgs = Map("demo.CharArr" -> List(FixedType("scala.Char")))
+    )
+    val p = portAll(
+      List(
+        "CharArr.java" -> "package demo;\npublic class CharArr {}",
+        "U.java" -> "package demo;\nclass U { Object o; boolean f() { return o instanceof CharArr; } }"
+      ),
+      ph
+    )
     assertEmits(p, "isInstanceOf[lowlevel.util.DynamicArray[?]]")
   }
 
@@ -2341,25 +2510,29 @@ class CollectionsTransformSpec extends PortSuite:
   test("IndexedField default via: recv.items[i] -> recv.apply(i)") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("items", 0) -> CollectionsTransform.RetargetRewrite.IndexedField("items"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> {
-          |  public T[] items;
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {
-          |  public T apply(int i) { return null; }
-          |  public void update(int i, T v) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  String read(Coll<String> c) { return c.items[0]; }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Coll" -> Map(("items", 0) -> CollectionsTransform.RetargetRewrite.IndexedField("items")))
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> {
+            |  public T[] items;
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {
+            |  public T apply(int i) { return null; }
+            |  public void update(int i, T v) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  String read(Coll<String> c) { return c.items[0]; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, ".apply(0)")
     assertNotEmits(p, ".items")
   }
@@ -2367,25 +2540,29 @@ class CollectionsTransformSpec extends PortSuite:
   test("IndexedField default viaWrite: recv.items[i] = v -> recv.update(i, v)") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("items", 0) -> CollectionsTransform.RetargetRewrite.IndexedField("items"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> {
-          |  public T[] items;
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {
-          |  public T apply(int i) { return null; }
-          |  public void update(int i, T v) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void write(Coll<String> c) { c.items[0] = "x"; }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Coll" -> Map(("items", 0) -> CollectionsTransform.RetargetRewrite.IndexedField("items")))
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> {
+            |  public T[] items;
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {
+            |  public T apply(int i) { return null; }
+            |  public void update(int i, T v) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void write(Coll<String> c) { c.items[0] = "x"; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, ".update(0,")
     assertNotEmits(p, ".items")
   }
@@ -2395,26 +2572,32 @@ class CollectionsTransformSpec extends PortSuite:
   test("IndexedField custom via: recv.keys[i] -> recv.getKeyAt(i) via retargetIndexedFields") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.AMap" -> "demo.Target"),
-      retargetIndexedFields = Map("demo.AMap" -> Map(
-        "keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))))
-    val p = portAll(List(
-      "AMap.java" ->
-        """package demo;
-          |public class AMap<K,V> {
-          |  public K[] keys;
-          |  public V[] values;
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<K,V> {
-          |  public K getKeyAt(int i) { return null; }
-          |  public void setKeyAt(int i, K k) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  String readKey(AMap<String,Integer> m) { return m.keys[0]; }
-          |}""".stripMargin), ph)
+      retargetIndexedFields = Map(
+        "demo.AMap" -> Map("keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))
+      )
+    )
+    val p = portAll(
+      List(
+        "AMap.java" ->
+          """package demo;
+            |public class AMap<K,V> {
+            |  public K[] keys;
+            |  public V[] values;
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<K,V> {
+            |  public K getKeyAt(int i) { return null; }
+            |  public void setKeyAt(int i, K k) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  String readKey(AMap<String,Integer> m) { return m.keys[0]; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, ".getKeyAt(0)")
     assertNotEmits(p, ".keys")
   }
@@ -2422,26 +2605,32 @@ class CollectionsTransformSpec extends PortSuite:
   test("IndexedField custom viaWrite: recv.keys[i] = v -> recv.setKeyAt(i, v) via retargetIndexedFields") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.AMap" -> "demo.Target"),
-      retargetIndexedFields = Map("demo.AMap" -> Map(
-        "keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))))
-    val p = portAll(List(
-      "AMap.java" ->
-        """package demo;
-          |public class AMap<K,V> {
-          |  public K[] keys;
-          |  public V[] values;
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<K,V> {
-          |  public K getKeyAt(int i) { return null; }
-          |  public void setKeyAt(int i, K k) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void writeKey(AMap<String,Integer> m) { m.keys[0] = "x"; }
-          |}""".stripMargin), ph)
+      retargetIndexedFields = Map(
+        "demo.AMap" -> Map("keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))
+      )
+    )
+    val p = portAll(
+      List(
+        "AMap.java" ->
+          """package demo;
+            |public class AMap<K,V> {
+            |  public K[] keys;
+            |  public V[] values;
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<K,V> {
+            |  public K getKeyAt(int i) { return null; }
+            |  public void setKeyAt(int i, K k) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void writeKey(AMap<String,Integer> m) { m.keys[0] = "x"; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, ".setKeyAt(0,")
     assertNotEmits(p, ".keys")
   }
@@ -2449,32 +2638,37 @@ class CollectionsTransformSpec extends PortSuite:
   test("IndexedField in retargetIndexedFields coexists with Collect in retargetRewrites at same name") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.AMap" -> "demo.Target"),
-      retargetRewrites = Map("demo.AMap" -> Map(
-        ("keys", 0) -> CollectionsTransform.RetargetRewrite.Collect("foreachKey", "demo.DArr"))),
-      retargetIndexedFields = Map("demo.AMap" -> Map(
-        "keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))))
-    val p = portAll(List(
-      "AMap.java" ->
-        """package demo;
-          |public class AMap<K,V> {
-          |  public K[] keys;
-          |  public K[] keys() { return keys; }
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<K,V> {
-          |  public K getKeyAt(int i) { return null; }
-          |  public void setKeyAt(int i, K k) {}
-          |  public void foreachKey(java.util.function.Consumer<K> f) {}
-          |}""".stripMargin,
-      "DArr.java" ->
-        """package demo;
-          |public class DArr<T> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  String indexed(AMap<String,Integer> m) { return m.keys[0]; }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.AMap" -> Map(("keys", 0) -> CollectionsTransform.RetargetRewrite.Collect("foreachKey", "demo.DArr"))),
+      retargetIndexedFields = Map(
+        "demo.AMap" -> Map("keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))
+      )
+    )
+    val p = portAll(
+      List(
+        "AMap.java" ->
+          """package demo;
+            |public class AMap<K,V> {
+            |  public K[] keys;
+            |  public K[] keys() { return keys; }
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<K,V> {
+            |  public K getKeyAt(int i) { return null; }
+            |  public void setKeyAt(int i, K k) {}
+            |  public void foreachKey(java.util.function.Consumer<K> f) {}
+            |}""".stripMargin,
+        "DArr.java" ->
+          """package demo;
+            |public class DArr<T> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  String indexed(AMap<String,Integer> m) { return m.keys[0]; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // The IndexedField fires on the array access, the Collect fires on calls
     assertEmits(p, ".getKeyAt(0)")
     assertNotEmits(p, ".keys[")
@@ -2488,27 +2682,31 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.MyArr" -> "demo.LlsArr"),
-      retargetRewrites = Map("demo.MyArr" -> Map(
-        ("<init>", 0) -> Construct("demo.LlsArr", "apply", fillTypeArgs = true))))
-    val p = portAll(List(
-      "MyArr.java" ->
-        """package demo;
-          |public class MyArr<T> {}""".stripMargin,
-      "LlsArr.java" ->
-        """package demo;
-          |public class LlsArr<T> {
-          |  public static <T> LlsArr<T> apply() { return null; }
-          |}""".stripMargin,
-      "Supplier.java" ->
-        """package demo;
-          |@FunctionalInterface
-          |public interface Supplier<T> { T get(); }""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void register(Supplier<MyArr<String>> s) {}
-          |  void test() { register(MyArr::new); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.MyArr" -> Map(("<init>", 0) -> Construct("demo.LlsArr", "apply", fillTypeArgs = true)))
+    )
+    val p = portAll(
+      List(
+        "MyArr.java" ->
+          """package demo;
+            |public class MyArr<T> {}""".stripMargin,
+        "LlsArr.java" ->
+          """package demo;
+            |public class LlsArr<T> {
+            |  public static <T> LlsArr<T> apply() { return null; }
+            |}""".stripMargin,
+        "Supplier.java" ->
+          """package demo;
+            |@FunctionalInterface
+            |public interface Supplier<T> { T get(); }""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void register(Supplier<MyArr<String>> s) {}
+            |  void test() { register(MyArr::new); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "demo.LlsArr.apply")
     assertNotEmits(p, "new demo.LlsArr")
     assertNotEmits(p, "new demo.MyArr")
@@ -2522,41 +2720,49 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.ObjMap" -> "demo.LlsMap"),
-      retargetRewrites = Map("demo.ObjMap" -> Map(
-        ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> Collect("foreachKey", "demo.LlsArr"),
-        ("<init>", 0)  -> Construct("demo.LlsMap", "apply"))))
-    val p = portAll(List(
-      "ObjMap.java" ->
-        """package demo;
-          |public class ObjMap<K, V> implements Iterable<java.util.Map.Entry<K, V>> {
-          |  public java.util.Iterator<java.util.Map.Entry<K, V>> iterator() { return null; }
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
-          |  public void foreachKey(java.util.function.Consumer<K> c) {}
-          |}""".stripMargin,
-      "LlsMap.java" ->
-        """package demo;
-          |public class LlsMap<K, V> {
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
-          |  public void foreachKey(java.util.function.Consumer<K> c) {}
-          |}""".stripMargin,
-      "LlsArr.java" ->
-        """package demo;
-          |public class LlsArr<T> {
-          |  public void add(T e) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  String find(ObjMap<String, ObjMap<String, Integer>> outer, int target) {
-          |    for (java.util.Map.Entry<String, ObjMap<String, Integer>> e1 : outer) {
-          |      for (java.util.Map.Entry<String, Integer> e2 : e1.getValue()) {
-          |        if (e2.getValue() == target) return e2.getKey();
-          |      }
-          |    }
-          |    return null;
-          |  }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map(
+        "demo.ObjMap" -> Map(
+          ("entries", 0) -> ForEach("foreachEntry", 2),
+          ("keys", 0) -> Collect("foreachKey", "demo.LlsArr"),
+          ("<init>", 0) -> Construct("demo.LlsMap", "apply")
+        )
+      )
+    )
+    val p = portAll(
+      List(
+        "ObjMap.java" ->
+          """package demo;
+            |public class ObjMap<K, V> implements Iterable<java.util.Map.Entry<K, V>> {
+            |  public java.util.Iterator<java.util.Map.Entry<K, V>> iterator() { return null; }
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+            |  public void foreachKey(java.util.function.Consumer<K> c) {}
+            |}""".stripMargin,
+        "LlsMap.java" ->
+          """package demo;
+            |public class LlsMap<K, V> {
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+            |  public void foreachKey(java.util.function.Consumer<K> c) {}
+            |}""".stripMargin,
+        "LlsArr.java" ->
+          """package demo;
+            |public class LlsArr<T> {
+            |  public void add(T e) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  String find(ObjMap<String, ObjMap<String, Integer>> outer, int target) {
+            |    for (java.util.Map.Entry<String, ObjMap<String, Integer>> e1 : outer) {
+            |      for (java.util.Map.Entry<String, Integer> e2 : e1.getValue()) {
+            |        if (e2.getValue() == target) return e2.getKey();
+            |      }
+            |    }
+            |    return null;
+            |  }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // the boundary wraps at the method level, not inside the inner lambda
     assertEmitsMatch(p, """boundary\[""")
     assertEmitsMatch(p, """boundary\.break\(""")
@@ -2571,26 +2777,30 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.MyEntry" -> "scala.Tuple2"),
-      retargetRewrites = Map("demo.MyEntry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true))))
-    val p = portAll(List(
-      "MyEntry.java" ->
-        """package demo;
-          |public class MyEntry<K, V> {
-          |  public K key;
-          |  public V value;
-          |  public MyEntry() { this.key = null; this.value = null; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void test(java.util.List<MyEntry<String, Integer>> list) {
-          |    MyEntry<String, Integer> e = new MyEntry<String, Integer>();
-          |    e.key = "hello";
-          |    e.value = 42;
-          |    list.add(e);
-          |  }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.MyEntry" -> Map(("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true)))
+    )
+    val p = portAll(
+      List(
+        "MyEntry.java" ->
+          """package demo;
+            |public class MyEntry<K, V> {
+            |  public K key;
+            |  public V value;
+            |  public MyEntry() { this.key = null; this.value = null; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void test(java.util.List<MyEntry<String, Integer>> list) {
+            |    MyEntry<String, Integer> e = new MyEntry<String, Integer>();
+            |    e.key = "hello";
+            |    e.value = 42;
+            |    list.add(e);
+            |  }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // the three statements (new + 2 assigns) fold into one construction
     assertEmits(p, "\"hello\"")
     assertEmits(p, "42")
@@ -2607,32 +2817,35 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.Wide" -> "demo.LlsWide"),
-      retargetRewrites = Map("demo.Wide" -> Map(
-        ("<init>", 5) -> Construct("demo.LlsWide", "apply"))))
-    val p = portAll(List(
-      "Wide.java" ->
-        """package demo;
-          |public class Wide<T> {
-          |  public Wide(T a, T b, T c, T d, T e) {}
-          |}""".stripMargin,
-      "LlsWide.java" ->
-        """package demo;
-          |public class LlsWide<T> {
-          |  public static <T> LlsWide<T> apply(T a, T b, T c, T d, T e) { return null; }
-          |}""".stripMargin,
-      "Supplier.java" ->
-        """package demo;
-          |@FunctionalInterface
-          |public interface Supplier5<A,B,C,D,E,R> { R get(A a, B b, C c, D d, E e); }""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void register(Supplier5<String,String,String,String,String,Wide<String>> s) {}
-          |  void test() { register(Wide::new); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Wide" -> Map(("<init>", 5) -> Construct("demo.LlsWide", "apply")))
+    )
+    val p = portAll(
+      List(
+        "Wide.java" ->
+          """package demo;
+            |public class Wide<T> {
+            |  public Wide(T a, T b, T c, T d, T e) {}
+            |}""".stripMargin,
+        "LlsWide.java" ->
+          """package demo;
+            |public class LlsWide<T> {
+            |  public static <T> LlsWide<T> apply(T a, T b, T c, T d, T e) { return null; }
+            |}""".stripMargin,
+        "Supplier.java" ->
+          """package demo;
+            |@FunctionalInterface
+            |public interface Supplier5<A,B,C,D,E,R> { R get(A a, B b, C c, D d, E e); }""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void register(Supplier5<String,String,String,String,String,Wide<String>> s) {}
+            |  void test() { register(Wide::new); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     val fs = ph.retargetBoundary(p.after)
-    assert(clue(fs).exists(_.what.contains("constructor reference arity")),
-      s"expected a finding for arity > pool, got: $fs")
+    assert(clue(fs).exists(_.what.contains("constructor reference arity")), s"expected a finding for arity > pool, got: $fs")
   }
 
   // ---------------------------------------------------------------------------
@@ -2643,47 +2856,49 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.ObjMap" -> "demo.LlsMap"),
-      retargetRewrites = Map("demo.ObjMap" -> Map(
-        ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("<init>", 0)  -> Construct("demo.LlsMap", "apply"))))
-    val p = portAll(List(
-      "Entry.java" ->
-        """package demo;
-          |public class Entry<K, V> {
-          |  public K key;
-          |  public V value;
-          |}""".stripMargin,
-      "ObjMap.java" ->
-        """package demo;
-          |public class ObjMap<K, V> implements Iterable<Entry<K, V>> {
-          |  public java.util.Iterator<Entry<K, V>> iterator() { return null; }
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
-          |}""".stripMargin,
-      "LlsMap.java" ->
-        """package demo;
-          |public class LlsMap<K, V> {
-          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  String find(ObjMap<String, ObjMap<String, Integer>> outer) {
-          |    for (Entry<String, ObjMap<String, Integer>> e1 : outer) {
-          |      ObjMap<String, Integer> a = e1.value;
-          |      ObjMap<String, Integer> b = e1.value;
-          |      for (Entry<String, Integer> e2 : a) {
-          |        if (e2.value == 1) return e2.key;
-          |      }
-          |      for (Entry<String, Integer> e3 : b) {
-          |        if (e3.value == 2) return e3.key;
-          |      }
-          |    }
-          |    return null;
-          |  }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.ObjMap" -> Map(("entries", 0) -> ForEach("foreachEntry", 2), ("<init>", 0) -> Construct("demo.LlsMap", "apply")))
+    )
+    val p = portAll(
+      List(
+        "Entry.java" ->
+          """package demo;
+            |public class Entry<K, V> {
+            |  public K key;
+            |  public V value;
+            |}""".stripMargin,
+        "ObjMap.java" ->
+          """package demo;
+            |public class ObjMap<K, V> implements Iterable<Entry<K, V>> {
+            |  public java.util.Iterator<Entry<K, V>> iterator() { return null; }
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+            |}""".stripMargin,
+        "LlsMap.java" ->
+          """package demo;
+            |public class LlsMap<K, V> {
+            |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  String find(ObjMap<String, ObjMap<String, Integer>> outer) {
+            |    for (Entry<String, ObjMap<String, Integer>> e1 : outer) {
+            |      ObjMap<String, Integer> a = e1.value;
+            |      ObjMap<String, Integer> b = e1.value;
+            |      for (Entry<String, Integer> e2 : a) {
+            |        if (e2.value == 1) return e2.key;
+            |      }
+            |      for (Entry<String, Integer> e3 : b) {
+            |        if (e3.value == 2) return e3.key;
+            |      }
+            |    }
+            |    return null;
+            |  }
+            |}""".stripMargin
+      ),
+      ph
+    )
     val fs = ph.retargetBoundary(p.after)
-    assert(clue(fs).exists(_.what.contains("nested loops returning")),
-      s"expected a finding for multiple inner labels, got: $fs")
+    assert(clue(fs).exists(_.what.contains("nested loops returning")), s"expected a finding for multiple inner labels, got: $fs")
     // the first inner label IS lifted -- boundary wraps the outer, so emitted code is in shape
     assertEmitsMatch(p, """boundary\[""")
     assertEmitsMatch(p, """boundary\.break\(""")
@@ -2695,18 +2910,23 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.OSet" -> "lowlevel.util.OrderedSet"),
-      retargetRewrites = Map("demo.OSet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
-    val p = portAll(List(
-      "OSet.java" ->
-        """package demo;
-          |public class OSet<T> implements Iterable<T> {
-          |  public java.util.Iterator<T> iterator() { return null; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses<T> {
-          |  java.util.Iterator<T> iter(OSet<T> s) { return s.iterator(); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.OSet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator"))))
+    )
+    val p = portAll(
+      List(
+        "OSet.java" ->
+          """package demo;
+            |public class OSet<T> implements Iterable<T> {
+            |  public java.util.Iterator<T> iterator() { return null; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses<T> {
+            |  java.util.Iterator<T> iter(OSet<T> s) { return s.iterator(); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "JavaIterator.removing(")
     assertEmits(p, "orderedItems.size")
     assertEmits(p, "orderedItems.apply(")
@@ -2720,27 +2940,31 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.Arr" -> "demo.Target"),
-      retargetRewrites = Map("demo.Arr" -> Map(
-        ("flag", 0) -> DropWrite("flag", "flagVal", "Target.flagVal is a constructor parameter"))))
-    val p = portAll(List(
-      "Arr.java" ->
-        """package demo;
-          |public class Arr { public boolean flag; }""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target { public boolean flagVal() { return true; } }""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean read(Arr a) { return a.flag; }
-          |  void write(Arr a) { a.flag = true; }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Arr" -> Map(("flag", 0) -> DropWrite("flag", "flagVal", "Target.flagVal is a constructor parameter")))
+    )
+    val p = portAll(
+      List(
+        "Arr.java" ->
+          """package demo;
+            |public class Arr { public boolean flag; }""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target { public boolean flagVal() { return true; } }""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean read(Arr a) { return a.flag; }
+            |  void write(Arr a) { a.flag = true; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // read side: renamed to flagVal
     assertEmits(p, ".flagVal")
     // write side: side-effect-free RHS removed entirely (no `()` in statement position)
     assertNotEmits(p, ".flag = true")
     assertNotEmits(p, ".flagVal = true")
-    assertNotEmits(p, "();")  // no stray unit literal
+    assertNotEmits(p, "();") // no stray unit literal
     // decision recorded
     assertDecides(p, Decision.Kind.DroppedFieldWrite, "flag")
   }
@@ -2749,21 +2973,25 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.Arr" -> "demo.Target"),
-      retargetRewrites = Map("demo.Arr" -> Map(
-        ("flag", 0) -> DropWrite("flag", "flagVal", "Target.flagVal is a constructor parameter"))))
-    val p = portAll(List(
-      "Arr.java" ->
-        """package demo;
-          |public class Arr { public boolean flag; }""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target { public boolean flagVal() { return true; } }""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void write(Arr a) { a.flag = compute(); }
-          |  static boolean compute() { return true; }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Arr" -> Map(("flag", 0) -> DropWrite("flag", "flagVal", "Target.flagVal is a constructor parameter")))
+    )
+    val p = portAll(
+      List(
+        "Arr.java" ->
+          """package demo;
+            |public class Arr { public boolean flag; }""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target { public boolean flagVal() { return true; } }""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void write(Arr a) { a.flag = compute(); }
+            |  static boolean compute() { return true; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // effectful RHS kept as bare expression
     assertEmits(p, "compute()")
     assertNotEmits(p, ".flagVal = ")
@@ -2776,28 +3004,36 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("entries", 0) -> ForEach("foreach", 1),
-        ("valueOp", 1) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK); $recv.put(bpK, bpOld); bpOld }"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> implements Iterable<T> {
-          |  public java.util.Iterator<T> iterator() { return null; }
-          |  public int valueOp(T key) { return 0; }
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {
-          |  public void foreach(java.util.function.Consumer<T> f) {}
-          |  public int get(T key) { return 0; }
-          |  public int put(T key, int v) { return 0; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void test(Coll<String> c) { for (String s : c) c.valueOp(s); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map(
+        "demo.Coll" -> Map(
+          ("entries", 0) -> ForEach("foreach", 1),
+          ("valueOp", 1) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK); $recv.put(bpK, bpOld); bpOld }")
+        )
+      )
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> implements Iterable<T> {
+            |  public java.util.Iterator<T> iterator() { return null; }
+            |  public int valueOp(T key) { return 0; }
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {
+            |  public void foreach(java.util.function.Consumer<T> f) {}
+            |  public int get(T key) { return 0; }
+            |  public int put(T key, int v) { return 0; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void test(Coll<String> c) { for (String s : c) c.valueOp(s); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // the Template's trailing value is replaced with () to suppress E190/E129
     assertEmits(p, "bpOld); () }")
     assertNotEmits(p, "; bpOld }")
@@ -2812,39 +3048,46 @@ class CollectionsTransformSpec extends PortSuite:
       retarget = Map(
         "demo.MyMap" -> "lowlevel.util.ObjectMap",
         "demo.MyMap$Keys" -> "scala.collection.Iterator",
-        "demo.Arr" -> "lowlevel.util.DynamicArray"),
+        "demo.Arr" -> "lowlevel.util.DynamicArray"
+      ),
       retargetRewrites = Map(
-        "demo.MyMap" -> Map(
-          ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray")),
+        "demo.MyMap" -> Map(("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray")),
         "demo.MyMap$Keys" -> Map(
           ("hasNext", 0) -> Chain(List("hasNext")),
-          ("toArray", 0) -> Template("{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
-          ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }")),
-        "demo.Arr" -> Map(
-          ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"))),
-      retargetTypeArgs = Map(
-        "demo.MyMap$Keys" -> List(SourceArg(0))))
-    val p = portAll(List(
-      "Arr.java" ->
-        """package demo;
-          |public class Arr<T> { public Arr() {} public void add(T t) {} }""".stripMargin,
-      "MyMap.java" ->
-        """package demo;
-          |public class MyMap<K, V> {
-          |  public static class Keys<K> implements java.util.Iterator<K> {
-          |    public Arr<K> toArray() { return new Arr<K>(); }
-          |    public Arr<K> toArray(Arr<K> a) { return a; }
-          |    public boolean hasNext() { return false; }
-          |    public K next() { return null; }
-          |  }
-          |  public Keys<K> keys() { return new Keys<K>(); }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses<K, V> {
-          |  Arr<K> collect(MyMap<K, V> m) { return m.keys().toArray(); }
-          |  Arr<K> collectInto(MyMap<K, V> m, Arr<K> a) { return m.keys().toArray(a); }
-          |}""".stripMargin), ph)
+          ("toArray", 0) -> Template(
+            "{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"
+          ),
+          ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }")
+        ),
+        "demo.Arr" -> Map(("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"))
+      ),
+      retargetTypeArgs = Map("demo.MyMap$Keys" -> List(SourceArg(0)))
+    )
+    val p = portAll(
+      List(
+        "Arr.java" ->
+          """package demo;
+            |public class Arr<T> { public Arr() {} public void add(T t) {} }""".stripMargin,
+        "MyMap.java" ->
+          """package demo;
+            |public class MyMap<K, V> {
+            |  public static class Keys<K> implements java.util.Iterator<K> {
+            |    public Arr<K> toArray() { return new Arr<K>(); }
+            |    public Arr<K> toArray(Arr<K> a) { return a; }
+            |    public boolean hasNext() { return false; }
+            |    public K next() { return null; }
+            |  }
+            |  public Keys<K> keys() { return new Keys<K>(); }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses<K, V> {
+            |  Arr<K> collect(MyMap<K, V> m) { return m.keys().toArray(); }
+            |  Arr<K> collectInto(MyMap<K, V> m, Arr<K> a) { return m.keys().toArray(a); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // toArray(0): builds a DynamicArray from the iterator via foreach
     assertEmits(p, "foreach(bpR.add)")
     assertEmits(p, "lowlevel.util.DynamicArray")
@@ -2857,27 +3100,31 @@ class CollectionsTransformSpec extends PortSuite:
     // wildcard must become `? <: Object` so that `apply(i)` conforms to Object slots.
     val ph = new CollectionsTransform(
       retarget = Map("demo.Coll" -> "demo.Target"),
-      retargetRewrites = Map("demo.Coll" -> Map(
-        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("demo.Target", "apply"))))
-    val p = portAll(List(
-      "Coll.java" ->
-        """package demo;
-          |public class Coll<T> {
-          |  public int size() { return 0; }
-          |  public T get(int i) { return null; }
-          |  public Coll() {}
-          |}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> extends Coll<T> {
-          |  public static <T> Target<T> apply() { return new Target<T>(); }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  @SuppressWarnings("rawtypes")
-          |  Object first(Coll raw) { return raw.get(0); }
-          |}""".stripMargin), ph)
+      retargetRewrites = Map("demo.Coll" -> Map(("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("demo.Target", "apply")))
+    )
+    val p = portAll(
+      List(
+        "Coll.java" ->
+          """package demo;
+            |public class Coll<T> {
+            |  public int size() { return 0; }
+            |  public T get(int i) { return null; }
+            |  public Coll() {}
+            |}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> extends Coll<T> {
+            |  public static <T> Target<T> apply() { return new Target<T>(); }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  @SuppressWarnings("rawtypes")
+            |  Object first(Coll raw) { return raw.get(0); }
+            |}""".stripMargin
+      ),
+      ph
+    )
     // `? <: java.lang.Object`, not bare `?`
     assertEmits(p, "demo.Target[? <: java.lang.Object]")
     assertNotEmits(p, "demo.Target[?]")
@@ -2889,36 +3136,41 @@ class CollectionsTransformSpec extends PortSuite:
     import CollectionsTransform.RetargetRewrite.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.MyMap" -> "demo.LlsMap"),
-      retargetRewrites = Map("demo.MyMap" -> Map(
-        ("values", 0) -> Collect("foreachValue", "demo.DArr"))))
+      retargetRewrites = Map("demo.MyMap" -> Map(("values", 0) -> Collect("foreachValue", "demo.DArr")))
+    )
     val redirect = new TypeRedirectTransform(Map("demo.OldVal" -> "demo.NewVal"))
-    val p = portAll(List(
-      "OldVal.java" ->
-        """package demo;
-          |public class OldVal { public void doIt() {} }""".stripMargin,
-      "NewVal.java" ->
-        """package demo;
-          |public class NewVal extends OldVal { public void doExtra() {} }""".stripMargin,
-      "MyMap.java" ->
-        """package demo;
-          |public class MyMap<K, V> {
-          |  public java.util.Iterator<V> values() { return null; }
-          |}""".stripMargin,
-      "LlsMap.java" ->
-        """package demo;
-          |public class LlsMap<K, V> extends MyMap<K, V> {
-          |  public void foreachValue(java.util.function.Consumer<V> f) {}
-          |}""".stripMargin,
-      "DArr.java" ->
-        """package demo;
-          |public class DArr<T> { public void add(T t) {} }""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  void walk(MyMap<String, NewVal> m) {
-          |    for (OldVal v : m.values()) { v.doIt(); }
-          |  }
-          |}""".stripMargin), redirect, ph)
+    val p        = portAll(
+      List(
+        "OldVal.java" ->
+          """package demo;
+            |public class OldVal { public void doIt() {} }""".stripMargin,
+        "NewVal.java" ->
+          """package demo;
+            |public class NewVal extends OldVal { public void doExtra() {} }""".stripMargin,
+        "MyMap.java" ->
+          """package demo;
+            |public class MyMap<K, V> {
+            |  public java.util.Iterator<V> values() { return null; }
+            |}""".stripMargin,
+        "LlsMap.java" ->
+          """package demo;
+            |public class LlsMap<K, V> extends MyMap<K, V> {
+            |  public void foreachValue(java.util.function.Consumer<V> f) {}
+            |}""".stripMargin,
+        "DArr.java" ->
+          """package demo;
+            |public class DArr<T> { public void add(T t) {} }""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  void walk(MyMap<String, NewVal> m) {
+            |    for (OldVal v : m.values()) { v.doIt(); }
+            |  }
+            |}""".stripMargin
+      ),
+      redirect,
+      ph
+    )
     // The lambda parameter should be typed from the receiver's value type (NewVal after redirect),
     // not from the loop variable's declared type (OldVal).
     assertEmits(p, "demo.NewVal")
@@ -2927,7 +3179,7 @@ class CollectionsTransformSpec extends PortSuite:
 
   test("a raw JDK-family parameter in an OVERRIDE keeps the shim's `[?]` — the Object bound is for retarget targets only") {
     val ph = new CollectionsTransform()
-    val p = port(
+    val p  = port(
       """package demo;
         |import java.util.*;
         |class Bag<T> extends AbstractCollection<T> {
@@ -2935,7 +3187,9 @@ class CollectionsTransformSpec extends PortSuite:
         |  public int size() { return 0; }
         |  public boolean containsAll(Collection c) { return false; }
         |}
-        |""".stripMargin, ph)
+        |""".stripMargin,
+      ph
+    )
     assertEmits(p, "containsAll(c: balticporter.runtime.JavaCollection[?])")
     assertNotEmits(p, "JavaCollection[? <: java.lang.Object]")
   }

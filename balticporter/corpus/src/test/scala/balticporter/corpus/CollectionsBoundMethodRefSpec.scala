@@ -15,7 +15,9 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
         |  void go(HashMap<String, String> map) { apply(map::get); }
         |  void apply(Function<String, String> f) { }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // scala's `Map.get` answers an `Option`; java's answers the value or `null`, which is the
     // rewrite the phase already performs at a CALL — now performed at the REFERENCE too.
     assertEmits(p, "val recv$")
@@ -33,7 +35,9 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
         |  void go(HashMap<String, String> map) { apply(map::put); }
         |  void apply(BiFunction<String, String, String> f) { }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     assertEmits(p, "a0$")
     assertEmits(p, "a1$")
   }
@@ -47,7 +51,9 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
         |  void go() { apply(this::get); }
         |  void apply(Function<String, String> f) { }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // a `val recv$ = this` would be emitted text for nothing: no assignment can move `this`, so the
     // per-invocation reading and the at-creation reading are the same program.
     assertNotEmits(p, "val recv$ = this")
@@ -62,7 +68,9 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
         |  void go(Table t) { apply(t::get); }
         |  void apply(Function<String, String> f) { }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // `kindOf` is the phase's OWN record of what it moved (§4.56). A receiver it never touched has
     // the member java gave it, so there is nothing to lower and lowering would be pure churn.
     assertEmits(p, "apply(t.get)")
@@ -78,7 +86,9 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
         |  void go(ArrayList<String> xs) { apply(xs::hashCode); }
         |  void apply(Supplier<Integer> f) { }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // `rewrite` answering `None` is the second gate and it is the one that keeps this from wrapping
     // every bound reference on every retyped receiver in a lambda for no difference at all.
     assertNotEmits(p, "val recv$")

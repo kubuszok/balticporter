@@ -3,10 +3,10 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{ OmissionCheck, Pipeline }
 
-/** A java enum's primary is its ROOT constructor, not the first one written (`CLAUDE.md` §4.4's
-  * `super(args)` row read at an enum body). */
+/** A java enum's primary is its ROOT constructor, not the first one written (`CLAUDE.md` §4.4's `super(args)` row read at an enum body).
+  */
 class EnumOverloadedCtorSpec extends PortSuite:
 
   private def emit(src: String) =
@@ -25,7 +25,8 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  Level(int bits) { this.bits = bits; }
         |  public int getBits() { return bits; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("enum Level(private[enums] val bits: scala.Int) extends java.lang.Enum[Level]"))
     assert(out.contains("case HIGH extends Level(3)"))
     // the one that was silently 0 before: java ran `this(1)`
@@ -46,7 +47,8 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  final int level;
         |  Shade(int level) { this.level = level; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("enum Shade(private[enums1] val level: scala.Int) extends java.lang.Enum[Shade]"))
     assert(out.contains("case DARK extends Shade(1)"))
     assert(out.contains("case LIGHT extends Shade(2)"))
@@ -67,7 +69,8 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  Tag(String s) { this(s.length()); }
         |  Tag(int n) { this.n = n; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // ONE ROW PER CONSTANT, which is the granularity a reader can act on: `ONE("x")` cannot reach a
     // root whose delegation reads `s`, and `TWO` matches no constructor's arity at all once the
     // nilary overload is the one that delegates.
@@ -87,7 +90,8 @@ class EnumOverloadedCtorSpec extends PortSuite:
         |  Pick(int n) { this.n = n; }
         |  Pick(long n) { this((int) n); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // `A(1)` is arity 1 and TWO constructors take one value parameter, so which one java chose is
     // not a question an arity match can answer; `B` is arity 0 and the nilary overload delegates
     // into the same ambiguity one hop later.

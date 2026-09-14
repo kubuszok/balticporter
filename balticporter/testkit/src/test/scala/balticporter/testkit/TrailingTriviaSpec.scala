@@ -20,7 +20,8 @@ class TrailingTriviaSpec extends munit.FunSuite:
         |        // Do nothing by default.
         |    }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("// Do nothing by default."), o)
     // inside the method, not hoisted above it — the whole point of a slot rather than a fallback
     assert(o.indexOf("def update") < o.indexOf("Do nothing by default."), o)
@@ -37,7 +38,8 @@ class TrailingTriviaSpec extends munit.FunSuite:
         |    }
         |    private void step() {}
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("setTransform(transform);"), o)
     val c = o.indexOf("setTransform(transform);")
     assert(c > o.indexOf("step()"), o)
@@ -61,7 +63,8 @@ class TrailingTriviaSpec extends munit.FunSuite:
         |        }
         |    }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("NOT_HANDLED unhandled by this switch"), o)
     // the sibling that always survived, for contrast: it PRECEDES a statement and folds onto it
     assert(o.contains("key name not found"), o)
@@ -87,16 +90,16 @@ class TrailingTriviaSpec extends munit.FunSuite:
         |        return r;
         |    }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("nothing else to do here"), o)
     assertEquals(occurrences(o, "nothing else to do here"), 1, o)
   }
 
-  /** the A2 interaction: the funnel rewrites every multi-constructor class, so this is the
-    * population `trailing` has to ride through. A SECONDARY keeps its braces and `ctorBody`
-    * renders them from `stmtsOf`'s statement LIST rather than from the body block — so the slot
-    * reaches it only because that rendering asks for it. The constructor the funnel CONSUMES has
-    * no braces left at all; that one is the recovery backstop's, not this mechanism's. */
+  /** the A2 interaction: the funnel rewrites every multi-constructor class, so this is the population `trailing` has to ride through. A SECONDARY keeps its braces and `ctorBody` renders them from
+    * `stmtsOf`'s statement LIST rather than from the body block — so the slot reaches it only because that rendering asks for it. The constructor the funnel CONSUMES has no braces left at all; that
+    * one is the recovery backstop's, not this mechanism's.
+    */
   private val multiCtor =
     """package demo;
       |public class Multi {
@@ -120,8 +123,7 @@ class TrailingTriviaSpec extends munit.FunSuite:
 
   test("A2 interaction: every SECONDARY constructor keeps its body's trailing comment") {
     val o = out(multiCtor)
-    List("defaulted both", "defaulted the height")
-      .foreach(c => assertEquals(occurrences(o, c), 1, s"'$c' in:\n$o"))
+    List("defaulted both", "defaulted the height").foreach(c => assertEquals(occurrences(o, c), 1, s"'$c' in:\n$o"))
     // …and each of them PLACED, not recovered: the backstop is the completeness half and these
     // three are the attachment channel's, which is what places them where java wrote them.
     assertEquals(balticporter.tir.TriviaMark.scan(o).count(_.line == 8), 0, o)
@@ -131,7 +133,6 @@ class TrailingTriviaSpec extends munit.FunSuite:
   test("A2 interaction: the CONSUMED constructor's is recovered — `RecoveredTriviaSpec` for how") {
     assertEquals(occurrences(out(multiCtor), "both given"), 1, out(multiCtor))
   }
-
 
   test("a nesting block comment at a block's tail still renders line-by-line as `//`") {
     val o = out(
@@ -143,7 +144,8 @@ class TrailingTriviaSpec extends munit.FunSuite:
         |    }
         |    private void g() {}
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("see the"), o)
     val line = o.linesIterator.find(_.contains("see the /* marker")).getOrElse("")
     assert(line.trim.startsWith("//"), s"[$line] in:\n$o")
@@ -167,7 +169,8 @@ class TrailingTriviaSpec extends munit.FunSuite:
     val o = out(
       """package demo;
         |public class Plain { public int f(int n) { int t = n; return t; } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(o.contains("val t: scala.Int = n"), o)
     assert(!o.contains("//"), o)
   }

@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** [[BeanPropertyTransform]] auto-detection — the `scope` parameter that scans a program for bean
-  * accessor pairs following the Java bean convention, complementing the explicit `pairs` map. */
+/** [[BeanPropertyTransform]] auto-detection — the `scope` parameter that scans a program for bean accessor pairs following the Java bean convention, complementing the explicit `pairs` map.
+  */
 class BeanPropertyTransformSpec extends munit.FunSuite:
 
   // ---- pure helpers -------------------------------------------------------------------------
@@ -64,23 +64,19 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
 
   // ---- end-to-end auto-detection ------------------------------------------------------------
 
-  private case class Ran(before: Program, after: Program, phase: BeanPropertyTransform,
-                         log: DecisionLog, idioms: IdiomLog = IdiomLog.discarding):
-    def out: String = new TirEmitter(after).emit
+  private case class Ran(before: Program, after: Program, phase: BeanPropertyTransform, log: DecisionLog, idioms: IdiomLog = IdiomLog.discarding):
+    def out:                String         = new TirEmitter(after).emit
     def named(fqn: String): Option[Symbol] = after.symbols.all.find(_.fullName == fqn)
 
   private def ran(java: String, phase: BeanPropertyTransform): Ran =
-    val before   = SpoonTir.fromSource(java)
-    val idioms   = new IdiomLog
-    val rewrites = RewriteLog()
-    val (after, log) = Pipeline.runTraced(before, List(phase),
-      new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding,
-      rewrites, idioms)
+    val before       = SpoonTir.fromSource(java)
+    val idioms       = new IdiomLog
+    val rewrites     = RewriteLog()
+    val (after, log) = Pipeline.runTraced(before, List(phase), new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding, rewrites, idioms)
     Ran(before, after, phase, log, idioms)
 
   private def nameOf(r: Ran, fqn: String): String =
-    r.before.symbols.all.find(_.fullName == fqn).map(_.id)
-      .flatMap(r.after.symbolOf).map(_.name).getOrElse(s"<no $fqn>")
+    r.before.symbols.all.find(_.fullName == fqn).map(_.id).flatMap(r.after.symbolOf).map(_.name).getOrElse(s"<no $fqn>")
 
   private def detectedConverted(r: Ran): List[IdiomCandidate] =
     r.idioms.all.filter(c => c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
@@ -93,14 +89,14 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("scope = Only(Set.empty) is a no-op — identical to an empty pairs map") {
-    val src = """
+    val src    = """
       class Thing {
         private int w;
         public int getW() { return w; }
         public void setW(int v) { this.w = v; }
       }
     """
-    val phase = new BeanPropertyTransform(scope = RuleScope.Only(Set.empty))
+    val phase  = new BeanPropertyTransform(scope = RuleScope.Only(Set.empty))
     val before = SpoonTir.fromSource(src)
     assert(phase.run(before) eq before, "Only(Set.empty) must return the same program")
   }
@@ -121,7 +117,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         void go(Layer l) { l.setOpacity(l.getOpacity() + 1.0f); }
       }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Layer"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Layer")))
+    )
     assert(clue(r.out).contains("def opacity"))
     assert(r.out.contains("def opacity_="))
     assert(r.out.contains("l.opacity = l.opacity + 1.0f"))
@@ -137,7 +134,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
       }
       class Use { void go(Info i) { String s = i.getName(); } }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Info"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Info")))
+    )
     assert(clue(r.out).contains("def name"))
     assert(clue(r.out).contains("i.name"))
     assert(!r.out.contains("_="))
@@ -153,7 +151,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
       }
       class Use { void go(Flag f) { boolean b = f.isReady(); } }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Flag"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Flag")))
+    )
     assert(clue(r.out).contains("def ready"))
     assertEquals(detectedConverted(r).size, 1)
   }
@@ -164,7 +163,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
       class Inside { public int getW() { return 0; } }
       class Outside { public int getH() { return 0; } }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Inside"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Inside")))
+    )
     assert(clue(r.out).contains("def w"))
     assertEquals(nameOf(r, "Outside#getH"), "getH", "outside type must not be touched")
     assertEquals(detectedConverted(r).size, 1)
@@ -184,9 +184,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         public int getW() { return 0; }
       }
       """,
-      new BeanPropertyTransform(
-        pairs = Map("Layer#opacity" -> "getOpacity/setOpacity"),
-        scope = RuleScope.Only(Set("Layer"))))
+      new BeanPropertyTransform(pairs = Map("Layer#opacity" -> "getOpacity/setOpacity"), scope = RuleScope.Only(Set("Layer")))
+    )
     // opacity was handled by the configured path, not auto-detection
     assert(clue(r.out).contains("def opacity"))
     // w was auto-detected
@@ -208,7 +207,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         public static int getW() { return 0; }
       }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Cfg"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Cfg")))
+    )
     assertEquals(nameOf(r, "Cfg#getW"), "getW")
     val refused = detectedRefused(r)
     assertEquals(refused.size, 1)
@@ -222,7 +222,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         public void getW() {}
       }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Cfg"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Cfg")))
+    )
     assertEquals(nameOf(r, "Cfg#getW"), "getW")
     val refused = detectedRefused(r)
     assertEquals(refused.size, 1)
@@ -238,7 +239,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         public Builder setW(int v) { this.w = v; return this; }
       }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Only(Set("Builder"))))
+      new BeanPropertyTransform(scope = RuleScope.Only(Set("Builder")))
+    )
     assertEquals(nameOf(r, "Builder#getW"), "getW")
     val refused = detectedRefused(r)
     assertEquals(refused.size, 1)
@@ -250,10 +252,9 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   // override component or refused as a unit)
   // -------------------------------------------------------------------------------------------
 
-  /** `Cullable` declares ONLY `setCullingArea`; `Group` declares the pair. The setter component
-    * reaches `Cullable`, `x.cullingArea = v` is scalac's `x.cullingArea_=(v)` with the GETTER on
-    * the LHS, and a `Cullable`-typed receiver has no getter — so the pair is refused whole and
-    * every declaration keeps its java name (23 pairs on libGDX core, 2 errors closed). */
+  /** `Cullable` declares ONLY `setCullingArea`; `Group` declares the pair. The setter component reaches `Cullable`, `x.cullingArea = v` is scalac's `x.cullingArea_=(v)` with the GETTER on the LHS,
+    * and a `Cullable`-typed receiver has no getter — so the pair is refused whole and every declaration keeps its java name (23 pairs on libGDX core, 2 errors closed).
+    */
   private val setterOnlyInterface =
     """
     class Rectangle {}
@@ -267,7 +268,7 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
     """
 
   test("a setter-only INTERFACE in the setter's component refuses the auto-detected pair") {
-    val r = ran(setterOnlyInterface, new BeanPropertyTransform(scope = RuleScope.Everywhere()))
+    val r       = ran(setterOnlyInterface, new BeanPropertyTransform(scope = RuleScope.Everywhere()))
     val refused = detectedRefused(r).filter(_.subject.endsWith("#cullingArea"))
     assertEquals(clue(refused).size, 1)
     assert(clue(refused.head.verdict.render).contains("SetterOnlyInterface"))
@@ -286,11 +287,10 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
     assert(clue(f).exists(_.detail.contains("Cullable")))
   }
 
-  /** `TirEmitter.resolveFieldShadowing`'s implementation-pair exemption is ABSTRACT-only: a concrete
-    * parameterless `def` is a detected getter whose storage is its OWN owner's field, and a
-    * descendant's same-name field is java's plain shadow — a `var` cannot override a concrete
-    * `def`, so it is renamed `$shadow` (Sprite#rotation / ParticleEmitter, Table#skin / Dialog:
-    * 2 RefChecks rows at 0 typer errors). */
+  /** `TirEmitter.resolveFieldShadowing`'s implementation-pair exemption is ABSTRACT-only: a concrete parameterless `def` is a detected getter whose storage is its OWN owner's field, and a
+    * descendant's same-name field is java's plain shadow — a `var` cannot override a concrete `def`, so it is renamed `$shadow` (Sprite#rotation / ParticleEmitter, Table#skin / Dialog: 2 RefChecks
+    * rows at 0 typer errors).
+    */
   test("a DESCENDANT's field under a detected concrete getter is a shadow, renamed `$shadow`") {
     val r = ran(
       """
@@ -304,7 +304,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         float twice() { return rotation * 2; }
       }
       """,
-      new BeanPropertyTransform(scope = RuleScope.Everywhere()))
+      new BeanPropertyTransform(scope = RuleScope.Everywhere())
+    )
     assertEquals(nameOf(r, "Sprite#getRotation"), "rotation")
     assert(clue(r.out).contains("var rotation$shadow"))
     assert(clue(r.out).contains("rotation$shadow * 2"))
@@ -328,8 +329,7 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   }
 
   test("surfaceFingerprint includes both pairs and scope") {
-    val a = new BeanPropertyTransform(Map("a#x" -> "getX"),
-      scope = RuleScope.Only(Set("com.foo")))
+    val a = new BeanPropertyTransform(Map("a#x" -> "getX"), scope = RuleScope.Only(Set("com.foo")))
     assert(clue(a.surfaceFingerprint).contains("a#x="))
     assert(a.surfaceFingerprint.contains("detect=only:com.foo"))
   }
@@ -350,8 +350,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("mergedWith composes two Only scopes by union") {
-    val a = new BeanPropertyTransform(scope = RuleScope.Only(Set("com.a")))
-    val b = new BeanPropertyTransform(scope = RuleScope.Only(Set("com.b")))
+    val a      = new BeanPropertyTransform(scope = RuleScope.Only(Set("com.a")))
+    val b      = new BeanPropertyTransform(scope = RuleScope.Only(Set("com.b")))
     val merged = a.mergedWith(b)
     assert(merged.isRight)
     val mp = merged.toOption.get.phase.asInstanceOf[BeanPropertyTransform]
@@ -360,8 +360,8 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   }
 
   test("mergedWith refuses mixed Only/Everywhere scopes") {
-    val a = new BeanPropertyTransform(scope = RuleScope.Only(Set("com.a")))
-    val b = new BeanPropertyTransform(scope = RuleScope.Everywhere(Set("com.b")))
+    val a      = new BeanPropertyTransform(scope = RuleScope.Only(Set("com.a")))
+    val b      = new BeanPropertyTransform(scope = RuleScope.Everywhere(Set("com.b")))
     val merged = a.mergedWith(b)
     assert(merged.isLeft)
     assert(clue(merged.swap.toOption.get).contains("disagrees"))
@@ -372,9 +372,7 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("subjects includes scope entries") {
-    val a = new BeanPropertyTransform(
-      pairs = Map("com.foo.Bar#opacity" -> "getOpacity"),
-      scope = RuleScope.Only(Set("com.baz")))
+    val a = new BeanPropertyTransform(pairs = Map("com.foo.Bar#opacity" -> "getOpacity"), scope = RuleScope.Only(Set("com.baz")))
     assert(a.subjects.contains("com.foo.Bar"))
     assert(a.subjects.contains("com.baz"))
   }
@@ -384,36 +382,37 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("auto-detection skips owner types in baseSubstitutedOwners") {
-    val src = """
+    val src    = """
       class Json {
         private boolean ignoreUnknownFields;
         public void setIgnoreUnknownFields(boolean v) { this.ignoreUnknownFields = v; }
         public boolean getIgnoreUnknownFields() { return this.ignoreUnknownFields; }
       }
     """
-    val phase = new BeanPropertyTransform(scope = RuleScope.Everywhere())
+    val phase  = new BeanPropertyTransform(scope = RuleScope.Everywhere())
     val before = SpoonTir.fromSource(src)
     // simulate a dependent run where Json is a substituted type from the base's port map
-    val scope = RunScope.of(before.units.map(_.symbol).toSet,
-                            Map.empty,
-                            substituted = Set("Json"))
-    val idioms   = new IdiomLog
-    val rewrites = RewriteLog()
-    val (after, _) = Pipeline.runTraced(before, List(phase),
-      new PolicyBinder(before, before.members, scope), balticporter.catalog.CatalogLog.discarding,
-      rewrites, idioms)
+    val scope      = RunScope.of(before.units.map(_.symbol).toSet, Map.empty, substituted = Set("Json"))
+    val idioms     = new IdiomLog
+    val rewrites   = RewriteLog()
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, scope),
+      balticporter.catalog.CatalogLog.discarding,
+      rewrites,
+      idioms
+    )
     // the pair should NOT be detected — the owner is substituted
-    val converted = idioms.all.filter(c =>
-      c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
-    assertEquals(clue(converted.size), 0,
-      "a substituted owner's pairs must not be auto-detected")
+    val converted = idioms.all.filter(c => c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
+    assertEquals(clue(converted.size), 0, "a substituted owner's pairs must not be auto-detected")
     // the method names should be unchanged
     val sym = after.symbols.all.find(_.fullName.endsWith("getIgnoreUnknownFields"))
     assert(sym.isDefined, "getIgnoreUnknownFields must keep its java name")
   }
 
   test("auto-detection still works for non-substituted owners alongside substituted ones") {
-    val src = """
+    val src    = """
       class Json {
         private boolean ignoreUnknownFields;
         public void setIgnoreUnknownFields(boolean v) { this.ignoreUnknownFields = v; }
@@ -425,21 +424,22 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
         public void setCount(int v) { this.count = v; }
       }
     """
-    val phase = new BeanPropertyTransform(scope = RuleScope.Everywhere())
+    val phase  = new BeanPropertyTransform(scope = RuleScope.Everywhere())
     val before = SpoonTir.fromSource(src)
     // Json is substituted but Config is not
-    val scope = RunScope.of(before.units.map(_.symbol).toSet,
-                            Map.empty,
-                            substituted = Set("Json"))
-    val idioms   = new IdiomLog
-    val rewrites = RewriteLog()
-    val (after, _) = Pipeline.runTraced(before, List(phase),
-      new PolicyBinder(before, before.members, scope), balticporter.catalog.CatalogLog.discarding,
-      rewrites, idioms)
-    val converted = idioms.all.filter(c =>
-      c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
+    val scope      = RunScope.of(before.units.map(_.symbol).toSet, Map.empty, substituted = Set("Json"))
+    val idioms     = new IdiomLog
+    val rewrites   = RewriteLog()
+    val (after, _) = Pipeline.runTraced(
+      before,
+      List(phase),
+      new PolicyBinder(before, before.members, scope),
+      balticporter.catalog.CatalogLog.discarding,
+      rewrites,
+      idioms
+    )
+    val converted = idioms.all.filter(c => c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
     // Config's pair should be detected, Json's should not
-    assertEquals(clue(converted.size), 1,
-      "only the non-substituted owner's pair should be auto-detected")
+    assertEquals(clue(converted.size), 1, "only the non-substituted owner's pair should be auto-detected")
     assertEquals(converted.head.subject, "Config#count")
   }

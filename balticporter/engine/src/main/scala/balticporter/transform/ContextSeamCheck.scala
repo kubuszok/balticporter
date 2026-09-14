@@ -3,62 +3,70 @@ package balticporter.transform
 import balticporter.catalog.FixKind
 import balticporter.tir.*
 
-/** Counts every place [[GlobalsToImplicitsTransform]]'s `using`-threading closure stopped, and
-  * why — a declaration with no signature to thread through. Eight [[Kind]]s, each a different
-  * reader instruction (see [[balticporter.tir.NotBound]] for why not collapsed). Gated by
-  * baseline, not a hard-coded fatality. No-op unless a port declared a threaded holder. DESIGN.md
-  * §8.4, CLAUDE.md §1. */
+/** Counts every place [[GlobalsToImplicitsTransform]]'s `using`-threading closure stopped, and why — a declaration with no signature to thread through. Eight [[Kind]]s, each a different reader
+  * instruction (see [[balticporter.tir.NotBound]] for why not collapsed). Gated by baseline, not a hard-coded fatality. No-op unless a port declared a threaded holder. DESIGN.md §8.4, CLAUDE.md §1.
+  */
 object ContextSeamCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "context-seam"
 
-  /** The menu; see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Only `unconstructed-thread`
-    * and `residual-global-read` get accept entries — the two kinds where "fine" is a real per-site
-    * answer the engine cannot derive. Every other act already has a spelling (`selfSupplied`,
-    * `sites`, `promoteToClass`, `boundary`), a pointer not an entry; `unsuppliable-use` gets none
-    * (the emitted file does not compile); `lost-clause` is an engine bug, not a port's to silence. */
+  /** The menu; see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Only `unconstructed-thread` and `residual-global-read` get accept entries — the two kinds where "fine" is a real per-site answer
+    * the engine cannot derive. Every other act already has a spelling (`selfSupplied`, `sites`, `promoteToClass`, `boundary`), a pointer not an entry; `unsuppliable-use` gets none (the emitted file
+    * does not compile); `lost-clause` is an engine bug, not a port's to silence.
+    */
   def remedies: List[Remedy] = List(
     Remedy(
-      id = "accept-unconstructed-thread", lane = Name, kind = Kind.UnconstructedThread.label,
-      emissionAffecting = false, fix = FixKind.Parameterised,
+      id = "accept-unconstructed-thread",
+      lane = Name,
+      kind = Kind.UnconstructedThread.label,
+      emissionAffecting = false,
+      fix = FixKind.Parameterised,
       subject = Remedy.Subject.OwnedType,
       what = "the port states that this class is constructed by its USERS and not by a framework, " +
         "so the `using` clause is part of the ported API and there is nothing to supply — the " +
-        "answer the warning says the engine cannot derive"),
+        "answer the warning says the engine cannot derive"
+    ),
     Remedy(
-      id = "accept-residual-global", lane = Name, kind = Kind.ResidualGlobalRead.label,
-      emissionAffecting = false, fix = FixKind.Parameterised,
+      id = "accept-residual-global",
+      lane = Name,
+      kind = Kind.ResidualGlobalRead.label,
+      emissionAffecting = false,
+      fix = FixKind.Parameterised,
       what = "the port states that this read stays global on purpose — no signature reaches it and " +
-        "no `sites` entry should move it, which is a per-site statement `boundary` cannot make"),
+        "no `sites` entry should move it, which is a per-site statement `boundary` cannot make"
+    )
   )
 
   /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
-    plan.drain(remedies, findings)(f =>
-      ResolutionPlan.Residue(f.kind.label, f.enclosing, f.subject, f.origin, f.detail))
+    plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.kind.label, f.enclosing, f.subject, f.origin, f.detail))
 
   /** what kind of seam this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Kind(val label: String):
     case ResidualGlobalRead extends Kind("residual-global-read")
-    /** the mirror of ResidualGlobalRead: a signature-less declaration that USES something
-      * threaded — a `No given` at every site, unlike the coherent-but-global read. PROGRESS.md §10.8.9 */
-    case UnsuppliableUse    extends Kind("unsuppliable-use")
-    case DeferredInit       extends Kind("deferred-init")
-    case CapturedContext    extends Kind("captured-context")
-    case FrozenComponent    extends Kind("frozen-component")
-    /** the port's own answer to a class no caller of this program constructs: constructors keep
-      * java's signature, a `given` member supplies the context. ENGINE-LIMITS CT7 */
-    case SelfSupplied       extends Kind("self-supplied")
+
+    /** the mirror of ResidualGlobalRead: a signature-less declaration that USES something threaded — a `No given` at every site, unlike the coherent-but-global read. PROGRESS.md §10.8.9
+      */
+    case UnsuppliableUse extends Kind("unsuppliable-use")
+    case DeferredInit extends Kind("deferred-init")
+    case CapturedContext extends Kind("captured-context")
+    case FrozenComponent extends Kind("frozen-component")
+
+    /** the port's own answer to a class no caller of this program constructs: constructors keep java's signature, a `given` member supplies the context. ENGINE-LIMITS CT7
+      */
+    case SelfSupplied extends Kind("self-supplied")
+
     /** the CT7 shape observed rather than declared — a warning, not a refusal. */
     case UnconstructedThread extends Kind("unconstructed-thread")
-    /** a static field whose initialiser constructs a threaded class — the field becomes a holder
-      * with a throwing accessor, initialised at the head of threaded static methods. ENGINE-LIMITS
-      * CT11 */
-    case StaticFieldHolder  extends Kind("static-field-holder")
-    /** a clause the phase attached that the emitted header does not carry — an engine bug, found
-      * only from the emitter's own recording after emission. ENGINE-LIMITS CT5 */
-    case LostClause         extends Kind("lost-clause")
+
+    /** a static field whose initialiser constructs a threaded class — the field becomes a holder with a throwing accessor, initialised at the head of threaded static methods. ENGINE-LIMITS CT11
+      */
+    case StaticFieldHolder extends Kind("static-field-holder")
+
+    /** a clause the phase attached that the emitted header does not carry — an engine bug, found only from the emitter's own recording after emission. ENGINE-LIMITS CT5
+      */
+    case LostClause extends Kind("lost-clause")
 
   object Kind:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -139,23 +147,27 @@ object ContextSeamCheck extends RemedySource:
           "counted above."
 
   /** one seam. @param subject the DECLARATION the seam is at, fully qualified at find time
-    * @param key the policy entry a reader edits — the holder FQN, or the `sites` key
-    * @param enclosing the declaration's symbol, for the ownership filter and attribution. */
-  final case class Finding(kind: Kind, subject: String, key: String, detail: String,
-                           origin: Origin, enclosing: SymId):
-    def render: String = s"${kind.label} $subject — $detail  (${origin.javaPath}:${origin.line})"
+    * @param key
+    *   the policy entry a reader edits — the holder FQN, or the `sites` key
+    * @param enclosing
+    *   the declaration's symbol, for the ownership filter and attribution.
+    */
+  final case class Finding(kind: Kind, subject: String, key: String, detail: String, origin: Origin, enclosing: SymId):
+    def render: String              = s"${kind.label} $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, kind.label, subject, CheckReport.relativise(origin.javaPath),
-                          origin.line, s"$detail [key=$key]")
+      CheckReport.Finding(Name, kind.label, subject, CheckReport.relativise(origin.javaPath), origin.line, s"$detail [key=$key]")
 
-  /** grouped one-line summary, worst family first, each with its §1 classification — the whole point
-    * of the check is that a reader does not have to work out who fixes it. */
+  /** grouped one-line summary, worst family first, each with its §1 classification — the whole point of the check is that a reader does not have to work out who fixes it.
+    */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.kind).toList.sortBy((_, v) => -v.size).map { (kind, vs) =>
-        val head  = s"  ${vs.size} × ${kind.label}\n  ${Kind.classification(kind)}"
-        val sites = vs.groupBy(f => (f.subject, f.detail)).toList.sortBy((_, v) => -v.size).take(10)
-          .map { case ((subj, det), ss) => s"    ${ss.size} × $subj: $det" }
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.kind)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (kind, vs) =>
+          val head  = s"  ${vs.size} × ${kind.label}\n  ${Kind.classification(kind)}"
+          val sites = vs.groupBy(f => (f.subject, f.detail)).toList.sortBy((_, v) => -v.size).take(10).map { case ((subj, det), ss) => s"    ${ss.size} × $subj: $det" }
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

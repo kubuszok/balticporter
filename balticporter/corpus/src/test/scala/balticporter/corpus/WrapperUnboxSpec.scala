@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** JAVA'S UNBOXING CONVERSION IS TWO STEPS, and the shortcut through `Number` names a member that
-  * does not exist on two of the eight wrappers. */
+/** JAVA'S UNBOXING CONVERSION IS TWO STEPS, and the shortcut through `Number` names a member that does not exist on two of the eight wrappers.
+  */
 class WrapperUnboxSpec extends PortSuite:
 
   test("a `Character` at an `int` SLOT unboxes at `char` and widens — never `intValue()`") {

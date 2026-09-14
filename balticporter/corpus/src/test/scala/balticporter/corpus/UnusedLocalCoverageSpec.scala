@@ -3,9 +3,9 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.UnusedSymbolTransform
 
-/** `UnusedSymbolTransform` reaches an unused local wherever java can declare one — a constructor
-  * body (promoted or not), a static method, an instance method: pure initialisers are deleted,
-  * effectful ones kept as bare statements. */
+/** `UnusedSymbolTransform` reaches an unused local wherever java can declare one — a constructor body (promoted or not), a static method, an instance method: pure initialisers are deleted, effectful
+  * ones kept as bare statements.
+  */
 class UnusedLocalCoverageSpec extends PortSuite:
 
   private val java =

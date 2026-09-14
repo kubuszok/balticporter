@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{ExternalUsage, JdkSurfaceCheck, Pipeline, Program, SymId}
+import balticporter.tir.{ ExternalUsage, JdkSurfaceCheck, Pipeline, Program, SymId }
 import balticporter.transform.CollectionsTransform
 
 /** The port's JDK wall, classified — `JdkSurfaceCheck`. */
@@ -16,14 +16,11 @@ class JdkSurfaceCheckSpec extends PortSuite:
 
   private def dispositions(src: String, withPhase: Boolean): Map[String, String] =
     val after = ported(src, withPhase)
-    JdkSurfaceCheck.classify(rows(after), CollectionsTransform.jdkMapping(ran = withPhase))
-      .map((r, d) => r.member.getOrElse(r.fullName) -> d.label)
-      .toMap
+    JdkSurfaceCheck.classify(rows(after), CollectionsTransform.jdkMapping(ran = withPhase)).map((r, d) => r.member.getOrElse(r.fullName) -> d.label).toMap
 
   private def findings(src: String, withPhase: Boolean) =
     val after = ported(src, withPhase)
-    JdkSurfaceCheck.check(after, rows(after), after.units,
-                          CollectionsTransform.jdkMapping(ran = withPhase))
+    JdkSurfaceCheck.check(after, rows(after), after.units, CollectionsTransform.jdkMapping(ran = withPhase))
 
   // -------------------------------------------------------------------------------------------
   // the member lanes
@@ -106,10 +103,8 @@ class JdkSurfaceCheckSpec extends PortSuite:
     // The synthetic stale entry used to be `Collections#unmodifiableList`, and this guard is what
     // RETIRED it: that member is now rewritten, so the pair stopped being a contradiction and the
     // test went red — which is the guard reporting on its own table rather than on a fixture.
-    val m = CollectionsTransform.jdkMapping(ran = true)
-      .copy(statics = CollectionsTransform.handledStatics + "java.util.Map$Entry#setValue")
-    val row = ExternalUsage.Row(SymId(1), "setValue",
-      Some("java.util.Map$Entry"), "setValue", scala.None, Nil)
+    val m   = CollectionsTransform.jdkMapping(ran = true).copy(statics = CollectionsTransform.handledStatics + "java.util.Map$Entry#setValue")
+    val row = ExternalUsage.Row(SymId(1), "setValue", Some("java.util.Map$Entry"), "setValue", scala.None, Nil)
     assertEquals(JdkSurfaceCheck.classify(List(row), m).head._2.label, "stale-refusal")
   }
 
@@ -118,10 +113,9 @@ class JdkSurfaceCheckSpec extends PortSuite:
     // naming a member the phase HANDLES is stale, and so is one naming a member nothing has. The
     // second half is checkable here because the refusal keys are `owner#name` in the same grammar
     // the phase's own table uses.
-    val handled = CollectionsTransform.handledStatics
+    val handled  = CollectionsTransform.handledStatics
     val clashing = JdkSurfaceCheck.Refusals.map(_.api).filter(handled.contains)
-    assertEquals(clue(clashing), Nil,
-      "a refusal names a member `CollectionsTransform` already rewrites — one of the two is out of date")
+    assertEquals(clue(clashing), Nil, "a refusal names a member `CollectionsTransform` already rewrites — one of the two is out of date")
   }
 
   test("a CONSTRUCTOR of a retyped type is not a hole — retyping the type IS the rewrite for `new`") {
@@ -132,16 +126,17 @@ class JdkSurfaceCheckSpec extends PortSuite:
         |""".stripMargin
     assertEquals(clue(dispositions(src, withPhase = true)).get("java.util.HashMap#<init>"), Some("mapped"))
     // …and the flag is not an assumption: a phase that retypes without touching `new` reports it.
-    val after = ported(src, withPhase = true)
+    val after   = ported(src, withPhase = true)
     val noCtors = CollectionsTransform.jdkMapping(ran = true).copy(constructors = false)
-    assertEquals(JdkSurfaceCheck.classify(rows(after), noCtors)
-      .collectFirst { case (r, d) if r.member.contains("java.util.HashMap#<init>") => d.label },
-      Some("unhandled"))
+    assertEquals(
+      JdkSurfaceCheck.classify(rows(after), noCtors).collectFirst { case (r, d) if r.member.contains("java.util.HashMap#<init>") => d.label },
+      Some("unhandled")
+    )
   }
 
   test("the EMPTY mapping makes the whole check a `kept` report — an empty parameter is a no-op") {
     val after = ported(statics, withPhase = false)
-    val ds = JdkSurfaceCheck.classify(rows(after), JdkSurfaceCheck.noMapping).map(_._2.label).distinct
+    val ds    = JdkSurfaceCheck.classify(rows(after), JdkSurfaceCheck.noMapping).map(_._2.label).distinct
     assertEquals(clue(ds.filterNot(_ == "kept").filterNot(_ == "refused")), Nil)
     assertEquals(clue(JdkSurfaceCheck.check(after, rows(after), after.units, JdkSurfaceCheck.noMapping)), Nil)
   }

@@ -10,9 +10,15 @@ class OverrideGraphSpec extends munit.FunSuite:
     (p, OverrideGraph.build(p, baseUnits = baseUnits))
 
   private def sym(p: Program, fqn: String): SymId =
-    p.symbols.all.find(_.fullName == fqn).map(_.id)
-      .getOrElse(fail(s"no symbol named $fqn — the program has: " +
-        p.symbols.all.filter(_.fullName.contains('#')).map(_.fullName).toList.sorted.take(40).mkString(", ")))
+    p.symbols.all
+      .find(_.fullName == fqn)
+      .map(_.id)
+      .getOrElse(
+        fail(
+          s"no symbol named $fqn — the program has: " +
+            p.symbols.all.filter(_.fullName.contains('#')).map(_.fullName).toList.sorted.take(40).mkString(", ")
+        )
+      )
 
   private def fqns(p: Program, ids: Set[SymId]): Set[String] =
     ids.flatMap(p.symbolOf).map(_.fullName)
@@ -27,8 +33,9 @@ class OverrideGraphSpec extends munit.FunSuite:
       class Use {
         Music make() { return new Music() { public void setLooping(boolean v) {} }; }
       }
-      """)
-    val c = g.closureOf(sym(p, "Music#setLooping"))
+      """
+    )
+    val c     = g.closureOf(sym(p, "Music#setLooping"))
     val names = fqns(p, c.members)
     assert(clue(names).contains("Music#setLooping"))
     assert(clue(names).contains("NoopMusic#setLooping"))
@@ -40,8 +47,7 @@ class OverrideGraphSpec extends munit.FunSuite:
   }
 
   test("edges are DESCRIPTOR-keyed: same name, same ARITY, different parameter type is NO edge") {
-    val (p, g) = graphOf(
-      """
+    val (p, g) = graphOf("""
       class Base { void put(int v) {} }
       class Sub extends Base { void put(String v) {} }
       """)
@@ -56,7 +62,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       class Base { void put(int v) {} }
       class Mid extends Base { void put(int v) {} }
       class Leaf extends Mid { void put(int v) {} }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "Leaf#put"))
     assertEquals(fqns(p, c.members), Set("Base#put", "Mid#put", "Leaf#put"))
     assertEquals(g.overridden(sym(p, "Leaf#put")).toSet, Set(sym(p, "Base#put"), sym(p, "Mid#put")))
@@ -70,10 +77,14 @@ class OverrideGraphSpec extends munit.FunSuite:
       interface Right { void run(); }
       class Both implements Left, Right { public void run() {} }
       class OnlyLeft implements Left { public void run() {} }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "Right#run"))
-    assertEquals(fqns(p, c.members), Set("Left#run", "Right#run", "Both#run", "OnlyLeft#run"),
-      "the walk must go up AND down from every member it reaches, or `OnlyLeft` is invisible from `Right`")
+    assertEquals(
+      fqns(p, c.members),
+      Set("Left#run", "Right#run", "Both#run", "OnlyLeft#run"),
+      "the walk must go up AND down from every member it reaches, or `OnlyLeft` is invisible from `Right`"
+    )
   }
 
   test("an UNPARSED parent ANCHORS — refuse and count, never guess (DESIGN.md §8.5)") {
@@ -84,7 +95,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         public int compare(String a, String b) { return 0; }
         public int getRank() { return 1; }
       }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "ByName#getRank"))
     assert(c.isAnchored, "an unparsed parent with no surface data must anchor")
     assertEquals(c.externalAnchors.map(_._1), Set("java.util.Comparator"))
@@ -100,10 +112,9 @@ class OverrideGraphSpec extends munit.FunSuite:
         public int getRank() { return 1; }
       }
       """
-    val p = SpoonTir.fromSource(src)
-    val surface = ExternalSurface.default ++ ExternalSurface(Map(
-      "java.util.Comparator" -> Set(ExternalSurface.Member("compare", 2))))
-    val g = OverrideGraph.build(p, surface)
+    val p       = SpoonTir.fromSource(src)
+    val surface = ExternalSurface.default ++ ExternalSurface(Map("java.util.Comparator" -> Set(ExternalSurface.Member("compare", 2))))
+    val g       = OverrideGraph.build(p, surface)
     assert(!g.closureOf(sym(p, "ByName#getRank")).isAnchored, "the surface says `getRank` is not there")
     assert(g.closureOf(sym(p, "ByName#compare")).isAnchored, "…and says `compare` IS")
   }
@@ -120,8 +131,10 @@ class OverrideGraphSpec extends munit.FunSuite:
       }
       """
     val (p, g) = graphOf(src)
-    assert(!g.closureOf(sym(p, "Bag#getToggle")).isAnchored,
-      "`java.lang.Iterable` does not declare `getToggle`, and the platform surface knows it")
+    assert(
+      !g.closureOf(sym(p, "Bag#getToggle")).isAnchored,
+      "`java.lang.Iterable` does not declare `getToggle`, and the platform surface knows it"
+    )
     assert(g.closureOf(sym(p, "Bag#iterator")).isAnchored, "…and it DOES declare `iterator`")
   }
 
@@ -136,7 +149,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         public int compare(String a, String b) { return 0; }
         public int getRank() { return 1; }
       }
-      """)
+      """
+    )
     assert(g.closureOf(sym(p, "ByName#getRank")).isAnchored)
   }
 
@@ -154,7 +168,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         public String getBundle() { return "b"; }
         public static Text grid(int n) { return OK; }
       }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "Text#getBundle"))
     assert(c.isAnchored, "unknown surface anchors — the over-refusal CT10 declines to lift")
     assertEquals(c.externalAnchors, Set(("java.lang.Enum", "getBundle")))
@@ -174,7 +189,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         private static String getBundle() { return "b"; }
         public String get() { return getBundle(); }
       }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "Text#getBundle"))
     assert(!c.isAnchored, c.externalAnchors.toString)
     assertEquals(fqns(p, c.members), Set("Text#getBundle"))
@@ -191,7 +207,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       """
       class Base { private int step(int x) { return x; } public int pub(int x) { return x; } }
       class Sub extends Base { private int step(int x) { return x + 1; } public int pub(int x) { return x + 1; } }
-      """)
+      """
+    )
     assertEquals(fqns(p, g.closureOf(sym(p, "Sub#step")).members), Set("Sub#step"))
     assertEquals(fqns(p, g.closureOf(sym(p, "Base#step")).members), Set("Base#step"))
     assertEquals(g.overridden(sym(p, "Sub#step")), Nil)
@@ -204,7 +221,7 @@ class OverrideGraphSpec extends munit.FunSuite:
     // `SpoonTir.superTypes` filters `java.lang.Object` out on purpose, so without the implicit root
     // a rename of `toString` reads as unanchored — and silently breaks every `println` of it.
     val (p, g) = graphOf("""class Thing { public String toString() { return "x"; } }""")
-    val c = g.closureOf(sym(p, "Thing#toString"))
+    val c      = g.closureOf(sym(p, "Thing#toString"))
     assert(c.isAnchored)
     assertEquals(c.externalAnchors, Set(("java.lang.Object", "toString")))
   }
@@ -215,21 +232,22 @@ class OverrideGraphSpec extends munit.FunSuite:
   }
 
   test("a BASE-owned declaration anchors the component (ENGINE-LIMITS D2)") {
-    val (p0, _) = graphOf("""
+    val (p0, _) = graphOf(
+      """
       interface Layer { int getDepth(); }
       class MyLayer implements Layer { public int getDepth() { return 1; } }
-      """)
+      """
+    )
     val baseUnit = p0.units.find(u => p0.symbolOf(u.symbol).exists(_.fullName == "Layer")).get.symbol
-    val g = OverrideGraph.build(p0, baseUnits = Set(baseUnit))
-    val c = g.closureOf(sym(p0, "MyLayer#getDepth"))
+    val g        = OverrideGraph.build(p0, baseUnits = Set(baseUnit))
+    val c        = g.closureOf(sym(p0, "MyLayer#getDepth"))
     assert(c.isAnchored, "renaming a base's declaration from a dependent emits a second definition of it")
     assertEquals(fqns(p0, c.baseAnchors), Set("Layer#getDepth"))
     assert(clue(c.anchorReason(p0).getOrElse("")).contains("resolution root"))
   }
 
   test("a FIELD is its own closure — java fields SHADOW, they do not override") {
-    val (p, g) = graphOf(
-      """
+    val (p, g) = graphOf("""
       class Base { int data; }
       class Sub extends Base { int data; }
       """)
@@ -246,7 +264,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         NOP;
         public int apply(int x) { return x; }
       }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "Op#apply"))
     assertEquals(clue(c.members).size, 2, s"the constant body's override is missing: ${fqns(p, c.members)}")
   }
@@ -274,7 +293,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       """
       interface P<T> { String go(T t); }
       class C implements P<String> { public String go(String t) { return t; } }
-      """)
+      """
+    )
     assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go", "C#go"))
     assertEquals(fqns(p, g.overridden(sym(p, "C#go")).toSet), Set("P#go"))
     assertEquals(fqns(p, g.overriders(sym(p, "P#go")).toSet), Set("C#go"))
@@ -286,7 +306,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       interface P<T> { String go(T t); }
       abstract class Mid<X> implements P<X> { }
       class C extends Mid<String> { public String go(String t) { return t; } }
-      """)
+      """
+    )
     assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go", "C#go"))
   }
 
@@ -298,7 +319,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         A;
         public String go(String t) { return t; }
       }
-      """)
+      """
+    )
     assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go", "E#go"))
   }
 
@@ -309,7 +331,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       """
       interface P<T> { void all(T[] xs); }
       class C implements P<String> { public void all(String[] xs) { } }
-      """)
+      """
+    )
     assertEquals(fqns(p, g.closureOf(sym(p, "P#all")).members), Set("P#all", "C#all"))
   }
 
@@ -318,7 +341,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       """
       interface P<T> { String go(T t); }
       class Use { P<String> make() { return new P<String>() { public String go(String t) { return t; } }; } }
-      """)
+      """
+    )
     assertEquals(clue(g.closureOf(sym(p, "P#go")).members).size, 2)
   }
 
@@ -330,7 +354,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       """
       interface P<T> { String go(T t); }
       abstract class C implements P<String> { public String go(Integer t) { return ""; } }
-      """)
+      """
+    )
     assertEquals(fqns(p, g.closureOf(sym(p, "P#go")).members), Set("P#go"))
     assertEquals(g.overridden(sym(p, "C#go")), Nil)
   }
@@ -344,7 +369,8 @@ class OverrideGraphSpec extends munit.FunSuite:
       class C implements java.util.function.Function<String, String> {
         public String apply(String t) { return t; }
       }
-      """)
+      """
+    )
     val c = g.closureOf(sym(p, "C#apply"))
     assertEquals(fqns(p, c.members), Set("C#apply"))
     assert(clue(c).isAnchored)
@@ -357,7 +383,8 @@ class OverrideGraphSpec extends munit.FunSuite:
         static class Inner { void m() {} }
         Runnable r = new Runnable() { public void run() {} };
       }
-      """)
+      """
+    )
     val named = g.types.flatMap(p.symbolOf).map(_.name)
     assert(clue(named).contains("Outer"))
     assert(clue(named).contains("Inner"))

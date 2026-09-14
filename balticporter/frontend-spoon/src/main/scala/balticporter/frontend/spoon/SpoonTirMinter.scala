@@ -2,8 +2,8 @@ package balticporter.frontend.spoon
 
 // Split out of SpoonTir.scala for file size (context diet S2): the symbol-key interner.
 
-import balticporter.core.{AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions}
-import balticporter.catalog.{CatalogLog, Dispatch, JS, Lowering, Obligations, Typing}
+import balticporter.core.{ AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions }
+import balticporter.catalog.{ CatalogLog, Dispatch, JS, Lowering, Obligations, Typing }
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -14,13 +14,13 @@ import spoon.reflect.reference.*
 import spoon.support.adaption.TypeAdaptor
 import spoon.support.compiler.VirtualFile
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 import scala.jdk.CollectionConverters.*
 
-/** Interns symbols by a stable string key (qualified names for types, `owner#member`
-  * for members, `decl$$Name` for type params). One id per key, monotonic. */
-private[spoon] final class Minter:
+/** Interns symbols by a stable string key (qualified names for types, `owner#member` for members, `decl$$Name` for type params). One id per key, monotonic.
+  */
+final private[spoon] class Minter:
   private[spoon] var next  = 0
   private[spoon] val byKey = collection.mutable.Map[String, SymId]()
   private[spoon] val syms  = collection.mutable.Map[SymId, Symbol]()
@@ -30,9 +30,9 @@ private[spoon] final class Minter:
 
   private[spoon] def set(id: SymId, sym: Symbol): Unit = syms(id) = sym
 
-  /** Register a SECOND key for an existing SymId, so `resolve`/`external` on the alias return
-    * `id` rather than minting a new one. Used for anonymous classes, whose internal key and
-    * Spoon's `getQualifiedName` key must resolve to the same symbol. */
+  /** Register a SECOND key for an existing SymId, so `resolve`/`external` on the alias return `id` rather than minting a new one. Used for anonymous classes, whose internal key and Spoon's
+    * `getQualifiedName` key must resolve to the same symbol.
+    */
   private[spoon] def alias(key: String, id: SymId): Unit = byKey(key) = id
 
   private[spoon] def define(key: String)(mk: SymId => Symbol): SymId =
@@ -40,13 +40,18 @@ private[spoon] final class Minter:
     syms(id) = mk(id)
     id
 
-  /** Ensure a minimal stub exists for an external reference; never clobbers a real definition.
-    * `owner` is `SymId.None` for a TYPE (external types are rooted outside the program); an
-    * external MEMBER must carry its owning type's id, or `owner#name` cannot identify it and
-    * every ownership-keyed lookup (e.g. `PortabilityCheck`) silently never fires. */
-  private[spoon] def external(key: String, name: String, owner: SymId = SymId.None,
-               descriptor: Option[Descriptor] = None, info: TypeRepr = NoType,
-               annotations: List[Annot] = Nil, flags: Flags = Flags()): SymId =
+  /** Ensure a minimal stub exists for an external reference; never clobbers a real definition. `owner` is `SymId.None` for a TYPE (external types are rooted outside the program); an external MEMBER
+    * must carry its owning type's id, or `owner#name` cannot identify it and every ownership-keyed lookup (e.g. `PortabilityCheck`) silently never fires.
+    */
+  private[spoon] def external(
+    key:         String,
+    name:        String,
+    owner:       SymId = SymId.None,
+    descriptor:  Option[Descriptor] = None,
+    info:        TypeRepr = NoType,
+    annotations: List[Annot] = Nil,
+    flags:       Flags = Flags()
+  ): SymId =
     val id = resolve(key)
     if !syms.contains(id) then syms(id) = Symbol(id, name, key, flags, owner, info, descriptor = descriptor, annotations = annotations)
     else
@@ -63,16 +68,19 @@ private[spoon] final class Minter:
       syms(id) = s
     id
 
-  private[spoon] def table: SymbolTable        = SymbolTable(syms.values)
-  private[spoon] def idOf(key: String): SymId  = byKey(key)
-  /** the symbol at `key` IF one was really defined there. Deliberately not `resolve`, which mints
-    * an id for a key nobody defined and reaches the emitter as `?`. */
+  private[spoon] def table:             SymbolTable = SymbolTable(syms.values)
+  private[spoon] def idOf(key: String): SymId       = byKey(key)
+
+  /** the symbol at `key` IF one was really defined there. Deliberately not `resolve`, which mints an id for a key nobody defined and reaches the emitter as `?`.
+    */
   private[spoon] def defined(key: String): Option[(SymId, Symbol)] =
     byKey.get(key).flatMap(id => syms.get(id).map(id -> _))
   private[spoon] def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
-  /** the DECLARED type this frontend interned for `id` — `NoType` where nothing was declared.
-    * Answers *did this frontend retype this declaration?* (CLAUDE.md §4.56). */
+
+  /** the DECLARED type this frontend interned for `id` — `NoType` where nothing was declared. Answers *did this frontend retype this declaration?* (CLAUDE.md §4.56).
+    */
   private[spoon] def infoOf(id: SymId): TypeRepr = syms.get(id).map(_.info).getOrElse(NoType)
-  /** the interned OWNER of a member — the type that declares it (not the subclass name it was
-    * reached through, T14). `SymId.None` for a type or an unresolved member. */
+
+  /** the interned OWNER of a member — the type that declares it (not the subclass name it was reached through, T14). `SymId.None` for a type or an unresolved member.
+    */
   private[spoon] def ownerOf(id: SymId): SymId = syms.get(id).map(_.owner).getOrElse(SymId.None)

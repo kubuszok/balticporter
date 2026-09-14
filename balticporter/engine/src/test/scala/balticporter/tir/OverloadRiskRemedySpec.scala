@@ -1,7 +1,7 @@
 package balticporter.tir
 
 import balticporter.catalog.CatalogLog
-import balticporter.core.{PolicyIssue, PolicyReport}
+import balticporter.core.{ PolicyIssue, PolicyReport }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 
@@ -34,8 +34,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
     (Pipeline.runTraced(p, List(new OverloadRiskCheck.Apply), binder)._1, binder)
 
   private def lane(p: Program, plan: ResolutionPlan = ResolutionPlan.empty): List[String] =
-    OverloadRiskCheck.check(p, p.units, new OverloadRiskCheck.Overloads(p), plan)
-      .findings.map(f => s"${f.issue} ${f.member}@${f.origin.line}")
+    OverloadRiskCheck.check(p, p.units, new OverloadRiskCheck.Overloads(p), plan).findings.map(f => s"${f.issue} ${f.member}@${f.origin.line}")
 
   private def emitted(p: Program): String = new TirEmitter(p).emit
 
@@ -116,8 +115,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
     assertEquals(decisions.map(_.kind), List(Decision.Kind.SelectedRemedy))
     assertEquals(decisions.map(_.subjectFqn), List("com.demo.Bag#remove"))
     assertEquals(decisions.head.reason, Reason.Configured("resolutions", "com.demo.Bag#remove(Object)"))
-    val moved = before.linesIterator.toList.zipAll(after.linesIterator.toList, "", "")
-      .collect { case (b, a) if b != a => a.trim }
+    val moved = before.linesIterator.toList.zipAll(after.linesIterator.toList, "", "").collect { case (b, a) if b != a => a.trim }
     assert(clue(moved).forall(_.contains("remove")), clue(moved))
   }
 
@@ -181,8 +179,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
         |}""".stripMargin
     val p      = SpoonTir.fromSource(Mixed, catalog = CatalogLog.discarding)
     val binder = new PolicyBinder(p, p.members)
-    binder.resolving(ResolutionPlan.of(
-      Map("com.demo.Mix#both()" -> "ascribe-javac-choice"), vocabulary, vocabulary.byId.keySet, binder))
+    binder.resolving(ResolutionPlan.of(Map("com.demo.Mix#both()" -> "ascribe-javac-choice"), vocabulary, vocabulary.byId.keySet, binder))
     val out  = Pipeline.runTraced(p, List(new OverloadRiskCheck.Apply), binder)._1
     val plan = binder.resolutions
     assertEquals(plan.all.size, 1)
@@ -195,15 +192,14 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
   }
 
   test("…and the guard is STATED ONCE, so the refusal and the emission read one predicate") {
-    val p = program
+    val p         = program
     given Program = p
-    val ov  = new OverloadRiskCheck.Overloads(p)
-    val out = collection.mutable.ListBuffer.empty[(String, Boolean)]
-    val scan = new Phase:
-      def name: String = "spec/scan"
-      override def transformApply(a: Tree.Apply)(using Program): Term =
-        if p.owns(a.method) then
-          out += (p.symbolOf(a.method).map(_.name).getOrElse("?") -> OverloadRiskCheck.ascription(a).isRight)
+    val ov        = new OverloadRiskCheck.Overloads(p)
+    val out       = collection.mutable.ListBuffer.empty[(String, Boolean)]
+    val scan      = new Phase:
+      def name:                                                  String = "spec/scan"
+      override def transformApply(a: Tree.Apply)(using Program): Term   =
+        if p.owns(a.method) then out += (p.symbolOf(a.method).map(_.name).getOrElse("?") -> OverloadRiskCheck.ascription(a).isRight)
         a
     p.units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     // a STATIC callee is refused; an instance, fixed-arity, non-generic one is not.
@@ -214,18 +210,16 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
   test("a selection at a declaration with no risky call at all is INERT, never silence") {
     val (_, binder) = run(program, Map("com.demo.Bag#indexOf(Object)" -> "accept-risk"))
     assertEquals(binder.resolutions.all, Nil)
-    assertEquals(PolicyReport.fromResolutions(binder.resolutions.troubles).findings.map(_.issue),
-                 List(PolicyIssue.NeverApplied))
+    assertEquals(PolicyReport.fromResolutions(binder.resolutions.troubles).findings.map(_.issue), List(PolicyIssue.NeverApplied))
   }
 
   // -------------------------------------------------------------------------------------------
   // ONE derivation of "the declaration a `resolutions` key can name" — read by BOTH sides
   // -------------------------------------------------------------------------------------------
 
-  /** the shape neither side could see the other's answer for: a risky call written inside an
-    * ANONYMOUS class in a member's body. The check attributed it to the anon method (a real
-    * declaration whose owner is a type — and a name no key can write, `Outer$1#run`), the applier to
-    * the member whose body it walked. */
+  /** the shape neither side could see the other's answer for: a risky call written inside an ANONYMOUS class in a member's body. The check attributed it to the anon method (a real declaration whose
+    * owner is a type — and a name no key can write, `Outer$1#run`), the applier to the member whose body it walked.
+    */
   private val Anon =
     """package com.demo;
       |public class Holder {
@@ -247,8 +241,7 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
   test("a call inside an ANON class is the ENCLOSING MEMBER's row — the check says so, not just the applier") {
     val p = anonProgram
     assert(clue(lane(p)).contains("BoxingPhaseSpan remove/1@6"))
-    val decl = OverloadRiskCheck.check(p, p.units, new OverloadRiskCheck.Overloads(p))
-      .findings.head.declaration
+    val decl = OverloadRiskCheck.check(p, p.units, new OverloadRiskCheck.Overloads(p)).findings.head.declaration
     // the anon method is a real declaration and an unwritable KEY (`Holder$1#run`, numbered by a
     // per-class counter), so the row is attributed to the member a port can actually name.
     assertEquals(p.symbolOf(decl).map(_.fullName), Some("com.demo.Holder#inMethod"))
@@ -279,9 +272,9 @@ class OverloadRiskRemedySpec extends munit.FunSuite:
   test("a declaration this run does NOT emit is another module's row — D2 at the ledger") {
     val p      = program
     val binder = new PolicyBinder(p, p.members, RunScope.of(Set.empty, Map.empty))
-    binder.resolving(ResolutionPlan.of(
-      Map("com.demo.Bag#remove(Object)" -> "ascribe-javac-choice"), vocabulary,
-      vocabulary.byId.keySet, binder))
+    binder.resolving(
+      ResolutionPlan.of(Map("com.demo.Bag#remove(Object)" -> "ascribe-javac-choice"), vocabulary, vocabulary.byId.keySet, binder)
+    )
     val out = Pipeline.runTraced(p, List(new OverloadRiskCheck.Apply), binder)._1
     assertEquals(binder.resolutions.all, Nil)
     assertEquals(emitted(out), emitted(p))

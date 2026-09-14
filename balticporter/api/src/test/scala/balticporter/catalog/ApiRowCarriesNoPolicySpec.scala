@@ -1,18 +1,18 @@
 package balticporter.catalog
 
-/** The `JS-{L,P}` half of the (a)/(b) line — NARROWER than `DifferenceTakesNoParameterSpec` rather
-  * than absent. */
+/** The `JS-{L,P}` half of the (a)/(b) line — NARROWER than `DifferenceTakesNoParameterSpec` rather than absent.
+  */
 class ApiRowCarriesNoPolicySpec extends munit.FunSuite:
 
   private def literalOnly(v: Any): Option[String] = v match
     case _: String | _: Int | _: Long | _: Boolean | _: Char | _: Double | _: Float | _: Short | _: Byte =>
       scala.None
-    case s: Set[?]                                                   => Some(s"a SET — a target set is exactly what a row may not carry ($s)")
+    case s: Set[?] => Some(s"a SET — a target set is exactly what a row may not carry ($s)")
     case _: Function0[?] | _: Function1[?, ?] | _: Function2[?, ?, ?] => Some("a predicate")
-    case c: scala.collection.Iterable[?]                             => Some(s"a collection (${c.getClass.getName})")
-    case p: Product                                                  => p.productIterator.map(literalOnly).collectFirst { case Some(x) => x }
-    case _: reflect.Enum                                             => scala.None
-    case other                                                       => Some(s"not a literal (${other.getClass.getName})")
+    case c: scala.collection.Iterable[?] => Some(s"a collection (${c.getClass.getName})")
+    case p: Product                      => p.productIterator.map(literalOnly).collectFirst { case Some(x) => x }
+    case _: reflect.Enum                 => scala.None
+    case other => Some(s"not a literal (${other.getClass.getName})")
 
   private def keyedMap(name: String, m: Map[?, ?]): Option[String] =
     val badKey = m.keys.collectFirst {
@@ -22,7 +22,7 @@ class ApiRowCarriesNoPolicySpec extends munit.FunSuite:
 
   private def offending(name: String, v: Any): Option[String] = v match
     case m: Map[?, ?] => keyedMap(name, m)
-    case other        => literalOnly(other).map(x => s"$name is $x")
+    case other => literalOnly(other).map(x => s"$name is $x")
 
   test("no JS-{L,P} row carries a target set, a predicate or a scope — only Platform-keyed facts") {
     val bad = ApiRows.all.flatMap { r =>
@@ -39,7 +39,7 @@ class ApiRowCarriesNoPolicySpec extends munit.FunSuite:
       Platform.values.toList.flatMap { p =>
         List(
           Option.when(!r.by.contains(p))(s"${r.id} has no availability for $p"),
-          Option.when(!r.verdict.contains(p))(s"${r.id} has no verdict for $p"),
+          Option.when(!r.verdict.contains(p))(s"${r.id} has no verdict for $p")
         ).flatten
       }
     }
@@ -48,8 +48,7 @@ class ApiRowCarriesNoPolicySpec extends munit.FunSuite:
 
   test("a row with no version anchor SAYS SO — `asOf` empty implies UNSTATED in its own sentence") {
     val silent = ApiRows.all.filter(r => r.asOf.isEmpty && !r.why.contains("UNSTATED")).map(_.id.toString)
-    assertEquals(silent, Nil,
-      s"a coverage claim with no version is one nothing can re-check; say UNSTATED: ${silent.mkString(", ")}")
+    assertEquals(silent, Nil, s"a coverage claim with no version is one nothing can re-check; say UNSTATED: ${silent.mkString(", ")}")
     val empty = ApiRows.all.filter(_.why.trim.isEmpty).map(_.id.toString)
     assertEquals(empty, Nil, s"a row with no reason is a row nobody can audit: ${empty.mkString(", ")}")
   }
@@ -59,8 +58,7 @@ class ApiRowCarriesNoPolicySpec extends munit.FunSuite:
     // wins silently. The library and platform halves overlap by subject (`java.util.concurrent`,
     // `java.lang.Thread`, `java.nio.charset`), and this is what forces that overlap to be resolved
     // rather than duplicated.
-    val dupes = ApiRows.all.groupBy(r => (r.fqn, r.exact)).filter(_._2.sizeIs > 1)
-      .map((k, v) => s"${k._1} claimed by ${v.map(_.id).mkString(", ")}").toList.sorted
+    val dupes = ApiRows.all.groupBy(r => (r.fqn, r.exact)).filter(_._2.sizeIs > 1).map((k, v) => s"${k._1} claimed by ${v.map(_.id).mkString(", ")}").toList.sorted
     assertEquals(dupes, Nil, dupes.mkString("\n"))
   }
 

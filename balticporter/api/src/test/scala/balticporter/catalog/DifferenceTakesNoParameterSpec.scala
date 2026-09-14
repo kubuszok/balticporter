@@ -3,10 +3,9 @@ package balticporter.catalog
 /** THE GUARD RAIL THAT PROTECTS `CLAUDE.md` §1's TAXONOMY. */
 class DifferenceTakesNoParameterSpec extends munit.FunSuite:
 
-  /** `scala.None` when the value is a literal or an enum case all the way down; otherwise what it
-    * was. Ordered deliberately: a PARAMETERISED enum case is both a `Product` and a `reflect.Enum`
-    * and must be recursed into, so `Product` is tried first; a parameterless case is neither a
-    * product nor a literal and is admitted by the `reflect.Enum` arm below it. */
+  /** `scala.None` when the value is a literal or an enum case all the way down; otherwise what it was. Ordered deliberately: a PARAMETERISED enum case is both a `Product` and a `reflect.Enum` and
+    * must be recursed into, so `Product` is tried first; a parameterless case is neither a product nor a literal and is admitted by the `reflect.Enum` arm below it.
+    */
   private def offending(v: Any): Option[String] = v match
     case _: String | _: Int | _: Long | _: Boolean | _: Char | _: Double | _: Float | _: Short | _: Byte =>
       scala.None
@@ -14,9 +13,9 @@ class DifferenceTakesNoParameterSpec extends munit.FunSuite:
     // would otherwise pass by recursion, which is the exact shape a policy field takes.
     case c: scala.collection.Iterable[?] => Some(s"a collection (${c.getClass.getName})")
     case _: Function0[?] | _: Function1[?, ?] | _: Function2[?, ?, ?] => Some("a predicate or a function")
-    case p: Product     => p.productIterator.map(offending).collectFirst { case Some(x) => x }
+    case p: Product      => p.productIterator.map(offending).collectFirst { case Some(x) => x }
     case _: reflect.Enum => scala.None
-    case other          => Some(s"neither a literal nor an enum case (${other.getClass.getName})")
+    case other => Some(s"neither a literal nor an enum case (${other.getClass.getName})")
 
   test("no JS-{E,S,C,G} row carries a scope, a set, a map or a predicate — the (a)/(b) line, mechanised") {
     val bad = Differences.all.flatMap { d =>

@@ -2,10 +2,9 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** G34 — under `noClasspath`, Spoon's `getExecutableDeclaration` can resolve to an UNRELATED type's
-  * method that happens to share the name.  The frontend must validate that the declaration's owner
-  * is the receiver's static type or a supertype (an inherited method), and fall through when it is
-  * not. */
+/** G34 — under `noClasspath`, Spoon's `getExecutableDeclaration` can resolve to an UNRELATED type's method that happens to share the name. The frontend must validate that the declaration's owner is
+  * the receiver's static type or a supertype (an inherited method), and fall through when it is not.
+  */
 class MethodResolutionSpec extends munit.FunSuite:
 
   private val src =
@@ -21,7 +20,7 @@ class MethodResolutionSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  private val program = SpoonTir.fromSource(src)
+  private val program   = SpoonTir.fromSource(src)
   private given Program = program
 
   private def sym(full: String): SymId =
@@ -45,7 +44,7 @@ class MethodResolutionSpec extends munit.FunSuite:
       case full                       => full
 
   test("direct call on interface binds the interface's own method") {
-    val ids = calleeIds("demo.User#useA")
+    val ids    = calleeIds("demo.User#useA")
     val owners = ids.map(ownerQ)
     assert(
       owners.exists(q => q == "demo.A" || q == "demo.B"),
@@ -58,7 +57,7 @@ class MethodResolutionSpec extends munit.FunSuite:
   }
 
   test("inherited method call binds through the hierarchy") {
-    val ids = calleeIds("demo.User#useC")
+    val ids    = calleeIds("demo.User#useC")
     val owners = ids.map(ownerQ)
     assert(
       owners.exists(q => q == "demo.A" || q == "demo.B"),
@@ -71,7 +70,7 @@ class MethodResolutionSpec extends munit.FunSuite:
   }
 
   test("call on unrelated type keeps its own binding") {
-    val ids = calleeIds("demo.User#useF")
+    val ids    = calleeIds("demo.User#useF")
     val owners = ids.map(ownerQ)
     assert(
       owners.contains("demo.F"),

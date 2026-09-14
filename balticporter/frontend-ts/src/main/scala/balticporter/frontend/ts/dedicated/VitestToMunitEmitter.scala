@@ -1,36 +1,33 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{ RastFile, RastNode, RastValue }
 import scala.collection.mutable
 
-/** Translates vitest/jest test files (`.spec.ts`, `.spec.js`) from RAST to
-  * MUnit test suites in Scala.
+/** Translates vitest/jest test files (`.spec.ts`, `.spec.js`) from RAST to MUnit test suites in Scala.
   *
-  * Handles `describe`/`it`/`expect` blocks and the common assertion matchers:
-  * `toBe`, `toEqual`, `toStrictEqual`, `toBeTruthy`, `toBeFalsy`, `toBeNull`,
-  * `toBeUndefined`, `toContain`, `toHaveLength`, `toThrow`, `toThrowError`,
-  * `toMatchInlineSnapshot`, `toThrowErrorMatchingInlineSnapshot`.
+  * Handles `describe`/`it`/`expect` blocks and the common assertion matchers: `toBe`, `toEqual`, `toStrictEqual`, `toBeTruthy`, `toBeFalsy`, `toBeNull`, `toBeUndefined`, `toContain`, `toHaveLength`,
+  * `toThrow`, `toThrowError`, `toMatchInlineSnapshot`, `toThrowErrorMatchingInlineSnapshot`.
   *
-  * Also handles `beforeEach` (hoisted to each test body), `it.todo` (emitted as
-  * `.ignore`), `not` negation, `resolves`/`rejects` chains, and nested
-  * `describe` blocks (flattened into test name prefixes).
+  * Also handles `beforeEach` (hoisted to each test body), `it.todo` (emitted as `.ignore`), `not` negation, `resolves`/`rejects` chains, and nested `describe` blocks (flattened into test name
+  * prefixes).
   *
-  * This is capability N12 from the genuine translation plan. */
+  * This is capability N12 from the genuine translation plan.
+  */
 object VitestToMunitEmitter:
 
   final case class EmitConfig(
-      packageName: String,
-      className: String,
-      imports: List[String] = Nil,
+    packageName: String,
+    className:   String,
+    imports:     List[String] = Nil
   )
 
   /** Result of emitting a test suite from RAST. */
   final case class EmitResult(
-      scala: String,
-      testCount: Int,
-      ignoredCount: Int,
-      /** Assertion patterns found, with counts. */
-      assertionCounts: Map[String, Int],
+    scala:        String,
+    testCount:    Int,
+    ignoredCount: Int,
+    /** Assertion patterns found, with counts. */
+    assertionCounts: Map[String, Int]
   )
 
   /** Emit a vitest/jest RAST file as an MUnit test suite. */
@@ -43,9 +40,9 @@ object VitestToMunitEmitter:
   // --------------------------------------------------------------------------
 
   private class EmitContext(config: EmitConfig):
-    private val sb = new StringBuilder
-    private var testCount = 0
-    private var ignoredCount = 0
+    private val sb              = new StringBuilder
+    private var testCount       = 0
+    private var ignoredCount    = 0
     private val assertionCounts = mutable.Map.empty[String, Int].withDefaultValue(0)
 
     def emitFile(file: RastFile): EmitResult =
@@ -69,19 +66,19 @@ object VitestToMunitEmitter:
 
     /** Process a node at any nesting level, looking for describe/it/beforeEach. */
     private def processTopLevel(
-        node: RastNode,
-        prefix: List[String],
-        beforeEachNodes: List[RastNode],
+      node:            RastNode,
+      prefix:          List[String],
+      beforeEachNodes: List[RastNode]
     ): Unit =
       if node.kind != "CallExpression" then return
 
-      val callee = node.children.headOption.getOrElse(return)
+      val callee     = node.children.headOption.getOrElse(return)
       val calleeInfo = identifyCallee(callee)
 
       calleeInfo match
         case ("describe", false) =>
-          val name = extractStringArg(node, 1)
-          val body = extractArrowBody(node, 2)
+          val name      = extractStringArg(node, 1)
+          val body      = extractArrowBody(node, 2)
           val newPrefix = prefix :+ name
           // Scan for beforeEach in this describe scope
           val localBeforeEach = mutable.ListBuffer.empty[RastNode]
@@ -117,8 +114,8 @@ object VitestToMunitEmitter:
         case "Identifier" =>
           (node.text.getOrElse(""), false)
         case "PropertyAccessExpression" if node.children.size >= 2 =>
-          val base = node.children.head
-          val prop = node.children.last
+          val base     = node.children.head
+          val prop     = node.children.last
           val baseName = base.text.getOrElse("")
           val propName = prop.text.getOrElse("")
           if baseName == "it" && propName == "todo" then ("it", true)
@@ -127,17 +124,19 @@ object VitestToMunitEmitter:
 
     /** Extract a string argument from a CallExpression at the given position. */
     private def extractStringArg(call: RastNode, pos: Int): String =
-      call.children.lift(pos).flatMap { n =>
-        n.value match
-          case Some(RastValue.Str(s)) => Some(s)
-          case _ => n.text
-      }.getOrElse("")
+      call.children
+        .lift(pos)
+        .flatMap { n =>
+          n.value match
+            case Some(RastValue.Str(s)) => Some(s)
+            case _                      => n.text
+        }
+        .getOrElse("")
 
     /** Extract the body Block from an ArrowFunction/FunctionExpression at the given position.
       *
-      * A braceless arrow like `() => expr` has the expression as a direct child
-      * (no Block wrapper). In that case we synthesize a Block containing one
-      * ExpressionStatement. */
+      * A braceless arrow like `() => expr` has the expression as a direct child (no Block wrapper). In that case we synthesize a Block containing one ExpressionStatement.
+      */
     private def extractArrowBody(call: RastNode, pos: Int): Option[RastNode] =
       call.children.lift(pos).flatMap { fn =>
         if fn.kind == "ArrowFunction" || fn.kind == "FunctionExpression" then
@@ -155,37 +154,32 @@ object VitestToMunitEmitter:
 
     /** Emit a single test case. */
     private def emitTest(
-        prefix: List[String],
-        name: String,
-        body: Option[RastNode],
-        beforeEach: List[RastNode],
-        isTodo: Boolean,
+      prefix:     List[String],
+      name:       String,
+      body:       Option[RastNode],
+      beforeEach: List[RastNode],
+      isTodo:     Boolean
     ): Unit =
       testCount += 1
       if isTodo then ignoredCount += 1
 
-      val fullName = (prefix :+ name).mkString(" > ")
+      val fullName    = (prefix :+ name).mkString(" > ")
       val escapedName = fullName.replace("\"", "\\\"")
 
       sb.append("\n")
-      if isTodo then
-        sb.append(s"""  test("$escapedName".ignore):\n""")
-      else
-        sb.append(s"""  test("$escapedName"):\n""")
+      if isTodo then sb.append(s"""  test("$escapedName".ignore):\n""")
+      else sb.append(s"""  test("$escapedName"):\n""")
 
       // Emit beforeEach body
-      for node <- beforeEach do
-        emitStatement(node, "    ")
+      for node <- beforeEach do emitStatement(node, "    ")
 
       // Emit test body
       body.foreach { block =>
-        for stmt <- block.children do
-          emitStatement(stmt, "    ")
+        for stmt <- block.children do emitStatement(stmt, "    ")
       }
 
       // If body was empty, emit a placeholder
-      if beforeEach.isEmpty && body.forall(_.children.isEmpty) then
-        sb.append("    ()\n")
+      if beforeEach.isEmpty && body.forall(_.children.isEmpty) then sb.append("    ()\n")
 
     // --------------------------------------------------------------------------
     // Statement emission
@@ -196,8 +190,7 @@ object VitestToMunitEmitter:
         case "ExpressionStatement" =>
           node.children.headOption.foreach { expr =>
             val unwrapped = unwrapAwait(expr)
-            if isExpectChain(unwrapped) then
-              emitExpectAssertion(unwrapped, indent)
+            if isExpectChain(unwrapped) then emitExpectAssertion(unwrapped, indent)
             else
               val code = emitExpr(unwrapped)
               sb.append(s"$indent$code\n")
@@ -206,11 +199,11 @@ object VitestToMunitEmitter:
         case "VariableStatement" =>
           node.children.find(_.kind == "VariableDeclarationList").foreach { vdl =>
             for vd <- vdl.children.filter(_.kind == "VariableDeclaration") do
-              val name = vd.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+              val name    = vd.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
               val isConst = vd.flags.contains("const") || vdl.flags.contains("const") ||
                 node.flags.contains("const")
               val keyword = if isConst then "val" else "var"
-              val init = vd.children.drop(1).lastOption.map(emitExpr).getOrElse("???")
+              val init    = vd.children.drop(1).lastOption.map(emitExpr).getOrElse("???")
               sb.append(s"$indent$keyword $name = $init\n")
           }
 
@@ -229,8 +222,7 @@ object VitestToMunitEmitter:
               emitStatement(children(2), indent + "  ")
 
         case "Block" =>
-          for child <- node.children do
-            emitStatement(child, indent)
+          for child <- node.children do emitStatement(child, indent)
 
         case _ =>
           val code = emitExpr(node)
@@ -259,12 +251,12 @@ object VitestToMunitEmitter:
 
     /** Parse an expect chain to extract: (subject, assertion, args, negated, resolves, rejects). */
     private case class ExpectInfo(
-        subject: RastNode,
-        assertion: String,
-        args: List[RastNode],
-        negated: Boolean,
-        resolves: Boolean,
-        rejects: Boolean,
+      subject:   RastNode,
+      assertion: String,
+      args:      List[RastNode],
+      negated:   Boolean,
+      resolves:  Boolean,
+      rejects:   Boolean
     )
 
     /** Walk from the outermost call inward to find the expect() call and its chain. */
@@ -275,9 +267,9 @@ object VitestToMunitEmitter:
       // Or: expect(x).rejects.toThrow(msg)
 
       // Collect the chain of property accesses and calls
-      val chain = mutable.ListBuffer.empty[String]
+      val chain     = mutable.ListBuffer.empty[String]
       val outerArgs = mutable.ListBuffer.empty[RastNode]
-      var current = node
+      var current   = node
       var expectSubject: Option[RastNode] = None
 
       // Walk the chain
@@ -285,7 +277,7 @@ object VitestToMunitEmitter:
         n.kind match
           case "CallExpression" =>
             val callee = n.children.headOption.getOrElse(return)
-            val args = n.children.drop(1)
+            val args   = n.children.drop(1)
 
             callee.kind match
               case "Identifier" if callee.text.contains("expect") =>
@@ -312,11 +304,11 @@ object VitestToMunitEmitter:
       walk(node)
 
       expectSubject.map { subj =>
-        val chainList = chain.toList
-        var negated = false
-        var resolves = false
-        var rejects = false
-        var assertion = ""
+        val chainList  = chain.toList
+        var negated    = false
+        var resolves   = false
+        var rejects    = false
+        var assertion  = ""
         val assertArgs = mutable.ListBuffer.empty[RastNode]
 
         for part <- chainList do
@@ -340,17 +332,14 @@ object VitestToMunitEmitter:
           val subjExpr = emitExpr(info.subject)
 
           // Handle resolves/rejects wrapper
-          if info.rejects then
-            emitRejectsAssertion(info, subjExpr, indent)
-          else if info.resolves then
-            emitResolvesAssertion(info, subjExpr, indent)
-          else
-            emitDirectAssertion(info, subjExpr, indent)
+          if info.rejects then emitRejectsAssertion(info, subjExpr, indent)
+          else if info.resolves then emitResolvesAssertion(info, subjExpr, indent)
+          else emitDirectAssertion(info, subjExpr, indent)
 
     private def emitDirectAssertion(info: ExpectInfo, subjExpr: String, indent: String): Unit =
       val assertion = info.assertion
-      val args = info.args
-      val negated = info.negated
+      val args      = info.args
+      val negated   = info.negated
 
       assertion match
         case "toBe" | "toEqual" | "toStrictEqual" =>
@@ -364,17 +353,13 @@ object VitestToMunitEmitter:
 
         case "toBeTruthy" =>
           assertionCounts("assert") += 1
-          if negated then
-            sb.append(s"${indent}assert(!$subjExpr)\n")
-          else
-            sb.append(s"${indent}assert($subjExpr)\n")
+          if negated then sb.append(s"${indent}assert(!$subjExpr)\n")
+          else sb.append(s"${indent}assert($subjExpr)\n")
 
         case "toBeFalsy" =>
           assertionCounts("assert") += 1
-          if negated then
-            sb.append(s"${indent}assert($subjExpr)\n")
-          else
-            sb.append(s"${indent}assert(!$subjExpr)\n")
+          if negated then sb.append(s"${indent}assert($subjExpr)\n")
+          else sb.append(s"${indent}assert(!$subjExpr)\n")
 
         case "toBeNull" | "toBeUndefined" =>
           if negated then
@@ -387,18 +372,14 @@ object VitestToMunitEmitter:
         case "toContain" =>
           val expected = args.headOption.map(emitExpr).getOrElse("???")
           assertionCounts("assert.contains") += 1
-          if negated then
-            sb.append(s"${indent}assert(!$subjExpr.contains($expected))\n")
-          else
-            sb.append(s"${indent}assert($subjExpr.contains($expected))\n")
+          if negated then sb.append(s"${indent}assert(!$subjExpr.contains($expected))\n")
+          else sb.append(s"${indent}assert($subjExpr.contains($expected))\n")
 
         case "toHaveLength" =>
           val expected = args.headOption.map(emitExpr).getOrElse("???")
           assertionCounts("assertEquals.length") += 1
-          if negated then
-            sb.append(s"${indent}assertNotEquals($subjExpr.length, $expected)\n")
-          else
-            sb.append(s"${indent}assertEquals($subjExpr.length, $expected)\n")
+          if negated then sb.append(s"${indent}assertNotEquals($subjExpr.length, $expected)\n")
+          else sb.append(s"${indent}assertEquals($subjExpr.length, $expected)\n")
 
         case "toThrow" | "toThrowError" =>
           assertionCounts("intercept") += 1
@@ -406,16 +387,13 @@ object VitestToMunitEmitter:
             val msg = args.headOption.map(emitExpr).getOrElse("\"\"")
             sb.append(s"${indent}val _e = intercept[Exception] { $subjExpr }\n")
             sb.append(s"${indent}assert(_e.getMessage.contains($msg))\n")
-          else
-            sb.append(s"${indent}intercept[Exception] { $subjExpr }\n")
+          else sb.append(s"${indent}intercept[Exception] { $subjExpr }\n")
 
         case "toMatchInlineSnapshot" =>
           assertionCounts("assertEquals.snapshot") += 1
           val snapshot = args.headOption.map(emitExpr).getOrElse("\"\"")
-          if negated then
-            sb.append(s"${indent}assertNotEquals($subjExpr.toString, $snapshot)\n")
-          else
-            sb.append(s"${indent}assertEquals($subjExpr.toString, $snapshot)\n")
+          if negated then sb.append(s"${indent}assertNotEquals($subjExpr.toString, $snapshot)\n")
+          else sb.append(s"${indent}assertEquals($subjExpr.toString, $snapshot)\n")
 
         case "toThrowErrorMatchingInlineSnapshot" =>
           assertionCounts("intercept.snapshot") += 1
@@ -426,47 +404,41 @@ object VitestToMunitEmitter:
         // KaTeX-specific matchers
         case "toParse" =>
           assertionCounts("assert.parse") += 1
-          if negated then
-            sb.append(s"${indent}intercept[ParseError] { KaTeX.parse($subjExpr) }\n")
-          else
-            sb.append(s"${indent}KaTeX.parse($subjExpr)\n")
+          if negated then sb.append(s"${indent}intercept[ParseError] { KaTeX.parse($subjExpr) }\n")
+          else sb.append(s"${indent}KaTeX.parse($subjExpr)\n")
 
         case "toBuild" =>
           assertionCounts("assert.build") += 1
-          if negated then
-            sb.append(s"${indent}intercept[Exception] { KaTeX.renderToString($subjExpr) }\n")
-          else
-            sb.append(s"${indent}KaTeX.renderToString($subjExpr)\n")
+          if negated then sb.append(s"${indent}intercept[Exception] { KaTeX.renderToString($subjExpr) }\n")
+          else sb.append(s"${indent}KaTeX.renderToString($subjExpr)\n")
 
         case "toParseLike" =>
           assertionCounts("assertEquals.parseLike") += 1
           val expected = args.headOption.map(emitExpr).getOrElse("???")
-          if negated then
-            sb.append(s"${indent}assertNotEquals(KaTeX.parse($subjExpr).toString, KaTeX.parse($expected).toString)\n")
-          else
-            sb.append(s"${indent}assertEquals(KaTeX.parse($subjExpr).toString, KaTeX.parse($expected).toString)\n")
+          if negated then sb.append(s"${indent}assertNotEquals(KaTeX.parse($subjExpr).toString, KaTeX.parse($expected).toString)\n")
+          else sb.append(s"${indent}assertEquals(KaTeX.parse($subjExpr).toString, KaTeX.parse($expected).toString)\n")
 
         case "toBuildLike" =>
           assertionCounts("assertEquals.buildLike") += 1
           val expected = args.headOption.map(emitExpr).getOrElse("???")
-          if negated then
-            sb.append(s"${indent}assertNotEquals(KaTeX.renderToString($subjExpr), KaTeX.renderToString($expected))\n")
-          else
-            sb.append(s"${indent}assertEquals(KaTeX.renderToString($subjExpr), KaTeX.renderToString($expected))\n")
+          if negated then sb.append(s"${indent}assertNotEquals(KaTeX.renderToString($subjExpr), KaTeX.renderToString($expected))\n")
+          else sb.append(s"${indent}assertEquals(KaTeX.renderToString($subjExpr), KaTeX.renderToString($expected))\n")
 
         case "toBeDefined" =>
           assertionCounts("assert.defined") += 1
-          if negated then
-            sb.append(s"${indent}assertEquals($subjExpr, null)\n")
-          else
-            sb.append(s"${indent}assert($subjExpr != null)\n")
+          if negated then sb.append(s"${indent}assertEquals($subjExpr, null)\n")
+          else sb.append(s"${indent}assert($subjExpr != null)\n")
 
         case "toBeCloseTo" =>
           assertionCounts("assertEqualsDouble") += 1
-          val expected = args.headOption.map(emitExpr).getOrElse("0.0")
-          val precision = args.lift(1).flatMap(_.value).collect {
-            case RastValue.Num(n) => n.toInt
-          }.getOrElse(5)
+          val expected  = args.headOption.map(emitExpr).getOrElse("0.0")
+          val precision = args
+            .lift(1)
+            .flatMap(_.value)
+            .collect { case RastValue.Num(n) =>
+              n.toInt
+            }
+            .getOrElse(5)
           val delta = s"1e-$precision"
           sb.append(s"${indent}assertEqualsDouble($subjExpr.toDouble, $expected.toDouble, $delta)\n")
 
@@ -477,10 +449,8 @@ object VitestToMunitEmitter:
         case "toMatch" =>
           assertionCounts("assert.match") += 1
           val pattern = args.headOption.map(emitExpr).getOrElse("\"\"")
-          if negated then
-            sb.append(s"${indent}assert(!$pattern.r.findFirstIn($subjExpr).isDefined)\n")
-          else
-            sb.append(s"${indent}assert($pattern.r.findFirstIn($subjExpr).isDefined)\n")
+          if negated then sb.append(s"${indent}assert(!$pattern.r.findFirstIn($subjExpr).isDefined)\n")
+          else sb.append(s"${indent}assert($pattern.r.findFirstIn($subjExpr).isDefined)\n")
 
         case "toHaveBeenCalledWith" =>
           assertionCounts("unhandled:toHaveBeenCalledWith") += 1
@@ -522,8 +492,7 @@ object VitestToMunitEmitter:
             val msg = info.args.headOption.map(emitExpr).getOrElse("\"\"")
             sb.append(s"${indent}val _e = intercept[Exception] { $subjExpr }\n")
             sb.append(s"${indent}assert(_e.getMessage.contains($msg))\n")
-          else
-            sb.append(s"${indent}intercept[Exception] { $subjExpr }\n")
+          else sb.append(s"${indent}intercept[Exception] { $subjExpr }\n")
         case "toThrowErrorMatchingInlineSnapshot" =>
           assertionCounts("intercept.snapshot") += 1
           val snapshot = info.args.headOption.map(emitExpr).getOrElse("\"\"")
@@ -539,8 +508,7 @@ object VitestToMunitEmitter:
 
     /** Unwrap AwaitExpression to the inner expression. */
     private def unwrapAwait(node: RastNode): RastNode =
-      if node.kind == "AwaitExpression" then
-        node.children.headOption.getOrElse(node)
+      if node.kind == "AwaitExpression" then node.children.headOption.getOrElse(node)
       else node
 
     private def emitExpr(node: RastNode): String =
@@ -558,23 +526,23 @@ object VitestToMunitEmitter:
         case "StringLiteral" =>
           node.value match
             case Some(RastValue.Str(s)) => quoteString(s)
-            case _ => "\"\""
+            case _                      => "\"\""
 
         case "NoSubstitutionTemplateLiteral" =>
           node.value match
             case Some(RastValue.Str(s)) => quoteString(s)
-            case _ => "\"\""
+            case _                      => "\"\""
 
         case "TemplateExpression" =>
           emitTemplateExpr(node)
 
-        case "TrueKeyword" => "true"
+        case "TrueKeyword"  => "true"
         case "FalseKeyword" => "false"
-        case "NullKeyword" => "null"
+        case "NullKeyword"  => "null"
 
         case "CallExpression" =>
           val callee = node.children.headOption.map(emitExpr).getOrElse("???")
-          val args = node.children.drop(1).map(emitExpr)
+          val args   = node.children.drop(1).map(emitExpr)
           s"$callee(${args.mkString(", ")})"
 
         case "PropertyAccessExpression" =>
@@ -587,19 +555,19 @@ object VitestToMunitEmitter:
           s"$obj($idx)"
 
         case "BinaryExpression" =>
-          val left = node.children.headOption.map(emitExpr).getOrElse("???")
+          val left  = node.children.headOption.map(emitExpr).getOrElse("???")
           val right = node.children.lastOption.map(emitExpr).getOrElse("???")
-          val op = node.operator.map(translateOp).getOrElse("???")
+          val op    = node.operator.map(translateOp).getOrElse("???")
           s"$left $op $right"
 
         case "PrefixUnaryExpression" =>
           val operand = node.children.headOption.map(emitExpr).getOrElse("???")
-          val op = node.operator.map(translateUnaryOp).getOrElse("!")
+          val op      = node.operator.map(translateUnaryOp).getOrElse("!")
           s"$op$operand"
 
         case "PostfixUnaryExpression" =>
           val operand = node.children.headOption.map(emitExpr).getOrElse("???")
-          val op = node.operator.map(translateUnaryOp).getOrElse("++")
+          val op      = node.operator.map(translateUnaryOp).getOrElse("++")
           s"{ val _p = $operand; $operand $op 1; _p }"
 
         case "ParenthesizedExpression" =>
@@ -608,8 +576,7 @@ object VitestToMunitEmitter:
 
         case "ArrayLiteralExpression" =>
           val elems = node.children.map { c =>
-            if c.kind == "SpreadElement" then
-              c.children.headOption.map(emitExpr).getOrElse("???") + "*"
+            if c.kind == "SpreadElement" then c.children.headOption.map(emitExpr).getOrElse("???") + "*"
             else emitExpr(c)
           }
           s"Vector(${elems.mkString(", ")})"
@@ -620,7 +587,7 @@ object VitestToMunitEmitter:
 
         case "ObjectLiteralExpression" =>
           val props = node.children.map { p =>
-            val key = p.children.headOption.flatMap(_.text).getOrElse("_")
+            val key   = p.children.headOption.flatMap(_.text).getOrElse("_")
             val value = p.children.drop(1).headOption.map(emitExpr).getOrElse("???")
             s"\"$key\" -> $value"
           }
@@ -633,25 +600,26 @@ object VitestToMunitEmitter:
           val body = node.children.find(_.kind == "Block")
           body match
             case Some(b) =>
-              val bodyStr = b.children.map { s =>
-                s.children.headOption.map(emitExpr).getOrElse(emitExpr(s))
-              }.mkString("; ")
+              val bodyStr = b.children
+                .map { s =>
+                  s.children.headOption.map(emitExpr).getOrElse(emitExpr(s))
+                }
+                .mkString("; ")
               if params.isEmpty then s"{ () => $bodyStr }"
               else s"{ (${params.mkString(", ")}) => $bodyStr }"
             case None =>
-              val bodyExpr = node.children.filterNot(_.kind == "Parameter")
-                .lastOption.map(emitExpr).getOrElse("???")
+              val bodyExpr = node.children.filterNot(_.kind == "Parameter").lastOption.map(emitExpr).getOrElse("???")
               if params.isEmpty then s"() => $bodyExpr"
               else s"(${params.mkString(", ")}) => $bodyExpr"
 
         case "ConditionalExpression" =>
-          val cond = node.children.headOption.map(emitExpr).getOrElse("???")
+          val cond  = node.children.headOption.map(emitExpr).getOrElse("???")
           val thenE = node.children.lift(1).map(emitExpr).getOrElse("???")
           val elseE = node.children.lift(2).map(emitExpr).getOrElse("???")
           s"if $cond then $thenE else $elseE"
 
         case "NewExpression" =>
-          val cls = node.children.headOption.map(emitExpr).getOrElse("???")
+          val cls  = node.children.headOption.map(emitExpr).getOrElse("???")
           val args = node.children.drop(1).map(emitExpr)
           s"new $cls(${args.mkString(", ")})"
 
@@ -680,7 +648,7 @@ object VitestToMunitEmitter:
           case "TemplateHead" | "TemplateMiddle" | "TemplateTail" =>
             c.value match
               case Some(RastValue.Str(s)) => escapeStringContent(s)
-              case _ => ""
+              case _                      => ""
           case "TemplateSpan" =>
             c.children.headOption.map(inner => s"$${${emitExpr(inner)}}").getOrElse("")
           case _ =>
@@ -689,55 +657,50 @@ object VitestToMunitEmitter:
       s"""s\"\"\"${parts.mkString}\"\"\""""
 
     private def translateOp(op: String): String = op match
-      case "EqualsEqualsEqualsToken" => "=="
-      case "ExclamationEqualsEqualsToken" => "!="
-      case "EqualsEqualsToken" => "==" // loose equality, best effort
-      case "ExclamationEqualsToken" => "!="
-      case "AmpersandAmpersandToken" => "&&"
-      case "BarBarToken" => "||"
-      case "PlusToken" => "+"
-      case "MinusToken" => "-"
-      case "AsteriskToken" => "*"
-      case "SlashToken" => "/"
-      case "PercentToken" => "%"
-      case "LessThanToken" => "<"
-      case "GreaterThanToken" => ">"
-      case "LessThanEqualsToken" => "<="
-      case "GreaterThanEqualsToken" => ">="
-      case "AmpersandToken" => "&"
-      case "BarToken" => "|"
-      case "CaretToken" => "^"
-      case "LessThanLessThanToken" => "<<"
-      case "GreaterThanGreaterThanToken" => ">>"
+      case "EqualsEqualsEqualsToken"                => "=="
+      case "ExclamationEqualsEqualsToken"           => "!="
+      case "EqualsEqualsToken"                      => "==" // loose equality, best effort
+      case "ExclamationEqualsToken"                 => "!="
+      case "AmpersandAmpersandToken"                => "&&"
+      case "BarBarToken"                            => "||"
+      case "PlusToken"                              => "+"
+      case "MinusToken"                             => "-"
+      case "AsteriskToken"                          => "*"
+      case "SlashToken"                             => "/"
+      case "PercentToken"                           => "%"
+      case "LessThanToken"                          => "<"
+      case "GreaterThanToken"                       => ">"
+      case "LessThanEqualsToken"                    => "<="
+      case "GreaterThanEqualsToken"                 => ">="
+      case "AmpersandToken"                         => "&"
+      case "BarToken"                               => "|"
+      case "CaretToken"                             => "^"
+      case "LessThanLessThanToken"                  => "<<"
+      case "GreaterThanGreaterThanToken"            => ">>"
       case "GreaterThanGreaterThanGreaterThanToken" => ">>>"
-      case "EqualsToken" => "="
-      case "PlusEqualsToken" => "+="
-      case "MinusEqualsToken" => "-="
-      case "AsteriskEqualsToken" => "*="
-      case "SlashEqualsToken" => "/="
-      case "InstanceOfKeyword" => ".isInstanceOf"
-      case other => other
+      case "EqualsToken"                            => "="
+      case "PlusEqualsToken"                        => "+="
+      case "MinusEqualsToken"                       => "-="
+      case "AsteriskEqualsToken"                    => "*="
+      case "SlashEqualsToken"                       => "/="
+      case "InstanceOfKeyword"                      => ".isInstanceOf"
+      case other                                    => other
 
     private def translateUnaryOp(op: String): String = op match
       case "ExclamationToken" => "!"
-      case "MinusToken" => "-"
-      case "PlusToken" => "+"
-      case "TildeToken" => "~"
-      case "PlusPlusToken" => "+="
-      case "MinusMinusToken" => "-="
-      case other => other
+      case "MinusToken"       => "-"
+      case "PlusToken"        => "+"
+      case "TildeToken"       => "~"
+      case "PlusPlusToken"    => "+="
+      case "MinusMinusToken"  => "-="
+      case other              => other
 
     private def quoteString(s: String): String =
       val escaped = escapeStringContent(s)
       if s.contains('\n') || s.contains('"') then
         // Use triple-quoted string for multiline or strings with quotes
         s"\"\"\"$s\"\"\""
-      else
-        s"\"$escaped\""
+      else s"\"$escaped\""
 
     private def escapeStringContent(s: String): String =
-      s.replace("\\", "\\\\")
-       .replace("\"", "\\\"")
-       .replace("\n", "\\n")
-       .replace("\r", "\\r")
-       .replace("\t", "\\t")
+      s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")

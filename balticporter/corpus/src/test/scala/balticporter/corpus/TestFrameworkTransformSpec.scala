@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, PortabilityCheck}
+import balticporter.tir.{ Pipeline, PortabilityCheck }
 import balticporter.transform.TestFrameworkTransform
 
 /** The JUnit-4 → MUnit conversion, per translated construct. */
@@ -67,9 +67,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   test("a class with no @Test records nothing — the phase converts nothing and says nothing") {
-    val log = Pipeline.runTraced(
-      SpoonTir.fromSource("package demo;\nclass Plain { public void one() {} }\n"),
-      List(new TestFrameworkTransform))._2
+    val log = Pipeline.runTraced(SpoonTir.fromSource("package demo;\nclass Plain { public void one() {} }\n"), List(new TestFrameworkTransform))._2
     assertEquals(log.all, Nil)
   }
 
@@ -129,7 +127,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  @Test public void a() { }
         |  @Test public void b() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("test(munit.TestOptions(\"a\").ignore)"))
     assert(out.contains("test(munit.TestOptions(\"b\").ignore)"))
     assert(!out.contains("@org.junit.Ignore"))
@@ -158,7 +157,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  @AfterClass public static void done() { }
         |  @Test public void a() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // java `static`, so the method emits into the companion and the override calls it through it.
     assert(clue(out).contains("override def beforeAll(): scala.Unit = OnceTest.once()"))
     assert(out.contains("override def afterAll(): scala.Unit = OnceTest.done()"))
@@ -173,10 +173,9 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   // ------------------------------------------------------ a test HIERARCHY --
 
-  /** Java's ordinary inherited-suite shape: an abstract root with no `@Test`, an abstract middle
-    * that declares the one `@Test`, a subclass that OVERRIDES it, and a concrete leaf that inherits
-    * it. Both halves of the structural transform break on this and neither is visible from the
-    * class being converted (`DESIGN.md` §3.6). */
+  /** Java's ordinary inherited-suite shape: an abstract root with no `@Test`, an abstract middle that declares the one `@Test`, a subclass that OVERRIDES it, and a concrete leaf that inherits it.
+    * Both halves of the structural transform break on this and neither is visible from the class being converted (`DESIGN.md` §3.6).
+    */
   private val hierarchySrc =
     """package demo;
       |import org.junit.Test;
@@ -198,8 +197,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // matched on the class NAME and the parent rather than on a whole header line: a
     // package-private java class renders `private abstract class Root private[demo] ()`, and the
     // access modifiers are the visibility plan's business and not this rule's.
-    def anchored(nm: String) = out.linesIterator.exists(l =>
-      l.contains(s"class $nm ") && l.contains("extends munit.FunSuite"))
+    def anchored(nm: String) = out.linesIterator.exists(l => l.contains(s"class $nm ") && l.contains("extends munit.FunSuite"))
     assert(clue(anchored("Root")))
     assert(!clue(anchored("Middle")))
     assert(!clue(anchored("Override1")))
@@ -236,9 +234,9 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   // ------------------------------------------------------------ assertions --
 
-  /** One suite exercising every `org.junit.Assert` shape the corpus resolves, plus the two the
-    * corpus does not (`assertSame`/`assertNotSame`) — a mapping is only as good as its coverage,
-    * and an unmapped member is silently left on JUnit. */
+  /** One suite exercising every `org.junit.Assert` shape the corpus resolves, plus the two the corpus does not (`assertSame`/`assertNotSame`) — a mapping is only as good as its coverage, and an
+    * unmapped member is silently left on JUnit.
+    */
   private val assertSrc =
     """package demo;
       |import org.junit.Assert;
@@ -305,8 +303,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // `Compare[A, B]` needs the two to relate, and two invariant `java.util.List`s at different
     // element types do not. Same rule as the numeric promotion above, at the other overload —
     // written as the call's type arguments, which is what java's signature said.
-    assert(clue(out).contains(
-      "munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, ls)"))
+    assert(clue(out).contains("munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, ls)"))
     // A ROOT on either side takes it too: `Compare[A, Object]` resolves for every `A`, so MUnit's
     // constraint is ALREADY VACUOUS there and writing java's widening down costs no check — while
     // reading a root as "the two types agree" is what would decline the one pair that needs it.
@@ -389,7 +386,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |public class OddTest {
         |  @Test public void a() { Assert.assertEquals("m", 1.0d, 2.0d, 3.0d, 4.0d); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(ph.findings.map(_.construct)).contains("junit.framework.Assert.assertEquals"))
   }
 
@@ -430,7 +428,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  static void mustThrow(Runnable r) { Assert.assertThrows(RuntimeException.class, () -> r.run()); }
         |  @Test public void a() { mustThrow(null); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val companion = out.substring(out.indexOf("object QualTest"))
     assert(clue(companion).contains("munit.Assertions.intercept[java.lang.RuntimeException](r.run())"))
   }
@@ -449,7 +448,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |    Assert.assertThrows("why", IllegalStateException.class, () -> { throw new IllegalStateException(); });
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val f = ph.findings.find(_.construct == "org.junit.Assert.assertThrows")
     assertEquals(f.map(_.fix.label), Some("a"))
     assert(clue(f.map(_.advice)).exists(_.contains("message")))
@@ -469,16 +469,17 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  ThrowingRunnable r;
         |  @Test public void a() { Assert.assertThrows(IllegalStateException.class, r); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(ph.findings.map(_.construct)).contains("org.junit.Assert.assertThrows"))
     assert(!clue(out).contains("munit.Assertions.intercept"))
   }
 
   // ------------------------------------------ the rewrite is not SUITE-scoped --
 
-  /** A test HELPER declares no `@Test` — that is what makes it a helper — and it is where a suite's
-    * assertions are most often centralised. Gating the `Assert` rewrite on the class declaring a
-    * `@Test` meant those calls were never even visited. */
+  /** A test HELPER declares no `@Test` — that is what makes it a helper — and it is where a suite's assertions are most often centralised. Gating the `Assert` rewrite on the class declaring a `@Test`
+    * meant those calls were never even visited.
+    */
   private val helperSrc =
     """package demo;
       |import org.junit.Assert;
@@ -518,7 +519,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |    @Test public void i() { Assert.assertEquals("m", 1.0d, 2.0d, 3.0d, 4.0d); }
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(ph.findings.count(_.construct == "org.junit.Assert.assertEquals"), 1)
   }
 
@@ -545,12 +547,13 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // parent a converted suite gains, and the member every `@Test` becomes a call to.
     val fp = (p: TestFrameworkTransform) => balticporter.core.PortManifest.fingerprint(p)
     assertNotEquals(fp(new TestFrameworkTransform(suite = "a.A")), fp(new TestFrameworkTransform(suite = "b.B")))
-    assertNotEquals(fp(new TestFrameworkTransform(testMember = "test")),
-                    fp(new TestFrameworkTransform(testMember = "testCase")))
+    assertNotEquals(fp(new TestFrameworkTransform(testMember = "test")), fp(new TestFrameworkTransform(testMember = "testCase")))
     // …and two instances of one configuration DO, or two modules that agree would report drift.
     assertEquals(fp(new TestFrameworkTransform), fp(new TestFrameworkTransform))
-    assert(clue(fp(new TestFrameworkTransform)).contains(TestFrameworkTransform.DefaultSuite),
-           "the fingerprint names the parent, which is the thing a dependent compiles against")
+    assert(
+      clue(fp(new TestFrameworkTransform)).contains(TestFrameworkTransform.DefaultSuite),
+      "the fingerprint names the parent, which is the thing a dependent compiles against"
+    )
   }
 
   test("NOTHING is injected alongside the port — the Asserts façade is gone") {
@@ -575,7 +578,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   test("BEHAVIOUR: the widened comparison still compares VALUES, not widths") {
-    val i: Int = 1
+    val i: Int  = 1
     val l: Long = 1L
     munit.Assertions.assertEquals(i.toLong, l)
     munit.Assertions.assertEquals(l, i.toLong)
@@ -594,14 +597,13 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, ls)
     assert(!(lo eq ls))
     val other: java.util.List[String] = java.util.Arrays.asList("a", "c")
-    intercept[munit.ComparisonFailException](
-      munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, other))
+    intercept[munit.ComparisonFailException](munit.Assertions.assertEquals[java.lang.Object, java.lang.Object](lo, other))
   }
 
   test("BEHAVIOUR: assertSame maps to `eq`, which is NOT `==`") {
     val a = new String("x")
     val b = new String("x")
-    munit.Assertions.assertEquals(a, b)                       // java's assertEquals: equal values
+    munit.Assertions.assertEquals(a, b) // java's assertEquals: equal values
     intercept[munit.FailException](munit.Assertions.assert(a eq b)) // java's assertSame: NOT same
   }
 
@@ -641,7 +643,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  public boolean matches(Object item) { return true; }
         |  public static IsAnything anything() { return new IsAnything(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+  )
 
   private def emitWithRules(java: String): (String, TestFrameworkTransform) =
     val ph    = new TestFrameworkTransform
@@ -660,9 +663,9 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
        |}
        |""".stripMargin
 
-  /** The guard each declined site named. NOT spelled with a `#`: that separator is `MemberKey`'s
-    * grammar and `PolicyKeyLintSpec` enforces that no phase rebuilds it from a string — a refusal
-    * KIND is not a member reference, however much it looks like one. */
+  /** The guard each declined site named. NOT spelled with a `#`: that separator is `MemberKey`'s grammar and `PolicyKeyLintSpec` enforces that no phase rebuilds it from a string — a refusal KIND is
+    * not a member reference, however much it looks like one.
+    */
   private def guards(ph: TestFrameworkTransform): List[String] =
     ph.findings.map(_.construct).collect {
       case c if c.startsWith("org.junit.rules.ExpectedException(") =>
@@ -670,18 +673,26 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     }
 
   test("thrown.expect(E.class) ARMS junit's own matcher list, in place") {
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    int x = 1;
-        |    thrown.expect(IllegalStateException.class);
-        |    boom(x);
-        |  }
-        |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    int x = 1;
+          |    thrown.expect(IllegalStateException.class);
+          |    boom(x);
+          |  }
+          |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     val t = out.substring(out.indexOf("test(\"a\")"))
     // the rule call is GONE — an emitted `thrown.expect(…)` is the defect this closes.
     assert(!clue(t).contains("thrown.expect"))
-    assert(t.contains("bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => " +
-                      "bpEx.isInstanceOf[java.lang.IllegalStateException])"), t)
+    assert(
+      t.contains(
+        "bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => " +
+          "bpEx.isInstanceOf[java.lang.IllegalStateException])"
+      ),
+      t
+    )
     // …and the arming stands WHERE JAVA WROTE IT: after `x`, before the throwing call. Java armed
     // the rule at the call and not before it, and this is that fact in the emitted order.
     assert(t.indexOf("var x") < t.indexOf("bpExpected = bpExpected"), t)
@@ -691,8 +702,12 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(t.contains("case bpThrown: java.lang.Throwable => bpCaught = bpThrown"), t)
     assert(t.contains("if (bpCaught ne null)"), t)
     assert(t.contains("if (bpExpected.isEmpty) throw bpCaught"), t)
-    assert(t.contains("bpExpected.forall((bpP: (java.lang.Throwable) => scala.Boolean) => " +
-                      "bpP.apply(bpCaught))"), t)
+    assert(t.contains(
+             "bpExpected.forall((bpP: (java.lang.Throwable) => scala.Boolean) => " +
+               "bpP.apply(bpCaught))"
+           ),
+           t
+    )
     assert(t.contains("else if (bpExpected.nonEmpty)"), t)
     assertEquals(guards(ph), Nil)
   }
@@ -703,14 +718,17 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // so an `intercept` around "the rest of the enclosing block" fails a body that completes
     // normally where java simply ran the next iteration. An arming is a statement and has no such
     // problem — it goes where java wrote it.
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    for (int i = 0; i < 3; i++) {
-        |      thrown.expect(IllegalStateException.class);
-        |      boom(i);
-        |    }
-        |  }
-        |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    for (int i = 0; i < 3; i++) {
+          |      thrown.expect(IllegalStateException.class);
+          |      boom(i);
+          |    }
+          |  }
+          |  static void boom(int x) { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     assertEquals(clue(guards(ph)), Nil)
     val t = out.substring(out.indexOf("test(\"a\")"))
     assert(!clue(t).contains("thrown.expect"))
@@ -721,12 +739,15 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   test("the MATCHER overload becomes hamcrest's own contract — `matches(Object)`, no table") {
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expect(org.hamcrest.IsAnything.anything());
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expect(org.hamcrest.IsAnything.anything());
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     val t = out.substring(out.indexOf("test(\"a\")"))
     assertEquals(clue(guards(ph)), Nil)
     assert(clue(t).contains(".matches(bpEx)"), t)
@@ -736,13 +757,16 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   test("expectMessage(String) is junit's containsString, and does not NPE on a null message") {
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expect(IllegalStateException.class);
-        |    thrown.expectMessage("boom");
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expect(IllegalStateException.class);
+          |    thrown.expectMessage("boom");
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin
+      )
+    )
     val t = out.substring(out.indexOf("test(\"a\")"))
     assertEquals(clue(guards(ph)), Nil)
     assert(clue(t).contains("bpEx.isInstanceOf[java.lang.IllegalStateException]"), t)
@@ -756,44 +780,52 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // Under the `intercept` shape this was a REFUSAL (`double-expect`): one `intercept` takes one
     // type argument and java's conjunction had no image. The accumulator is junit's own, so the
     // conjunction is `forall` and there is nothing left to decline.
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expect(IllegalStateException.class);
-        |    thrown.expect(org.hamcrest.IsAnything.anything());
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expect(IllegalStateException.class);
+          |    thrown.expect(org.hamcrest.IsAnything.anything());
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     assertEquals(clue(guards(ph)), Nil)
     val t = out.substring(out.indexOf("test(\"a\")"))
-    assertEquals(clue(t.sliding("bpExpected = bpExpected".length)
-                       .count(_ == "bpExpected = bpExpected")), 2)
+    assertEquals(clue(t.sliding("bpExpected = bpExpected".length).count(_ == "bpExpected = bpExpected")), 2)
   }
 
   test("…and the operands are bound IN CALL ORDER, whichever of the two java wrote first") {
     // The eager bindings exist to keep java's evaluation order, so ordering them by KIND would
     // reintroduce exactly what they were written to preserve. Nothing else can see this: both
     // orders compile, and both differ only when an operand has a side effect.
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expectMessage(msg());
-        |    thrown.expect(org.hamcrest.IsAnything.anything());
-        |    boom();
-        |  }
-        |  static String msg() { return "boom"; }
-        |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expectMessage(msg());
+          |    thrown.expect(org.hamcrest.IsAnything.anything());
+          |    boom();
+          |  }
+          |  static String msg() { return "boom"; }
+          |  static void boom() { throw new IllegalStateException("boom"); }""".stripMargin
+      )
+    )
     val t = out.substring(out.indexOf("test(\"a\")"))
     assertEquals(clue(guards(ph)), Nil)
     assert(clue(t).indexOf("val bpMessage0") < t.indexOf("val bpMatcher"), t)
   }
 
   test("any OTHER member of the rule is REFUSED — a state this translation does not model") {
-    val (_, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expect(IllegalStateException.class);
-        |    thrown.expectCause(org.hamcrest.IsAnything.anything());
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val (_, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expect(IllegalStateException.class);
+          |    thrown.expectCause(org.hamcrest.IsAnything.anything());
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     assertEquals(clue(guards(ph)), List("unsupported-member"))
   }
 
@@ -802,14 +834,17 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // handed to something else is a rule state it cannot model. Two guards rather than one: a
     // wrong MEMBER and a reference that is not a call at all are different sentences, and an agent
     // reading the row has to be told which.
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() {
-        |    thrown.expect(IllegalStateException.class);
-        |    use(thrown);
-        |    boom();
-        |  }
-        |  static void use(Object o) { }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @Test public void a() {
+          |    thrown.expect(IllegalStateException.class);
+          |    use(thrown);
+          |    boom();
+          |  }
+          |  static void use(Object o) { }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     assertEquals(clue(guards(ph)), List("unsupported-reference"))
     assert(clue(out).contains("thrown.expect"))
   }
@@ -818,17 +853,20 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // The per-test guards are asked of a BODY and cannot see this: the arming is in no test body, so
     // every test reads as *never touches the rule* and is left alone silently, with the
     // `thrown.expect` still standing in emitted code that compiles and does nothing.
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  private void arm() { thrown.expect(IllegalStateException.class); }
-        |  @Test public void a() {
-        |    arm();
-        |    boom();
-        |  }
-        |  @Test public void b() {
-        |    thrown.expect(IllegalStateException.class);
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  private void arm() { thrown.expect(IllegalStateException.class); }
+          |  @Test public void a() {
+          |    arm();
+          |    boom();
+          |  }
+          |  @Test public void b() {
+          |    thrown.expect(IllegalStateException.class);
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     assertEquals(clue(guards(ph)), List("arming-outside-test"))
     // …and BOTH tests are left alone, `b` included: the refusal is the suite's.
     assert(!clue(out).contains("bpExpected"), out)
@@ -840,13 +878,16 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // throws is compared against the expectation in java. That was a REFUSAL under the `intercept`
     // shape, which had to sit inside the `try … finally`; the wrap is applied outside it now, so
     // the nesting is java's own. Nothing else could see this: both shapes compile.
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @After public void tearDown() { }
-        |  @Test public void a() {
-        |    thrown.expect(IllegalStateException.class);
-        |    boom();
-        |  }
-        |  static void boom() { throw new IllegalStateException(); }""".stripMargin))
+    val (out, ph) = emitWithRules(
+      ruleSuite(
+        """  @After public void tearDown() { }
+          |  @Test public void a() {
+          |    thrown.expect(IllegalStateException.class);
+          |    boom();
+          |  }
+          |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+      )
+    )
     assertEquals(clue(guards(ph)), Nil)
     val t = out.substring(out.indexOf("test(\"a\")"))
     assert(clue(t).contains("finally tearDown()"), t)
@@ -872,7 +913,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  }
         |  static void boom() { throw new IllegalStateException(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(clue(guards(ph)), List("class-rule"))
     assert(clue(out).contains("thrown.expect"))
     assert(!out.contains("bpExpected"), out)
@@ -888,15 +930,15 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  @Rule public TemporaryFolder folder = new TemporaryFolder();
         |  @Test public void a() { folder.toString(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(clue(guards(ph)), Nil)
     assert(clue(ph.findings.map(_.construct)).contains("org.junit.Rule"))
     assert(clue(out).contains("folder.toString()"))
   }
 
   test("a suite with NO rule produces no ExpectedException row — the refusal lane is not noise") {
-    val (out, ph) = emitWithRules(ruleSuite(
-      """  @Test public void a() { }"""))
+    val (out, ph) = emitWithRules(ruleSuite("""  @Test public void a() { }"""))
     assertEquals(clue(guards(ph)), Nil)
     // …and no test that never touches the rule pays for it: no accumulator, no catch, no check.
     assert(!clue(out).contains("bpExpected"))
@@ -906,14 +948,20 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // The emitted accumulator plainly asserts a throw; what it cannot say is that java said so
     // through a `@Rule` FIELD three screens up, which is the fact an agent reading one emitted file
     // has no way to recover (CLAUDE.md §4.575).
-    val log = Pipeline.runTraced(
-      SpoonTir.fromSources(("Snippet.java" -> ruleSuite(
-        """  @Test public void a() {
-          |    thrown.expect(IllegalStateException.class);
-          |    boom();
-          |  }
-          |  static void boom() { throw new IllegalStateException(); }""".stripMargin)) :: junitRuleStubs),
-      List(new TestFrameworkTransform))._2
+    val log = Pipeline
+      .runTraced(
+        SpoonTir.fromSources(
+          ("Snippet.java" -> ruleSuite(
+            """  @Test public void a() {
+              |    thrown.expect(IllegalStateException.class);
+              |    boom();
+              |  }
+              |  static void boom() { throw new IllegalStateException(); }""".stripMargin
+          )) :: junitRuleStubs
+        ),
+        List(new TestFrameworkTransform)
+      )
+      ._2
     val d = log.all.find(_.subjectFqn.endsWith("#a"))
     assert(clue(log.all.map(_.subjectFqn)).nonEmpty)
     assert(clue(d.map(_.detail.getOrElse("rule", ""))).exists(_.contains("modelled")))
@@ -921,8 +969,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   // ---- the lowering's SEMANTIC CELLS, run rather than read ----
 
-  private def ruleCheck(caught: java.lang.Throwable,
-                        expected: List[java.lang.Throwable => Boolean]): Unit =
+  private def ruleCheck(caught: java.lang.Throwable, expected: List[java.lang.Throwable => Boolean]): Unit =
     if caught ne null then
       if expected.isEmpty then throw caught
       else munit.Assertions.assert(expected.forall(p => p.apply(caught)), "did not satisfy")
@@ -930,7 +977,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   test("BEHAVIOUR: ARMED and MATCHED passes — junit's rule applied to what the test threw") {
     var bpExpected: List[java.lang.Throwable => Boolean] = Nil
-    var bpCaught: java.lang.Throwable = null
+    var bpCaught:   java.lang.Throwable                  = null
     try {
       bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
       throw new IllegalStateException("boom")
@@ -940,7 +987,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   test("BEHAVIOUR: ARMED and NOT matched FAILS — and it is the expectation that reports it") {
     var bpExpected: List[java.lang.Throwable => Boolean] = Nil
-    var bpCaught: java.lang.Throwable = null
+    var bpCaught:   java.lang.Throwable                  = null
     try {
       bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
       throw new java.io.IOException("other")
@@ -950,7 +997,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   test("BEHAVIOUR: ARMED and NOTHING THROWN fails — junit's failDueToMissingException") {
     var bpExpected: List[java.lang.Throwable => Boolean] = Nil
-    val bpCaught: java.lang.Throwable = null
+    val bpCaught:   java.lang.Throwable                  = null
     bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
     intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
   }
@@ -973,13 +1020,12 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // a body that completed normally; this simply does what java did.
     var iterations = 0
     var bpExpected: List[java.lang.Throwable => Boolean] = Nil
-    var bpCaught: java.lang.Throwable = null
+    var bpCaught:   java.lang.Throwable                  = null
     try {
       var i = 0
       while (i < 3) {
         iterations += 1
-        if i == 0 then
-          bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
+        if i == 0 then bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
         if i == 1 then throw new IllegalStateException("second iteration")
         i += 1
       }
@@ -993,11 +1039,10 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // The reason the accumulator is a LIST: keeping only the last matcher would PASS where java
     // FAILED, which is the false-green direction this engine exists to prevent.
     var bpExpected: List[java.lang.Throwable => Boolean] = Nil
-    var bpCaught: java.lang.Throwable = null
+    var bpCaught:   java.lang.Throwable                  = null
     try {
       bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => bpEx.isInstanceOf[IllegalStateException])
-      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) =>
-        (bpEx.getMessage ne null) && bpEx.getMessage.contains("wanted"))
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => (bpEx.getMessage ne null) && bpEx.getMessage.contains("wanted"))
       throw new IllegalStateException("other")
     } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
     intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
@@ -1005,10 +1050,9 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
   test("BEHAVIOUR: expectMessage over a NULL message does not throw — hamcrest answers false") {
     var bpExpected: List[java.lang.Throwable => Boolean] = Nil
-    var bpCaught: java.lang.Throwable = null
+    var bpCaught:   java.lang.Throwable                  = null
     try {
-      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) =>
-        (bpEx.getMessage ne null) && bpEx.getMessage.contains("boom"))
+      bpExpected = bpExpected :+ ((bpEx: java.lang.Throwable) => (bpEx.getMessage ne null) && bpEx.getMessage.contains("boom"))
       throw new IllegalStateException()
     } catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
     intercept[munit.FailException](ruleCheck(bpCaught, bpExpected))
@@ -1025,7 +1069,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  @Rule public TemporaryFolder folder = new TemporaryFolder();
         |  @Test public void a() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val f = ph.findings.find(_.construct == "org.junit.Rule")
     assert(clue(ph.findings).nonEmpty)
     assertEquals(f.map(_.fix.label), Some("a"))
@@ -1042,7 +1087,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |public class ParamTest {
         |  @Test public void a() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(ph.findings.map(_.construct)).contains("org.junit.runner.RunWith"))
   }
 
@@ -1067,7 +1113,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // `Symbol.annotations`), so a JUnit-5 suite whose assertions came from elsewhere would be
     // invisible to the check. "Semi-loudly" is the right word for it.
     val prog = Pipeline.run(SpoonTir.fromSource(junit5), Nil)
-    val v = PortabilityCheck.check(prog).map(_.api).distinct
+    val v    = PortabilityCheck.check(prog).map(_.api).distinct
     assert(clue(v).exists(_.startsWith("org.junit.jupiter")))
   }
 
@@ -1096,7 +1142,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |public class OldTest extends junit.framework.TestCase {
         |  public void testSomething() { assertTrue(true); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(ph.findings.map(_.construct)).contains("junit.framework.TestCase"))
   }
 
@@ -1109,7 +1156,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |public class HamcrestTest {
         |  @Test public void a() { assertThat(1, equalTo(1)); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val f = ph.findings.find(_.construct == "assertThat")
     assert(clue(ph.findings.map(_.construct)).contains("assertThat"))
     assertEquals(f.map(_.fix.label), Some("a"))
@@ -1123,15 +1171,19 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // NUMBER. `TestFrameworkTransform.findings` prints one; nothing recorded it, because the check
     // had rules for `org.junit.` and `junit.framework.` and none for the vocabulary reached
     // THROUGH them — so a suite could be 100% hamcrest and every portability lane read zero.
-    val prog = Pipeline.run(SpoonTir.fromSource(
-      """package demo;
-        |import org.hamcrest.CoreMatchers;
-        |import org.hamcrest.MatcherAssert;
-        |import org.junit.Test;
-        |public class HamcrestFqnTest {
-        |  @Test public void a() { MatcherAssert.assertThat(1, CoreMatchers.equalTo(1)); }
-        |}
-        |""".stripMargin), Nil)
+    val prog = Pipeline.run(
+      SpoonTir.fromSource(
+        """package demo;
+          |import org.hamcrest.CoreMatchers;
+          |import org.hamcrest.MatcherAssert;
+          |import org.junit.Test;
+          |public class HamcrestFqnTest {
+          |  @Test public void a() { MatcherAssert.assertThat(1, CoreMatchers.equalTo(1)); }
+          |}
+          |""".stripMargin
+      ),
+      Nil
+    )
     val v = PortabilityCheck.check(prog).map(_.api).distinct
     assert(clue(v).exists(_.startsWith("org.hamcrest.")))
   }
@@ -1161,7 +1213,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  @Rule public org.junit.rules.TemporaryFolder tmp = new org.junit.rules.TemporaryFolder();
         |  @Test public void a() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val rows = ph.findings.map(_.report("demo.RefusedTest"))
     // ONE lane name, spelled as the residue it is — the `idiom(refused)` family.
     assertEquals(rows.map(_.check).distinct, List("test-framework(refused)"))
@@ -1178,11 +1231,12 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // whole. A `Symbol`'s `origin` defaults to `Origin.synthetic`, so a construct reported from a
     // SYMBOL — which is every DROPPED annotation, and `@RunWith(Suite.class)` is one because it
     // has arguments — carries `<synthetic>` as its path.
-    val classLevel = ph.findings.filter(f => f.construct.startsWith("org.junit.runner") ||
-                                             f.construct.contains("SuiteClasses"))
+    val classLevel = ph.findings.filter(f =>
+      f.construct.startsWith("org.junit.runner") ||
+        f.construct.contains("SuiteClasses")
+    )
     assert(clue(classLevel).nonEmpty)
-    assert(classLevel.forall(_.at != balticporter.tir.SymId.None),
-           clue(classLevel.map(f => f.construct -> f.where.javaPath)))
+    assert(classLevel.forall(_.at != balticporter.tir.SymId.None), clue(classLevel.map(f => f.construct -> f.where.javaPath)))
     // the summary groups by construct and names one site each — the shape a reader scans.
     val sum = TestFrameworkTransform.summary(ph.findings)
     assert(clue(sum).contains("org.junit.Rule × 1"), sum)
@@ -1209,7 +1263,8 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
         |  /** Test of the different adding methods */
         |  @Test public void addTest() { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(out.contains("Test of the different adding methods"), out)
     assert(out.indexOf("Test of the different adding methods") < out.indexOf("test(\"addTest\")"), out)
   }

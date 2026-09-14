@@ -2,9 +2,9 @@ package balticporter.tir
 
 /** Try-with-resources whose resources the emitter did not lower (JLS 14.20.3).
   *
-  * Walks the tree independently of the emitter; disagrees when a `try` with resources
-  * reached the output without lowering. Findings are §1(a) engine gaps.
-  * Currently reports 0 on all ports (no corpus library uses try-with-resources). */
+  * Walks the tree independently of the emitter; disagrees when a `try` with resources reached the output without lowering. Findings are §1(a) engine gaps. Currently reports 0 on all ports (no corpus
+  * library uses try-with-resources).
+  */
 object TryResourceCheck:
 
   val Name = "try-resource"
@@ -29,13 +29,12 @@ object TryResourceCheck:
       s"try-with-resources declaring ${resources.mkString(", ")} — the emitted `try` binds none of " +
         "them and calls no `close()`, so a resource opened for its side effect vanishes silently " +
         "(JLS 14.20.3.1)"
-    def render: String = s"$issue $owner: try(${resources.mkString("; ")})  (${origin.javaPath}:${origin.line})"
+    def render: String              = s"$issue $owner: try(${resources.mkString("; ")})  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
-        origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** @param lowered which `try`s the emitter lowered, keyed by [[Tree.Try.id]].
-    *                `_ => false` reproduces the un-repaired engine.
+  /** @param lowered
+    *   which `try`s the emitter lowered, keyed by [[Tree.Try.id]]. `_ => false` reproduces the un-repaired engine.
     */
   def check(program: Program, units: List[Tree.ClassDef], lowered: Tree.Try => Boolean): List[Finding] =
     given Program = program
@@ -44,10 +43,9 @@ object TryResourceCheck:
   private def inUnit(u: Tree.ClassDef, lowered: Tree.Try => Boolean)(using program: Program): List[Finding] =
     // owner name per try (Origin key -- same shape as BreakCatchCheck)
     val ownerOf = collection.mutable.Map.empty[Origin, String]
-    val claim = (s: SymId, t: Option[Term]) =>
-      t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
-    val owners = new Phase:
-      def name: String = "try-resource/owner"
+    val claim   = (s: SymId, t: Option[Term]) => t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))
+    val owners  = new Phase:
+      def name:                                                    String      = "try-resource/owner"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { claim(d.symbol, d.rhs); d }
       override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef = { claim(v.symbol, v.rhs); v }
     StandardTraversal.mapClassDef(owners, u)
@@ -67,7 +65,7 @@ object TryResourceCheck:
     StandardTraversal.scanTerm(t, Set.empty[Origin]) { (acc, x) =>
       x match
         case tr: Tree.Try => acc + tr.origin
-        case _            => acc
+        case _ => acc
     }
 
   private def fqn(s: SymId)(using program: Program): String =
@@ -76,8 +74,12 @@ object TryResourceCheck:
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

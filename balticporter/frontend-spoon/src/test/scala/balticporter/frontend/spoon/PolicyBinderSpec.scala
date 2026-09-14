@@ -1,12 +1,12 @@
 package balticporter.frontend.spoon
 
-import balticporter.core.{FrontendConfig, Substitutions}
+import balticporter.core.{ FrontendConfig, Substitutions }
 import balticporter.tir.*
 
 import java.nio.file.Files
 
-/** [[PolicyBinder]] — every way a declared key can FAIL to name what its author meant, and the
-  * different instruction each failure owes its reader. */
+/** [[PolicyBinder]] — every way a declared key can FAIL to name what its author meant, and the different instruction each failure owes its reader.
+  */
 class PolicyBinderSpec extends munit.FunSuite:
 
   private def tree(subs: Substitutions)(files: (String, String)*): Program =
@@ -33,7 +33,7 @@ class PolicyBinderSpec extends munit.FunSuite:
       |  @Override public boolean equals(Object o) { return false; }
       |}""".stripMargin
 
-  private def binderOf(p: Program) = new PolicyBinder(p, p.members)
+  private def binderOf(p: Program)                                             = new PolicyBinder(p, p.members)
   private def bind(p: Program, key: String, need: Ownership = Ownership.Owned) =
     binderOf(p).bindMember("spec", "setting", key, need)
   private def bindAll(p: Program, key: String, need: Ownership = Ownership.Owned) =
@@ -44,7 +44,7 @@ class PolicyBinderSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("an overload-PRECISE key binds to exactly one symbol; the BARE key binds to the whole set") {
-    val p = tree(Substitutions.none)(source)
+    val p   = tree(Substitutions.none)(source)
     val one = bind(p, "com.demo.Shop#make(Class)")
     assert(clue(one).isBound)
     val oneSym = one.toOption.flatMap(_.sym).get
@@ -67,8 +67,7 @@ class PolicyBinderSpec extends munit.FunSuite:
     val p = tree(Substitutions.none)(source)
     assert(bind(p, "com.demo.Shop#<init>(int)").isBound)
     assert(bind(p, "com.demo.Shop#<init>()").isBound)
-    assertNotEquals(bind(p, "com.demo.Shop#<init>(int)").toOption.flatMap(_.sym),
-                    bind(p, "com.demo.Shop#<init>()").toOption.flatMap(_.sym))
+    assertNotEquals(bind(p, "com.demo.Shop#<init>(int)").toOption.flatMap(_.sym), bind(p, "com.demo.Shop#<init>()").toOption.flatMap(_.sym))
   }
 
   // -------------------------------------------------------------------------
@@ -78,8 +77,7 @@ class PolicyBinderSpec extends munit.FunSuite:
   test("an AMBIGUOUS key fails to bind and the finding LISTS the candidates, rendered with descriptors") {
     val p = tree(Substitutions.none)(source)
     val b = bind(p, "com.demo.Shop#make")
-    assertEquals(b.why, Some(NotBound.Ambiguous(
-      List("com.demo.Shop#make(Class)", "com.demo.Shop#make(String)"))))
+    assertEquals(b.why, Some(NotBound.Ambiguous(List("com.demo.Shop#make(Class)", "com.demo.Shop#make(String)"))))
     // the message must be the string an agent EDITS (§4.575) — so the candidates appear verbatim.
     assert(clue(b.why.get.detail).contains("com.demo.Shop#make(Class)"))
     assert(clue(b.why.get.detail).contains("com.demo.Shop#make(String)"))
@@ -111,17 +109,16 @@ class PolicyBinderSpec extends munit.FunSuite:
     // it FIRED: `bindMembers` binds, with an empty symbol set, and reports nothing.
     val b = bindAll(p, "com.demo.Shop#make(Class)")
     assert(clue(b).isBound)
-    assertEquals(b.toOption.map(_.flatMap(_.sym)), Some(Nil))     // nothing to point at …
+    assertEquals(b.toOption.map(_.flatMap(_.sym)), Some(Nil)) // nothing to point at …
     assertEquals(b.toOption.map(_.map(_.dropped)), Some(List(true))) // … because it was DROPPED
     assertEquals(binderOf(p).unbound, Nil)
     // …and the program genuinely has no such member, which is what makes the line above the point.
     val owner = p.symbols.all.find(_.fullName == "com.demo.Shop").map(_.id).get
-    assertEquals(p.symbols.all.filter(s => s.name == "make" && s.owner == owner)
-      .flatMap(_.descriptor.map(_.render)).toSet, Set("String"))
+    assertEquals(p.symbols.all.filter(s => s.name == "make" && s.owner == owner).flatMap(_.descriptor.map(_.render)).toSet, Set("String"))
   }
 
-  /** a second unit that CALLS the member the test above drops — the reference side, which is where
-    * a dropped member still has a symbol. */
+  /** a second unit that CALLS the member the test above drops — the reference side, which is where a dropped member still has a symbol.
+    */
   private val caller = "com/demo/Till.java" ->
     """package com.demo;
       |public class Till {
@@ -148,8 +145,8 @@ class PolicyBinderSpec extends munit.FunSuite:
   }
 
   test("bindCallee does NOT change the ordinary path — a LIVE member still binds through the index") {
-    val p = tree(Substitutions.none)(source, caller)
-    val b = binderOf(p)
+    val p         = tree(Substitutions.none)(source, caller)
+    val b         = binderOf(p)
     val viaCallee = b.bindCallee("spec", "setting", "com.demo.Shop#make(Class)")
     val viaMember = bind(p, "com.demo.Shop#make(Class)")
     assertEquals(viaCallee.toOption.flatMap(_.sym), viaMember.toOption.flatMap(_.sym))
@@ -184,15 +181,15 @@ class PolicyBinderSpec extends munit.FunSuite:
     // The grammar is SIMPLE names and every report a key is copied out of shows the qualified ones.
     // Compared by equality this key named nothing and the binder said `never matched` about a member
     // that is right there — the failure two ports document in a comment and neither can fix.
-    val p    = tree(Substitutions.none)(source)
-    val hit  = bind(p, "com.demo.Shop#make(java.lang.Class)")
+    val p   = tree(Substitutions.none)(source)
+    val hit = bind(p, "com.demo.Shop#make(java.lang.Class)")
     assert(clue(hit).isBound)
-    assertEquals(hit.toOption.flatMap(_.sym).flatMap(p.symbolOf).flatMap(_.descriptor).map(_.render),
-                 Some("Class"))
+    assertEquals(hit.toOption.flatMap(_.sym).flatMap(p.symbolOf).flatMap(_.descriptor).map(_.render), Some("Class"))
     // …and it is still the OVERLOAD it names, not the set: the other one is not admitted.
-    assertEquals(bind(p, "com.demo.Shop#make(java.lang.String)").toOption
-                   .flatMap(_.sym).flatMap(p.symbolOf).flatMap(_.descriptor).map(_.render),
-                 Some("String"))
+    assertEquals(
+      bind(p, "com.demo.Shop#make(java.lang.String)").toOption.flatMap(_.sym).flatMap(p.symbolOf).flatMap(_.descriptor).map(_.render),
+      Some("String")
+    )
   }
 
   test("…and EXTERNAL, which is where the trap was actually met") {
@@ -206,7 +203,8 @@ class PolicyBinderSpec extends munit.FunSuite:
         """package com.demo;
           |public class Uses {
           |  public int h(Object o) { return System.identityHashCode(o); }
-          |}""".stripMargin)
+          |}""".stripMargin
+    )
     def bindExt(k: String) =
       binderOf(p).bindMember("spec", "setting", k, Ownership.External).toOption.flatMap(_.sym)
     val simple    = bindExt("java.lang.System#identityHashCode(Object)")
@@ -229,10 +227,17 @@ class PolicyBinderSpec extends munit.FunSuite:
     // exists for). It does not exist yet, so it is hand-minted here — which is the honest test:
     // the binder's rule is STRUCTURAL ("the frontend walked this owner and did not record this
     // member"), so it does not need to know which phase minted it.
-    val owner = p0.symbols.all.find(_.fullName == "com.demo.Shop").get
-    val id    = SymId(p0.symbols.all.map(_.id.raw).max + 1)
-    val minted = Symbol(id, "$synthetic", "com.demo.Shop#$synthetic", Flags(), owner.id,
-      TypeRepr.MethodType(Nil, TypeRepr.NoType), descriptor = Some(Descriptor.empty))
+    val owner  = p0.symbols.all.find(_.fullName == "com.demo.Shop").get
+    val id     = SymId(p0.symbols.all.map(_.id.raw).max + 1)
+    val minted = Symbol(
+      id,
+      "$synthetic",
+      "com.demo.Shop#$synthetic",
+      Flags(),
+      owner.id,
+      TypeRepr.MethodType(Nil, TypeRepr.NoType),
+      descriptor = Some(Descriptor.empty)
+    )
     val p = p0.rebuilt(symbols = p0.symbols.updated(minted))
 
     val b = new PolicyBinder(p, p.members).bindMember("spec", "setting", "com.demo.Shop#$synthetic")
@@ -245,12 +250,14 @@ class PolicyBinderSpec extends munit.FunSuite:
   }
 
   test("a `static { }` block's key BINDS — an initialiser is a member the frontend read out of Java") {
-    val p = tree(Substitutions.none)("com/demo/Init.java" ->
-      """package com.demo;
-        |public class Init {
-        |  public static int a;
-        |  static { a = 1; }
-        |}""".stripMargin)
+    val p = tree(Substitutions.none)(
+      "com/demo/Init.java" ->
+        """package com.demo;
+          |public class Init {
+          |  public static int a;
+          |  static { a = 1; }
+          |}""".stripMargin
+    )
     // The counterpart to the `SyntheticTarget` test below, and the reason that test needs this one
     // beside it: the refusal is STRUCTURAL, so anything the frontend walks and the index does not
     // record is refused as engine-minted. A hand-written static initialiser is the case that
@@ -274,16 +281,17 @@ class PolicyBinderSpec extends munit.FunSuite:
     val p = tree(Substitutions.none)(source)
     val b = binderOf(p)
     b.bindMember("method-body-substitution", "MethodBodyTransform", "com.demo.Shop#nosuch")
-    assertEquals(b.unbound.map(r => (r.phase, r.setting, r.entry)),
-      List(("method-body-substitution", "MethodBodyTransform", "com.demo.Shop#nosuch")))
+    assertEquals(
+      b.unbound.map(r => (r.phase, r.setting, r.entry)),
+      List(("method-body-substitution", "MethodBodyTransform", "com.demo.Shop#nosuch"))
+    )
   }
 
   test("a TYPE key binds by ownership: declared binds, referenced-only is ExternalOnly") {
     val p = tree(Substitutions.none)(source)
     val b = binderOf(p)
     assert(b.bindType("spec", "dropTypes", "com.demo.Shop").isBound)
-    assertEquals(b.bindType("spec", "dropTypes", "java.util.List").why,
-      Some(NotBound.ExternalOnly("java.util.List")))
+    assertEquals(b.bindType("spec", "dropTypes", "java.util.List").why, Some(NotBound.ExternalOnly("java.util.List")))
     // …and a rule whose entire subject IS external says so explicitly, rather than the default
     // silently admitting one.
     assert(b.bindType("spec", "portability", "java.util.List", Ownership.External).isBound)

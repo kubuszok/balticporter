@@ -73,7 +73,7 @@ class JavaStackSpec extends munit.FunSuite:
     val s = new JavaStack[String]
     s.push("a"); s.push("b"); s.push("c")
     assertEquals(s.toList, List("a", "b", "c"))
-    assertEquals(s.head, "a")   // java: get(0) is the BOTTOM
+    assertEquals(s.head, "a") // java: get(0) is the BOTTOM
     assertEquals(s.peek(), "c") // …and the top is the LAST
     val scalas = scala.collection.mutable.Stack.empty[String]
     scalas.push("a"); scalas.push("b"); scalas.push("c")

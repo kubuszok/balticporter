@@ -3,14 +3,13 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, DecisionLog, Pipeline, Program, RuleScope}
-import balticporter.transform.{BeanExposureCheck, CollectionsTransform, PublicFieldAccessorTransform}
+import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program, RuleScope }
+import balticporter.transform.{ BeanExposureCheck, CollectionsTransform, PublicFieldAccessorTransform }
 
 /** A JAVA `public` FIELD IS NOT PUBLIC ON THE JVM ONCE IT IS SCALA — `ENGINE-LIMITS.md` K21 face 2. */
 class PublicFieldAccessorSpec extends PortSuite:
 
-  private def ported(source: String, scope: RuleScope = RuleScope.Everywhere())
-      : (DecisionLog, Program, PublicFieldAccessorTransform, String) =
+  private def ported(source: String, scope: RuleScope = RuleScope.Everywhere()): (DecisionLog, Program, PublicFieldAccessorTransform, String) =
     val ph             = new PublicFieldAccessorTransform(scope)
     val (after, notes) = Pipeline.runTraced(SpoonTir.fromSource(source), List(ph))
     (notes, after, ph, new TirEmitter(after, notes = notes).emit)
@@ -37,15 +36,13 @@ class PublicFieldAccessorSpec extends PortSuite:
     val (_, _, _, out) = ported(Shape)
     assert(clue(out).contains("def getA(): java.lang.Object"))
     assert(out.contains("def setA(v: java.lang.Object)"))
-    assert(out.contains("def getB(): java.lang.Object"),
-           "the GETTER's type is the phase's own, never the field's — see test 4")
+    assert(out.contains("def getB(): java.lang.Object"), "the GETTER's type is the phase's own, never the field's — see test 4")
     assert(!out.contains("def setB("), "java had no setter for a `final` field and neither has this")
   }
 
   test("a field java did NOT make public gains nothing — the phase reproduces java's surface") {
     val (_, _, _, out) = ported(Shape)
-    for absent <- List("getHidden", "getPackaged", "getProt", "getStatik") do
-      assert(!clue(out).contains(absent), s"$absent is not on java's class-file surface")
+    for absent <- List("getHidden", "getPackaged", "getProt", "getStatik") do assert(!clue(out).contains(absent), s"$absent is not on java's class-file surface")
   }
 
   // -------------------------------------------------------------------------
@@ -60,11 +57,18 @@ class PublicFieldAccessorSpec extends PortSuite:
 
   test("…and the type is COUNTED instead — one row per TYPE, which is the review list") {
     val (_, after, ph, _) = ported(Shape, RuleScope.Only(Set.empty))
-    val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.Unexposed)
-    assertEquals(clue(fs).size, 1, "the question `is this class read reflectively?` is asked once " +
-      "per class, so a row per FIELD would bury it")
-    assertEquals(fs.head.detail, "a,b", "and it names the fields, so a reader can judge without " +
-      "opening the java")
+    val fs                = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.Unexposed)
+    assertEquals(
+      clue(fs).size,
+      1,
+      "the question `is this class read reflectively?` is asked once " +
+        "per class, so a row per FIELD would bury it"
+    )
+    assertEquals(fs.head.detail,
+                 "a,b",
+                 "and it names the fields, so a reader can judge without " +
+                   "opening the java"
+    )
   }
 
   test("…and a type IN scope is exposed rather than counted — a closed seam is not a residue") {
@@ -78,16 +82,18 @@ class PublicFieldAccessorSpec extends PortSuite:
 
   test("EVERY field's getter goes through the RUN-TIME egress bridge, at `java.lang.Object`") {
     val (_, _, _, out) = ported(Shape)
-    assert(clue(out).contains(
-      "def getA(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.a)"),
-      "a framework calls back IN through this accessor, one hop past the argument bridge")
-    assert(out.contains(
-      "def getB(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.b)"),
+    assert(
+      clue(out).contains("def getA(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.a)"),
+      "a framework calls back IN through this accessor, one hop past the argument bridge"
+    )
+    assert(
+      out.contains("def getB(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.b)"),
       "…and a field typed as anything else takes the SAME accessor: java declared a FIELD and not a " +
-      "getter, so this signature is the phase's own and its only reader is the framework, reading " +
-      "the RUNTIME value. `toJavaValue` is the identity on a `String`, so this is behaviour-" +
-      "identical where the old `Object`-only bridge was right — and correct where it was not, at a " +
-      "field whose type a retyping phase moved (§4.56 forbids this phase asking which)")
+        "getter, so this signature is the phase's own and its only reader is the framework, reading " +
+        "the RUNTIME value. `toJavaValue` is the identity on a `String`, so this is behaviour-" +
+        "identical where the old `Object`-only bridge was right — and correct where it was not, at a " +
+        "field whose type a retyping phase moved (§4.56 forbids this phase asking which)"
+    )
   }
 
   test("…including a field whose type a RETYPING phase moved — the case the old rule missed") {
@@ -104,11 +110,14 @@ class PublicFieldAccessorSpec extends PortSuite:
     val (after, notes) =
       Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform(), ph))
     val out = new TirEmitter(after, notes = notes).emit
-    assert(clue(out).contains("var some: scala.collection.mutable.Map"),
-           "the premise: the retyping really did move this field, so the test is not vacuous")
-    assert(out.contains(
-      "def getSome(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.some)"),
-      "…and the accessor a bean reader sees is java's representation of it, not the scala map")
+    assert(
+      clue(out).contains("var some: scala.collection.mutable.Map"),
+      "the premise: the retyping really did move this field, so the test is not vacuous"
+    )
+    assert(
+      out.contains("def getSome(): java.lang.Object = balticporter.runtime.JavaCollections.Reified.toJavaValue(this.some)"),
+      "…and the accessor a bean reader sees is java's representation of it, not the scala map"
+    )
   }
 
   // -------------------------------------------------------------------------
@@ -123,9 +132,12 @@ class PublicFieldAccessorSpec extends PortSuite:
         |    return new Object() { public String tag = "x"; };
         |  }
         |}
-        |""".stripMargin)
-    assert(clue(out).contains("def getTag(): java.lang.Object"),
-           "an anonymous class lives in a TERM, and a walk over class bodies finds none of them")
+        |""".stripMargin
+    )
+    assert(
+      clue(out).contains("def getTag(): java.lang.Object"),
+      "an anonymous class lives in a TERM, and a walk over class bodies finds none of them"
+    )
   }
 
   // -------------------------------------------------------------------------
@@ -139,9 +151,13 @@ class PublicFieldAccessorSpec extends PortSuite:
         |  public Object mapper;
         |  public Object getMapper() { return mapper; }
         |}
-        |""".stripMargin)
-    assertEquals(clue(out).sliding("def getMapper".length).count(_ == "def getMapper"), 1,
-                 "a second one is a duplicate-definition error the port cannot recover from")
+        |""".stripMargin
+    )
+    assertEquals(
+      clue(out).sliding("def getMapper".length).count(_ == "def getMapper"),
+      1,
+      "a second one is a duplicate-definition error the port cannot recover from"
+    )
     val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameTaken)
     assertEquals(clue(fs).size, 1)
     assert(fs.head.subject.endsWith("#mapper"), clue(fs.head.subject))
@@ -153,18 +169,23 @@ class PublicFieldAccessorSpec extends PortSuite:
 
   test("the accessor is RECORDED and noted — an invented member has no upstream line behind it") {
     val (log, _, _, out) = ported(Shape)
-    val ds = log.all.filter(_.kind == Decision.Kind.BeanAccessor)
+    val ds               = log.all.filter(_.kind == Decision.Kind.BeanAccessor)
     assertEquals(clue(ds).size, 2)
     assertEquals(ds.map(_.reason.className).distinct, List("configured"))
-    assert(clue(out).contains("/* porter: bean-accessor reason=configured"),
-           "the reader is looking at a `def getA()` the source map cannot answer for (§4.575)")
+    assert(
+      clue(out).contains("/* porter: bean-accessor reason=configured"),
+      "the reader is looking at a `def getA()` the source map cannot answer for (§4.575)"
+    )
   }
 
   test("the bean suffix is `java.beans.Introspector`'s, not `capitalize`") {
     assertEquals(PublicFieldAccessorTransform.beanSuffix("url"), "Url")
-    assertEquals(PublicFieldAccessorTransform.beanSuffix("URL"), "URL",
-                 "two leading capitals keep their spelling — `getURL` is what a bean reader looks " +
-                   "for, and `getURL` is what `decapitalize` inverts")
+    assertEquals(
+      PublicFieldAccessorTransform.beanSuffix("URL"),
+      "URL",
+      "two leading capitals keep their spelling — `getURL` is what a bean reader looks " +
+        "for, and `getURL` is what `decapitalize` inverts"
+    )
     assertEquals(PublicFieldAccessorTransform.beanSuffix("a"), "A")
   }
 
@@ -180,11 +201,13 @@ class PublicFieldAccessorSpec extends PortSuite:
         |  public String eMail;
         |  public String name;
         |}
-        |""".stripMargin)
-    assert(!clue(out).contains("getEMail"),
-           "an accessor no bean reader will look for is worse than none — it reads as coverage")
-    assert(out.contains("def getName(): java.lang.Object"),
-           "and the field beside it is unaffected: this is a refusal about ONE name")
+        |""".stripMargin
+    )
+    assert(!clue(out).contains("getEMail"), "an accessor no bean reader will look for is worse than none — it reads as coverage")
+    assert(
+      out.contains("def getName(): java.lang.Object"),
+      "and the field beside it is unaffected: this is a refusal about ONE name"
+    )
     val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameUnreachable)
     assertEquals(clue(fs).size, 1)
     assert(fs.head.subject.endsWith("#eMail"), clue(fs.head.subject))
@@ -195,7 +218,8 @@ class PublicFieldAccessorSpec extends PortSuite:
     val (_, _, _, out) = ported(
       """package demo;
         |class T { public String eMail; }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains("def get"), out)
     assert(!out.contains("def set"), out)
   }
@@ -226,7 +250,8 @@ class PublicFieldAccessorSpec extends PortSuite:
         |  public String a;
         |  public String A;
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(clue(out).sliding("def getA(".length).count(_ == "def getA("), 1, out)
     assertEquals(clue(rows(ph, after)).map(_.issue), List(BeanExposureCheck.Issue.NameUnreachable))
   }
@@ -240,7 +265,8 @@ class PublicFieldAccessorSpec extends PortSuite:
       """package demo;
         |class Base { public Object getMapper() { return null; } }
         |class Sub extends Base { public Object mapper; }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(clue(out).sliding("def getMapper".length).count(_ == "def getMapper"), 1, out)
     val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameTaken)
     assertEquals(clue(fs).size, 1)

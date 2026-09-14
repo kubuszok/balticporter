@@ -1,11 +1,11 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
+import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 import balticporter.transform.CollectionBoundaryCheck.Issue
 
-/** The JDK/Scala collection BOUNDARY, counted — every slot `CollectionsTransform` opened and
-  * `coerce` did not close. */
+/** The JDK/Scala collection BOUNDARY, counted — every slot `CollectionsTransform` opened and `coerce` did not close.
+  */
 class CollectionBoundaryCheckSpec extends PortSuite:
 
   private def findings(java: String) =
@@ -46,7 +46,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
 
   test("…and the check names it, with an origin and a §1 classification") {
     val (_, fs) = findings(streamSlot)
-    val decl = fs.filter(f => f.slot == "declaration" && f.expected.startsWith("java.util.stream."))
+    val decl    = fs.filter(f => f.slot == "declaration" && f.expected.startsWith("java.util.stream."))
     assertEquals(clue(decl).size, 1)
     assertEquals(decl.head.issue, Issue.UntranslatedFamily)
     assertEquals(decl.head.actual, "scala.collection.mutable.Buffer")
@@ -165,14 +165,14 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     // port's program contains its base's units, and a slot stranded inside one of those is the
     // base's finding.
     val ph = new CollectionsTransform
-    val p = port(
+    val p  = port(
       """package demo;
         |import java.util.*;
         |import java.util.concurrent.*;
         |class Base { CopyOnWriteArrayList<String> v = new CopyOnWriteArrayList<String>(); List<String> w() { return v; } }
         |class Dep  { List<String> l = new ArrayList<String>(); List<String> w() { return l; } }
         |""".stripMargin,
-      ph,
+      ph
     )
     assert(clue(ph.boundary(p.after)).nonEmpty)
     def unit(n: String) = p.after.units.filter(u => p.after.symbolOf(u.symbol).exists(_.fullName == n))

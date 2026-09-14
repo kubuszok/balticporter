@@ -3,10 +3,10 @@ package balticporter.frontend.spoon
 import balticporter.core.FrontendConfig
 import balticporter.tir.*
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** `Symbol.descriptor` as the FRONTEND derives it — over a REAL SOURCE TREE, never through
-  * `SpoonTir.fromSource`. */
+/** `Symbol.descriptor` as the FRONTEND derives it — over a REAL SOURCE TREE, never through `SpoonTir.fromSource`.
+  */
 class DescriptorSpec extends munit.FunSuite:
 
   private def tree(files: (String, String)*): Program =
@@ -29,23 +29,23 @@ class DescriptorSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("every declared executable carries its SOURCE-LEVEL parameter spelling; a FIELD carries none") {
-    val p = tree("com/demo/Widget.java" ->
-      """package com.demo;
-        |public class Widget {
-        |  public int size;
-        |  public Widget() { }
-        |  public Widget(int size) { this.size = size; }
-        |  public String label(int n, String sep) { return sep + n; }
-        |  public String label(java.lang.Class<?> c) { return c.getName(); }
-        |}""".stripMargin)
+    val p = tree(
+      "com/demo/Widget.java" ->
+        """package com.demo;
+          |public class Widget {
+          |  public int size;
+          |  public Widget() { }
+          |  public Widget(int size) { this.size = size; }
+          |  public String label(int n, String sep) { return sep + n; }
+          |  public String label(java.lang.Class<?> c) { return c.getName(); }
+          |}""".stripMargin
+    )
     val ms = members(p, "com.demo.Widget")
     // a constructor is `<init>`; both overloads share the name and the symbol table holds both,
     // so read the SET of spellings rather than one.
     val sym = p.symbols.all.filter(s => s.name == "<init>" && p.symbolOf(s.owner).exists(_.fullName == "com.demo.Widget"))
     assertEquals(sym.flatMap(_.descriptor.map(_.render)).toSet, Set("", "int"))
-    val labels = p.symbols.all
-      .filter(s => s.name == "label" && p.symbolOf(s.owner).exists(_.fullName == "com.demo.Widget"))
-      .flatMap(_.descriptor.map(_.render)).toSet
+    val labels = p.symbols.all.filter(s => s.name == "label" && p.symbolOf(s.owner).exists(_.fullName == "com.demo.Widget")).flatMap(_.descriptor.map(_.render)).toSet
     assertEquals(labels, Set("int,String", "Class"))
     // A FIELD has no descriptor, and that is the COMPLETE answer: `owner#name` is its whole
     // identity. Reporting it as unresolved would produce a finding for every field in the program.
@@ -53,14 +53,16 @@ class DescriptorSpec extends munit.FunSuite:
   }
 
   test("a GENERIC parameter keeps its SIMPLE name — the spelling is erased source, not a JVM descriptor") {
-    val p = tree("com/demo/Box.java" ->
-      """package com.demo;
-        |import java.util.List;
-        |public class Box<T> {
-        |  public void put(T item) { }
-        |  public void putAll(List<T> items) { }
-        |  public <X> void other(X x, Class<X> c) { }
-        |}""".stripMargin)
+    val p = tree(
+      "com/demo/Box.java" ->
+        """package com.demo;
+          |import java.util.List;
+          |public class Box<T> {
+          |  public void put(T item) { }
+          |  public void putAll(List<T> items) { }
+          |  public <X> void other(X x, Class<X> c) { }
+          |}""".stripMargin
+    )
     assertEquals(members(p, "com.demo.Box")("put"), Some("T"))
     assertEquals(members(p, "com.demo.Box")("putAll"), Some("List"))
     assertEquals(members(p, "com.demo.Box")("other"), Some("X,Class"))
@@ -71,14 +73,16 @@ class DescriptorSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("an ARRAY parameter spells `int[]`, and a VARARG spells the array it is — both from the parser") {
-    val p = tree("com/demo/Owner.java" ->
-      """package com.demo;
-        |public class Owner {
-        |  public void copy(int[] src) { }
-        |  public void copy2(int[][] src) { }
-        |  public void of(String... parts) { }
-        |  public void of1(String part) { }
-        |}""".stripMargin)
+    val p = tree(
+      "com/demo/Owner.java" ->
+        """package com.demo;
+          |public class Owner {
+          |  public void copy(int[] src) { }
+          |  public void copy2(int[][] src) { }
+          |  public void of(String... parts) { }
+          |  public void of1(String part) { }
+          |}""".stripMargin
+    )
     val ms = members(p, "com.demo.Owner")
     // THE DIVERGENCE, closed at the source. The TIR renders `int[]` as
     // `AppliedType(scala.Array, [Int])`, and a key built from the TYCON's name spelled this member
@@ -98,15 +102,17 @@ class DescriptorSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("`equals` binds as `Object`, NEVER as `Any` — the descriptor is read BEFORE the retyping") {
-    val p = tree("com/demo/Point.java" ->
-      """package com.demo;
-        |public class Point {
-        |  public int x;
-        |  @Override public boolean equals(Object o) { return o instanceof Point; }
-        |  public boolean same(Object o) { return o == this; }
-        |}""".stripMargin)
-    val id  = p.symbols.all.find(_.fullName == "com.demo.Point").map(_.id).get
-    val eq  = p.symbols.all.find(s => s.name == "equals" && s.owner == id).get
+    val p = tree(
+      "com/demo/Point.java" ->
+        """package com.demo;
+          |public class Point {
+          |  public int x;
+          |  @Override public boolean equals(Object o) { return o instanceof Point; }
+          |  public boolean same(Object o) { return o == this; }
+          |}""".stripMargin
+    )
+    val id = p.symbols.all.find(_.fullName == "com.demo.Point").map(_.id).get
+    val eq = p.symbols.all.find(s => s.name == "equals" && s.owner == id).get
 
     // The frontend deliberately retypes a 1-argument `equals(Object)`'s parameter to `scala.Any`,
     // because Scala's `Object.equals` takes `Any` and `equals(Object)` would CLASH with it rather
@@ -133,18 +139,20 @@ class DescriptorSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("Descriptor-from-Spoon and Descriptor-from-info agree on EVERY executable — `equals` excepted") {
-    val p = tree("com/demo/Wide.java" ->
-      """package com.demo;
-        |import java.util.List;
-        |public class Wide<T> {
-        |  public Wide(int a, String b) { }
-        |  public void prims(int a, long b, short c, byte d, char e, boolean f, float g, double h) { }
-        |  public void arrays(int[] a, String[][] b, T[] c) { }
-        |  public void generics(List<String> a, Class<?> b, T c) { }
-        |  public void varargs(String first, Object... rest) { }
-        |  public void none() { }
-        |  @Override public boolean equals(Object o) { return false; }
-        |}""".stripMargin)
+    val p = tree(
+      "com/demo/Wide.java" ->
+        """package com.demo;
+          |import java.util.List;
+          |public class Wide<T> {
+          |  public Wide(int a, String b) { }
+          |  public void prims(int a, long b, short c, byte d, char e, boolean f, float g, double h) { }
+          |  public void arrays(int[] a, String[][] b, T[] c) { }
+          |  public void generics(List<String> a, Class<?> b, T c) { }
+          |  public void varargs(String first, Object... rest) { }
+          |  public void none() { }
+          |  @Override public boolean equals(Object o) { return false; }
+          |}""".stripMargin
+    )
     val owner = p.symbols.all.find(_.fullName == "com.demo.Wide").map(_.id).get
     val execs = p.symbols.all.filter(s => s.owner == owner && s.descriptor.isDefined).toList
     assert(clue(execs.size) >= 7)
@@ -162,15 +170,17 @@ class DescriptorSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("an EXTERNAL member the parser RESOLVED carries a descriptor; the JDK-typed owner is external") {
-    val p = tree("com/demo/Caller.java" ->
-      """package com.demo;
-        |public class Caller {
-        |  public String go(String s) { return s.substring(1, 2); }
-        |}""".stripMargin)
+    val p = tree(
+      "com/demo/Caller.java" ->
+        """package com.demo;
+          |public class Caller {
+          |  public String go(String s) { return s.substring(1, 2); }
+          |}""".stripMargin
+    )
     // `java.lang.String#substring(int,int)` is not declared by this program; the frontend interns it
     // on first reference, and with a full classpath the declaration resolves — so the descriptor is
     // available and is the parser's, exactly as for a declared member.
-    val sub = p.symbols.all.filter(_.name == "substring").toList
+    val sub       = p.symbols.all.filter(_.name == "substring").toList
     val spellings = sub.map(s => s.descriptor.map(_.render))
     assert(clue(spellings).contains(Some("int,int")))
   }

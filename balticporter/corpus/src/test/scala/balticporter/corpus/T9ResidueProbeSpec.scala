@@ -18,7 +18,8 @@ class T9ResidueProbeSpec extends PortSuite:
         |    x = new Inner().v();
         |  }
         |}
-        |""".stripMargin).out
+        |""".stripMargin
+    ).out
     // the local one is a member of the CLASS …
     assert(clue(out).contains("class Inner private[demo] () {\n    private[demo] def v(): scala.Int = {\n      return 2"))
     // … and java's static nested one is a member of the OBJECT.
@@ -37,7 +38,8 @@ class T9ResidueProbeSpec extends PortSuite:
         |    x = new Inner().v();
         |  }
         |}
-        |""".stripMargin).out
+        |""".stripMargin
+    ).out
     // BOTH are emitted into `class Holder`'s body, so scalac reports `Inner is already defined`.
     // Pinned as the defect it is: the member-clash pass renames a field that shadows a field and a
     // field that clashes with a method, and does not consider a class a member at all.
@@ -56,7 +58,8 @@ class T9ResidueProbeSpec extends PortSuite:
         |    return Level.HIGH.ordinal();
         |  }
         |}
-        |""".stripMargin).out
+        |""".stripMargin
+    ).out
     assert(clue(out).contains("enum Level extends java.lang.Enum[Level]"))
     assert(clue(out).contains("case HIGH extends Level"))
     // …and NOT the sealed shape's hand-written `values()`: the desugaring supplies a PARENLESS one
@@ -73,7 +76,8 @@ class T9ResidueProbeSpec extends PortSuite:
         |    return Level.HIGH.ordinal();
         |  }
         |}
-        |""".stripMargin).out
+        |""".stripMargin
+    ).out
     // `demo.Holder.1Level.HIGH` — two defects in one path, and the pin is on the exact text so the
     // day either is fixed this test says so:
     //   - `1Level` is javac's binary simple name for the FIRST `Level` in the type. The DECLARATION
@@ -94,7 +98,8 @@ class T9ResidueProbeSpec extends PortSuite:
         |    return Local.k();
         |  }
         |}
-        |""".stripMargin).out
+        |""".stripMargin
+    ).out
     assert(clue(out).contains("object Local"))
     assert(clue(out).contains("return Local.k()"))
   }

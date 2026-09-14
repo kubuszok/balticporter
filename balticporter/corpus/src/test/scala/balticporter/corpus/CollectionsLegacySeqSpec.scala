@@ -6,8 +6,8 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-/** `java.util.Vector` and `java.util.Stack` — java's two LEGACY sequences, both absent from
-  * Scala.js and `Stack` from Scala Native too. */
+/** `java.util.Vector` and `java.util.Stack` — java's two LEGACY sequences, both absent from Scala.js and `Stack` from Scala Native too.
+  */
 class CollectionsLegacySeqSpec extends PortSuite:
 
   private val src =
@@ -62,9 +62,9 @@ class CollectionsLegacySeqSpec extends PortSuite:
   test("everything else a Stack is sent is answered by the Seq arms, through the re-entry") {
     // `Stack extends Vector extends List`: `get`/`size` are List's members and get List's rewrites,
     // which is the fallback arm at the foot of `rewrite` and not a second copy of the table.
-    assert(clue(out).contains("this.stack(0)"))   // get(i) -> apply
+    assert(clue(out).contains("this.stack(0)")) // get(i) -> apply
     assert(clue(out).contains("this.stack.size")) // parenless
-    assert(clue(out).contains("this.legacy(i)"))  // the same arm, reached at Kind.Seq
+    assert(clue(out).contains("this.legacy(i)")) // the same arm, reached at Kind.Seq
     assert(clue(out).contains("this.legacy += s"))
   }
 

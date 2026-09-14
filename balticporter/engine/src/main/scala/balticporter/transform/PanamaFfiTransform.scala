@@ -2,10 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** Replaces each JNI `native` method with a Project Panama (`java.lang.foreign`) downcall: a
-  * private `MethodHandle` field built from the signature, and a body invoking the handle and
-  * casting to the declared return type. Detection is structural (`isNative`). First cut: JVM
-  * downcalls only (JDK 22+ `invokeExact`); a Scala Native linker backend is a refinement point. */
+/** Replaces each JNI `native` method with a Project Panama (`java.lang.foreign`) downcall: a private `MethodHandle` field built from the signature, and a body invoking the handle and casting to the
+  * declared return type. Detection is structural (`isNative`). First cut: JVM downcalls only (JDK 22+ `invokeExact`); a Scala Native linker backend is a refinement point.
+  */
 final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) extends Phase:
   def name = "jni->panama"
 
@@ -13,8 +12,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
   private var mhRef: TypeRepr = TypeRepr.NoType
 
   override def run(program: Program): Program =
-    val natives = program.symbols.all
-      .filter(s => s.info.isInstanceOf[TypeRepr.MethodType] && isNative(s)).map(_.id).toSet
+    val natives = program.symbols.all.filter(s => s.info.isInstanceOf[TypeRepr.MethodType] && isNative(s)).map(_.id).toSet
     if natives.isEmpty then return program
 
     var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
@@ -33,33 +31,34 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
 
     natives.foreach { m =>
       program.symbolOf(m).foreach { s =>
-        record(Decision(
-          kind       = Decision.Kind.RetypedSignature,
-          subject    = m,
-          subjectFqn = s.fullName,
-          detail = Map(
-            "from" -> "java `native` (JNI), declared without a body",
-            "to"   -> s"a Panama downcall through the generated `${names(m)}` handle",
-            "why"  -> ("JNI glue is hand-written C on the JVM and absent from every other backend; " +
-              "a `java.lang.foreign` downcall is derivable from the signature alone"),
-          ),
-          reason = Reason.Universal("jni-to-panama"),
-          origin = Decision.originOf(program, s.id),
-        ))
+        record(
+          Decision(
+            kind = Decision.Kind.RetypedSignature,
+            subject = m,
+            subjectFqn = s.fullName,
+            detail = Map(
+              "from" -> "java `native` (JNI), declared without a body",
+              "to" -> s"a Panama downcall through the generated `${names(m)}` handle",
+              "why" -> ("JNI glue is hand-written C on the JVM and absent from every other backend; " +
+                "a `java.lang.foreign` downcall is derivable from the signature alone")
+            ),
+            reason = Reason.Universal("jni-to-panama"),
+            origin = Decision.originOf(program, s.id)
+          )
+        )
       }
     }
 
     // drop `native` from the rewritten methods — they now have a body
-    val symbols0 = program.symbols.all.map(s =>
-      if natives(s.id) then s.copy(flags = s.flags.copy(isNative = false)) else s)
-    val symbols = SymbolTable(symbols0 ++ minted)
+    val symbols0  = program.symbols.all.map(s => if natives(s.id) then s.copy(flags = s.flags.copy(isNative = false)) else s)
+    val symbols   = SymbolTable(symbols0 ++ minted)
     given Program = program.rebuilt(symbols = symbols)
 
     val units = program.units.map(u => rewriteClass(u, natives, handleSym))
     program.rebuilt(units, symbols)
 
   private def rewriteClass(cd: Tree.ClassDef, natives: Set[SymId], handleSym: Map[SymId, SymId])(using Program): Tree.ClassDef =
-    val o = Origin.synthetic
+    val o    = Origin.synthetic
     val body = cd.body.flatMap {
       case d: Tree.DefDef if natives(d.symbol) =>
         val hs    = handleSym(d.symbol)
@@ -67,21 +66,20 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
         val bound = d.copy(rhs = Some(Tree.Opaque(invoke(d, hs), d.returnTpt.tpe, o)))
         List(field, bound)
       case c: Tree.ClassDef => List(rewriteClass(c, natives, handleSym))
-      case other            => List(other)
+      case other => List(other)
     }
     cd.copy(body = body)
 
   // ---- FFI codegen ----
 
-  /** The handle field's name for every native at once, keyed on a fact about the METHOD, never on
-    * the frontend's mint counter (`ENGINE-LIMITS.md` M10 — moved 122 digests once). A lone native:
-    * `freeMemory$handle`. An overload set: `copyJni$0$handle`, ordered by erased signature,
-    * tiebroken by declaration position. [[invoke]] reads the name back off the minted symbol. */
+  /** The handle field's name for every native at once, keyed on a fact about the METHOD, never on the frontend's mint counter (`ENGINE-LIMITS.md` M10 — moved 122 digests once). A lone native:
+    * `freeMemory$handle`. An overload set: `copyJni$0$handle`, ordered by erased signature, tiebroken by declaration position. [[invoke]] reads the name back off the minted symbol.
+    */
   private[balticporter] def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =
     given Program = program
-    def nameOf(m: SymId): String  = program.symbolOf(m).map(_.name).getOrElse("fn")
+    def nameOf(m:  SymId): String = program.symbolOf(m).map(_.name).getOrElse("fn")
     def ownerOf(m: SymId): SymId  = program.symbolOf(m).map(_.owner).getOrElse(SymId.None)
-    def sigOf(m: SymId): String   = program.symbolOf(m).map(_.info) match
+    def sigOf(m: SymId):   String = program.symbolOf(m).map(_.info) match
       case Some(TypeRepr.MethodType(ps, r, _)) =>
         ps.map((_, t) => TirPrinter.tpe(t, TirPrinter.Style.canonical)).mkString(",") +
           ":" + TirPrinter.tpe(r, TirPrinter.Style.canonical)
@@ -129,8 +127,8 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
   private def typeStr(t: TypeRepr)(using p: Program): String = fullName(t) match
     case "" => "scala.Any"
     case fn => fn
-  private def isVoid(t: TypeRepr)(using p: Program): Boolean = fullName(t) == "scala.Unit"
-  private def fullName(t: TypeRepr)(using p: Program): String = headSym(t).flatMap(p.symbolOf).map(_.fullName).getOrElse("")
+  private def isVoid(t:   TypeRepr)(using p: Program): Boolean = fullName(t) == "scala.Unit"
+  private def fullName(t: TypeRepr)(using p: Program): String  = headSym(t).flatMap(p.symbolOf).map(_.fullName).getOrElse("")
 
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)

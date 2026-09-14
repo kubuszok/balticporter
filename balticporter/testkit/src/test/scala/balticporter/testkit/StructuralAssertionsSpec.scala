@@ -49,7 +49,8 @@ class StructuralAssertionsSpec extends PortSuite:
         |public class Reflective {
         |  public Object read(Class<?> c) throws Exception { return c.getDeclaredField("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val fs = PortabilityCheck.check(p.after).map(_.report("portability")(using p.after))
     assertFinds(fs, "java.lang.Class#getDeclaredField", detail = "reflective member access is JVM-only")
   }
@@ -72,12 +73,11 @@ class StructuralAssertionsSpec extends PortSuite:
 
   // -- the preview fixture ------------------------------------------------------------------------
 
-  /** a phase that leaves a jump with NO enclosing loop — the shape the emitter's only refusal
-    * mechanism exists for, and one no Java source can express (javac rejects it). Constructing it
-    * here is the honest fixture: the refusal is reachable at all only because a PHASE can produce a
-    * tree the frontend never would. */
+  /** a phase that leaves a jump with NO enclosing loop — the shape the emitter's only refusal mechanism exists for, and one no Java source can express (javac rejects it). Constructing it here is the
+    * honest fixture: the refusal is reachable at all only because a PHASE can produce a tree the frontend never would.
+    */
   private class StrandJump extends Phase:
-    def name: String = "test/strand-jump"
+    def name:                                                       String      = "test/strand-jump"
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if d.rhs.isEmpty || !p.symbolOf(d.symbol).exists(_.name == "go") then d
       else d.copy(rhs = Some(Tree.Break(Some("nowhere"), TypeRepr.NoType, d.origin)))
@@ -127,14 +127,13 @@ class StructuralAssertionsSpec extends PortSuite:
     assertEquals(vend.plan.mode, RuntimeMode.Vendored)
   }
 
-
   // -- assertConsults / assertNotConsults / assertCites -------------------------------------------
 
   private val identity = "public class I { boolean f(Object a, Object b) { return a == b; } }"
 
   test("assertConsults sees a difference the frontend CONSIDERED, which the text cannot state") {
     val p = port(identity)
-    assertEmits(p, " eq ")                                        // what the text can say
+    assertEmits(p, " eq ") // what the text can say
     assertConsults(p, balticporter.catalog.JS.E(1), fired = true) // what only the log can
   }
 

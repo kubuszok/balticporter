@@ -1,15 +1,13 @@
 package balticporter.core
 
-import balticporter.core.ManifestAgreement.{BasePort, Kind}
+import balticporter.core.ManifestAgreement.{ BasePort, Kind }
 import balticporter.tir.SrcMap
 
 /** PER-LOCATION SELECTION AS SHARED SURFACE — the §1.5 half of `resolutions`. */
 class ResolutionAgreementSpec extends munit.FunSuite:
 
-  private def mapOf(module: String = "base", emitted: List[String] = Nil,
-                    dropTypes: Set[String] = Set.empty, injected: Set[String] = Set.empty) =
-    PortMap.of(module, "eng", emitted, SrcMap.Recording(Nil), dropTypes, Set.empty, injected,
-      Set.empty, Map.empty)
+  private def mapOf(module: String = "base", emitted: List[String] = Nil, dropTypes: Set[String] = Set.empty, injected: Set[String] = Set.empty) =
+    PortMap.of(module, "eng", emitted, SrcMap.Recording(Nil), dropTypes, Set.empty, injected, Set.empty, Map.empty)
 
   private def kinds(fs: List[ManifestAgreement.Finding]) =
     fs.map(_.kind).filterNot(_ == Kind.InheritedKeyNeverFired).sortBy(_.toString)
@@ -22,8 +20,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("resolutions are INHERITED — a dependent applies its base's selections without restating them") {
-    val base = PortManifest(name = "base", governs = Set("up"),
-                            resolutions = Map("up.A#m" -> "wrap"))
+    val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
     val dep  = base.extendedBy(PortManifest(name = "dep", resolutions = Map("dep.B#n" -> "copy")))
     assertEquals(dep.effectiveResolutions, Map("up.A#m" -> "wrap", "dep.B#n" -> "copy"))
   }
@@ -139,8 +136,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   test("a BASE's own selections are its own business — nothing here reports them") {
     val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
     val dep  = base.extendedBy(PortManifest(name = "dep"))
-    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
-                 Nil)
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))), Nil)
   }
 
   // -------------------------------------------------------------------------------------------
@@ -155,8 +151,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
     val dep  = PortManifest(name = "dep").mirroring(base)
     assertEquals(dep.policyChain.map(_.name), List("dep"))
     assertEquals(dep.resolutionConflicts, Nil)
-    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
-      .filter(_.kind == Kind.MissingResolution)
+    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest"))).filter(_.kind == Kind.MissingResolution)
     assertEquals(fs.map(_.subject), List("up.A#m"))
     assert(fs.forall(_.kind.fatal))
     assert(clue(fs.head.detail).contains("""selects "wrap" here; this module selects nothing"""))
@@ -165,8 +160,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   test("…and one that RESTATES it differently is the same divergence, reported the same way") {
     val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
     val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m" -> "copy")).mirroring(base)
-    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
-      .filter(_.kind == Kind.ResolutionDivergence)
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest"))).filter(_.kind == Kind.ResolutionDivergence)
     assertEquals(fs.map(_.subject), List("up.A#m"))
     assert(clue(fs.head.detail).contains("""selects "wrap", this module "copy""""))
   }
@@ -174,8 +168,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
   test("…and restating it IDENTICALLY is not a finding — that is what `mirroring` is FOR") {
     val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
     val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m" -> "wrap")).mirroring(base)
-    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
-                 Nil)
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))), Nil)
   }
 
   test("…nor under the OTHER LEGAL SPELLING, which a string comparison called a MISSING selection") {
@@ -183,15 +176,13 @@ class ResolutionAgreementSpec extends munit.FunSuite:
     // than its base did. Compared by string that is `MissingResolution`, fatal, for agreeing.
     val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
     val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "wrap")).mirroring(base)
-    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
-                 Nil)
+    assertEquals(kinds(check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))), Nil)
   }
 
   test("…and the same pair with two IDS is the divergence, naming the spelling that differs") {
     val base = PortManifest(name = "base", governs = Set("up"), resolutions = Map("up.A#m" -> "wrap"))
     val dep  = PortManifest(name = "dep", resolutions = Map("up.A#m(int)" -> "copy")).mirroring(base)
-    val fs = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))
-      .filter(_.kind == Kind.ResolutionDivergence)
+    val fs   = check(dep, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest"))).filter(_.kind == Kind.ResolutionDivergence)
     assertEquals(fs.map(_.subject), List("up.A#m"))
     assert(clue(fs.head.detail).contains("the same member under the other spelling"))
   }
@@ -214,8 +205,7 @@ class ResolutionAgreementSpec extends munit.FunSuite:
     assert(clue(fs.head.detail).contains("""`base` selects "wrap""""))
     // …and a module that adds a key of its own reports nothing at all.
     val other = base.extendedBy(PortManifest(name = "dep", resolutions = Map("dep.B#n" -> "copy")))
-    assertEquals(kinds(check(other, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))),
-                 Nil)
+    assertEquals(kinds(check(other, List(BasePort(base, Some(mapOf(emitted = List("up.A"))), "run-latest")))), Nil)
   }
 
   // -------------------------------------------------------------------------------------------

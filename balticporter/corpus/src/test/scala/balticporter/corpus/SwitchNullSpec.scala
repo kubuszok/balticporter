@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{SwitchNullCheck, Tree}
+import balticporter.tir.{ SwitchNullCheck, Tree }
 import balticporter.tir.SwitchNullCheck.Issue
 
 /** A java `switch` on a REFERENCE type NPEs on a null selector (JLS 14.11); a `match` falls out. */
@@ -31,7 +31,8 @@ class SwitchNullSpec extends PortSuite:
   }
 
   test("an ENUM selector too — JLS 14.11.2 is the same rule") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         enum E { A, B }
@@ -41,12 +42,14 @@ class SwitchNullSpec extends PortSuite:
           }
           return 0;
         }
-      }""")
+      }"""
+    )
     assertEmits(p, "case null => throw new java.lang.NullPointerException")
   }
 
   test("a BOXED selector too — the unboxing NPE is the same general text") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f(Integer n) {
@@ -55,12 +58,14 @@ class SwitchNullSpec extends PortSuite:
           }
           return 0;
         }
-      }""")
+      }"""
+    )
     assertEmits(p, "case null => throw new java.lang.NullPointerException")
   }
 
   test("a PRIMITIVE selector gets nothing — an `int` switch can never see null") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f(char c) {
@@ -69,12 +74,14 @@ class SwitchNullSpec extends PortSuite:
           }
           return 0;
         }
-      }""")
+      }"""
+    )
     assertNotEmits(p, "case null =>")
   }
 
   test("…and neither does a `long` or an `int`, which is most of the corpus's switches") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f(int n, long m) {
@@ -82,14 +89,16 @@ class SwitchNullSpec extends PortSuite:
           switch (m) { case 2L: return 2; }
           return 0;
         }
-      }""")
+      }"""
+    )
     assertNotEmits(p, "case null =>")
   }
 
   test("java that already writes `case null` keeps its own behaviour — no synthetic throw") {
     // SE21's pattern-switch opt-out (JLS 14.11.1). The label is java deliberately handling null,
     // and a throw ahead of it would invert exactly what it exists to state.
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f(String s) {
@@ -99,7 +108,8 @@ class SwitchNullSpec extends PortSuite:
             default: return 0;
           }
         }
-      }""")
+      }"""
+    )
     assertNotEmits(p, "throw new java.lang.NullPointerException")
     assertEmits(p, "case null =>")
   }
@@ -128,7 +138,8 @@ class SwitchNullSpec extends PortSuite:
   }
 
   test("a primitive switch is not a finding — 0 even un-repaired") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f(int n) {
@@ -137,12 +148,14 @@ class SwitchNullSpec extends PortSuite:
           }
           return 0;
         }
-      }""")
+      }"""
+    )
     assertEquals(SwitchNullCheck.check(p.after, p.after.units, (_: Tree.Match) => false), Nil)
   }
 
   test("the guard set is keyed by TOKEN — a guarded switch may not vouch for its sibling") {
-    val p = port("""
+    val p = port(
+      """
       package demo;
       public class C {
         int f(String a, String b) {
@@ -150,7 +163,8 @@ class SwitchNullSpec extends PortSuite:
           switch (b) { case "y": return 2; }
           return 0;
         }
-      }""")
+      }"""
+    )
     val ms = p.after.units.flatMap(collectMatches(_)(using p.after))
     assertEquals(clue(ms).size, 2)
     val byToken = SwitchNullCheck.check(p.after, p.after.units, m => m.id == ms.head.id)
@@ -162,7 +176,7 @@ class SwitchNullSpec extends PortSuite:
     balticporter.tir.StandardTraversal.scanClassDef(u, ()) { (_, t) =>
       t match
         case m: Tree.Match => out += m
-        case _             => ()
+        case _ => ()
       ()
     }
     out.toList

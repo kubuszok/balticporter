@@ -1,14 +1,13 @@
 package balticporter.runner
 
-import balticporter.core.{FrontendConfig, ManifestAgreement, PortManifest, Provenance, RuntimeMode}
-import balticporter.tir.{ConfigError, Descriptor, Param, RuleScope}
-import balticporter.transform.{BeanPropertyTransform, CollectionsTransform, MutableParamsTransform,
-  TestFrameworkTransform, TypeRedirectTransform}
+import balticporter.core.{ FrontendConfig, ManifestAgreement, PortManifest, Provenance, RuntimeMode }
+import balticporter.tir.{ ConfigError, Descriptor, Param, RuleScope }
+import balticporter.transform.{ BeanPropertyTransform, CollectionsTransform, MutableParamsTransform, TestFrameworkTransform, TypeRedirectTransform }
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** The config front door, held to ONE property: it constructs the same values the Scala path
-  * constructs. */
+/** The config front door, held to ONE property: it constructs the same values the Scala path constructs.
+  */
 class PortConfigSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
@@ -17,8 +16,10 @@ class PortConfigSpec extends munit.FunSuite:
     val root = Files.createTempDirectory("portconf")
     val src  = root.resolve("java/com/demo")
     Files.createDirectories(src)
-    Files.writeString(src.resolve("Widget.java"),
-      "package com.demo;\npublic class Widget { public java.util.List<String> labels() { return null; } }\n")
+    Files.writeString(
+      src.resolve("Widget.java"),
+      "package com.demo;\npublic class Widget { public java.util.List<String> labels() { return null; } }\n"
+    )
     Files.writeString(src.resolve("Gadget.java"), "package com.demo;\npublic class Gadget {}\n")
     Files.writeString(src.resolve("package-info.java"), "package com.demo;\n")
     extra.foreach((name, text) => Files.writeString(root.resolve(name), text))
@@ -69,38 +70,44 @@ class PortConfigSpec extends munit.FunSuite:
         |}
         |runtimeMode = "vendored"
         |nextStep    = "compile it"
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val dir = f.getParent
 
     val fromConf = PortConfig.load(f)
-    val byHand = PortRun(
-      label     = "demo",
-      portRoot  = dir.resolve("out"),
+    val byHand   = PortRun(
+      label = "demo",
+      portRoot = dir.resolve("out"),
       sourceSet = SourceSet.Test,
       // `resolutionExcludes` is RELATIVE to whichever root contains it and is NOT resolved against
       // the config's directory — the same string has to answer for every root, exactly as
       // `includeGlobs`/`excludeGlobs` are relative to `sourceRoot`. Spelled here so the round trip
       // fails if the loader ever starts resolving it as a path.
-      frontend  = FrontendConfig(dir.resolve("java"),
-                    List("com/demo/Gadget.java", "com/demo/Widget.java"),
-                    Nil, List(dir.resolve("java")), List("com/demo/emu")),
-      phases    = Nil,
-      manifest  = Some(PortManifest(
-        name           = "demo",
-        governs        = Set("com.demo"),
-        dropTypes      = Set("com.demo.Gone"),
-        dropMethods    = Set("com.demo.Widget#gone()"),
-        packageRenames = Map("com.demo" -> "port.demo"),
-        typeRenames        = Map("com.demo.Widget" -> "Gizmo"),
-        subPackages        = Map("com.demo.Gadget" -> "internal"),
-        flattenNestedTypes = Set("com.demo.Widget$Inner"),
-        allowPackageSplit  = Set("com.demo.Gadget"),
-        surface        = List(new CollectionsTransform, new MutableParamsTransform),
-      )),
-      provenance = Some(Provenance("demo-lib", "abc123", "MIT", "src/main/java",
-                     dir.resolve("java").toString)),
+      frontend = FrontendConfig(
+        dir.resolve("java"),
+        List("com/demo/Gadget.java", "com/demo/Widget.java"),
+        Nil,
+        List(dir.resolve("java")),
+        List("com/demo/emu")
+      ),
+      phases = Nil,
+      manifest = Some(
+        PortManifest(
+          name = "demo",
+          governs = Set("com.demo"),
+          dropTypes = Set("com.demo.Gone"),
+          dropMethods = Set("com.demo.Widget#gone()"),
+          packageRenames = Map("com.demo" -> "port.demo"),
+          typeRenames = Map("com.demo.Widget" -> "Gizmo"),
+          subPackages = Map("com.demo.Gadget" -> "internal"),
+          flattenNestedTypes = Set("com.demo.Widget$Inner"),
+          allowPackageSplit = Set("com.demo.Gadget"),
+          surface = List(new CollectionsTransform, new MutableParamsTransform)
+        )
+      ),
+      provenance = Some(Provenance("demo-lib", "abc123", "MIT", "src/main/java", dir.resolve("java").toString)),
       runtimeMode = RuntimeMode.Vendored,
-      nextStep    = "compile it",
+      nextStep = "compile it"
     )
 
     assertEquals(fromConf.label, byHand.label)
@@ -152,20 +159,31 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("a scope reaches the phase, and an empty one is the pre-scope default") {
-    def scopeOf(conf: String) = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c.scope }.get
+    def scopeOf(conf: String) = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c.scope }.get
     assertEquals(
-      scopeOf(Minimal.replace("""manifest { name = "demo" }""",
-        """manifest { name = "demo", surface = [ { transform = "collections" } ] }""")),
-      RuleScope.Everywhere(): RuleScope)
+      scopeOf(
+        Minimal.replace("""manifest { name = "demo" }""", """manifest { name = "demo", surface = [ { transform = "collections" } ] }""")
+      ),
+      RuleScope.Everywhere(): RuleScope
+    )
     assertEquals(
-      scopeOf(Minimal.replace("""manifest { name = "demo" }""",
-        """manifest { name = "demo", surface = [ { transform = "collections", scope { except = ["com.demo.Bridge"] } } ] }""")),
-      RuleScope.Everywhere(Set("com.demo.Bridge")): RuleScope)
+      scopeOf(
+        Minimal.replace(
+          """manifest { name = "demo" }""",
+          """manifest { name = "demo", surface = [ { transform = "collections", scope { except = ["com.demo.Bridge"] } } ] }"""
+        )
+      ),
+      RuleScope.Everywhere(Set("com.demo.Bridge")): RuleScope
+    )
     assertEquals(
-      scopeOf(Minimal.replace("""manifest { name = "demo" }""",
-        """manifest { name = "demo", surface = [ { transform = "collections", scope { only = ["com.demo"] } } ] }""")),
-      RuleScope.Only(Set("com.demo")): RuleScope)
+      scopeOf(
+        Minimal.replace(
+          """manifest { name = "demo" }""",
+          """manifest { name = "demo", surface = [ { transform = "collections", scope { only = ["com.demo"] } } ] }"""
+        )
+      ),
+      RuleScope.Only(Set("com.demo")): RuleScope
+    )
   }
 
   // -------------------------------------------------------------------------------------------
@@ -173,13 +191,14 @@ class PortConfigSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("retargetRewrites with Rename entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" { "get/1" = "apply", "set/1" = "addOne" } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     assertEquals(ct.retargetRewrites.size, 1)
     val tbl = ct.retargetRewrites("com.demo.Widget")
     assertEquals(tbl(("get", 1)), CollectionsTransform.RetargetRewrite.Rename("apply"))
@@ -187,245 +206,256 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("retargetRewrites with BoolDispatch entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "removeValue/2" { boolDispatch = 1, onTrue = "removeByRef", onFalse = "removeByVal" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("removeValue", 2)),
-      CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))
+    assertEquals(tbl(("removeValue", 2)), CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))
   }
 
   test("retargetRewrites with Construct entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "lowlevel.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "<init>/0" { companion = "lowlevel.X", factory = "apply" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("<init>", 0)),
-      CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply"))
+    assertEquals(tbl(("<init>", 0)), CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply"))
   }
 
   test("retargetRewrites with Construct entries parse dropTrailing and fillTypeArgs") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "lowlevel.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "<init>/4" { companion = "lowlevel.X", factory = "apply", dropTrailing = 2, fillTypeArgs = true }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("<init>", 4)),
-      CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply", dropTrailing = 2, fillTypeArgs = true))
+    assertEquals(
+      tbl(("<init>", 4)),
+      CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply", dropTrailing = 2, fillTypeArgs = true)
+    )
   }
 
   test("retargetRewrites with ForEach entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "entries/0" { forEach = "foreachEntry", arity = 2 }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("entries", 0)),
-      CollectionsTransform.RetargetRewrite.ForEach("foreachEntry", 2))
+    assertEquals(tbl(("entries", 0)), CollectionsTransform.RetargetRewrite.ForEach("foreachEntry", 2))
   }
 
   test("retargetRewrites with ForEach defaults arity to 1") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "keys/0" { forEach = "foreachKey" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("keys", 0)),
-      CollectionsTransform.RetargetRewrite.ForEach("foreachKey", 1))
+    assertEquals(tbl(("keys", 0)), CollectionsTransform.RetargetRewrite.ForEach("foreachKey", 1))
   }
 
   test("retargetRewrites with Collect entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "keys/0" { collect = "foreachKey", into = "lowlevel.util.DynamicArray" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("keys", 0)),
-      CollectionsTransform.RetargetRewrite.Collect("foreachKey", "lowlevel.util.DynamicArray"))
+    assertEquals(tbl(("keys", 0)), CollectionsTransform.RetargetRewrite.Collect("foreachKey", "lowlevel.util.DynamicArray"))
   }
 
   test("retargetRewrites with Collect defaults into to DynamicArray") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "values/0" { collect = "foreachValue" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("values", 0)),
-      CollectionsTransform.RetargetRewrite.Collect("foreachValue", "lowlevel.util.DynamicArray"))
+    assertEquals(tbl(("values", 0)), CollectionsTransform.RetargetRewrite.Collect("foreachValue", "lowlevel.util.DynamicArray"))
   }
 
   test("retargetRewrites with Chain entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "iterator/0" { chain = ["orderedItems", "iterator"], parens = ["orderedItems"] }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("iterator", 0)),
-      CollectionsTransform.RetargetRewrite.Chain(List("orderedItems", "iterator"), parens = Set("orderedItems")))
+    assertEquals(
+      tbl(("iterator", 0)),
+      CollectionsTransform.RetargetRewrite.Chain(List("orderedItems", "iterator"), parens = Set("orderedItems"))
+    )
   }
 
   test("retargetRewrites with Chain and dropArgs are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "toArray/1" { chain = ["toArray"], dropArgs = true }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("toArray", 1)),
-      CollectionsTransform.RetargetRewrite.Chain(List("toArray"), dropArgs = true))
+    assertEquals(tbl(("toArray", 1)), CollectionsTransform.RetargetRewrite.Chain(List("toArray"), dropArgs = true))
   }
 
   test("retargetRewrites with FieldWrite entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "size/0" { fieldWrite = "truncate" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("size", 0)),
-      CollectionsTransform.RetargetRewrite.FieldWrite("size", "truncate"))
+    assertEquals(tbl(("size", 0)), CollectionsTransform.RetargetRewrite.FieldWrite("size", "truncate"))
   }
 
   test("retargetRewrites with IndexedField entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "items/0" { indexedField = "items" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("items", 0)),
-      CollectionsTransform.RetargetRewrite.IndexedField("items"))
+    assertEquals(tbl(("items", 0)), CollectionsTransform.RetargetRewrite.IndexedField("items"))
   }
 
   test("retargetRewrites with Template entries are parsed from config") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "incr/2" { template = "{ val i = $0; $recv(i) = $recv(i) + $1 }" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(tbl(("incr", 2)),
-      CollectionsTransform.RetargetRewrite.Template("{ val i = $0; $recv(i) = $recv(i) + $1 }"))
+    assertEquals(tbl(("incr", 2)), CollectionsTransform.RetargetRewrite.Template("{ val i = $0; $recv(i) = $recv(i) + $1 }"))
   }
 
   test("retargetRewrites with descriptor key are parsed into retargetRewritesByDesc") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "<init>/(int)" = "apply"
         |    "<init>/(Array)" { companion = "scala.X", factory = "from" }
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     assert(ct.retargetRewrites.get("com.demo.Widget").forall(_.isEmpty))
     val tbl = ct.retargetRewritesByDesc("com.demo.Widget")
-    assertEquals(tbl(("<init>", Descriptor(List(Param.Prim("int"))))),
-      CollectionsTransform.RetargetRewrite.Rename("apply"))
-    assertEquals(tbl(("<init>", Descriptor(List(Param.Named("Array"))))),
-      CollectionsTransform.RetargetRewrite.Construct("scala.X", "from"))
+    assertEquals(tbl(("<init>", Descriptor(List(Param.Prim("int"))))), CollectionsTransform.RetargetRewrite.Rename("apply"))
+    assertEquals(
+      tbl(("<init>", Descriptor(List(Param.Named("Array"))))),
+      CollectionsTransform.RetargetRewrite.Construct("scala.X", "from")
+    )
   }
 
   test("retargetRewrites mixes arity and descriptor keys for the same source") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "<init>/0" = "apply"
         |    "<init>/(int)" = "apply"
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct       = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val arityTbl = ct.retargetRewrites("com.demo.Widget")
-    assertEquals(arityTbl(("<init>", 0)),
-      CollectionsTransform.RetargetRewrite.Rename("apply"))
+    assertEquals(arityTbl(("<init>", 0)), CollectionsTransform.RetargetRewrite.Rename("apply"))
     val descTbl = ct.retargetRewritesByDesc("com.demo.Widget")
-    assertEquals(descTbl(("<init>", Descriptor(List(Param.Prim("int"))))),
-      CollectionsTransform.RetargetRewrite.Rename("apply"))
+    assertEquals(descTbl(("<init>", Descriptor(List(Param.Prim("int"))))), CollectionsTransform.RetargetRewrite.Rename("apply"))
   }
 
   test("retargetRewrites with multi-param descriptor key") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
         |  retargetRewrites { "com.demo.Widget" {
         |    "<init>/(boolean,int)" = "apply"
         |  } }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct  = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     val tbl = ct.retargetRewritesByDesc("com.demo.Widget")
-    assertEquals(tbl(("<init>", Descriptor(List(Param.Prim("boolean"), Param.Prim("int"))))),
-      CollectionsTransform.RetargetRewrite.Rename("apply"))
+    assertEquals(
+      tbl(("<init>", Descriptor(List(Param.Prim("boolean"), Param.Prim("int"))))),
+      CollectionsTransform.RetargetRewrite.Rename("apply")
+    )
   }
 
   test("empty retargetRewrites is the default when not specified") {
-    val conf = Minimal.replace("""manifest { name = "demo" }""",
+    val conf = Minimal.replace(
+      """manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",
         |  retarget { "com.demo.Widget" = "scala.X" }
-        |} ] }""".stripMargin)
-    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
-      .collectFirst { case c: CollectionsTransform => c }.get
+        |} ] }""".stripMargin
+    )
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface.collectFirst { case c: CollectionsTransform => c }.get
     assert(ct.retargetRewrites.isEmpty)
   }
 
@@ -452,13 +482,17 @@ class PortConfigSpec extends munit.FunSuite:
         |input  { sourceRoot = "java" }
         |output { portRoot = "out", sourceSet = "test" }
         |manifest { name = "dep", surface = [ { transform = "test-framework" } ] }
-        |""".stripMargin, Map("base.conf" -> base))
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
 
-    val m = PortConfig.load(f).manifest.get
+    val m      = PortConfig.load(f).manifest.get
     val byHand = PortManifest(
-      name = "base", dropTypes = Set("com.demo.Gone"),
+      name = "base",
+      dropTypes = Set("com.demo.Gone"),
       packageRenames = Map("com.demo" -> "port.demo"),
-      surface = List(new CollectionsTransform), inject = List(Path.of("java")),
+      surface = List(new CollectionsTransform),
+      inject = List(Path.of("java"))
     ).extendedBy(PortManifest(name = "dep", surface = List(new TestFrameworkTransform())))
 
     assertEquals(m.name, "dep")
@@ -481,10 +515,13 @@ class PortConfigSpec extends munit.FunSuite:
         |output { portRoot = "out", sourceSet = "main" }
         |manifest { name = "a" }
         |""".stripMargin,
-      Map("b.conf" ->
-        """base = "b.conf"
-          |manifest { name = "b" }
-          |""".stripMargin))
+      Map(
+        "b.conf" ->
+          """base = "b.conf"
+            |manifest { name = "b" }
+            |""".stripMargin
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("base chain"))
   }
@@ -501,17 +538,21 @@ class PortConfigSpec extends munit.FunSuite:
     // b.conf names ITSELF through a symlinked directory that points back at the conf's own dir
     try Files.createSymbolicLink(root.resolve("via"), root)
     catch case _: UnsupportedOperationException => assume(false, "filesystem without symlinks")
-    Files.writeString(root.resolve("b.conf"),
+    Files.writeString(
+      root.resolve("b.conf"),
       """base = "via/b.conf"
         |manifest { name = "b" }
-        |""".stripMargin)
-    Files.writeString(root.resolve("port.conf"),
+        |""".stripMargin
+    )
+    Files.writeString(
+      root.resolve("port.conf"),
       """label = "a"
         |base  = "b.conf"
         |input  { sourceRoot = "java" }
         |output { portRoot = "out", sourceSet = "main" }
         |manifest { name = "a" }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val e = intercept[ConfigError](PortConfig.load(root.resolve("port.conf")))
     assert(clue(e.getMessage).contains("base chain"))
   }
@@ -535,7 +576,9 @@ class PortConfigSpec extends munit.FunSuite:
         |input  { sourceRoot = "java" }
         |output { portRoot = "out", sourceSet = "test" }
         |manifest { name = "dep" }
-        |""".stripMargin, Map("base.conf" -> base))
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
     assertEquals(PortConfig.load(f).manifest.get.baseChain.map(_.name), List("base"))
   }
 
@@ -560,7 +603,9 @@ class PortConfigSpec extends munit.FunSuite:
           |input  { sourceRoot = "java" }
           |output { portRoot = "out", sourceSet = "test" }
           |manifest { name = "dep" }
-          |""".stripMargin, Map("base.conf" -> base))
+          |""".stripMargin,
+        Map("base.conf" -> base)
+      )
       val m = PortConfig.load(f).manifest.get
       // resolved against THE CONF FILE, like every other path a conf holds
       assertEquals(m.baseReports.map(_.getFileName.toString), List("published", "elsewhere"))
@@ -571,8 +616,7 @@ class PortConfigSpec extends munit.FunSuite:
       // …and ANCHORED, so a `{ transform = "port-map-migration" }` entry — which loads its maps at
       // CONSTRUCTION time, through a factory that takes nothing but its own view — reads the same
       // value `PortRun` will. One value, both readers (D6.5).
-      assertEquals(balticporter.tir.DebugFlags.baseReports.map(_.getFileName.toString),
-                   List("published", "elsewhere"))
+      assertEquals(balticporter.tir.DebugFlags.baseReports.map(_.getFileName.toString), List("published", "elsewhere"))
     finally
       prev match
         case Some(v) => System.setProperty("balticporter.baseReports", v)
@@ -586,18 +630,31 @@ class PortConfigSpec extends munit.FunSuite:
     // compared is `surfaceFingerprint`, because that is what decides whether two modules agree
     // about the emitted surface (§1.5), and because an entry with no renames must still render
     // exactly what it always did or every base/dependent pair predating this feature disagrees.
-    def fp(entries: String) = PortConfig.load(fixture(Minimal.replace(
-      """manifest { name = "demo" }""",
-      s"""manifest { name = "demo", surface = [ { transform = "type-redirect", redirects { $entries } } ] }"""
-    ))).manifest.get.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.surfaceFingerprint }.get
+    def fp(entries: String) = PortConfig
+      .load(
+        fixture(
+          Minimal.replace(
+            """manifest { name = "demo" }""",
+            s"""manifest { name = "demo", surface = [ { transform = "type-redirect", redirects { $entries } } ] }"""
+          )
+        )
+      )
+      .manifest
+      .get
+      .effectiveSurface
+      .collectFirst { case t: TypeRedirectTransform => t.surfaceFingerprint }
+      .get
 
     assertEquals(fp(""""a.B" = "c.D""""), "a.B->c.D")
     assertEquals(fp("""  "a.B" = { to = "c.D" }  """), "a.B->c.D")
     assertEquals(
-      fp("""  "a.B" = "c.D"
-           |  "a.Disposable" = { to = "java.lang.AutoCloseable"
-           |                     memberRenames { dispose = "close" } }  """.stripMargin),
-      "a.B->c.D,a.Disposable->java.lang.AutoCloseable[dispose=close]")
+      fp(
+        """  "a.B" = "c.D"
+          |  "a.Disposable" = { to = "java.lang.AutoCloseable"
+          |                     memberRenames { dispose = "close" } }  """.stripMargin
+      ),
+      "a.B->c.D,a.Disposable->java.lang.AutoCloseable[dispose=close]"
+    )
   }
 
   test("`bean-properties` reads BOTH entry shapes out of one map, and the TARGET is in the fingerprint") {
@@ -605,32 +662,48 @@ class PortConfigSpec extends munit.FunSuite:
     // matters is the LAST one: two entries that name the same accessors and ask for different
     // SHAPES must not compare equal, or `SurfaceMissing` cannot see the difference and a same-name
     // pair can be neither compared nor composed (`ENGINE-LIMITS.md` CT9).
-    def fp(entries: String) = PortConfig.load(fixture(Minimal.replace(
-      """manifest { name = "demo" }""",
-      s"""manifest { name = "demo", surface = [ { transform = "bean-properties", pairs { $entries } } ] }"""
-    ))).manifest.get.effectiveSurface.collectFirst { case t: BeanPropertyTransform => t.surfaceFingerprint }.get
+    def fp(entries: String) = PortConfig
+      .load(
+        fixture(
+          Minimal.replace(
+            """manifest { name = "demo" }""",
+            s"""manifest { name = "demo", surface = [ { transform = "bean-properties", pairs { $entries } } ] }"""
+          )
+        )
+      )
+      .manifest
+      .get
+      .effectiveSurface
+      .collectFirst { case t: BeanPropertyTransform => t.surfaceFingerprint }
+      .get
 
     assertEquals(fp(""""a.B#x" = "getX/setX""""), "a.B#x=getX/setX>def-pair")
     assertEquals(fp("""  "a.B#x" = { accessors = "getX/setX" }  """), "a.B#x=getX/setX>def-pair")
-    assertEquals(fp("""  "a.B#x" = { accessors = "getX/setX", target = "var" }  """),
-      "a.B#x=getX/setX>var")
-    assertNotEquals(fp(""""a.B#x" = "getX/setX""""),
-      fp("""  "a.B#x" = { accessors = "getX/setX", target = "var" }  """))
+    assertEquals(fp("""  "a.B#x" = { accessors = "getX/setX", target = "var" }  """), "a.B#x=getX/setX>var")
+    assertNotEquals(fp(""""a.B#x" = "getX/setX""""), fp("""  "a.B#x" = { accessors = "getX/setX", target = "var" }  """))
   }
 
   test("…and a `target` outside the closed set names every spelling rather than defaulting") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "bean-properties",
-        |  pairs { "a.B#x" = { accessors = "getX", target = "lazy-val" } } } ] }""".stripMargin))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [ { transform = "bean-properties",
+          |  pairs { "a.B#x" = { accessors = "getX", target = "lazy-val" } } } ] }""".stripMargin
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("def-pair"))
     assert(clue(e.getMessage).contains("val"))
   }
 
   test("a misspelt key INSIDE a bean-properties entry fails the run — the shape probe is not a read") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "bean-properties",
-        |  pairs { "a.B#x" = { accessor = "getX" } } } ] }""".stripMargin))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [ { transform = "bean-properties",
+          |  pairs { "a.B#x" = { accessor = "getX" } } } ] }""".stripMargin
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("accessor"))
   }
@@ -657,13 +730,16 @@ class PortConfigSpec extends munit.FunSuite:
         |output { portRoot = "out", sourceSet = "test" }
         |manifest { name = "dep"
         |  surface = [ { transform = "type-redirect", redirects { "other.Legacy" = "dep.Own" } } ] }
-        |""".stripMargin, Map("base.conf" -> base))
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
 
     val m = PortConfig.load(f).manifest.get
     assertEquals(m.effectiveSurface.map(_.name), List("type-redirect"))
     assertEquals(
       m.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.surfaceFingerprint }.get,
-      "com.demo.Gone->port.Kept,other.Legacy->dep.Own")
+      "com.demo.Gone->port.Kept,other.Legacy->dep.Own"
+    )
     assertEquals(m.surfaceFold.refusals, Nil)
     assertEquals(m.surfaceFold.ownKeys, Map("type-redirect" -> Set("other.Legacy")))
   }
@@ -683,7 +759,9 @@ class PortConfigSpec extends munit.FunSuite:
         |output { portRoot = "out", sourceSet = "test" }
         |manifest { name = "dep"
         |  surface = [ { transform = "type-redirect", redirects { "a.B" = "c.OTHER" } } ] }
-        |""".stripMargin, Map("base.conf" -> base))
+        |""".stripMargin,
+      Map("base.conf" -> base)
+    )
 
     val m = PortConfig.load(f).manifest.get
     assertEquals(m.effectiveSurface.size, 2, "a refused merge leaves the pre-merge pipeline")
@@ -693,9 +771,13 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("a misspelt key INSIDE a redirect entry fails the run — the shape probe is not a read") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "type-redirect",
-        |  redirects { "a.B" = { to = "c.D", memberRename { x = "y" } } } } ] }""".stripMargin))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [ { transform = "type-redirect",
+          |  redirects { "a.B" = { to = "c.D", memberRename { x = "y" } } } } ] }""".stripMargin
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("memberRename"))
   }
@@ -705,8 +787,9 @@ class PortConfigSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("an unknown transform names every factory the classpath actually offers") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "collectionz" } ] }"""))
+    val f = fixture(
+      Minimal.replace("""manifest { name = "demo" }""", """manifest { name = "demo", surface = [ { transform = "collectionz" } ] }""")
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("unknown transform 'collectionz'"))
     assert(clue(e.getMessage).contains("collections"))
@@ -717,8 +800,9 @@ class PortConfigSpec extends munit.FunSuite:
     // Not "unknown transform": a port told that would reasonably conclude the feature is missing.
     // It is not missing — it is manifest DATA, because it must run after every other phase and
     // `runsAfter` cannot say "after everything" (CLAUDE.md §4.56).
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "package-rename" } ] }"""))
+    val f = fixture(
+      Minimal.replace("""manifest { name = "demo" }""", """manifest { name = "demo", surface = [ { transform = "package-rename" } ] }""")
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("manifest.packageRenames"))
     assert(!clue(e.getMessage).contains("unknown transform"))
@@ -730,15 +814,20 @@ class PortConfigSpec extends munit.FunSuite:
         |input  { sourceRoot = "java", resolutionRootz = ["java"] }
         |output { portRoot = "out", sourceSet = "main" }
         |manifest { name = "demo", dropType = ["com.demo.Gone"] }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("input.resolutionRootz"))
     assert(clue(e.getMessage).contains("manifest.dropType"))
   }
 
   test("a key nobody read fails INSIDE a surface entry too") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "test-framework", suit = "munit.FunSuite" } ] }"""))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [ { transform = "test-framework", suit = "munit.FunSuite" } ] }"""
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("surface[0].suit"))
   }
@@ -749,23 +838,32 @@ class PortConfigSpec extends munit.FunSuite:
         |input  { sourceRoot = "java", files = "com/demo/Widget.java" }
         |output { portRoot = "out", sourceSet = "main" }
         |manifest { name = "demo" }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("expected a list of strings"))
   }
 
   test("`hints` is a list of FQNs — a plain string is a shape error (O4 CLOSED)") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [
-        |  { transform = "primitive-to-opaque", fqn = "port.Handle", hints = "not-a-list" } ] }""".stripMargin))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [
+          |  { transform = "primitive-to-opaque", fqn = "port.Handle", hints = "not-a-list" } ] }""".stripMargin
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("expected a list"))
   }
 
   test("a scope declaring both directions is refused") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [
-        |  { transform = "collections", scope { except = ["a"], only = ["b"] } } ] }""".stripMargin))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [
+          |  { transform = "collections", scope { except = ["a"], only = ["b"] } } ] }""".stripMargin
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("never both"))
   }
@@ -776,7 +874,8 @@ class PortConfigSpec extends munit.FunSuite:
         |input  { sourceRoot = "java", files = ["com/demo/Widget.java"], includeGlobs = ["**.java"] }
         |output { portRoot = "out", sourceSet = "main" }
         |manifest { name = "demo" }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     intercept[ConfigError](PortConfig.load(f))
   }
 
@@ -788,7 +887,8 @@ class PortConfigSpec extends munit.FunSuite:
         |input  { sourceRoot = "java", classpathFile = "nope.txt" }
         |output { portRoot = "out", sourceSet = "main" }
         |manifest { name = "demo" }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.getMessage).contains("classpathFile"))
   }
@@ -816,7 +916,7 @@ class PortConfigSpec extends munit.FunSuite:
     // EVERY such resource on the classpath, not the first one: the test source set contributes a
     // second file, and `getResourceAsStream` would silently return whichever came first.
     val declared = collection.mutable.ListBuffer.empty[String]
-    val urls = getClass.getClassLoader.getResources("META-INF/services/balticporter.tir.TransformFactory")
+    val urls     = getClass.getClassLoader.getResources("META-INF/services/balticporter.tir.TransformFactory")
     while urls.hasMoreElements do
       val src = scala.io.Source.fromURL(urls.nextElement())
       try declared ++= src.getLines().map(_.trim).filter(l => l.nonEmpty && !l.startsWith("#"))
@@ -831,8 +931,12 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   test("a factory built from config reaches the pipeline with its config applied") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", surface = [ { transform = "spec-echo", tag = "hello" } ] }"""))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", surface = [ { transform = "spec-echo", tag = "hello" } ] }"""
+      )
+    )
     assertEquals(PortConfig.load(f).manifest.get.effectiveSurface.map(_.name), List("spec-echo(hello)"))
   }
 
@@ -841,22 +945,29 @@ class PortConfigSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("`resolutions` is read as data and reaches the manifest") {
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest {
-        |  name    = "demo"
-        |  surface = [ { transform = "spec-echo", tag = "hi" } ]
-        |  resolutions { "com.demo.Widget#labels" = "spec-echo-remedy" }
-        |}""".stripMargin))
-    assertEquals(PortConfig.load(f).manifest.get.resolutions,
-                 Map("com.demo.Widget#labels" -> "spec-echo-remedy"))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest {
+          |  name    = "demo"
+          |  surface = [ { transform = "spec-echo", tag = "hi" } ]
+          |  resolutions { "com.demo.Widget#labels" = "spec-echo-remedy" }
+          |}""".stripMargin
+      )
+    )
+    assertEquals(PortConfig.load(f).manifest.get.resolutions, Map("com.demo.Widget#labels" -> "spec-echo-remedy"))
   }
 
   test("an UNKNOWN remedy id is refused at LOAD, with the alternatives listed") {
     // The loud door. A value silently ignored here is a port that selected a remedy and got none,
     // which reads exactly like a port that never asked — the §1(b) no-op this whole front door
     // exists to prevent.
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", resolutions { "com.demo.Widget#labels" = "no-such-remedy" } }"""))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", resolutions { "com.demo.Widget#labels" = "no-such-remedy" } }"""
+      )
+    )
     val e = intercept[ConfigError](PortConfig.load(f))
     assert(clue(e.why).contains("no-such-remedy"))
     assert(clue(e.why).contains("spec-echo-remedy"))
@@ -867,10 +978,13 @@ class PortConfigSpec extends munit.FunSuite:
     // the mistake is a missing `surface` entry and not a typo. It is reported at RUN time as a
     // policy finding naming the phase, and refusing it here would send the reader hunting for a
     // spelling mistake in a correct id.
-    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
-      """manifest { name = "demo", resolutions { "com.demo.Widget#labels" = "spec-echo-remedy" } }"""))
-    assertEquals(PortConfig.load(f).manifest.get.resolutions,
-                 Map("com.demo.Widget#labels" -> "spec-echo-remedy"))
+    val f = fixture(
+      Minimal.replace(
+        """manifest { name = "demo" }""",
+        """manifest { name = "demo", resolutions { "com.demo.Widget#labels" = "spec-echo-remedy" } }"""
+      )
+    )
+    assertEquals(PortConfig.load(f).manifest.get.resolutions, Map("com.demo.Widget#labels" -> "spec-echo-remedy"))
   }
 
   test("a factory DECLARES its phase's menu, so the registry knows it without building anything") {

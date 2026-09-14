@@ -2,17 +2,14 @@ package balticporter.transform
 
 /** [[RetargetBoundaryCheck]] — the Issue enum and its classification.
   *
-  * Integration coverage lives in `ComparatorOrderingPortSpec` (corpus); this spec covers the
-  * structural properties a unit test can see without a frontend.
+  * Integration coverage lives in `ComparatorOrderingPortSpec` (corpus); this spec covers the structural properties a unit test can see without a frontend.
   */
 class RetargetBoundaryCheckSpec extends munit.FunSuite:
 
   // ---- Issue.classification covers every variant ----
 
   test("every Issue variant has a non-empty classification") {
-    for v <- RetargetBoundaryCheck.Issue.values do
-      assert(clue(RetargetBoundaryCheck.Issue.classification(v)).nonEmpty,
-        s"Issue.$v has no classification")
+    for v <- RetargetBoundaryCheck.Issue.values do assert(clue(RetargetBoundaryCheck.Issue.classification(v)).nonEmpty, s"Issue.$v has no classification")
   }
 
   test("IteratorRemove classification mentions ENGINE-LIMITS") {
@@ -43,7 +40,8 @@ class RetargetBoundaryCheckSpec extends munit.FunSuite:
       "com.example.Queue",
       "scala.collection.mutable.ArrayDeque",
       Origin.synthetic,
-      SymId.None)
+      SymId.None
+    )
     assert(clue(f.render).contains("IteratorRemove"))
     assert(f.detail.contains("iterator remove"))
   }

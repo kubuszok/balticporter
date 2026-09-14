@@ -52,7 +52,9 @@ class CollectionsListIteratorSpec extends PortSuite:
         |  public void set(String e)     { }
         |  public void add(String e)     { }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // §4.5: java's arity survives, because the shim carries java's own shape rather than scala's
     // parameterless one.
     assertEmits(p, "extends balticporter.runtime.JavaListIterator[java.lang.String]")
@@ -67,7 +69,9 @@ class CollectionsListIteratorSpec extends PortSuite:
         |  private final Set<String> names = new HashSet<String>();
         |  int count() { return names.size(); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // java declares `listIterator` on `List` and nowhere else, so a kind that never had the member
     // must not acquire one — the arm is `Kind.Seq`/`Kind.Stack` for exactly that reason.
     assertNotEmits(p, "JavaListIterator")
@@ -83,7 +87,9 @@ class CollectionsListIteratorSpec extends PortSuite:
         |  Spliterator<String> a() { return items.spliterator(); }
         |  Spliterator<String> b() { return tags.spliterator(); }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // java re-declares the member three times with three characteristic sets — `List` passes
     // `ORDERED`, `Set` passes `DISTINCT` — and `Spliterators.spliterator(Collection, int)` ORs in
     // `SIZED | SUBSIZED` for both. The emitted call NAMES which of java's declarations it is,
@@ -102,12 +108,9 @@ class CollectionsListIteratorSpec extends PortSuite:
     // a reader sent to a wall instead of to the reason (§4.45).
     val keys = JdkSurfaceCheck.Refusals.map(_.api).toSet
     assert(keys.contains("java.util.Collection#spliterator"), keys.toList.sorted.mkString(", "))
-    assert(!keys.contains("java.util.List#spliterator"),
-           "the `List#spliterator` refusal is STALE — the phase now answers for it")
-    assert(!keys.contains("java.util.Set#spliterator"),
-           "the `Set#spliterator` refusal is STALE — the phase now answers for it")
-    assert(!keys.contains("java.util.List#listIterator"),
-           "the `listIterator` refusal is STALE — the phase now answers for it")
+    assert(!keys.contains("java.util.List#spliterator"), "the `List#spliterator` refusal is STALE — the phase now answers for it")
+    assert(!keys.contains("java.util.Set#spliterator"), "the `Set#spliterator` refusal is STALE — the phase now answers for it")
+    assert(!keys.contains("java.util.List#listIterator"), "the `listIterator` refusal is STALE — the phase now answers for it")
   }
 
   test("the refusal and the phase table do not CONTRADICT each other") {
@@ -124,9 +127,13 @@ class CollectionsListIteratorSpec extends PortSuite:
     val rewritten = CollectionsTransform.typeMap.collect {
       case (owner, (target, _)) if !CollectionsTransform.ShimFqns.contains(target) => owner
     }.toSet
-    assert(!refused.exists(k => rewritten.contains(k.take(k.indexOf('#'))) &&
-                                handled.contains(k.substring(k.indexOf('#') + 1))),
-           s"a member is refused AND handled at a rewritten owner: $refused")
+    assert(
+      !refused.exists(k =>
+        rewritten.contains(k.take(k.indexOf('#'))) &&
+          handled.contains(k.substring(k.indexOf('#') + 1))
+      ),
+      s"a member is refused AND handled at a rewritten owner: $refused"
+    )
     assert(handled.contains("listIterator"), "listIterator is answered and must say so")
     assert(handled.contains("spliterator"), "spliterator is answered and must say so")
   }

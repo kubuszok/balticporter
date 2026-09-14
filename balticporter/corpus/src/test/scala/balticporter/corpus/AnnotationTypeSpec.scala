@@ -10,8 +10,11 @@ class AnnotationTypeSpec extends PortSuite:
     // JAVA'S OWN NAME at the parameter, because that is the half a USE writes — `@p.Tag(n = 4)` —
     // and the half `TirEmitter.annots` renders for a port that claims the family. `val`, so the
     // element is a member and the read below resolves; the default is JLS 9.6.2's own.
-    assertEmits(p, "class Tag(val value: java.lang.String = \"none\", val n: scala.Int = 3) " +
-                   "extends scala.annotation.StaticAnnotation")
+    assertEmits(
+      p,
+      "class Tag(val value: java.lang.String = \"none\", val n: scala.Int = 3) " +
+        "extends scala.annotation.StaticAnnotation"
+    )
   }
 
   test("an element with NO default takes none — a use must supply it, exactly as java demands") {
@@ -33,8 +36,9 @@ class AnnotationTypeSpec extends PortSuite:
     // the side that moves.
     val p = port(
       "package p;\n" +
-      "@interface Tag { String value() default \"none\"; }\n" +
-      "class Reader { String read(Tag t) { return t.value(); } }\n")
+        "@interface Tag { String value() default \"none\"; }\n" +
+        "class Reader { String read(Tag t) { return t.value(); } }\n"
+    )
     assertEmits(p, "return t.value")
     assertNotEmits(p, "t.value()")
   }
@@ -44,7 +48,8 @@ class AnnotationTypeSpec extends PortSuite:
     // `java.lang.annotation.Retention` out of a class file, where `value()` is a method.
     val p = port(
       "package p;\n" +
-      "import java.lang.annotation.Retention;\n" +
-      "class Reader { Object read(Retention r) { return r.value(); } }\n")
+        "import java.lang.annotation.Retention;\n" +
+        "class Reader { Object read(Retention r) { return r.value(); } }\n"
+    )
     assertEmits(p, "r.value()")
   }

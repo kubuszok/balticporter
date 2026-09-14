@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PortManifest, SurfaceFold}
+import balticporter.core.{ PortManifest, SurfaceFold }
 
 /** MethodBodyTransform's MergeablePolicy — the fix for `ENGINE-LIMITS.md` D9 at this phase. */
 class MethodBodyTransformMergeSpec extends munit.FunSuite:
@@ -13,7 +13,7 @@ class MethodBodyTransformMergeSpec extends munit.FunSuite:
   // ---- positive: independent keys union ----
 
   test("independent keys from base and dependent merge into one instance") {
-    val b = base(List(mbt("com.demo.A#foo" -> "1 + 1")))
+    val b   = base(List(mbt("com.demo.A#foo" -> "1 + 1")))
     val dep = b.extendedBy(PortManifest("dep", surface = List(mbt("com.dep.B#bar" -> "2 + 2"))))
 
     assertEquals(dep.surfaceFold.refusals, Nil)
@@ -23,7 +23,7 @@ class MethodBodyTransformMergeSpec extends munit.FunSuite:
   }
 
   test("same key with identical body text is accepted silently (idempotent restatement)") {
-    val b = base(List(mbt("com.demo.A#foo" -> "same body")))
+    val b   = base(List(mbt("com.demo.A#foo" -> "same body")))
     val dep = b.extendedBy(PortManifest("dep", surface = List(mbt("com.demo.A#foo" -> "same body"))))
 
     assertEquals(dep.surfaceFold.refusals, Nil)
@@ -35,7 +35,7 @@ class MethodBodyTransformMergeSpec extends munit.FunSuite:
   // ---- negative: same key with different body refuses ----
 
   test("same key with different body text refuses — the two are a conflict only a human resolves") {
-    val b = base(List(mbt("com.demo.A#foo" -> "body1")))
+    val b   = base(List(mbt("com.demo.A#foo" -> "body1")))
     val dep = b.extendedBy(PortManifest("dep", surface = List(mbt("com.demo.A#foo" -> "body2"))))
 
     assert(clue(dep.surfaceFold.refusals).nonEmpty)
@@ -77,12 +77,11 @@ class MethodBodyTransformMergeSpec extends munit.FunSuite:
 
   test("empty MethodBodyTransform merges with any other without conflict") {
     val empty = mbt()
-    val full = mbt("com.demo.A#foo" -> "1")
+    val full  = mbt("com.demo.A#foo" -> "1")
 
     val result = empty.mergedWith(full)
     assert(result.isRight)
-    assertEquals(result.toOption.get.phase.asInstanceOf[MethodBodyTransform].bodies,
-      Map("com.demo.A#foo" -> "1"))
+    assertEquals(result.toOption.get.phase.asInstanceOf[MethodBodyTransform].bodies, Map("com.demo.A#foo" -> "1"))
   }
 
   // ---- wrong phase type refuses ----
@@ -97,19 +96,18 @@ class MethodBodyTransformMergeSpec extends munit.FunSuite:
   test("ashley shape: base with AssetManager bodies + dependent with Engine.createComponent") {
     val baseBodies = mbt(
       "com.demo.AssetManager#clear" -> "{ this.finish() }",
-      "com.demo.AssetManager#getAssetFileName" -> "{ null }",
+      "com.demo.AssetManager#getAssetFileName" -> "{ null }"
     )
     val depBodies = mbt(
-      "com.dep.Engine#createComponent(Class)" -> "lowlevel.Nullable(factory.create(componentType))",
+      "com.dep.Engine#createComponent(Class)" -> "lowlevel.Nullable(factory.create(componentType))"
     )
-    val b = base(List(baseBodies))
+    val b   = base(List(baseBodies))
     val dep = b.extendedBy(PortManifest("dep", governs = Set("com.dep"), surface = List(depBodies)))
 
     assertEquals(dep.surfaceFold.refusals, Nil)
     val eff = dep.effectiveSurface.collect { case t: MethodBodyTransform => t }
     assertEquals(clue(eff.size), 1)
     assertEquals(eff.head.bodies.size, 3)
-    assertEquals(eff.head.bodies("com.dep.Engine#createComponent(Class)"),
-      "lowlevel.Nullable(factory.create(componentType))")
+    assertEquals(eff.head.bodies("com.dep.Engine#createComponent(Class)"), "lowlevel.Nullable(factory.create(componentType))")
     assertEquals(eff.head.bodies("com.demo.AssetManager#clear"), "{ this.finish() }")
   }

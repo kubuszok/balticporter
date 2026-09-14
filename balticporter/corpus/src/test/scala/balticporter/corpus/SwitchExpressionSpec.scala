@@ -17,7 +17,8 @@ class SwitchExpressionSpec extends PortSuite:
       |  }
       |  int compute(int k) { return k; }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("a switch EXPRESSION is a `match` in value position, with the arms java wrote") {
     assert(clue(arrows.out).contains("case 1 =>"), arrows.out)
@@ -55,7 +56,8 @@ class SwitchExpressionSpec extends PortSuite:
       |    };
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("an arrow BLOCK arm keeps its statements and its TAIL `yield` becomes the arm's value") {
     // The `yield` is peeled: a scala arm's value is its last expression already, so carrying the
@@ -81,15 +83,15 @@ class SwitchExpressionSpec extends PortSuite:
       |    };
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("a NON-TAIL `yield` gets a value-carrying boundary around the ARM, named") {
     // `yield` from inside the `if` leaves the whole switch expression. Scala has no expression-level
     // jump, so the exact image is `boundary`/`break` — with the `Label` typed at the switch's own
     // type, which is what makes it a different boundary from the `Unit`-carrying one a mid-case
     // `break` gets.
-    assert(clue(nonTail.out).contains("scala.util.boundary { (yield$1: scala.util.boundary.Label["),
-      nonTail.out)
+    assert(clue(nonTail.out).contains("scala.util.boundary { (yield$1: scala.util.boundary.Label["), nonTail.out)
     assert(clue(nonTail.out).contains("scala.util.boundary.break(1)(using yield$1)"), nonTail.out)
     // …and the TAIL one is still the block's value, not a second break.
     assert(!clue(nonTail.out).contains("break(2)"), nonTail.out)
@@ -111,7 +113,8 @@ class SwitchExpressionSpec extends PortSuite:
       |    };
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("a COLON-form arm yields, and an empty label group still merges into the next arm") {
     assert(clue(colon.out).contains("case 2 | 3 =>"), colon.out)
@@ -136,7 +139,8 @@ class SwitchExpressionSpec extends PortSuite:
       |  enum K { A, B }
       |  int f(K k) { return switch (k) { case A -> 1; case B -> 2; }; }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("an exhaustive enum switch expression gets NO fall-out arm — java has no fall-out to model") {
     // Asserted on the SYNTHESISED arm's own text (`case _ => ()`) rather than on `case _`, because
@@ -152,7 +156,8 @@ class SwitchExpressionSpec extends PortSuite:
         |  int seen = 0;
         |  void f(K k) { switch (k) { case A: seen = 1; break; case B: seen = 2; break; } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(stmtNoDefault.out).contains("case _ => ()"), stmtNoDefault.out)
   }
 
@@ -165,7 +170,8 @@ class SwitchExpressionSpec extends PortSuite:
       |class Z {
       |  int f(String s) { return switch (s) { case "a" -> 1; default -> 0; }; }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("the NULL-SELECTOR rule composes: a reference selector still gets java's implicit NPE") {
     // JS-S08 is decided in the emitter, at `Tree.Match`, so it reaches an expression switch by
@@ -185,7 +191,8 @@ class SwitchExpressionSpec extends PortSuite:
       |    return switch (a) { default -> switch (b) { default -> 9; }; };
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("a NESTED switch expression is an ordinary nested `match`") {
     assertEquals(clue(nested.out).sliding(" match {".length).count(_ == " match {"), 2, nested.out)
@@ -210,7 +217,8 @@ class SwitchExpressionSpec extends PortSuite:
       |    };
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("a `yield` through a nested switch STATEMENT targets the OUTER expression") {
     // Both halves of the defect are in one emission. `yieldsOut` stopped at any `Tree.Match`, so
@@ -220,8 +228,7 @@ class SwitchExpressionSpec extends PortSuite:
     // A `Label[scala.Int]`, opened by the outer arm, is the only boundary in this program.
     assert(clue(throughStmt.out).contains("scala.util.boundary.Label[scala.Int]"), throughStmt.out)
     assert(!clue(throughStmt.out).contains("scala.util.boundary.Label[scala.Unit]"), throughStmt.out)
-    assertEquals(clue(throughStmt.out).sliding("scala.util.boundary {".length)
-      .count(_ == "scala.util.boundary {"), 1, throughStmt.out)
+    assertEquals(clue(throughStmt.out).sliding("scala.util.boundary {".length).count(_ == "scala.util.boundary {"), 1, throughStmt.out)
     assert(clue(throughStmt.out).contains("scala.util.boundary.break(10)(using yield$1)"), throughStmt.out)
   }
 
@@ -241,7 +248,8 @@ class SwitchExpressionSpec extends PortSuite:
       |  int seen = 0;
       |  void f(int k) { switch (k) { case 1 -> seen = 1; default -> seen = 2; } }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   test("an ARROW-form switch STATEMENT carries no `yield` — JLS 14.21 permits none") {
     // Spoon normalises `case 1 -> seen = 1;` into a `CtYieldStatement` wrapping the assignment. It
@@ -258,9 +266,10 @@ class SwitchExpressionSpec extends PortSuite:
   /** the emitter's rendering of `switch (k) { default -> { if (k > 0) { yield 1; } yield 2; } }`. */
   private def nonTailShape(k: Int): Int =
     k match
-      case _ => scala.util.boundary { (yield$1: scala.util.boundary.Label[scala.Int]) ?=>
-        { if k > 0 then { scala.util.boundary.break(1)(using yield$1) }; 2 }
-      }
+      case _ =>
+        scala.util.boundary { (yield$1: scala.util.boundary.Label[scala.Int]) ?=>
+          if k > 0 then { scala.util.boundary.break(1)(using yield$1) }; 2
+        }
 
   test("PROBE: a value-carrying `boundary` yields the ARM's value, from arbitrary depth") {
     assertEquals(nonTailShape(5), 1)
@@ -282,16 +291,17 @@ class SwitchExpressionSpec extends PortSuite:
     intercept[MatchError](exhaustiveShape("z"))
   }
 
-  /** the emitter's rendering of a `yield` that leaves the outer expression from inside a nested
-    * switch STATEMENT — copied from the emitted text, not paraphrased. */
+  /** the emitter's rendering of a `yield` that leaves the outer expression from inside a nested switch STATEMENT — copied from the emitted text, not paraphrased.
+    */
   private def throughStmtShape(a: Int, b: Int): Int =
     a match
-      case 1 => scala.util.boundary { (yield$1: scala.util.boundary.Label[scala.Int]) ?=>
-        b match
-          case 2 => scala.util.boundary.break(10)(using yield$1)
-          case _ => ()
-        20
-      }
+      case 1 =>
+        scala.util.boundary { (yield$1: scala.util.boundary.Label[scala.Int]) ?=>
+          b match
+            case 2 => scala.util.boundary.break(10)(using yield$1)
+            case _ => ()
+          20
+        }
       case _ => 0
 
   test("PROBE: a break at the OUTER label really leaves the inner match — javac's own answers") {
@@ -322,7 +332,8 @@ class SwitchExpressionSpec extends PortSuite:
         |  int seen = 0;
         |  void f(int k) { switch (k) { case 1 -> seen = 1; } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // JS-S05 is unchanged for the classic form: java FALLS OUT of a switch statement that matches
     // nothing, and scala's `match` throws `MatchError` without the arm.
     assert(clue(noDefault.out).contains("case _ =>"), noDefault.out)

@@ -1,12 +1,12 @@
 package balticporter.corpus
 
-import balticporter.core.{FrontendConfig, Provenance}
+import balticporter.core.{ FrontendConfig, Provenance }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Origin, Pipeline, Program, Tree}
+import balticporter.tir.{ Origin, Pipeline, Program, Tree }
 import balticporter.transform.PackageRenameTransform
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 /** The attribution header `TirEmitter` stamps on every emitted unit. */
 class ProvenanceHeaderSpec extends munit.FunSuite:
@@ -18,9 +18,9 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** Parse from a REAL file, so the unit's `Origin` carries the path a port would actually see.
-    * `SpoonTir.fromSource` parses an in-memory `VirtualFile` and records no path at all — which is
-    * the "origin unavailable" case, asserted separately below. */
+  /** Parse from a REAL file, so the unit's `Origin` carries the path a port would actually see. `SpoonTir.fromSource` parses an in-memory `VirtualFile` and records no path at all — which is the
+    * "origin unavailable" case, asserted separately below.
+    */
   private val root: Path =
     val tmp = Files.createTempDirectory("bp-provenance").toRealPath()
     val dir = tmp.resolve("src/main/java/com/example/demo")
@@ -36,7 +36,7 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
     upstreamCommit = "0123456789abcdef",
     originalLicense = "Apache-2.0",
     sourcePathPrefix = "src/main/java",
-    sourceRoot = root.toString,
+    sourceRoot = root.toString
   )
 
   private def only(p: Program): Tree.ClassDef = p.units.head
@@ -70,8 +70,7 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
   }
 
   test("an unrelativisable path is FLAGGED as recorded, never silently reshaped into a plausible one") {
-    val out = new TirEmitter(fromFile, provenance = Some(prov.copy(sourceRoot = "", sourcePathPrefix = "nowhere")))
-      .emitUnit(only(fromFile))
+    val out = new TirEmitter(fromFile, provenance = Some(prov.copy(sourceRoot = "", sourcePathPrefix = "nowhere"))).emitUnit(only(fromFile))
     assert(clue(out).contains("Widget.java  (path as recorded — set Provenance.sourceRoot to relativise it)"))
     // and it did NOT invent `nowhere/...`
     assert(!out.contains("Ported from: nowhere/"))
@@ -118,12 +117,9 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
     val link       = tmp.resolve("via-link")
     try Files.createSymbolicLink(link, nestedRoot)
     catch case _: UnsupportedOperationException => assume(false, "filesystem without symlinks")
-    val prog = SpoonTir.fromTypes(
-      SpoonTir.buildModel(FrontendConfig(nestedRoot, List("com/example/demo/Widget.java"), Nil), lenient = true))
-    val real = new TirEmitter(prog, provenance = Some(
-      prov.copy(sourcePathPrefix = "mylib", sourceRoot = nestedRoot.toString))).emitUnit(only(prog))
-    val linked = new TirEmitter(prog, provenance = Some(
-      prov.copy(sourcePathPrefix = "mylib", sourceRoot = link.toString))).emitUnit(only(prog))
+    val prog   = SpoonTir.fromTypes(SpoonTir.buildModel(FrontendConfig(nestedRoot, List("com/example/demo/Widget.java"), Nil), lenient = true))
+    val real   = new TirEmitter(prog, provenance = Some(prov.copy(sourcePathPrefix = "mylib", sourceRoot = nestedRoot.toString))).emitUnit(only(prog))
+    val linked = new TirEmitter(prog, provenance = Some(prov.copy(sourcePathPrefix = "mylib", sourceRoot = link.toString))).emitUnit(only(prog))
     assert(clue(linked).contains(" * Ported from: mylib/com/example/demo/Widget.java"))
     assertEquals(linked, real)
   }

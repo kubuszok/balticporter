@@ -1,24 +1,22 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue}
+import balticporter.frontend.ts.{ RastFile, RastNode, RastType, RastValue }
 import scala.collection.mutable
 
-/**
- * Dedicated RAST-to-Scala emitter for hachure-fill.
- *
- * Reads the resolved AST and produces Scala that matches the hand-port's
- * structure. Each TS pattern maps to a deterministic Scala idiom:
- *   - Point/Line/Polygon tuple aliases → case classes with var fields
- *   - point[0]/point[1] → point.x/point.y
- *   - Math.* → Math.* (same in Scala)
- *   - splice(0, n) → take(n) + remove(0, n)
- *   - sort(comparator) → sortInPlaceWith extracted method
- *   - forEach(arrow) → foreach { ... }
- *   - typeof check → runtime isInstanceOf
- *   - JS truthiness → explicit predicates
- */
+/** Dedicated RAST-to-Scala emitter for hachure-fill.
+  *
+  * Reads the resolved AST and produces Scala that matches the hand-port's structure. Each TS pattern maps to a deterministic Scala idiom:
+  *   - Point/Line/Polygon tuple aliases → case classes with var fields
+  *   - point[0]/point[1] → point.x/point.y
+  *   - Math.* → Math.* (same in Scala)
+  *   - splice(0, n) → take(n) + remove(0, n)
+  *   - sort(comparator) → sortInPlaceWith extracted method
+  *   - forEach(arrow) → foreach { ... }
+  *   - typeof check → runtime isInstanceOf
+  *   - JS truthiness → explicit predicates
+  */
 object HachureFillEmitter {
 
   def emit(file: RastFile): String = {
@@ -27,7 +25,7 @@ object HachureFillEmitter {
   }
 
   private class EmitCtx(file: RastFile) {
-    private val sb = new StringBuilder
+    private val sb     = new StringBuilder
     private val indent = "  "
     // Track which variables are optional params
     private val optionalParams = mutable.Set.empty[String]
@@ -55,12 +53,11 @@ object HachureFillEmitter {
       sb.append(s"${indent}${indent}d != 0.0 && !d.isNaN\n\n")
 
       // Emit each function
-      for (node <- file.nodes) {
+      for (node <- file.nodes)
         node.kind match {
           case "FunctionDeclaration" => emitFunction(node)
-          case _ => () // type aliases and interfaces handled above
+          case _                     => () // type aliases and interfaces handled above
         }
-      }
 
       // Edge comparators (extracted from inline sort lambdas)
       emitEdgeCompare()
@@ -71,18 +68,18 @@ object HachureFillEmitter {
     }
 
     private def emitFunction(node: RastNode): Unit = {
-      val name = nameOf(node)
+      val name       = nameOf(node)
       val isExported = node.flags.contains("ExportKeyword")
-      val vis = if (isExported) "" else "private "
-      val params = node.children.filter(_.kind == "Parameter")
+      val vis        = if (isExported) "" else "private "
+      val params     = node.children.filter(_.kind == "Parameter")
 
       name match {
-        case "rotatePoints" => emitRotatePoints(node, params)
-        case "rotateLines" => emitRotateLines(node, params)
-        case "areSamePoints" => emitAreSamePoints(node, params)
-        case "hachureLines" => emitHachureLines(node, params)
+        case "rotatePoints"         => emitRotatePoints(node, params)
+        case "rotateLines"          => emitRotateLines(node, params)
+        case "areSamePoints"        => emitAreSamePoints(node, params)
+        case "hachureLines"         => emitHachureLines(node, params)
         case "straightHachureLines" => emitStraightHachureLines(node, params)
-        case _ => sb.append(s"${indent}// TODO: $name\n\n")
+        case _                      => sb.append(s"${indent}// TODO: $name\n\n")
       }
     }
 
@@ -247,10 +244,16 @@ object HachureFillEmitter {
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}break()\n")
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}}\n")
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}val ce: EdgeEntry = activeEdges(i).edge\n")
-      sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}val ne: EdgeEntry = activeEdges(nexti).edge\n")
+      sb.append(
+        s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}val ne: EdgeEntry = activeEdges(nexti).edge\n"
+      )
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}lines += Line(\n")
-      sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}Point(Math.round(ce.x).toDouble, y),\n")
-      sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}Point(Math.round(ne.x).toDouble, y)\n")
+      sb.append(
+        s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}Point(Math.round(ce.x).toDouble, y),\n"
+      )
+      sb.append(
+        s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}Point(Math.round(ne.x).toDouble, y)\n"
+      )
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent})\n")
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}${indent}i = i + 2\n")
       sb.append(s"${indent}${indent}${indent}${indent}${indent}${indent}${indent}}\n")

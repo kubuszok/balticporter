@@ -1,9 +1,8 @@
 package balticporter.catalog
 
-/** Renders the registry as markdown — `just catalog`. THE OUTPUT IS A BUILD PRODUCT: committed it
-  * would be a seventh document nobody loads (§3.6) that disagrees with the code it came from, so
-  * it goes to `.balticporter/` (gitignored, CLAUDE.md §5.5). Writes to stdout, letting the caller
-  * redirect — a renderer that owns a path has a second opinion about where the answer lives. */
+/** Renders the registry as markdown — `just catalog`. THE OUTPUT IS A BUILD PRODUCT: committed it would be a seventh document nobody loads (§3.6) that disagrees with the code it came from, so it goes
+  * to `.balticporter/` (gitignored, CLAUDE.md §5.5). Writes to stdout, letting the caller redirect — a renderer that owns a path has a second opinion about where the answer lives.
+  */
 object CatalogDoc:
 
   def render: String =
@@ -15,14 +14,12 @@ object CatalogDoc:
     for (area, rows) <- Differences.all.groupBy(_.id.area).toList.sortBy(_._1.ordinal) do
       sb ++= s"## JS-$area — ${rows.size} rows\n\n"
       sb ++= "| id | title | sev | status | twin | fix | evidence |\n|---|---|---|---|---|---|---|\n"
-      for d <- rows.sortBy(_.id.n) do
-        sb ++= s"| ${d.id} | ${d.title} | ${short(d.severity)} | ${short(d.status)} | ${short(d.twin)} | ${short(d.fix)} | ${d.evidence} |\n"
+      for d <- rows.sortBy(_.id.n) do sb ++= s"| ${d.id} | ${d.title} | ${short(d.severity)} | ${short(d.status)} | ${short(d.twin)} | ${short(d.fix)} | ${d.evidence} |\n"
       sb ++= "\n"
 
     sb ++= s"## Retired ids — ${Differences.retired.size}\n\n"
     sb ++= "| id | absorbed into | why |\n|---|---|---|\n"
-    for r <- Differences.retired do
-      sb ++= s"| ${r.id} | ${r.into.fold("—")(_.toString)} | ${r.why} |\n"
+    for r <- Differences.retired do sb ++= s"| ${r.id} | ${r.into.fold("—")(_.toString)} | ${r.why} |\n"
     sb ++= "\n"
 
     for (area, rows) <- ApiRows.all.groupBy(_.id.area).toList.sortBy(_._1.ordinal) do
@@ -30,17 +27,17 @@ object CatalogDoc:
       sb ++= "| id | fqn | JVM | Scala.js | Scala Native | asOf | why |\n|---|---|---|---|---|---|---|\n"
       for r <- rows.sortBy(_.id.n) do
         def cell(p: Platform) = s"${short(r.by(p))} / ${short(r.verdict(p))}"
-        val asOf = if r.asOf.isEmpty then "—" else r.asOf.toList.sorted.map((k, v) => s"$k=$v").mkString("; ")
+        val asOf              = if r.asOf.isEmpty then "—" else r.asOf.toList.sorted.map((k, v) => s"$k=$v").mkString("; ")
         sb ++= s"| ${r.id} | `${r.fqn}`${if r.exact then " (exact)" else ""} | ${cell(Platform.Jvm)} | " +
           s"${cell(Platform.ScalaJs)} | ${cell(Platform.ScalaNative)} | $asOf | ${r.why} |\n"
       sb ++= "\n"
     sb.result()
 
-  /** an enum case as its own name plus its parameters, without the `Status.` noise a table does not
-    * need. Derived from the value, never from a second table of strings. */
+  /** an enum case as its own name plus its parameters, without the `Status.` noise a table does not need. Derived from the value, never from a second table of strings.
+    */
   private def short(v: Any): String = v match
     case p: Product if p.productArity > 0 => s"${p.productPrefix}(${p.productIterator.map(short).mkString(", ")})"
     case s: String                        => s
-    case other                            => other.toString
+    case other => other.toString
 
   def main(args: Array[String]): Unit = print(render)

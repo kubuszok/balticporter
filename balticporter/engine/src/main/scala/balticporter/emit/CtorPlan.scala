@@ -7,48 +7,51 @@ import balticporter.core.BExpr.*
 enum FieldLine:
   /** ordinary field declaration with an initializer (own or fused from the single ctor). */
   case FromField(f: BField, init: BExpr)
+
   /** null-sentinel merge: `val f: T = if (_p != null) _p else <default>`. */
   case SentinelVal(f: BField, paramName: String, default: BExpr)
+
   /** generalized sentinel: `val f: T = if (_p != null) <whenSome> else <whenNull>`. */
   case CondInit(f: BField, paramName: String, whenSome: BExpr, whenNull: BExpr)
+
   /** No usable initializer: Java default value, as `var` (definite-assignment fallback). */
   case DefaultInit(f: BField)
 
-/** Primary/secondary constructor layout for a class. Picks a funnel strategy: single-root
-  * promotion, identity-super delegation, null-sentinel merge, maximal-primary, or no-arg-primary +
-  * effect-replay. Refuses (Unsupported) when no strategy applies. */
+/** Primary/secondary constructor layout for a class. Picks a funnel strategy: single-root promotion, identity-super delegation, null-sentinel merge, maximal-primary, or no-arg-primary +
+  * effect-replay. Refuses (Unsupported) when no strategy applies.
+  */
 final case class CtorPlan(
-    primaryParams: List[CtorPlan.Param],
-    primaryMods: Option[Mods],
-    /** True when the no-arg path equals passing null to the primary (sentinel merge). */
-    sentinelLike: Boolean,
-    /** Primary Java ctor's comments, hoisted above the class line. */
-    primaryLeading: List[Trivia],
-    superArgs: List[BExpr],
-    primaryBody: List[BStmt],
-    fieldLines: List[FieldLine],
-    secondaryCtors: List[CtorPlan.Secondary],
+  primaryParams: List[CtorPlan.Param],
+  primaryMods:   Option[Mods],
+  /** True when the no-arg path equals passing null to the primary (sentinel merge). */
+  sentinelLike: Boolean,
+  /** Primary Java ctor's comments, hoisted above the class line. */
+  primaryLeading: List[Trivia],
+  superArgs:      List[BExpr],
+  primaryBody:    List[BStmt],
+  fieldLines:     List[FieldLine],
+  secondaryCtors: List[CtorPlan.Secondary]
 )
 
 object CtorPlan:
   /** promoted=true renders as `<vis>val name: T`; the vis comes from the promoted field. */
   final case class Param(p: BParam, promoted: Option[BField])
   final case class Secondary(
-      leading: List[Trivia],
-      mods: Mods,
-      params: List[BParam],
-      delegateArgs: List[BExpr],
-      /** statements after the delegation (Scala auxiliaries may run code after this(...)). */
-      body: List[BStmt] = Nil,
-      /** the delegation target's param types — drives varargs/array adaptation. */
-      targetTypes: List[BType] = Nil,
+    leading:      List[Trivia],
+    mods:         Mods,
+    params:       List[BParam],
+    delegateArgs: List[BExpr],
+    /** statements after the delegation (Scala auxiliaries may run code after this(...)). */
+    body: List[BStmt] = Nil,
+    /** the delegation target's param types — drives varargs/array adaptation. */
+    targetTypes: List[BType] = Nil
   )
 
   def of(
-      t: BTypeDecl,
-      unit: BUnit,
-      sentinelSupers: Set[String] = Set.empty,
-      registry: Option[CtorRegistry] = None,
+    t:              BTypeDecl,
+    unit:           BUnit,
+    sentinelSupers: Set[String] = Set.empty,
+    registry:       Option[CtorRegistry] = None
   ): CtorPlan =
     def fail(what: String): Nothing = throw Unsupported(unit.sourcePath, t.name, what)
 
@@ -64,7 +67,7 @@ object CtorPlan:
 
     def splitAssignsT(body: List[BStmt]): (List[(String, BExpr, List[Trivia])], List[BStmt]) =
       val assigns = List.newBuilder[(String, BExpr, List[Trivia])]
-      val rest = List.newBuilder[BStmt]
+      val rest    = List.newBuilder[BStmt]
       body.foreach { s =>
         s.k match
           case BStmtK.Assign(Ident(f, RefKind.OwnField), rhs, None) => assigns += ((f, rhs, s.leading))
@@ -75,80 +78,74 @@ object CtorPlan:
 
     /** Root ctor becomes primary; `secondaries` are pre-converted this()-delegators. */
     def rootPlan(c: BCtor, secondaries: List[Secondary]): CtorPlan =
-        val (assignsT, rest) = splitAssignsT(c.body)
-        val assigns = assignsT.map(x => (x._1, x._2))
-        val counts = assigns.groupBy(_._1).view.mapValues(_.length).toMap
-        counts.find(_._2 > 1).foreach { case (f, _) => fail(s"field $f assigned more than once in ctor") }
-        val assignedOnce = assigns.toMap
-        val assignTrivia: Map[String, List[Trivia]] = assignsT.map(x => x._1 -> x._3).toMap
-        def withAssignTrivia(f: BField): BField =
-          f.copy(leading = f.leading ++ assignTrivia.getOrElse(f.name, Nil))
-        // fields reassigned by secondaries cannot be promoted or val
-        val secondaryAssigned: Set[String] = secondaries
-          .flatMap(_.body)
-          .collect { case BStmt(_, BStmtK.Assign(Ident(f, RefKind.OwnField), _, None)) => f }
-          .toSet
-        val promoted: Map[String, BField] = assignedOnce.collect {
-          case (f, Ident(p, RefKind.Param(_)))
-              if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) &&
-                !secondaryAssigned.contains(f) &&
-                !t.methods.exists(_.name == f) => // field-vs-method clash stays a field (renamed later)
-            f -> t.fields.find(_.name == f).get
-        }
-        // rename params that collide with fields, methods, or inherited field names
-        val inheritedFields: Set[String] =
-          t.superClass.flatMap(s => registry.map(_.inheritedFieldNames(s.qname))).getOrElse(Set.empty)
-        val renamed: Set[String] = c.params
-          .map(_.name)
-          .filter(pn =>
-            !promoted.contains(pn) &&
-              (t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn) || inheritedFields.contains(pn))
-          )
-          .toSet
-        def rn(e: BExpr): BExpr =
-          renamed.foldLeft(e)((acc, n) => renameParam(acc, n, "_" + n))
-        val renameStmts: BExpr => BExpr = {
-          case Ident(n, k @ RefKind.Param(_)) if renamed.contains(n) => Ident("_" + n, k)
-          case e                                                     => e
-        }
-        val assignedR = assignedOnce.view.mapValues(rn).toMap
-        val superArgsR = c.superArgs.getOrElse(Nil).map(rn)
-        val restR = rest.map(BirTransform.mapStmt(_)(renameStmts))
-        val params = c.params.map { p =>
-          if renamed.contains(p.name) then Param(p.copy(name = "_" + p.name), None)
-          else Param(p, promoted.get(p.name))
-        }
-        def unfinal(f: BField): BField =
-          if secondaryAssigned.contains(f.name) then f.copy(mods = f.mods.copy(isFinal = false)) else f
-        val reassignedInCtor = collection.mutable.Set[String]()
-        val fieldLines = t.fields.flatMap { f0 =>
-          val f = unfinal(f0)
-          if promoted.contains(f.name) then None
-          else
-            (f.init, assignedR.get(f.name)) match
-              case (Some(i), None) => Some(FieldLine.FromField(f, i))
-              case (None, Some(e)) => Some(FieldLine.FromField(withAssignTrivia(f), e))
-              case (Some(i), Some(_)) =>
-                // field has own init AND ctor assignment: keep init, reinstate assignment in body
-                reassignedInCtor += f.name
-                Some(FieldLine.FromField(f.copy(mods = f.mods.copy(isFinal = false)), i))
-              case (None, None) => Some(fieldWithOwnInit(f))
-        }
-        val reinstated = assignsT
-          .filter(x => reassignedInCtor.contains(x._1))
-          .map(x => BStmt(x._3, BStmtK.Assign(Ident(x._1, RefKind.OwnField), rn(x._2), None)))
-        // hoist promoted fields' trivia above the class line (val params can't carry block comments)
-        val promotedTrivia = t.fields.filter(f => promoted.contains(f.name)).flatMap(f => withAssignTrivia(f).leading)
-        CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia,
-          superArgsR, reinstated ++ restR, fieldLines, secondaries)
+      val (assignsT, rest) = splitAssignsT(c.body)
+      val assigns          = assignsT.map(x => (x._1, x._2))
+      val counts           = assigns.groupBy(_._1).view.mapValues(_.length).toMap
+      counts.find(_._2 > 1).foreach { case (f, _) => fail(s"field $f assigned more than once in ctor") }
+      val assignedOnce = assigns.toMap
+      val assignTrivia:                Map[String, List[Trivia]] = assignsT.map(x => x._1 -> x._3).toMap
+      def withAssignTrivia(f: BField): BField                    =
+        f.copy(leading = f.leading ++ assignTrivia.getOrElse(f.name, Nil))
+      // fields reassigned by secondaries cannot be promoted or val
+      val secondaryAssigned: Set[String]         = secondaries.flatMap(_.body).collect { case BStmt(_, BStmtK.Assign(Ident(f, RefKind.OwnField), _, None)) => f }.toSet
+      val promoted:          Map[String, BField] = assignedOnce.collect {
+        case (f, Ident(p, RefKind.Param(_)))
+            if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) &&
+              !secondaryAssigned.contains(f) &&
+              !t.methods.exists(_.name == f) => // field-vs-method clash stays a field (renamed later)
+          f -> t.fields.find(_.name == f).get
+      }
+      // rename params that collide with fields, methods, or inherited field names
+      val inheritedFields: Set[String] =
+        t.superClass.flatMap(s => registry.map(_.inheritedFieldNames(s.qname))).getOrElse(Set.empty)
+      val renamed: Set[String] = c.params
+        .map(_.name)
+        .filter(pn =>
+          !promoted.contains(pn) &&
+            (t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn) || inheritedFields.contains(pn))
+        )
+        .toSet
+      def rn(e: BExpr): BExpr =
+        renamed.foldLeft(e)((acc, n) => renameParam(acc, n, "_" + n))
+      val renameStmts: BExpr => BExpr = {
+        case Ident(n, k @ RefKind.Param(_)) if renamed.contains(n) => Ident("_" + n, k)
+        case e                                                     => e
+      }
+      val assignedR  = assignedOnce.view.mapValues(rn).toMap
+      val superArgsR = c.superArgs.getOrElse(Nil).map(rn)
+      val restR      = rest.map(BirTransform.mapStmt(_)(renameStmts))
+      val params     = c.params.map { p =>
+        if renamed.contains(p.name) then Param(p.copy(name = "_" + p.name), None)
+        else Param(p, promoted.get(p.name))
+      }
+      def unfinal(f: BField): BField =
+        if secondaryAssigned.contains(f.name) then f.copy(mods = f.mods.copy(isFinal = false)) else f
+      val reassignedInCtor = collection.mutable.Set[String]()
+      val fieldLines       = t.fields.flatMap { f0 =>
+        val f = unfinal(f0)
+        if promoted.contains(f.name) then None
+        else
+          (f.init, assignedR.get(f.name)) match
+            case (Some(i), None)    => Some(FieldLine.FromField(f, i))
+            case (None, Some(e))    => Some(FieldLine.FromField(withAssignTrivia(f), e))
+            case (Some(i), Some(_)) =>
+              // field has own init AND ctor assignment: keep init, reinstate assignment in body
+              reassignedInCtor += f.name
+              Some(FieldLine.FromField(f.copy(mods = f.mods.copy(isFinal = false)), i))
+            case (None, None) => Some(fieldWithOwnInit(f))
+      }
+      val reinstated = assignsT.filter(x => reassignedInCtor.contains(x._1)).map(x => BStmt(x._3, BStmtK.Assign(Ident(x._1, RefKind.OwnField), rn(x._2), None)))
+      // hoist promoted fields' trivia above the class line (val params can't carry block comments)
+      val promotedTrivia = t.fields.filter(f => promoted.contains(f.name)).flatMap(f => withAssignTrivia(f).leading)
+      CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia, superArgsR, reinstated ++ restR, fieldLines, secondaries)
 
     def identityBasisPlan(ctors: List[BCtor], roots: List[BCtor]): Option[CtorPlan] =
       identityBasisPlanImpl(ctors, roots, splitAssigns, rootPlan)
 
-    /** Synthetic maximal-primary: multiple root ctors with the same canonical super
-      * arity get a private primary taking all super + field slots. */
+    /** Synthetic maximal-primary: multiple root ctors with the same canonical super arity get a private primary taking all super + field slots.
+      */
     def maximalPrimaryPlan: Option[CtorPlan] =
-      val reg = registry.orNull
+      val reg                         = registry.orNull
       val (rootCtors, thisDelegators) = t.ctors.partition(_.thisArgs.isEmpty)
       if reg == null || t.ctors.lengthIs < 2 || rootCtors.length < 2 then None
       else
@@ -175,17 +172,17 @@ object CtorPlan:
               if n == 0 then Some(Nil)
               else superQ.flatMap(q => reg.byFqcn.get(q)).flatMap((_, info) => info.ctors.find(_.params.length == n).map(_.params.map(_.tpe)))
             superParamTypes match
-              case None => None
+              case None         => None
               case Some(sTypes) =>
                 val assignedNames = perCtor.flatMap(_._3.map(_._1)).toSet
-                val fieldsF = t.fields.filter(f => assignedNames.contains(f.name))
+                val fieldsF       = t.fields.filter(f => assignedNames.contains(f.name))
                 // synthetic slot names must not collide with class members
-                val sNames = (0 until n).map(i => s"_s$i").toList
-                val fNames = fieldsF.map(f => s"_f_${f.name}")
+                val sNames        = (0 until n).map(i => s"_s$i").toList
+                val fNames        = fieldsF.map(f => s"_f_${f.name}")
                 val primaryParams =
                   sNames.zip(sTypes).map((nm, tp) => BParam(nm, tp, false)) ++
                     fieldsF.zip(fNames).map((f, nm) => BParam(nm, f.tpe, false))
-                val superRefs = sNames.zip(sTypes).map((nm, tp) => Ident(nm, RefKind.Param(false)))
+                val superRefs   = sNames.zip(sTypes).map((nm, tp) => Ident(nm, RefKind.Param(false)))
                 val primaryBody = fieldsF.zip(fNames).map { (f, nm) =>
                   BStmt(f.leading, BStmtK.Assign(Ident(f.name, RefKind.OwnField), Ident(nm, RefKind.Param(false)), None))
                 }
@@ -195,36 +192,36 @@ object CtorPlan:
                   else fieldWithOwnInit(f)
                 }
                 val rootSecondaries = perCtor.map { case (c, Some(cSuper), assigns, rest) =>
-                  val amap = assigns.toMap
+                  val amap      = assigns.toMap
                   val fieldVals = fieldsF.map { f =>
                     amap.getOrElse(f.name, f.init.getOrElse(javaDefault(f.tpe)))
                   }
-                  fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, cSuper ++ fieldVals,
-                    body = rest, targetTypes = primaryParams.map(_.tpe)))
+                  fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, cSuper ++ fieldVals, body = rest, targetTypes = primaryParams.map(_.tpe)))
                 }
                 // this()-delegating ctors: ordered so each target precedes it (Scala rule)
                 def depth(c: BCtor, seen: Set[BCtor]): Int = c.thisArgs match
-                  case None => 0
+                  case None       => 0
                   case Some(args) =>
                     t.ctors.find(o => !seen.contains(o) && (o ne c) && o.params.length == args.length) match
                       case Some(tg) => 1 + depth(tg, seen + c)
                       case None     => 99
                 val delegSecondaries = thisDelegators.sortBy(d => depth(d, Set.empty)).map { d =>
-                  val tgtTypes = t.ctors.find(o => (o ne d) && o.params.length == d.thisArgs.get.length)
-                    .map(_.params.map(_.tpe)).getOrElse(Nil)
+                  val tgtTypes = t.ctors.find(o => (o ne d) && o.params.length == d.thisArgs.get.length).map(_.params.map(_.tpe)).getOrElse(Nil)
                   fixSecondaryCollisions(t, Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body, targetTypes = tgtTypes))
                 }
                 val secondaries = rootSecondaries ++ delegSecondaries
-                Some(CtorPlan(
-                  primaryParams.map(p => Param(p, None)),
-                  Some(Mods(vis = Vis.Private)),
-                  sentinelLike = false,
-                  Nil,
-                  superRefs,
-                  primaryBody,
-                  fieldLines,
-                  secondaries,
-                ))
+                Some(
+                  CtorPlan(
+                    primaryParams.map(p => Param(p, None)),
+                    Some(Mods(vis = Vis.Private)),
+                    sentinelLike = false,
+                    Nil,
+                    superRefs,
+                    primaryBody,
+                    fieldLines,
+                    secondaries
+                  )
+                )
 
     t.ctors match
       case Nil =>
@@ -236,16 +233,16 @@ object CtorPlan:
 
       case ctors =>
         val (roots, delegators) = ctors.partition(_.thisArgs.isEmpty)
-        val allEmptyBodies = ctors.forall { c =>
+        val allEmptyBodies      = ctors.forall { c =>
           val (a, r) = splitAssigns(c.body); a.isEmpty && r.isEmpty
         }
         // Date shape: all roots with identical super args, no field assigns, one no-arg root
-        val sameSuper = ctors.map(_.superArgs.getOrElse(Nil)).distinct.lengthIs == 1
+        val sameSuper      = ctors.map(_.superArgs.getOrElse(Nil)).distinct.lengthIs == 1
         val noFieldAssigns = ctors.forall(c => splitAssigns(c.body)._1.isEmpty)
         val noArgEmptyRoot =
           ctors.find(c => c.thisArgs.isEmpty && c.params.isEmpty && splitAssigns(c.body)._2.isEmpty)
         if roots.length == ctors.length && sameSuper && noFieldAssigns && noArgEmptyRoot.isDefined then
-          val primary = noArgEmptyRoot.get
+          val primary     = noArgEmptyRoot.get
           val secondaries = ctors.filterNot(_ eq primary).map { c =>
             Secondary(c.leading, c.mods, c.params, Nil, splitAssigns(c.body)._2)
           }
@@ -254,7 +251,7 @@ object CtorPlan:
           // this()-chain: sole root is primary; delegators ordered by depth (Scala rule)
           def depth(c: BCtor, seen: Set[BCtor]): Int =
             c.thisArgs match
-              case None => 0
+              case None       => 0
               case Some(args) =>
                 ctors.find(o => !seen.contains(o) && (o ne c) && o.params.length == args.length) match
                   case Some(target) => 1 + depth(target, seen + c)
@@ -264,8 +261,7 @@ object CtorPlan:
             .map(d =>
               fixSecondaryCollisions(
                 t,
-                Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body,
-                  targetTypes = roots.head.params.map(_.tpe)),
+                Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body, targetTypes = roots.head.params.map(_.tpe))
               )
             )
           rootPlan(roots.head, secondaries)
@@ -278,18 +274,15 @@ object CtorPlan:
           }
           ctors.filter(isIdentitySuper) match
             case Nil =>
-              noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
-                fail("multiple constructors, none with an identity super(...) call"))
+              noArgPrimaryPlan(t, unit, registry, fail).getOrElse(fail("multiple constructors, none with an identity super(...) call"))
             case candidates =>
               // max-arity identity-super ctor is primary (source order on ties)
-              val primary = candidates.maxBy(_.params.length)
+              val primary        = candidates.maxBy(_.params.length)
               val parentSentinel = t.superClass.exists(s => sentinelSupers.contains(s.qname))
               // resolve secondary's super args through parent's this()-chain to primary arity
               def resolvedThrough(c: BCtor): Option[List[BExpr]] =
                 if c.thisArgs.isDefined then None // this-delegation must already match arity
-                else
-                  t.superClass.flatMap(sc => registry.flatMap(_.resolveThisChain(sc.qname, c.superArgs.getOrElse(Nil), target = c.callTargetTypes)))
-                    .filter(_.length == primary.params.length)
+                else t.superClass.flatMap(sc => registry.flatMap(_.resolveThisChain(sc.qname, c.superArgs.getOrElse(Nil), target = c.callTargetTypes))).filter(_.length == primary.params.length)
               def canDelegate(c: BCtor): Boolean =
                 val dArgs = c.thisArgs.orElse(c.superArgs).getOrElse(Nil)
                 dArgs.length == primary.params.length ||
@@ -304,18 +297,17 @@ object CtorPlan:
                 )
               else
                 var usedSentinelRewrite = false
-                val secondaries = others.map { c =>
+                val secondaries         = others.map { c =>
                   val delegateArgs =
                     c.thisArgs.orElse(c.superArgs).getOrElse(Nil)
-                  if delegateArgs.length == primary.params.length then
-                    Secondary(c.leading, c.mods, c.params, delegateArgs, targetTypes = primary.params.map(_.tpe))
-                  else resolvedThrough(c) match
-                    case Some(resolved) =>
-                      Secondary(c.leading, c.mods, c.params, resolved, targetTypes = primary.params.map(_.tpe))
-                    case None =>
-                      usedSentinelRewrite = true
-                      Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")),
-                        targetTypes = primary.params.map(_.tpe))
+                  if delegateArgs.length == primary.params.length then Secondary(c.leading, c.mods, c.params, delegateArgs, targetTypes = primary.params.map(_.tpe))
+                  else
+                    resolvedThrough(c) match
+                      case Some(resolved) =>
+                        Secondary(c.leading, c.mods, c.params, resolved, targetTypes = primary.params.map(_.tpe))
+                      case None =>
+                        usedSentinelRewrite = true
+                        Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")), targetTypes = primary.params.map(_.tpe))
                 }
                 CtorPlan(
                   primary.params.map(p => Param(p, None)),
@@ -325,7 +317,7 @@ object CtorPlan:
                   primary.superArgs.getOrElse(Nil),
                   Nil,
                   t.fields.map(fieldWithOwnInit),
-                  secondaries,
+                  secondaries
                 )
         else if identityBasisPlan(ctors, roots).isDefined then identityBasisPlan(ctors, roots).get
         else
@@ -333,23 +325,19 @@ object CtorPlan:
             case List(noArg, paramful) if noArg.params.isEmpty && paramful.params.length == 1 =>
               val (naT, nr) = splitAssignsT(noArg.body)
               val (paT, pr) = splitAssignsT(paramful.body)
-              val na = naT.map(x => (x._1, x._2))
-              val pa = paT.map(x => (x._1, x._2))
+              val na        = naT.map(x => (x._1, x._2))
+              val pa        = paT.map(x => (x._1, x._2))
               val mergeTrivia: Map[String, List[Trivia]] =
                 (paT ++ naT).groupBy(_._1).view.mapValues(_.flatMap(_._3).toList).toMap
               def withMergeTrivia(f: BField): BField =
                 f.copy(leading = f.leading ++ mergeTrivia.getOrElse(f.name, Nil))
-              if nr.nonEmpty || pr.nonEmpty then
-                return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
-                  fail("two-ctor merge: ctor bodies contain more than field assignments"))
+              if nr.nonEmpty || pr.nonEmpty then return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(fail("two-ctor merge: ctor bodies contain more than field assignments"))
               (na, pa) match
                 case (List((f1, defaultExpr)), List((f2, Ident(pn, RefKind.Param(_)))))
                     if f1 == f2 && paramful.params.head.name == pn &&
                       t.fields.exists(fd => fd.name == f1 && fd.mods.isFinal) =>
                   val p = paramful.params.head
-                  if p.tpe.isInstanceOf[BType.Prim] then
-                    return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
-                      fail("two-ctor merge: sentinel requires a reference-typed parameter"))
+                  if p.tpe.isInstanceOf[BType.Prim] then return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(fail("two-ctor merge: sentinel requires a reference-typed parameter"))
                   val fld = t.fields.find(_.name == f1).get
                   CtorPlan(
                     List(Param(p.copy(name = "_" + p.name), None)),
@@ -360,22 +348,18 @@ object CtorPlan:
                     Nil,
                     FieldLine.SentinelVal(withMergeTrivia(fld), "_" + p.name, defaultExpr)
                       :: t.fields.filterNot(_.name == f1).map(fieldWithOwnInit),
-                    List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
+                    List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null"))))
                   )
                 case (na, pa) =>
                   // generalized N-field sentinel merge
-                  val naMap = na.toMap
-                  val paMap = pa.toMap
+                  val naMap   = na.toMap
+                  val paMap   = pa.toMap
                   val noDupes = naMap.size == na.length && paMap.size == pa.length
                   val superOk = noArg.superArgs.getOrElse(Nil) == paramful.superArgs.getOrElse(Nil)
-                  val p = paramful.params.head
-                  if !noDupes || !superOk then
-                    return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
-                      fail("two-ctor merge: shapes don't match the sentinel pattern"))
-                  if p.tpe.isInstanceOf[BType.Prim] then
-                    return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
-                      fail("two-ctor merge: sentinel requires a reference-typed parameter"))
-                  val pn = "_" + p.name
+                  val p       = paramful.params.head
+                  if !noDupes || !superOk then return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(fail("two-ctor merge: shapes don't match the sentinel pattern"))
+                  if p.tpe.isInstanceOf[BType.Prim] then return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(fail("two-ctor merge: sentinel requires a reference-typed parameter"))
+                  val pn     = "_" + p.name
                   val merged = t.fields.map { f =>
                     (paMap.get(f.name), naMap.get(f.name), f.init) match
                       case (Some(_), Some(_), Some(_)) =>
@@ -399,27 +383,25 @@ object CtorPlan:
                     paramful.superArgs.getOrElse(Nil),
                     Nil,
                     merged,
-                    List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
+                    List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null"))))
                   )
             case _ =>
-              noArgPrimaryPlan(t, unit, registry, fail)
-                .orElse(maximalPrimaryPlan)
-                .getOrElse(fail(s"${ctors.length} constructors with field logic — no funnel strategy applies"))
+              noArgPrimaryPlan(t, unit, registry, fail).orElse(maximalPrimaryPlan).getOrElse(fail(s"${ctors.length} constructors with field logic — no funnel strategy applies"))
 
-  /** Identity-basis funnel: a root ctor whose super+field args are all distinct param
-    * refs serves as basis; siblings delegate by filling its slots. */
+  /** Identity-basis funnel: a root ctor whose super+field args are all distinct param refs serves as basis; siblings delegate by filling its slots.
+    */
   private def identityBasisPlanImpl(
-      ctors: List[BCtor],
-      roots: List[BCtor],
-      splitAssigns: List[BStmt] => (List[(String, BExpr)], List[BStmt]),
-      rootPlan: (BCtor, List[Secondary]) => CtorPlan,
+    ctors:        List[BCtor],
+    roots:        List[BCtor],
+    splitAssigns: List[BStmt] => (List[(String, BExpr)], List[BStmt]),
+    rootPlan:     (BCtor, List[Secondary]) => CtorPlan
   ): Option[CtorPlan] =
     def paramRef(e: BExpr): Option[String] = e match
       case Ident(n, RefKind.Param(_)) => Some(n)
       case _                          => None
     val basis = roots.find { p =>
-      val (pa, pr) = splitAssigns(p.body)
-      val superParams = p.superArgs.getOrElse(Nil).map(paramRef)
+      val (pa, pr)     = splitAssigns(p.body)
+      val superParams  = p.superArgs.getOrElse(Nil).map(paramRef)
       val assignParams = pa.map((_, e) => paramRef(e))
       pr.isEmpty &&
       superParams.forall(_.isDefined) && assignParams.forall(_.isDefined) && {
@@ -429,20 +411,20 @@ object CtorPlan:
     }
     basis.flatMap { p =>
       val (pAssigns, _) = splitAssigns(p.body)
-      val superParams = p.superArgs.getOrElse(Nil).flatMap(paramRef)
+      val superParams   = p.superArgs.getOrElse(Nil).flatMap(paramRef)
       val fieldOfParam: Map[String, String] = pAssigns.flatMap((f, e) => paramRef(e).map(_ -> f)).toMap
       val others = ctors.filterNot(_ eq p)
       val secondaries: Option[List[Secondary]] =
         others.foldRight(Option(List.empty[Secondary])) { (r, acc) =>
           acc.flatMap { tail =>
             val (rAssigns, rRest) = splitAssigns(r.body)
-            val rSuper = r.superArgs.getOrElse(Nil)
+            val rSuper            = r.superArgs.getOrElse(Nil)
             if r.thisArgs.isDefined || rSuper.length != superParams.length ||
               rAssigns.map(_._1).toSet != pAssigns.map(_._1).toSet ||
               rAssigns.map(_._1).distinct.length != rAssigns.length
             then None
             else
-              val rAssignMap = rAssigns.toMap
+              val rAssignMap   = rAssigns.toMap
               val delegateArgs = p.params.map { param =>
                 superParams.indexOf(param.name) match
                   case -1 => rAssignMap(fieldOfParam(param.name))
@@ -456,17 +438,16 @@ object CtorPlan:
       secondaries.map(rootPlan(p, _))
     }
 
-  /** No-arg-primary + effect-replay: bare primary, each ctor replays
-    * inlined super effects. Requires no-arg-reachable parent chain. */
+  /** No-arg-primary + effect-replay: bare primary, each ctor replays inlined super effects. Requires no-arg-reachable parent chain.
+    */
   private def noArgPrimaryPlan(
-      t: BTypeDecl,
-      unit: BUnit,
-      registry: Option[CtorRegistry],
-      fail: String => Nothing,
+    t:        BTypeDecl,
+    unit:     BUnit,
+    registry: Option[CtorRegistry],
+    fail:     String => Nothing
   ): Option[CtorPlan] =
     registry.flatMap { reg =>
-      val selfFqcn = reg.resolveFqcn(unit.pkg, t.name)
-        .getOrElse(if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}")
+      val selfFqcn = reg.resolveFqcn(unit.pkg, t.name).getOrElse(if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}")
       def dbg(msg: => String): Unit =
         if sys.env.get("BP_DEBUG_CLASS").exists(selfFqcn.endsWith) then System.err.println(s"[noargpp] $selfFqcn: $msg")
       val noArgJava = t.ctors.find(_.params.isEmpty)
@@ -475,8 +456,8 @@ object CtorPlan:
         var found = false
         BirTransform.mapExpr(e) { case x @ Ident(_, RefKind.Param(_)) => found = true; x; case x => x }
         found
-      def paramFree(es: List[BExpr]): Boolean = !es.exists(hasParamRef)
-      val sharedSuper: Option[List[BExpr]] =
+      def paramFree(es: List[BExpr]): Boolean             = !es.exists(hasParamRef)
+      val sharedSuper:                Option[List[BExpr]] =
         if noArgJava.isEmpty && t.ctors.nonEmpty && t.ctors.forall(c => c.thisArgs.isEmpty && c.superArgs.isDefined) then
           t.ctors.map(_.superArgs.get).distinctBy(_.toString) match
             case List(one) if one.nonEmpty && paramFree(one) => Some(one)
@@ -484,12 +465,12 @@ object CtorPlan:
         else None
       def upstreamOf(c: BCtor): Option[List[BStmt]] = c.thisArgs match
         case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta, forFqcn = selfFqcn, target = c.callTargetTypes)
-        case None =>
+        case None     =>
           val sargs = c.superArgs.getOrElse(Nil)
           t.superClass match
             case Some(p) => reg.inlineSuperEffects(p.qname, sargs, forFqcn = selfFqcn, target = c.callTargetTypes)
             case None    => if sargs.isEmpty then Some(Nil) else None
-      def ownBody(c: BCtor): List[BStmt] = c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
+      def ownBody(c: BCtor):  List[BStmt]         = c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
       def flatBody(c: BCtor): Option[List[BStmt]] =
         // shared-super: primary already ran super, replay only own body
         if sharedSuper.isDefined then Some(ownBody(c))
@@ -517,15 +498,15 @@ object CtorPlan:
           def collectAssigns(st: BStmt): Unit =
             st.k match
               case BStmtK.Assign(Ident(f, RefKind.OwnField), _, _) => assigned += f
-              case BStmtK.If(_, a, b)      => a.foreach(collectAssigns); b.foreach(_.foreach(collectAssigns))
-              case BStmtK.While(_, b)      => b.foreach(collectAssigns)
-              case BStmtK.DoWhile(b, _)    => b.foreach(collectAssigns)
-              case BStmtK.Block(b)         => b.foreach(collectAssigns)
-              case BStmtK.Boundary(b, _)   => b.foreach(collectAssigns)
-              case BStmtK.Try(b, cs, f2)   =>
+              case BStmtK.If(_, a, b)                              => a.foreach(collectAssigns); b.foreach(_.foreach(collectAssigns))
+              case BStmtK.While(_, b)                              => b.foreach(collectAssigns)
+              case BStmtK.DoWhile(b, _)                            => b.foreach(collectAssigns)
+              case BStmtK.Block(b)                                 => b.foreach(collectAssigns)
+              case BStmtK.Boundary(b, _)                           => b.foreach(collectAssigns)
+              case BStmtK.Try(b, cs, f2)                           =>
                 b.foreach(collectAssigns); cs.foreach(_.body.foreach(collectAssigns)); f2.foreach(_.foreach(collectAssigns))
-              case BStmtK.Match(_, cases)  => cases.foreach(_.body.foreach(collectAssigns))
-              case _ => ()
+              case BStmtK.Match(_, cases) => cases.foreach(_.body.foreach(collectAssigns))
+              case _                      => ()
           secs.foreach(_.body.foreach(collectAssigns))
           primaryBody.getOrElse(Nil).foreach(collectAssigns)
           val fieldLines = t.fields.map { f0 =>
@@ -542,17 +523,14 @@ object CtorPlan:
             sharedSuper.getOrElse(Nil),
             primaryBody.getOrElse(Nil),
             fieldLines,
-            secs,
+            secs
           )
         }
     }
 
   /** Rename secondary-ctor params that collide with class members (`_p`). */
   private def fixSecondaryCollisions(t: BTypeDecl, s: Secondary): Secondary =
-    val collide = s.params
-      .map(_.name)
-      .filter(pn => t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn))
-      .toSet
+    val collide = s.params.map(_.name).filter(pn => t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn)).toSet
     if collide.isEmpty then s
     else
       val rnE: BExpr => BExpr = {
@@ -562,7 +540,7 @@ object CtorPlan:
       s.copy(
         params = s.params.map(p => if collide.contains(p.name) then p.copy(name = "_" + p.name) else p),
         delegateArgs = s.delegateArgs.map(BirTransform.mapExpr(_)(rnE)),
-        body = s.body.map(BirTransform.mapStmt(_)(rnE)),
+        body = s.body.map(BirTransform.mapStmt(_)(rnE))
       )
 
   /** True when the expression references `this` or an own-field. */
@@ -572,24 +550,24 @@ object CtorPlan:
     case Select(r, _)               => usesThis(r)
     case ArrayLength(a)             => usesThis(a)
     case ArrayAccess(a, i)          => usesThis(a) || usesThis(i)
-    case Call(recv, _, args, _, _) =>
+    case Call(recv, _, args, _, _)  =>
       val recvThis = recv match
         case Recv.OnThis | Recv.OnSuper => true
         case Recv.On(r)                 => usesThis(r)
         case Recv.Static(_)             => false
       recvThis || args.exists(usesThis)
-    case New(_, args, _, _)     => args.exists(usesThis)
-    case NewArray(_, d, i)      => d.exists(usesThis) || i.exists(_.exists(usesThis))
-    case AssignExpr(l, r)       => usesThis(l) || usesThis(r)
-    case IncDecExpr(t2, _, _)   => usesThis(t2)
-    case Binary(_, l, r, _)     => usesThis(l) || usesThis(r)
-    case Unary(_, x, _)         => usesThis(x)
-    case Ternary(c, t, e2)      => usesThis(c) || usesThis(t) || usesThis(e2)
-    case Cast(_, x)             => usesThis(x)
-    case InstanceOf(x, _)       => usesThis(x)
-    case Typed(x, _)            => usesThis(x)
-    case Lambda(_, body, _)     => body.fold(_ => true, usesThis) // conservative for stmt bodies
-    case MethodRef(p2, _)       => p2.fold(_ => false, usesThis)
+    case New(_, args, _, _)                                                 => args.exists(usesThis)
+    case NewArray(_, d, i)                                                  => d.exists(usesThis) || i.exists(_.exists(usesThis))
+    case AssignExpr(l, r)                                                   => usesThis(l) || usesThis(r)
+    case IncDecExpr(t2, _, _)                                               => usesThis(t2)
+    case Binary(_, l, r, _)                                                 => usesThis(l) || usesThis(r)
+    case Unary(_, x, _)                                                     => usesThis(x)
+    case Ternary(c, t, e2)                                                  => usesThis(c) || usesThis(t) || usesThis(e2)
+    case Cast(_, x)                                                         => usesThis(x)
+    case InstanceOf(x, _)                                                   => usesThis(x)
+    case Typed(x, _)                                                        => usesThis(x)
+    case Lambda(_, body, _)                                                 => body.fold(_ => true, usesThis) // conservative for stmt bodies
+    case MethodRef(p2, _)                                                   => p2.fold(_ => false, usesThis)
     case _: UnboundMethodRef | _: Ident | _: Lit | _: ClassLit | _: CtorRef => false
 
   /** Java default value for a type, as an expression. */
@@ -611,19 +589,19 @@ object CtorPlan:
       case Select(r, n)                                => Select(rp(r), n)
       case ArrayLength(a)                              => ArrayLength(rp(a))
       case ArrayAccess(a, i)                           => ArrayAccess(rp(a), rp(i))
-      case Call(recv, n, args, f, o) =>
+      case Call(recv, n, args, f, o)                   =>
         val r2 = recv match
           case Recv.On(r) => Recv.On(rp(r))
           case other      => other
         Call(r2, n, args.map(rp), f, o)
-      case n: New                  => n.copy(args = n.args.map(rp))
-      case NewArray(el, d, i)      => NewArray(el, d.map(rp), i.map(_.map(rp)))
-      case Binary(op, l, r, c)     => Binary(op, rp(l), rp(r), c)
-      case Unary(op, x, p2)        => Unary(op, rp(x), p2)
-      case Ternary(c, tt, ee)      => Ternary(rp(c), rp(tt), rp(ee))
-      case Cast(t2, x)             => Cast(t2, rp(x))
-      case InstanceOf(x, t2)       => InstanceOf(rp(x), t2)
-      case Typed(x, t2)            => Typed(rp(x), t2)
-      case l: Lambda               => if l.params.contains(from) then l else l.copy(body = l.body.map(rp))
-      case m: MethodRef            => m.copy(prefix = m.prefix.map(rp))
-      case u: UnboundMethodRef     => u
+      case n: New => n.copy(args = n.args.map(rp))
+      case NewArray(el, d, i)  => NewArray(el, d.map(rp), i.map(_.map(rp)))
+      case Binary(op, l, r, c) => Binary(op, rp(l), rp(r), c)
+      case Unary(op, x, p2)    => Unary(op, rp(x), p2)
+      case Ternary(c, tt, ee)  => Ternary(rp(c), rp(tt), rp(ee))
+      case Cast(t2, x)         => Cast(t2, rp(x))
+      case InstanceOf(x, t2)   => InstanceOf(rp(x), t2)
+      case Typed(x, t2)        => Typed(rp(x), t2)
+      case l: Lambda           => if l.params.contains(from) then l else l.copy(body = l.body.map(rp))
+      case m: MethodRef        => m.copy(prefix = m.prefix.map(rp))
+      case u: UnboundMethodRef => u

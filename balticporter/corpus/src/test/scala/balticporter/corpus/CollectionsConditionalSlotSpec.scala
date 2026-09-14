@@ -17,7 +17,9 @@ class CollectionsConditionalSlotSpec extends PortSuite:
         |    return attributes != null ? attributes.values() : Collections.EMPTY_LIST;
         |  }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the `else` arm is a `Buffer` at a `JavaCollection` result — java's own `List <: Collection`,
     // an edge the mapping has no image for — and nothing reached it while the walk stopped at the
     // `if`.
@@ -34,7 +36,9 @@ class CollectionsConditionalSlotSpec extends PortSuite:
         |    return n > 0 ? a : n < 0 ? b : Collections.EMPTY_LIST;
         |  }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the recursion goes back through `coerce`, so an inner conditional is an arm like any other and
     // every guard still answers.
     assertEmits(p, "balticporter.runtime.JavaCollection.from(a)")
@@ -47,7 +51,9 @@ class CollectionsConditionalSlotSpec extends PortSuite:
         |class Plain {
         |  String pick(int n, String a, String b) { return n > 0 ? a : b; }
         |}
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // the descent is identity-preserving where neither arm moves, so no member digest shifts for a
     // conditional that was already right — the over-approximation §5 has no instrument for.
     assertEmits(p, "return if (n > 0) a else b")

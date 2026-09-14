@@ -3,15 +3,15 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason}
+import balticporter.tir.{ Decision, Pipeline, PorterNote, Program, Reason }
 import balticporter.transform.CollectionsTransform
 
-/** A `super.<JDK DEFAULT>` ON A CLASS THE PHASE RE-PARENTED — `ENGINE-LIMITS.md` K29, and
-  * `CLAUDE.md` §1's *an obligation the engine's own translation created*. */
+/** A `super.<JDK DEFAULT>` ON A CLASS THE PHASE RE-PARENTED — `ENGINE-LIMITS.md` K29, and `CLAUDE.md` §1's *an obligation the engine's own translation created*.
+  */
 class CollectionsSuperDefaultSpec extends PortSuite:
 
-  /** `Fast` is the positive — a class the mapping re-parents onto `mutable.ArrayBuffer`, calling all
-    * four defaults through `super` exactly as `java.util.AbstractCollection`'s own subclasses do. */
+  /** `Fast` is the positive — a class the mapping re-parents onto `mutable.ArrayBuffer`, calling all four defaults through `super` exactly as `java.util.AbstractCollection`'s own subclasses do.
+    */
   private val src =
     """package demo;
       |import java.util.*;
@@ -92,7 +92,8 @@ class CollectionsSuperDefaultSpec extends PortSuite:
         |class Sub extends Base {
         |  public boolean removeAll(Collection<?> c) { return super.removeAll(c); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(out.contains("super.removeAll("), out)
     assert(!out.contains("JavaCollections.removeAll(this,"), out)
   }
@@ -107,7 +108,8 @@ class CollectionsSuperDefaultSpec extends PortSuite:
         |class Mine extends Own {
         |  public boolean containsAll(Collection<?> c) { return super.containsAll(c); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(out.contains("super.containsAll("), out)
     assert(!out.contains("JavaCollections.containsAll(this,"), out)
   }
@@ -125,18 +127,23 @@ class CollectionsSuperDefaultSpec extends PortSuite:
         |  public Iterator<String> iterator() { return null; }
         |  public int size() { return 0; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(out.contains("super.containsAll("), out)
     assert(!out.contains("JavaCollections.containsAll(this,"), out)
   }
 
   test("the no-op, by arithmetic: a program with no such `super` records NOTHING") {
-    val log = Pipeline.runTraced(
-      SpoonTir.fromSource(
-        """package demo;
-          |import java.util.*;
-          |class Plain { boolean ask(List<String> xs, Collection<String> c) { return xs.containsAll(c); } }
-          |""".stripMargin),
-      List(new CollectionsTransform()))._2
+    val log = Pipeline
+      .runTraced(
+        SpoonTir.fromSource(
+          """package demo;
+            |import java.util.*;
+            |class Plain { boolean ask(List<String> xs, Collection<String> c) { return xs.containsAll(c); } }
+            |""".stripMargin
+        ),
+        List(new CollectionsTransform())
+      )
+      ._2
     assertEquals(clue(log.of(Decision.Kind.SubstitutedCall)).size, 0)
   }

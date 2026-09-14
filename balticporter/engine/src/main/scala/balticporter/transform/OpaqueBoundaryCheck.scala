@@ -2,10 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The OPAQUE-TYPE boundary, counted — every seam `PrimitiveToOpaqueTransform`'s retyping opened
-  * and could not close: an EXTERNAL CALLEE with no readable formal, a REIFIED position
-  * (`instanceof`/cast), and a BOXED-PRIMITIVE boundary the coercion did not reach. Parameterised by
-  * the phase's own `seeds`/`typeMapping`; empty seeds is a no-op. Counts residue, not successes. */
+/** The OPAQUE-TYPE boundary, counted — every seam `PrimitiveToOpaqueTransform`'s retyping opened and could not close: an EXTERNAL CALLEE with no readable formal, a REIFIED position
+  * (`instanceof`/cast), and a BOXED-PRIMITIVE boundary the coercion did not reach. Parameterised by the phase's own `seeds`/`typeMapping`; empty seeds is a no-op. Counts residue, not successes.
+  */
 object OpaqueBoundaryCheck:
 
   /** the check's name in `findings.tsv`. */
@@ -13,11 +12,13 @@ object OpaqueBoundaryCheck:
 
   /** what kind of boundary this is, which decides who fixes it (CLAUDE.md §1). */
   enum Issue:
-    /** a call to an EXTERNAL method whose formal `coerceArgs` cannot read; the SCOPE FENCE is the
-      * configured defence. */
+    /** a call to an EXTERNAL method whose formal `coerceArgs` cannot read; the SCOPE FENCE is the configured defence.
+      */
     case ExternalCallee
+
     /** the declaration's opaque type is deliberately held back by the port's SCOPE. */
     case ScopedOut
+
     /** a BOXED-PRIMITIVE value where the wrapping could not fire — no auto-unbox node in the TIR. */
     case BoxedPrimitive
 
@@ -42,19 +43,21 @@ object OpaqueBoundaryCheck:
           "it could not reach."
 
   /** one boundary site. `unit` is the top-level symbol for D2 ownership filtering. */
-  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin,
-                           unit: SymId = SymId.None):
-    def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
+  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):
+    def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, subject,
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   /** grouped one-line summary, worst family first, each with its §1 classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

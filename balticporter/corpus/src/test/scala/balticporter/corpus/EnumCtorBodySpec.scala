@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** The Java ENUM lowering, pinned through the pipeline — a Java snippet in, the emitted Scala
-  * asserted. */
+/** The Java ENUM lowering, pinned through the pipeline — a Java snippet in, the emitted Scala asserted.
+  */
 class EnumCtorBodySpec extends PortSuite:
 
   test("an enum constructor's BODY runs — the field it computes is not left at its default") {

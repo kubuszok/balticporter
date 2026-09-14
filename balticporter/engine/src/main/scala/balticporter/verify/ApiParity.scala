@@ -2,8 +2,8 @@ package balticporter.verify
 
 import balticporter.core.*
 
-/** Every non-private member of the original Java unit must appear in the emitted Scala skeleton.
-  * Constructor shapes are exempt (the funnel restructures them); private members are not required. */
+/** Every non-private member of the original Java unit must appear in the emitted Scala skeleton. Constructor shapes are exempt (the funnel restructures them); private members are not required.
+  */
 object ApiParity:
 
   final case class Expectation(path: String, name: String, arity: Option[Int]):
@@ -15,10 +15,10 @@ object ApiParity:
   private def visible(m: Mods): Boolean = m.vis != Vis.Private
 
   private def ofType(t: BTypeDecl, path: String): List[Expectation] =
-    val self = Expectation(path, t.name, None)
-    val here = s"$path/${t.name}"
+    val self      = Expectation(path, t.name, None)
+    val here      = s"$path/${t.name}"
     val companion = s"$path/${t.name}$$"
-    val instance =
+    val instance  =
       t.methods.filter(m => visible(m.mods)).map(m => Expectation(here, m.name, Some(m.params.length))) ++
         t.fields.filter(f => visible(f.mods)).map(f => Expectation(here, f.name, None)) ++
         t.enumCases.map(c => Expectation(here, c.name, None))

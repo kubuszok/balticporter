@@ -6,8 +6,8 @@ import balticporter.transform.CollectionsTransform
 /** THE CLASH THE MINTED PARENT MADE — `CLAUDE.md` §4.5 read at a CALL rather than at a shim. */
 class CollectionsMintedParentClashSpec extends PortSuite:
 
-  /** the shape, on all three kinds at once. Each class declares java's `Object`-formal member and
-    * a CALLER of it, so the pin's effect is visible in the emitted caller. */
+  /** the shape, on all three kinds at once. Each class declares java's `Object`-formal member and a CALLER of it, so the pin's effect is visible in the emitted caller.
+    */
   private val src =
     """package demo;
       |import java.util.*;
@@ -86,7 +86,9 @@ class CollectionsMintedParentClashSpec extends PortSuite:
         |  public boolean contains(Object o) { return false; }
         |}
         |class Uses { void go(Registry r, String s) { r.remove(s); r.contains(s); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // nothing minted a parent here, so there is no second alternative and no ambiguity: the
     // conjunct that decides this is the phase's OWN record of what it re-parented (§4.56).
     assertEmits(p, "r.remove(s)")
@@ -104,7 +106,9 @@ class CollectionsMintedParentClashSpec extends PortSuite:
         |  public boolean holds(Object o) { return false; }
         |}
         |class Uses { void go(Cursor<String> c, String s) { c.holds(s); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // `java.util.Iterator` maps to the `JavaIterator` SHIM, which carries java's shape and declares
     // nothing at the element type — §4.5's whole reason for a standalone target. Counting it as a
     // re-parenting would pin calls against a parent that has no such member.
@@ -131,7 +135,9 @@ class CollectionsMintedParentClashSpec extends PortSuite:
         |  public Set<Map.Entry<String, V>> entrySet() { return slots.entrySet(); }
         |}
         |class Uses { void go(Store<Integer> s, Object probe) { s.remove(probe); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // an `Object` at an `Object` slot already selects java's alternative uniquely; ascribing it to
     // its own type is emitted text for nothing, which is the over-approximation §5 cannot see. The
     // bridge renames the member either way, so what this negative still pins is the ABSENCE of the
@@ -160,7 +166,9 @@ class CollectionsMintedParentClashSpec extends PortSuite:
         |  public Set<Map.Entry<Object, Object>> entrySet() { return slots.entrySet(); }
         |}
         |class Uses { void go(Any2Any m, String s) { m.remove(s); } }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // both alternatives WOULD take an `Object` and the pin could make neither unique — which is why
     // it refuses. The bridge answers this shape too, and by construction rather than by refusing:
     // renaming java's member leaves one alternative, so the `E051` this test was written to leave

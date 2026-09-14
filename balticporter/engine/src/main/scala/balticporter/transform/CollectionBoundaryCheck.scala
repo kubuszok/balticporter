@@ -4,80 +4,95 @@ import balticporter.catalog.FixKind
 import balticporter.core.RuntimeArtifact
 import balticporter.tir.*
 
-/** The JDK/Scala collection BOUNDARY, counted — every slot the retyping opened and did not close.
-  * `CollectionsTransform` retypes signatures while JDK types the mapping does not cover stay put,
-  * so a `Found/Required` error reaches the compiler with no §1 classification (§4.45). Counts the
-  * same four slot kinds `coerce` reaches, plus a call on a SCOPED-OUT receiver. STRANDED when the
-  * two sides fall on opposite sides of a line the phase itself drew. §1(a), an empty mapping is a no-op. */
+/** The JDK/Scala collection BOUNDARY, counted — every slot the retyping opened and did not close. `CollectionsTransform` retypes signatures while JDK types the mapping does not cover stay put, so a
+  * `Found/Required` error reaches the compiler with no §1 classification (§4.45). Counts the same four slot kinds `coerce` reaches, plus a call on a SCOPED-OUT receiver. STRANDED when the two sides
+  * fall on opposite sides of a line the phase itself drew. §1(a), an empty mapping is a no-op.
+  */
 object CollectionBoundaryCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "collection-boundary"
 
-  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Two entries, both
-    * `accept`-shaped, at an EXTERNAL callee (ONE-SPELLING rules out the rest: `UnmappedSubtype`/
-    * `ScopedOut` already have a manifest key). `wrap-at-seam`/`copy-detach` are ABSENT, not
-    * unspelled (no factory found, or a copy would detach both directions).
-    * `InexpressibleParent`/`ReifiedOccurrence` are known divergences the engine refuses to repair. */
+  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Two entries, both `accept`-shaped, at an EXTERNAL callee (ONE-SPELLING rules out the rest: `UnmappedSubtype`/ `ScopedOut`
+    * already have a manifest key). `wrap-at-seam`/`copy-detach` are ABSENT, not unspelled (no factory found, or a copy would detach both directions). `InexpressibleParent`/`ReifiedOccurrence` are
+    * known divergences the engine refuses to repair.
+    */
   def remedies: List[Remedy] = List(
     Remedy(
-      id = "accept-external-callee", lane = Name, kind = Issue.ExternalCallee.toString,
-      emissionAffecting = false, fix = FixKind.Parameterised,
+      id = "accept-external-callee",
+      lane = Name,
+      kind = Issue.ExternalCallee.toString,
+      emissionAffecting = false,
+      fix = FixKind.Parameterised,
       subject = Remedy.Subject.ExternalMember,
       what = "the port has READ this seam and states that the value crossing it is one this callee " +
         "handles — the row moves to remediation(resolved), the emitted text does not change, and " +
-        "nothing is wrapped or copied"),
+        "nothing is wrapped or copied"
+    ),
     Remedy(
-      id = "accept-opaque-egress", lane = Name, kind = Issue.OpaqueEgress.toString,
-      emissionAffecting = false, fix = FixKind.Parameterised,
+      id = "accept-opaque-egress",
+      lane = Name,
+      kind = Issue.OpaqueEgress.toString,
+      emissionAffecting = false,
+      fix = FixKind.Parameterised,
       subject = Remedy.Subject.ExternalMember,
       what = "the port has READ this external method and states that it does NOT read the runtime " +
         "representation it is handed — the complement of a `reflectiveSinks` entry, which is the " +
-        "only answer this review list previously had no way to record"),
+        "only answer this review list previously had no way to record"
+    )
   )
 
   /** what kind of stranding this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Issue:
-    /** the JDK type is a SUBTYPE of one the mapping covers — [[CollectionClosureCheck]]'s closure
-      * hole, met here as a site. */
+    /** the JDK type is a SUBTYPE of one the mapping covers — [[CollectionClosureCheck]]'s closure hole, met here as a site.
+      */
     case UnmappedSubtype
+
     /** a JDK collection family the engine deliberately does not retype at all. */
     case UntranslatedFamily
+
     /** a type that IS in the mapping and reached this slot anyway. */
     case MappedTypeSurvived
+
     /** both sides are the phase's own output, on opposite sides of the shim/scala split. */
     case ShimBoundary
-    /** the same slot where the VALUE is not the phase's output: it is produced by a call the
-      * phase's own static arms cover and DECLINED to rewrite, so the value is java's however the
-      * position-blind node type reads. Kept apart from [[ShimBoundary]], whose classification
-      * points at `coerce` instead. */
+
+    /** the same slot where the VALUE is not the phase's output: it is produced by a call the phase's own static arms cover and DECLINED to rewrite, so the value is java's however the position-blind
+      * node type reads. Kept apart from [[ShimBoundary]], whose classification points at `coerce` instead.
+      */
     case RefusedSource
-    /** one side is a declaration the phase's [[balticporter.tir.RuleScope]] deliberately held back,
-      * so it kept its JDK type while the code meeting it moved. */
+
+    /** one side is a declaration the phase's [[balticporter.tir.RuleScope]] deliberately held back, so it kept its JDK type while the code meeting it moved.
+      */
     case ScopedOut
-    /** the same slot where NO POLICY held the declaration back: it OVERRIDES a member whose
-      * signature lives in a COMPILED CLASS FILE, so the phase could not move its formals (§4.56).
-      * Kept apart from [[ScopedOut]] — there is no key anywhere to change here. */
+
+    /** the same slot where NO POLICY held the declaration back: it OVERRIDES a member whose signature lives in a COMPILED CLASS FILE, so the phase could not move its formals (§4.56). Kept apart from
+      * [[ScopedOut]] — there is no key anywhere to change here.
+      */
     case ClassFileOverride
-    /** one side is a method the PROGRAM DOES NOT DECLARE, whose signature cannot be retyped and
-      * whose seam this check cannot otherwise see. Recorded BY THE PHASE while the external
-      * signature is still readable, reported here so the whole residue is in one place. */
+
+    /** one side is a method the PROGRAM DOES NOT DECLARE, whose signature cannot be retyped and whose seam this check cannot otherwise see. Recorded BY THE PHASE while the external signature is still
+      * readable, reported here so the whole residue is in one place.
+      */
     case ExternalCallee
-    /** a class the program declares IMPLEMENTS a java type this phase maps, and the target CANNOT
-      * BE A PARENT, so the parent is left as java's rather than emitted at a type that cannot
-      * carry it. */
+
+    /** a class the program declares IMPLEMENTS a java type this phase maps, and the target CANNOT BE A PARENT, so the parent is left as java's rather than emitted at a type that cannot carry it.
+      */
     case InexpressibleParent
-    /** a class the phase RE-PARENTED onto a `scala.collection` target owes a member that target
-      * declares, and the bridge could not be built (`ENGINE-LIMITS.md` K28.1) — not a slot: the
-      * class is simply missing a member scalac will demand the moment `RefChecks` runs. */
+
+    /** a class the phase RE-PARENTED onto a `scala.collection` target owes a member that target declares, and the bridge could not be built (`ENGINE-LIMITS.md` K28.1) — not a slot: the class is
+      * simply missing a member scalac will demand the moment `RefChecks` runs.
+      */
     case UnbridgedMember
-    /** an `instanceof` or a downcast at a type this phase retyped, whose TARGET no live view can
-      * be — a REIFIED occurrence, asking about a runtime object the retyping did not move, so it
-      * is the one seam with no slot and no compile error behind it. */
+
+    /** an `instanceof` or a downcast at a type this phase retyped, whose TARGET no live view can be — a REIFIED occurrence, asking about a runtime object the retyping did not move, so it is the one
+      * seam with no slot and no compile error behind it.
+      */
     case ReifiedOccurrence
-    /** an external callee with a `java.lang.Object` FORMAL, reached by a value this phase cannot
-      * prove it did not retype. The slot is fine — the value conforms — but if the callee READS the
-      * representation it was handed, it sees something different from the java it was ported from. */
+
+    /** an external callee with a `java.lang.Object` FORMAL, reached by a value this phase cannot prove it did not retype. The slot is fine — the value conforms — but if the callee READS the
+      * representation it was handed, it sees something different from the java it was ported from.
+      */
     case OpaqueEgress
 
   object Issue:
@@ -194,40 +209,37 @@ object CollectionBoundaryCheck extends RemedySource:
 
   /** one stranded slot. */
   final case class Finding(issue: Issue, slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId):
-    def detail: String = s"$slot: Found $actual / Required $expected"
-    def render: String = s"$issue $slot — Found $actual / Required $expected  (${origin.javaPath}:${origin.line})"
+    def detail:                         String              = s"$slot: Found $actual / Required $expected"
+    def render:                         String              = s"$issue $slot — Found $actual / Required $expected  (${origin.javaPath}:${origin.line})"
     def report(using program: Program): CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
-                          origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-    /** the string both artifacts key on — the drained row's `remediation(resolved)` finding uses this
-      * one too, so a reader can join the two halves of the move by the column they are looking at.
-      * For the two remedied kinds `enclosing` is the CALLEE, which is what a selection names. */
+    /** the string both artifacts key on — the drained row's `remediation(resolved)` finding uses this one too, so a reader can join the two halves of the move by the column they are looking at. For
+      * the two remedied kinds `enclosing` is the CALLEE, which is what a selection names.
+      */
     def owner(using program: Program): String =
       program.symbolOf(enclosing).map(_.fullName).getOrElse("?")
 
-  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. Returns the findings that
-    * remain; the rest are in the plan's ledger and become `remediation(resolved)` rows. */
+  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. Returns the findings that remain; the rest are in the plan's ledger and become `remediation(resolved)` rows.
+    */
   def resolved(plan: ResolutionPlan, findings: List[Finding])(using Program): List[Finding] =
-    plan.drain(remedies, findings)(f =>
-      ResolutionPlan.Residue(f.issue.toString, f.enclosing, f.owner, f.origin, f.detail))
+    plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.issue.toString, f.enclosing, f.owner, f.origin, f.detail))
 
-  /** JDK collection families that are NOT in the closure of anything `typeMap` covers and are not
-    * retyped at all. `java.util.stream` is the whole of it today; the refusal is deliberate and
-    * its sites must still be counted, not left as prose (CLAUDE.md §5.1). */
+  /** JDK collection families that are NOT in the closure of anything `typeMap` covers and are not retyped at all. `java.util.stream` is the whole of it today; the refusal is deliberate and its sites
+    * must still be counted, not left as prose (CLAUDE.md §5.1).
+    */
   val untranslatedFamilies: List[String] = List("java.util.stream.")
 
-  /** WHY a declaration's type is read LITERALLY rather than through the mapping. An enum rather
-    * than a flag because the two refusals have different §1 classifications: `Scoped` names a
-    * manifest key a port can edit (`CollectionsTransform(scope)`); `ClassFile` — java put this
-    * signature in a compiled class file — names none. Reported as one kind, half the rows would
-    * send their reader after a key that does not exist. */
+  /** WHY a declaration's type is read LITERALLY rather than through the mapping. An enum rather than a flag because the two refusals have different §1 classifications: `Scoped` names a manifest key a
+    * port can edit (`CollectionsTransform(scope)`); `ClassFile` — java put this signature in a compiled class file — names none. Reported as one kind, half the rows would send their reader after a
+    * key that does not exist.
+    */
   enum Held:
     case No, Scoped, ClassFile
 
   object Held:
-    /** the SLOT name for the receiver arm — kept verbatim per case rather than generalised, because
-      * these strings are baselined (`findings.tsv`) and a rename is a diff nobody can read. */
+    /** the SLOT name for the receiver arm — kept verbatim per case rather than generalised, because these strings are baselined (`findings.tsv`) and a rename is a diff nobody can read.
+      */
     def slotOf(h: Held): String = h match
       case ClassFile => "argument (class-file-override receiver)"
       case _         => "argument (scoped-out receiver)"
@@ -235,11 +247,10 @@ object CollectionBoundaryCheck extends RemedySource:
   private enum Side:
     case Jdk, Shim, Scala, Universal, Other
 
-  /** which side of the boundary a type is on, decided from the MAPPING's own targets wherever a
-    * choice exists. Shim side is `targets` restricted to the runtime package; scala side is
-    * decided by PACKAGE since the phase also mints types outside `typeMap`. `Universal`
-    * (`java.lang.Object`) is its own side, not `Other`: it CONFORMS with no compile error, though
-    * the callee behind it may see a value java never handed it. */
+  /** which side of the boundary a type is on, decided from the MAPPING's own targets wherever a choice exists. Shim side is `targets` restricted to the runtime package; scala side is decided by
+    * PACKAGE since the phase also mints types outside `typeMap`. `Universal` (`java.lang.Object`) is its own side, not `Other`: it CONFORMS with no compile error, though the callee behind it may see
+    * a value java never handed it.
+    */
   private def sideOf(fqn: String, shims: Set[String]): Side =
     if shims.contains(fqn) then Side.Shim
     else if fqn.startsWith("scala.collection.") then Side.Scala
@@ -247,21 +258,18 @@ object CollectionBoundaryCheck extends RemedySource:
     else if fqn == CollectionsTransform.ObjectFqn then Side.Universal
     else Side.Other
 
-  /** Every stranded slot in `program`, which must be the program AFTER the phase ran: this counts
-    * the residue the retyping created, so running it before means counting nothing. `mapped` and
-    * `targets` are the phase's own policy, read back, so the check concludes about a type only
-    * from what the phase did to it (CLAUDE.md §4.56). */
-  def check(program: Program, mapped: Set[String], targets: Set[String] = Set.empty,
-            scopedOut: Set[SymId] = Set.empty, classFileOverrides: Set[SymId] = Set.empty): List[Finding] =
+  /** Every stranded slot in `program`, which must be the program AFTER the phase ran: this counts the residue the retyping created, so running it before means counting nothing. `mapped` and `targets`
+    * are the phase's own policy, read back, so the check concludes about a type only from what the phase did to it (CLAUDE.md §4.56).
+    */
+  def check(program: Program, mapped: Set[String], targets: Set[String] = Set.empty, scopedOut: Set[SymId] = Set.empty, classFileOverrides: Set[SymId] = Set.empty): List[Finding] =
     check(program, program.units, mapped, targets, scopedOut, classFileOverrides)
 
-  /** …restricted to the units the run actually EMITS: a DEPENDENT port's `Program` holds the base
-    * module's units too, and a stranded slot inside one of those is the BASE's finding, reported by
-    * a repository that cannot act on it (ENGINE-LIMITS D2). A base port passes `program.units`. */
-  def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targets: Set[String],
-            scopedOut: Set[SymId], classFileOverrides: Set[SymId]): List[Finding] =
-    val out   = collection.mutable.ListBuffer[Finding]()
-    val shims = targets.filter(_.startsWith(RuntimeArtifact.Package + "."))
+  /** …restricted to the units the run actually EMITS: a DEPENDENT port's `Program` holds the base module's units too, and a stranded slot inside one of those is the BASE's finding, reported by a
+    * repository that cannot act on it (ENGINE-LIMITS D2). A base port passes `program.units`.
+    */
+  def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targets: Set[String], scopedOut: Set[SymId], classFileOverrides: Set[SymId]): List[Finding] =
+    val out       = collection.mutable.ListBuffer[Finding]()
+    val shims     = targets.filter(_.startsWith(RuntimeArtifact.Package + "."))
     given Program = program
 
     def fqn(t: TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
@@ -279,51 +287,43 @@ object CollectionBoundaryCheck extends RemedySource:
       // no mapped supertype at all: a gap in COVERAGE rather than a broken relation.
       else Issue.UnmappedSubtype
 
-    /** The type a term REALLY has: for a reference to a declaration the phase read LITERALLY, not
-      * the one the node carries — `CollectionsTransform.scopedType`, read through the same function
-      * the transform uses, so what it refuses to rewrite and what this counts agree. Returns WHICH
-      * literal-reading set answered, since the two carry different §1 classifications. */
+    /** The type a term REALLY has: for a reference to a declaration the phase read LITERALLY, not the one the node carries — `CollectionsTransform.scopedType`, read through the same function the
+      * transform uses, so what it refuses to rewrite and what this counts agree. Returns WHICH literal-reading set answered, since the two carry different §1 classifications.
+      */
     def actualOf(t: Term): (TypeRepr, Held) =
-      CollectionsTransform.scopedType(t, scopedOut).map(_ -> Held.Scoped)
-        .orElse(CollectionsTransform.scopedType(t, classFileOverrides).map(_ -> Held.ClassFile))
-        .getOrElse(t.tpe -> Held.No)
+      CollectionsTransform.scopedType(t, scopedOut).map(_ -> Held.Scoped).orElse(CollectionsTransform.scopedType(t, classFileOverrides).map(_ -> Held.ClassFile)).getOrElse(t.tpe -> Held.No)
 
     /** which set held THIS declaration back — the same question at a symbol rather than at a term. */
     def heldOf(s: SymId): Held =
       if scopedOut(s) then Held.Scoped else if classFileOverrides(s) then Held.ClassFile else Held.No
 
-    /** is this callee a THIRD PARTY's, rather than one of the collection API's own members? Excludes
-      * e.g. `java.util.List#indexOf(Object)` whose RECEIVER has already been retyped — the call
-      * binds to scala's own `indexOf`, so the class file's formal describes nothing emitted. */
+    /** is this callee a THIRD PARTY's, rather than one of the collection API's own members? Excludes e.g. `java.util.List#indexOf(Object)` whose RECEIVER has already been retyped — the call binds to
+      * scala's own `indexOf`, so the class file's formal describes nothing emitted.
+      */
     def foreign(m: SymId): Boolean =
-      !program.owns(m) && !program.symbolOf(m).flatMap(c => program.symbolOf(c.owner))
-        .exists(o => mapped.contains(o.fullName) || targets.contains(o.fullName))
+      !program.owns(m) && !program.symbolOf(m).flatMap(c => program.symbolOf(c.owner)).exists(o => mapped.contains(o.fullName) || targets.contains(o.fullName))
 
-    /** is this value produced by a call the phase's own static arms cover and DECLINED to rewrite?
-      * Every arm that FIRED left its minted helper's symbol behind, so a callee still standing at
-      * one of these `owner#name` keys is one the phase left under the JDK's name (§4.56). */
+    /** is this value produced by a call the phase's own static arms cover and DECLINED to rewrite? Every arm that FIRED left its minted helper's symbol behind, so a callee still standing at one of
+      * these `owner#name` keys is one the phase left under the JDK's name (§4.56).
+      */
     def refusedSource(t: Term): Boolean = t match
       case a: Tree.Apply =>
-        program.symbolOf(a.method).flatMap(c => program.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
-          .exists(CollectionsTransform.handledStatics.contains)
+        program.symbolOf(a.method).flatMap(c => program.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render)).exists(CollectionsTransform.handledStatics.contains)
       case _ => false
 
-    def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
-             expectedHeld: Held, expectedExternal: Boolean = false,
-             expectedForeign: Boolean = false): Unit =
+    def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId, expectedHeld: Held, expectedExternal: Boolean = false, expectedForeign: Boolean = false): Unit =
       val (actualT, actualHeld) = actualOf(actual)
-      val held = if expectedHeld != Held.No then expectedHeld else actualHeld
+      val held                  = if expectedHeld != Held.No then expectedHeld else actualHeld
       (fqn(expected), fqn(actualT)) match
         case (Some(e), Some(a)) if e != a =>
           (sideOf(e, shims), sideOf(a, shims)) match
             // `expectedExternal` describes the EXPECTED side only.
-            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, held, expectedExternal), kind, e, a, origin, enclosing)
-            case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, held), kind, e, a, origin, enclosing)
+            case (Side.Jdk, Side.Scala | Side.Shim)                => out += Finding(issueFor(e, held, expectedExternal), kind, e, a, origin, enclosing)
+            case (Side.Scala | Side.Shim, Side.Jdk)                => out += Finding(issueFor(a, held), kind, e, a, origin, enclosing)
             case (Side.Shim, Side.Scala) | (Side.Scala, Side.Shim) =>
               // a call still standing at a `handledStatic` name is one the phase declined to
               // rewrite, so the value is java's however the node reads.
-              out += Finding(if refusedSource(actual) then Issue.RefusedSource else Issue.ShimBoundary,
-                             kind, e, a, origin, enclosing)
+              out += Finding(if refusedSource(actual) then Issue.RefusedSource else Issue.ShimBoundary, kind, e, a, origin, enclosing)
             // java's UNIVERSAL formal at a CLASS FILE: produces no compile error, since a retyped
             // collection conforms. OWNED callees and the collection API's own members (see
             // `foreign`) are excluded by `expectedForeign`.
@@ -336,23 +336,25 @@ object CollectionBoundaryCheck extends RemedySource:
       def name: String = "collection-boundary-check"
 
       override def transformApply(t: Tree.Apply)(using Program): Term =
-        val formals = program.symbolOf(t.method).map(_.info).collect {
-          case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
-          case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
-        }.getOrElse(Nil)
+        val formals = program
+          .symbolOf(t.method)
+          .map(_.info)
+          .collect {
+            case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+            case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+          }
+          .getOrElse(Nil)
         if formals.sizeIs == t.args.size then
           val external = !program.owns(t.method)
           val third    = foreign(t.method)
-          t.args.zip(formals).foreach((a, f) =>
-            slot("argument", f, a, a.origin, t.method, heldOf(t.method), external, third))
+          t.args.zip(formals).foreach((a, f) => slot("argument", f, a, a.origin, t.method, heldOf(t.method), external, third))
         else onScopedReceiver(t)
         t
 
-      /** The scope seam the four slot kinds CANNOT reach: an argument whose FORMAL is unknown. A
-        * call on a scoped-out declaration binds to the JDK's own API (`b.raw.addAll(mine)`), an
-        * EXTERNAL symbol with no interned signature, so the arm above skips it. The JDK contract
-        * stands in, licensed only where the receiver resolves THROUGH A SCOPED-OUT DECLARATION.
-        * Gated on `scopedOut`/`classFileOverrides`, so a run holding nothing back can't reach this. */
+      /** The scope seam the four slot kinds CANNOT reach: an argument whose FORMAL is unknown. A call on a scoped-out declaration binds to the JDK's own API (`b.raw.addAll(mine)`), an EXTERNAL symbol
+        * with no interned signature, so the arm above skips it. The JDK contract stands in, licensed only where the receiver resolves THROUGH A SCOPED-OUT DECLARATION. Gated on
+        * `scopedOut`/`classFileOverrides`, so a run holding nothing back can't reach this.
+        */
       private def onScopedReceiver(t: Tree.Apply)(using Program): Unit = t.fun match
         case Tree.Select(recv, _, _, _) =>
           val (recvT, recvHeld) = actualOf(recv)
@@ -360,9 +362,9 @@ object CollectionBoundaryCheck extends RemedySource:
             fqn(recvT).filter(r => sideOf(r, shims) == Side.Jdk).foreach { r =>
               t.args.foreach { a =>
                 val (actualT, _) = actualOf(a)
-                fqn(actualT).filter(x => sideOf(x, shims) == Side.Scala || sideOf(x, shims) == Side.Shim)
-                  .foreach(x => out += Finding(issueFor(r, recvHeld), Held.slotOf(recvHeld),
-                                              r, x, a.origin, t.method))
+                fqn(actualT)
+                  .filter(x => sideOf(x, shims) == Side.Scala || sideOf(x, shims) == Side.Shim)
+                  .foreach(x => out += Finding(issueFor(r, recvHeld), Held.slotOf(recvHeld), r, x, a.origin, t.method))
               }
             }
         case _ => ()
@@ -380,18 +382,19 @@ object CollectionBoundaryCheck extends RemedySource:
         t
 
       override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
-        t.rhs.foreach(b => returnsIn(b).foreach { r =>
-          r.expr.foreach(e => slot("return", t.returnTpt.tpe, e, r.origin, t.symbol, heldOf(t.symbol)))
-        })
+        t.rhs.foreach(b =>
+          returnsIn(b).foreach { r =>
+            r.expr.foreach(e => slot("return", t.returnTpt.tpe, e, r.origin, t.symbol, heldOf(t.symbol)))
+          }
+        )
         t
 
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     out.toList
 
-  /** every `return` that belongs to THIS method — the same DELIBERATELY BOUNDED walk
-    * `CollectionsTransform.coerceReturns` performs. A `return` inside a lambda/anon class/local
-    * class returns from THAT; the default arm does NOT descend, making a later node kind a MISSED
-    * finding rather than a wrong one. Pinned against `coerceReturns` by spec. */
+  /** every `return` that belongs to THIS method — the same DELIBERATELY BOUNDED walk `CollectionsTransform.coerceReturns` performs. A `return` inside a lambda/anon class/local class returns from
+    * THAT; the default arm does NOT descend, making a later node kind a MISSED finding rather than a wrong one. Pinned against `coerceReturns` by spec.
+    */
   def returnsIn(t: Term): List[Tree.Return] = t match
     case x: Tree.Return       => List(x)
     case x: Tree.Block        => x.stats.collect { case s: Term => returnsIn(s) }.flatten ++ returnsIn(x.expr)
@@ -403,21 +406,24 @@ object CollectionBoundaryCheck extends RemedySource:
     case x: Tree.Synchronized => returnsIn(x.body)
     case x: Tree.Try          => returnsIn(x.body) ++ x.catches.flatMap(c => returnsIn(c.body)) ++ x.finalizer.toList.flatMap(returnsIn)
     case x: Tree.Match        => x.cases.flatMap(c => returnsIn(c.body))
-    case _                    => Nil
+    case _ => Nil
 
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
     case _                           => scala.None
 
-  /** grouped one-line summary, worst family first, each with its §1 classification — the whole
-    * point of the check is that a reader does not have to work out who fixes it. */
+  /** grouped one-line summary, worst family first, each with its §1 classification — the whole point of the check is that a reader does not have to work out who fixes it.
+    */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.groupBy(f => (f.slot, f.expected, f.actual)).toList.sortBy((_, v) => -v.size).take(10)
-          .map { case ((slot, e, a), ss) => s"    ${ss.size} × $slot: Found $a / Required $e" }
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.groupBy(f => (f.slot, f.expected, f.actual)).toList.sortBy((_, v) => -v.size).take(10).map { case ((slot, e, a), ss) => s"    ${ss.size} × $slot: Found $a / Required $e" }
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

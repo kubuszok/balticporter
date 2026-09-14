@@ -1,19 +1,20 @@
 package balticporter.transform
 
-import balticporter.tir.{CheckReport, Origin}
+import balticporter.tir.{ CheckReport, Origin }
 
-/** Counts java `public` fields a reflective framework cannot see once emitted as private scala
-  * members (`ENGINE-LIMITS.md` K21 face 2). [[Issue.NameTaken]]: seam from this phase's own scope.
-  * [[Issue.Unexposed]]: review list of java-public-field types not yet scoped.
-  * [[Issue.NameUnreachable]]: name unreachable via `decapitalize`. Recorded only when the phase ran. */
+/** Counts java `public` fields a reflective framework cannot see once emitted as private scala members (`ENGINE-LIMITS.md` K21 face 2). [[Issue.NameTaken]]: seam from this phase's own scope.
+  * [[Issue.Unexposed]]: review list of java-public-field types not yet scoped. [[Issue.NameUnreachable]]: name unreachable via `decapitalize`. Recorded only when the phase ran.
+  */
 object BeanExposureCheck:
   val Name = "bean-exposure"
 
   enum Issue:
     /** bean name already taken by a member java declared. */
     case NameTaken
+
     /** java-public-field type not yet in scope — review list. */
     case Unexposed
+
     /** field name unreachable via `decapitalize`. */
     case NameUnreachable
 
@@ -51,16 +52,19 @@ object BeanExposureCheck:
           "library — and applying it everywhere would rewrite the emitted surface of every port."
 
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin):
-    def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
+    def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, subject,
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  (none)"
     else
-      fs.groupBy(_.issue).toList.sortBy(_._1.toString).map { (issue, vs) =>
-        s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}\n" +
-          vs.take(20).map(v => "    " + v.render).mkString("\n") +
-          (if vs.sizeIs > 20 then s"\n    … ${vs.size - 20} more" else "")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy(_._1.toString)
+        .map { (issue, vs) =>
+          s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}\n" +
+            vs.take(20).map(v => "    " + v.render).mkString("\n") +
+            (if vs.sizeIs > 20 then s"\n    … ${vs.size - 20} more" else "")
+        }
+        .mkString("\n")

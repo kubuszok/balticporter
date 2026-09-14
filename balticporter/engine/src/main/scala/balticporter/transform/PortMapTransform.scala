@@ -2,34 +2,44 @@ package balticporter.transform
 
 import balticporter.core.MergeablePolicy
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, PortMap, PortManifest, SurfacePolicy}
+import balticporter.core.{ PolicyFinding, PolicyIssue, PolicyReport, PolicySource, PortManifest, PortMap, SurfacePolicy }
 import balticporter.tir.*
 
-/** Migrates a DEPENDENT's references from what its base module PUBLISHED — re-points a renamed
-  * type/member to the base's emitted name, and reports a call to a member the base dropped or
-  * replaced with a hand-supplied body. `maps` are the base's own published [[PortMap]]s; empty is
-  * a no-op. Does not rewrite a dropped call or verify freshness ([[PortMap.freshness]]'s job). */
+/** Migrates a DEPENDENT's references from what its base module PUBLISHED — re-points a renamed type/member to the base's emitted name, and reports a call to a member the base dropped or replaced with
+  * a hand-supplied body. `maps` are the base's own published [[PortMap]]s; empty is a no-op. Does not rewrite a dropped call or verify freshness ([[PortMap.freshness]]'s job).
+  */
 final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, Rewrite:
   def name: String = "port-map-migration"
+
   /** the follow RENAMES owned overrides of base members; its residue is the `port-map` lane (K5.10). */
   def accountedBy: Set[String] = Set("port-map")
 
-  /** the modules FOLLOWED; a dependent of a dependent inherits its base's follow and adds its own,
-    * so two instances compose by UNION of maps (one per module), never refuse (CLAUDE.md §1.5). */
-  def subjects: Set[String] = maps.map(_.module).toSet
+  /** the modules FOLLOWED; a dependent of a dependent inherits its base's follow and adds its own, so two instances compose by UNION of maps (one per module), never refuse (CLAUDE.md §1.5).
+    */
+  def subjects:                 Set[String]                            = maps.map(_.module).toSet
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: PortMapTransform =>
       val merged = new PortMapTransform((maps ++ o.maps).distinctBy(_.module))
       Right(MergeablePolicy.Merged(merged, o.subjects -- subjects))
     case _ => Left(s"`$name` cannot merge with ${later.getClass.getSimpleName}")
-  /** The follow RENAMES the base's symbols to their emitted names, so it is a namespace rename and
-    * runs after every phase whose scope is spelled in UPSTREAM names (CLAUDE.md §4.56; K51 ix). */
-  override def runsAfter: Set[String]  = Set("nullability", "java-collections->scala", "bean-properties",
-    "nullary-arity", "type-redirect", "member-rename", "class-to-trait", "type-class-array", "globals->implicits")
+
+  /** The follow RENAMES the base's symbols to their emitted names, so it is a namespace rename and runs after every phase whose scope is spelled in UPSTREAM names (CLAUDE.md §4.56; K51 ix).
+    */
+  override def runsAfter: Set[String] = Set(
+    "nullability",
+    "java-collections->scala",
+    "bean-properties",
+    "nullary-arity",
+    "type-redirect",
+    "member-rename",
+    "class-to-trait",
+    "type-class-array",
+    "globals->implicits"
+  )
   override def runsBefore: Set[String] = Set("package-rename")
 
-  /** the map's identity — module, engine, source fingerprint, entry count — so two modules on
-    * different base revisions do not fingerprint equal. */
+  /** the map's identity — module, engine, source fingerprint, entry count — so two modules on different base revisions do not fingerprint equal.
+    */
   def surfaceFingerprint: String =
     maps.map(m => s"${m.module}@${m.engine}/${m.sources}#${m.entries.size}").sorted.mkString(",")
 
@@ -37,19 +47,18 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
   // lookups, built once from the maps
   // ---------------------------------------------------------------------------
 
-  /** upstream type FQN → (publishing module, entry). Nearest map LAST so it wins, matching the
-    * precedence `PortManifest.effectivePackageRenames` uses. */
+  /** upstream type FQN → (publishing module, entry). Nearest map LAST so it wins, matching the precedence `PortManifest.effectivePackageRenames` uses.
+    */
   private val typeEntries: Map[String, (String, PortMap.Entry)] =
     maps.foldLeft(Map.empty[String, (String, PortMap.Entry)]) { (acc, m) =>
       acc ++ m.types.iterator.filter(_.upstream.nonEmpty).map(e => e.upstream -> (m.module, e))
     }
 
-  /** `owner#name` → every overload the maps record for it. The map keys members precisely
-    * (`owner#name(P1,P2)`); a TIR symbol's `fullName` carries no parameter list at all, so the bare
-    * form is the only key both sides can agree on and the overload is chosen by ARITY below. */
+  /** `owner#name` → every overload the maps record for it. The map keys members precisely (`owner#name(P1,P2)`); a TIR symbol's `fullName` carries no parameter list at all, so the bare form is the
+    * only key both sides can agree on and the overload is chosen by ARITY below.
+    */
   private val memberEntries: Map[String, List[(String, PortMap.Entry)]] =
-    maps.flatMap(m => m.members.filter(_.upstream.nonEmpty).map(e => (m.module, e)))
-      .groupBy((_, e) => PortMapTransform.bareKey(e.upstream))
+    maps.flatMap(m => m.members.filter(_.upstream.nonEmpty).map(e => (m.module, e))).groupBy((_, e) => PortMapTransform.bareKey(e.upstream))
 
   /** upstream prefix → the name the base emitted, for every type it moved. */
   private val renames: Map[String, String] =
@@ -57,15 +66,18 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       case (_, e) if e.disposition == PortMap.Disposition.Renamed && e.emitted.nonEmpty => e.upstream -> e.emitted
     }.toMap
 
-  private var report: PolicyReport = PolicyReport.empty
-  private var found: List[PortMapTransform.Finding] = Nil
-  private var repointed: Int = 0
+  private var report:    PolicyReport                   = PolicyReport.empty
+  private var found:     List[PortMapTransform.Finding] = Nil
+  private var repointed: Int                            = 0
 
-  /** types the base SUBSTITUTED — dropped and replaced by a hand-written injection. A dependent's
-    * detection phases skip these owners (D14). Read BEFORE the pipeline runs. */
-  def substitutedOwnerTypes: Set[String] = maps.flatMap(_.types).collect {
-    case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
-  }.toSet
+  /** types the base SUBSTITUTED — dropped and replaced by a hand-written injection. A dependent's detection phases skip these owners (D14). Read BEFORE the pipeline runs.
+    */
+  def substitutedOwnerTypes: Set[String] = maps
+    .flatMap(_.types)
+    .collect {
+      case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
+    }
+    .toSet
 
   /** what the maps say about this program, in a stable order. Read AFTER the pipeline has run. */
   def findings: List[PortMapTransform.Finding] = found
@@ -73,8 +85,8 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
   /** how many symbols this phase moved to the name the base actually emitted. */
   def renamedSymbols: Int = repointed
 
-  /** a map that matched NOTHING — no per-entry `NeverMatched`, since a base publishes far more
-    * entries than a dependent touches. Reported once per map. */
+  /** a map that matched NOTHING — no per-entry `NeverMatched`, since a base publishes far more entries than a dependent touches. Reported once per map.
+    */
   def policyReport: PolicyReport = report
 
   // ---------------------------------------------------------------------------
@@ -85,17 +97,26 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       return program
 
     val names = program.symbols.all.iterator.map(_.fullName).toSet
-    report = PolicyReport(maps.flatMap { m =>
-      val touches = m.entries.iterator.filter(_.upstream.nonEmpty).exists { e =>
-        names(e.upstream) || names(PortMapTransform.bareKey(e.upstream))
+    report = PolicyReport(
+      maps.flatMap { m =>
+        val touches = m.entries.iterator.filter(_.upstream.nonEmpty).exists { e =>
+          names(e.upstream) || names(PortMapTransform.bareKey(e.upstream))
+        }
+        if touches then Nil
+        else
+          List(
+            PolicyFinding(
+              name,
+              "PortMapTransform.maps",
+              s"${m.module} (${m.entries.size} entries)",
+              PolicyIssue.NeverMatched,
+              "not one of this map's upstream names occurs in this program, so nothing was re-pointed and " +
+                "no dropped call could be reported. Either this is the wrong module's map, or it was " +
+                "published before a namespace move — re-run the base port"
+            )
+          )
       }
-      if touches then Nil
-      else List(PolicyFinding(name, "PortMapTransform.maps", s"${m.module} (${m.entries.size} entries)",
-        PolicyIssue.NeverMatched,
-        "not one of this map's upstream names occurs in this program, so nothing was re-pointed and " +
-          "no dropped call could be reported. Either this is the wrong module's map, or it was " +
-          "published before a namespace move — re-run the base port"))
-    })
+    )
 
     val theirs = PortMapTransform.ownedByBase(program, typeEntries.keySet)
     found = scan(program, theirs)
@@ -103,9 +124,9 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     val repointed0 = repoint(program)
     followMemberRenames(repointed0)
 
-  /** decision provenance for the re-pointing below: one row per (declaration of THIS module,
-    * re-pointed type). `RetypedSignature` — no call was re-targeted, only the declared type. Filtered
-    * by [[PortMapTransform.ownedByBase]] for D2's reason. Read from the PRE-repoint program. */
+  /** decision provenance for the re-pointing below: one row per (declaration of THIS module, re-pointed type). `RetypedSignature` — no call was re-targeted, only the declared type. Filtered by
+    * [[PortMapTransform.ownedByBase]] for D2's reason. Read from the PRE-repoint program.
+    */
   private def recordRepoints(program: Program, theirs: Set[SymId]): Unit =
     if renames.nonEmpty then
       val byName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
@@ -113,29 +134,30 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
         byName.get(from).foreach { sym =>
           val who = typeEntries.get(from).map(_._1).getOrElse("?")
           Decision.declarationsUsing(program, sym.id).filterNot((encl, _) => theirs(encl)).foreach { (encl, origin) =>
-            record(Decision(
-              kind       = Decision.Kind.RetypedSignature,
-              subject    = encl,
-              subjectFqn = Decision.fqnOf(program, encl, from),
-              detail     = Map(
-                "from" -> from,
-                "to"   -> to,
-                "key"  -> from,
-                "base" -> who,
-                "why"  -> ("the base module's PUBLISHED port map records this type emitted under " +
-                  "that name; this module never restates the rename and cannot change it here"),
-              ),
-              reason = Reason.Configured(name, s"$from -> $to"),
-              origin = origin,
-            ))
+            record(
+              Decision(
+                kind = Decision.Kind.RetypedSignature,
+                subject = encl,
+                subjectFqn = Decision.fqnOf(program, encl, from),
+                detail = Map(
+                  "from" -> from,
+                  "to" -> to,
+                  "key" -> from,
+                  "base" -> who,
+                  "why" -> ("the base module's PUBLISHED port map records this type emitted under " +
+                    "that name; this module never restates the rename and cannot change it here")
+                ),
+                reason = Reason.Configured(name, s"$from -> $to"),
+                origin = origin
+              )
+            )
           }
         }
       }
 
-  /** Re-points every owned symbol under a name the base MOVED — mechanically identical to
-    * [[PackageRenameTransform]] (longest match, cut at a separator, owned symbols only, §4.56); the
-    * map comes from the base's published output rather than this module's own config. Idempotent: a
-    * symbol already moved by `packageRenames` no longer matches an upstream prefix. */
+  /** Re-points every owned symbol under a name the base MOVED — mechanically identical to [[PackageRenameTransform]] (longest match, cut at a separator, owned symbols only, §4.56); the map comes from
+    * the base's published output rather than this module's own config. Idempotent: a symbol already moved by `packageRenames` no longer matches an upstream prefix.
+    */
   private def repoint(program: Program): Program =
     if renames.isEmpty then
       repointed = 0
@@ -161,16 +183,18 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       // trees and the xref are keyed by `SymId`; renaming the symbol reaches every reference.
       program.rebuilt(symbols = table)
 
-  /** Follows the base's member renames: for every base port-map member entry whose simple name
-    * changed, finds the symbol by its UPSTREAM FQN and renames it to the EMITTED simple name — the
-    * bean-property collapse and parenless-arity decisions the base already made (D14). Uses
-    * `MemberRenamer` so the whole override component (and its call sites) moves too. */
+  /** Follows the base's member renames: for every base port-map member entry whose simple name changed, finds the symbol by its UPSTREAM FQN and renames it to the EMITTED simple name — the
+    * bean-property collapse and parenless-arity decisions the base already made (D14). Uses `MemberRenamer` so the whole override component (and its call sites) moves too.
+    */
   private def followMemberRenames(program: Program): Program =
     // types the base SUBSTITUTED emit members from the INJECTED file, which never renamed them —
     // renaming the dependent's references here would call a name that file does not have.
-    val substitutedTypes: Set[String] = maps.flatMap(_.types).collect {
-      case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
-    }.toSet
+    val substitutedTypes: Set[String] = maps
+      .flatMap(_.types)
+      .collect {
+        case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
+      }
+      .toSet
 
     val memberRenameEntries = maps.flatMap(_.members).filter { e =>
       e.upstream.nonEmpty && e.emitted.nonEmpty && e.disposition == PortMap.Disposition.Renamed && {
@@ -188,18 +212,18 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     val graph = OverrideGraph.build(program)
     // a fullName indexes a LIST (CLAUDE.md §4.55): a field `parent` and a method `parent()` share
     // one; the entry's own KIND (an upstream key ending in `)` is a method) picks the symbol.
-    val byFullNameAll: Map[String, List[Symbol]] = program.symbols.all.toList.groupBy(_.fullName)
-    def ofKind(entry: PortMap.Entry, ss: List[Symbol]): Option[Symbol] =
+    val byFullNameAll:                                  Map[String, List[Symbol]] = program.symbols.all.toList.groupBy(_.fullName)
+    def ofKind(entry: PortMap.Entry, ss: List[Symbol]): Option[Symbol]            =
       val wantMethod = entry.upstream.endsWith(")")
       // among overloads, the entry's ARITY picks (`dst2(Vector3)` -> `distanceSq`, `dst2(float,float,float)` stays)
-      val wantArity  = Option.when(wantMethod) {
+      val wantArity = Option.when(wantMethod) {
         val inner = entry.upstream.substring(entry.upstream.lastIndexOf('(') + 1).stripSuffix(")")
         if inner.trim.isEmpty then 0 else inner.count(_ == ',') + 1
       }
       def arityOf(s: Symbol): Option[Int] = s.info match
-        case m: TypeRepr.MethodType                        => Some(m.params.size)
-        case TypeRepr.PolyType(_, m: TypeRepr.MethodType)  => Some(m.params.size)
-        case _                                             => scala.None
+        case m: TypeRepr.MethodType => Some(m.params.size)
+        case TypeRepr.PolyType(_, m: TypeRepr.MethodType) => Some(m.params.size)
+        case _                                            => scala.None
       val kinded = ss.filter(s => PolicyBinder.isExecutable(s.info) == wantMethod)
       kinded.find(s => wantArity.isDefined && arityOf(s) == wantArity).orElse(kinded.headOption).orElse(ss.headOption)
     def lookup(fqn: String, entry: PortMap.Entry): Option[Symbol] = byFullNameAll.get(fqn).flatMap(ofKind(entry, _))
@@ -213,7 +237,7 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       // try the repointed (emitted-namespace) name first, then the upstream bare name — an owned
       // symbol is in the emitted namespace after `repoint`, an unowned base member is not.
       val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
-      val sym = lookup(inEmitNs, e).orElse(lookup(upBare, e))
+      val sym      = lookup(inEmitNs, e).orElse(lookup(upBare, e))
       sym.filter(_.name != newName).map { s =>
         FollowEntry(s, newName, e)
       }
@@ -224,8 +248,8 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       if followEntries.size >= memberRenameEntries.size then followEntries
       else
         val matched = followEntries.map(_.sym.id).toSet
-        val extra = collection.mutable.ListBuffer.empty[FollowEntry]
-        val byName = program.symbols.all.groupBy(_.name)
+        val extra   = collection.mutable.ListBuffer.empty[FollowEntry]
+        val byName  = program.symbols.all.groupBy(_.name)
         memberRenameEntries.foreach { e =>
           val upBare   = PortMapTransform.bareKey(e.upstream)
           val emitBare = PortMapTransform.bareKey(e.emitted)
@@ -238,11 +262,9 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
             val ownerEmit = PackageRenameTransform.renamed(ownerFqn, renames.toMap)
             byName.getOrElse(upName, Nil).foreach { s =>
               if !matched.contains(s.id) && s.name != newName then
-                val ownerSym = program.symbolOf(s.owner)
-                val ownerMatch = ownerSym.exists(o =>
-                  o.fullName == ownerFqn || o.fullName == ownerEmit)
-                if ownerMatch then
-                  extra += FollowEntry(s, newName, e)
+                val ownerSym   = program.symbolOf(s.owner)
+                val ownerMatch = ownerSym.exists(o => o.fullName == ownerFqn || o.fullName == ownerEmit)
+                if ownerMatch then extra += FollowEntry(s, newName, e)
             }
         }
         followEntries ++ extra.toList
@@ -272,12 +294,14 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     // dump the rename map and how many symbols it catches
     if byFqnToRename.values.exists(_ == "head") then
       val caught = program.symbols.all.filter(s => byFqnToRename.get(s.fullName).exists(_ != s.name))
-      System.err.println(s"[RENAME-MAP] entries=${byFqnToRename.size} caught=${caught.size} keys=${byFqnToRename.keys.filter(_.contains("first")).mkString("; ")}")
+      System.err.println(
+        s"[RENAME-MAP] entries=${byFqnToRename.size} caught=${caught.size} keys=${byFqnToRename.keys.filter(_.contains("first")).mkString("; ")}"
+      )
       caught.foreach(s => System.err.println(s"  [RENAMED] id=${s.id} ${s.fullName} -> ${byFqnToRename(s.fullName)}"))
     val directTable = program.symbols.all.foldLeft(program.symbols) { (t, s) =>
       byFqnToRename.get(s.fullName) match
         case Some(nn) if s.name != nn => t.updated(s.copy(name = nn))
-        case _ => t
+        case _                        => t
     }
     val program1 = if allDirect.isEmpty then program else program.rebuilt(symbols = directTable)
 
@@ -285,9 +309,10 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
 
     // strip `()` for parenless members (MemberRenamer renames the name but not the arity),
     // expanded to the whole override component so a dependent's own override follows too.
-    val graph2 = OverrideGraph.build(renamed)
-    val renamedByName = renamed.symbols.all.toList.groupBy(_.name)
-    val parenlessRoots = memberRenameEntries.filter(_.memberShape.form == "parenless")
+    val graph2         = OverrideGraph.build(renamed)
+    val renamedByName  = renamed.symbols.all.toList.groupBy(_.name)
+    val parenlessRoots = memberRenameEntries
+      .filter(_.memberShape.form == "parenless")
       .flatMap { e =>
         val upBare   = PortMapTransform.bareKey(e.upstream)
         val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
@@ -297,38 +322,43 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
         // a renamed member still sits in the UPSTREAM package here (package-rename runs last):
         // the emitted simple name under the upstream OWNER — found through the owner symbol, never
         // a rebuilt `owner#name` string; the entry's arity picks among overloads (`ofKind`)
-        val emitOwner = PortMapTransform.ownerOf(emitBare)
-        val renamedInUpNs = renamedByName.getOrElse(newName, Nil)
-          .filter(s => renamed.symbolOf(s.owner).exists(o => o.fullName == ownerFqn || o.fullName == emitOwner))
-        val byKey = List(inEmitNs, emitBare, upBare).flatMap(k => renamed.symbols.all.filter(_.fullName == k))
+        val emitOwner     = PortMapTransform.ownerOf(emitBare)
+        val renamedInUpNs = renamedByName.getOrElse(newName, Nil).filter(s => renamed.symbolOf(s.owner).exists(o => o.fullName == ownerFqn || o.fullName == emitOwner))
+        val byKey         = List(inEmitNs, emitBare, upBare).flatMap(k => renamed.symbols.all.filter(_.fullName == k))
         ofKind(e, (byKey ++ renamedInUpNs).distinctBy(_.id).filter(s => PolicyBinder.isExecutable(s.info))).map(_.id)
-      }.toSet
+      }
+      .toSet
     val parenlessSyms = parenlessRoots.flatMap(r => graph2.closureOf(r).members)
 
     if parenlessSyms.isEmpty then renamed
     else
       given Program = renamed
-      renamed.rebuilt(units = renamed.units.map { u =>
-        StandardTraversal.mapClassDef(new Phase {
-          def name = "port-map-follow-parenless"
-          override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
-            if parenlessSyms.contains(t.symbol) then t.copy(paramss = Nil) else t
-          override def transformApply(t: Tree.Apply)(using Program): Term =
-            if parenlessSyms.contains(t.method) && t.args.isEmpty then
-              t.fun match
-                case _: Tree.Ident            => Tree.Ident(t.method, t.tpe, t.origin)
-                case Tree.Select(q, _, _, _)  => Tree.Select(q, t.method, t.tpe, t.origin)
-                case _                        => t
-            else t
-        }, u)
-      })
+      renamed.rebuilt(
+        units = renamed.units.map { u =>
+          StandardTraversal.mapClassDef(
+            new Phase {
+              def name = "port-map-follow-parenless"
+              override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
+                if parenlessSyms.contains(t.symbol) then t.copy(paramss = Nil) else t
+              override def transformApply(t: Tree.Apply)(using Program): Term =
+                if parenlessSyms.contains(t.method) && t.args.isEmpty then
+                  t.fun match
+                    case _: Tree.Ident => Tree.Ident(t.method, t.tpe, t.origin)
+                    case Tree.Select(q, _, _, _) => Tree.Select(q, t.method, t.tpe, t.origin)
+                    case _                       => t
+                else t
+            },
+            u
+          )
+        }
+      )
 
   // ---------------------------------------------------------------------------
   // reporting — what the dependent references that the base did not emit
   // ---------------------------------------------------------------------------
 
-  /** Every reference this program makes that the maps have something to say about. Driven by the
-    * `Xref` index (CLAUDE.md §3), not a private recursion. */
+  /** Every reference this program makes that the maps have something to say about. Driven by the `Xref` index (CLAUDE.md §3), not a private recursion.
+    */
   private def scan(program: Program, theirs: Set[SymId]): List[PortMapTransform.Finding] =
     val out = collection.mutable.ListBuffer.empty[PortMapTransform.Finding]
 
@@ -341,9 +371,13 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       typeEntries.get(full) match
         case Some((who, e)) if e.disposition == PortMap.Disposition.Dropped =>
           sites(sym.id).foreach { (origin, _, _) =>
-            out += PortMapTransform.Finding(PortMapTransform.Issue.DroppedType, who, full,
+            out += PortMapTransform.Finding(
+              PortMapTransform.Issue.DroppedType,
+              who,
+              full,
               "the base's map records it Dropped: nothing is emitted at that name and nothing replaces it",
-              origin)
+              origin
+            )
           }
         case _ => ()
 
@@ -351,8 +385,8 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
       if full.contains('#') then
         // the precise key, built from the callee symbol's own `info` (erased parameter simple
         // names); arity is the weaker fallback for a symbol whose `info` never resolved.
-        val all   = memberEntries.getOrElse(full, Nil)
-        val exact = PortMapTransform.preciseKey(program, sym).flatMap(k => all.find(_._2.upstream == k))
+        val all        = memberEntries.getOrElse(full, Nil)
+        val exact      = PortMapTransform.preciseKey(program, sym).flatMap(k => all.find(_._2.upstream == k))
         val candidates = exact match
           case Some(c)    => List(c)
           case scala.None => all
@@ -361,27 +395,39 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
             val arity = site match
               case Some(a: Tree.Apply) => Some(a.args.size)
               case _                   => scala.None
-            val picked = if exact.isDefined then candidates else PortMapTransform.select(candidates, arity)
+            val picked       = if exact.isDefined then candidates else PortMapTransform.select(candidates, arity)
             val dispositions = picked.map((_, e) => (e.disposition, e.body)).distinct
             if dispositions.sizeIs > 1 then
-              out += PortMapTransform.Finding(PortMapTransform.Issue.Ambiguous, picked.head._1, full,
+              out += PortMapTransform.Finding(
+                PortMapTransform.Issue.Ambiguous,
+                picked.head._1,
+                full,
                 s"${picked.size} overload(s) in the base's map disagree (" +
                   picked.map((_, e) => s"${e.upstream}=${e.disposition}${if e.body then "+body" else ""}").sorted.mkString(", ") +
                   ") and this call site's arity does not separate them",
-                origin)
+                origin
+              )
             else
               picked.headOption.foreach { (who, e) =>
                 if e.disposition == PortMap.Disposition.Dropped then
-                  out += PortMapTransform.Finding(PortMapTransform.Issue.DroppedMember, who, e.upstream,
+                  out += PortMapTransform.Finding(
+                    PortMapTransform.Issue.DroppedMember,
+                    who,
+                    e.upstream,
                     "the base's map records it Dropped: the base emits no such member, so this call " +
                       "resolves to nothing in the module it compiles against" +
                       PortMapTransform.refusalOf(e),
-                    origin)
+                    origin
+                  )
                 else if e.body then
-                  out += PortMapTransform.Finding(PortMapTransform.Issue.SubstitutedBody, who, e.upstream,
+                  out += PortMapTransform.Finding(
+                    PortMapTransform.Issue.SubstitutedBody,
+                    who,
+                    e.upstream,
                     "the base emits this member with a HAND-SUPPLIED body: the signature is upstream's " +
                       "and the behaviour is not, which a call site cannot see any other way",
-                    origin)
+                    origin
+                  )
               }
           }
     }
@@ -389,78 +435,82 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
 
 object PortMapTransform:
 
-  /** The phase configured from whatever those base modules last PUBLISHED:
-    * {{{ surface = List(PortMapTransform.forBases("sge")) }}}
-    * A base that published nothing reports so via [[PortMapTransform.policyReport]]. Freshness is
-    * checked by `PortRun`, not here. Reads the filesystem at CONSTRUCTION, so
-    * [[PortMapTransform.surfaceFingerprint]] depends on what is on disk — intended. */
+  /** The phase configured from whatever those base modules last PUBLISHED: {{{surface = List(PortMapTransform.forBases("sge"))}}} A base that published nothing reports so via
+    * [[PortMapTransform.policyReport]]. Freshness is checked by `PortRun`, not here. Reads the filesystem at CONSTRUCTION, so [[PortMapTransform.surfaceFingerprint]] depends on what is on disk —
+    * intended.
+    */
   def forBases(modules: String*): PortMapTransform = forBasesIn(Nil, modules*)
 
-  /** …with the port's own search path for the bases' report trees (`PortManifest.baseReports`,
-    * D6.5). Pass `Nil` where all ports publish under one `port-report/`. */
+  /** …with the port's own search path for the bases' report trees (`PortManifest.baseReports`, D6.5). Pass `Nil` where all ports publish under one `port-report/`.
+    */
   def forBasesIn(reports: List[java.nio.file.Path], modules: String*): PortMapTransform =
     new PortMapTransform(modules.toList.flatMap(PortMap.published(_, reports)))
 
   enum Issue:
     /** a call to a member the base's map records as `Dropped`. */
     case DroppedMember
-    /** a reference to a type the base's map records as `Dropped` — not `Substituted`, which has a
-      * replacement standing at the same name and is therefore callable. */
+
+    /** a reference to a type the base's map records as `Dropped` — not `Substituted`, which has a replacement standing at the same name and is therefore callable.
+      */
     case DroppedType
+
     /** a call into a member whose body the base replaced. */
     case SubstitutedBody
+
     /** overloads whose dispositions differ and which this call site's arity does not separate. */
     case Ambiguous
 
-  /** @param base   the module that PUBLISHED the record (CLAUDE.md §4.45).
-    * @param detail the base's own record, quoted rather than paraphrased. */
+  /** @param base
+    *   the module that PUBLISHED the record (CLAUDE.md §4.45).
+    * @param detail
+    *   the base's own record, quoted rather than paraphrased.
+    */
   final case class Finding(issue: Issue, base: String, symbol: String, detail: String, origin: Origin):
-    def render: String = s"$issue: $symbol — $detail (base: $base)  (${origin.javaPath}:${origin.line})"
+    def render: String              = s"$issue: $symbol — $detail (base: $base)  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding("port-map", issue.toString, symbol,
-        CheckReport.relativise(origin.javaPath), origin.line, s"$detail (base: $base)")
+      CheckReport.Finding("port-map", issue.toString, symbol, CheckReport.relativise(origin.javaPath), origin.line, s"$detail (base: $base)")
 
-  /** The base's own record, where the drop was an ENGINE REFUSAL rather than a policy decision — a
-    * different §1 kind (§4.45): (b) the dependent can ask for it back; (a) IN THE BASE, no manifest
-    * key changes that. Empty for an ordinary policy drop. */
+  /** The base's own record, where the drop was an ENGINE REFUSAL rather than a policy decision — a different §1 kind (§4.45): (b) the dependent can ask for it back; (a) IN THE BASE, no manifest key
+    * changes that. Empty for an ordinary policy drop.
+    */
   private[transform] def refusalOf(e: PortMap.Entry): String =
     val r = e.memberShape.refusal
     if r.isEmpty then ""
-    else s" — and NOT by policy: the base's ENGINE could not render it (`$r`), so no manifest key " +
-      "here or there brings it back. §1(a) IN THE BASE: the fix is a hand-written replacement in " +
-      "that module (§1.5's `inject`); in this one, stop calling it"
+    else
+      s" — and NOT by policy: the base's ENGINE could not render it (`$r`), so no manifest key " +
+        "here or there brings it back. §1(a) IN THE BASE: the fix is a hand-written replacement in " +
+        "that module (§1.5's `inject`); in this one, stop calling it"
 
   /** Which of §1's three kinds each issue's fix is (CLAUDE.md §4.45). */
   def classification(issue: Issue): String = issue match
-    case Issue.DroppedMember => "§1(b) PER-LIBRARY: the base module does not emit this member. Give this " +
-      "module a replacement — `MethodBodyTransform` for a body, `StaticForwarderTransform` to re-point " +
-      "it, or `dropMethods` if the member is itself only a forwarder to the dropped one."
-    case Issue.DroppedType => "§1(b) PER-LIBRARY: the base module emits nothing at this name and injects " +
-      "no replacement. Rewrite the references away in this module, or ship a replacement here — the " +
-      "base deliberately does not have one."
-    case Issue.SubstitutedBody => "§1(b) PER-LIBRARY, INFORMATIONAL: the behaviour behind this signature " +
-      "is not upstream's. Nothing is broken; check that this module's use of it still holds."
-    case Issue.Ambiguous => "§1(a) ENGINE or (b): the base's overloads disagree and arity cannot separate " +
-      "them. If the call is genuinely to the dropped overload, say so with a precise `dropMethods` key " +
-      "here; if this is an engine gap in overload identity, it belongs in ENGINE-LIMITS.md."
+    case Issue.DroppedMember =>
+      "§1(b) PER-LIBRARY: the base module does not emit this member. Give this " +
+        "module a replacement — `MethodBodyTransform` for a body, `StaticForwarderTransform` to re-point " +
+        "it, or `dropMethods` if the member is itself only a forwarder to the dropped one."
+    case Issue.DroppedType =>
+      "§1(b) PER-LIBRARY: the base module emits nothing at this name and injects " +
+        "no replacement. Rewrite the references away in this module, or ship a replacement here — the " +
+        "base deliberately does not have one."
+    case Issue.SubstitutedBody =>
+      "§1(b) PER-LIBRARY, INFORMATIONAL: the behaviour behind this signature " +
+        "is not upstream's. Nothing is broken; check that this module's use of it still holds."
+    case Issue.Ambiguous =>
+      "§1(a) ENGINE or (b): the base's overloads disagree and arity cannot separate " +
+        "them. If the call is genuinely to the dropped overload, say so with a precise `dropMethods` key " +
+        "here; if this is an engine gap in overload identity, it belongs in ENGINE-LIMITS.md."
 
-  /** Every place a member symbol is used, ONE ENTRY PER SITE, with the `Apply` that gives the site
-    * its arity where there is one. The xref records `a.m(x)` twice (`Call` on `Apply`, `TermRef` on
-    * `Select`); collapsing to (file, line, enclosing definition) and keeping the `Apply` gives one
-    * finding per place an author has to edit, including two calls on one line. */
+  /** Every place a member symbol is used, ONE ENTRY PER SITE, with the `Apply` that gives the site its arity where there is one. The xref records `a.m(x)` twice (`Call` on `Apply`, `TermRef` on
+    * `Select`); collapsing to (file, line, enclosing definition) and keeping the `Apply` gives one finding per place an author has to edit, including two calls on one line.
+    */
   def callSites(program: Program, s: SymId): List[(Origin, Option[Tree], SymId)] =
-    program.usages(s)
-      .groupBy(u => (u.site.origin.javaPath, u.site.origin.line, u.enclosing.raw))
-      .toList.sortBy(_._1)
-      .map { (k, us) =>
-        val applied = us.collectFirst { case Usage(_, a: Tree.Apply, _) => a }
-        (applied.map(_.origin).getOrElse(us.head.site.origin), applied, SymId(k._3))
-      }
+    program.usages(s).groupBy(u => (u.site.origin.javaPath, u.site.origin.line, u.enclosing.raw)).toList.sortBy(_._1).map { (k, us) =>
+      val applied = us.collectFirst { case Usage(_, a: Tree.Apply, _) => a }
+      (applied.map(_.origin).getOrElse(us.head.site.origin), applied, SymId(k._3))
+    }
 
-  /** Every symbol that belongs to a type the BASE published — a dependent's model contains the
-    * base's Java too (D2), so reporting those would bury this module's own handful. Ownership is
-    * decided structurally (§4.56), rooted on the types the map names, fuel-bounded so an
-    * unresolvable case errs toward reporting. */
+  /** Every symbol that belongs to a type the BASE published — a dependent's model contains the base's Java too (D2), so reporting those would bury this module's own handful. Ownership is decided
+    * structurally (§4.56), rooted on the types the map names, fuel-bounded so an unresolvable case errs toward reporting.
+    */
   def ownedByBase(program: Program, baseTypes: Set[String]): Set[SymId] =
     def theirs(s: SymId, fuel: Int): Boolean =
       s != SymId.None && fuel > 0 && program.symbolOf(s).exists { sym =>
@@ -468,9 +518,9 @@ object PortMapTransform:
       }
     program.symbols.all.collect { case s if theirs(s.id, 64) => s.id }.toSet
 
-  /** `owner#name(P1,P2)` for a callee, built from the SYMBOL's own `info` — the same key convention
-    * `Substitutions.dropMethods`/`MethodBodyTransform`/the map use. `scala.None` when the symbol is
-    * not a method or its `info` never resolved, rather than guessing a key. */
+  /** `owner#name(P1,P2)` for a callee, built from the SYMBOL's own `info` — the same key convention `Substitutions.dropMethods`/`MethodBodyTransform`/the map use. `scala.None` when the symbol is not
+    * a method or its `info` never resolved, rather than guessing a key.
+    */
   def preciseKey(program: Program, sym: Symbol): Option[String] =
     def params(t: TypeRepr): Option[List[TypeRepr]] = t match
       case TypeRepr.MethodType(ps, _, _) => Some(ps.map(_._2))
@@ -481,19 +531,19 @@ object PortMapTransform:
       case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), _) => program.symbolOf(s).map(_.name)
       case _                                               => scala.None
     for
-      ps   <- params(sym.info)
+      ps <- params(sym.info)
       // all parameters resolve, or none — a partial key would match the wrong overload.
       names <- ps.foldLeft(Option(List.empty[String]))((acc, p) => acc.zip(simple(p)).map(_ :+ _))
     yield s"${sym.fullName}(${names.mkString(",")})"
 
-  /** `owner#name` out of `owner#name(P1,P2)` — the form a TIR symbol's `fullName` takes, since a
-    * symbol carries no parameter list. */
+  /** `owner#name` out of `owner#name(P1,P2)` — the form a TIR symbol's `fullName` takes, since a symbol carries no parameter list.
+    */
   def bareKey(key: String): String =
     val i = key.indexOf('(')
     if i < 0 then key else key.substring(0, i)
 
-  /** how many parameters a member key declares. The keys in a map are already ERASED
-    * ([[PortMap.erase]]), so there are no nested generics to balance and a comma count is exact. */
+  /** how many parameters a member key declares. The keys in a map are already ERASED ([[PortMap.erase]]), so there are no nested generics to balance and a comma count is exact.
+    */
   def arityOf(key: String): Option[Int] =
     val i = key.indexOf('(')
     if i < 0 then scala.None
@@ -501,10 +551,9 @@ object PortMapTransform:
       val inner = key.substring(i + 1).stripSuffix(")")
       Some(if inner.isBlank then 0 else inner.count(_ == ',') + 1)
 
-  /** Chooses the overloads a call site could mean — arity is the only discriminator, since the map
-    * keys by erased parameter types and a TIR call site carries argument trees. Exact arity wins
-    * outright; no arity match means NO record (a miss, not the nearest candidate) — the map may be
-    * stale, or the member varargs. A key with no parameter list (a field) is kept regardless. */
+  /** Chooses the overloads a call site could mean — arity is the only discriminator, since the map keys by erased parameter types and a TIR call site carries argument trees. Exact arity wins
+    * outright; no arity match means NO record (a miss, not the nearest candidate) — the map may be stale, or the member varargs. A key with no parameter list (a field) is kept regardless.
+    */
   def select(candidates: List[(String, PortMap.Entry)], arity: Option[Int]): List[(String, PortMap.Entry)] =
     arity match
       case scala.None => candidates

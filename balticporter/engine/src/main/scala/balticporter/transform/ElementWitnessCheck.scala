@@ -2,9 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The TYPE-CLASS ARRAY boundary, counted — every place [[ElementWitnessTransform]] declined to
-  * move an element-typed array onto the witness, and why. Parameterised by the phase's own
-  * `subjects`; an empty subject map is a no-op and this lane records nothing (CLAUDE.md §1(b)). */
+/** The TYPE-CLASS ARRAY boundary, counted — every place [[ElementWitnessTransform]] declined to move an element-typed array onto the witness, and why. Parameterised by the phase's own `subjects`; an
+  * empty subject map is a no-op and this lane records nothing (CLAUDE.md §1(b)).
+  */
 object ElementWitnessCheck:
 
   /** the check's name in `findings.tsv`. */
@@ -12,20 +12,24 @@ object ElementWitnessCheck:
 
   /** what kind of refusal this is, which decides who fixes it (CLAUDE.md §1). */
   enum Issue:
-    /** a `null` read or write standing for TABLE OCCUPANCY, not for an absent value — the element
-      * type cannot lose its `<: java.lang.Object` bound without a representation change. */
+    /** a `null` read or write standing for TABLE OCCUPANCY, not for an absent value — the element type cannot lose its `<: java.lang.Object` bound without a representation change.
+      */
     case OccupancySentinel
+
     /** an element-typed array created inside a declaration the policy does not name. */
     case NonSubject
-    /** a creation at an element-typed slot the phase recognises as one and cannot express through
-      * the witness — no witness is in scope at that declaration, or the shape is not one of the
-      * four the mechanism translates. */
+
+    /** a creation at an element-typed slot the phase recognises as one and cannot express through the witness — no witness is in scope at that declaration, or the shape is not one of the four the
+      * mechanism translates.
+      */
     case UnhandledCreation
-    /** an element-typed array presented as `Array[java.lang.Object]` — java's own RAW view of a
-      * receiver, which stops being true the moment the element type may be a primitive. */
+
+    /** an element-typed array presented as `Array[java.lang.Object]` — java's own RAW view of a receiver, which stops being true the moment the element type may be a primitive.
+      */
     case ErasedArrayCast
-    /** java's UNCHECKED CONVERSION (JLS 5.1.9) at a RAW formal this phase filled with `Object`:
-      * the argument is cast to the filled type — erasure-sound, and invisible in the java. */
+
+    /** java's UNCHECKED CONVERSION (JLS 5.1.9) at a RAW formal this phase filled with `Object`: the argument is cast to the filled type — erasure-sound, and invisible in the java.
+      */
     case RawConversion
 
   object Issue:
@@ -79,19 +83,21 @@ object ElementWitnessCheck:
           "Until then this call is correct for a reference element type and throws for a primitive one."
 
   /** one refusal. `unit` is the top-level symbol for D2 ownership filtering. */
-  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin,
-                           unit: SymId = SymId.None):
-    def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
+  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):
+    def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(Name, issue.toString, subject,
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   /** grouped one-line summary, worst family first, each with its §1 classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

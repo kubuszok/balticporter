@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, IdiomKind}
+import balticporter.tir.{ Decision, IdiomKind }
 import balticporter.transform.SamLambdaTransform
 
 /** THE SAM TRANSFORMER — the conversion, its emitted SHAPE, and its attribution. */
@@ -31,8 +31,10 @@ class SamLambdaTransformSpec extends PortSuite:
     assertEmits(p, ": java.lang.Runnable)")
   }
 
-  test("…and the CONSTRUCTOR APPLICATION goes with it — the frontend models `new I(){…}` as an\n" +
-       "     `Apply` over the `New`, so a conversion at the `New` alone leaves a lambda APPLIED") {
+  test(
+    "…and the CONSTRUCTOR APPLICATION goes with it — the frontend models `new I(){…}` as an\n" +
+      "     `Apply` over the `New`, so a conversion at the `New` alone leaves a lambda APPLIED"
+  ) {
     // The defect this pins is loud, but only if somebody looks: `((…) => …): I)()` is a lambda
     // applied to the constructor's (empty) argument list. It is why the conversion sits at the
     // `Apply` and reads the argument list there — which is also the belt to guard 1's brace, since
@@ -58,7 +60,9 @@ class SamLambdaTransformSpec extends PortSuite:
         |      public int compare(String a, String b) { return a.length() - b.length() + bias; }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertEmitsMatch(p, """\(a: java\.lang\.String, b: java\.lang\.String\) =>""")
     assertEmits(p, ": java.util.Comparator[java.lang.String])")
   }
@@ -76,8 +80,10 @@ class SamLambdaTransformSpec extends PortSuite:
       |  }
       |}""".stripMargin
 
-  test("a VALUE-returning `return` inside the converted body gets the SAM METHOD's result type\n" +
-       "     — `ENGINE-LIMITS.md` I9, and the shape that took wave 1 from 0 to 4 typer errors") {
+  test(
+    "a VALUE-returning `return` inside the converted body gets the SAM METHOD's result type\n" +
+      "     — `ENGINE-LIMITS.md` I9, and the shape that took wave 1 from 0 to 4 typer errors"
+  ) {
     // java's lambda body is a METHOD body, so `return` is legal in it; scala's lambda is an
     // expression and rejects `return` outright. The emitter restores java's meaning with a nested
     // `def` (`JS-S21`) — and a `def` needs a RESULT TYPE, which is `compare`'s `int` and NEVER the
@@ -105,7 +111,8 @@ class SamLambdaTransformSpec extends PortSuite:
         |  java.util.function.Supplier<String> s() {
         |    return () -> { return "x"; };
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
     assertEquals(clue(balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)).map(_.owner), Nil)
   }
@@ -122,7 +129,8 @@ class SamLambdaTransformSpec extends PortSuite:
         |  java.util.function.Supplier s() {
         |    return () -> { return "x"; };
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     val fs = balticporter.tir.OmissionCheck.unnameableLambdaReturn(p.after)
     assertEquals(clue(fs).map(_.owner), List("C#s"))
     assertNotEmits(p, "body$")
@@ -136,7 +144,9 @@ class SamLambdaTransformSpec extends PortSuite:
         |      public void run() { if (n < 0) { return; } System.out.println(n); }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertEmitsMatch(p, """def body\$\d+\(\): scala\.Unit = """)
   }
 
@@ -169,7 +179,9 @@ class SamLambdaTransformSpec extends PortSuite:
         |    Runnable b = new Runnable() { public void run() { System.out.println(s + "!"); } };
         |    a.run(); b.run();
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     val ds = p.decisions.filter(_.kind == Decision.Kind.SamLambda)
     assertEquals(clue(ds).size, 1)
     assertEquals(ds.head.detail.get("count"), Some("2"))
@@ -195,13 +207,17 @@ class SamLambdaTransformSpec extends PortSuite:
         |    Runnable a = new Runnable() { public void run() { System.out.println(s); } };
         |    a.run();
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     val ds = p.decisions.filter(_.kind == Decision.Kind.SamLambda)
     assertEquals(clue(ds).map(_.subjectFqn), List("C#two"))
   }
 
-  test("the porter NOTE's PLACEMENT is `AtDeclaration` — a kind in the wrong set is a note that\n" +
-       "     never appears (§4.575)") {
+  test(
+    "the porter NOTE's PLACEMENT is `AtDeclaration` — a kind in the wrong set is a note that\n" +
+      "     never appears (§4.575)"
+  ) {
     // Asserted structurally rather than on emitted text, because the placement sets are the
     // machinery and the text is the consequence. `NoteCoverageCheck` gates both directions on every
     // real run; what a fixture can pin is that the kind is in the rendered set at all and in the one
@@ -213,8 +229,10 @@ class SamLambdaTransformSpec extends PortSuite:
     assertEquals(PorterNote.slug(Decision.Kind.SamLambda), "sam-lambda")
   }
 
-  test("a RAW-typed target converts, and the ascription it writes is the WILDCARD one — measured,\n" +
-       "     not assumed, because the guard it would have justified is not free") {
+  test(
+    "a RAW-typed target converts, and the ascription it writes is the WILDCARD one — measured,\n" +
+      "     not assumed, because the guard it would have justified is not free"
+  ) {
     // The ascription is `nw.tpt`, and for a RAW generic use this engine renders `[?]` (the reference
     // port's own answer, §3.5). So a raw `new Comparator(){…}` emits
     // `((a, b) => …): java.util.Comparator[?]`, and a scala lambda at a WILDCARD-APPLIED type is a
@@ -228,7 +246,9 @@ class SamLambdaTransformSpec extends PortSuite:
         |      public int compare(Object a, Object b) { return bias; }
         |    };
         |  }
-        |}""".stripMargin, new SamLambdaTransform)
+        |}""".stripMargin,
+      new SamLambdaTransform
+    )
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#raw")
     assertEmits(p, "): java.util.Comparator[?])")
     assertEmitsMatch(p, """\(a: java\.lang\.Object, b: java\.lang\.Object\) =>""")
@@ -242,6 +262,5 @@ class SamLambdaTransformSpec extends PortSuite:
     // A `CollectionsTransform` retarget moving `java.util.Comparator` to `scala.math.Ordering`
     // changes what the ascription would SAY, and a phase that ran afterwards would be writing a type
     // java never named at that site.
-    assertEquals(new SamLambdaTransform().runsBefore,
-                 Set("java-collections->scala", "package-rename"))
+    assertEquals(new SamLambdaTransform().runsBefore, Set("java-collections->scala", "package-rename"))
   }

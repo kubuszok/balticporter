@@ -1,6 +1,6 @@
 package balticporter.testkit
 
-import balticporter.catalog.{Attaches, Differences, JS, Status}
+import balticporter.catalog.{ Attaches, Differences, JS, Status }
 import balticporter.tir.HeapPollutionCheck
 
 /** THE `JS-G` EDGE-CASE SUITE — the generics rows the engine wires, at the shape each row is about. */
@@ -20,7 +20,8 @@ class CatalogAreaGSpec extends PortSuite:
         |  Path f(Path location) {
         |    return Optional.ofNullable(location).orElseGet(() -> Paths.get(".").toAbsolutePath());
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, "asInstanceOf[java.util.function.Supplier")
     assertEmits(p, "orElseGet(() =>")
@@ -34,7 +35,8 @@ class CatalogAreaGSpec extends PortSuite:
         |import java.nio.file.Path;
         |public class A {
         |  Path f(Path location, Path other) { return Optional.ofNullable(location).orElse(other); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31))
   }
 
@@ -47,7 +49,8 @@ class CatalogAreaGSpec extends PortSuite:
         |import java.util.Comparator;
         |public class A {
         |  void f(List<String> l) { l.sort(Comparator.comparing(String::length)); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, "asInstanceOf[java.util.function.Function")
   }
@@ -61,7 +64,8 @@ class CatalogAreaGSpec extends PortSuite:
         |public class A {
         |  static class Box<T> { Box(Supplier<? extends T> s) {} }
         |  Box<String> f() { return new Box<String>(() -> "x"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, ").asInstanceOf[java.util.function.Supplier")
   }
@@ -76,7 +80,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  Object f() { return (java.util.concurrent.Callable<String>) () -> "x"; }
         |  Object g() { return (Runnable) () -> { System.out.println("y"); }; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertNotEmits(p, "asInstanceOf[java.util.concurrent.Callable")
     assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
     assertEmits(p, "): java.util.concurrent.Callable[java.lang.String])")
@@ -91,7 +96,8 @@ class CatalogAreaGSpec extends PortSuite:
         |  static void run(Runnable r) {}
         |  static void run(String s) {}
         |  void f() { run((Runnable) () -> {}); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
     assertEmits(p, "): java.lang.Runnable)")
@@ -104,7 +110,8 @@ class CatalogAreaGSpec extends PortSuite:
     val p = port(
       """public class A {
         |  Object f(Object o) { return (String) o; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertEmits(p, "asInstanceOf[java.lang.String]")
   }
 
@@ -118,7 +125,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static void run(Runnable r, Object... rest) {}
         |  void f() { run(() -> {}, "a", "b"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
   }
@@ -128,7 +136,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static void all(String name, Runnable... rest) {}
         |  void f() { all("n", () -> {}, () -> {}); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, "asInstanceOf[java.lang.Runnable")
   }
@@ -141,7 +150,8 @@ class CatalogAreaGSpec extends PortSuite:
         |  interface Fn { String get(); }
         |  static String use(Fn f) { return f.get(); }
         |  String f() { return use(() -> "x"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(31), fired = true)
     assertNotEmits(p, "asInstanceOf[A.Fn]")
   }
@@ -180,7 +190,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G09 — a RAW value at a parameterised slot is java's UNCHECKED CONVERSION, and scala has none") {
     val p = port(
       """import java.util.List;
-        |public class A { List<String> f(List raw) { return raw; } }""".stripMargin)
+        |public class A { List<String> f(List raw) { return raw; } }""".stripMargin
+    )
     assertConsults(p, JS.G(9), fired = true)
     assertEmits(p, "asInstanceOf[java.util.List[java.lang.String]]")
   }
@@ -188,7 +199,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G09 — a fully parameterised value at the same slot is consulted and does not fire") {
     val p = port(
       """import java.util.List;
-        |public class A { List<String> f(List<String> l) { return l; } }""".stripMargin)
+        |public class A { List<String> f(List<String> l) { return l; } }""".stripMargin
+    )
     assertConsults(p, JS.G(9))
   }
 
@@ -205,7 +217,8 @@ class CatalogAreaGSpec extends PortSuite:
         |    field = xs;
         |    new Box(n);
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(14), fired = true)
     assertConsults(p, JS.G(9))
   }
@@ -220,7 +233,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  Object boxed = 1;
         |  Object[] widened = new String[0];
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(14), fired = true)
     assertConsults(p, JS.G(13), fired = true)
     assertConsults(p, JS.G(9))
@@ -254,7 +268,8 @@ class CatalogAreaGSpec extends PortSuite:
     val p = port(
       """public class A {
         |  <T> T[] f(int n) { return (T[]) new Object[n]; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(15), fired = true)
     assertEmits(p, "new scala.Array[java.lang.Object](")
   }
@@ -273,7 +288,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G17 — `T[]::new` is an IntFunction, not a no-arg supplier: a scala array needs a LENGTH") {
     val p = port(
       """import java.util.function.IntFunction;
-        |public class A { IntFunction<String[]> f() { return String[]::new; } }""".stripMargin)
+        |public class A { IntFunction<String[]> f() { return String[]::new; } }""".stripMargin
+    )
     assertConsults(p, JS.G(17), fired = true)
     assertEmits(p, "(size: scala.Int) => new scala.Array[java.lang.String](size)")
   }
@@ -281,7 +297,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G17 — an ordinary method reference is consulted for it and does NOT fire") {
     val p = port(
       """import java.util.function.Function;
-        |public class A { Function<String, Integer> f() { return Integer::parseInt; } }""".stripMargin)
+        |public class A { Function<String, Integer> f() { return Integer::parseInt; } }""".stripMargin
+    )
     assertConsults(p, JS.G(17))
   }
 
@@ -295,7 +312,8 @@ class CatalogAreaGSpec extends PortSuite:
         |import java.util.Comparator;
         |public class A {
         |  void f(List<String> l) { l.sort(Comparator.comparing(String::length)); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(43), fired = true)
     assertEmits(p, "self$")
   }
@@ -310,7 +328,8 @@ class CatalogAreaGSpec extends PortSuite:
     val p = port(
       """import java.util.Objects;
         |import java.util.function.Predicate;
-        |public class A { Predicate<Object> f() { return Objects::isNull; } }""".stripMargin)
+        |public class A { Predicate<Object> f() { return Objects::isNull; } }""".stripMargin
+    )
     assertConsults(p, JS.G(43), fired = true)
     assertEmits(p, "java.util.Objects.isNull")
     // the negative: no receiver parameter was invented for a method that has no receiver.
@@ -320,7 +339,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G43 — an UNBOUND reference keeps java's ARITY even where the formal is a type VARIABLE") {
     val p = port(
       """import java.util.Comparator;
-        |public class A { Comparator<String> f() { return Comparable::compareTo; } }""".stripMargin)
+        |public class A { Comparator<String> f() { return Comparable::compareTo; } }""".stripMargin
+    )
     assertConsults(p, JS.G(43), fired = true)
     // `compareTo(T)` is arity 1, so the lambda is arity 2 — the receiver plus java's one argument.
     // Rendered off the symbol's `MethodType` it was `((self$) => self$.compareTo())`, which is a
@@ -334,7 +354,8 @@ class CatalogAreaGSpec extends PortSuite:
         |public class A {
         |  static class Box { Box(String s) {} }
         |  Function<String, Box> f() { return Box::new; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(43), fired = true)
     assertEmitsMatch(p, """\(a0\$\) => new [^()]*Box\(a0\$\)""")
   }
@@ -345,7 +366,8 @@ class CatalogAreaGSpec extends PortSuite:
         |public class A {
         |  static class Box { Box() {} }
         |  Supplier<Box> f() { return Box::new; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertEmits(p, "() => new ")
     assertNotEmits(p, "a0$")
   }
@@ -356,7 +378,8 @@ class CatalogAreaGSpec extends PortSuite:
         |public class A {
         |  static class Box { Box() {} }
         |  Supplier<Box> f() { return Box::new; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(33), fired = true)
     assertConsults(p, JS.G(43), fired = true)
   }
@@ -367,7 +390,8 @@ class CatalogAreaGSpec extends PortSuite:
         |public class A {
         |  static int len(String s) { return s.length(); }
         |  Function<String, Integer> f() { return A::len; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(33))
     assertConsults(p, JS.G(43), fired = true)
   }
@@ -379,7 +403,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static void run(String... xs) {}
         |  void f() { run("a", "b"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(37), fired = true)
     assertConsults(p, JS.G(38))
     assertEmits(p, "scala.Array[java.lang.String](\"a\", \"b\")")
@@ -390,7 +415,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static void run(String... xs) {}
         |  void f(String[] xs) { run(xs); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(38), fired = true)
     assertConsults(p, JS.G(37))
     assertNotEmits(p, "scala.Array[java.lang.String](xs)")
@@ -401,7 +427,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static <T> void all(T... xs) {}
         |  void f() { all("a", "b"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(42), fired = true)
   }
 
@@ -410,7 +437,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static void all(String... xs) {}
         |  void f() { all("a"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(42))
   }
 
@@ -419,7 +447,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static void one(String x) {}
         |  void f() { one("a"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     List(JS.G(37), JS.G(38), JS.G(39), JS.G(40)).foreach(assertConsults(p, _))
   }
 
@@ -428,8 +457,7 @@ class CatalogAreaGSpec extends PortSuite:
     // `argTerms` flattens a `Tree.Repeated` in an argument position before the dispatch sees it, so
     // an attachment at that kind could never be consulted and could never be reported as a hole
     // either — coverage that cannot fail. This assertion is what holds the two halves together.
-    val p = port(
-      """public class A { String f() { return String.format("%s", "a"); } }""".stripMargin)
+    val p = port("""public class A { String f() { return String.format("%s", "a"); } }""".stripMargin)
     assertConsults(p, JS.G(39), fired = true)
     assertConsults(p, JS.G(40))
     assertConsults(p, JS.G(18), fired = true)
@@ -439,8 +467,7 @@ class CatalogAreaGSpec extends PortSuite:
     // `String.format(fmt, args)`: a bare array conforms as ONE element wherever the repeated element
     // is `Object`, so `%s` prints the array and the second `%s` throws — `CLAUDE.md` §4.4, no error
     // and no moved count. The spread is what makes it java's arity again.
-    val p = port(
-      """public class A { String f(String fmt, Object[] args) { return String.format(fmt, args); } }""".stripMargin)
+    val p = port("""public class A { String f(String fmt, Object[] args) { return String.format(fmt, args); } }""".stripMargin)
     assertConsults(p, JS.G(40), fired = true)
     assertConsults(p, JS.G(39), fired = true)
     assertConsults(p, JS.G(38), fired = true)
@@ -455,7 +482,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static String id(String s) { return s; }
         |  Object f() { return id("a"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(18))
   }
 
@@ -467,7 +495,8 @@ class CatalogAreaGSpec extends PortSuite:
     // asserts is that the branch is LIVE at every call — which is the half a suite can see.
     val p = port(
       """import java.util.List;
-        |public class A { Object f(List<?> l) { return l.get(0); } }""".stripMargin)
+        |public class A { Object f(List<?> l) { return l.get(0); } }""".stripMargin
+    )
     assertConsults(p, JS.G(22))
   }
 
@@ -477,7 +506,8 @@ class CatalogAreaGSpec extends PortSuite:
         |public class A {
         |  static <T> T pick(List<T> l) { return l.get(0); }
         |  Object f(List<String> l) { return pick(l); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(32), fired = true)
     assertConsults(p, JS.G(29), fired = true)
   }
@@ -487,7 +517,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static String id(String s) { return s; }
         |  Object f() { return id("a"); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     List(JS.G(29), JS.G(30), JS.G(32)).foreach(assertConsults(p, _))
   }
 
@@ -498,7 +529,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static <T extends java.lang.Number> T make() { return null; }
         |  Object f() { return make(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(30), fired = true)
     assertConsults(p, JS.G(29))
   }
@@ -508,7 +540,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G34 — a java INTERSECTION in a cast becomes scala's `&`") {
     val p = port(
       """import java.io.Serializable;
-        |public class A { Object f(Object o) { return (Serializable & Cloneable) o; } }""".stripMargin)
+        |public class A { Object f(Object o) { return (Serializable & Cloneable) o; } }""".stripMargin
+    )
     assertConsults(p, JS.G(34), fired = true)
     assertEmits(p, "java.io.Serializable & java.lang.Cloneable")
   }
@@ -528,7 +561,8 @@ class CatalogAreaGSpec extends PortSuite:
     val p = port(
       """public class A {
         |  static <N extends Comparable<N>> N max(N a, N b) { return a; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(35), fired = true)
   }
 
@@ -545,8 +579,10 @@ class CatalogAreaGSpec extends PortSuite:
     val p = port("public class A { boolean f(Object o) { return o instanceof String; } }")
     assertConsults(p, JS.G(21), fired = true)
     assertEmits(p, "isInstanceOf[java.lang.String]")
-    assert(Differences.byId(JS.G(21)).status.isInstanceOf[Status.Partial],
-      "the SE16 pattern binding is still absent — flip this assertion with the row")
+    assert(
+      Differences.byId(JS.G(21)).status.isInstanceOf[Status.Partial],
+      "the SE16 pattern binding is still absent — flip this assertion with the row"
+    )
   }
 
   // -- THE FOURTH SURFACE — the rows decided while a TYPE is lowered or rendered -----------------
@@ -617,7 +653,8 @@ class CatalogAreaGSpec extends PortSuite:
         |    Entries here() { return null; }
         |    static Entries there() { return null; }
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(8), fired = true)
   }
 
@@ -634,7 +671,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static class Box<T extends Number> { }
         |  static class Sub extends Box { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(5), fired = true)
     assertEmits(p, "extends A.Box[java.lang.Number]")
   }
@@ -654,10 +692,13 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static class Node<N extends Node<N>> { }
         |  static class Holder extends Node { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(11), fired = true)
-    assert(Differences.byId(JS.G(11)).status.isInstanceOf[Status.Refused],
-      "JS-G11 is no longer a refusal — flip this test with it")
+    assert(
+      Differences.byId(JS.G(11)).status.isInstanceOf[Status.Refused],
+      "JS-G11 is no longer a refusal — flip this test with it"
+    )
     assertEmits(p, "extends A.Node[?]")
   }
 
@@ -666,7 +707,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  static class Box<T extends Number> { }
         |  static class Sub extends Box { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(11))
   }
 
@@ -679,7 +721,8 @@ class CatalogAreaGSpec extends PortSuite:
         |  static class Box<T> { }
         |  interface Cfg<T extends Number> { void save(Box<T> b); }
         |  static class Impl implements Cfg { public void save(Box b) { } }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertCites(p, JS.G(6), "save")
   }
 
@@ -700,7 +743,8 @@ class CatalogAreaGSpec extends PortSuite:
         |    public void conv(Cell<?>... c) { }
         |    void go(Cell<?>[] cs) { conv(cs); }
         |  }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     // THE OVERRIDE, not the interface's own member. The interface's rendering is the CONTROL that
     // identified the defect (`PROGRESS.md` §10.9.7 family 5) and it was always right, so an
     // assertion that only asks whether the wildcard is writable here proves nothing at all —
@@ -729,7 +773,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A<T> {
         |  static class Inner { java.util.List<T> xs; }
         |  <U> java.util.List<U> g(java.util.List<U> u) { return u; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(12))
     assertNotEmits(p, balticporter.tir.Symbol.UnresolvedTypeVarPrefix)
   }
@@ -745,10 +790,13 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  interface Box<T> { T get(); }
         |  Object f() { return new Box() { public Object get() { return null; } }; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(10), fired = true)
-    assert(Differences.byId(JS.G(10)).status.isInstanceOf[Status.Refused],
-      "JS-G10 is no longer a refusal — flip this test with it")
+    assert(
+      Differences.byId(JS.G(10)).status.isInstanceOf[Status.Refused],
+      "JS-G10 is no longer a refusal — flip this test with it"
+    )
   }
 
   test("JS-G10 — a PARAMETERISED anonymous class is the ordinary case; consulted, does not fire") {
@@ -756,7 +804,8 @@ class CatalogAreaGSpec extends PortSuite:
       """public class A {
         |  interface Box<T> { T get(); }
         |  Object f() { return new Box<String>() { public String get() { return "x"; } }; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(10))
   }
 
@@ -787,8 +836,10 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G20 — a row with NO surface at all is counted, not claimed") {
     val p = port("public class A { int x = 1; }")
     assertNotConsults(p, JS.G(20))
-    assert(Differences.leaves(Differences.byId(JS.G(20)).attaches).exists(_.isInstanceOf[Attaches.Unmechanised]),
-      "JS-G20 gained a surface — move it out of this test and give it one of its own")
+    assert(
+      Differences.leaves(Differences.byId(JS.G(20)).attaches).exists(_.isInstanceOf[Attaches.Unmechanised]),
+      "JS-G20 gained a surface — move it out of this test and give it one of its own"
+    )
   }
 
   // -- JS-G41: heap pollution, which is COUNTED because there is nothing to translate -------------
@@ -823,7 +874,8 @@ class CatalogAreaGSpec extends PortSuite:
         |  void f(String... xs) { }
         |  void g(java.lang.Class<?>... ys) { }
         |  void h(String[]... zs) { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     assertConsults(p, JS.G(41))
     assertNoFindings(HeapPollutionCheck.check(p.after, p.after.units).map(_.report))
   }
@@ -850,22 +902,26 @@ class CatalogAreaGSpec extends PortSuite:
   // -- the partition, asserted rather than left to a reader ---------------------------------------
 
   test("every JS-G row is wired, declared unmechanised, or owes nothing — and the residue is NAMED") {
-    val byKind = Differences.generics.groupBy(d => Differences.leaves(d.attaches) match
-      case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
-      case ls if ls.exists(_.isInstanceOf[Attaches.LoweredType])  => "lowered-type"
-      case ls if ls.exists(_.isInstanceOf[Attaches.RenderedType]) => "rendered-type"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
-      case ls if ls.exists(_.isInstanceOf[Attaches.Cited])        => "cited"
-      case _                                                      => "none")
+    val byKind = Differences.generics.groupBy(d =>
+      Differences.leaves(d.attaches) match
+        case ls if ls.exists(_.isInstanceOf[Attaches.Unmechanised]) => "unmechanised"
+        case ls if ls.exists(_.isInstanceOf[Attaches.LoweredType])  => "lowered-type"
+        case ls if ls.exists(_.isInstanceOf[Attaches.RenderedType]) => "rendered-type"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Rendered])     => "rendered"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Lowered])      => "lowered"
+        case ls if ls.exists(_.isInstanceOf[Attaches.Cited])        => "cited"
+        case _                                                      => "none"
+    )
     assertEquals(byKind.values.map(_.size).sum, Differences.generics.size)
     // THE CHUNK'S OWN BAR, in the form that can fail. Area G opened with 38 of its 40 rows on
     // `Unmechanised` — the largest such claim in the registry — chunk 12 took it to eleven, and the
     // fourth surface takes it to TWO, and `JS-G41`'s counter to ONE. The audit question is
     // unchanged: were the rows instrumented, or renamed to keep a lane green.
-    assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
+    assertEquals(
+      byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set(JS.G(20)),
-      "a JS-G row that is not JS-G20's per-phase discipline still says nothing is measuring it")
+      "a JS-G row that is not JS-G20's per-phase discipline still says nothing is measuring it"
+    )
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-G row is wired to the RENDERING dispatch")
     assert(byKind.getOrElse("lowered", Nil).nonEmpty, "no JS-G row is wired to the LOWERING dispatch")
     // …and the FOURTH surface, BOTH halves — asked of the LEAVES and not of the bucket, because the
@@ -882,6 +938,9 @@ class CatalogAreaGSpec extends PortSuite:
     // could lose it and nothing in this file would say so.
     assertEquals(byKind.getOrElse("cited", Nil).map(_.id), List(JS.G(6), JS.G(48)))
     // …and a row claiming NO obligation must not be one the registry calls Open.
-    assertEquals(byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id), Nil,
-      "an Open row claiming NoObligation is a gap no lane can see")
+    assertEquals(
+      byKind.getOrElse("none", Nil).filter(_.status.isOpen).map(_.id),
+      Nil,
+      "an Open row claiming NoObligation is a gap no lane can see"
+    )
   }

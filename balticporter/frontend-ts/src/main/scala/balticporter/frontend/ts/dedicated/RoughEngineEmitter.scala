@@ -1,13 +1,12 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode}
+import balticporter.frontend.ts.{ RastFile, RastNode }
 
 /** Dedicated RAST-to-Scala emitter for roughjs engine files (renderer.ts + generator.ts).
   *
-  * Reads the resolved AST and produces Scala that matches the hand-port's structure.
-  * Each TS pattern maps to a deterministic Scala idiom derived from RAST nodes:
+  * Reads the resolved AST and produces Scala that matches the hand-port's structure. Each TS pattern maps to a deterministic Scala idiom derived from RAST nodes:
   *   - Object literals for OpSet/Op/EllipseParams/EllipseResult/Drawable/PathInfo
   *   - Point[0]/Point[1] to Point.x/Point.y
   *   - Math.* to Math.*
@@ -15,15 +14,16 @@ import balticporter.frontend.ts.{RastFile, RastNode}
   *   - JS truthiness to explicit predicates
   *   - RNG threading via mutable ResolvedOptions.randomizer
   *   - Module functions to object members
-  *   - Class with constructor to Scala class */
+  *   - Class with constructor to Scala class
+  */
 object RoughEngineEmitter {
 
   def emit(rendererRast: RastFile, generatorRast: RastFile): Map[String, String] = {
-    val rendererCtx = new RendererEmitCtx(rendererRast)
+    val rendererCtx  = new RendererEmitCtx(rendererRast)
     val generatorCtx = new GeneratorEmitCtx(generatorRast)
     Map(
       "RoughRenderer" -> rendererCtx.emit(),
-      "RoughGenerator" -> generatorCtx.emit(),
+      "RoughGenerator" -> generatorCtx.emit()
     )
   }
 
@@ -43,7 +43,7 @@ object RoughEngineEmitter {
   private def isExported(node: RastNode): Boolean =
     node.flags.contains("ExportKeyword")
 
-  private val I = "  "
+  private val I  = "  "
   private val I2 = "    "
   private val I3 = "      "
   private val I4 = "        "
@@ -56,7 +56,7 @@ object RoughEngineEmitter {
   // ---- Renderer emitter ----
 
   private class RendererEmitCtx(file: RastFile) {
-    private val sb = new StringBuilder
+    private val sb  = new StringBuilder
     private val fns = functionsOf(file)
 
     def emit(): String = {
@@ -65,7 +65,7 @@ object RoughEngineEmitter {
       sb.append("object RoughRenderer {\n\n")
       emitHelper()
       // Emit each function in the order they appear in the RAST
-      for ((name, node) <- fns) {
+      for ((name, node) <- fns)
         name match {
           case "line"                  => emitLine(node)
           case "linearPath"            => emitLinearPath(node)
@@ -96,7 +96,6 @@ object RoughEngineEmitter {
           case "_bezierTo"             => emitBezierTo(node)
           case _                       => () // skip unknown
         }
-      }
       emitNumTruthy()
       sb.append("}\n")
       sb.toString
@@ -121,9 +120,15 @@ object RoughEngineEmitter {
     private def emitHelper(): Unit = {
       sb.append(s"${I}private val helper: RenderHelper = new RenderHelper {\n")
       sb.append(s"${I2}def randOffset(x: Double, o: ResolvedOptions): Double = RoughRenderer.randOffset(x, o)\n")
-      sb.append(s"${I2}def randOffsetWithRange(min: Double, max: Double, o: ResolvedOptions): Double = RoughRenderer.randOffsetWithRange(min, max, o)\n")
-      sb.append(s"${I2}def ellipse(x: Double, y: Double, width: Double, height: Double, o: ResolvedOptions): OpSet = RoughRenderer.ellipse(x, y, width, height, o)\n")
-      sb.append(s"${I2}def doubleLineOps(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions): Vector[Op] = RoughRenderer.doubleLineFillOps(x1, y1, x2, y2, o)\n")
+      sb.append(
+        s"${I2}def randOffsetWithRange(min: Double, max: Double, o: ResolvedOptions): Double = RoughRenderer.randOffsetWithRange(min, max, o)\n"
+      )
+      sb.append(
+        s"${I2}def ellipse(x: Double, y: Double, width: Double, height: Double, o: ResolvedOptions): OpSet = RoughRenderer.ellipse(x, y, width, height, o)\n"
+      )
+      sb.append(
+        s"${I2}def doubleLineOps(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions): Vector[Op] = RoughRenderer.doubleLineFillOps(x1, y1, x2, y2, o)\n"
+      )
       sb.append(s"${I}}\n\n")
     }
 
@@ -220,7 +225,9 @@ object RoughEngineEmitter {
 
     private def emitGenerateEllipseParams(node: RastNode): Unit = {
       sb.append(s"${I}def generateEllipseParams(width: Double, height: Double, o: ResolvedOptions): EllipseParams = {\n")
-      sb.append(s"${I2}val psq: Double = Math.sqrt(Math.PI * 2 * Math.sqrt((Math.pow(width / 2, 2) + Math.pow(height / 2, 2)) / 2))\n")
+      sb.append(
+        s"${I2}val psq: Double = Math.sqrt(Math.PI * 2 * Math.sqrt((Math.pow(width / 2, 2) + Math.pow(height / 2, 2)) / 2))\n"
+      )
       sb.append(s"${I2}val stepCount: Double = Math.ceil(Math.max(o.curveStepCount, (o.curveStepCount / Math.sqrt(200)) * psq))\n")
       sb.append(s"${I2}val increment: Double = (Math.PI * 2) / stepCount\n")
       sb.append(s"${I2}var rx: Double = Math.abs(width / 2)\n")
@@ -233,7 +240,9 @@ object RoughEngineEmitter {
     }
 
     private def emitEllipseWithParams(node: RastNode): Unit = {
-      sb.append(s"${I}def ellipseWithParams(x: Double, y: Double, o: ResolvedOptions, ellipseParams: EllipseParams): EllipseResult = {\n")
+      sb.append(
+        s"${I}def ellipseWithParams(x: Double, y: Double, o: ResolvedOptions, ellipseParams: EllipseParams): EllipseResult = {\n"
+      )
       sb.append(s"${I2}val overlap: Double = ellipseParams.increment * _offset(0.1, _offset(0.4, 1, o), o)\n")
       sb.append(s"${I2}val (ap1, cp1): (Vector[Point], Vector[Point]) =\n")
       sb.append(s"${I3}_computeEllipsePoints(ellipseParams.increment, x, y, ellipseParams.rx, ellipseParams.ry, 1, overlap, o)\n")
@@ -253,7 +262,9 @@ object RoughEngineEmitter {
     }
 
     private def emitArc(node: RastNode): Unit = {
-      sb.append(s"${I}def arc(x: Double, y: Double, width: Double, height: Double, start: Double, stop: Double, closed: Boolean, roughClosure: Boolean, o: ResolvedOptions): OpSet = {\n")
+      sb.append(
+        s"${I}def arc(x: Double, y: Double, width: Double, height: Double, start: Double, stop: Double, closed: Boolean, roughClosure: Boolean, o: ResolvedOptions): OpSet = {\n"
+      )
       sb.append(s"${I2}val cx: Double = x\n")
       sb.append(s"${I2}val cy: Double = y\n")
       sb.append(s"${I2}var rx: Double = Math.abs(width / 2)\n")
@@ -293,7 +304,9 @@ object RoughEngineEmitter {
 
     private def emitSvgPath(node: RastNode): Unit = {
       sb.append(s"${I}def svgPath(path: String, o: ResolvedOptions): OpSet = {\n")
-      sb.append(s"${I2}val segments: Vector[pathdata.Segment] = PathDataParser.normalize(PathDataParser.absolutize(PathDataParser.parsePath(path)))\n")
+      sb.append(
+        s"${I2}val segments: Vector[pathdata.Segment] = PathDataParser.normalize(PathDataParser.absolutize(PathDataParser.parsePath(path)))\n"
+      )
       sb.append(s"${I2}val ops: ArrayBuffer[Op] = ArrayBuffer.empty\n")
       sb.append(s"${I2}var first: Point = Point(0, 0)\n")
       sb.append(s"${I2}var current: Point = Point(0, 0)\n")
@@ -353,7 +366,9 @@ object RoughEngineEmitter {
     }
 
     private def emitPatternFillArc(node: RastNode): Unit = {
-      sb.append(s"${I}def patternFillArc(x: Double, y: Double, width: Double, height: Double, start: Double, stop: Double, o: ResolvedOptions): OpSet = {\n")
+      sb.append(
+        s"${I}def patternFillArc(x: Double, y: Double, width: Double, height: Double, start: Double, stop: Double, o: ResolvedOptions): OpSet = {\n"
+      )
       sb.append(s"${I2}val cx: Double = x\n")
       sb.append(s"${I2}val cy: Double = y\n")
       sb.append(s"${I2}var rx: Double = Math.abs(width / 2)\n")
@@ -429,7 +444,9 @@ object RoughEngineEmitter {
     }
 
     private def emitDoubleLine(node: RastNode): Unit = {
-      sb.append(s"${I}private def _doubleLine(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions, filling: Boolean = false): Vector[Op] = {\n")
+      sb.append(
+        s"${I}private def _doubleLine(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions, filling: Boolean = false): Vector[Op] = {\n"
+      )
       sb.append(s"${I2}val singleStroke: Boolean = if (filling) o.disableMultiStrokeFill else o.disableMultiStroke\n")
       sb.append(s"${I2}val o1: Vector[Op] = _line(x1, y1, x2, y2, o, true, false)\n")
       sb.append(s"${I2}if (singleStroke) {\n")
@@ -442,7 +459,9 @@ object RoughEngineEmitter {
     }
 
     private def emitLinePrivate(node: RastNode): Unit = {
-      sb.append(s"${I}private def _line(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions, move: Boolean, overlay: Boolean): Vector[Op] = {\n")
+      sb.append(
+        s"${I}private def _line(x1: Double, y1: Double, x2: Double, y2: Double, o: ResolvedOptions, move: Boolean, overlay: Boolean): Vector[Op] = {\n"
+      )
       sb.append(s"${I2}val lengthSq: Double = Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)\n")
       sb.append(s"${I2}val length: Double = Math.sqrt(lengthSq)\n")
       sb.append(s"${I2}var roughnessGain: Double = 1\n")
@@ -591,7 +610,9 @@ object RoughEngineEmitter {
     }
 
     private def emitComputeEllipsePoints(node: RastNode): Unit = {
-      sb.append(s"${I}private def _computeEllipsePoints(increment: Double, cx: Double, cy: Double, rx: Double, ry: Double, offset: Double, overlap: Double, o: ResolvedOptions): (Vector[Point], Vector[Point]) = {\n")
+      sb.append(
+        s"${I}private def _computeEllipsePoints(increment: Double, cx: Double, cy: Double, rx: Double, ry: Double, offset: Double, overlap: Double, o: ResolvedOptions): (Vector[Point], Vector[Point]) = {\n"
+      )
       sb.append(s"${I2}val coreOnly: Boolean = o.roughness == 0\n")
       sb.append(s"${I2}val corePoints: ArrayBuffer[Point] = ArrayBuffer.empty\n")
       sb.append(s"${I2}val allPoints: ArrayBuffer[Point] = ArrayBuffer.empty\n")
@@ -655,7 +676,9 @@ object RoughEngineEmitter {
     }
 
     private def emitArcPrivate(node: RastNode): Unit = {
-      sb.append(s"${I}private def _arc(increment: Double, cx: Double, cy: Double, rx: Double, ry: Double, strt: Double, stp: Double, offset: Double, o: ResolvedOptions): Vector[Op] = {\n")
+      sb.append(
+        s"${I}private def _arc(increment: Double, cx: Double, cy: Double, rx: Double, ry: Double, strt: Double, stp: Double, offset: Double, o: ResolvedOptions): Vector[Op] = {\n"
+      )
       sb.append(s"${I2}val radOffset: Double = strt + _offsetOpt(0.1, o)\n")
       sb.append(s"${I2}val points: ArrayBuffer[Point] = ArrayBuffer.empty\n")
       sb.append(s"${I2}points += Point(\n")
@@ -683,7 +706,9 @@ object RoughEngineEmitter {
     }
 
     private def emitBezierTo(node: RastNode): Unit = {
-      sb.append(s"${I}private def _bezierTo(x1: Double, y1: Double, x2: Double, y2: Double, x: Double, y: Double, current: Point, o: ResolvedOptions): Vector[Op] = {\n")
+      sb.append(
+        s"${I}private def _bezierTo(x1: Double, y1: Double, x2: Double, y2: Double, x: Double, y: Double, current: Point, o: ResolvedOptions): Vector[Op] = {\n"
+      )
       sb.append(s"${I2}val ops: ArrayBuffer[Op] = ArrayBuffer.empty\n")
       sb.append(s"${I2}val ros: Vector[Double] = Vector(\n")
       sb.append(s"${I3}if (numTruthy(o.maxRandomnessOffset)) o.maxRandomnessOffset else 1.0,\n")
@@ -753,9 +778,8 @@ object RoughEngineEmitter {
       sb.append("import ssg.graphs.commons.util.FormatUtil\n\n")
     }
 
-    private def emitNOS(): Unit = {
+    private def emitNOS(): Unit =
       sb.append("final val NOS: String = \"none\"\n\n")
-    }
 
     private def emitClass(): Unit = {
       sb.append("final class RoughGenerator(config: Config = Config()) {\n\n")
@@ -866,12 +890,16 @@ object RoughEngineEmitter {
     }
 
     private def emitGenRectangle(): Unit = {
-      sb.append(s"${I}def rectangle(x: Double, y: Double, width: Double, height: Double, options: Option[Options] = None): Drawable = {\n")
+      sb.append(
+        s"${I}def rectangle(x: Double, y: Double, width: Double, height: Double, options: Option[Options] = None): Drawable = {\n"
+      )
       sb.append(s"${I2}val o: ResolvedOptions = _o(options)\n")
       sb.append(s"${I2}val paths: ArrayBuffer[OpSet] = ArrayBuffer.empty\n")
       sb.append(s"${I2}val outline: OpSet = RoughRenderer.rectangle(x, y, width, height, o)\n")
       sb.append(s"${I2}if (fillTruthy(o)) {\n")
-      sb.append(s"${I3}val points: Vector[Point] = Vector(Point(x, y), Point(x + width, y), Point(x + width, y + height), Point(x, y + height))\n")
+      sb.append(
+        s"${I3}val points: Vector[Point] = Vector(Point(x, y), Point(x + width, y), Point(x + width, y + height), Point(x, y + height))\n"
+      )
       sb.append(s"${I3}if (o.fillStyle == \"solid\") {\n")
       sb.append(s"${I4}paths += RoughRenderer.solidFillPolygon(Vector(points), o)\n")
       sb.append(s"${I3}} else {\n")
@@ -886,14 +914,18 @@ object RoughEngineEmitter {
     }
 
     private def emitGenEllipse(): Unit = {
-      sb.append(s"${I}def ellipse(x: Double, y: Double, width: Double, height: Double, options: Option[Options] = None): Drawable = {\n")
+      sb.append(
+        s"${I}def ellipse(x: Double, y: Double, width: Double, height: Double, options: Option[Options] = None): Drawable = {\n"
+      )
       sb.append(s"${I2}val o: ResolvedOptions = _o(options)\n")
       sb.append(s"${I2}val paths: ArrayBuffer[OpSet] = ArrayBuffer.empty\n")
       sb.append(s"${I2}val ellipseParams: EllipseParams = RoughRenderer.generateEllipseParams(width, height, o)\n")
       sb.append(s"${I2}val ellipseResponse: EllipseResult = RoughRenderer.ellipseWithParams(x, y, o, ellipseParams)\n")
       sb.append(s"${I2}if (fillTruthy(o)) {\n")
       sb.append(s"${I3}if (o.fillStyle == \"solid\") {\n")
-      sb.append(s"${I4}val shape: OpSet = RoughRenderer.ellipseWithParams(x, y, o, ellipseParams).opset.copy(`type` = OpSetType.fillPath)\n")
+      sb.append(
+        s"${I4}val shape: OpSet = RoughRenderer.ellipseWithParams(x, y, o, ellipseParams).opset.copy(`type` = OpSetType.fillPath)\n"
+      )
       sb.append(s"${I4}paths += shape\n")
       sb.append(s"${I3}} else {\n")
       sb.append(s"${I4}paths += RoughRenderer.patternFillPolygons(Vector(ellipseResponse.estimatedPoints), o)\n")
@@ -921,14 +953,18 @@ object RoughEngineEmitter {
     }
 
     private def emitGenArc(): Unit = {
-      sb.append(s"${I}def arc(x: Double, y: Double, width: Double, height: Double, start: Double, stop: Double, closed: Boolean = false, options: Option[Options] = None): Drawable = {\n")
+      sb.append(
+        s"${I}def arc(x: Double, y: Double, width: Double, height: Double, start: Double, stop: Double, closed: Boolean = false, options: Option[Options] = None): Drawable = {\n"
+      )
       sb.append(s"${I2}val o: ResolvedOptions = _o(options)\n")
       sb.append(s"${I2}val paths: ArrayBuffer[OpSet] = ArrayBuffer.empty\n")
       sb.append(s"${I2}val outline: OpSet = RoughRenderer.arc(x, y, width, height, start, stop, closed, true, o)\n")
       sb.append(s"${I2}if (closed && fillTruthy(o)) {\n")
       sb.append(s"${I3}if (o.fillStyle == \"solid\") {\n")
       sb.append(s"${I4}val fillOptions: ResolvedOptions = o.copy(disableMultiStroke = true)\n")
-      sb.append(s"${I4}val shape: OpSet = RoughRenderer.arc(x, y, width, height, start, stop, true, false, fillOptions).copy(`type` = OpSetType.fillPath)\n")
+      sb.append(
+        s"${I4}val shape: OpSet = RoughRenderer.arc(x, y, width, height, start, stop, true, false, fillOptions).copy(`type` = OpSetType.fillPath)\n"
+      )
       sb.append(s"${I4}paths += shape\n")
       sb.append(s"${I3}} else {\n")
       sb.append(s"${I4}paths += RoughRenderer.patternFillArc(x, y, width, height, start, stop, o)\n")
@@ -1013,14 +1049,18 @@ object RoughEngineEmitter {
       sb.append(s"${I2}if (d.isEmpty) {\n")
       sb.append(s"${I3}_d(\"path\", paths.toVector, o)\n")
       sb.append(s"${I2}} else {\n")
-      sb.append(s"${I3}val cleaned: String = MinusSpacePattern.replaceAllIn(d.replace(\"\\n\", \" \"), \"-\").replace(\"/(ss)/g\", \" \")\n\n")
+      sb.append(
+        s"${I3}val cleaned: String = MinusSpacePattern.replaceAllIn(d.replace(\"\\n\", \" \"), \"-\").replace(\"/(ss)/g\", \" \")\n\n"
+      )
       sb.append(s"${I3}val hasFill: Boolean = o.fill.exists(s => s.nonEmpty && s != \"transparent\" && s != NOS)\n")
       sb.append(s"${I3}val hasStroke: Boolean = o.stroke != NOS\n")
       sb.append(s"${I3}val simplified: Boolean = o.simplification.exists(s => numTruthy(s) && (s < 1))\n")
       sb.append(s"${I3}val distance: Double =\n")
       sb.append(s"${I4}if (simplified) 4 - 4 * o.simplification.filter(numTruthy).getOrElse(1.0)\n")
       sb.append(s"${I4}else (1 + o.roughness) / 2\n")
-      sb.append(s"${I3}val sets: Vector[Vector[Point]] = PointsOnPath.pointsOnPath(cleaned, Some(1.0), Some(distance)).map(_.map(toGeomPoint))\n")
+      sb.append(
+        s"${I3}val sets: Vector[Vector[Point]] = PointsOnPath.pointsOnPath(cleaned, Some(1.0), Some(distance)).map(_.map(toGeomPoint))\n"
+      )
       sb.append(s"${I3}val shape: OpSet = RoughRenderer.svgPath(cleaned, o)\n\n")
       sb.append(s"${I3}if (hasFill) {\n")
       sb.append(s"${I4}if (o.fillStyle == \"solid\") {\n")
@@ -1062,10 +1102,16 @@ object RoughEngineEmitter {
       sb.append(s"${I4}case _ => item.data\n")
       sb.append(s"${I3}}\n")
       sb.append(s"${I3}item.op match {\n")
-      sb.append(s"""${I4}case OpType.move     => sb ++= s"M$${RoughGenerator.numToString(data(0))} $${RoughGenerator.numToString(data(1))} "\n""")
+      sb.append(
+        s"""${I4}case OpType.move     => sb ++= s"M$${RoughGenerator.numToString(data(0))} $${RoughGenerator.numToString(data(1))} "\n"""
+      )
       sb.append(s"""${I4}case OpType.bcurveTo =>\n""")
-      sb.append(s"""${I5}sb ++= s"C$${RoughGenerator.numToString(data(0))} $${RoughGenerator.numToString(data(1))}, $${RoughGenerator.numToString(data(2))} $${RoughGenerator.numToString(data(3))}, $${RoughGenerator.numToString(data(4))} $${RoughGenerator.numToString(data(5))} "\n""")
-      sb.append(s"""${I4}case OpType.lineTo => sb ++= s"L$${RoughGenerator.numToString(data(0))} $${RoughGenerator.numToString(data(1))} "\n""")
+      sb.append(
+        s"""${I5}sb ++= s"C$${RoughGenerator.numToString(data(0))} $${RoughGenerator.numToString(data(1))}, $${RoughGenerator.numToString(data(2))} $${RoughGenerator.numToString(data(3))}, $${RoughGenerator.numToString(data(4))} $${RoughGenerator.numToString(data(5))} "\n"""
+      )
+      sb.append(
+        s"""${I4}case OpType.lineTo => sb ++= s"L$${RoughGenerator.numToString(data(0))} $${RoughGenerator.numToString(data(1))} "\n"""
+      )
       sb.append(s"${I3}}\n")
       sb.append(s"${I2}}\n")
       sb.append(s"${I2}sb.toString.trim\n")
@@ -1080,9 +1126,13 @@ object RoughEngineEmitter {
       sb.append(s"${I2}for (drawing <- sets) {\n")
       sb.append(s"${I3}val path: Nullable[PathInfo] = drawing.`type` match {\n")
       sb.append(s"${I4}case OpSetType.path =>\n")
-      sb.append(s"${I5}Nullable(PathInfo(d = opsToPath(drawing), stroke = o.stroke, strokeWidth = o.strokeWidth, fill = Some(NOS)))\n")
+      sb.append(
+        s"${I5}Nullable(PathInfo(d = opsToPath(drawing), stroke = o.stroke, strokeWidth = o.strokeWidth, fill = Some(NOS)))\n"
+      )
       sb.append(s"${I4}case OpSetType.fillPath =>\n")
-      sb.append(s"${I5}Nullable(PathInfo(d = opsToPath(drawing), stroke = NOS, strokeWidth = 0, fill = Some(o.fill.filter(_.nonEmpty).getOrElse(NOS))))\n")
+      sb.append(
+        s"${I5}Nullable(PathInfo(d = opsToPath(drawing), stroke = NOS, strokeWidth = 0, fill = Some(o.fill.filter(_.nonEmpty).getOrElse(NOS))))\n"
+      )
       sb.append(s"${I4}case OpSetType.fillSketch =>\n")
       sb.append(s"${I5}Nullable(fillSketch(drawing, o))\n")
       sb.append(s"${I3}}\n")
@@ -1126,7 +1176,9 @@ object RoughEngineEmitter {
       sb.append(s"${I}private def toGeomPoint(p: CurvePoint): Point =\n")
       sb.append(s"${I2}Point(p.x, p.y)\n\n")
       sb.append(s"${I}private def bezierPolyPoints(pts: Vector[Point], roughness: Double): Vector[Point] =\n")
-      sb.append(s"${I2}PointsOnCurve.pointsOnBezierCurves(CurveToBezier.curveToBezier(pts.map(toCurvePoint)), 10, Some((1 + roughness) / 2)).map(toGeomPoint)\n")
+      sb.append(
+        s"${I2}PointsOnCurve.pointsOnBezierCurves(CurveToBezier.curveToBezier(pts.map(toCurvePoint)), 10, Some((1 + roughness) / 2)).map(toGeomPoint)\n"
+      )
     }
 
     private def emitCompanion(): Unit = {

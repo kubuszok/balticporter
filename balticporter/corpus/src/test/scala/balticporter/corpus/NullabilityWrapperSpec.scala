@@ -1,6 +1,6 @@
 package balticporter.corpus
 
-import balticporter.testkit.{PortFixture, PortSuite}
+import balticporter.testkit.{ PortFixture, PortSuite }
 import balticporter.tir.*
 import balticporter.transform.NullabilityBoundaryCheck.Issue
 import balticporter.transform.NullabilityTransform
@@ -86,9 +86,9 @@ class NullabilityWrapperSpec extends PortSuite:
     // `java.io.PrintStream#println` is an external the frontend interned without a signature, so
     // there is nothing to coerce against. Refused and COUNTED — the same shape the collection
     // boundary's scoped-out receiver has, and for the same reason.
-    val ph = phase
+    val ph         = phase
     val (after, _) = Pipeline.runTraced(PortFixture.parse(java), List(ph))
-    val seams = ph.boundary(after.units).filter(_.issue == Issue.UncoercibleSeam)
+    val seams      = ph.boundary(after.units).filter(_.issue == Issue.UncoercibleSeam)
     assertEquals(seams.size, 1)
   }
 
@@ -152,7 +152,7 @@ class NullabilityWrapperSpec extends PortSuite:
       |""".stripMargin
 
   test("WRAPPER mode REFUSES an override-crossing member and counts it; UNION mode moves it") {
-    val w = new NullabilityTransform(Set("demo.Null"), Target.Named(W))
+    val w              = new NullabilityTransform(Set("demo.Null"), Target.Named(W))
     val (afterW, logW) = Pipeline.runTraced(PortFixture.parse(overriding), List(w))
     assertEquals(w.boundary(afterW.units).map(_.issue), List(Issue.OverrideCrossing))
     assertEquals(logW.of(Decision.Kind.RetypedSignature), Nil)
@@ -160,7 +160,7 @@ class NullabilityWrapperSpec extends PortSuite:
     // Union mode has no such constraint, and that is MEASURED rather than assumed: without
     // `-Yexplicit-nulls` an override may narrow a `T | Null` return or widen a `T` one, both
     // compile, so one end of the pair may move alone.
-    val u = new NullabilityTransform(Set("demo.Null"), Target.Union)
+    val u         = new NullabilityTransform(Set("demo.Null"), Target.Union)
     val (_, logU) = Pipeline.runTraced(PortFixture.parse(overriding), List(u))
     assertEquals(logU.of(Decision.Kind.RetypedSignature).map(_.subjectFqn), List("demo.Sub#find"))
   }
@@ -188,9 +188,9 @@ class NullabilityWrapperSpec extends PortSuite:
       |""".stripMargin
 
   test("a wrapped value captured as a CLASS-FILE SAM's result is unwrapped at the body and COUNTED") {
-    val ph = phase
+    val ph         = phase
     val (after, _) = Pipeline.runTraced(PortFixture.parse(lambdas), List(ph))
-    val p = port(lambdas, phase)
+    val p          = port(lambdas, phase)
     assertEmits(p, "this.push(() => transition.orNull)")
     val seams = ph.boundary(after.units).filter(_.issue == Issue.UncoercibleSeam)
     assertEquals(seams.map(_.subject), List("java.util.function.Supplier"))
@@ -211,11 +211,10 @@ class NullabilityWrapperSpec extends PortSuite:
   // a CAST over a wrapped value — the node keeps the type the EMITTER renders
   // -------------------------------------------------------------------------
 
-  /** `(int) poll()` at junit's `assertEquals(long, long)`: java unboxed at `int` and WIDENED to the
-    * slot, and the port has to unwrap the `Nullable` under that cast. The unwrap is the OPERAND's
-    * business and the cast is untouched — so the node still emits `.asInstanceOf[scala.Int]`, and
-    * recording the slot's `long` on it is a type the emitted Scala does not have
-    * (`ENGINE-LIMITS.md` §0). `TestFrameworkTransform.promote` is the reader that pays for it. */
+  /** `(int) poll()` at junit's `assertEquals(long, long)`: java unboxed at `int` and WIDENED to the slot, and the port has to unwrap the `Nullable` under that cast. The unwrap is the OPERAND's
+    * business and the cast is untouched — so the node still emits `.asInstanceOf[scala.Int]`, and recording the slot's `long` on it is a type the emitted Scala does not have (`ENGINE-LIMITS.md` §0).
+    * `TestFrameworkTransform.promote` is the reader that pays for it.
+    */
   private val junitStub =
     """package org.junit;
       |public @interface Test {}
@@ -251,7 +250,7 @@ class NullabilityWrapperSpec extends PortSuite:
     // type the emitter renders it at. `TirEmitter` reads `tpt` (`castTarget`) and every later rule
     // reads `tpe`, so a node where the two disagree lies to every reader but the emitter — and
     // nothing else in a run can see it.
-    given Program = p.after
+    given Program  = p.after
     val mismatched = p.after.units.flatMap { u =>
       StandardTraversal.scanClassDef(u, List.empty[Tree.Typed]) {
         case (acc, x: Tree.Typed) if x.tpt.tpe != x.tpe => x :: acc
@@ -274,10 +273,9 @@ class NullabilityWrapperSpec extends PortSuite:
   // a call from ONE unit into a RETYPED member of another — the dependent's shape
   // -------------------------------------------------------------------------
 
-  /** A dependent port's `Program` CONTAINS its base's units (`ENGINE-LIMITS.md` D2), and the
-    * inherited phase runs over both — so a base member the annotations retype has to be seen as
-    * retyped at a call site in the other unit, or the dependent emits a call to a signature that no
-    * longer exists. */
+  /** A dependent port's `Program` CONTAINS its base's units (`ENGINE-LIMITS.md` D2), and the inherited phase runs over both — so a base member the annotations retype has to be seen as retyped at a
+    * call site in the other unit, or the dependent emits a call to a signature that no longer exists.
+    */
   private val baseUnit =
     """package base;
       |import java.lang.annotation.*;
@@ -299,8 +297,7 @@ class NullabilityWrapperSpec extends PortSuite:
       |""".stripMargin
 
   test("a call into a BASE member the inherited phase retyped unwraps in the DEPENDENT's unit") {
-    val p = portAll(List("Cache.java" -> baseUnit, "Reader.java" -> dependentUnit),
-                    new NullabilityTransform(Set("base.Null"), Target.Named(W)))
+    val p = portAll(List("Cache.java" -> baseUnit, "Reader.java" -> dependentUnit), new NullabilityTransform(Set("base.Null"), Target.Named(W)))
     assertEmits(p, s"def get(key: K): $W[V]")
     assertEmits(p, "val r: Reader = this.cache.get(name).orNull")
     // and NOT the bare call, which resolves against `get(K, V)` and reports `E171 missing argument
@@ -312,11 +309,10 @@ class NullabilityWrapperSpec extends PortSuite:
   // an OVERRIDE inherits the contract — the edge the annotation travels down
   // -------------------------------------------------------------------------
 
-  /** Java's marker is a fact about the MEMBER and javac ignores it, so an upstream has no reason to
-    * repeat it on an override and routinely does not. Scala has no such freedom: a wrapper retype
-    * moves the SIGNATURE, so an override that keeps the upstream spelling is `E038 … a different
-    * signature than the overridden declaration` — and at a GENERIC result it is `E007 Found: W[T] /
-    * Required: T` in a body that returns exactly what the parent handed it. */
+  /** Java's marker is a fact about the MEMBER and javac ignores it, so an upstream has no reason to repeat it on an override and routinely does not. Scala has no such freedom: a wrapper retype moves
+    * the SIGNATURE, so an override that keeps the upstream spelling is `E038 … a different signature than the overridden declaration` — and at a GENERIC result it is `E007 Found: W[T] / Required: T`
+    * in a body that returns exactly what the parent handed it.
+    */
   private val overrideChain =
     """package demo;
       |import java.lang.annotation.*;
@@ -359,8 +355,8 @@ class NullabilityWrapperSpec extends PortSuite:
         |class ImageButton extends Button { ImageButton(Drawable up) { super(up); } ImageButton(Skin s) { super(s); } }
         |""".stripMargin
     val p = port(java, phase)
-    assertEmits(p, s"up: $W[demo.Drawable]")          // the ANNOTATED constructor moved
-    assertEmits(p, "def this(up: demo.Drawable)")     // …and the subclass's own did NOT
+    assertEmits(p, s"up: $W[demo.Drawable]") // the ANNOTATED constructor moved
+    assertEmits(p, "def this(up: demo.Drawable)") // …and the subclass's own did NOT
     assertNotEmits(p, s"$W[demo.Skin]")
   }
 
@@ -381,9 +377,9 @@ class NullabilityWrapperSpec extends PortSuite:
         |  Style(@Null BitmapFont font) {}
         |}
         |""".stripMargin
-    val ph = phase
+    val ph         = phase
     val (after, _) = Pipeline.runTraced(PortFixture.parse(java), List(ph))
-    val clashes = ph.boundary(after.units).filter(_.issue == Issue.OverloadErasureClash)
+    val clashes    = ph.boundary(after.units).filter(_.issue == Issue.OverloadErasureClash)
     // BOTH sides, because the distinction is carried by the pair and refusing one end is an
     // arbitrary choice between two declarations.
     assertEquals(clue(clashes).size, 2)
@@ -397,6 +393,5 @@ class NullabilityWrapperSpec extends PortSuite:
     // have: a companion or `static` member (`ENGINE-LIMITS.md` G20) and a super-constructor
     // argument list. An ascription there is `E006 Not found: type T`; the bare `W.empty` is right
     // wherever the slot is, so the arm declines structurally rather than asking about scope.
-    List(ported, port(overrideChain, phase), portAll(castSources, phase))
-      .foreach(p => assertNotEmits(p, "empty.asInstanceOf"))
+    List(ported, port(overrideChain, phase), portAll(castSources, phase)).foreach(p => assertNotEmits(p, "empty.asInstanceOf"))
   }

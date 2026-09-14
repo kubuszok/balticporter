@@ -1,11 +1,11 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
-import balticporter.transform.{CollectionInternalCheck, CollectionsTransform}
+import balticporter.transform.{ CollectionInternalCheck, CollectionsTransform }
 import balticporter.transform.CollectionInternalCheck.Issue
 
-/** The IN-PROGRAM half of the collections residue — every site where java's own subtyping carried a
-  * value across an edge the mapping has no image for. */
+/** The IN-PROGRAM half of the collections residue — every site where java's own subtyping carried a value across an edge the mapping has no image for.
+  */
 class CollectionInternalCheckSpec extends PortSuite:
 
   private def findings(java: String) =
@@ -86,7 +86,7 @@ class CollectionInternalCheckSpec extends PortSuite:
 
   test("one type variable bound to BOTH sides of the edge — java widened, scala cannot") {
     val (_, fs, _) = findings(splitVar)
-    val sv = fs.filter(_.issue == Issue.SplitTypeVariable)
+    val sv         = fs.filter(_.issue == Issue.SplitTypeVariable)
     assertEquals(clue(sv).size, 1)
     assert(clue(sv.head.slot).startsWith("type variable V of put"))
     assertEquals(sv.head.edge, "java.util.ArrayList <: java.util.Collection")
@@ -120,7 +120,8 @@ class CollectionInternalCheckSpec extends PortSuite:
         |class Use {
         |  void f(Box<Collection<String>> b, Collection<String> c, ArrayList<String> xs) { b.set(c, xs); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(fs.filter(_.issue == Issue.SplitTypeVariable)).isEmpty)
   }
 
@@ -136,7 +137,8 @@ class CollectionInternalCheckSpec extends PortSuite:
         |  HashSet<String> s = new HashSet<>();
         |  void f(Collection<String> c) { s.addAll(c); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the rewrite really does hand a `mutable.HashSet` and a `JavaCollection` to one helper, and
     // the helper has NO signature to check either against — which is exactly why an arm reading the
     // operands alone cannot tell this site (2 compile errors) from
@@ -159,6 +161,7 @@ class CollectionInternalCheckSpec extends PortSuite:
         |  void add(String s) { xs.add(s); }
         |  List<String> all() { return xs; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(clue(fs), Nil)
   }

@@ -2,31 +2,31 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** SE15 TEXT BLOCKS — `SpoonKinds` called this the sharpest of the four ABSORBED-SILENTLY kinds,
-  * and this spec is the probe that decides whether it is a defect at all. */
+/** SE15 TEXT BLOCKS — `SpoonKinds` called this the sharpest of the four ABSORBED-SILENTLY kinds, and this spec is the probe that decides whether it is a defect at all.
+  */
 class TextBlockSpec extends PortSuite:
 
   // A TRIPLE-QUOTED Scala string holding a JAVA text block. Nothing here is processed by Scala; the
   // `\"\"\"` sequences reach the java parser as `"""`, which is what opens and closes the block.
   private val src =
     "package p;\n" +
-    "class T {\n" +
-    "  String block() {\n" +
-    "    return \"\"\"\n" +
-    "        Hello,\n" +
-    "        World\"\"\";\n" +
-    "  }\n" +
-    "  String indented() {\n" +
-    "    return \"\"\"\n" +
-    "            outer\n" +
-    "              inner\n" +
-    "            \"\"\";\n" +
-    "  }\n" +
-    "  String quoted() {\n" +
-    "    return \"\"\"\n" +
-    "        say \"hi\"\\n done\"\"\";\n" +
-    "  }\n" +
-    "}\n"
+      "class T {\n" +
+      "  String block() {\n" +
+      "    return \"\"\"\n" +
+      "        Hello,\n" +
+      "        World\"\"\";\n" +
+      "  }\n" +
+      "  String indented() {\n" +
+      "    return \"\"\"\n" +
+      "            outer\n" +
+      "              inner\n" +
+      "            \"\"\";\n" +
+      "  }\n" +
+      "  String quoted() {\n" +
+      "    return \"\"\"\n" +
+      "        say \"hi\"\\n done\"\"\";\n" +
+      "  }\n" +
+      "}\n"
 
   private val out = port(src).out
 

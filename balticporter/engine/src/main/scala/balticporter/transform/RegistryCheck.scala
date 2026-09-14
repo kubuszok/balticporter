@@ -2,10 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** What `RegistryTransform` could NOT turn into a registry lookup, one lane per kind — the §3
-  * refusal enumeration for reflective instantiation (`ENGINE-LIMITS.md` P10). Each kind is a
-  * different instruction to its reader, so each is its own lane (CLAUDE.md §4.45); an empty spec
-  * records nothing at all. */
+/** What `RegistryTransform` could NOT turn into a registry lookup, one lane per kind — the §3 refusal enumeration for reflective instantiation (`ENGINE-LIMITS.md` P10). Each kind is a different
+  * instruction to its reader, so each is its own lane (CLAUDE.md §4.45); an empty spec records nothing at all.
+  */
 object RegistryCheck:
 
   /** the check family; the lanes are `registry(<kind>)`. */
@@ -15,26 +14,32 @@ object RegistryCheck:
 
   /** Why a call was not, or could only partly be, turned into a registry lookup. */
   enum Issue:
-    /** the callee's argument is not a `Class` value, so there is no key to look up. REFUSED: the
-      * call is left as java wrote it. */
+    /** the callee's argument is not a `Class` value, so there is no key to look up. REFUSED: the call is left as java wrote it.
+      */
     case NonClassArg
-    /** the class is named by a STRING at run time (`forName(...)`), so no registration can exist
-      * for it. REFUSED. */
+
+    /** the class is named by a STRING at run time (`forName(...)`), so no registration can exist for it. REFUSED.
+      */
     case ByName
-    /** `newInstance(this.getClass())` — a reflective SELF-CLONE, whose key is the runtime class of
-      * an arbitrary subtype. REFUSED unless the entry's `miss` reproduces reflection. */
+
+    /** `newInstance(this.getClass())` — a reflective SELF-CLONE, whose key is the runtime class of an arbitrary subtype. REFUSED unless the entry's `miss` reproduces reflection.
+      */
     case SelfClone
-    /** a call of a member the port declares a THROWING FACADE member: it compiles and throws at run
-      * time, and no registry replaces it. COUNTED, never rewritten. */
+
+    /** a call of a member the port declares a THROWING FACADE member: it compiles and throws at run time, and no registry replaces it. COUNTED, never rewritten.
+      */
     case Facade
-    /** the rewritten call sits under a `try` this entry's `handles` does not describe, so java's
-      * handler is left in place over a callee that can no longer throw what it catches. */
+
+    /** the rewritten call sits under a `try` this entry's `handles` does not describe, so java's handler is left in place over a callee that can no longer throw what it catches.
+      */
     case GuardedCall
-    /** a call of the entry's callee OUTSIDE its `scope` — the port declared where the registry
-      * applies and this site is not there. REFUSED. */
+
+    /** a call of the entry's callee OUTSIDE its `scope` — the port declared where the registry applies and this site is not there. REFUSED.
+      */
     case OutOfScope
-    /** `Miss.JvmReflect` at a module ported for a backend that has no runtime reflection: the miss
-      * arm compiles there and answers "not registered" for every unseeded type. */
+
+    /** `Miss.JvmReflect` at a module ported for a backend that has no runtime reflection: the miss arm compiles there and answers "not registered" for every unseeded type.
+      */
     case JvmOnlyMiss
 
   object Issue:
@@ -79,28 +84,29 @@ object RegistryCheck:
           "miss value — `seeds`, or a registration in the consumer's bootstrap, is what closes it."
 
   /** one refused or counted site. `unit` is the top-level symbol for D2 ownership filtering. */
-  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin,
-                           unit: SymId = SymId.None):
-    def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
+  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):
+    def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
-      CheckReport.Finding(lane(Issue.slug(issue)), Issue.slug(issue), subject,
-        CheckReport.relativise(origin.javaPath), origin.line, detail)
+      CheckReport.Finding(lane(Issue.slug(issue)), Issue.slug(issue), subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   /** every lane this check owns — required together, so a kind that recorded nothing still says 0. */
   val AllLanes: Set[String] = Issue.values.map(i => lane(Issue.slug(i))).toSet
 
-  /** Record ONE lane per kind, so a kind that found nothing still says 0 rather than "never ran"
-    * (`CheckReport.record`'s own reason). Lives here, beside the lane names it writes. */
+  /** Record ONE lane per kind, so a kind that found nothing still says 0 rather than "never ran" (`CheckReport.record`'s own reason). Lives here, beside the lane names it writes.
+    */
   def record(findings: List[Finding]): Unit =
-    Issue.values.foreach(i =>
-      CheckReport.record(lane(Issue.slug(i)), findings.filter(_.issue == i).map(_.report)))
+    Issue.values.foreach(i => CheckReport.record(lane(Issue.slug(i)), findings.filter(_.issue == i).map(_.report)))
 
   /** grouped one-line summary, worst family first, each with its §1 classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
-      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
-        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
-        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
-        (head :: sites).mkString("\n")
-      }.mkString("\n")
+      fs.groupBy(_.issue)
+        .toList
+        .sortBy((_, v) => -v.size)
+        .map { (issue, vs) =>
+          val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+          val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+          (head :: sites).mkString("\n")
+        }
+        .mkString("\n")

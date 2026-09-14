@@ -51,7 +51,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |  private int all;
         |  public Builder all (int n) { this.all = n; return this; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("all$field"))
   }
 
@@ -60,7 +61,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
       """package demo;
         |class Base { protected int hasNext; }
         |class Sub extends Base { public boolean hasNext () { return hasNext != 0; } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("hasNext$field"))
   }
 
@@ -72,7 +74,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |  private int keepMeAClass;
         |  public static int count (int n) { return n; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("count$field"))
   }
 
@@ -88,7 +91,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |  private int x$field;
         |  public int x () { return x; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(field).contains("var x$field$:"), field)
     assertEquals(clue(field.linesIterator.count(_.contains("var x$field:"))), 1, field)
 
@@ -100,7 +104,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |  public int y () { return y; }
         |  public int y$field () { return 0; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(method).contains("var y$field$:"), method)
     assertEquals(clue(method.linesIterator.count(_.contains("def y$field("))), 1, method)
   }
@@ -112,7 +117,8 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |  private int x;
         |  public int x () { return x; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("x$field"), out)
     assert(!clue(out).contains("x$field$"), out)
   }
@@ -121,10 +127,9 @@ class MemberClashPlacementSpec extends munit.FunSuite:
   // THE JOIN KEY — a rename moves `Symbol.name` and must NOT move `Symbol.fullName`
   // -------------------------------------------------------------------------------------------
 
-  /** Every artifact that joins POLICY to EMITTED CODE keys a member on `owner#name` (`MemberKey`),
-    * and the port map's `upstream` column is that key spelled in JAVA's names. That is right today
-    * for one reason and one only: the §4.55 passes rewrite `Symbol.name`, which the emitter renders,
-    * and leave `Symbol.fullName`, which is a separate stored field. */
+  /** Every artifact that joins POLICY to EMITTED CODE keys a member on `owner#name` (`MemberKey`), and the port map's `upstream` column is that key spelled in JAVA's names. That is right today for
+    * one reason and one only: the §4.55 passes rewrite `Symbol.name`, which the emitter renders, and leave `Symbol.fullName`, which is a separate stored field.
+    */
   test("a §4.55 rename moves the emitted NAME and leaves `Symbol.fullName` spelling JAVA's") {
     val src =
       """package demo;
@@ -152,6 +157,7 @@ class MemberClashPlacementSpec extends munit.FunSuite:
         |  private static int limit;
         |  public int limit () { return limit; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains("limit$field"))
   }

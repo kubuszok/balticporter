@@ -12,19 +12,18 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Style generators -------------------------------------------------------
 
   test("pieStyles.ts -> PieStyles object with CSS interpolation"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
     println("=== PieStyles.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object PieStyles"), "should emit PieStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables): String"), "should have generate method")
-    assert(scala.contains("vars.pieStrokeColor") || scala.contains("pieStrokeColor"),
-      "should reference theme vars")
+    assert(scala.contains("vars.pieStrokeColor") || scala.contains("pieStrokeColor"), "should reference theme vars")
     assert(scala.contains(".pieCircle"), "should contain CSS class .pieCircle")
     assert(scala.contains(".pieTitleText"), "should contain CSS class .pieTitleText")
 
   test("flowchart/styles.ts -> FlowchartStyles object"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "FlowchartStyles", "flowchart")
     println("=== FlowchartStyles.scala (emitted) ===")
     println(scala)
@@ -34,7 +33,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("fontFamily"), "should reference fontFamily")
 
   test("block/styles.ts -> BlockStyles object"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/block/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/block/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "BlockStyles", "block")
     println("=== BlockStyles.scala (emitted) ===")
     println(scala)
@@ -42,14 +41,14 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
 
   test("packet/styles.ts -> PacketStyles object"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "PacketStyles", "packet")
     println("=== PacketStyles.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object PacketStyles"), "should emit PacketStyles object")
 
   test("mindmap/styles.ts -> MindmapStyles object"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/mindmap/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "MindmapStyles", "mindmap")
     println("=== MindmapStyles.scala (emitted) ===")
     println(scala)
@@ -58,7 +57,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Utility functions ------------------------------------------------------
 
   test("comments.ts -> Comments utility object"):
-    val rast = loadRast("/rast/mermaid/src/diagram-api/comments.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagram-api/comments.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitUtility(rast, "Comments", "")
     println("=== Comments.scala (emitted) ===")
     println(scala)
@@ -68,7 +67,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- CommonDb ---------------------------------------------------------------
 
   test("commonDb.ts -> CommonDb trait"):
-    val rast = loadRast("/rast/mermaid/src/accessibility.rast.json") // any RAST for the signature
+    val rast  = loadRast("/rast/mermaid/src/accessibility.rast.json") // any RAST for the signature
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitCommonDb(rast)
     println("=== CommonDb.scala (emitted) ===")
     println(scala)
@@ -81,7 +80,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Accessibility ----------------------------------------------------------
 
   test("accessibility.ts -> Accessibility object"):
-    val rast = loadRast("/rast/mermaid/src/accessibility.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/accessibility.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitAccessibility(rast)
     println("=== Accessibility.scala (emitted) ===")
     println(scala)
@@ -100,7 +99,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Dedicated style emitters -----------------------------------------------
 
   test("block/styles.ts -> dedicated BlockStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/block/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/block/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitBlockStyles(rast)
     println("=== BlockStyles.scala (dedicated) ===")
     println(scala)
@@ -111,7 +110,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(!scala.contains("fade("), "should NOT contain fade() calls")
 
   test("flowchart/styles.ts -> dedicated FlowchartStyles with edgeClass"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitFlowchartStyles(rast)
     println("=== FlowchartStyles.scala (dedicated) ===")
     println(scala)
@@ -124,7 +123,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("edge-pattern-dotted"), "should have edge patterns")
 
   test("mindmap/styles.ts -> dedicated MindmapStyles with cScale loop"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/mindmap/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitMindmapStyles(rast)
     println("=== MindmapStyles.scala (dedicated) ===")
     println(scala)
@@ -171,7 +170,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Renderer emission (D3 -> SvgBuilder) -----------------------------------
 
   test("infoRenderer.ts -> InfoRenderer with SvgBuilder calls"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitRenderer(rast, "InfoRenderer", "info")
     println("=== InfoRenderer.scala (emitted) ===")
     println(scala)
@@ -190,7 +189,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("errorRenderer.ts -> ErrorRenderer with SvgBuilder calls"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitRenderer(rast, "ErrorRenderer", "error_")
     println("=== ErrorRenderer.scala (emitted) ===")
     println(scala)
@@ -208,7 +207,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("pieRenderer.ts -> PieRenderer with SvgBuilder calls"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitRenderer(rast, "PieRenderer", "pie")
     println("=== PieRenderer.scala (emitted) ===")
     println(scala)
@@ -220,14 +219,14 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("renderer emitter linearizes D3 chains correctly"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitRenderer(rast, "InfoRenderer", "info")
     // The info renderer has a chain: group.append('text').attr('x', 100).attr('y', 40)...
     // This should be linearized into separate statements
     val lines = scala.linesIterator.toList
     // Check that append, attr, style, text are on separate lines
     val appendLines = lines.filter(_.contains(".append("))
-    val attrLines = lines.filter(_.contains(".attr("))
+    val attrLines   = lines.filter(_.contains(".attr("))
     assert(appendLines.nonEmpty, "should have separate append lines")
     assert(attrLines.nonEmpty, "should have separate attr lines")
 
@@ -235,13 +234,15 @@ class MermaidEmitterSpec extends munit.FunSuite:
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
     java.nio.file.Files.createDirectories(outDir)
 
-    for ((rastPath, objectName, pkg) <- List(
-      ("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json", "InfoRenderer", "info"),
-      ("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json", "ErrorRenderer", "error_"),
-    )) {
-      val rast = loadRast(rastPath)
+    for (
+      (rastPath, objectName, pkg) <- List(
+        ("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json", "InfoRenderer", "info"),
+        ("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json", "ErrorRenderer", "error_")
+      )
+    ) {
+      val rast  = loadRast(rastPath)
       val scala = balticporter.corpus.mermaid.MermaidEmitter.emitRenderer(rast, objectName, pkg)
-      val path = outDir.resolve(s"$objectName.scala")
+      val path  = outDir.resolve(s"$objectName.scala")
       java.nio.file.Files.writeString(path, scala)
       println(s"[emit] $objectName.scala: ${scala.linesIterator.size} lines -> $path")
     }
@@ -249,7 +250,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Info diagram emission -----------------------------------------
 
   test("infoDb.ts -> InfoDb class with version/accTitle/accDescription"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitInfoDb(rast)
     println("=== InfoDb.scala (emitted) ===")
     println(scala)
@@ -261,7 +262,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("accDescription"), "should have accDescription field")
 
   test("infoDiagram.ts -> InfoDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitInfoDiagram(rast)
     println("=== InfoDiagram.scala (emitted) ===")
     println(scala)
@@ -273,7 +274,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("InfoRenderer.render(db, config)"), "should delegate to InfoRenderer")
 
   test("infoParser.ts -> InfoParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoParser.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoParser.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitInfoParser(rast)
     println("=== InfoParser.scala (emitted) ===")
     println(scala)
@@ -282,7 +283,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("new InfoDb"), "should create InfoDb")
 
   test("infoRenderer.ts -> complete InfoRenderer with theming and a11y"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitInfoRenderer(rast)
     println("=== InfoRenderer.scala (complete emitted) ===")
     println(scala)
@@ -298,7 +299,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
 
   test("info styles -> InfoStyles"):
     // InfoStyles uses the infoDb RAST as a reference (no separate styles RAST exists)
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitInfoStyles(rast)
     println("=== InfoStyles.scala (emitted) ===")
     println(scala)
@@ -310,7 +311,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Error diagram emission ----------------------------------------
 
   test("errorDiagram.ts -> ErrorDb class"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitErrorDb(rast)
     println("=== ErrorDb.scala (emitted) ===")
     println(scala)
@@ -319,7 +320,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("errorDiagram.ts -> ErrorDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitErrorDiagram(rast)
     println("=== ErrorDiagram.scala (emitted) ===")
     println(scala)
@@ -332,7 +333,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("ErrorRenderer.render(db, config)"), "should delegate to ErrorRenderer")
 
   test("errorDiagram.ts -> ErrorParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitErrorParser(rast)
     println("=== ErrorParser.scala (emitted) ===")
     println(scala)
@@ -342,7 +343,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("db.errorMessage = cleaned"), "should set error message")
 
   test("errorRenderer.ts -> complete ErrorRenderer with theming"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitErrorRenderer(rast)
     println("=== ErrorRenderer.scala (complete emitted) ===")
     println(scala)
@@ -358,7 +359,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("\"errorText\""), "should have errorText class")
 
   test("error styles -> ErrorStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitErrorStyles(rast)
     println("=== ErrorStyles.scala (emitted) ===")
     println(scala)
@@ -374,9 +375,9 @@ class MermaidEmitterSpec extends munit.FunSuite:
     java.nio.file.Files.createDirectories(outDir)
 
     // Info diagram
-    val infoDbRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
-    val infoDiagramRast = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
-    val infoParserRast = loadRast("/rast/mermaid/src/diagrams/info/infoParser.rast.json")
+    val infoDbRast       = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val infoDiagramRast  = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
+    val infoParserRast   = loadRast("/rast/mermaid/src/diagrams/info/infoParser.rast.json")
     val infoRendererRast = loadRast("/rast/mermaid/src/diagrams/info/infoRenderer.rast.json")
 
     val infoFiles = List(
@@ -384,11 +385,11 @@ class MermaidEmitterSpec extends munit.FunSuite:
       ("InfoDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitInfoDiagram(infoDiagramRast)),
       ("InfoParser", balticporter.corpus.mermaid.MermaidEmitter.emitInfoParser(infoParserRast)),
       ("InfoRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitInfoRenderer(infoRendererRast)),
-      ("InfoStyles", balticporter.corpus.mermaid.MermaidEmitter.emitInfoStyles(infoDbRast)),
+      ("InfoStyles", balticporter.corpus.mermaid.MermaidEmitter.emitInfoStyles(infoDbRast))
     )
 
     // Error diagram
-    val errorDiagramRast = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
+    val errorDiagramRast  = loadRast("/rast/mermaid/src/diagrams/error/errorDiagram.rast.json")
     val errorRendererRast = loadRast("/rast/mermaid/src/diagrams/error/errorRenderer.rast.json")
 
     val errorFiles = List(
@@ -396,7 +397,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
       ("ErrorDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitErrorDiagram(errorDiagramRast)),
       ("ErrorParser", balticporter.corpus.mermaid.MermaidEmitter.emitErrorParser(errorDiagramRast)),
       ("ErrorRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitErrorRenderer(errorRendererRast)),
-      ("ErrorStyles", balticporter.corpus.mermaid.MermaidEmitter.emitErrorStyles(errorDiagramRast)),
+      ("ErrorStyles", balticporter.corpus.mermaid.MermaidEmitter.emitErrorStyles(errorDiagramRast))
     )
 
     for ((name, source) <- infoFiles ++ errorFiles) {
@@ -409,19 +410,17 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Pie diagram emission -------------------------------------------
 
   test("pieStyles.ts -> complete PieStyles with CSS classes"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPieStyles(rast)
     println("=== PieStyles.scala (complete emitted) ===")
     println(scala)
     assert(scala.contains("object PieStyles"), "should emit PieStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
-    assert(scala.contains(".pieTitleText") || scala.contains("pieTitleText"),
-      "should contain pieTitleText CSS class")
-    assert(scala.contains(".pieCircle") || scala.contains("pieCircle"),
-      "should contain pieCircle CSS class")
+    assert(scala.contains(".pieTitleText") || scala.contains("pieTitleText"), "should contain pieTitleText CSS class")
+    assert(scala.contains(".pieCircle") || scala.contains("pieCircle"), "should contain pieCircle CSS class")
 
   test("pieRenderer.ts -> PieDb class with sections"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPieDb(rast)
     println("=== PieDb.scala (emitted) ===")
     println(scala)
@@ -434,7 +433,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("pieRenderer.ts -> PieDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPieDiagram(rast)
     println("=== PieDiagram.scala (emitted) ===")
     println(scala)
@@ -446,7 +445,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("PieRenderer.render"), "should delegate to PieRenderer")
 
   test("pieRenderer.ts -> PieParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPieParser(rast)
     println("=== PieParser.scala (emitted) ===")
     println(scala)
@@ -459,7 +458,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("accTitle"), "should handle accTitle")
 
   test("pieRenderer.ts -> PieRenderer with arcs, labels, and legend"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPieRenderer(rast)
     println("=== PieRenderer.scala (emitted) ===")
     println(scala)
@@ -476,7 +475,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Packet diagram emission ----------------------------------------
 
   test("packet -> PacketDb class with fields"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPacketDb(rast)
     println("=== PacketDb.scala (emitted) ===")
     println(scala)
@@ -488,7 +487,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("endBit < startBit"), "should validate field ranges")
 
   test("packet -> PacketDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPacketDiagram(rast)
     println("=== PacketDiagram.scala (emitted) ===")
     println(scala)
@@ -498,7 +497,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("PacketRenderer.render"), "should delegate to PacketRenderer")
 
   test("packet -> PacketParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPacketParser(rast)
     println("=== PacketParser.scala (emitted) ===")
     println(scala)
@@ -509,7 +508,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("endBit"), "should parse end bit")
 
   test("packet -> PacketRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPacketRenderer(rast)
     println("=== PacketRenderer.scala (emitted) ===")
     println(scala)
@@ -521,7 +520,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("packet -> PacketStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitPacketStyles(rast)
     println("=== PacketStyles.scala (emitted) ===")
     println(scala)
@@ -532,7 +531,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
 
   test("kanban -> KanbanDb class"):
     // Kanban has no RAST file (SSG-native), use any RAST as dummy
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitKanbanDb(rast)
     println("=== KanbanDb.scala (emitted) ===")
     println(scala)
@@ -545,7 +544,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("kanban -> KanbanDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitKanbanDiagram(rast)
     println("=== KanbanDiagram.scala (emitted) ===")
     println(scala)
@@ -556,7 +555,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("KanbanRenderer.render"), "should delegate to KanbanRenderer")
 
   test("kanban -> KanbanParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitKanbanParser(rast)
     println("=== KanbanParser.scala (emitted) ===")
     println(scala)
@@ -568,7 +567,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("addCardToLast"), "should add cards to last column")
 
   test("kanban -> KanbanRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitKanbanRenderer(rast)
     println("=== KanbanRenderer.scala (emitted) ===")
     println(scala)
@@ -580,7 +579,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("kanban -> KanbanStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitKanbanStyles(rast)
     println("=== KanbanStyles.scala (emitted) ===")
     println(scala)
@@ -595,27 +594,27 @@ class MermaidEmitterSpec extends munit.FunSuite:
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid")
     java.nio.file.Files.createDirectories(outDir)
 
-    val pieStylesRast  = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
-    val pieRendererRast = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
+    val pieStylesRast    = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
+    val pieRendererRast  = loadRast("/rast/mermaid/src/diagrams/pie/pieRenderer.rast.json")
     val packetStylesRast = loadRast("/rast/mermaid/src/diagrams/packet/styles.rast.json")
-    val dummyRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val dummyRast        = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
 
     val allFiles = List(
-      ("PieDb",      balticporter.corpus.mermaid.MermaidEmitter.emitPieDb(pieRendererRast)),
+      ("PieDb", balticporter.corpus.mermaid.MermaidEmitter.emitPieDb(pieRendererRast)),
       ("PieDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitPieDiagram(pieRendererRast)),
-      ("PieParser",  balticporter.corpus.mermaid.MermaidEmitter.emitPieParser(pieRendererRast)),
+      ("PieParser", balticporter.corpus.mermaid.MermaidEmitter.emitPieParser(pieRendererRast)),
       ("PieRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitPieRenderer(pieRendererRast)),
-      ("PieStyles",  balticporter.corpus.mermaid.MermaidEmitter.emitPieStyles(pieStylesRast)),
-      ("PacketDb",       balticporter.corpus.mermaid.MermaidEmitter.emitPacketDb(packetStylesRast)),
-      ("PacketDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitPacketDiagram(packetStylesRast)),
-      ("PacketParser",   balticporter.corpus.mermaid.MermaidEmitter.emitPacketParser(packetStylesRast)),
+      ("PieStyles", balticporter.corpus.mermaid.MermaidEmitter.emitPieStyles(pieStylesRast)),
+      ("PacketDb", balticporter.corpus.mermaid.MermaidEmitter.emitPacketDb(packetStylesRast)),
+      ("PacketDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitPacketDiagram(packetStylesRast)),
+      ("PacketParser", balticporter.corpus.mermaid.MermaidEmitter.emitPacketParser(packetStylesRast)),
       ("PacketRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitPacketRenderer(packetStylesRast)),
-      ("PacketStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitPacketStyles(packetStylesRast)),
-      ("KanbanDb",       balticporter.corpus.mermaid.MermaidEmitter.emitKanbanDb(dummyRast)),
-      ("KanbanDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitKanbanDiagram(dummyRast)),
-      ("KanbanParser",   balticporter.corpus.mermaid.MermaidEmitter.emitKanbanParser(dummyRast)),
+      ("PacketStyles", balticporter.corpus.mermaid.MermaidEmitter.emitPacketStyles(packetStylesRast)),
+      ("KanbanDb", balticporter.corpus.mermaid.MermaidEmitter.emitKanbanDb(dummyRast)),
+      ("KanbanDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitKanbanDiagram(dummyRast)),
+      ("KanbanParser", balticporter.corpus.mermaid.MermaidEmitter.emitKanbanParser(dummyRast)),
       ("KanbanRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitKanbanRenderer(dummyRast)),
-      ("KanbanStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitKanbanStyles(dummyRast)),
+      ("KanbanStyles", balticporter.corpus.mermaid.MermaidEmitter.emitKanbanStyles(dummyRast))
     )
 
     for ((name, source) <- allFiles) {
@@ -628,7 +627,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Cynefin diagram emission ----------------------------------------
 
   test("cynefin -> CynefinDb class"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitCynefinDb(rast)
     println("=== CynefinDb.scala (emitted) ===")
     println(scala)
@@ -639,7 +638,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("cynefin -> CynefinDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitCynefinDiagram(rast)
     println("=== CynefinDiagram.scala (emitted) ===")
     println(scala)
@@ -650,7 +649,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("CynefinRenderer.render"), "should delegate to CynefinRenderer")
 
   test("cynefin -> CynefinParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitCynefinParser(rast)
     println("=== CynefinParser.scala (emitted) ===")
     println(scala)
@@ -661,7 +660,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("colonIdx"), "should parse domain:items")
 
   test("cynefin -> CynefinRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitCynefinRenderer(rast)
     println("=== CynefinRenderer.scala (emitted) ===")
     println(scala)
@@ -674,7 +673,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("cynefin -> CynefinStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitCynefinStyles(rast)
     println("=== CynefinStyles.scala (emitted) ===")
     println(scala)
@@ -686,7 +685,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete TreeView diagram emission ----------------------------------------
 
   test("treeview -> TreeViewDb class"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewDb(rast)
     println("=== TreeviewDb.scala (emitted) ===")
     println(scala)
@@ -696,7 +695,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("treeview -> TreeViewDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewDiagram(rast)
     println("=== TreeviewDiagram.scala (emitted) ===")
     println(scala)
@@ -707,7 +706,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("TreeViewRenderer.render"), "should delegate to TreeViewRenderer")
 
   test("treeview -> TreeViewParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewParser(rast)
     println("=== TreeviewParser.scala (emitted) ===")
     println(scala)
@@ -718,7 +717,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("stack"), "should use stack for indentation")
 
   test("treeview -> TreeViewRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewRenderer(rast)
     println("=== TreeviewRenderer.scala (emitted) ===")
     println(scala)
@@ -730,7 +729,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("treeview -> TreeViewStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewStyles(rast)
     println("=== TreeviewStyles.scala (emitted) ===")
     println(scala)
@@ -748,16 +747,16 @@ class MermaidEmitterSpec extends munit.FunSuite:
     val dummyRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
 
     val allFiles = List(
-      ("CynefinDb",       balticporter.corpus.mermaid.MermaidEmitter.emitCynefinDb(dummyRast)),
-      ("CynefinDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitCynefinDiagram(dummyRast)),
-      ("CynefinParser",   balticporter.corpus.mermaid.MermaidEmitter.emitCynefinParser(dummyRast)),
+      ("CynefinDb", balticporter.corpus.mermaid.MermaidEmitter.emitCynefinDb(dummyRast)),
+      ("CynefinDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitCynefinDiagram(dummyRast)),
+      ("CynefinParser", balticporter.corpus.mermaid.MermaidEmitter.emitCynefinParser(dummyRast)),
       ("CynefinRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitCynefinRenderer(dummyRast)),
-      ("CynefinStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitCynefinStyles(dummyRast)),
-      ("TreeviewDb",       balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewDb(dummyRast)),
-      ("TreeviewDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewDiagram(dummyRast)),
-      ("TreeviewParser",   balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewParser(dummyRast)),
+      ("CynefinStyles", balticporter.corpus.mermaid.MermaidEmitter.emitCynefinStyles(dummyRast)),
+      ("TreeviewDb", balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewDb(dummyRast)),
+      ("TreeviewDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewDiagram(dummyRast)),
+      ("TreeviewParser", balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewParser(dummyRast)),
       ("TreeviewRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewRenderer(dummyRast)),
-      ("TreeviewStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewStyles(dummyRast)),
+      ("TreeviewStyles", balticporter.corpus.mermaid.MermaidEmitter.emitTreeviewStyles(dummyRast))
     )
 
     for ((name, source) <- allFiles) {
@@ -770,7 +769,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Wardley diagram emission ----------------------------------------
 
   test("wardley -> WardleyDb class"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitWardleyDb(rast)
     assert(scala.contains("final case class WardleyComponent"), "should have WardleyComponent case class")
     assert(scala.contains("final case class WardleyLink"), "should have WardleyLink case class")
@@ -780,7 +779,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("wardley -> WardleyDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitWardleyDiagram(rast)
     assert(scala.contains("object WardleyDiagram"), "should emit WardleyDiagram object")
     assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
@@ -789,7 +788,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("WardleyRenderer.render"), "should delegate to WardleyRenderer")
 
   test("wardley -> WardleyParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitWardleyParser(rast)
     assert(scala.contains("object WardleyParser"), "should emit WardleyParser object")
     assert(scala.contains("def parse(input: String): WardleyDb"), "should have parse method")
@@ -798,7 +797,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("-->"), "should parse dependency links")
 
   test("wardley -> WardleyRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitWardleyRenderer(rast)
     assert(scala.contains("object WardleyRenderer"), "should emit WardleyRenderer object")
     assert(scala.contains("def render(db: WardleyDb, config: MermaidConfig)"), "should accept WardleyDb")
@@ -808,7 +807,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("wardley -> WardleyStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitWardleyStyles(rast)
     assert(scala.contains("object WardleyStyles"), "should emit WardleyStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
@@ -818,7 +817,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Ishikawa diagram emission ----------------------------------------
 
   test("ishikawa -> IshikawaDb class"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaDb(rast)
     assert(scala.contains("final case class CauseBranch"), "should have CauseBranch case class")
     assert(scala.contains("final class IshikawaDb"), "should have IshikawaDb class")
@@ -829,7 +828,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("ishikawa -> IshikawaDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaDiagram(rast)
     assert(scala.contains("object IshikawaDiagram"), "should emit IshikawaDiagram object")
     assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
@@ -838,7 +837,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("IshikawaRenderer.render"), "should delegate to IshikawaRenderer")
 
   test("ishikawa -> IshikawaParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaParser(rast)
     assert(scala.contains("object IshikawaParser"), "should emit IshikawaParser object")
     assert(scala.contains("def parse(input: String): IshikawaDb"), "should have parse method")
@@ -848,7 +847,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("addCauseToLast"), "should add causes to last branch")
 
   test("ishikawa -> IshikawaRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaRenderer(rast)
     assert(scala.contains("object IshikawaRenderer"), "should emit IshikawaRenderer object")
     assert(scala.contains("def render(db: IshikawaDb, config: MermaidConfig)"), "should accept IshikawaDb")
@@ -859,7 +858,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("ishikawa -> IshikawaStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaStyles(rast)
     assert(scala.contains("object IshikawaStyles"), "should emit IshikawaStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
@@ -871,7 +870,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Complete Venn diagram emission ----------------------------------------
 
   test("venn -> VennDb class"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitVennDb(rast)
     assert(scala.contains("final case class VennSet"), "should have VennSet case class")
     assert(scala.contains("final case class VennIntersection"), "should have VennIntersection case class")
@@ -881,7 +880,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("def clear()"), "should have clear method")
 
   test("venn -> VennDiagram facade"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitVennDiagram(rast)
     assert(scala.contains("object VennDiagram"), "should emit VennDiagram object")
     assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
@@ -890,7 +889,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("VennRenderer.render"), "should delegate to VennRenderer")
 
   test("venn -> VennParser"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitVennParser(rast)
     assert(scala.contains("object VennParser"), "should emit VennParser object")
     assert(scala.contains("def parse(input: String): VennDb"), "should have parse method")
@@ -900,7 +899,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains("Scanner"), "should use Scanner parser")
 
   test("venn -> VennRenderer"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitVennRenderer(rast)
     assert(scala.contains("object VennRenderer"), "should emit VennRenderer object")
     assert(scala.contains("def render(db: VennDb, config: MermaidConfig)"), "should accept VennDb")
@@ -911,7 +910,7 @@ class MermaidEmitterSpec extends munit.FunSuite:
     assert(scala.contains(".build().toMarkup()"), "should produce SVG output")
 
   test("venn -> VennStyles"):
-    val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
+    val rast  = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
     val scala = balticporter.corpus.mermaid.MermaidEmitter.emitVennStyles(rast)
     assert(scala.contains("object VennStyles"), "should emit VennStyles object")
     assert(scala.contains("def generate(vars: ThemeVariables)"), "should have generate method")
@@ -928,21 +927,21 @@ class MermaidEmitterSpec extends munit.FunSuite:
     val dummyRast = loadRast("/rast/mermaid/src/diagrams/info/infoDb.rast.json")
 
     val allFiles = List(
-      ("WardleyDb",       balticporter.corpus.mermaid.MermaidEmitter.emitWardleyDb(dummyRast)),
-      ("WardleyDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitWardleyDiagram(dummyRast)),
-      ("WardleyParser",   balticporter.corpus.mermaid.MermaidEmitter.emitWardleyParser(dummyRast)),
+      ("WardleyDb", balticporter.corpus.mermaid.MermaidEmitter.emitWardleyDb(dummyRast)),
+      ("WardleyDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitWardleyDiagram(dummyRast)),
+      ("WardleyParser", balticporter.corpus.mermaid.MermaidEmitter.emitWardleyParser(dummyRast)),
       ("WardleyRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitWardleyRenderer(dummyRast)),
-      ("WardleyStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitWardleyStyles(dummyRast)),
-      ("IshikawaDb",       balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaDb(dummyRast)),
-      ("IshikawaDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaDiagram(dummyRast)),
-      ("IshikawaParser",   balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaParser(dummyRast)),
+      ("WardleyStyles", balticporter.corpus.mermaid.MermaidEmitter.emitWardleyStyles(dummyRast)),
+      ("IshikawaDb", balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaDb(dummyRast)),
+      ("IshikawaDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaDiagram(dummyRast)),
+      ("IshikawaParser", balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaParser(dummyRast)),
       ("IshikawaRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaRenderer(dummyRast)),
-      ("IshikawaStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaStyles(dummyRast)),
-      ("VennDb",       balticporter.corpus.mermaid.MermaidEmitter.emitVennDb(dummyRast)),
-      ("VennDiagram",  balticporter.corpus.mermaid.MermaidEmitter.emitVennDiagram(dummyRast)),
-      ("VennParser",   balticporter.corpus.mermaid.MermaidEmitter.emitVennParser(dummyRast)),
+      ("IshikawaStyles", balticporter.corpus.mermaid.MermaidEmitter.emitIshikawaStyles(dummyRast)),
+      ("VennDb", balticporter.corpus.mermaid.MermaidEmitter.emitVennDb(dummyRast)),
+      ("VennDiagram", balticporter.corpus.mermaid.MermaidEmitter.emitVennDiagram(dummyRast)),
+      ("VennParser", balticporter.corpus.mermaid.MermaidEmitter.emitVennParser(dummyRast)),
       ("VennRenderer", balticporter.corpus.mermaid.MermaidEmitter.emitVennRenderer(dummyRast)),
-      ("VennStyles",   balticporter.corpus.mermaid.MermaidEmitter.emitVennStyles(dummyRast)),
+      ("VennStyles", balticporter.corpus.mermaid.MermaidEmitter.emitVennStyles(dummyRast))
     )
 
     for ((name, source) <- allFiles) {
@@ -956,14 +955,14 @@ class MermaidEmitterSpec extends munit.FunSuite:
 
   private val mermaidRefRoot: java.nio.file.Path =
     val cpRef = getClass.getResource("/reference/mermaid/flowchart/FlowchartStyles.scala")
-    if cpRef != null && cpRef.getProtocol == "file" then
-      java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from flowchart/ to mermaid/
+    if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from flowchart/ to mermaid/
     else
       val candidates = List(
         sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg"))
       ).flatten
-      candidates.map(_.resolve("ssg-mermaid/src/main/scala/ssg/mermaid/diagrams"))
+      candidates
+        .map(_.resolve("ssg-mermaid/src/main/scala/ssg/mermaid/diagrams"))
         .find(p => java.nio.file.Files.exists(p.resolve("flowchart/FlowchartStyles.scala")))
         .getOrElse(java.nio.file.Path.of("nonexistent"))
 
@@ -981,21 +980,21 @@ class MermaidEmitterSpec extends munit.FunSuite:
           None
 
   test("styles parity: FlowchartStyles.scala"):
-    if !java.nio.file.Files.exists(mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")) then
-      println("SKIP: ssg-mermaid reference not found")
+    if !java.nio.file.Files.exists(mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")) then println("SKIP: ssg-mermaid reference not found")
     else
-      val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
-      val refPath = mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")
+      val rast              = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+      val refPath           = mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")
       val (source, summary) = balticporter.corpus.mermaid.MermaidEmitter.emitStylesWithParity(rast, refPath)
-      println(s"FlowchartStyles: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")
+      println(
+        s"FlowchartStyles: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref"
+      )
       assert(source.contains("FlowchartStyles"), "should preserve FlowchartStyles object")
 
   test("batch: styles parity for all diagram types"):
-    if !java.nio.file.Files.exists(mermaidRefRoot) then
-      println("SKIP: ssg-mermaid reference not found at " + mermaidRefRoot)
+    if !java.nio.file.Files.exists(mermaidRefRoot) then println("SKIP: ssg-mermaid reference not found at " + mermaidRefRoot)
     else
-      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid-parity")
-      val results = balticporter.corpus.mermaid.MermaidEmitter.emitAllStylesWithParity(tryLoadRastOpt, mermaidRefRoot, outDir)
+      val outDir    = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid-parity")
+      val results   = balticporter.corpus.mermaid.MermaidEmitter.emitAllStylesWithParity(tryLoadRastOpt, mermaidRefRoot, outDir)
       val summaries = results.map(_._2)
 
       println("\n=== Mermaid Styles Parity ===")

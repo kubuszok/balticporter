@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Pipeline, Program}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
+import balticporter.tir.{ Pipeline, Program }
+import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 
 /** A REIFIED occurrence of a retyped type — `ENGINE-LIMITS.md` K18, catalog `JS-G48`. */
 class CollectionsReifiedSpec extends PortSuite:
@@ -29,12 +29,15 @@ class CollectionsReifiedSpec extends PortSuite:
         |  boolean isList(Object v) { return v instanceof List; }
         |  boolean isSet(Object v)  { return v instanceof Set; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains(s"$Reified.isMap("))
     assert(out.contains(s"$Reified.isBuffer("))
     assert(out.contains(s"$Reified.isSet("))
-    assert(!out.contains("isInstanceOf[scala.collection.mutable."),
-           "no bare test against a mapping target survives — that is the whole defect")
+    assert(
+      !out.contains("isInstanceOf[scala.collection.mutable."),
+      "no bare test against a mapping target survives — that is the whole defect"
+    )
   }
 
   test("a DOWNCAST from Object becomes the coercion, and java's own cast is KEPT around it") {
@@ -44,10 +47,13 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  int size(Object v) { return ((Map<String, Object>) v).size(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains(s"$Reified.asMap("))
-    assert(out.contains("asInstanceOf[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]"),
-           "java's cast is unchecked in its type arguments and the emitted cast says so")
+    assert(
+      out.contains("asInstanceOf[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]"),
+      "java's cast is unchecked in its type arguments and the emitted cast says so"
+    )
   }
 
   test("the SHIM targets are reified positions too — Collection, Iterable, Iterator") {
@@ -60,7 +66,8 @@ class CollectionsReifiedSpec extends PortSuite:
         |  boolean isItr(Object v)  { return v instanceof Iterator; }
         |  int n(Object v) { return ((Collection<?>) v).size(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains(s"$Reified.isCollection("))
     assert(out.contains(s"$Reified.isIterable("))
     assert(out.contains(s"$Reified.isIterator("))
@@ -79,9 +86,12 @@ class CollectionsReifiedSpec extends PortSuite:
         |  private Map<String, Object> own = new HashMap<String, Object>();
         |  Map<? extends String, ? extends Object> widen() { return (Map<? extends String, ? extends Object>) own; }
         |}
-        |""".stripMargin)
-    assert(!clue(out).contains(s"$Reified.asMap("),
-           "the operand is a declaration this phase retyped: the representation is known")
+        |""".stripMargin
+    )
+    assert(
+      !clue(out).contains(s"$Reified.asMap("),
+      "the operand is a declaration this phase retyped: the representation is known"
+    )
   }
 
   test("…and an EXTERNAL PRODUCER is NOT vouched for, however its node type reads") {
@@ -93,10 +103,13 @@ class CollectionsReifiedSpec extends PortSuite:
         |    return (Map<String, Object>) p.clone();
         |  }
         |}
-        |""".stripMargin)
-    assert(clue(out).contains(s"$Reified.asMap("),
-           "the value is whatever the class file makes; the node's type only reads as a target " +
-             "because transformType is position-blind")
+        |""".stripMargin
+    )
+    assert(
+      clue(out).contains(s"$Reified.asMap("),
+      "the value is whatever the class file makes; the node's type only reads as a target " +
+        "because transformType is position-blind"
+    )
   }
 
   test("a type the PROGRAM DECLARES is vouched for by OWNERSHIP — every instance of it is the port's") {
@@ -113,9 +126,12 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  Iterator<String> it() { return (Iterator<String>) new Own(); }
         |}
-        |""".stripMargin)
-    assert(!clue(out).contains(s"$Reified.asIterator("),
-           "the operand's type is declared by this program, so its representation is not in question")
+        |""".stripMargin
+    )
+    assert(
+      !clue(out).contains(s"$Reified.asIterator("),
+      "the operand's type is declared by this program, so its representation is not in question"
+    )
   }
 
   test("a `null` cast has no runtime object to be about and is left exactly as it was") {
@@ -125,7 +141,8 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  Map<String, Object> none() { return (Map<String, Object>) null; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains(s"$Reified.asMap("))
   }
 
@@ -140,14 +157,13 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  int size(Object v) { return ((HashMap<String, Object>) v).size(); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(!clue(out).contains(s"$Reified.as"), "nothing was approximated")
-    val reified = ph.boundary(program)
-      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    val reified = ph.boundary(program).filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
     assertEquals(clue(reified).size, 1)
     assert(reified.head.detail.contains("reified cast"))
-    assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ReifiedOccurrence)
-             .contains("§1(a)"))
+    assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ReifiedOccurrence).contains("§1(a)"))
   }
 
   // -------------------------------------------------------------------------
@@ -160,10 +176,10 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  boolean fast(List<String> xs) { return xs instanceof RandomAccess; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(clue(out).contains("isInstanceOf[java.util.RandomAccess]"), "left exactly as java wrote it")
-    val reified = ph.boundary(program)
-      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    val reified = ph.boundary(program).filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
     assertEquals(clue(reified).size, 1)
     assert(reified.head.detail.contains("reified type test"))
   }
@@ -175,9 +191,9 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  Object sorted(Object v) { return (SortedMap<String, Object>) v; }
         |}
-        |""".stripMargin)
-    val reified = ph.boundary(program)
-      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+        |""".stripMargin
+    )
+    val reified = ph.boundary(program).filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
     assertEquals(clue(reified).size, 1)
     assert(reified.head.detail.contains("reified cast"))
   }
@@ -195,9 +211,9 @@ class CollectionsReifiedSpec extends PortSuite:
         |  Runnable run(Object v)  { return (Runnable) v; }
         |  List<String> keep(List<String> xs) { return xs; }
         |}
-        |""".stripMargin)
-    assertEquals(clue(ph.boundary(program))
-      .count(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence), 0)
+        |""".stripMargin
+    )
+    assertEquals(clue(ph.boundary(program)).count(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence), 0)
   }
 
   test("NEGATIVE — `java.lang.Object` is in every closure and is never a divergence") {
@@ -209,9 +225,9 @@ class CollectionsReifiedSpec extends PortSuite:
         |class T {
         |  boolean isObj(Object v) { return v instanceof Object; }
         |}
-        |""".stripMargin)
-    assertEquals(clue(ph.boundary(program))
-      .count(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence), 0)
+        |""".stripMargin
+    )
+    assertEquals(clue(ph.boundary(program)).count(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence), 0)
   }
 
   // -------------------------------------------------------------------------
@@ -227,16 +243,15 @@ class CollectionsReifiedSpec extends PortSuite:
         |  boolean b(Object v) { return v instanceof List; }
         |  boolean untouched(Object v) { return v instanceof String; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val catalog = new balticporter.catalog.CatalogLog
-    Pipeline.runTraced(program, List(new CollectionsTransform),
-                       new balticporter.tir.PolicyBinder(program, program.members), catalog)
+    Pipeline.runTraced(program, List(new CollectionsTransform), new balticporter.tir.PolicyBinder(program, program.members), catalog)
     val cited = catalog.citedAt(balticporter.catalog.JS.G(48))
     assertEquals(clue(cited).size, 2)
     assert(cited.exists(_.contains("#a")))
     assert(cited.exists(_.contains("#b")))
-    assert(!cited.exists(_.contains("untouched")),
-           "a citation is per DECLARATION, and this one's test is not at a mapped type")
+    assert(!cited.exists(_.contains("untouched")), "a citation is per DECLARATION, and this one's test is not at a mapped type")
   }
 
   // -------------------------------------------------------------------------
@@ -247,24 +262,27 @@ class CollectionsReifiedSpec extends PortSuite:
     // Source is non-generic (like gdx's CharArray) retargeted with FixedType args.
     val ph = new CollectionsTransform(
       retarget = Map("demo.SrcArr" -> "demo.Target"),
-      retargetTypeArgs = Map("demo.SrcArr" -> List(
-        CollectionsTransform.RetargetArg.FixedType("scala.Char"))))
-    val p = portAll(List(
-      "SrcArr.java" ->
-        """package demo;
-          |public class SrcArr {}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public final class Target<T> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
-          |}""".stripMargin), ph)
+      retargetTypeArgs = Map("demo.SrcArr" -> List(CollectionsTransform.RetargetArg.FixedType("scala.Char")))
+    )
+    val p = portAll(
+      List(
+        "SrcArr.java" ->
+          """package demo;
+            |public class SrcArr {}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public final class Target<T> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assert(clue(p.out).contains("false"), "the test is provably false and emits the literal")
     assertNotEmits(p, "isInstanceOf")
-    val reified = ph.boundary(p.after)
-      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    val reified = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
     assertEquals(clue(reified).size, 1)
     assert(reified.head.detail.contains("provably false"))
   }
@@ -272,23 +290,26 @@ class CollectionsReifiedSpec extends PortSuite:
   test("a type test at a NON-FINAL retarget target keeps the erased instanceof (finality unknown)") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.SrcArr" -> "demo.Target"),
-      retargetTypeArgs = Map("demo.SrcArr" -> List(
-        CollectionsTransform.RetargetArg.FixedType("scala.Char"))))
-    val p = portAll(List(
-      "SrcArr.java" ->
-        """package demo;
-          |public class SrcArr {}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public class Target<T> {}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
-          |}""".stripMargin), ph)
+      retargetTypeArgs = Map("demo.SrcArr" -> List(CollectionsTransform.RetargetArg.FixedType("scala.Char")))
+    )
+    val p = portAll(
+      List(
+        "SrcArr.java" ->
+          """package demo;
+            |public class SrcArr {}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public class Target<T> {}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "isInstanceOf[demo.Target[?]]")
-    val reified = ph.boundary(p.after)
-      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    val reified = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
     assertEquals(clue(reified).size, 1)
     assert(reified.head.detail.contains("erased test"))
   }
@@ -296,23 +317,27 @@ class CollectionsReifiedSpec extends PortSuite:
   test("a type test at a FINAL retarget target that EXTENDS the operand keeps the erased instanceof") {
     val ph = new CollectionsTransform(
       retarget = Map("demo.SrcArr" -> "demo.Target"),
-      retargetTypeArgs = Map("demo.SrcArr" -> List(
-        CollectionsTransform.RetargetArg.FixedType("scala.Char"))))
-    val p = portAll(List(
-      "SrcArr.java" ->
-        """package demo;
-          |public class SrcArr {}""".stripMargin,
-      "Target.java" ->
-        """package demo;
-          |public final class Target<T> implements java.lang.CharSequence {
-          |  public int length() { return 0; }
-          |  public char charAt(int i) { return 0; }
-          |  public CharSequence subSequence(int s, int e) { return this; }
-          |}""".stripMargin,
-      "Uses.java" ->
-        """package demo;
-          |class Uses {
-          |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
-          |}""".stripMargin), ph)
+      retargetTypeArgs = Map("demo.SrcArr" -> List(CollectionsTransform.RetargetArg.FixedType("scala.Char")))
+    )
+    val p = portAll(
+      List(
+        "SrcArr.java" ->
+          """package demo;
+            |public class SrcArr {}""".stripMargin,
+        "Target.java" ->
+          """package demo;
+            |public final class Target<T> implements java.lang.CharSequence {
+            |  public int length() { return 0; }
+            |  public char charAt(int i) { return 0; }
+            |  public CharSequence subSequence(int s, int e) { return this; }
+            |}""".stripMargin,
+        "Uses.java" ->
+          """package demo;
+            |class Uses {
+            |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
+            |}""".stripMargin
+      ),
+      ph
+    )
     assertEmits(p, "isInstanceOf[demo.Target[?]]")
   }

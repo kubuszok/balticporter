@@ -1,6 +1,6 @@
 package balticporter.corpus
 
-import balticporter.testkit.{PortFixture, PortSuite}
+import balticporter.testkit.{ PortFixture, PortSuite }
 import balticporter.tir.*
 import balticporter.transform.NullabilityTransform
 
@@ -29,9 +29,12 @@ class NullabilityMemberKeySpec extends PortSuite:
   test("the two overloads ARE retyped — otherwise this spec proves nothing") {
     val ms = overloads(retyped)
     assertEquals(ms.size, 2)
-    assert(ms.forall(_.info match
-      case TypeRepr.MethodType(List((_, TypeRepr.OrType(_, _))), _, _) => true
-      case _                                                          => false), clue(ms.map(_.info)))
+    assert(
+      ms.forall(_.info match
+        case TypeRepr.MethodType(List((_, TypeRepr.OrType(_, _))), _, _) => true
+        case _                                                           => false),
+      clue(ms.map(_.info))
+    )
   }
 
   test("…and they keep DISTINCT member keys — the descriptor is the java signature, not the info") {

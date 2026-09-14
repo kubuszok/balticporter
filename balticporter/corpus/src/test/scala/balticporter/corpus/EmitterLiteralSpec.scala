@@ -2,11 +2,10 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** Two LEXICAL seams of the emitter, pinned through the pipeline — a Java snippet in, the emitted
-  * Scala asserted. Both are CLAUDE.md §1(a) facts about the two languages' lexers, both were found
-  * by porting anim8-gdx, and neither is visible to any check: the emitted file simply does not
-  * parse, so the whole failure arrives as a wall of syntax errors attributed to whatever the lexer
-  * was reading when it gave up. */
+/** Two LEXICAL seams of the emitter, pinned through the pipeline — a Java snippet in, the emitted Scala asserted. Both are CLAUDE.md §1(a) facts about the two languages' lexers, both were found by
+  * porting anim8-gdx, and neither is visible to any check: the emitted file simply does not parse, so the whole failure arrives as a wall of syntax errors attributed to whatever the lexer was reading
+  * when it gave up.
+  */
 class EmitterLiteralSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------
@@ -26,12 +25,12 @@ class EmitterLiteralSpec extends PortSuite:
 
   test("every character Scala's lexer cannot take verbatim is escaped") {
     val p = port(stringy)
-    assertEmits(p, "\\u0001")  // a control character with no named escape
-    assertEmits(p, "\\n")      // the one that ENDS the literal if it is left raw
-    assertEmits(p, "\\f")      // a named escape the five-case version did not have
-    assertEmits(p, "\\\"")     // the quote
-    assertEmits(p, "\\\\")     // the backslash
-    assertEmits(p, "\\u007f")  // DEL — printable-looking, and an illegal character
+    assertEmits(p, "\\u0001") // a control character with no named escape
+    assertEmits(p, "\\n") // the one that ENDS the literal if it is left raw
+    assertEmits(p, "\\f") // a named escape the five-case version did not have
+    assertEmits(p, "\\\"") // the quote
+    assertEmits(p, "\\\\") // the backslash
+    assertEmits(p, "\\u007f") // DEL — printable-looking, and an illegal character
   }
 
   test("ordinary non-ASCII text is emitted VERBATIM — the file is UTF-8 and Scala reads it as UTF-8") {
@@ -43,8 +42,8 @@ class EmitterLiteralSpec extends PortSuite:
   test("NO raw control character survives anywhere in the emitted source") {
     // The strongest form of the assertion and the cheapest: a control character in the output is a
     // file that does not parse, wherever it came from. Tabs/newlines are the emitter's own layout.
-    val out  = port(stringy).out
-    val bad  = out.filter(c => (c < ' ' || c.toInt == 0x7f) && c != '\n' && c != '\r' && c != '\t')
+    val out = port(stringy).out
+    val bad = out.filter(c => (c < ' ' || c.toInt == 0x7f) && c != '\n' && c != '\r' && c != '\t')
     assertEquals(bad.map(_.toInt).toList, List.empty[Int], s"raw control characters in:\n$out")
   }
 

@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A NILARY STATIC METHOD REFERENCE — `ENGINE-LIMITS.md` G32, the one qualified name scala will not
-  * eta-expand. */
+/** A NILARY STATIC METHOD REFERENCE — `ENGINE-LIMITS.md` G32, the one qualified name scala will not eta-expand.
+  */
 class StaticMethodRefAritySpec extends PortSuite:
 
   test("a NILARY static reference becomes a lambda that CALLS the method") {
@@ -14,7 +14,8 @@ class StaticMethodRefAritySpec extends PortSuite:
         |  static String compute() { return "x"; }
         |  Supplier<String> go() { return Uses::compute; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "() => Uses.compute()")
     // …and NOT the bare qualified name, which is what the port emitted before and which scalac
     // reads as a call with its argument list left off.
@@ -31,7 +32,8 @@ class StaticMethodRefAritySpec extends PortSuite:
         |  static String twice(String s) { return s + s; }
         |  Function<String, String> go() { return Uses::twice; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the target IS @FunctionalInterface — bare name, no explicit lambda
     assertEmits(p, "return Uses.twice")
     assertNotEmits(p, "=> Uses.twice(a0$)")
@@ -47,7 +49,8 @@ class StaticMethodRefAritySpec extends PortSuite:
         |  static String upper(String s) { return s.toUpperCase(); }
         |  Mapper go() { return Uses::upper; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "=> Uses.upper(a0$)")
     assertNotEmits(p, "return Uses.upper\n")
   }
@@ -61,7 +64,8 @@ class StaticMethodRefAritySpec extends PortSuite:
         |@FunctionalInterface
         |interface Mapper { String map(String s); }
         |class Uses { Mapper go() { return Uses::upper; } static String upper(String s) { return s.toUpperCase(); } }
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEmits(p, "@java.lang.FunctionalInterface")
     assertEmits(p, "trait Mapper")
     // the method reference targeting the annotated interface keeps the BARE NAME — no explicit
@@ -78,7 +82,8 @@ class StaticMethodRefAritySpec extends PortSuite:
         |  String name() { return "n"; }
         |  Function<Uses, String> go() { return Uses::name; }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     // the receiver becomes the SAM's first parameter (JLS 15.13.3), so this reference has arity 0
     // at the METHOD and arity 1 at the function — the arm above must not read the first number and
     // answer for the second.

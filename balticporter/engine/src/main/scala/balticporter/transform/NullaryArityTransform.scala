@@ -1,37 +1,44 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, SurfacePolicy}
+import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.tir.*
 
-/** Drops `()` from a nullary getter-like method — `def x(): R` becomes `def x: R` — and rewrites
-  * every call site. Getter-like (conservatively): no assignments/increments, no calls to
-  * non-nullary members; over-refuses, never under-refuses, and EVERY owned nilary value-returning
-  * declaration takes one lane row (§3; the operator gap in that scan is `ENGINE-LIMITS.md` K42).
-  * Scope default `Only(Set.empty)` (§1(b) — this ADDS arity). After `bean-properties`. */
-final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
-                                  /** members whose `()` goes although the body has behaviour — the reference
-                                    * port's decision, by exact FQN; the whole override COMPONENT follows it over the body and
-                                    * overload guards (a spelling is the component's); anchors and call sites still apply (K51 xvii). */
-                                  val force: Set[String] = Set.empty,
-                                  /** also drop `()` where the REFERENCE port declares the accessor
-                                    * parenless (`RunScope.derived`, `PROGRESS.md` §13.31 step 1). */
-                                  val derive: Boolean = false)
-    extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
+/** Drops `()` from a nullary getter-like method — `def x(): R` becomes `def x: R` — and rewrites every call site. Getter-like (conservatively): no assignments/increments, no calls to non-nullary
+  * members; over-refuses, never under-refuses, and EVERY owned nilary value-returning declaration takes one lane row (§3; the operator gap in that scan is `ENGINE-LIMITS.md` K42). Scope default
+  * `Only(Set.empty)` (§1(b) — this ADDS arity). After `bean-properties`.
+  */
+final class NullaryArityTransform(
+  scope: RuleScope = RuleScope.Only(Set.empty),
+  /** members whose `()` goes although the body has behaviour — the reference port's decision, by exact FQN; the whole override COMPONENT follows it over the body and overload guards (a spelling is
+    * the component's); anchors and call sites still apply (K51 xvii).
+    */
+  val force: Set[String] = Set.empty,
+  /** also drop `()` where the REFERENCE port declares the accessor parenless (`RunScope.derived`, `PROGRESS.md` §13.31 step 1).
+    */
+  val derive: Boolean = false
+) extends Phase,
+      SurfacePolicy,
+      MergeablePolicy,
+      IdiomPhase,
+      Rewrite,
+      PolicyBound:
 
   private var derivedForce: Set[String] = Set.empty
-  private var derivedIdSet: Set[SymId] = Set.empty
+  private var derivedIdSet: Set[SymId]  = Set.empty
+
   /** members the reference keeps WITH `()` (`KeepParens` rows): never converted (derive only). */
   private var derivedKeep: Set[SymId] = Set.empty
-  /** the override COMPONENTS a forced member belongs to: the reference's parenless spelling on one
-    * member is the spelling of the whole component, over the detector's own guards. */
-  private var forcedComp: Set[SymId] = Set.empty
-  private def forcedAll(id: SymId, fqn: String): Boolean = forcedId(id, fqn) || forcedComp(id)
-  private def forced(fqn: String): Boolean = force(fqn) || derivedForce(fqn)
-  private def forcedId(id: SymId, fqn: String): Boolean = forced(fqn) || derivedIdSet(id)
+
+  /** the override COMPONENTS a forced member belongs to: the reference's parenless spelling on one member is the spelling of the whole component, over the detector's own guards.
+    */
+  private var forcedComp:                        Set[SymId] = Set.empty
+  private def forcedAll(id: SymId, fqn: String): Boolean    = forcedId(id, fqn) || forcedComp(id)
+  private def forced(fqn:   String):             Boolean    = force(fqn) || derivedForce(fqn)
+  private def forcedId(id:  SymId, fqn: String): Boolean    = forced(fqn) || derivedIdSet(id)
 
   def name: String = "nullary-arity"
 
-  override def runsAfter: Set[String] = Set("bean-properties")
+  override def runsAfter:  Set[String] = Set("bean-properties")
   override def runsBefore: Set[String] = Set("package-rename")
 
   def idiomKinds: Set[IdiomKind] =
@@ -55,8 +62,8 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     case n: NullaryArityTransform =>
       val noOp = RuleScope.Only(Set.empty)
       val merged: Either[String, RuleScope] = (arityScope, n.arityScope) match
-        case (s, `noOp`) => Right(s)
-        case (`noOp`, s) => Right(s)
+        case (s, `noOp`)                                    => Right(s)
+        case (`noOp`, s)                                    => Right(s)
         case (RuleScope.Only(mine), RuleScope.Only(theirs)) =>
           Right(RuleScope.Only(mine ++ theirs))
         case (RuleScope.Everywhere(mine), RuleScope.Everywhere(theirs)) =>
@@ -75,16 +82,17 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
 
   /** Types the base or this module SUBSTITUTED — detection skips these owners (D14, §1.5). */
   private var substitutedOwners: Set[String] = Set.empty
+
   /** which units this run emits: a base's declaration keeps its arity, read literally (K51). */
-  private var runScope: RunScope             = RunScope.whole
+  private var runScope: RunScope = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit =
-    runScope          = binder.run
+    runScope = binder.run
     substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
     if derive then
-      derivedForce  = binder.run.derived.parenless
-      derivedIdSet  = binder.run.derived.parenlessIds
-      derivedKeep   = binder.run.derived.keepParensIds
+      derivedForce = binder.run.derived.parenless
+      derivedIdSet = binder.run.derived.parenlessIds
+      derivedKeep = binder.run.derived.keepParensIds
 
   // ---- the run --------------------------------------------------------------------------
 
@@ -96,9 +104,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     if scope == RuleScope.Only(Set.empty) && !derive then return program
 
     val graph = OverrideGraph.build(program)
-    forcedComp = program.symbols.all.toList
-      .filter(s => program.owned(s.id) && forcedId(s.id, s.fullName))
-      .flatMap(s => graph.closureOf(s.id).members).toSet
+    forcedComp = program.symbols.all.toList.filter(s => program.owned(s.id) && forcedId(s.id, s.fullName)).flatMap(s => graph.closureOf(s.id).members).toSet
 
     // ---- 1. find candidates — EVERY member of the population takes a lane row (§3) ----
     // The population is every OWNED method declaration java wrote `m()` with a value result: that
@@ -109,62 +115,103 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     program.symbols.all.foreach { s =>
       val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
       program.definitionOf(s.id) match
-        case Some(d: Tree.DefDef)
-            if program.owned(s.id) && isNilary(d) && !isVoid(program, d.returnTpt.tpe) =>
+        case Some(d: Tree.DefDef) if program.owned(s.id) && isNilary(d) && !isVoid(program, d.returnTpt.tpe) =>
           if s.flags.isStatic then
-            refuse(program, s.id, "StaticMember",
+            refuse(
+              program,
+              s.id,
+              "StaticMember",
               "a java `static` is emitted onto the companion, where the arity this phase mints is " +
-              "not the one the call sites it cannot see were written against")
+                "not the one the call sites it cannot see were written against"
+            )
           // a declaration in a unit this run does not EMIT — the base's; its arity is published (K51)
           else if !runScope.emitsSymbol(program, s.id) then
-            refuse(program, s.id, "NotEmitted",
+            refuse(
+              program,
+              s.id,
+              "NotEmitted",
               "this run emits no declaration for it (a base's unit): its arity is the base's " +
-              "published fact, read literally, and not this module's to move")
+                "published fact, read literally, and not this module's to move"
+            )
           // owners the base SUBSTITUTED — the injected shim's members were never renamed (D14, §1.5)
           else if substitutedOwners.contains(ownerFqn) then
-            refuse(program, s.id, "SubstitutedOwner",
+            refuse(
+              program,
+              s.id,
+              "SubstitutedOwner",
               s"`$ownerFqn` is substituted by the base: this run emits no declaration for it, so " +
-              "the arity of its members is the base's fact and not this module's to move")
+                "the arity of its members is the base's fact and not this module's to move"
+            )
           else if !PolicyBinder.isExecutable(s.info) then
-            refuse(program, s.id, "NotExecutable",
+            refuse(
+              program,
+              s.id,
+              "NotExecutable",
               "the symbol's `info` is not a `MethodType`/`PolyType`, so this phase cannot read the " +
-              "parameter clause it would drop")
+                "parameter clause it would drop"
+            )
           else if derive && derivedKeep(s.id) then
-            refuse(program, s.id, "ReferenceKeepsParens",
-              "the reference port spells this member WITH its `()`; the derived policy keeps java's arity")
+            refuse(
+              program,
+              s.id,
+              "ReferenceKeepsParens",
+              "the reference port spells this member WITH its `()`; the derived policy keeps java's arity"
+            )
           else if !scope.includes(program, s) && !forcedAll(s.id, s.fullName) then
-            refuse(program, s.id, "OutOfScope",
-              s"the phase's `RuleScope` excludes it (entry `${scope.entryFor(program, s).getOrElse("?")}`)")
+            refuse(
+              program,
+              s.id,
+              "OutOfScope",
+              s"the phase's `RuleScope` excludes it (entry `${scope.entryFor(program, s).getOrElse("?")}`)"
+            )
           else
             val closure = graph.closureOf(s.id)
             if closure.isAnchored then
-              refuse(program, s.id, "AnchoredClosure",
-                closure.anchorReason(program).getOrElse(
-                  "the override component reaches a declaration this program cannot move"))
+              refuse(
+                program,
+                s.id,
+                "AnchoredClosure",
+                closure.anchorReason(program).getOrElse("the override component reaches a declaration this program cannot move")
+              )
             else if !isGetterLike(program, d) && !forcedAll(s.id, s.fullName) then
-              refuse(program, s.id, "SideEffectingBody",
+              refuse(
+                program,
+                s.id,
+                "SideEffectingBody",
                 "the body contains assignments or calls to non-getter members — dropping `()` " +
-                "would change the call's meaning from 'do something and return' to 'read a value'")
+                  "would change the call's meaning from 'do something and return' to 'read a value'"
+              )
             else if !callSitesRewritable(program, closure.members) then
-              refuse(program, s.id, "UnrewritableCallSite",
+              refuse(
+                program,
+                s.id,
+                "UnrewritableCallSite",
                 "a call site uses a shape this phase cannot rewrite (a method reference, " +
-                "a value-position usage, or an unowned call)")
+                  "a value-position usage, or an unowned call)"
+              )
             else if hasOverloadedSibling(program, s) && !forcedAll(s.id, s.fullName) then
-              refuse(program, s.id, "Overloaded",
+              refuse(
+                program,
+                s.id,
+                "Overloaded",
                 "the owner type declares another method with the same name that takes parameters — " +
-                "dropping `()` would make `o.m(arg)` resolve to the parenless `m` applied to `arg` " +
-                "rather than calling the parameterful overload")
-            else
-              candidates += s.id
+                  "dropping `()` would make `o.m(arg)` resolve to the parenless `m` applied to `arg` " +
+                  "rather than calling the parameterful overload"
+              )
+            else candidates += s.id
         // a member of an owned type that the SYMBOL TABLE says is nilary and non-void while the
         // TREE holds no `DefDef` for it — dropped, or minted by a phase without one. Nothing here
         // can be converted, and a silent skip would leave the denominator short.
         case scala.None
             if program.owned(s.id) && graph.types.contains(s.owner) &&
-               !s.flags.isStatic && isNilaryValueInfo(program, s) =>
-          refuse(program, s.id, "NoDefinition",
+              !s.flags.isStatic && isNilaryValueInfo(program, s) =>
+          refuse(
+            program,
+            s.id,
+            "NoDefinition",
             "the program has no `DefDef` for this member — it was dropped, or minted without a " +
-            "declaration — so there is no parameter clause to strip")
+              "declaration — so there is no parameter clause to strip"
+          )
         case _ => () // not a nilary value-returning method declaration this program owns
     }
 
@@ -175,32 +222,42 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
 
     candidates.foreach { c =>
       if !allConverted.contains(c) then
-        val comp = componentMap(c)
+        val comp      = componentMap(c)
         val allInComp = comp.forall { m =>
           candidates.contains(m) || !program.owned(m)
         }
         if allInComp then
           comp.filter(program.owned).foreach { m =>
             allConverted += m
-            consider(IdiomCandidate(IdiomKind.NullaryArity, IdiomVerdict.Converted,
-              Decision.fqnOf(program, m, "?"),
-              s"drop `()` from `${program.symbolOf(m).map(_.name).getOrElse("?")}`",
-              Decision.originOf(program, m)))
-            record(Decision(
-              kind       = Decision.Kind.ParenlessConversion,
-              subject    = m,
-              subjectFqn = Decision.fqnOf(program, m, "?"),
-              detail     = Map("from" -> s"${program.symbolOf(m).map(_.name).getOrElse("?")}()",
-                               "to"   -> program.symbolOf(m).map(_.name).getOrElse("?")),
-              reason     = Reason.Universal("nullary-arity"),
-              origin     = Decision.originOf(program, m),
-            ))
+            consider(
+              IdiomCandidate(
+                IdiomKind.NullaryArity,
+                IdiomVerdict.Converted,
+                Decision.fqnOf(program, m, "?"),
+                s"drop `()` from `${program.symbolOf(m).map(_.name).getOrElse("?")}`",
+                Decision.originOf(program, m)
+              )
+            )
+            record(
+              Decision(
+                kind = Decision.Kind.ParenlessConversion,
+                subject = m,
+                subjectFqn = Decision.fqnOf(program, m, "?"),
+                detail = Map("from" -> s"${program.symbolOf(m).map(_.name).getOrElse("?")}()", "to" -> program.symbolOf(m).map(_.name).getOrElse("?")),
+                reason = Reason.Universal("nullary-arity"),
+                origin = Decision.originOf(program, m)
+              )
+            )
           }
         else
           comp.filter(m => candidates.contains(m)).foreach { m =>
-            refuse(program, m, "ComponentPartial",
+            refuse(
+              program,
+              m,
+              "ComponentPartial",
               "not every member of the override component qualifies — dropping `()` on some " +
-              "but not all would break the override edge")
+                "but not all would break the override edge"
+            )
           }
     }
 
@@ -219,19 +276,23 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
   override def transformApply(t: Tree.Apply)(using Program): Term =
     if converted.contains(t.method) && t.args.isEmpty then
       t.fun match
-        case _: Tree.Ident            => Tree.Ident(t.method, t.tpe, t.origin)
-        case Tree.Select(q, _, _, _)  => Tree.Select(q, t.method, t.tpe, t.origin)
-        case _                        => t
+        case _: Tree.Ident => Tree.Ident(t.method, t.tpe, t.origin)
+        case Tree.Select(q, _, _, _) => Tree.Select(q, t.method, t.tpe, t.origin)
+        case _                       => t
     else t
 
   // ---- helpers --------------------------------------------------------------------------
 
   private def refuse(p: Program, m: SymId, guard: String, why: String): Unit =
-    consider(IdiomCandidate(IdiomKind.NullaryArity,
-      IdiomVerdict.Refused(guard, why),
-      Decision.fqnOf(p, m, "?"),
-      s"keep `()` on `${p.symbolOf(m).map(_.name).getOrElse("?")}`",
-      Decision.originOf(p, m)))
+    consider(
+      IdiomCandidate(
+        IdiomKind.NullaryArity,
+        IdiomVerdict.Refused(guard, why),
+        Decision.fqnOf(p, m, "?"),
+        s"keep `()` on `${p.symbolOf(m).map(_.name).getOrElse("?")}`",
+        Decision.originOf(p, m)
+      )
+    )
 
   /** a method with exactly one empty parameter clause: `paramss == List(Nil)`. */
   private def isNilary(d: Tree.DefDef): Boolean =
@@ -239,8 +300,8 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
       case List(Nil) => true
       case _         => false
 
-  /** the SYMBOL's own claim that it is a nilary method with a value result — asked only where the
-    * tree holds no `DefDef`, so the declaration's own shape cannot be read. */
+  /** the SYMBOL's own claim that it is a nilary method with a value result — asked only where the tree holds no `DefDef`, so the declaration's own shape cannot be read.
+    */
   private def isNilaryValueInfo(p: Program, s: Symbol): Boolean = s.info match
     case TypeRepr.MethodType(Nil, r, _) => !isVoid(p, r)
     case _                              => false
@@ -250,31 +311,30 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
     case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "scala.Unit")
     case _                      => false
 
-  /** CONSERVATIVE getter-like test: the body contains no assignments and no calls to
-    * non-nullary owned methods. Over-refuses rather than under-refuses.
+  /** CONSERVATIVE getter-like test: the body contains no assignments and no calls to non-nullary owned methods. Over-refuses rather than under-refuses.
     *
-    * An ABSTRACT method (no body) is not getter-like: its arity is part of its contract, and
-    * dropping `()` would break every SAM lambda ascribing to it. */
+    * An ABSTRACT method (no body) is not getter-like: its arity is part of its contract, and dropping `()` would break every SAM lambda ascribing to it.
+    */
   private def isGetterLike(p: Program, d: Tree.DefDef): Boolean =
     d.rhs match
-      case scala.None    => false // abstract — no body to inspect, keep arity
+      case scala.None => false // abstract — no body to inspect, keep arity
       case Some(body) => !hasSideEffects(p, body)
 
-  /** Walk the body for assignments, increments, and calls to non-nullary members. A mutable flag
-    * rather than a fold, since `StandardTraversal` is a transformer, not a folder. */
+  /** Walk the body for assignments, increments, and calls to non-nullary members. A mutable flag rather than a fold, since `StandardTraversal` is a transformer, not a folder.
+    */
   private def hasSideEffects(p: Program, t: Term): Boolean =
     var found = false
     def scan(t: Term): Unit = t match
-      case _: Tree.Assign  => found = true
-      case _: Tree.IncDec  => found = true
-      case a: Tree.Apply =>
+      case _: Tree.Assign => found = true
+      case _: Tree.IncDec => found = true
+      case a: Tree.Apply  =>
         // a call to a method that itself takes arguments is potentially side-effecting
         if a.args.nonEmpty then found = true
         scan(a.fun)
         a.args.foreach(scan)
-      case Tree.Select(q, _, _, _)      => scan(q)
+      case Tree.Select(q, _, _, _)       => scan(q)
       case Tree.TypeApply(f, _, _, _)    => scan(f)
-      case Tree.If(c, th, el, _, _)     => scan(c); scan(th); scan(el)
+      case Tree.If(c, th, el, _, _)      => scan(c); scan(th); scan(el)
       case Tree.Block(stats, e, _, _, _) =>
         stats.foreach {
           case t: Term => scan(t)
@@ -286,22 +346,22 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
       case Tree.InstanceOf(e, _, _, _)  => scan(e)
       case Tree.ArrayAccess(a, i, _, _) => scan(a); scan(i)
       case Tree.ArrayLength(a, _, _)    => scan(a)
-      case _ => ()
+      case _                            => ()
     scan(t)
     found
 
-  /** Does the owner type declare another method with the same name that takes parameters?
-    * Dropping `()` from `toArray()` beside `toArray(Class)` would make `a.toArray(classOf[X])`
-    * resolve to the parenless `toArray` applied to the argument, valid Scala asking a different
-    * question. Deliberately over-approximate (Scala 3 auto-tupling makes any-arity a hazard);
-    * a false positive just keeps `()`, always correct. */
+  /** Does the owner type declare another method with the same name that takes parameters? Dropping `()` from `toArray()` beside `toArray(Class)` would make `a.toArray(classOf[X])` resolve to the
+    * parenless `toArray` applied to the argument, valid Scala asking a different question. Deliberately over-approximate (Scala 3 auto-tupling makes any-arity a hazard); a false positive just keeps
+    * `()`, always correct.
+    */
   private def hasOverloadedSibling(p: Program, s: Symbol): Boolean =
     val siblings = p.symbols.all.filter(sib =>
       sib.id != s.id &&
-      sib.name == s.name &&
-      sib.owner == s.owner &&
-      PolicyBinder.isExecutable(sib.info) &&
-      hasParams(sib.info))
+        sib.name == s.name &&
+        sib.owner == s.owner &&
+        PolicyBinder.isExecutable(sib.info) &&
+        hasParams(sib.info)
+    )
     siblings.nonEmpty
 
   /** Does this method type take at least one parameter? */
@@ -316,11 +376,11 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
       p.usages(s).forall {
         case Usage(UsageKind.Call, a: Tree.Apply, _) =>
           a.args.isEmpty && (a.fun match
-            case _: Tree.Ident           => true
-            case _: Tree.Select          => true
-            case _                       => false)
+            case _: Tree.Ident  => true
+            case _: Tree.Select => true
+            case _ => false)
         case Usage(UsageKind.TermRef, _, _) => false // value-position reference
-        case _ => true
+        case _                              => true
       }
     }
 

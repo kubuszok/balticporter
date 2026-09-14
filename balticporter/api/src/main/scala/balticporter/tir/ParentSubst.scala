@@ -1,21 +1,19 @@
 package balticporter.tir
 
-/** The map from an ANCESTOR's type PARAMETERS to the arguments a subclass instantiates them with —
-  * the one derivation any synthesiser copying a parent signature into a subclass must run (a
-  * diamond forwarder, `CtorFunnel`, a replayed body). The `extends` clause makes it EXACT.
-  * TRANSITIVE — composes each level (`T -> X -> Leaf` collapses to `T -> Leaf`); maps only
-  * ancestors this program DECLARES (an external parent's params are a class-file fact, §4.56). */
+/** The map from an ANCESTOR's type PARAMETERS to the arguments a subclass instantiates them with — the one derivation any synthesiser copying a parent signature into a subclass must run (a diamond
+  * forwarder, `CtorFunnel`, a replayed body). The `extends` clause makes it EXACT. TRANSITIVE — composes each level (`T -> X -> Leaf` collapses to `T -> Leaf`); maps only ancestors this program
+  * DECLARES (an external parent's params are a class-file fact, §4.56).
+  */
 object ParentSubst:
 
-  /** the ancestors' type parameters, mapped to what `cd` instantiates them with. Empty for a class
-    * whose parents are non-generic, external, or not applied. */
+  /** the ancestors' type parameters, mapped to what `cd` instantiates them with. Empty for a class whose parents are non-generic, external, or not applied.
+    */
   def of(cd: Tree.ClassDef)(using Program): Map[SymId, TypeRepr] =
     ofParents(cd.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe })
 
-  /** …from the PARENT TYPES alone, for a declaration that is not a [[Tree.ClassDef]]. An ANONYMOUS
-    * CLASS needs it: `new Base<Leaf>() { … }` instantiates its parent in the `Tree.New`'s `tpt`,
-    * with no `ClassDef` to read a clause off. [[of]] is this against a class's own clause, so the
-    * two can never derive different maps for one hierarchy. */
+  /** …from the PARENT TYPES alone, for a declaration that is not a [[Tree.ClassDef]]. An ANONYMOUS CLASS needs it: `new Base<Leaf>() { … }` instantiates its parent in the `Tree.New`'s `tpt`, with no
+    * `ClassDef` to read a clause off. [[of]] is this against a class's own clause, so the two can never derive different maps for one hierarchy.
+    */
   def ofParents(parents: List[TypeRepr])(using program: Program): Map[SymId, TypeRepr] =
     def classOfSym(s: SymId): Option[Tree.ClassDef] =
       program.definitionOf(s).collect { case c: Tree.ClassDef => c }
@@ -38,15 +36,13 @@ object ParentSubst:
               // each argument is itself read THROUGH the map built so far, which is what makes the
               // composition collapse `T -> X -> Leaf` rather than leaving two hops to chase.
               val here = pc.tparams.map(_.symbol).zip(as.map(subst(_, m))).toMap
-              walk(pc.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe },
-                   m ++ here, depth + 1)
+              walk(pc.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }, m ++ here, depth + 1)
         }
     walk(parents, Map.empty, 0)
 
-  /** rewrite every occurrence of a mapped type parameter in `t`. COMPLETE over [[TypeRepr]] rather
-    * than the shapes the first caller happened to need — a partial recursion is §4.56's fast-path
-    * guard at a type walk. BINDERS ARE NOT ENTERED: `PolyType`/`TypeLambda` could capture, and
-    * nothing in a java-derived signature needs it. */
+  /** rewrite every occurrence of a mapped type parameter in `t`. COMPLETE over [[TypeRepr]] rather than the shapes the first caller happened to need — a partial recursion is §4.56's fast-path guard
+    * at a type walk. BINDERS ARE NOT ENTERED: `PolyType`/`TypeLambda` could capture, and nothing in a java-derived signature needs it.
+    */
   def subst(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr =
     if m.isEmpty then t
     else

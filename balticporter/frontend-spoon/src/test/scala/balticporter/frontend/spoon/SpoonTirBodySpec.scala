@@ -2,11 +2,10 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** Locks in body-construct coverage: a single method exercising arrays (new/access/length),
-  * classic-for with break/continue, for-each, while, if, try/catch/finally, switch,
-  * instanceof, lambda, operators, return. If any construct regresses to `Unsupported`,
-  * `fromSource` throws and this fails — a construct-level regression net independent of the
-  * corpus. Also checks the call graph survives all of them. */
+/** Locks in body-construct coverage: a single method exercising arrays (new/access/length), classic-for with break/continue, for-each, while, if, try/catch/finally, switch, instanceof, lambda,
+  * operators, return. If any construct regresses to `Unsupported`, `fromSource` throws and this fails — a construct-level regression net independent of the corpus. Also checks the call graph survives
+  * all of them.
+  */
 class SpoonTirBodySpec extends munit.FunSuite:
 
   private val src =
@@ -102,8 +101,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
 
   /** CLAUDE.md §4.4 row 7, for the shape a String switch takes. */
   private def matchesOf(p: Program, member: String): List[Tree.Match] =
-    val sym = p.symbols.all.find(_.fullName == member).map(_.id)
-      .getOrElse(fail(s"no member $member"))
+    val sym = p.symbols.all.find(_.fullName == member).map(_.id).getOrElse(fail(s"no member $member"))
     p.definitionOf(sym) match
       case Some(d: Tree.DefDef) =>
         given Program = p
@@ -127,7 +125,8 @@ class SpoonTirBodySpec extends munit.FunSuite:
         |    return out;
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     val ms = matchesOf(p, "demo.Cmp#apply")
     assertEquals(ms.size, 1)
     // without this arm every operator OUTSIDE the three labels — which java answers `false` —
@@ -144,7 +143,8 @@ class SpoonTirBodySpec extends munit.FunSuite:
         |    switch (op) { case "a": return 1; default: return 2; }
         |  }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(matchesOf(p, "demo.Cmp2#apply").head.cases.count(_.isDefault), 1)
   }
 
@@ -170,12 +170,11 @@ class SpoonTirBodySpec extends munit.FunSuite:
       |    return String.format("%s %s", "a", "b");
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   private def lastArgOf(name: String): Option[Tree] =
-    callsIn(varargProgram, "demo.Va#use")
-      .find(a => varargProgram.symbolOf(a.method).exists(_.name == name))
-      .flatMap(_.args.lastOption)
+    callsIn(varargProgram, "demo.Va#use").find(a => varargProgram.symbolOf(a.method).exists(_.name == name)).flatMap(_.args.lastOption)
 
   test("an IN-PROGRAM vararg call still materialises the array both halves agree on") {
     assert(clue(lastArgOf("pick")).exists(_.isInstanceOf[Tree.NewArray]))
@@ -209,12 +208,11 @@ class SpoonTirBodySpec extends munit.FunSuite:
       |    return String.format("%s %s", args);
       |  }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   private def lastFwdArgOf(name: String): Option[Tree] =
-    callsIn(passThroughProgram, "demo.Fwd#forward")
-      .find(a => passThroughProgram.symbolOf(a.method).exists(_.name == name))
-      .flatMap(_.args.lastOption)
+    callsIn(passThroughProgram, "demo.Fwd#forward").find(a => passThroughProgram.symbolOf(a.method).exists(_.name == name)).flatMap(_.args.lastOption)
 
   test("an array passed through an EXTERNAL vararg slot is SPREAD — the silent, Object-element face") {
     // `String.format(String, Object...)`: `Array[Object] <: Object`, so the unspread array COMPILES
@@ -254,7 +252,8 @@ class SpoonTirBodySpec extends munit.FunSuite:
       |  void referenceAtObject(String[] strs) { java.util.Arrays.asList(strs); }
       |  void primitiveAtPrimitive(int[] ints) { sum(ints); }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   private def compLastArg(member: String): Option[Tree] =
     callsIn(componentProgram, s"demo.Comp#$member").headOption.flatMap(_.args.lastOption)
@@ -296,7 +295,8 @@ class SpoonTirBodySpec extends munit.FunSuite:
       |  void oneAtOne(String[] xs)   { flat(xs); }
       |  void twoAtObject(String[][] xs) { java.util.Arrays.asList(xs); }
       |}
-      |""".stripMargin)
+      |""".stripMargin
+  )
 
   private def dimLastArg(member: String): Option[Tree] =
     callsIn(dimProgram, s"demo.Dim#$member").headOption.flatMap(_.args.lastOption)
@@ -307,7 +307,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
     // one-dimensional value to a two-dimensional formal.
     dimLastArg("oneAtTwo") match
       case Some(Tree.NewArray(_, _, Some(es), _, _)) => assertEquals(clue(es).size, 1)
-      case other => fail(s"expected a one-element NewArray, got $other")
+      case other                                     => fail(s"expected a one-element NewArray, got $other")
   }
 
   test("…and a TWO-dimensional one passes through — javac's `outer=2`") {
@@ -340,43 +340,48 @@ class SpoonTirBodySpec extends munit.FunSuite:
 
   // -- T14: a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING ------
 
-  private val staticProgram = SpoonTir.fromSources(List(
-    "Base.java"   -> """package demo;
+  private val staticProgram = SpoonTir.fromSources(
+    List(
+      "Base.java" -> """package demo;
                        |public class Base { public static int make() { return 1; } public static final int SEED = 3; }
                        |""".stripMargin,
-    "Sub.java"    -> """package demo;
-                       |public class Sub extends Base { }
-                       |""".stripMargin,
-    "Consts.java" -> """package demo;
-                       |public interface Consts { int MAX = 7; }
-                       |""".stripMargin,
-    "Impl.java"   -> """package demo;
+      "Sub.java" -> """package demo;
+                      |public class Sub extends Base { }
+                      |""".stripMargin,
+      "Consts.java" -> """package demo;
+                         |public interface Consts { int MAX = 7; }
+                         |""".stripMargin,
+      "Impl.java" -> """package demo;
                        |public class Impl implements Consts { }
                        |""".stripMargin,
-    "Use.java"    -> """package demo;
-                       |public class Use {
-                       |  int viaSubclass()       { return Sub.make(); }
-                       |  int viaOwnClass()       { return Base.make(); }
-                       |  int fieldViaSubclass()  { return Sub.SEED; }
-                       |  int fieldViaOwnClass()  { return Base.SEED; }
-                       |  int fieldViaInterface() { return Impl.MAX; }
-                       |  Object jdkViaSubclass() { return java.time.ZoneOffset.systemDefault(); }
-                       |  Object jdkViaOwnClass() { return java.time.ZoneId.systemDefault(); }
-                       |}
-                       |""".stripMargin))
+      "Use.java" -> """package demo;
+                      |public class Use {
+                      |  int viaSubclass()       { return Sub.make(); }
+                      |  int viaOwnClass()       { return Base.make(); }
+                      |  int fieldViaSubclass()  { return Sub.SEED; }
+                      |  int fieldViaOwnClass()  { return Base.SEED; }
+                      |  int fieldViaInterface() { return Impl.MAX; }
+                      |  Object jdkViaSubclass() { return java.time.ZoneOffset.systemDefault(); }
+                      |  Object jdkViaOwnClass() { return java.time.ZoneId.systemDefault(); }
+                      |}
+                      |""".stripMargin
+    )
+  )
 
   /** the type the emitted receiver NAMES, for the one static access in `demo.Use#<name>`. */
   private def staticReceiverIn(name: String): String =
     given Program = staticProgram
-    val id = staticProgram.symbols.all.find(_.fullName == s"demo.Use#$name").map(_.id)
-      .getOrElse(fail(s"no member demo.Use#$name"))
+    val id        = staticProgram.symbols.all.find(_.fullName == s"demo.Use#$name").map(_.id).getOrElse(fail(s"no member demo.Use#$name"))
     staticProgram.definitionOf(id) match
       case Some(d: Tree.DefDef) =>
-        StandardTraversal.scanTerm(d.rhs.getOrElse(fail("no body")), List.empty[String]) {
-          case (acc, Tree.Select(Tree.Ident(q, _, _), _, _, _)) =>
-            staticProgram.symbolOf(q).map(_.fullName).getOrElse("?") :: acc
-          case (acc, _) => acc
-        }.headOption.getOrElse(fail(s"no static access in demo.Use#$name"))
+        StandardTraversal
+          .scanTerm(d.rhs.getOrElse(fail("no body")), List.empty[String]) {
+            case (acc, Tree.Select(Tree.Ident(q, _, _), _, _, _)) =>
+              staticProgram.symbolOf(q).map(_.fullName).getOrElse("?") :: acc
+            case (acc, _) => acc
+          }
+          .headOption
+          .getOrElse(fail(s"no static access in demo.Use#$name"))
       case _ => fail(s"demo.Use#$name is not a method")
 
   test("a static METHOD reached through a SUBCLASS name is emitted at its DECLARING type") {
@@ -408,20 +413,23 @@ class SpoonTirBodySpec extends munit.FunSuite:
 
   // -- …and the vararg PACK is owed at an ANONYMOUS-CLASS construction too ----------------------
 
-  private val anonVarargProgram = SpoonTir.fromSources(List(
-    "P.java"   -> """package demo;
+  private val anonVarargProgram = SpoonTir.fromSources(
+    List(
+      "P.java" -> """package demo;
                     |public class P {
                     |  public P() { }
                     |  public P(String... xs) { }
                     |  public int run() { return 0; }
                     |}
                     |""".stripMargin,
-    "Use.java" -> """package demo;
-                    |public class Use {
-                    |  P plain()  { return new P("a", "b"); }
-                    |  P anon()   { return new P("a", "b") { public int run() { return 1; } }; }
-                    |}
-                    |""".stripMargin))
+      "Use.java" -> """package demo;
+                      |public class Use {
+                      |  P plain()  { return new P("a", "b"); }
+                      |  P anon()   { return new P("a", "b") { public int run() { return 1; } }; }
+                      |}
+                      |""".stripMargin
+    )
+  )
 
   private def anonVarargLastArg(member: String): Option[Tree] =
     callsIn(anonVarargProgram, s"demo.Use#$member").headOption.flatMap(_.args.lastOption)

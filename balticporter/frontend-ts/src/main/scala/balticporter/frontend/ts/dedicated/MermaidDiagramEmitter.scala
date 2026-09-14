@@ -1,8 +1,8 @@
 package balticporter.corpus.mermaid
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
-import balticporter.frontend.ts.{RastFile, RastNode}
+import balticporter.frontend.ts.{ RastFile, RastNode }
 import scala.annotation.nowarn
 
 /** RAST-based emitter for Mermaid diagram registration modules.
@@ -17,23 +17,31 @@ object MermaidDiagramEmitter {
 
   /** Emits a Scala diagram object from a RAST file.
     *
-    * @param rast        the parsed RAST file
-    * @param objectName  e.g. "InfoDiagram"
-    * @param pkg         e.g. "info"
-    * @param dbClass     e.g. "InfoDb"
-    * @param parserClass e.g. "InfoParser" (None if no parser)
-    * @param rendererClass e.g. "InfoRenderer" (None if no renderer)
-    * @param detectorClass e.g. "InfoDetector" (None to skip detect method)
-    * @return the complete Scala source
+    * @param rast
+    *   the parsed RAST file
+    * @param objectName
+    *   e.g. "InfoDiagram"
+    * @param pkg
+    *   e.g. "info"
+    * @param dbClass
+    *   e.g. "InfoDb"
+    * @param parserClass
+    *   e.g. "InfoParser" (None if no parser)
+    * @param rendererClass
+    *   e.g. "InfoRenderer" (None if no renderer)
+    * @param detectorClass
+    *   e.g. "InfoDetector" (None to skip detect method)
+    * @return
+    *   the complete Scala source
     */
   def emitDiagram(
-      rast: RastFile,
-      objectName: String,
-      pkg: String,
-      dbClass: String,
-      parserClass: Option[String] = None,
-      rendererClass: Option[String] = None,
-      detectorClass: Option[String] = None,
+    rast:          RastFile,
+    objectName:    String,
+    pkg:           String,
+    dbClass:       String,
+    parserClass:   Option[String] = None,
+    rendererClass: Option[String] = None,
+    detectorClass: Option[String] = None
   ): String = {
     val sb = new StringBuilder
     sb.append(header(rast.path, s"$objectName.scala"))
@@ -92,46 +100,43 @@ object MermaidDiagramEmitter {
   /** Extracts the component names referenced in the export object. */
   private def findExportedComponents(rast: RastFile): Map[String, String] = {
     val result = scala.collection.mutable.Map.empty[String, String]
-    for (node <- rast.nodes) {
+    for (node <- rast.nodes)
       node.kind match {
         case "VariableStatement" if node.flags.contains("ExportKeyword") =>
           val decls = extractVarDecls(node)
           for (d <- decls) {
             val objLit = findChild(d, "ObjectLiteralExpression")
             objLit.foreach { obj =>
-              for (prop <- obj.children) {
+              for (prop <- obj.children)
                 prop.kind match {
                   case "ShorthandPropertyAssignment" =>
                     val name = nameOf(prop)
                     result(name) = name
                   case "PropertyAssignment" =>
-                    val key = nameOf(prop)
+                    val key   = nameOf(prop)
                     val value = prop.children.lastOption.flatMap(_.text).getOrElse(key)
                     result(key) = value
                   case _ => ()
                 }
-              }
             }
           }
         case "ExportAssignment" =>
           val objLit = findChild(node, "ObjectLiteralExpression")
           objLit.foreach { obj =>
-            for (prop <- obj.children) {
+            for (prop <- obj.children)
               prop.kind match {
                 case "ShorthandPropertyAssignment" =>
                   val name = nameOf(prop)
                   result(name) = name
                 case "PropertyAssignment" =>
-                  val key = nameOf(prop)
+                  val key   = nameOf(prop)
                   val value = prop.children.lastOption.flatMap(_.text).getOrElse(key)
                   result(key) = value
                 case _ => ()
               }
-            }
           }
         case _ => ()
       }
-    }
     result.toMap
   }
 

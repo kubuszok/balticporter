@@ -1,12 +1,13 @@
 package balticporter.core
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import balticporter.tir.Phase
 
-/** A [[balticporter.tir.Phase]] whose output references types from `balticporter.runtime`.
-  * [[RuntimePlan]] derives the build dependency and vendored sources from phases that declare this. */
+/** A [[balticporter.tir.Phase]] whose output references types from `balticporter.runtime`. [[RuntimePlan]] derives the build dependency and vendored sources from phases that declare this.
+  */
 trait RequiresRuntime:
   self: Phase =>
+
   /** fully-qualified names under [[RuntimeArtifact.Package]] this phase's output can reference. */
   def runtimeTypes: Set[String]
 
@@ -14,6 +15,7 @@ trait RequiresRuntime:
 enum RuntimeMode:
   /** Library dependency (default). */
   case Dependency
+
   /** Sources written into `src_managed`. Only correct for single-module ports. */
   case Vendored
 
@@ -23,17 +25,17 @@ object RuntimeMode:
   def fromArgs(args: Seq[String]): RuntimeMode =
     if args.contains(VendoredFlag) then RuntimeMode.Vendored else RuntimeMode.Dependency
 
-/** The published `balticporter-runtime` artifact. Support types are real compiled Scala;
-  * the engine keeps a verbatim copy as resources for [[RuntimeMode.Vendored]].
-  * Version-locked to the engine via `BuildVersion`. */
+/** The published `balticporter-runtime` artifact. Support types are real compiled Scala; the engine keeps a verbatim copy as resources for [[RuntimeMode.Vendored]]. Version-locked to the engine via
+  * `BuildVersion`.
+  */
 object RuntimeArtifact:
 
   /** the single package every support type lives in. */
   val Package = "balticporter.runtime"
 
   val organization: String = BuildVersion.organization
-  val artifact: String     = BuildVersion.runtimeArtifact
-  val version: String      = BuildVersion.version
+  val artifact:     String = BuildVersion.runtimeArtifact
+  val version:      String = BuildVersion.version
 
   /** Maven-ish coordinates, build-tool-agnostic. `crossScala` = `%%`. */
   final case class Coordinates(organization: String, artifact: String, version: String, crossScala: Boolean = true)
@@ -43,8 +45,10 @@ object RuntimeArtifact:
   private val ResourceDir = "balticporter/vendored-runtime"
 
   private def resource(name: String): Option[String] =
-    Option(getClass.getClassLoader.getResourceAsStream(s"$ResourceDir/$name"))
-      .map(is => try new String(is.readAllBytes(), "UTF-8") finally is.close())
+    Option(getClass.getClassLoader.getResourceAsStream(s"$ResourceDir/$name")).map(is =>
+      try new String(is.readAllBytes(), "UTF-8")
+      finally is.close()
+    )
 
   /** FQN -> source text, read from vendored resources. `RuntimeArtifactSpec` asserts agreement. */
   lazy val vendored: Map[String, String] =
@@ -77,9 +81,9 @@ object RuntimeArtifact:
       if next.subsetOf(acc) then acc else step(acc ++ next)
     step(fqns.filter(known.contains)) ++ fqns.filterNot(known.contains)
 
-  /** Concrete instance members each support type brings, as `(name, param counts per list)`.
-    * Used by `TirEmitter.externalConcrete` for diamond detection.
-    * Declared, not derived; `RuntimeMembersDerivationSpec` asserts agreement with the sources. */
+  /** Concrete instance members each support type brings, as `(name, param counts per list)`. Used by `TirEmitter.externalConcrete` for diamond detection. Declared, not derived;
+    * `RuntimeMembersDerivationSpec` asserts agreement with the sources.
+    */
   val concreteMembers: Map[String, Set[(String, List[Int])]] = Map(
     s"$Package.JavaIterator" -> Set(("remove", List(0))),
     // `JavaListIterator` brings nothing concrete; its key is needed for derivation completeness.
@@ -89,21 +93,30 @@ object RuntimeArtifact:
     s"$Package.Wrapping" -> Set.empty,
     // Every concrete member of `JavaCollection` (all of `AbstractCollection` except `iterator()`/`size()`).
     s"$Package.JavaCollection" -> Set(
-      ("isEmpty", Nil), ("contains", List(1)), ("add", List(1)), ("remove", List(1)),
-      ("clear", List(0)), ("containsAll", List(1)), ("addAll", List(1)), ("removeAll", List(1)),
-      ("retainAll", List(1)), ("removeIf", List(1)), ("toArray", List(0)), ("toArray", List(1)),
-    ),
+      ("isEmpty", Nil),
+      ("contains", List(1)),
+      ("add", List(1)),
+      ("remove", List(1)),
+      ("clear", List(0)),
+      ("containsAll", List(1)),
+      ("addAll", List(1)),
+      ("removeAll", List(1)),
+      ("retainAll", List(1)),
+      ("removeIf", List(1)),
+      ("toArray", List(0)),
+      ("toArray", List(1))
+    )
     // NB `JavaCollections` is an object, never a parent -- no entry here.
   )
 
-/** Runtime delivery plan derived from the phases that ran: the build dependency OR vendored sources
-  * (mutually exclusive). */
+/** Runtime delivery plan derived from the phases that ran: the build dependency OR vendored sources (mutually exclusive).
+  */
 final case class RuntimePlan(required: Set[String], mode: RuntimeMode):
 
   def isEmpty: Boolean = required.isEmpty
 
-  /** the library dependency the generated build must declare, or `None` when nothing needs it or
-    * the sources are being vendored instead. */
+  /** the library dependency the generated build must declare, or `None` when nothing needs it or the sources are being vendored instead.
+    */
   def dependency: Option[RuntimeArtifact.Coordinates] =
     if isEmpty || mode == RuntimeMode.Vendored then None else Some(RuntimeArtifact.coordinates)
 

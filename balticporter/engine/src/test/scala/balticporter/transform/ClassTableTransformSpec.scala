@@ -1,13 +1,13 @@
 package balticporter.transform
 
-import balticporter.core.{MergeablePolicy, PortManifest, SurfaceFold}
+import balticporter.core.{ MergeablePolicy, PortManifest, SurfaceFold }
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Phase, Pipeline, Program, RuleScope}
+import balticporter.tir.{ Phase, Pipeline, Program, RuleScope }
 
-/** `ClassTableTransform` — the §1(b) REDIRECT of a name lookup at a port's own table. Its scope is
-  * an opt-OUT (`Everywhere(Set.empty)` is the pre-scope path) and two instances compose only over
-  * DISJOINT scopes (`ENGINE-LIMITS.md` P10). */
+/** `ClassTableTransform` — the §1(b) REDIRECT of a name lookup at a port's own table. Its scope is an opt-OUT (`Everywhere(Set.empty)` is the pre-scope path) and two instances compose only over
+  * DISJOINT scopes (`ENGINE-LIMITS.md` P10).
+  */
 class ClassTableTransformSpec extends munit.FunSuite:
 
   private val java =
@@ -41,8 +41,7 @@ class ClassTableTransformSpec extends munit.FunSuite:
 
   test("the DEFAULT scope adds no fingerprint segment, so the parameter's arrival is flat") {
     assertEquals(table().surfaceFingerprint, s"$Key->$ToOne")
-    assertEquals(table(scope = RuleScope.Only(Set("com.demo.Alpha"))).surfaceFingerprint,
-      s"$Key->$ToOne[only:com.demo.Alpha]")
+    assertEquals(table(scope = RuleScope.Only(Set("com.demo.Alpha"))).surfaceFingerprint, s"$Key->$ToOne[only:com.demo.Alpha]")
   }
 
   test("the unrestricted default redirects EVERY call, as it did before it had a scope") {
@@ -80,26 +79,26 @@ class ClassTableTransformSpec extends munit.FunSuite:
     assert(clue(absent.policyReport.findings.map(_.key)).contains("com.demo.NoSuch#gone"))
     val malformed = new ClassTableTransform(Map(Key -> "com.demo.TableOne"))
     Pipeline.runTraced(parse(), List(malformed))
-    assert(clue(malformed.policyReport.findings.map(_.detail).mkString)
-      .contains("is not `owner#member`"))
+    assert(clue(malformed.policyReport.findings.map(_.detail).mkString).contains("is not `owner#member`"))
   }
 
   // ---- merge ------------------------------------------------------------------------------------
 
   private def merged(a: ClassTableTransform, b: ClassTableTransform) =
     a.mergedWith(b).map { case MergeablePolicy.Merged(p, added) =>
-      (p.asInstanceOf[ClassTableTransform], added) }
+      (p.asInstanceOf[ClassTableTransform], added)
+    }
 
   test("independent keys UNION, and the later instance's subjects are what it ADDS") {
-    val other = new ClassTableTransform(Map("com.demo.Alpha#go" -> ToTwo))
+    val other             = new ClassTableTransform(Map("com.demo.Alpha#go" -> ToTwo))
     val Right((p, added)) = merged(table(), other): @unchecked
     assertEquals(p.entries.map(_.from).sorted, List("com.demo.Alpha#go", Key))
     assert(clue(added).contains("com.demo.Alpha"))
   }
 
   test("the SAME key at a DIFFERENT table composes over DISJOINT scopes, per SITE") {
-    val base = table(ToOne, RuleScope.Only(Set("com.demo.Alpha")))
-    val dep  = table(ToTwo, RuleScope.Only(Set("com.demo.Beta")))
+    val base          = table(ToOne, RuleScope.Only(Set("com.demo.Alpha")))
+    val dep           = table(ToTwo, RuleScope.Only(Set("com.demo.Beta")))
     val Right((p, _)) = merged(base, dep): @unchecked
     assertEquals(p.entries.size, 2)
     val out = emit(p)
@@ -111,11 +110,11 @@ class ClassTableTransformSpec extends munit.FunSuite:
   test("the SAME key at a DIFFERENT table REFUSES where the scopes OVERLAP") {
     // the unrestricted base covers the dependent's package, so a site would be claimed twice.
     assert(clue(merged(table(ToOne), table(ToTwo, RuleScope.Only(Set("com.demo.Beta"))))).isLeft)
-    assert(merged(table(ToOne, RuleScope.Only(Set("com.demo"))),
-                  table(ToTwo, RuleScope.Only(Set("com.demo.Beta")))).isLeft)
+    assert(merged(table(ToOne, RuleScope.Only(Set("com.demo"))), table(ToTwo, RuleScope.Only(Set("com.demo.Beta")))).isLeft)
     // …and an `except` that CARVES OUT the dependent's declaration is disjoint, so it composes.
-    assert(merged(table(ToOne, RuleScope.Everywhere(Set("com.demo.Beta"))),
-                  table(ToTwo, RuleScope.Only(Set("com.demo.Beta")))).isRight)
+    assert(
+      merged(table(ToOne, RuleScope.Everywhere(Set("com.demo.Beta"))), table(ToTwo, RuleScope.Only(Set("com.demo.Beta")))).isRight
+    )
   }
 
   test("the same key at the SAME table is idempotent, whatever the scopes") {
@@ -124,14 +123,10 @@ class ClassTableTransformSpec extends munit.FunSuite:
   }
 
   test("a manifest chain folds the pair into ONE instance, and a conflict is a fatal refusal") {
-    val base = PortManifest("base", governs = Set("com.demo"),
-      surface = List(table(ToOne, RuleScope.Only(Set("com.demo.Alpha")))))
-    val ok   = base.extendedBy(PortManifest("dep",
-      surface = List(table(ToTwo, RuleScope.Only(Set("com.demo.Beta"))))))
+    val base = PortManifest("base", governs = Set("com.demo"), surface = List(table(ToOne, RuleScope.Only(Set("com.demo.Alpha")))))
+    val ok   = base.extendedBy(PortManifest("dep", surface = List(table(ToTwo, RuleScope.Only(Set("com.demo.Beta"))))))
     assertEquals(ok.surfaceFold.refusals, Nil)
     assertEquals(ok.effectiveSurface.collect { case c: ClassTableTransform => c }.size, 1)
-    val bad = PortManifest("base", governs = Set("com.demo"), surface = List(table(ToOne)))
-      .extendedBy(PortManifest("dep",
-        surface = List(table(ToTwo, RuleScope.Only(Set("com.demo.Beta"))))))
+    val bad = PortManifest("base", governs = Set("com.demo"), surface = List(table(ToOne))).extendedBy(PortManifest("dep", surface = List(table(ToTwo, RuleScope.Only(Set("com.demo.Beta"))))))
     assertEquals(clue(bad.surfaceFold.refusals).map(_.cause), List(SurfaceFold.Cause.Conflict))
   }

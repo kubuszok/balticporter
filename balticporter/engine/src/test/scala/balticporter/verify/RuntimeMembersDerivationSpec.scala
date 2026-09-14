@@ -3,10 +3,9 @@ package balticporter.verify
 import scala.meta.*
 import balticporter.core.RuntimeArtifact
 
-/** `TirEmitter`'s `externalConcrete` exists ONLY because the injected supertypes used to be
-  * unparseable text. They are a real, published module now, so the data CAN be derived — and this
-  * suite is the derivation, run against `RuntimeArtifact.concreteMembers` to prove the declared
-  * table is not merely plausible. */
+/** `TirEmitter`'s `externalConcrete` exists ONLY because the injected supertypes used to be unparseable text. They are a real, published module now, so the data CAN be derived — and this suite is the
+  * derivation, run against `RuntimeArtifact.concreteMembers` to prove the declared table is not merely plausible.
+  */
 class RuntimeMembersDerivationSpec extends munit.FunSuite:
 
   /** the CONCRETE instance members a support type brings, as `(name, params per clause)`. */
@@ -20,15 +19,18 @@ class RuntimeMembersDerivationSpec extends munit.FunSuite:
       case other                                                                                     => owner(other)
     }
 
-    tree.collect { case t: Defn.Trait => t }.map { t =>
-      val fqn = s"${RuntimeArtifact.Package}.${t.name.value}"
-      val concrete = t.collect {
-        // Defn.Def has a body; Decl.Def is abstract. That is the whole distinction.
-        case d: Defn.Def if owner(d).contains(t) && !d.mods.exists(_.is[Mod.Private]) =>
-          (d.name.value, d.paramClauses.map(_.values.size).toList)
-      }.toSet
-      fqn -> concrete
-    }.toMap
+    tree
+      .collect { case t: Defn.Trait => t }
+      .map { t =>
+        val fqn      = s"${RuntimeArtifact.Package}.${t.name.value}"
+        val concrete = t.collect {
+          // Defn.Def has a body; Decl.Def is abstract. That is the whole distinction.
+          case d: Defn.Def if owner(d).contains(t) && !d.mods.exists(_.is[Mod.Private]) =>
+            (d.name.value, d.paramClauses.map(_.values.size).toList)
+        }.toSet
+        fqn -> concrete
+      }
+      .toMap
 
   private def sources = RuntimeArtifact.vendored
 
@@ -45,13 +47,15 @@ class RuntimeMembersDerivationSpec extends munit.FunSuite:
   }
 
   test("a nilary def and a parameterless def are distinguished — the thing reflection cannot do") {
-    val d = derive("""package balticporter.runtime
-                     |trait T:
-                     |  def nilary(): Unit = ()
-                     |  def parameterless: Unit = ()
-                     |""".stripMargin)
+    val d = derive(
+      """package balticporter.runtime
+        |trait T:
+        |  def nilary(): Unit = ()
+        |  def parameterless: Unit = ()
+        |""".stripMargin
+    )
     assertEquals(
       d(s"${RuntimeArtifact.Package}.T"),
-      Set(("nilary", List(0)), ("parameterless", List.empty[Int])),
+      Set(("nilary", List(0)), ("parameterless", List.empty[Int]))
     )
   }

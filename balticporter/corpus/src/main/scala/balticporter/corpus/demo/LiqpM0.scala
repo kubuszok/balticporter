@@ -5,13 +5,12 @@ import balticporter.core.*
 import balticporter.frontend.spoon.SpoonFrontend
 import balticporter.runner.M0Pipeline
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** M0 gate: 20 hand-picked Liqp files → compiling Scala 3, comments preserved, byte-identical
-  * across runs (DESIGN.md §3.11). The set is the smallest one exercising every M0 translation
-  * path while resolving with only two shims. Out-of-set externals follow the Shim disposition
-  * (DESIGN.md §3.7): handwritten minimal implementations under `corpus/shims`. */
+/** M0 gate: 20 hand-picked Liqp files → compiling Scala 3, comments preserved, byte-identical across runs (DESIGN.md §3.11). The set is the smallest one exercising every M0 translation path while
+  * resolving with only two shims. Out-of-set externals follow the Shim disposition (DESIGN.md §3.7): handwritten minimal implementations under `corpus/shims`.
+  */
 object LiqpM0:
 
   val files: List[String] = List(
@@ -34,14 +33,14 @@ object LiqpM0:
     "liqp/filters/Replace_First.java",
     "liqp/filters/Rstrip.java",
     "liqp/filters/Strip.java",
-    "liqp/filters/Upcase.java",
+    "liqp/filters/Upcase.java"
   )
 
   def main(args: Array[String]): Unit =
-    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+    val repoRoot   = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
     val sourceRoot = repoRoot.resolve("../ssg/original-src/liqp/src/main/java").normalize
-    val outDir = repoRoot.resolve("out/liqp-m0/src")
-    val shims = repoRoot.resolve("balticporter/corpus/shims")
+    val outDir     = repoRoot.resolve("out/liqp-m0/src")
+    val shims      = repoRoot.resolve("balticporter/corpus/shims")
 
     val plan = UnitPlan(
       sourceRoot = sourceRoot,
@@ -53,8 +52,8 @@ object LiqpM0:
         upstreamName = "Liqp",
         upstreamCommit = LiqpClasspath.upstreamCommit(repoRoot),
         originalLicense = "MIT",
-        sourcePathPrefix = "liqp/src/main/java",
-      ),
+        sourcePathPrefix = "liqp/src/main/java"
+      )
     )
 
     println(s"[m0] translating ${plan.files.length} files from $sourceRoot")
@@ -74,14 +73,14 @@ object LiqpM0:
         System.err.println("[m0] GATE RED")
         sys.exit(1)
 
-/** The M0 SCOUT's classpath — the published liqp jar + transitives, so `LValue`/`TemplateContext`
-  * resolve as Spoon shadow classes. Not to be confused with `balticporter.corpus.liqp.LiqpClasspath`,
-  * which is the real port's and resolves liqp from SOURCE. */
+/** The M0 SCOUT's classpath — the published liqp jar + transitives, so `LValue`/`TemplateContext` resolve as Spoon shadow classes. Not to be confused with `balticporter.corpus.liqp.LiqpClasspath`,
+  * which is the real port's and resolves liqp from SOURCE.
+  */
 object LiqpClasspath:
 
-  /** 0.9.2.3 is the closest published release to the vendored 0.9.2 commit; the jar is only used
-    * for shadow-class resolution of out-of-set types (LValue, TemplateContext). antlr4-runtime
-    * comes explicitly (upstream pom pins 4.13.0) because the published liqp jar shades it away. */
+  /** 0.9.2.3 is the closest published release to the vendored 0.9.2 commit; the jar is only used for shadow-class resolution of out-of-set types (LValue, TemplateContext). antlr4-runtime comes
+    * explicitly (upstream pom pins 4.13.0) because the published liqp jar shades it away.
+    */
   val Coordinates: List[String] = List("nl.big-o:liqp:0.9.2.3", "org.antlr:antlr4-runtime:4.13.0")
 
   def resolve(repoRoot: Path): List[Path] =
@@ -99,21 +98,31 @@ object LiqpClasspath:
     ensureParserClasses(repoRoot, fetched) :: externals
 
   private def ensureParserClasses(repoRoot: Path, cp: List[Path]): Path =
-    val genSrc = repoRoot.resolve("out/antlr-gen/src")
+    val genSrc     = repoRoot.resolve("out/antlr-gen/src")
     val genClasses = repoRoot.resolve("out/antlr-gen/classes")
     if !Files.isDirectory(genClasses.resolve("liquid/parser/v4")) then
       val grammarDir = repoRoot.resolve("../ssg/original-src/liqp/src/main/antlr4/liquid/parser/v4").normalize
       Files.createDirectories(genSrc)
       Files.createDirectories(genClasses)
       def run(cmd: List[String]): Unit =
-        val pb = new ProcessBuilder(cmd*).redirectErrorStream(true)
+        val pb   = new ProcessBuilder(cmd*).redirectErrorStream(true)
         val proc = pb.start()
-        val out = new String(proc.getInputStream.readAllBytes())
+        val out  = new String(proc.getInputStream.readAllBytes())
         if proc.waitFor() != 0 then throw new RuntimeException(s"${cmd.head} failed:\n$out")
       run(
-        List("cs", "launch", "org.antlr:antlr4:4.13.0", "--", "-o", genSrc.toString,
-          "-visitor", "-package", "liquid.parser.v4",
-          grammarDir.resolve("LiquidLexer.g4").toString, grammarDir.resolve("LiquidParser.g4").toString)
+        List(
+          "cs",
+          "launch",
+          "org.antlr:antlr4:4.13.0",
+          "--",
+          "-o",
+          genSrc.toString,
+          "-visitor",
+          "-package",
+          "liquid.parser.v4",
+          grammarDir.resolve("LiquidLexer.g4").toString,
+          grammarDir.resolve("LiquidParser.g4").toString
+        )
       )
       val javaFiles = Files.list(genSrc).iterator().asScala.map(_.toString).filter(_.endsWith(".java")).toList.sorted
       // the generated parser's @header imports liqp.TemplateParser — the published jar
@@ -128,8 +137,7 @@ object LiqpClasspath:
       // them, and a class-file version newer than the reading JVM's is an UnsupportedClassVersionError
       // on a cache nothing invalidates.
       run(
-        List("javac", "--release", "17",
-          "-cp", depCp.map(_.toString).mkString(java.io.File.pathSeparator), "-d", genClasses.toString)
+        List("javac", "--release", "17", "-cp", depCp.map(_.toString).mkString(java.io.File.pathSeparator), "-d", genClasses.toString)
           ++ javaFiles
       )
     genClasses
@@ -142,8 +150,7 @@ object LiqpClasspath:
 
   /** Pin of the vendored upstream: the submodule HEAD recorded by ../ssg. */
   def upstreamCommit(repoRoot: Path): String =
-    val pb = new ProcessBuilder("git", "-C", repoRoot.resolve("../ssg/original-src/liqp").toString, "rev-parse", "HEAD")
-      .redirectErrorStream(true)
+    val pb   = new ProcessBuilder("git", "-C", repoRoot.resolve("../ssg/original-src/liqp").toString, "rev-parse", "HEAD").redirectErrorStream(true)
     val proc = pb.start()
-    val out = new String(proc.getInputStream.readAllBytes()).trim
+    val out  = new String(proc.getInputStream.readAllBytes()).trim
     if proc.waitFor() != 0 then "unknown" else out

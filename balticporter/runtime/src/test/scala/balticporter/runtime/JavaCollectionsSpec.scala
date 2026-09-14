@@ -1,11 +1,10 @@
 package balticporter.runtime
 
-import scala.collection.mutable.{ArrayBuffer, Buffer, ListBuffer}
+import scala.collection.mutable.{ ArrayBuffer, Buffer, ListBuffer }
 
-/** `JavaCollections`' BEHAVIOUR. Every member here exists because a java call has no scala
-  * counterpart with the same MEANING, and every one of those differences is invisible to a compile
-  * — which is why an emission spec (`CollectionsStaticsSpec`) is only half the gate. The other half
-  * is here, and it was entirely missing: nothing called any of these methods. */
+/** `JavaCollections`' BEHAVIOUR. Every member here exists because a java call has no scala counterpart with the same MEANING, and every one of those differences is invisible to a compile — which is
+  * why an emission spec (`CollectionsStaticsSpec`) is only half the gate. The other half is here, and it was entirely missing: nothing called any of these methods.
+  */
 class JavaCollectionsSpec extends munit.FunSuite:
 
   private val byNatural: java.util.Comparator[Int] = (a: Int, b: Int) => a - b
@@ -115,22 +114,22 @@ class JavaCollectionsSpec extends munit.FunSuite:
   // removeValue — the RESULT and the DIRECTION of the equality
   // -------------------------------------------------------------------------------------------
 
-  /** An asymmetric pair, in eight lines: `Accepting.equals(x)` is true for a `Rejecting` and
-    * `Rejecting.equals(x)` is never true. Exactly the shape `java.sql.Timestamp` has against
-    * `java.util.Date`, and the only shape that can tell the two directions apart. */
-  private final class Accepting:
+  /** An asymmetric pair, in eight lines: `Accepting.equals(x)` is true for a `Rejecting` and `Rejecting.equals(x)` is never true. Exactly the shape `java.sql.Timestamp` has against `java.util.Date`,
+    * and the only shape that can tell the two directions apart.
+    */
+  final private class Accepting:
     override def equals(o: Any): Boolean = o.isInstanceOf[Rejecting]
-    override def hashCode: Int           = 1
-  private final class Rejecting:
+    override def hashCode:       Int     = 1
+  final private class Rejecting:
     override def equals(o: Any): Boolean = false
-    override def hashCode: Int           = 1
+    override def hashCode:       Int     = 1
 
   test("removeValue asks the PROBE, as java's Collection.remove(Object) does — in BOTH directions") {
     // Java's `ArrayList.remove(Object o)` tests `o.equals(element)`. Only an asymmetric pair can
     // show which side is asked, and it has to be tested in both roles: an implementation that asked
     // the ELEMENT would get the opposite answer to each of these.
     val elementAccepts: Buffer[Any] = ArrayBuffer(new Accepting)
-    val probeAccepts: Buffer[Any]   = ArrayBuffer(new Rejecting)
+    val probeAccepts:   Buffer[Any] = ArrayBuffer(new Rejecting)
 
     // probe.equals(element) = true  -> java removes; asking the element would answer false.
     assert(JavaCollections.removeValue(probeAccepts, new Accepting))
@@ -148,7 +147,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // OTHER two reasons — the boolean RESULT and the explicit null arm — the real ones, and because
     // a future `indexWhere(_ == o)` written by hand WOULD diverge.
     val xs: Buffer[Any] = ArrayBuffer(new Rejecting)
-    assertEquals(xs.indexOf(new Accepting), 0)          // the probe is asked
+    assertEquals(xs.indexOf(new Accepting), 0) // the probe is asked
     assertEquals(xs.indexWhere(e => e == new Accepting), -1) // the element is asked — the other answer
   }
 
@@ -199,7 +198,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // java's bound and not the narrower one, and read `Found: Buffer[Comparable[Object]]`.
     val xs = scala.collection.mutable.ArrayBuffer[Comparable[Object]](
       new Comparable[Object] { def compareTo(o: Object): Int = 1 },
-      new Comparable[Object] { def compareTo(o: Object): Int = -1 },
+      new Comparable[Object] { def compareTo(o: Object): Int = -1 }
     )
     JavaCollections.sortNatural(xs)
     assertEquals(xs.size, 2)
@@ -258,17 +257,17 @@ class JavaCollectionsSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
   // `java.util.Collection`'s BULK DEFAULTS at the SECOND target — the K29 receiver contract
 
-  /** the emitted shape itself: a class that DEFINES a set, re-parented onto `mutable.Set`, whose
-    * `super.<default>` the phase rewrites to a helper standing on `this`. */
+  /** the emitted shape itself: a class that DEFINES a set, re-parented onto `mutable.Set`, whose `super.<default>` the phase rewrites to a helper standing on `this`.
+    */
   private class Definer[E] extends scala.collection.mutable.Set[E]:
-    private val items                            = ArrayBuffer.empty[E]
-    def iterator: Iterator[E]                    = items.iterator
-    def contains(e: E): Boolean                  = items.contains(e)
-    def addOne(e: E): this.type                  = { if !items.contains(e) then items += e; this }
-    def subtractOne(e: E): this.type             = { items -= e; this }
-    override def clear(): Unit                   = items.clear()
+    private val items = ArrayBuffer.empty[E]
+    def iterator:          Iterator[E] = items.iterator
+    def contains(e:    E): Boolean     = items.contains(e)
+    def addOne(e:      E): this.type   = { if !items.contains(e) then items += e; this }
+    def subtractOne(e: E): this.type   = { items -= e; this }
+    override def clear():  Unit        = items.clear()
     // …and these are what the phase emits in place of `super.<name>(c)`.
-    def addAllJ(c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean    = JavaCollections.addAll(this, c)
+    def addAllJ(c:    scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = JavaCollections.addAll(this, c)
     def removeAllJ(c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = JavaCollections.removeAll(this, c)
     def retainAllJ(c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = JavaCollections.retainAll(this, c)
 
@@ -301,15 +300,18 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // ARGUMENT's element. These two ask `c.contains(e)` for each `e` of the receiver, so the probe
     // is the RECEIVER's. The two directions differ for any asymmetric `equals`, and a helper that
     // picked the wrong one compiles and moves no count.
-    class Elem  extends AnyRef { override def equals(o: Any): Boolean = true  }
+    class Elem extends AnyRef { override def equals(o: Any): Boolean = true }
     class Probe extends AnyRef { override def equals(o: Any): Boolean = false }
     val xs: Buffer[AnyRef] = ArrayBuffer(new Elem)
     assert(JavaCollections.removeAll(xs, List(new Probe)), "elem.equals(probe) is what java asks here")
     assertEquals(xs.size, 0)
     // …and the other member really does read it the other way round, at the same pair.
     val ys: Buffer[AnyRef] = ArrayBuffer(new Elem)
-    assertEquals(JavaCollections.containsAll(ys, List(new Probe)), false,
-                 "containsAll asks the ARGUMENT's equals — the opposite direction, same pair")
+    assertEquals(
+      JavaCollections.containsAll(ys, List(new Probe)),
+      false,
+      "containsAll asks the ARGUMENT's equals — the opposite direction, same pair"
+    )
   }
 
   test("…and java's null arm on both: a null element is matched by a null probe") {
@@ -363,7 +365,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // the declaration's own parameter is emitted `JavaCollection[?]` while the receiver is the class
     // this phase re-parented. A one-sided formal would reject exactly the site the helper is for.
     val shim: JavaIterable[String] = JavaCollection.from(ArrayBuffer("b", "z"))
-    val xs: Buffer[String]         = ArrayBuffer("a", "b", "c")
+    val xs:   Buffer[String]       = ArrayBuffer("a", "b", "c")
     assert(JavaCollections.removeAll(xs, shim))
     assertEquals(xs.toList, List("a", "c"))
     val d = new Definer[String]
@@ -489,8 +491,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val out = JavaCollections.toArray(ArrayBuffer("x", "y"), a)
     assert(!(out eq a))
     assertEquals(out.length, 2)
-    if PlatformArrays.reifiesComponentType then
-      assertEquals(out.getClass.getComponentType, classOf[String])
+    if PlatformArrays.reifiesComponentType then assertEquals(out.getClass.getComponentType, classOf[String])
     assertEquals(out.toList, List[Object]("x", "y"))
   }
 
@@ -504,9 +505,9 @@ class JavaCollectionsSpec extends munit.FunSuite:
   // ---- …and java's FOURTH part: `size()` is a HINT, and both directions are its own code path --
 
   /** a collection whose `size` disagrees with its iterator, as a fixed-universe bit set's does. */
-  private final class Lying(elems: List[String], claimed: Int) extends Iterable[String]:
-    def iterator: Iterator[String] = elems.iterator
-    override def size: Int         = claimed
+  final private class Lying(elems: List[String], claimed: Int) extends Iterable[String]:
+    def iterator:      Iterator[String] = elems.iterator
+    override def size: Int              = claimed
 
   test("toArray() TRIMS when the iterator yields FEWER than `size` claimed") {
     val out = JavaCollections.toArray(new Lying(List("a", "b", "c", "d"), 32))
@@ -533,8 +534,8 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val a = new Array[String](8)
     java.util.Arrays.fill(a.asInstanceOf[Array[Object]], "old")
     val out = JavaCollections.toArray(new Lying(List("a", "b"), 6), a)
-    assert(out eq a)            // it fits, so the caller's own array comes back
-    assertEquals(out(2), null)  // …terminated at 2, which is the COUNT
+    assert(out eq a) // it fits, so the caller's own array comes back
+    assertEquals(out(2), null) // …terminated at 2, which is the COUNT
     assertEquals(out(3), "old") // …and java leaves the rest of the tail alone
   }
 
@@ -543,8 +544,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val out = JavaCollections.toArray(new Lying(List("a", "b"), 32), a)
     assert(!(out eq a))
     assertEquals(out.length, 2)
-    if PlatformArrays.reifiesComponentType then
-      assertEquals(out.getClass.getComponentType, classOf[String])
+    if PlatformArrays.reifiesComponentType then assertEquals(out.getClass.getComponentType, classOf[String])
     assertEquals(out.toList, List("a", "b"))
   }
 
@@ -562,8 +562,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val out = JavaCollections.toArray(new Lying(List("a", "b", "c", "d"), 2), a)
     assert(!(out eq a))
     assertEquals(out.length, 4)
-    if PlatformArrays.reifiesComponentType then
-      assertEquals(out.getClass.getComponentType, classOf[String])
+    if PlatformArrays.reifiesComponentType then assertEquals(out.getClass.getComponentType, classOf[String])
     assertEquals(out.toList, List("a", "b", "c", "d"))
   }
 
@@ -621,11 +620,11 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val ro = JavaCollections.unmodifiableList(xs)
     xs += "b"
     assertEquals(ro.toList, List("a", "b"))
-    val s = scala.collection.mutable.Set("a")
+    val s   = scala.collection.mutable.Set("a")
     val ros = JavaCollections.unmodifiableSet(s)
     s += "b"
     assert(ros.contains("b"))
-    val m = scala.collection.mutable.Map("k" -> 1)
+    val m   = scala.collection.mutable.Map("k" -> 1)
     val rom = JavaCollections.unmodifiableMap(m)
     m("j") = 2
     assertEquals(rom.get("j"), Some(2))
@@ -703,11 +702,9 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("comparingByKey / comparingByValue compare the right half of the pair") {
     val byLen: java.util.Comparator[String] = (a: String, b: String) => a.length - b.length
     val pairs = List(("bbb", 1), ("a", 3), ("bb", 2))
-    assertEquals(pairs.sortWith(JavaCollections.comparingByKey[String, Int](byLen).compare(_, _) < 0).map(_._1),
-                 List("a", "bb", "bbb"))
+    assertEquals(pairs.sortWith(JavaCollections.comparingByKey[String, Int](byLen).compare(_, _) < 0).map(_._1), List("a", "bb", "bbb"))
     val byInt: java.util.Comparator[Int] = (a: Int, b: Int) => a - b
-    assertEquals(pairs.sortWith(JavaCollections.comparingByValue[String, Int](byInt).compare(_, _) < 0).map(_._2),
-                 List(1, 2, 3))
+    assertEquals(pairs.sortWith(JavaCollections.comparingByValue[String, Int](byInt).compare(_, _) < 0).map(_._2), List(1, 2, 3))
   }
 
   // -------------------------------------------------------------------------------------------
@@ -728,9 +725,9 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // ulps, which passes a tolerance assertion until the collection is large enough and then does
     // not. Declaring `A => Double` makes scala insert the widening java's `ToDoubleFunction` does,
     // at the same place.
-    val fs: Buffer[Float]  = ArrayBuffer.fill(1000)(0.1f)
-    val widened            = JavaCollections.mapToDouble(fs, f => f).sum
-    val inFloat: Float     = fs.sum
+    val fs: Buffer[Float] = ArrayBuffer.fill(1000)(0.1f)
+    val widened = JavaCollections.mapToDouble(fs, f => f).sum
+    val inFloat: Float = fs.sum
     assertEquals(widened, fs.foldLeft(0.0)((a, f) => a + f.toDouble))
     assert(widened != inFloat.toDouble, s"float and double accumulation must differ: $widened vs ${inFloat.toDouble}")
   }
@@ -750,7 +747,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // Java's two-argument collector merges with a remapping function that throws
     // `IllegalStateException`. A stream whose keys collide is a bug java reports loudly and the
     // naive `.map(x => k(x) -> v(x)).toMap` hides — no compile error, no count moved.
-    val id: java.util.function.Function[String, String]  = (s: String) => s
+    val id:  java.util.function.Function[String, String] = (s: String) => s
     val len: java.util.function.Function[String, Int]    = (s: String) => s.length
     assertEquals(JavaCollections.toMap(ArrayBuffer("a", "bb"), id, len).toMap, Map("a" -> 1, "bb" -> 2))
     val head: java.util.function.Function[String, Char] = (s: String) => s.charAt(0)
@@ -760,18 +757,18 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("toMap(k, v, merge) runs merge(EXISTING, INCOMING) — the order inverts every resolver") {
     // `(a, b) -> b` is last-wins and `(a, b) -> a` is first-wins; swapping the two arguments turns
     // each into the other with nothing in the compile to show for it.
-    val head: java.util.function.Function[String, Char] = (s: String) => s.charAt(0)
-    val id: java.util.function.Function[String, String] = (s: String) => s
-    val last: java.util.function.BinaryOperator[String] = (_: String, b: String) => b
-    val first: java.util.function.BinaryOperator[String] = (a: String, _: String) => a
+    val head:  java.util.function.Function[String, Char]   = (s: String) => s.charAt(0)
+    val id:    java.util.function.Function[String, String] = (s: String) => s
+    val last:  java.util.function.BinaryOperator[String]   = (_: String, b: String) => b
+    val first: java.util.function.BinaryOperator[String]   = (a: String, _: String) => a
     assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, last).toMap, Map('a' -> "ay"))
     assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, first).toMap, Map('a' -> "ax"))
   }
 
   test("…and a merge returning NULL REMOVES the mapping, which is Map.merge's documented behaviour") {
-    val head: java.util.function.Function[String, Char] = (s: String) => s.charAt(0)
-    val id: java.util.function.Function[String, String] = (s: String) => s
-    val drop: java.util.function.BinaryOperator[String] = (_: String, _: String) => null
+    val head: java.util.function.Function[String, Char]   = (s: String) => s.charAt(0)
+    val id:   java.util.function.Function[String, String] = (s: String) => s
+    val drop: java.util.function.BinaryOperator[String]   = (_: String, _: String) => null
     assertEquals(JavaCollections.toMap(ArrayBuffer("ax", "ay"), head, id, drop).toMap, Map.empty[Char, String])
   }
 
@@ -924,7 +921,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val c = JavaCollections.Reified.asCollection(jl).asInstanceOf[JavaCollection[Int]]
     assertEquals(c.size(), 1)
     c.add(2)
-    assertEquals(jl.size(), 2)          // live, not a copy
+    assertEquals(jl.size(), 2) // live, not a copy
     jl.add(3)
     assertEquals(c.size(), 3)
     // …and from the port's own buffer, through the factory that already existed.
@@ -1001,7 +998,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   private def jv(x: Any) = JavaCollections.Reified.toJavaValue(x)
 
   test("a retyped MAP leaves as java's own — which is what a reflective consumer reads") {
-    val m = scala.collection.mutable.HashMap[String, Any]("key" -> "value")
+    val m   = scala.collection.mutable.HashMap[String, Any]("key" -> "value")
     val out = jv(m).asInstanceOf[java.util.Map[Any, Any]]
     assertEquals(out.get("key"), "value": Any)
     assertEquals(out.size(), 1)
@@ -1009,20 +1006,21 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   test("…DEEP: `toJava` converts one level and a serialiser walks the whole tree") {
-    val m = scala.collection.mutable.HashMap[String, Any](
-      "in" -> scala.collection.mutable.HashMap[String, Any]("k" -> 1))
+    val m   = scala.collection.mutable.HashMap[String, Any]("in" -> scala.collection.mutable.HashMap[String, Any]("k" -> 1))
     val out = jv(m).asInstanceOf[java.util.Map[Any, Any]]
-    assert(out.get("in").isInstanceOf[java.util.Map[?, ?]],
-           "one level is exactly the refusal `coerce` records for a nested element type")
+    assert(
+      out.get("in").isInstanceOf[java.util.Map[?, ?]],
+      "one level is exactly the refusal `coerce` records for a nested element type"
+    )
     assertEquals(out.get("in").asInstanceOf[java.util.Map[Any, Any]].get("k"), 1: Any)
   }
 
   test("a BUFFER and a SET leave as java's, elements converted on read") {
-    val b = scala.collection.mutable.Buffer[Any](scala.collection.mutable.HashMap("k" -> 1))
+    val b  = scala.collection.mutable.Buffer[Any](scala.collection.mutable.HashMap("k" -> 1))
     val jl = jv(b).asInstanceOf[java.util.List[Any]]
     assertEquals(jl.size(), 1)
     assert(jl.get(0).isInstanceOf[java.util.Map[?, ?]])
-    val s = scala.collection.mutable.Set[Any](scala.collection.mutable.Buffer[Any](1))
+    val s  = scala.collection.mutable.Set[Any](scala.collection.mutable.Buffer[Any](1))
     val js = jv(s).asInstanceOf[java.util.Set[Any]]
     assertEquals(js.size(), 1)
     assert(js.iterator().next().isInstanceOf[java.util.List[?]])
@@ -1031,8 +1029,10 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("a MAP is not converted as an ITERABLE of pairs — the order `isCollection` is exact about") {
     val out = jv(scala.collection.mutable.HashMap("k" -> 1))
     assert(out.isInstanceOf[java.util.Map[?, ?]], clue(out.getClass.getName))
-    assert(!out.isInstanceOf[java.util.Collection[?]],
-           "a scala Map IS a scala Iterable, and java's Map is not a Collection at all")
+    assert(
+      !out.isInstanceOf[java.util.Collection[?]],
+      "a scala Map IS a scala Iterable, and java's Map is not a Collection at all"
+    )
   }
 
   test("IDENTITY for everything this engine did not put there") {
@@ -1047,8 +1047,11 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   test("an ARRAY keeps its identity when nothing inside it moved") {
     val untouched: Array[AnyRef] = Array("a", "b")
-    assert(jv(untouched) eq untouched, "the spine has to be copied to convert it, so it is copied " +
-      "only when an element actually moves")
+    assert(
+      jv(untouched) eq untouched,
+      "the spine has to be copied to convert it, so it is copied " +
+        "only when an element actually moves"
+    )
     val moved: Array[AnyRef] = Array(scala.collection.mutable.HashMap("k" -> 1))
     val out = jv(moved).asInstanceOf[Array[AnyRef]]
     assert(out ne moved)
@@ -1064,8 +1067,10 @@ class JavaCollectionsSpec extends munit.FunSuite:
     val moved: Array[AnyRef] = Array(scala.collection.mutable.HashMap("k" -> 1))
     val out = jv(moved).asInstanceOf[Array[AnyRef]]
     out(0) = "written"
-    assert(moved(0).isInstanceOf[scala.collection.mutable.Map[?, ?]],
-           "the port's own array does not see it — the detachment K15 refuses elsewhere")
+    assert(
+      moved(0).isInstanceOf[scala.collection.mutable.Map[?, ?]],
+      "the port's own array does not see it — the detachment K15 refuses elsewhere"
+    )
   }
 
   test("a SELF-REFERENTIAL array terminates — the one arm with no view's laziness to stop it") {
@@ -1089,7 +1094,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   test("a DELEGATING shim leaves as what it wraps, not as a bean around it") {
-    val b = scala.collection.mutable.Buffer[Any](1, 2)
+    val b   = scala.collection.mutable.Buffer[Any](1, 2)
     val out = jv(JavaCollection.from(b))
     assert(out.isInstanceOf[java.util.Collection[?]], clue(out.getClass.getName))
     assertEquals(out.asInstanceOf[java.util.Collection[Any]].size(), 2)
@@ -1149,7 +1154,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   test("removeIf removes what the predicate ACCEPTS — the complement of filterInPlace — and says whether it did") {
-    val xs: Buffer[String] = ArrayBuffer("a", "", "b", "")
+    val xs:    Buffer[String]                       = ArrayBuffer("a", "", "b", "")
     val empty: java.util.function.Predicate[String] = (s: String) => s.isEmpty
     assertEquals(JavaCollections.removeIf(xs, empty), true)
     assertEquals(xs.toList, List("a", "b"))
@@ -1162,11 +1167,13 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("removeIf identifies an element by POSITION, so an equals that ignores the field still removes the right one") {
     // flexmark's own shape: `trackedOffsets.removeIf(it -> it.getOffset() == n)` over a type whose
     // `equals` is not the offset. A by-value route (`-=`) would remove the FIRST equal element.
-    final class Off(val n: Int) { override def equals(o: Any): Boolean = o.isInstanceOf[Off]
-                                  override def hashCode(): Int        = 1 }
+    final class Off(val n: Int) {
+      override def equals(o: Any): Boolean = o.isInstanceOf[Off]
+      override def hashCode():     Int     = 1
+    }
     val a, b = new Off(1)
     val c    = new Off(2)
-    val xs: Buffer[Off] = ArrayBuffer(a, b, c)
+    val xs:  Buffer[Off]                       = ArrayBuffer(a, b, c)
     val two: java.util.function.Predicate[Off] = (o: Off) => o.n == 2
     assertEquals(JavaCollections.removeIf(xs, two), true)
     assert(xs.toList.map(_.n) == List(1, 1))
@@ -1219,7 +1226,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("sort is what `List.sort(cmp)` needs too — in place, stable, and on a non-indexed Buffer") {
     // SE8 made `Collections.sort(list, c)` delegate to `list.sort(c)`, so ONE helper is correct for
     // both by java's own definition — which is why the member arm reaches this and not a second one.
-    val xs: Buffer[(Int, String)] = ListBuffer((2, "a"), (1, "b"), (2, "c"), (1, "d"))
+    val xs:      Buffer[(Int, String)]               = ListBuffer((2, "a"), (1, "b"), (2, "c"), (1, "d"))
     val byFirst: java.util.Comparator[(Int, String)] = (a, b) => a._1 - b._1
     JavaCollections.sort(xs, byFirst)
     assertEquals(xs.toList, List((1, "b"), (1, "d"), (2, "a"), (2, "c")), "stable: ties keep their order")

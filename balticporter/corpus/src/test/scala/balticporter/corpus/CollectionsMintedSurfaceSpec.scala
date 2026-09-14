@@ -77,8 +77,8 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
     assertNotEmits(p, "containsKey$java")
   }
 
-  /** …and the one below it that THIS FIXTURE CANNOT PROVE, which is worth stating rather than
-    * hiding (§4.59: a fixture only promotes a fact it can actually distinguish). */
+  /** …and the one below it that THIS FIXTURE CANNOT PROVE, which is worth stating rather than hiding (§4.59: a fixture only promotes a fact it can actually distinguish).
+    */
   test("a VARARG overload is never the delegate while a fixed-arity one exists") {
     val p = port(src, new CollectionsTransform)
     assertEmits(p, "override def addOne(elem: E): this.type")
@@ -104,7 +104,9 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
       """package demo;
         |import java.util.*;
         |interface Widened<V> extends Map<String, V> { }
-        |""".stripMargin, new CollectionsTransform)
+        |""".stripMargin,
+      new CollectionsTransform
+    )
     // it DOES get the minted parent — that is `declaredParentKinds`' answer and is correct…
     assertEmits(p, "trait Widened[V <: java.lang.Object] extends scala.collection.mutable.Map[java.lang.String, V]")
     // …and it gets no bridge at all. A bridge here would delegate to members the type does not have.

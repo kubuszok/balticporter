@@ -3,15 +3,15 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
-import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
+import balticporter.tir.{ Decision, Pipeline, PorterNote, Program, Reason }
+import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 
-/** A MEMBER THAT OVERRIDES A CLASS FILE keeps its formals — `CLAUDE.md` §4.56 read at an OVERRIDE
-  * rather than at a call. */
+/** A MEMBER THAT OVERRIDES A CLASS FILE keeps its formals — `CLAUDE.md` §4.56 read at an OVERRIDE rather than at a call.
+  */
 class CollectionsClassFileOverrideSpec extends PortSuite:
 
-  /** `Holder` is the positive; `Fast` is the mapped-parent negative; `Ours`/`Impl` are the
-    * program-declared-ancestor negative; `Holder#absorb` is the not-an-override negative. */
+  /** `Holder` is the positive; `Fast` is the mapped-parent negative; `Ours`/`Impl` are the program-declared-ancestor negative; `Holder#absorb` is the not-an-override negative.
+    */
   private val src =
     """package demo;
       |import java.util.*;
@@ -31,8 +31,8 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  /** the FQN this fixture's positive stands on. Named once so the premise test and the assertions
-    * cannot drift apart, which is exactly how the `AbstractSet` version went stale. */
+  /** the FQN this fixture's positive stands on. Named once so the premise test and the assertions cannot drift apart, which is exactly how the `AbstractSet` version went stale.
+    */
   private val UnmappedBase = "java.util.AbstractMap"
 
   private def ported: (CollectionsTransform, Program, String) =
@@ -51,25 +51,31 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
     // Asked of the phase's own table, not assumed. Wave 12 mapped the type this spec used to stand
     // on, and every assertion below then failed saying `heldNames = Set()` — which reads as a broken
     // refusal rather than as a moved example. This row is what turns that into a sentence.
-    assert(!clue(CollectionsTransform.typeMap).contains(UnmappedBase),
-           s"$UnmappedBase is now MAPPED, so it can no longer play the unmapped-parent role here. " +
-             "Move this fixture to a base that is still absent from `typeMap` (java.util.AbstractList, " +
-             "java.util.AbstractSequentialList) — and see ENGINE-LIMITS.md K29, because mapping an " +
-             "abstract base is exactly the step that owes the JDK defaults a definer calls through `super`.")
+    assert(
+      !clue(CollectionsTransform.typeMap).contains(UnmappedBase),
+      s"$UnmappedBase is now MAPPED, so it can no longer play the unmapped-parent role here. " +
+        "Move this fixture to a base that is still absent from `typeMap` (java.util.AbstractList, " +
+        "java.util.AbstractSequentialList) — and see ENGINE-LIMITS.md K29, because mapping an " +
+        "abstract base is exactly the step that owes the JDK defaults a definer calls through `super`."
+    )
   }
 
   test("a member overriding an UNMAPPED java parent keeps java's formal") {
     val (ph, p, out) = ported
-    assert(clue(heldNames(ph, p)).exists(_.endsWith("Holder#putAll")),
-           s"Holder#putAll overrides $UnmappedBase's and must be held literally")
-    assert(out.contains("def putAll(m: java.util.Map[? <: java.lang.String, ? <: java.lang.String])"),
-           s"the emitted formal is not java's\n--- emitted ---\n$out")
+    assert(
+      clue(heldNames(ph, p)).exists(_.endsWith("Holder#putAll")),
+      s"Holder#putAll overrides $UnmappedBase's and must be held literally"
+    )
+    assert(
+      out.contains("def putAll(m: java.util.Map[? <: java.lang.String, ? <: java.lang.String])"),
+      s"the emitted formal is not java's\n--- emitted ---\n$out"
+    )
   }
 
   test("…and the refusal is a RECORDED decision, universal, naming what it overrides") {
     val (ph, p, _) = ported
-    val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform()))._2
-    val ds  = log.of(Decision.Kind.RetainedSignature).filter(_.subjectFqn.endsWith("Holder#putAll"))
+    val log        = Pipeline.runTraced(SpoonTir.fromSource(src), List(new CollectionsTransform()))._2
+    val ds         = log.of(Decision.Kind.RetainedSignature).filter(_.subjectFqn.endsWith("Holder#putAll"))
     assertEquals(clue(ds).size, 1)
     assert(ds.head.reason.isInstanceOf[Reason.Universal], clue(ds.head.reason).toString)
     assertEquals(PorterNote.pairs(ds.head).toMap.get("overrides"), Some(s"$UnmappedBase#putAll"))
@@ -87,10 +93,14 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
 
   test("a class extending a MAPPED collection keeps its retyped override — the parent is the shim") {
     val (ph, p, out) = ported
-    assert(!clue(heldNames(ph, p)).exists(_.endsWith("Fast#addAll")),
-           "Fast extends java.util.ArrayList, which the mapping covers: its override must MOVE")
-    assert(!out.contains("def addAll(c: java.util.Collection[? <: java.lang.String])"),
-           s"Fast#addAll kept java's formal under a shim parent\n--- emitted ---\n$out")
+    assert(
+      !clue(heldNames(ph, p)).exists(_.endsWith("Fast#addAll")),
+      "Fast extends java.util.ArrayList, which the mapping covers: its override must MOVE"
+    )
+    assert(
+      !out.contains("def addAll(c: java.util.Collection[? <: java.lang.String])"),
+      s"Fast#addAll kept java's formal under a shim parent\n--- emitted ---\n$out"
+    )
   }
 
   test("a member overriding an interface THIS PROGRAM declares is not held") {
@@ -122,12 +132,14 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
         |  public List<String> keys(String seed) { return new ArrayList<String>(); }
         |}
         |""".stripMargin
-    val ph  = new CollectionsTransform()
-    val out = new TirEmitter(Pipeline.run(SpoonTir.fromSource(generic), List(ph))).emit
+    val ph   = new CollectionsTransform()
+    val out  = new TirEmitter(Pipeline.run(SpoonTir.fromSource(generic), List(ph))).emit
     val held = ph.classFileOverrides.flatMap(SpoonTir.fromSource(generic).symbolOf).map(_.fullName)
     assert(clue(held).isEmpty, "an override of a program-declared interface must MOVE, generic or not")
-    assert(!clue(out).contains("java.util.List[java.lang.String]"),
-           s"a java formal was held under a program-declared parent\n--- emitted ---\n$out")
+    assert(
+      !clue(out).contains("java.util.List[java.lang.String]"),
+      s"a java formal was held under a program-declared parent\n--- emitted ---\n$out"
+    )
   }
 
   test("NEGATIVE: an ANONYMOUS class's member is out of the refusal's reach and is not held") {
@@ -148,8 +160,10 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
     val p   = Pipeline.run(SpoonTir.fromSource(anon), List(ph))
     val out = new TirEmitter(p).emit
     assert(!heldNames(ph, p).exists(_.contains("initialValue")), clue(heldNames(ph, p)).toString)
-    assert(!out.contains("porter: retained-signature"),
-           s"a note was emitted for a member the restore cannot reach\n--- emitted ---\n$out")
+    assert(
+      !out.contains("porter: retained-signature"),
+      s"a note was emitted for a member the restore cannot reach\n--- emitted ---\n$out"
+    )
   }
 
   test("a program with no unconverted java parent holds NOTHING — the no-op, by arithmetic") {
@@ -170,11 +184,14 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
 
   test("the seam at a CALLER is ClassFileOverride, and its sentence names no key to change") {
     val (ph, p, _) = ported
-    val rows = ph.boundary(p).filter(_.issue == CollectionBoundaryCheck.Issue.ClassFileOverride)
+    val rows       = ph.boundary(p).filter(_.issue == CollectionBoundaryCheck.Issue.ClassFileOverride)
     // the caller passes a retyped Buffer at a formal that stayed java's; where `coerce` bridges it
     // with a live view the slot closes, and either way NO row may be filed as `ScopedOut`.
-    assertEquals(ph.boundary(p).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0,
-                 "this run set no scope: a ScopedOut row would send its reader after a key that does not exist")
+    assertEquals(
+      ph.boundary(p).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut),
+      0,
+      "this run set no scope: a ScopedOut row would send its reader after a key that does not exist"
+    )
     val sentence = CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ClassFileOverride)
     assert(sentence.contains("§1(a)"), clue(sentence))
     assert(!sentence.contains("§1(b)"), clue(sentence))

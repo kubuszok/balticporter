@@ -1,6 +1,6 @@
 package balticporter.corpus.roughjs
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
 /** Dedicated emitter for roughjs core.ts → Core.scala. */
 object RoughCoreEmitter {
@@ -28,12 +28,23 @@ object RoughCoreEmitter {
 
     sb.append("final case class Options(\n")
     val optFields = List(
-      ("maxRandomnessOffset", "Double"), ("roughness", "Double"), ("bowing", "Double"),
-      ("stroke", "String"), ("strokeWidth", "Double"), ("curveFitting", "Double"),
-      ("curveTightness", "Double"), ("curveStepCount", "Double"), ("fill", "String"),
-      ("fillStyle", "String"), ("fillWeight", "Double"), ("hachureAngle", "Double"),
-      ("hachureGap", "Double"), ("simplification", "Double"), ("dashOffset", "Double"),
-      ("dashGap", "Double"), ("zigzagOffset", "Double"),
+      ("maxRandomnessOffset", "Double"),
+      ("roughness", "Double"),
+      ("bowing", "Double"),
+      ("stroke", "String"),
+      ("strokeWidth", "Double"),
+      ("curveFitting", "Double"),
+      ("curveTightness", "Double"),
+      ("curveStepCount", "Double"),
+      ("fill", "String"),
+      ("fillStyle", "String"),
+      ("fillWeight", "Double"),
+      ("hachureAngle", "Double"),
+      ("hachureGap", "Double"),
+      ("simplification", "Double"),
+      ("dashOffset", "Double"),
+      ("dashGap", "Double"),
+      ("zigzagOffset", "Double")
     )
     for ((name, tpe) <- optFields)
       sb.append(s"  $name: Option[$tpe] = None,\n")
@@ -51,11 +62,21 @@ object RoughCoreEmitter {
 
     sb.append("final case class ResolvedOptions(\n")
     val reqFields = List(
-      ("maxRandomnessOffset", "Double"), ("roughness", "Double"), ("bowing", "Double"),
-      ("stroke", "String"), ("strokeWidth", "Double"), ("curveFitting", "Double"),
-      ("curveTightness", "Double"), ("curveStepCount", "Double"), ("fillStyle", "String"),
-      ("fillWeight", "Double"), ("hachureAngle", "Double"), ("hachureGap", "Double"),
-      ("dashOffset", "Double"), ("dashGap", "Double"), ("zigzagOffset", "Double"),
+      ("maxRandomnessOffset", "Double"),
+      ("roughness", "Double"),
+      ("bowing", "Double"),
+      ("stroke", "String"),
+      ("strokeWidth", "Double"),
+      ("curveFitting", "Double"),
+      ("curveTightness", "Double"),
+      ("curveStepCount", "Double"),
+      ("fillStyle", "String"),
+      ("fillWeight", "Double"),
+      ("hachureAngle", "Double"),
+      ("hachureGap", "Double"),
+      ("dashOffset", "Double"),
+      ("dashGap", "Double"),
+      ("zigzagOffset", "Double")
     )
     for ((name, tpe) <- reqFields)
       sb.append(s"  $name: $tpe,\n")

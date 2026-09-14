@@ -25,8 +25,7 @@ class JdkSurfaceRemedySpec extends munit.FunSuite:
 
   /** the interned EXTERNAL member — the thing this lane's subject column names. */
   private def callee(p: Program): SymId =
-    p.symbols.all.find(s => s.name == "fill" && !p.owns(s.id)).map(_.id)
-      .getOrElse(fail("the frontend interned no external `Arrays#fill`"))
+    p.symbols.all.find(s => s.name == "fill" && !p.owns(s.id)).map(_.id).getOrElse(fail("the frontend interned no external `Arrays#fill`"))
 
   private def row(d: JdkSurfaceCheck.Disposition, at: SymId) =
     JdkSurfaceCheck.Finding("java.util.Arrays#fill(float[],float)", d, 1, Origin.synthetic, at)
@@ -35,15 +34,15 @@ class JdkSurfaceRemedySpec extends munit.FunSuite:
   private val findingKinds = List(
     JdkSurfaceCheck.Disposition.Unhandled("java.util.Arrays"),
     JdkSurfaceCheck.Disposition.KeptIterable("java.util.List"),
-    JdkSurfaceCheck.Disposition.StaleRefusal("java.util.Map$Entry#setValue"))
+    JdkSurfaceCheck.Disposition.StaleRefusal("java.util.Map$Entry#setValue")
+  )
 
   test("the menu names THIS check's lane and the one kind it answers") {
     assertEquals(JdkSurfaceCheck.remedies.map(_.lane), List(JdkSurfaceCheck.Name))
     assertEquals(JdkSurfaceCheck.AcceptJdkMember.kind, "unhandled")
     // …read off the disposition rather than trusted as a literal: the two must be the same string
     // or the drain silently matches nothing.
-    assertEquals(JdkSurfaceCheck.AcceptJdkMember.kind,
-      JdkSurfaceCheck.Disposition.Unhandled("x").label)
+    assertEquals(JdkSurfaceCheck.AcceptJdkMember.kind, JdkSurfaceCheck.Disposition.Unhandled("x").label)
     assert(!JdkSurfaceCheck.AcceptJdkMember.emissionAffecting)
     assertEquals(JdkSurfaceCheck.AcceptJdkMember.subject, Remedy.Subject.ExternalMember)
   }

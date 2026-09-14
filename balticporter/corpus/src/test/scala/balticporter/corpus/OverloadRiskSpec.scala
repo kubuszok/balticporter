@@ -1,6 +1,6 @@
 package balticporter.corpus
 
-import balticporter.testkit.{Ported, PortSuite}
+import balticporter.testkit.{ PortSuite, Ported }
 import balticporter.tir.*
 import balticporter.tir.OverloadRiskCheck.Issue
 
@@ -8,7 +8,7 @@ import balticporter.tir.OverloadRiskCheck.Issue
 class OverloadRiskSpec extends PortSuite:
 
   private def report(java: String) =
-    val p = port(java)
+    val p  = port(java)
     val ov = new OverloadRiskCheck.Overloads(p.after)
     (p, OverloadRiskCheck.check(p.after, p.after.units, ov))
 
@@ -21,7 +21,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(String... a) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.VarargPhaseSpan), r.findings.toString)
   }
 
@@ -32,7 +33,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(Integer a) { }
         |  void go() { f(1); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
   }
 
@@ -43,7 +45,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(Object a) { }
         |  void go() { f(1); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
   }
 
@@ -54,7 +57,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(String a) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.GenericTieBreak), r.findings.toString)
   }
 
@@ -67,7 +71,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(String a, String b) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings, Nil)
     assertEquals(r.overloaded, 0)
   }
@@ -79,7 +84,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(Thread a) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings, Nil)
     assert(r.overloaded >= 1, "the call must still reach the denominator, or the rate is unreadable")
   }
@@ -90,7 +96,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(String a) { }
         |  void go() { f("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings, Nil)
     assertEquals(r.overloaded, 0)
     assert(r.calls >= 1)
@@ -101,7 +108,8 @@ class OverloadRiskSpec extends PortSuite:
       """public class A {
         |  void go() { String.valueOf(1); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings, Nil)
   }
 
@@ -115,7 +123,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void g(String a) { }
         |  void go() { f(1); g("x"); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.calls > r.overloaded, "not every call is overloaded, and the summary must be able to say so")
     assert(r.overloaded >= r.findings.size)
     assert(OverloadRiskCheck.summary(r).contains("applicable candidate"))
@@ -137,7 +146,8 @@ class OverloadRiskSpec extends PortSuite:
         |  static class P { void f(Object a) { } }
         |  static class C extends P { void f(int a) { } void go() { f(1); } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
   }
 
@@ -149,7 +159,8 @@ class OverloadRiskSpec extends PortSuite:
         |  static class P { void f(int a) { } }
         |  static class C extends P { void f(Integer a) { } void go() { f(1); } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
   }
 
@@ -159,7 +170,8 @@ class OverloadRiskSpec extends PortSuite:
         |  static class P { void f(String a) { } }
         |  static class C extends P { <T> void f(T a) { } void go() { f("x"); } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.GenericTieBreak), r.findings.toString)
   }
 
@@ -170,7 +182,8 @@ class OverloadRiskSpec extends PortSuite:
         |  static class C extends P { void f(Integer a) { } }
         |  void go(C c) { c.f(1); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
   }
 
@@ -181,7 +194,8 @@ class OverloadRiskSpec extends PortSuite:
         |  static class C extends P { void f(Integer a) { } }
         |  void go(P p) { p.f(1); }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings, Nil)
   }
 
@@ -194,9 +208,9 @@ class OverloadRiskSpec extends PortSuite:
   /** the same units with every unqualified `this.m(…)` rewritten to the BARE `Ident` form. */
   private def bareIdentCalls(p: Ported): List[Tree.ClassDef] =
     given Program = p.after
-    val bare = new Phase:
-      def name: String = "spec/bare-ident-calls"
-      override def transformApply(a: Tree.Apply)(using Program): Term = a.fun match
+    val bare      = new Phase:
+      def name:                                                  String = "spec/bare-ident-calls"
+      override def transformApply(a: Tree.Apply)(using Program): Term   = a.fun match
         case Tree.Select(_: Tree.This, m, t, o) => a.copy(fun = Tree.Ident(m, t, o))
         case _                                  => a
     p.after.units.map(u => StandardTraversal.mapClassDef(bare, u))
@@ -217,7 +231,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void go() { f(1); }
         |  static class Inner extends A { void f(Integer a) { } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings, Nil, r.findings.toString)
   }
 
@@ -231,7 +246,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void go() { f(1); }
         |  static class Inner extends A { }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.findings.map(_.owner).distinct, List("A"), r.findings.toString)
   }
 
@@ -243,7 +259,8 @@ class OverloadRiskSpec extends PortSuite:
         |  void f(int a) { }
         |  static class Inner extends A { void f(Integer a) { } void go() { f(1); } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assert(r.findings.map(_.issue).contains(Issue.BoxingPhaseSpan), r.findings.toString)
     assertEquals(r.findings.map(_.owner).distinct, List("A$Inner"), r.findings.toString)
   }
@@ -259,6 +276,7 @@ class OverloadRiskSpec extends PortSuite:
         |  void go() { f(1); f(2); }
         |  static class Inner { void h(int a) { } void go2() { h(1); h(2); h(3); } }
         |}
-        |""".stripMargin)
+        |""".stripMargin
+    )
     assertEquals(r.calls, 7)
   }

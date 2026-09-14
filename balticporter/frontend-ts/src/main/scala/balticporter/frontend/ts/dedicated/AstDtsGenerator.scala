@@ -1,22 +1,19 @@
 package balticporter.corpus.terser
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 
 import scala.collection.mutable
 
-/** Generates TypeScript declaration files (.d.ts) from a DEFNODE hierarchy
-  * and per-property type inference derived from a hand-ported reference.
+/** Generates TypeScript declaration files (.d.ts) from a DEFNODE hierarchy and per-property type inference derived from a hand-ported reference.
   *
-  * The generated declarations let the TypeScript checker type `this.x`
-  * accesses inside DEFMETHOD bodies, replacing the blanket `any` with
-  * concrete field types. DESIGN.md: N7 capability.
+  * The generated declarations let the TypeScript checker type `this.x` accesses inside DEFMETHOD bodies, replacing the blanket `any` with concrete field types. DESIGN.md: N7 capability.
   */
 object AstDtsGenerator:
 
   /** A reference field with its JS name and TypeScript type. */
   final case class DerivedField(
-      jsName: String,   // original JS field name (snake_case), e.g. "block_scope"
-      tsType: String,   // TypeScript type for the .d.ts, e.g. "AST_Scope | null"
+    jsName: String, // original JS field name (snake_case), e.g. "block_scope"
+    tsType: String // TypeScript type for the .d.ts, e.g. "AST_Scope | null"
   )
 
   // --------------------------------------------------------------------------
@@ -37,10 +34,9 @@ object AstDtsGenerator:
       case s"mutable.Map[$k, $v]"              => s"Map<${scalaTypeToTs(k)}, ${scalaTypeToTs(v)}>"
       case s"mutable.Set[$e]"                  => s"Set<${scalaTypeToTs(e)}>"
       case s"List[$inner]"                     => s"${scalaTypeToTs(inner)}[]"
-      case other =>
+      case other                               =>
         // Convert AstXxx -> AST_Xxx
-        if other.startsWith("Ast") && other.length > 3 && other(3).isUpper then
-          "AST_" + other.drop(3)
+        if other.startsWith("Ast") && other.length > 3 && other(3).isUpper then "AST_" + other.drop(3)
         else other
 
   // --------------------------------------------------------------------------
@@ -49,9 +45,7 @@ object AstDtsGenerator:
 
   /** Infer the TypeScript type for a DEFNODE property.
     *
-    * This mirrors the inference in TerserEmitter.inferPropertyType but
-    * returns a TypeScript type string directly. The logic is the same:
-    * map (propName, className) to a TypeScript type based on known
+    * This mirrors the inference in TerserEmitter.inferPropertyType but returns a TypeScript type string directly. The logic is the same: map (propName, className) to a TypeScript type based on known
     * patterns from the reference port.
     */
   def inferTsFieldType(propName: String, className: String): DerivedField =
@@ -59,57 +53,42 @@ object AstDtsGenerator:
 
     // Boolean properties
     if Set("static", "logical", "optional", "await", "async").contains(baseName) ||
-       baseName.startsWith("is_") ||
-       baseName.startsWith("uses_") then
-      DerivedField(propName, "boolean")
+      baseName.startsWith("is_") ||
+      baseName.startsWith("uses_")
+    then DerivedField(propName, "boolean")
     // String properties
-    else if Set("operator", "quote", "raw").contains(baseName) then
-      DerivedField(propName, "string")
+    else if Set("operator", "quote", "raw").contains(baseName) then DerivedField(propName, "string")
     // Int properties
-    else if baseName == "annotations" || baseName == "cname" then
-      DerivedField(propName, "number")
+    else if baseName == "annotations" || baseName == "cname" then DerivedField(propName, "number")
     // Body is array only on AST_Block
-    else if baseName == "body" && className == "AST_Block" then
-      DerivedField(propName, "AST_Node[]")
+    else if baseName == "body" && className == "AST_Block" then DerivedField(propName, "AST_Node[]")
     // Array properties
-    else if Set("args", "argnames", "elements", "properties", "expressions",
-                "segments", "definitions", "names", "references").contains(baseName) then
-      DerivedField(propName, "AST_Node[]")
-    else if Set("imported_names", "exported_names").contains(baseName) then
-      DerivedField(propName, "AST_Node[] | null")
+    else if Set("args", "argnames", "elements", "properties", "expressions", "segments", "definitions", "names", "references").contains(baseName) then DerivedField(propName, "AST_Node[]")
+    else if Set("imported_names", "exported_names").contains(baseName) then DerivedField(propName, "AST_Node[] | null")
     // Name is string for symbol and label classes
     else if baseName == "name" &&
-            (className.contains("Symbol") ||
-             className == "AST_Label" || className == "AST_LabelRef") then
-      DerivedField(propName, "string")
+      (className.contains("Symbol") ||
+        className == "AST_Label" || className == "AST_LabelRef")
+    then DerivedField(propName, "string")
     // Value is string for directive and template segment
     else if baseName == "value" &&
-            (className == "AST_Directive" || className == "AST_TemplateSegment") then
-      DerivedField(propName, "string")
+      (className == "AST_Directive" || className == "AST_TemplateSegment")
+    then DerivedField(propName, "string")
     // Property as union type for prop access
-    else if baseName == "property" then
-      DerivedField(propName, "string | AST_Node")
+    else if baseName == "property" then DerivedField(propName, "string | AST_Node")
     // Key as union type for object property classes
-    else if baseName == "key" && className != "AST_PrivateIn" then
-      DerivedField(propName, "string | AST_Node")
+    else if baseName == "key" && className != "AST_PrivateIn" then DerivedField(propName, "string | AST_Node")
     // Scope-related types
-    else if Set("block_scope", "scope", "parent_scope").contains(baseName) then
-      DerivedField(propName, "AST_Scope | null")
+    else if Set("block_scope", "scope", "parent_scope").contains(baseName) then DerivedField(propName, "AST_Scope | null")
     // Definition reference
-    else if baseName == "thedef" then
-      DerivedField(propName, "SymbolDef | null")
-    else if baseName == "mangled_name" then
-      DerivedField(propName, "string | null")
+    else if baseName == "thedef" then DerivedField(propName, "SymbolDef | null")
+    else if baseName == "mangled_name" then DerivedField(propName, "string | null")
     // Scope data structures
-    else if Set("variables", "globals").contains(baseName) then
-      DerivedField(propName, "Map<string, SymbolDef>")
-    else if baseName == "enclosed" then
-      DerivedField(propName, "SymbolDef[]")
-    else if baseName == "mangled_names" then
-      DerivedField(propName, "Set<string>")
+    else if Set("variables", "globals").contains(baseName) then DerivedField(propName, "Map<string, SymbolDef>")
+    else if baseName == "enclosed" then DerivedField(propName, "SymbolDef[]")
+    else if baseName == "mangled_names" then DerivedField(propName, "Set<string>")
     // Default: single node reference
-    else
-      DerivedField(propName, "AST_Node | null")
+    else DerivedField(propName, "AST_Node | null")
 
   // --------------------------------------------------------------------------
   // .d.ts generation
@@ -117,17 +96,15 @@ object AstDtsGenerator:
 
   /** Generate a complete `.d.ts` string declaring all DEFNODE classes.
     *
-    * Each class gets typed fields from `inferTsFieldType`, a `TYPE` string
-    * constant, and an extends clause matching the hierarchy. DEFMETHOD
-    * declarations for the major families (scope analysis, equivalence,
-    * size estimation) are added as interface augmentations on `AST_Node`.
+    * Each class gets typed fields from `inferTsFieldType`, a `TYPE` string constant, and an extends clause matching the hierarchy. DEFMETHOD declarations for the major families (scope analysis,
+    * equivalence, size estimation) are added as interface augmentations on `AST_Node`.
     */
   def generate(
-      hierarchy: List[TerserEmitter.DefnodeClass],
-      defmethodFamilies: Map[String, List[DefmethodDecl]] = Map.empty,
-      referenceFields: Map[String, List[DerivedField]] = Map.empty,
+    hierarchy:         List[TerserEmitter.DefnodeClass],
+    defmethodFamilies: Map[String, List[DefmethodDecl]] = Map.empty,
+    referenceFields:   Map[String, List[DerivedField]] = Map.empty
   ): String =
-    val sb = new StringBuilder
+    val sb     = new StringBuilder
     val byName = hierarchy.map(c => c.varName -> c).toMap
 
     sb.append("// Auto-generated from DEFNODE hierarchy and reference port types.\n")
@@ -172,8 +149,7 @@ object AstDtsGenerator:
     sb.append("}\n\n")
 
     // Emit each DEFNODE class
-    for cls <- hierarchy do
-      emitClassDecl(sb, cls, byName, referenceFields)
+    for cls <- hierarchy do emitClassDecl(sb, cls, byName, referenceFields)
 
     // Emit DEFMETHOD augmentations (module-level interface merging)
     for (className, methods) <- defmethodFamilies do
@@ -203,7 +179,9 @@ object AstDtsGenerator:
 
     sb.append("export declare class TreeTransformer extends TreeWalker {\n")
     sb.append("  constructor(\n")
-    sb.append("    before: (node: AST_Node, descend: (node: AST_Node, tw: TreeTransformer) => void, in_list: boolean) => AST_Node | undefined,\n")
+    sb.append(
+      "    before: (node: AST_Node, descend: (node: AST_Node, tw: TreeTransformer) => void, in_list: boolean) => AST_Node | undefined,\n"
+    )
     sb.append("    after?: (node: AST_Node, in_list: boolean) => AST_Node | undefined,\n")
     sb.append("  );\n")
     sb.append("  before: any;\n")
@@ -213,7 +191,9 @@ object AstDtsGenerator:
     sb.append("export declare function walk(node: AST_Node, visitor: (node: AST_Node) => any): void;\n")
     sb.append("export declare function walk_abort(node: AST_Node, visitor: (node: AST_Node) => any): boolean;\n")
     sb.append("export declare function walk_body(node: AST_Node, visitor: TreeWalker): void;\n")
-    sb.append("export declare function walk_parent(node: AST_Node, cb: (node: AST_Node, info: any) => any, initial_stack?: AST_Node[]): void;\n\n")
+    sb.append(
+      "export declare function walk_parent(node: AST_Node, cb: (node: AST_Node, info: any) => any, initial_stack?: AST_Node[]): void;\n\n"
+    )
 
     sb.append("// Annotation constants\n")
     sb.append("export declare const _INLINE: number;\n")
@@ -226,20 +206,19 @@ object AstDtsGenerator:
 
   /** Emit one class declaration. */
   private def emitClassDecl(
-      sb: StringBuilder,
-      cls: TerserEmitter.DefnodeClass,
-      byName: Map[String, TerserEmitter.DefnodeClass],
-      referenceFields: Map[String, List[DerivedField]] = Map.empty,
+    sb:              StringBuilder,
+    cls:             TerserEmitter.DefnodeClass,
+    byName:          Map[String, TerserEmitter.DefnodeClass],
+    referenceFields: Map[String, List[DerivedField]] = Map.empty
   ): Unit =
     val extendsClause = cls.base match
       case Some(parent) if byName.contains(parent) => s" extends $parent"
-      case _ => ""
+      case _                                       => ""
 
     sb.append(s"export declare class ${cls.varName}$extendsClause {\n")
 
     // TYPE constant
-    if !cls.isAbstract then
-      sb.append(s"  TYPE: \"${cls.typeName}\";\n")
+    if !cls.isAbstract then sb.append(s"  TYPE: \"${cls.typeName}\";\n")
 
     // start/end tokens (root node only -- these are AST_Token, not AST_Node)
     val isRoot = cls.base.isEmpty || cls.varName == "AST_Node"
@@ -248,25 +227,21 @@ object AstDtsGenerator:
       sb.append("  end: AST_Token | null;\n")
 
     // Build lookup from reference fields for this class (snake_case name -> tsType)
-    val refLookup: Map[String, String] = referenceFields
-      .getOrElse(cls.varName, Nil)
-      .map(f => f.jsName -> f.tsType)
-      .toMap
+    val refLookup: Map[String, String] = referenceFields.getOrElse(cls.varName, Nil).map(f => f.jsName -> f.tsType).toMap
 
     // Self-properties: use reference type when available and more specific than
     // heuristic; fall back to heuristic when the reference type is just `any`
     val skipProps = if isRoot then Set("start", "end") else Set.empty[String]
     for prop <- cls.selfProps if !skipProps.contains(prop) do
       val heuristic = inferTsFieldType(prop, cls.varName)
-      val field = refLookup.get(prop) match
+      val field     = refLookup.get(prop) match
         case Some(tsType) if !isLessSpecific(tsType, heuristic.tsType) =>
           DerivedField(prop, tsType)
         case _ => heuristic
       sb.append(s"  ${field.jsName}: ${field.tsType};\n")
 
     // DEFNODE methods declared in the constructor object
-    for method <- cls.methods do
-      sb.append(s"  $method(...args: any[]): any;\n")
+    for method <- cls.methods do sb.append(s"  $method(...args: any[]): any;\n")
 
     sb.append("}\n\n")
 
@@ -276,105 +251,56 @@ object AstDtsGenerator:
 
   /** A DEFMETHOD declaration for the `.d.ts` interface augmentation. */
   final case class DefmethodDecl(
-      methodName: String,
-      params: List[DefmethodParam],
-      returnType: String,
+    methodName: String,
+    params:     List[DefmethodParam],
+    returnType: String
   )
 
   final case class DefmethodParam(
-      name: String,
-      tsType: String,
+    name:   String,
+    tsType: String
   )
 
   /** Build DEFMETHOD declarations for common families.
     *
-    * These are the well-known method families that scope.js, equivalent-to.js,
-    * size.js, and other files add to the AST classes via DEFMETHOD.
+    * These are the well-known method families that scope.js, equivalent-to.js, size.js, and other files add to the AST classes via DEFMETHOD.
     */
   def commonDefmethodDecls: Map[String, List[DefmethodDecl]] =
     Map(
       "AST_Node" -> List(
-        DefmethodDecl("figure_out_scope",
-          List(DefmethodParam("options", "any")),
-          "void"),
-        DefmethodDecl("equivalent_to",
-          List(DefmethodParam("node", "AST_Node")),
-          "boolean"),
-        DefmethodDecl("shallow_cmp",
-          List(DefmethodParam("other", "AST_Node")),
-          "boolean"),
-        DefmethodDecl("_size",
-          List(DefmethodParam("info", "any")),
-          "number"),
-        DefmethodDecl("size",
-          List(DefmethodParam("compressor", "any"), DefmethodParam("stack", "any")),
-          "number"),
-        DefmethodDecl("is_string",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("is_number",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("is_boolean",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("is_nullish",
-          List(DefmethodParam("compressor", "any")),
-          "boolean | 0"),
-        DefmethodDecl("has_side_effects",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("may_throw_on_access",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("_eval",
-          List(DefmethodParam("compressor", "any"), DefmethodParam("ignore_side_effects", "any")),
-          "any"),
-        DefmethodDecl("is_constant_expression",
-          List(DefmethodParam("scope", "AST_Scope")),
-          "boolean"),
-        DefmethodDecl("drop_side_effect_free",
+        DefmethodDecl("figure_out_scope", List(DefmethodParam("options", "any")), "void"),
+        DefmethodDecl("equivalent_to", List(DefmethodParam("node", "AST_Node")), "boolean"),
+        DefmethodDecl("shallow_cmp", List(DefmethodParam("other", "AST_Node")), "boolean"),
+        DefmethodDecl("_size", List(DefmethodParam("info", "any")), "number"),
+        DefmethodDecl("size", List(DefmethodParam("compressor", "any"), DefmethodParam("stack", "any")), "number"),
+        DefmethodDecl("is_string", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("is_number", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("is_boolean", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("is_nullish", List(DefmethodParam("compressor", "any")), "boolean | 0"),
+        DefmethodDecl("has_side_effects", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("may_throw_on_access", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("_eval", List(DefmethodParam("compressor", "any"), DefmethodParam("ignore_side_effects", "any")), "any"),
+        DefmethodDecl("is_constant_expression", List(DefmethodParam("scope", "AST_Scope")), "boolean"),
+        DefmethodDecl(
+          "drop_side_effect_free",
           List(DefmethodParam("compressor", "any"), DefmethodParam("first_in_statement", "any")),
-          "AST_Node | null"),
-        DefmethodDecl("may_throw",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("_dot_throw",
-          List(DefmethodParam("compressor", "any")),
-          "boolean"),
-        DefmethodDecl("aborts",
-          Nil,
-          "AST_Node | null"),
-        DefmethodDecl("_do_print",
-          List(DefmethodParam("output", "any")),
-          "void"),
-        DefmethodDecl("print",
-          List(DefmethodParam("output", "any")),
-          "void"),
-        DefmethodDecl("needs_parens",
-          List(DefmethodParam("output", "any")),
-          "boolean"),
-        DefmethodDecl("add_source_map",
-          List(DefmethodParam("output", "any")),
-          "void"),
+          "AST_Node | null"
+        ),
+        DefmethodDecl("may_throw", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("_dot_throw", List(DefmethodParam("compressor", "any")), "boolean"),
+        DefmethodDecl("aborts", Nil, "AST_Node | null"),
+        DefmethodDecl("_do_print", List(DefmethodParam("output", "any")), "void"),
+        DefmethodDecl("print", List(DefmethodParam("output", "any")), "void"),
+        DefmethodDecl("needs_parens", List(DefmethodParam("output", "any")), "boolean"),
+        DefmethodDecl("add_source_map", List(DefmethodParam("output", "any")), "void")
       ),
       "AST_Scope" -> List(
-        DefmethodDecl("def_variable",
-          List(DefmethodParam("symbol", "AST_Symbol"), DefmethodParam("init", "AST_Node | null")),
-          "SymbolDef"),
-        DefmethodDecl("def_function",
-          List(DefmethodParam("symbol", "AST_Symbol"), DefmethodParam("init", "AST_Node | null")),
-          "SymbolDef"),
-        DefmethodDecl("find_variable",
-          List(DefmethodParam("name", "string | AST_Symbol")),
-          "SymbolDef | undefined"),
-        DefmethodDecl("next_mangled",
-          List(DefmethodParam("options", "any"), DefmethodParam("ext", "any")),
-          "string"),
-        DefmethodDecl("is_block_scope",
-          Nil,
-          "boolean"),
-      ),
+        DefmethodDecl("def_variable", List(DefmethodParam("symbol", "AST_Symbol"), DefmethodParam("init", "AST_Node | null")), "SymbolDef"),
+        DefmethodDecl("def_function", List(DefmethodParam("symbol", "AST_Symbol"), DefmethodParam("init", "AST_Node | null")), "SymbolDef"),
+        DefmethodDecl("find_variable", List(DefmethodParam("name", "string | AST_Symbol")), "SymbolDef | undefined"),
+        DefmethodDecl("next_mangled", List(DefmethodParam("options", "any"), DefmethodParam("ext", "any")), "string"),
+        DefmethodDecl("is_block_scope", Nil, "boolean")
+      )
     )
 
   /** Count the total number of typed fields in a generated `.d.ts`. */
@@ -387,20 +313,19 @@ object AstDtsGenerator:
 
   /** A field parsed from a reference port Scala source file. */
   final case class ParsedField(
-      className: String,  // Scala class name, e.g. "AstCall"
-      fieldName: String,  // Scala field name, e.g. "expression"
-      scalaType: String,  // Scala type, e.g. "AstNode | Null"
+    className: String, // Scala class name, e.g. "AstCall"
+    fieldName: String, // Scala field name, e.g. "expression"
+    scalaType: String // Scala type, e.g. "AstNode | Null"
   )
 
   /** Parse field declarations from a Scala source string.
     *
-    * Looks for `var`/`val` field declarations within class/trait bodies.
-    * Returns a list of (className, fieldName, scalaType) tuples.
+    * Looks for `var`/`val` field declarations within class/trait bodies. Returns a list of (className, fieldName, scalaType) tuples.
     */
   def parseFieldsFromScala(source: String): List[ParsedField] =
-    val result = mutable.ListBuffer.empty[ParsedField]
+    val result       = mutable.ListBuffer.empty[ParsedField]
     val classOrTrait = """(?:class|trait)\s+(Ast\w+)""".r
-    val fieldDecl = """\s+(?:var|val)\s+(\w+)\s*:\s*(.+?)\s*=""".r
+    val fieldDecl    = """\s+(?:var|val)\s+(\w+)\s*:\s*(.+?)\s*=""".r
 
     var currentClass = ""
     for line <- source.linesIterator do
@@ -418,8 +343,7 @@ object AstDtsGenerator:
 
   /** Convert a Scala class name (AstXxx) back to JS DEFNODE name (AST_Xxx). */
   def scalaNameToDefnode(scalaName: String): String =
-    if scalaName.startsWith("Ast") && scalaName.length > 3 then
-      "AST_" + scalaName.drop(3)
+    if scalaName.startsWith("Ast") && scalaName.length > 3 then "AST_" + scalaName.drop(3)
     else scalaName
 
   /** Build a field type map from parsed reference fields.
@@ -427,24 +351,20 @@ object AstDtsGenerator:
     * Returns className (JS) -> list of DerivedField.
     */
   def buildFieldTypeMap(parsedFields: List[ParsedField]): Map[String, List[DerivedField]] =
-    parsedFields
-      .groupBy(f => scalaNameToDefnode(f.className))
-      .map { case (jsClass, fields) =>
-        jsClass -> fields.map { f =>
-          // Convert field name from camelCase back to snake_case for the JS side
-          val jsFieldName = camelToSnake(f.fieldName)
-          DerivedField(jsFieldName, scalaTypeToTs(f.scalaType))
-        }
+    parsedFields.groupBy(f => scalaNameToDefnode(f.className)).map { case (jsClass, fields) =>
+      jsClass -> fields.map { f =>
+        // Convert field name from camelCase back to snake_case for the JS side
+        val jsFieldName = camelToSnake(f.fieldName)
+        DerivedField(jsFieldName, scalaTypeToTs(f.scalaType))
       }
+    }
 
-  /** True when `refType` is strictly less specific than `heuristicType`.
-    * E.g. `any`, `any[]`, `Map<string, any>` are less specific than a
-    * concrete type when the heuristic doesn't use `any`.
+  /** True when `refType` is strictly less specific than `heuristicType`. E.g. `any`, `any[]`, `Map<string, any>` are less specific than a concrete type when the heuristic doesn't use `any`.
     */
   private def isLessSpecific(refType: String, heuristicType: String): Boolean =
     // If the reference type contains `any` anywhere and the heuristic doesn't,
     // prefer the heuristic — the reference lost type information
-    val refHasAny = refType.contains("any")
+    val refHasAny       = refType.contains("any")
     val heuristicHasAny = heuristicType.contains("any")
     refHasAny && !heuristicHasAny
 
@@ -456,44 +376,40 @@ object AstDtsGenerator:
       if c.isUpper && i > 0 then
         sb.append('_')
         sb.append(c.toLower)
-      else
-        sb.append(c)
+      else sb.append(c)
     sb.toString
 
   /** Generate a `.d.ts` with field types derived from reference port sources.
     *
-    * Combines hierarchy extraction, reference field parsing, and `.d.ts`
-    * generation. When a DEFNODE property has a matching field in the
-    * reference, the reference type is used (via `scalaTypeToTs`); otherwise
-    * `inferTsFieldType` provides the heuristic fallback.
+    * Combines hierarchy extraction, reference field parsing, and `.d.ts` generation. When a DEFNODE property has a matching field in the reference, the reference type is used (via `scalaTypeToTs`);
+    * otherwise `inferTsFieldType` provides the heuristic fallback.
     */
   def generateFromReference(
-      hierarchy: List[TerserEmitter.DefnodeClass],
-      referenceSources: List[String],
+    hierarchy:        List[TerserEmitter.DefnodeClass],
+    referenceSources: List[String]
   ): String =
     val allFields = referenceSources.flatMap(parseFieldsFromScala)
-    val fieldMap = buildFieldTypeMap(allFields)
+    val fieldMap  = buildFieldTypeMap(allFields)
     generate(hierarchy, commonDefmethodDecls, fieldMap)
 
-  /** Derivation metrics: how many DEFNODE fields are covered by reference
-    * types vs falling back to the heuristic.
+  /** Derivation metrics: how many DEFNODE fields are covered by reference types vs falling back to the heuristic.
     */
   final case class DerivationMetrics(
-      totalFields: Int,
-      referenceDerived: Int,
-      heuristicFallback: Int,
+    totalFields:       Int,
+    referenceDerived:  Int,
+    heuristicFallback: Int
   )
 
   /** Count how many fields use reference-derived types vs heuristic. */
   def countDerivedVsHeuristic(
-      hierarchy: List[TerserEmitter.DefnodeClass],
-      referenceFields: Map[String, List[DerivedField]],
+    hierarchy:       List[TerserEmitter.DefnodeClass],
+    referenceFields: Map[String, List[DerivedField]]
   ): DerivationMetrics =
-    var total = 0
-    var fromRef = 0
+    var total         = 0
+    var fromRef       = 0
     var fromHeuristic = 0
     for cls <- hierarchy do
-      val isRoot = cls.base.isEmpty || cls.varName == "AST_Node"
+      val isRoot    = cls.base.isEmpty || cls.varName == "AST_Node"
       val skipProps = if isRoot then Set("start", "end") else Set.empty[String]
       val refLookup = referenceFields.getOrElse(cls.varName, Nil).map(_.jsName).toSet
       for prop <- cls.selfProps if !skipProps.contains(prop) do

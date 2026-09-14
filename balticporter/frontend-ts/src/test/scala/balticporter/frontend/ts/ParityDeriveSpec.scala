@@ -28,7 +28,7 @@ class ParityDeriveSpec extends munit.FunSuite:
   test("derive: RAST body replaces reference"):
     val rastBodies = Map(
       "braced" -> List(("    x + 100\n", 0)),
-      "expression" -> List(("    x + 200\n", 0)),
+      "expression" -> List(("    x + 200\n", 0))
     )
     val result = ParityDerive.derive(syntheticReference, rastBodies)
     assert(result.emittedSource.contains("x + 100"), "braced body should be replaced")
@@ -39,7 +39,7 @@ class ParityDeriveSpec extends munit.FunSuite:
 
   test("derive: uncompilable pattern blocks substitution"):
     val rastBodies = Map(
-      "braced" -> List(("    badPattern( x )\n", 0)),
+      "braced" -> List(("    badPattern( x )\n", 0))
     )
     val policy = ParityDerive.Policy(uncompilablePatterns = List("badPattern("))
     val result = ParityDerive.derive(syntheticReference, rastBodies, policy)
@@ -56,22 +56,22 @@ class ParityDeriveSpec extends munit.FunSuite:
 
   test("derive: private methods allowed by default"):
     val rastBodies = Map("priv" -> List(("    n * 100\n", 0)))
-    val result = ParityDerive.derive(syntheticReference, rastBodies)
-    val privEntry = result.bodies.find(_.methodName == "priv").get
+    val result     = ParityDerive.derive(syntheticReference, rastBodies)
+    val privEntry  = result.bodies.find(_.methodName == "priv").get
     assertEquals(privEntry.source, "rast")
 
   test("derive: private methods blocked by policy"):
     val rastBodies = Map("priv" -> List(("    n * 100\n", 0)))
-    val policy = ParityDerive.Policy(allowPrivate = false)
-    val result = ParityDerive.derive(syntheticReference, rastBodies, policy)
-    val privEntry = result.bodies.find(_.methodName == "priv").get
+    val policy     = ParityDerive.Policy(allowPrivate = false)
+    val result     = ParityDerive.derive(syntheticReference, rastBodies, policy)
+    val privEntry  = result.bodies.find(_.methodName == "priv").get
     assertEquals(privEntry.source, "reference")
     assertEquals(privEntry.why, "private")
 
   test("derive: single-body map overload works"):
     val rastBodies = Map("braced" -> ("    x + 999\n", 0))
-    val policy = ParityDerive.Policy()
-    val result = ParityDerive.derive(syntheticReference, rastBodies, policy)
+    val policy     = ParityDerive.Policy()
+    val result     = ParityDerive.derive(syntheticReference, rastBodies, policy)
     assert(result.emittedSource.contains("x + 999"))
     assertEquals(result.rastCount, 1)
 
@@ -79,7 +79,7 @@ class ParityDeriveSpec extends munit.FunSuite:
     val entries = List(
       ParityDerive.BodyEntry("foo", "rast", "", 0),
       ParityDerive.BodyEntry("bar", "reference", "no-rast-symbol", 0),
-      ParityDerive.BodyEntry("baz", "reference", "uncompilable-pattern:badFunc(", 0),
+      ParityDerive.BodyEntry("baz", "reference", "uncompilable-pattern:badFunc(", 0)
     )
     val tsv = ParityDerive.formatBodiesTsv(entries)
     assert(tsv.startsWith("method_name\tsource\twhy\trefusal_count\n"))
@@ -103,8 +103,8 @@ class ParityDeriveSpec extends munit.FunSuite:
     val rastBodies = Map(
       "toMarkup" -> List(
         ("    s\"rast-first-$n\"\n", 0),
-        ("    s\"rast-second-$s\"\n", 0),
-      ),
+        ("    s\"rast-second-$s\"\n", 0)
+      )
     )
     val result = ParityDerive.derive(reference, rastBodies)
     assert(result.emittedSource.contains("rast-first"))

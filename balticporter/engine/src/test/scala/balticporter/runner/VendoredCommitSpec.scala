@@ -1,15 +1,14 @@
 package balticporter.runner
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** [[VendoredCommit]] against a REAL git repository built in a temp dir — the helper shells out,
-  * so a mock would test the string formatter and skip the only part that can break. Negative case
+/** [[VendoredCommit]] against a REAL git repository built in a temp dir — the helper shells out, so a mock would test the string formatter and skip the only part that can break. Negative case
   * included: a check (here, a fallback) that has never fired is not known to work (CLAUDE.md §3).
   */
 class VendoredCommitSpec extends munit.FunSuite:
 
   private def sh(cwd: Path, cmd: String*): Unit =
-    val p = new ProcessBuilder(cmd*).directory(cwd.toFile).redirectErrorStream(true).start()
+    val p   = new ProcessBuilder(cmd*).directory(cwd.toFile).redirectErrorStream(true).start()
     val out = new String(p.getInputStream.readAllBytes())
     assert(p.waitFor() == 0, s"${cmd.mkString(" ")} failed:\n$out")
 
@@ -30,7 +29,7 @@ class VendoredCommitSpec extends munit.FunSuite:
           Files.list(p).forEach(rm); Files.delete(p)
         else Files.delete(p)
       rm(dir)
-    },
+    }
   )
 
   repo.test("a clean subtree pins repo@hash and names the subtree") { dir =>
@@ -64,5 +63,6 @@ class VendoredCommitSpec extends munit.FunSuite:
   test("outside any git repository, say 'commit unknown' — never invent an anchor") {
     val dir = Files.createTempDirectory("vendored-commit-nogit")
     try assertEquals(VendoredCommit.of(dir.resolve("lib")), "vendored at lib; commit unknown")
-    finally Files.deleteIfExists(dir.resolve("lib")); Files.deleteIfExists(dir)
+    finally Files.deleteIfExists(dir.resolve("lib"));
+    Files.deleteIfExists(dir)
   }

@@ -3,10 +3,10 @@ package balticporter.runner
 import balticporter.core.*
 import balticporter.tir.*
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
-/** `decisions.tsv` end to end — the channel that answers "HOW did the porter arrive at this code?"
-  * for an agent in another repository (CLAUDE.md §4.45). */
+/** `decisions.tsv` end to end — the channel that answers "HOW did the porter arrive at this code?" for an agent in another repository (CLAUDE.md §4.45).
+  */
 class DecisionProvenanceSpec extends munit.FunSuite:
 
   private def java(dir: Path, rel: String, src: String): Unit =
@@ -17,40 +17,49 @@ class DecisionProvenanceSpec extends munit.FunSuite:
   private def fixture(): (Path, Path) =
     val root = Files.createTempDirectory("decisions-run")
     val src  = root.resolve("java")
-    java(src, "com/demo/Widget.java",
+    java(
+      src,
+      "com/demo/Widget.java",
       """package com.demo;
         |public class Widget {
         |  public int size;
         |  public String label() { return "w" + size; }
-        |}""".stripMargin)
-    java(src, "com/demo/Gadget.java",
+        |}""".stripMargin
+    )
+    java(
+      src,
+      "com/demo/Gadget.java",
       """package com.demo;
         |public class Gadget {
         |  public Widget w = new Widget();
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     (root, src)
 
-  /** the artifact layer, into a directory of this test's own — `PortRunSpec.withReport`, which is
-    * also what keeps a suite from publishing artifacts into the repository. */
+  /** the artifact layer, into a directory of this test's own — `PortRunSpec.withReport`, which is also what keeps a suite from publishing artifacts into the repository.
+    */
   private def withReport[A](dir: Path)(f: => A): A =
     val keys  = List("balticporter.report" -> "on", "balticporter.reportDir" -> dir.toString)
     val saved = keys.map((k, _) => k -> Option(System.getProperty(k)))
     keys.foreach((k, v) => System.setProperty(k, v))
     try f
-    finally saved.foreach {
-      case (k, Some(v))    => System.setProperty(k, v)
-      case (k, scala.None) => System.clearProperty(k)
-    }
+    finally
+      saved.foreach {
+        case (k, Some(v))    => System.setProperty(k, v)
+        case (k, scala.None) => System.clearProperty(k)
+      }
 
   private def run(root: Path, src: Path, files: List[String] = Nil)(f: PortRun => PortRun = identity): PortResult =
     val fs = if files.nonEmpty then files else List("com/demo/Widget.java", "com/demo/Gadget.java")
-    f(PortRun(
-      label     = "demo",
-      portRoot  = root.resolve("port"),
-      sourceSet = SourceSet.Main,
-      frontend  = FrontendConfig(src, fs, Nil),
-      phases    = Nil,
-    )).execute()
+    f(
+      PortRun(
+        label = "demo",
+        portRoot = root.resolve("port"),
+        sourceSet = SourceSet.Main,
+        frontend = FrontendConfig(src, fs, Nil),
+        phases = Nil
+      )
+    ).execute()
 
   private def decisions(rep: Path): List[Decision] =
     Decision.parseAll(rep.resolve("run-latest/decisions.tsv"))
@@ -60,36 +69,41 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     java(inject, "com/demo/Widget.scala", s"package $pkg\nclass Widget { def label(): String = \"w\" }")
     inject
 
-  /** A wrapper whose statics are what the redirect phases are configured against, plus one class
-    * that calls each of them from a DIFFERENT method — so "one row per declaration" is a claim the
-    * fixture can actually distinguish from "one row per site". */
+  /** A wrapper whose statics are what the redirect phases are configured against, plus one class that calls each of them from a DIFFERENT method — so "one row per declaration" is a claim the fixture
+    * can actually distinguish from "one row per site".
+    */
   private def redirectFixture(): (Path, Path, List[String]) =
     val (root, src) = fixture()
-    java(src, "com/demo/Reflect.java",
+    java(
+      src,
+      "com/demo/Reflect.java",
       """package com.demo;
         |public class Reflect {
         |  public static Class<?> forName(String n) { return null; }
         |  public static String nameOf(Class<?> c) { return null; }
-        |}""".stripMargin)
-    java(src, "com/demo/Uses.java",
+        |}""".stripMargin
+    )
+    java(
+      src,
+      "com/demo/Uses.java",
       """package com.demo;
         |public class Uses {
         |  public Class<?> lookUp(String n) { return Reflect.forName(n); }
         |  public String describe(Class<?> c) { return Reflect.nameOf(c) + Reflect.nameOf(c); }
-        |}""".stripMargin)
-    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java",
-                     "com/demo/Reflect.java", "com/demo/Uses.java"))
+        |}""".stripMargin
+    )
+    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java", "com/demo/Reflect.java", "com/demo/Uses.java"))
 
   // -------------------------------------------------------------------------
 
   test("a drop, an injection and a rename each leave a row naming the policy entry that produced it") {
     val (root, src) = fixture()
-    val rep    = root.resolve("report")
-    val inject = widgetReplacement(root, "sge")
+    val rep         = root.resolve("report")
+    val inject      = widgetReplacement(root, "sge")
     withReport(rep) {
-      run(root, src)(_.copy(
-        subs           = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject)),
-        packageRenames = Map("com.demo" -> "sge")))
+      run(root, src)(
+        _.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject)), packageRenames = Map("com.demo" -> "sge"))
+      )
     }
     val ds = decisions(rep)
     // every decision is classified — that is the mandatory half of the record
@@ -124,7 +138,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a declared key that never fired is still recorded — and says so") {
     val (root, src) = fixture()
-    val rep = root.resolve("report")
+    val rep         = root.resolve("report")
     withReport(rep) {
       run(root, src)(_.copy(subs = Substitutions(dropMethods = Set("com.demo.Widget#nope", "com.demo.Widget#label"))))
     }
@@ -140,11 +154,14 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     // the row is unnavigable for the sake of a `$` — and libGDX drops constructors on exactly such
     // types (`ParallelArray$ChannelDescriptor`).
     val (root, src) = fixture()
-    java(src, "com/demo/Outer.java",
+    java(
+      src,
+      "com/demo/Outer.java",
       """package com.demo;
         |public class Outer {
         |  public static class Inner { public int f() { return 1; } }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     val rep = root.resolve("report")
     withReport(rep) {
       run(root, src, files = List("com/demo/Outer.java")) {
@@ -159,8 +176,8 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a type nobody dropped has no row — the log records decisions, not the whole program") {
     val (root, src) = fixture()
-    val rep    = root.resolve("report")
-    val inject = widgetReplacement(root, "com.demo")
+    val rep         = root.resolve("report")
+    val inject      = widgetReplacement(root, "com.demo")
     withReport(rep) {
       run(root, src)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject))))
     }
@@ -174,7 +191,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("an EMPTY manifest writes a header-only artifact, not a missing file") {
     val (root, src) = fixture()
-    val rep = root.resolve("report")
+    val rep         = root.resolve("report")
     withReport(rep)(run(root, src)())
     val p = rep.resolve("run-latest/decisions.tsv")
     assert(Files.isRegularFile(p), "a run that decided nothing must still say so")
@@ -187,20 +204,24 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a re-pointed call records one row per DECLARATION, naming the entry that fired") {
     val (root, src, files) = redirectFixture()
-    val rep = root.resolve("report")
+    val rep                = root.resolve("report")
     withReport(rep) {
-      run(root, src, files)(_.copy(phases = List(
-        new balticporter.transform.ClassTableTransform(Map(
-          "com.demo.Reflect#forName" -> "com.demo.Table#classFor")),
-        new balticporter.transform.StaticForwarderTransform(List(
-          balticporter.transform.StaticForwarderTransform.Forwarder(
-            wrapper = "com.demo.Reflect", receiver = "java.lang.Class", members = Set("nameOf")))),
-      )))
+      run(root, src, files)(
+        _.copy(
+          phases = List(
+            new balticporter.transform.ClassTableTransform(Map("com.demo.Reflect#forName" -> "com.demo.Table#classFor")),
+            new balticporter.transform.StaticForwarderTransform(
+              List(
+                balticporter.transform.StaticForwarderTransform.Forwarder(wrapper = "com.demo.Reflect", receiver = "java.lang.Class", members = Set("nameOf"))
+              )
+            )
+          )
+        )
+      )
     }
     val rs = decisions(rep).filter(_.kind == Decision.Kind.RedirectedCall)
 
-    val table = rs.filter(_.reason == Reason.Configured("class-table",
-      "com.demo.Reflect#forName -> com.demo.Table#classFor"))
+    val table = rs.filter(_.reason == Reason.Configured("class-table", "com.demo.Reflect#forName -> com.demo.Table#classFor"))
     assertEquals(clue(table).size, 1)
     assert(clue(table.head.subjectFqn).startsWith("com.demo.Uses#lookUp"))
     assertEquals(table.head.detail("key"), "com.demo.Reflect#forName")
@@ -212,33 +233,35 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     // occurrence buries every decision that is not a redirect.
     val fwd = rs.filter(_.reason.className == "configured").filterNot(table.contains)
     assertEquals(clue(fwd).size, 1)
-    assertEquals(fwd.head.reason,
-      Reason.Configured("static-forwarder-inline", "com.demo.Reflect#nameOf -> java.lang.Class#nameOf"))
+    assertEquals(fwd.head.reason, Reason.Configured("static-forwarder-inline", "com.demo.Reflect#nameOf -> java.lang.Class#nameOf"))
     assert(clue(fwd.head.subjectFqn).startsWith("com.demo.Uses#describe"))
     assertEquals(fwd.head.detail("key"), "com.demo.Reflect")
   }
 
   test("a program the redirect phases do not touch records nothing — an empty policy is silent") {
     val (root, src, files) = redirectFixture()
-    val rep = root.resolve("report")
+    val rep                = root.resolve("report")
     withReport(rep) {
-      run(root, src, files)(_.copy(phases = List(
-        // configured against names this program does not have: the mechanism is identical and
-        // nothing fires, so nothing is recorded
-        new balticporter.transform.ClassTableTransform(Map("com.other.X#y" -> "com.other.T#z")),
-        new balticporter.transform.StaticForwarderTransform(Nil),
-        new balticporter.transform.TypeRedirectTransform(Map.empty),
-      )))
+      run(root, src, files)(
+        _.copy(
+          phases = List(
+            // configured against names this program does not have: the mechanism is identical and
+            // nothing fires, so nothing is recorded
+            new balticporter.transform.ClassTableTransform(Map("com.other.X#y" -> "com.other.T#z")),
+            new balticporter.transform.StaticForwarderTransform(Nil),
+            new balticporter.transform.TypeRedirectTransform(Map.empty)
+          )
+        )
+      )
     }
     assertEquals(decisions(rep), Nil)
   }
 
   test("a re-pointed TYPE records a RetypedSignature — nothing was called") {
     val (root, src, files) = redirectFixture()
-    val rep = root.resolve("report")
+    val rep                = root.resolve("report")
     withReport(rep) {
-      run(root, src, files)(_.copy(phases = List(
-        new balticporter.transform.TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo.Slab")))))
+      run(root, src, files)(_.copy(phases = List(new balticporter.transform.TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo.Slab")))))
     }
     val rs = decisions(rep).filter(_.kind == Decision.Kind.RetypedSignature)
     // `Gadget.w` is declared `Widget` — a TYPE occurrence, which no body seam could reach
@@ -252,14 +275,19 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     val (root, src, files) = redirectFixture()
     def once(rep: Path): String =
       withReport(rep) {
-        run(root, src, files)(_.copy(phases = List(
-          new balticporter.transform.ClassTableTransform(Map(
-            "com.demo.Reflect#forName" -> "com.demo.Table#classFor")),
-          new balticporter.transform.StaticForwarderTransform(List(
-            balticporter.transform.StaticForwarderTransform.Forwarder(
-              wrapper = "com.demo.Reflect", receiver = "java.lang.Class", members = Set("nameOf")))),
-          new balticporter.transform.TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo.Slab")),
-        )))
+        run(root, src, files)(
+          _.copy(
+            phases = List(
+              new balticporter.transform.ClassTableTransform(Map("com.demo.Reflect#forName" -> "com.demo.Table#classFor")),
+              new balticporter.transform.StaticForwarderTransform(
+                List(
+                  balticporter.transform.StaticForwarderTransform.Forwarder(wrapper = "com.demo.Reflect", receiver = "java.lang.Class", members = Set("nameOf"))
+                )
+              ),
+              new balticporter.transform.TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo.Slab"))
+            )
+          )
+        )
       }
       Files.readString(rep.resolve("run-latest/decisions.tsv"))
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
@@ -271,12 +299,15 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a replaced BODY records the member and the key — nothing else can say the signature lies") {
     val (root, src) = fixture()
-    val rep = root.resolve("report")
+    val rep         = root.resolve("report")
     withReport(rep) {
-      run(root, src)(_.copy(phases = List(
-        new balticporter.transform.MethodBodyTransform(Map(
-          "com.demo.Widget#label" -> """"replaced"""",
-          "com.demo.Widget#nope"  -> "()")))))
+      run(root, src)(
+        _.copy(
+          phases = List(
+            new balticporter.transform.MethodBodyTransform(Map("com.demo.Widget#label" -> """"replaced"""", "com.demo.Widget#nope" -> "()"))
+          )
+        )
+      )
     }
     val bs = decisions(rep).filter(_.kind == Decision.Kind.SubstitutedBody)
     // one row per member REPLACED — a key that fired nowhere replaced nothing, and `PolicyReport`
@@ -289,12 +320,15 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a VENDORED support type is (a) and a supportSources entry is (b) — the same act, two fixes") {
     val (root, src) = fixture()
-    val rep = root.resolve("report")
+    val rep         = root.resolve("report")
     withReport(rep) {
-      run(root, src)(_.copy(
-        phases         = List(new balticporter.transform.CollectionsTransform),
-        runtimeMode    = RuntimeMode.Vendored,
-        supportSources = Map("com.demo.Prop" -> "package com.demo\nobject Prop")))
+      run(root, src)(
+        _.copy(
+          phases = List(new balticporter.transform.CollectionsTransform),
+          runtimeMode = RuntimeMode.Vendored,
+          supportSources = Map("com.demo.Prop" -> "package com.demo\nobject Prop")
+        )
+      )
     }
     val inj = decisions(rep).filter(_.kind == Decision.Kind.InjectedMember)
 
@@ -314,7 +348,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     // what the plan requires: a support type reached through a build dependency is not a
     // definition in this port's output at all.
     val (root, src) = fixture()
-    val rep = root.resolve("report")
+    val rep         = root.resolve("report")
     withReport(rep) {
       run(root, src)(_.copy(phases = List(new balticporter.transform.CollectionsTransform)))
     }
@@ -325,12 +359,16 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     val (root, src) = fixture()
     def once(rep: Path): String =
       withReport(rep) {
-        run(root, src)(_.copy(
-          phases         = List(
-            new balticporter.transform.CollectionsTransform,
-            new balticporter.transform.MethodBodyTransform(Map("com.demo.Widget#label" -> """"x""""))),
-          runtimeMode    = RuntimeMode.Vendored,
-          supportSources = Map("com.demo.Prop" -> "package com.demo\nobject Prop")))
+        run(root, src)(
+          _.copy(
+            phases = List(
+              new balticporter.transform.CollectionsTransform,
+              new balticporter.transform.MethodBodyTransform(Map("com.demo.Widget#label" -> """"x""""))
+            ),
+            runtimeMode = RuntimeMode.Vendored,
+            supportSources = Map("com.demo.Prop" -> "package com.demo\nobject Prop")
+          )
+        )
       }
       Files.readString(rep.resolve("run-latest/decisions.tsv"))
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
@@ -340,12 +378,14 @@ class DecisionProvenanceSpec extends munit.FunSuite:
   // the RETYPE family — a declaration whose emitted SIGNATURE moved
   // -------------------------------------------------------------------------
 
-  /** A class whose members carry a JDK collection in every position a retyping reaches, plus one
-    * reassigned parameter — so "one row per declaration, not per parameter" is a claim the fixture
-    * can distinguish. */
+  /** A class whose members carry a JDK collection in every position a retyping reaches, plus one reassigned parameter — so "one row per declaration, not per parameter" is a claim the fixture can
+    * distinguish.
+    */
   private def retypeFixture(): (Path, Path, List[String]) =
     val (root, src) = fixture()
-    java(src, "com/demo/Bag.java",
+    java(
+      src,
+      "com/demo/Bag.java",
       """package com.demo;
         |import java.util.List;
         |import java.util.ArrayList;
@@ -353,12 +393,13 @@ class DecisionProvenanceSpec extends munit.FunSuite:
         |  public List<String> items = new ArrayList<String>();
         |  public List<String> pick(List<String> from, int n) { n = n + 1; return from; }
         |  public int plain(int k) { return k; }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java", "com/demo/Bag.java"))
 
   test("a retyped DECLARATION records once, with both types — and a PARAMETER does not add a row") {
     val (root, src, files) = retypeFixture()
-    val rep = root.resolve("report")
+    val rep                = root.resolve("report")
     withReport(rep) {
       run(root, src, files)(_.copy(phases = List(new balticporter.transform.CollectionsTransform)))
     }
@@ -380,7 +421,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a reassigned parameter records once per METHOD, naming the parameters that moved") {
     val (root, src, files) = retypeFixture()
-    val rep = root.resolve("report")
+    val rep                = root.resolve("report")
     withReport(rep) {
       run(root, src, files)(_.copy(phases = List(new balticporter.transform.MutableParamsTransform)))
     }
@@ -393,11 +434,9 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("a program with no JDK collection and no reassigned parameter records nothing") {
     val (root, src) = fixture()
-    val rep = root.resolve("report")
+    val rep         = root.resolve("report")
     withReport(rep) {
-      run(root, src)(_.copy(phases = List(
-        new balticporter.transform.CollectionsTransform,
-        new balticporter.transform.MutableParamsTransform)))
+      run(root, src)(_.copy(phases = List(new balticporter.transform.CollectionsTransform, new balticporter.transform.MutableParamsTransform)))
     }
     assertEquals(decisions(rep), Nil)
   }
@@ -406,9 +445,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     val (root, src, files) = retypeFixture()
     def once(rep: Path): String =
       withReport(rep) {
-        run(root, src, files)(_.copy(phases = List(
-          new balticporter.transform.CollectionsTransform,
-          new balticporter.transform.MutableParamsTransform)))
+        run(root, src, files)(_.copy(phases = List(new balticporter.transform.CollectionsTransform, new balticporter.transform.MutableParamsTransform)))
       }
       Files.readString(rep.resolve("run-latest/decisions.tsv"))
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
@@ -420,31 +457,39 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   private def ctorFixture(): (Path, Path, List[String]) =
     val (root, src) = fixture()
-    java(src, "com/demo/Base.java",
+    java(
+      src,
+      "com/demo/Base.java",
       """package com.demo;
         |public class Base {
         |  public Base(int n, boolean b) { }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     // ONE constructor that becomes the primary: java's own structure, unchanged. No row.
-    java(src, "com/demo/Plain.java",
+    java(
+      src,
+      "com/demo/Plain.java",
       """package com.demo;
         |public class Plain extends Base {
         |  public Plain(int n) { super(n, true); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     // SEVERAL roots reaching the SAME parent constructor with different arguments: neither can be
     // the primary, so a primary taking the PARENT's parameters is synthesised.
-    java(src, "com/demo/Two.java",
+    java(
+      src,
+      "com/demo/Two.java",
       """package com.demo;
         |public class Two extends Base {
         |  public Two() { super(0, false); }
         |  public Two(int n) { super(n + 1, true); }
-        |}""".stripMargin)
-    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java",
-                     "com/demo/Base.java", "com/demo/Plain.java", "com/demo/Two.java"))
+        |}""".stripMargin
+    )
+    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java", "com/demo/Base.java", "com/demo/Plain.java", "com/demo/Two.java"))
 
   test("a funnelled class records its SHAPE and its promoted signature; a trivial one records nothing") {
     val (root, src, files) = ctorFixture()
-    val rep = root.resolve("report")
+    val rep                = root.resolve("report")
     withReport(rep)(run(root, src, files)())
     val fs = decisions(rep).filter(_.kind == Decision.Kind.FunnelledCtor)
 
@@ -466,9 +511,9 @@ class DecisionProvenanceSpec extends munit.FunSuite:
   /** The funnel's row is also a PORTER NOTE, and that is a CORRECTION rather than an addition. */
   test("the funnel's decision is emitted BESIDE the synthesised class, which has no java behind it") {
     val (root, src, files) = ctorFixture()
-    val rep = root.resolve("note-report")
-    val res = withReport(rep)(run(root, src, files)())
-    val text = Files.readString(res.outDir.resolve("com/demo/Two.scala"))
+    val rep                = root.resolve("note-report")
+    val res                = withReport(rep)(run(root, src, files)())
+    val text               = Files.readString(res.outDir.resolve("com/demo/Two.scala"))
 
     assert(PorterNote.Rendered(Decision.Kind.FunnelledCtor))
     assert(PorterNote.AtDeclaration(Decision.Kind.FunnelledCtor))
@@ -494,9 +539,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     // real run in both directions; this is the same join, on the artifacts this test holds.
     val found = PorterNote.scan(text).filter(_.kind.contains(Decision.Kind.FunnelledCtor))
     assertEquals(clue(found).size, 1, text)
-    assertEquals(
-      decisions(rep).count(d => d.kind == Decision.Kind.FunnelledCtor && d.subjectFqn == "com.demo.Two"),
-      1)
+    assertEquals(decisions(rep).count(d => d.kind == Decision.Kind.FunnelledCtor && d.subjectFqn == "com.demo.Two"), 1)
   }
 
   test("two identical runs record identical funnel rows") {
@@ -511,50 +554,59 @@ class DecisionProvenanceSpec extends munit.FunSuite:
   // a DEPENDENT publishes its OWN decisions and no others (ENGINE-LIMITS D2)
   // -------------------------------------------------------------------------
 
-  /** two source trees: `base/` is only RESOLVED against, `dep/` is what the run converts — the
-    * structural shape of every dependent port. */
+  /** two source trees: `base/` is only RESOLVED against, `dep/` is what the run converts — the structural shape of every dependent port.
+    */
   private def dependentFixture(): (Path, Path, Path) =
     val root = Files.createTempDirectory("decisions-dep")
     val base = root.resolve("base")
     val dep  = root.resolve("dep")
-    java(base, "com/base/Holder.java",
+    java(
+      base,
+      "com/base/Holder.java",
       """package com.base;
         |import java.util.List;
         |import java.util.ArrayList;
         |public class Holder {
         |  public List<String> items = new ArrayList<String>();
         |  public List<String> all() { return items; }
-        |}""".stripMargin)
-    java(dep, "com/dep/Uses.java",
+        |}""".stripMargin
+    )
+    java(
+      dep,
+      "com/dep/Uses.java",
       """package com.dep;
         |import java.util.List;
         |public class Uses {
         |  public List<String> mine = null;
         |  public List<String> read(com.base.Holder h) { return h.all(); }
-        |}""".stripMargin)
+        |}""".stripMargin
+    )
     (root, base, dep)
 
   test("a dependent's decisions.tsv holds ITS declarations only — the base's are WITHHELD") {
     val (root, base, dep) = dependentFixture()
-    val rep = root.resolve("report")
+    val rep               = root.resolve("report")
     withReport(rep) {
       PortRun(
-        label     = "dep",
-        portRoot  = root.resolve("port"),
+        label = "dep",
+        portRoot = root.resolve("port"),
         sourceSet = SourceSet.Main,
-        frontend  = FrontendConfig(dep, List("com/dep/Uses.java"), Nil, resolutionRoots = List(base)),
-        phases    = Nil, // a manifest SUPPLIES the phases; passing both would give the run two policies
+        frontend = FrontendConfig(dep, List("com/dep/Uses.java"), Nil, resolutionRoots = List(base)),
+        phases = Nil, // a manifest SUPPLIES the phases; passing both would give the run two policies
         // resolution roots outside this run's own tree ARE a dependent port, and one that declares
         // no base is itself a fatal finding (§1.5) — so the shared surface arrives as a value.
-        manifest  = Some(
+        manifest = Some(
           PortManifest(
-            name           = "base",
-            surface        = List(new balticporter.transform.CollectionsTransform),
-            packageRenames = Map("com.base" -> "port.base"),
-          ).extendedBy(PortManifest(
-            name           = "dep",
-            packageRenames = Map("com.dep" -> "port.dep"),
-          ))),
+            name = "base",
+            surface = List(new balticporter.transform.CollectionsTransform),
+            packageRenames = Map("com.base" -> "port.base")
+          ).extendedBy(
+            PortManifest(
+              name = "dep",
+              packageRenames = Map("com.dep" -> "port.dep")
+            )
+          )
+        )
       ).execute()
     }
     val ds = decisions(rep)
@@ -578,14 +630,14 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     // Same phase, same java, no resolution roots: every unit is this run's own, so nothing is
     // withheld and `Holder`'s rows appear — in the port that emits Holder.
     val (root, base, _) = dependentFixture()
-    val rep = root.resolve("report")
+    val rep             = root.resolve("report")
     withReport(rep) {
       PortRun(
-        label     = "base",
-        portRoot  = root.resolve("baseport"),
+        label = "base",
+        portRoot = root.resolve("baseport"),
         sourceSet = SourceSet.Main,
-        frontend  = FrontendConfig(base, List("com/base/Holder.java"), Nil),
-        phases    = List(new balticporter.transform.CollectionsTransform),
+        frontend = FrontendConfig(base, List("com/base/Holder.java"), Nil),
+        phases = List(new balticporter.transform.CollectionsTransform)
       ).execute()
     }
     val ds = decisions(rep)
@@ -594,13 +646,12 @@ class DecisionProvenanceSpec extends munit.FunSuite:
 
   test("two identical runs produce byte-identical decisions.tsv") {
     val (root, src) = fixture()
-    val inject = widgetReplacement(root, "com.demo")
+    val inject      = widgetReplacement(root, "com.demo")
     def once(rep: Path): String =
       withReport(rep) {
-        run(root, src)(_.copy(subs = Substitutions(
-          dropTypes   = Set("com.demo.Widget"),
-          dropMethods = Set("com.demo.Gadget#nope"),
-          inject      = List(inject))))
+        run(root, src)(
+          _.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), dropMethods = Set("com.demo.Gadget#nope"), inject = List(inject)))
+        )
       }
       Files.readString(rep.resolve("run-latest/decisions.tsv"))
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))

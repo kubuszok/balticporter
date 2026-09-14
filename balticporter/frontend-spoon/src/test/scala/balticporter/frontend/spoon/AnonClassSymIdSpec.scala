@@ -35,11 +35,10 @@ class AnonClassSymIdSpec extends munit.FunSuite:
   test("anonymous class field declaration and assignment share one SymId") {
     val anon = findAnon
     // the field `x` is declared as a ValDef in the anonymous class body
-    val fieldDecl = anon.body.collectFirst { case v: Tree.ValDef => v }
-      .getOrElse(fail("no ValDef in anonymous class body"))
+    val fieldDecl = anon.body.collectFirst { case v: Tree.ValDef => v }.getOrElse(fail("no ValDef in anonymous class body"))
 
     // the assignment `x = 1` is inside the `run()` method body
-    val assigns = collection.mutable.ListBuffer.empty[SymId]
+    val assigns   = collection.mutable.ListBuffer.empty[SymId]
     given Program = program
     anon.body.foreach {
       case d: Tree.DefDef =>
@@ -47,9 +46,9 @@ class AnonClassSymIdSpec extends munit.FunSuite:
           StandardTraversal.scanTerm(rhs, ()) {
             case (_, Tree.Assign(lhs, _, _, _, _)) =>
               lhs match
-                case Tree.Ident(s, _, _) => assigns += s
+                case Tree.Ident(s, _, _)     => assigns += s
                 case Tree.Select(_, s, _, _) => assigns += s
-                case _ => ()
+                case _                       => ()
             case _ => ()
           }
         }
@@ -67,8 +66,7 @@ class AnonClassSymIdSpec extends munit.FunSuite:
   test("anonymous class method's own symbol is owned by the anonymous class") {
     val anon = findAnon
     // the `run()` method is declared in the anonymous class body
-    val runMethod = anon.body.collectFirst { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "run") => d }
-      .getOrElse(fail("no run() method in anonymous class body"))
+    val runMethod = anon.body.collectFirst { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "run") => d }.getOrElse(fail("no run() method in anonymous class body"))
 
     // its owner should be the anonymous class symbol
     val methodSym = program.symbolOf(runMethod.symbol).getOrElse(fail("no symbol for run()"))

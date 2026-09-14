@@ -2,15 +2,14 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Constant, CtorFunnel, OmissionCheck, Phase, Pipeline, Program, Term, Tree, Trivia,
-                         TriviaKind}
+import balticporter.tir.{ Constant, CtorFunnel, OmissionCheck, Phase, Pipeline, Program, Term, Tree, Trivia, TriviaKind }
 
-/** WHAT SHAPE A CONSTRUCTOR'S BODY ARRIVES IN — and why `CtorFunnel.delegationOnlyNilary` may not
-  * have a fallback arm (`ENGINE-LIMITS.md` C11). */
+/** WHAT SHAPE A CONSTRUCTOR'S BODY ARRIVES IN — and why `CtorFunnel.delegationOnlyNilary` may not have a fallback arm (`ENGINE-LIMITS.md` C11).
+  */
 class CtorFunnelBodyShapeSpec extends munit.FunSuite:
 
-  /** The C11 shape itself: `Font()` is nilary, delegates with ARGUMENTS, and sits in front of a class
-    * whose primary is scala's own implicit nilary one. */
+  /** The C11 shape itself: `Font()` is nilary, delegates with ARGUMENTS, and sits in front of a class whose primary is scala's own implicit nilary one.
+    */
   private val src =
     """package demo;
       |public class Font {
@@ -26,11 +25,11 @@ class CtorFunnelBodyShapeSpec extends munit.FunSuite:
 
   private def parsed: Program = SpoonTir.fromSource(src, "Font.java")
 
-  /** rewrite the rhs of the NILARY constructor of `demo.Font`, through the pipeline rather than by a
-    * private walk (CLAUDE.md §3). */
+  /** rewrite the rhs of the NILARY constructor of `demo.Font`, through the pipeline rather than by a private walk (CLAUDE.md §3).
+    */
   private def reshaped(p: Program)(f: Tree.Block => Term): Program =
     val phase = new Phase:
-      def name: String = "spec/reshape-ctor-body"
+      def name:                                                          String      = "spec/reshape-ctor-body"
       override def transformDefDef(d: Tree.DefDef)(using prog: Program): Tree.DefDef =
         val isNilaryCtor =
           prog.symbolOf(d.symbol).exists(s => s.name == "<init>" && s.fullName.startsWith("demo.Font")) &&
@@ -42,9 +41,7 @@ class CtorFunnelBodyShapeSpec extends munit.FunSuite:
 
   private def nilaryCtorOf(p: Program): Tree.DefDef =
     val font = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "demo.Font")).get
-    CtorFunnel.ctorsOf(p, font.body)
-      .find(d => CtorFunnel.valueParams(p, d).isEmpty)
-      .getOrElse(fail("no nilary constructor in demo.Font"))
+    CtorFunnel.ctorsOf(p, font.body).find(d => CtorFunnel.valueParams(p, d).isEmpty).getOrElse(fail("no nilary constructor in demo.Font"))
 
   private def emitted(p: Program): String = new TirEmitter(p).emit
 
@@ -93,7 +90,9 @@ class CtorFunnelBodyShapeSpec extends munit.FunSuite:
         |  public Empty()      { super(); }
         |  public Empty(int a) { n = a; }
         |}
-        |""".stripMargin, "Empty.java")
+        |""".stripMargin,
+      "Empty.java"
+    )
     val ctor = CtorFunnel.ctorsOf(nil, nil.units.head.body).find(d => CtorFunnel.valueParams(nil, d).isEmpty).get
     assertEquals(CtorFunnel.delegationOnlyNilary(nil, ctor), Some(Nil))
     assertEquals(OmissionCheck.droppedNilaryCtors(nil, nil.units), Nil)

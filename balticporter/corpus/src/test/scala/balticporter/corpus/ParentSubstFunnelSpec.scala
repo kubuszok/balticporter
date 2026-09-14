@@ -4,9 +4,9 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A SYNTHESISED PRIMARY's slots are the PARENT CONSTRUCTOR's formals, and those formals are
-  * written in the parent's scope — so they take the same substitution the diamond forwarder does
-  * (`balticporter.tir.ParentSubst`, `CLAUDE.md` §4.56: one derivation, not one per caller). */
+/** A SYNTHESISED PRIMARY's slots are the PARENT CONSTRUCTOR's formals, and those formals are written in the parent's scope — so they take the same substitution the diamond forwarder does
+  * (`balticporter.tir.ParentSubst`, `CLAUDE.md` §4.56: one derivation, not one per caller).
+  */
 class ParentSubstFunnelSpec extends munit.FunSuite:
 
   private val src =
@@ -44,8 +44,11 @@ class ParentSubstFunnelSpec extends munit.FunSuite:
     assert(clue(out).contains("class Widget protected (sup$0: fbound2.Adapter[fbound2.Panel])"))
     assert(!out.contains("sup$0: fbound2.Adapter[N]"))
     // the `extends` clause passes the same slot, so both halves of the line agree
-    assert(out.contains("extends fbound2.Handler[fbound2.Widget, fbound2.Panel](sup$0)") ||
-           out.contains("extends fbound2.Handler[Widget, fbound2.Panel](sup$0)"), clue(out))
+    assert(
+      out.contains("extends fbound2.Handler[fbound2.Widget, fbound2.Panel](sup$0)") ||
+        out.contains("extends fbound2.Handler[Widget, fbound2.Panel](sup$0)"),
+      clue(out)
+    )
   }
 
   test("TRANSITIVE — the parameter is bound by a GRANDparent") {

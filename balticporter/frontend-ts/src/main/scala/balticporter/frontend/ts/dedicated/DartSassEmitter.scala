@@ -1,14 +1,13 @@
 package balticporter.corpus.sass
 
-import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.frontend.ts.dedicated.{ DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction }
 import balticporter.corpus.terser.TerserEmitter
 
-import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastValue}
-import java.nio.file.{Files, Path}
+import balticporter.frontend.ts.{ ParityDerive, RastFile, RastNode, RastValue }
+import java.nio.file.{ Files, Path }
 import scala.collection.mutable
 
-/** Dedicated RAST-to-Scala emitter for dart-sass — a Dart implementation of
-  * the Sass CSS preprocessor.
+/** Dedicated RAST-to-Scala emitter for dart-sass — a Dart implementation of the Sass CSS preprocessor.
   *
   * Dart is structurally closer to Scala than JavaScript/TypeScript:
   *   - Classes with constructors, named parameters, factory constructors
@@ -18,10 +17,9 @@ import scala.collection.mutable
   *   - Null-safety (`?` types) → Nullable or `| Null`
   *   - Cascade `..` → temp variable + method chain
   *
-  * The emitter uses parity-derive against the ssg-sass hand-ported reference
-  * (132 files, 48K LOC). RAST bodies are translated using
-  * DefmethodBodyTranslator where they compile; otherwise reference bodies
-  * are kept. */
+  * The emitter uses parity-derive against the ssg-sass hand-ported reference (132 files, 48K LOC). RAST bodies are translated using DefmethodBodyTranslator where they compile; otherwise reference
+  * bodies are kept.
+  */
 object DartSassEmitter:
 
   // --------------------------------------------------------------------------
@@ -29,49 +27,53 @@ object DartSassEmitter:
   // --------------------------------------------------------------------------
 
   final case class DartSassModule(
-      category: String,
-      dartPath: String,
-      referenceSubPath: String,
-      objectName: String,
-      subclassDartPaths: List[String] = Nil,
+    category:          String,
+    dartPath:          String,
+    referenceSubPath:  String,
+    objectName:        String,
+    subclassDartPaths: List[String] = Nil
   )
 
   val TopLevelModules: List[DartSassModule] = List(
-    DartSassModule("class", "lib/src/exception.dart",           "SassException.scala",      "SassException"),
-    DartSassModule("class", "lib/src/callable.dart",            "Callable.scala",           "Callable"),
-    DartSassModule("class", "lib/src/configuration.dart",       "Configuration.scala",      "Configuration"),
-    DartSassModule("class", "lib/src/compile.dart",             "Compile.scala",            "Compile"),
-    DartSassModule("class", "lib/src/environment.dart",         "Environment.scala",        "Environment"),
-    DartSassModule("class", "lib/src/evaluation_context.dart",  "EvaluationContext.scala",  "EvaluationContext"),
-    DartSassModule("class", "lib/src/import_cache.dart",        "ImportCache.scala",        "ImportCache"),
-    DartSassModule("class", "lib/src/interpolation_buffer.dart","InterpolationBuffer.scala", "InterpolationBuffer"),
-    DartSassModule("class", "lib/src/interpolation_map.dart",   "InterpolationMap.scala",   "InterpolationMap"),
-    DartSassModule("class", "lib/src/deprecation.dart",         "Deprecation.scala",        "Deprecation"),
-    DartSassModule("class", "lib/src/syntax.dart",              "Syntax.scala",             "Syntax"),
-    DartSassModule("class", "lib/src/module.dart",              "Module.scala",             "Module"),
-    DartSassModule("data",  "lib/src/color_names.dart",         "ColorNames.scala",         "ColorNames"),
-    DartSassModule("data",  "lib/src/utils.dart",               "Utils.scala",              "Utils"),
-    DartSassModule("data",  "lib/src/logger.dart",              "Logger.scala",             "Logger"),
+    DartSassModule("class", "lib/src/exception.dart", "SassException.scala", "SassException"),
+    DartSassModule("class", "lib/src/callable.dart", "Callable.scala", "Callable"),
+    DartSassModule("class", "lib/src/configuration.dart", "Configuration.scala", "Configuration"),
+    DartSassModule("class", "lib/src/compile.dart", "Compile.scala", "Compile"),
+    DartSassModule("class", "lib/src/environment.dart", "Environment.scala", "Environment"),
+    DartSassModule("class", "lib/src/evaluation_context.dart", "EvaluationContext.scala", "EvaluationContext"),
+    DartSassModule("class", "lib/src/import_cache.dart", "ImportCache.scala", "ImportCache"),
+    DartSassModule("class", "lib/src/interpolation_buffer.dart", "InterpolationBuffer.scala", "InterpolationBuffer"),
+    DartSassModule("class", "lib/src/interpolation_map.dart", "InterpolationMap.scala", "InterpolationMap"),
+    DartSassModule("class", "lib/src/deprecation.dart", "Deprecation.scala", "Deprecation"),
+    DartSassModule("class", "lib/src/syntax.dart", "Syntax.scala", "Syntax"),
+    DartSassModule("class", "lib/src/module.dart", "Module.scala", "Module"),
+    DartSassModule("data", "lib/src/color_names.dart", "ColorNames.scala", "ColorNames"),
+    DartSassModule("data", "lib/src/utils.dart", "Utils.scala", "Utils"),
+    DartSassModule("data", "lib/src/logger.dart", "Logger.scala", "Logger")
   )
 
   val AstCssModules: List[DartSassModule] = List(
-    DartSassModule("ast", "lib/src/ast/css/at_rule.dart",       "ast/css/CssAtRule.scala",       "CssAtRule"),
-    DartSassModule("ast", "lib/src/ast/css/comment.dart",       "ast/css/CssComment.scala",      "CssComment"),
-    DartSassModule("ast", "lib/src/ast/css/declaration.dart",   "ast/css/CssDeclaration.scala",  "CssDeclaration"),
-    DartSassModule("ast", "lib/src/ast/css/import.dart",        "ast/css/CssImport.scala",       "CssImport"),
-    DartSassModule("ast", "lib/src/ast/css/keyframe_block.dart","ast/css/CssKeyframeBlock.scala", "CssKeyframeBlock"),
-    DartSassModule("ast", "lib/src/ast/css/media_query.dart",   "ast/css/CssMediaQuery.scala",   "CssMediaQuery"),
-    DartSassModule("ast", "lib/src/ast/css/media_rule.dart",    "ast/css/CssMediaRule.scala",    "CssMediaRule"),
-    DartSassModule("ast", "lib/src/ast/css/style_rule.dart",    "ast/css/CssStyleRule.scala",    "CssStyleRule"),
-    DartSassModule("ast", "lib/src/ast/css/stylesheet.dart",    "ast/css/CssStylesheet.scala",   "CssStylesheet"),
-    DartSassModule("ast", "lib/src/ast/css/supports_rule.dart", "ast/css/CssSupportsRule.scala",  "CssSupportsRule"),
-    DartSassModule("ast", "lib/src/ast/css/value.dart",         "ast/css/CssValue.scala",        "CssValue"),
+    DartSassModule("ast", "lib/src/ast/css/at_rule.dart", "ast/css/CssAtRule.scala", "CssAtRule"),
+    DartSassModule("ast", "lib/src/ast/css/comment.dart", "ast/css/CssComment.scala", "CssComment"),
+    DartSassModule("ast", "lib/src/ast/css/declaration.dart", "ast/css/CssDeclaration.scala", "CssDeclaration"),
+    DartSassModule("ast", "lib/src/ast/css/import.dart", "ast/css/CssImport.scala", "CssImport"),
+    DartSassModule("ast", "lib/src/ast/css/keyframe_block.dart", "ast/css/CssKeyframeBlock.scala", "CssKeyframeBlock"),
+    DartSassModule("ast", "lib/src/ast/css/media_query.dart", "ast/css/CssMediaQuery.scala", "CssMediaQuery"),
+    DartSassModule("ast", "lib/src/ast/css/media_rule.dart", "ast/css/CssMediaRule.scala", "CssMediaRule"),
+    DartSassModule("ast", "lib/src/ast/css/style_rule.dart", "ast/css/CssStyleRule.scala", "CssStyleRule"),
+    DartSassModule("ast", "lib/src/ast/css/stylesheet.dart", "ast/css/CssStylesheet.scala", "CssStylesheet"),
+    DartSassModule("ast", "lib/src/ast/css/supports_rule.dart", "ast/css/CssSupportsRule.scala", "CssSupportsRule"),
+    DartSassModule("ast", "lib/src/ast/css/value.dart", "ast/css/CssValue.scala", "CssValue")
   )
 
   val AstSassModules: List[DartSassModule] = List(
     DartSassModule("ast", "lib/src/ast/sass/argument_declaration.dart", "ast/sass/ArgumentDeclaration.scala", "ArgumentDeclaration"),
-    DartSassModule("ast", "lib/src/ast/sass/at_root_query.dart",       "ast/sass/AtRootQuery.scala",        "AtRootQuery"),
-    DartSassModule("ast", "lib/src/ast/sass/expression.dart",          "ast/sass/Expression.scala",          "Expression",
+    DartSassModule("ast", "lib/src/ast/sass/at_root_query.dart", "ast/sass/AtRootQuery.scala", "AtRootQuery"),
+    DartSassModule(
+      "ast",
+      "lib/src/ast/sass/expression.dart",
+      "ast/sass/Expression.scala",
+      "Expression",
       subclassDartPaths = List(
         "lib/src/ast/sass/expression/binary_operation.dart",
         "lib/src/ast/sass/expression/boolean.dart",
@@ -90,11 +92,16 @@ object DartSassEmitter:
         "lib/src/ast/sass/expression/supports.dart",
         "lib/src/ast/sass/expression/unary_operation.dart",
         "lib/src/ast/sass/expression/value.dart",
-        "lib/src/ast/sass/expression/variable.dart",
-      )),
-    DartSassModule("ast", "lib/src/ast/sass/import.dart",              "ast/sass/Import.scala",              "Import"),
-    DartSassModule("ast", "lib/src/ast/sass/interpolation.dart",       "ast/sass/Interpolation.scala",       "Interpolation"),
-    DartSassModule("ast", "lib/src/ast/sass/statement.dart",           "ast/sass/Statement.scala",           "Statement",
+        "lib/src/ast/sass/expression/variable.dart"
+      )
+    ),
+    DartSassModule("ast", "lib/src/ast/sass/import.dart", "ast/sass/Import.scala", "Import"),
+    DartSassModule("ast", "lib/src/ast/sass/interpolation.dart", "ast/sass/Interpolation.scala", "Interpolation"),
+    DartSassModule(
+      "ast",
+      "lib/src/ast/sass/statement.dart",
+      "ast/sass/Statement.scala",
+      "Statement",
       subclassDartPaths = List(
         "lib/src/ast/sass/statement/at_root_rule.dart",
         "lib/src/ast/sass/statement/at_rule.dart",
@@ -124,56 +131,62 @@ object DartSassEmitter:
         "lib/src/ast/sass/statement/use_rule.dart",
         "lib/src/ast/sass/statement/variable_declaration.dart",
         "lib/src/ast/sass/statement/warn_rule.dart",
-        "lib/src/ast/sass/statement/while_rule.dart",
-      )),
+        "lib/src/ast/sass/statement/while_rule.dart"
+      )
+    )
   )
 
   val SelectorModules: List[DartSassModule] = List(
-    DartSassModule("selector", "lib/src/ast/selector/complex.dart",    "ast/selector/ComplexSelector.scala", "ComplexSelector"),
+    DartSassModule("selector", "lib/src/ast/selector/complex.dart", "ast/selector/ComplexSelector.scala", "ComplexSelector")
   )
 
   val ParseModules: List[DartSassModule] = List(
-    DartSassModule("parse", "lib/src/parse/stylesheet.dart",  "parse/StylesheetParser.scala", "StylesheetParser"),
-    DartSassModule("parse", "lib/src/parse/sass.dart",        "parse/SassParser.scala",       "SassParser"),
-    DartSassModule("parse", "lib/src/parse/scss.dart",        "parse/ScssParser.scala",       "ScssParser"),
-    DartSassModule("parse", "lib/src/parse/css.dart",         "parse/CssParser.scala",        "CssParser"),
-    DartSassModule("parse", "lib/src/parse/selector.dart",    "parse/SelectorParser.scala",   "SelectorParser"),
-    DartSassModule("parse", "lib/src/parse/media_query.dart", "parse/MediaQueryParser.scala",  "MediaQueryParser"),
-    DartSassModule("parse", "lib/src/parse/at_root_query.dart","parse/AtRootQueryParser.scala","AtRootQueryParser"),
-    DartSassModule("parse", "lib/src/parse/key_frame.dart",   "parse/KeyframeParser.scala",    "KeyframeParser"),
+    DartSassModule("parse", "lib/src/parse/stylesheet.dart", "parse/StylesheetParser.scala", "StylesheetParser"),
+    DartSassModule("parse", "lib/src/parse/sass.dart", "parse/SassParser.scala", "SassParser"),
+    DartSassModule("parse", "lib/src/parse/scss.dart", "parse/ScssParser.scala", "ScssParser"),
+    DartSassModule("parse", "lib/src/parse/css.dart", "parse/CssParser.scala", "CssParser"),
+    DartSassModule("parse", "lib/src/parse/selector.dart", "parse/SelectorParser.scala", "SelectorParser"),
+    DartSassModule("parse", "lib/src/parse/media_query.dart", "parse/MediaQueryParser.scala", "MediaQueryParser"),
+    DartSassModule("parse", "lib/src/parse/at_root_query.dart", "parse/AtRootQueryParser.scala", "AtRootQueryParser"),
+    DartSassModule("parse", "lib/src/parse/key_frame.dart", "parse/KeyframeParser.scala", "KeyframeParser")
   )
 
   val ValueModules: List[DartSassModule] = List(
-    DartSassModule("value", "lib/src/value.dart",                "value/Value.scala",              "Value"),
-    DartSassModule("value", "lib/src/value/boolean.dart",        "value/SassBoolean.scala",        "SassBoolean"),
-    DartSassModule("value", "lib/src/value/calculation.dart",    "value/SassCalculation.scala",    "SassCalculation"),
-    DartSassModule("value", "lib/src/value/color.dart",          "value/SassColor.scala",          "SassColor"),
-    DartSassModule("value", "lib/src/value/function.dart",       "value/SassFunction.scala",       "SassFunction"),
-    DartSassModule("value", "lib/src/value/list.dart",           "value/SassList.scala",           "SassList"),
-    DartSassModule("value", "lib/src/value/map.dart",            "value/SassMap.scala",            "SassMap"),
-    DartSassModule("value", "lib/src/value/mixin.dart",          "value/SassMixin.scala",          "SassMixin"),
-    DartSassModule("value", "lib/src/value/null.dart",           "value/SassNull.scala",           "SassNull"),
-    DartSassModule("value", "lib/src/value/number.dart",         "value/SassNumber.scala",         "SassNumber"),
-    DartSassModule("value", "lib/src/value/string.dart",         "value/SassString.scala",         "SassString"),
+    DartSassModule("value", "lib/src/value.dart", "value/Value.scala", "Value"),
+    DartSassModule("value", "lib/src/value/boolean.dart", "value/SassBoolean.scala", "SassBoolean"),
+    DartSassModule("value", "lib/src/value/calculation.dart", "value/SassCalculation.scala", "SassCalculation"),
+    DartSassModule("value", "lib/src/value/color.dart", "value/SassColor.scala", "SassColor"),
+    DartSassModule("value", "lib/src/value/function.dart", "value/SassFunction.scala", "SassFunction"),
+    DartSassModule("value", "lib/src/value/list.dart", "value/SassList.scala", "SassList"),
+    DartSassModule("value", "lib/src/value/map.dart", "value/SassMap.scala", "SassMap"),
+    DartSassModule("value", "lib/src/value/mixin.dart", "value/SassMixin.scala", "SassMixin"),
+    DartSassModule("value", "lib/src/value/null.dart", "value/SassNull.scala", "SassNull"),
+    DartSassModule("value", "lib/src/value/number.dart", "value/SassNumber.scala", "SassNumber"),
+    DartSassModule("value", "lib/src/value/string.dart", "value/SassString.scala", "SassString")
   )
 
   val VisitorModules: List[DartSassModule] = List(
-    DartSassModule("visitor", "lib/src/visitor/serialize.dart",       "visitor/SerializeVisitor.scala",       "SerializeVisitor"),
-    DartSassModule("visitor", "lib/src/visitor/evaluate.dart",        "visitor/EvaluateVisitor.scala",        "EvaluateVisitor"),
-    DartSassModule("visitor", "lib/src/visitor/clone_css.dart",       "visitor/CloneCssVisitor.scala",        "CloneCssVisitor"),
-    DartSassModule("visitor", "lib/src/visitor/recursive_ast.dart",   "visitor/RecursiveAstVisitor.scala",    "RecursiveAstVisitor"),
-    DartSassModule("visitor", "lib/src/visitor/recursive_statement.dart", "visitor/RecursiveStatementVisitor.scala", "RecursiveStatementVisitor"),
-    DartSassModule("visitor", "lib/src/visitor/find_dependencies.dart", "visitor/FindDependenciesVisitor.scala", "FindDependenciesVisitor"),
+    DartSassModule("visitor", "lib/src/visitor/serialize.dart", "visitor/SerializeVisitor.scala", "SerializeVisitor"),
+    DartSassModule("visitor", "lib/src/visitor/evaluate.dart", "visitor/EvaluateVisitor.scala", "EvaluateVisitor"),
+    DartSassModule("visitor", "lib/src/visitor/clone_css.dart", "visitor/CloneCssVisitor.scala", "CloneCssVisitor"),
+    DartSassModule("visitor", "lib/src/visitor/recursive_ast.dart", "visitor/RecursiveAstVisitor.scala", "RecursiveAstVisitor"),
+    DartSassModule(
+      "visitor",
+      "lib/src/visitor/recursive_statement.dart",
+      "visitor/RecursiveStatementVisitor.scala",
+      "RecursiveStatementVisitor"
+    ),
+    DartSassModule("visitor", "lib/src/visitor/find_dependencies.dart", "visitor/FindDependenciesVisitor.scala", "FindDependenciesVisitor")
   )
 
   val FunctionModules: List[DartSassModule] = List(
-    DartSassModule("function", "lib/src/functions/color.dart",  "functions/ColorFunctions.scala",  "ColorFunctions"),
-    DartSassModule("function", "lib/src/functions/list.dart",   "functions/ListFunctions.scala",   "ListFunctions"),
-    DartSassModule("function", "lib/src/functions/map.dart",    "functions/MapFunctions.scala",    "MapFunctions"),
-    DartSassModule("function", "lib/src/functions/math.dart",   "functions/MathFunctions.scala",   "MathFunctions"),
-    DartSassModule("function", "lib/src/functions/meta.dart",   "functions/MetaFunctions.scala",   "MetaFunctions"),
-    DartSassModule("function", "lib/src/functions/selector.dart","functions/SelectorFunctions.scala","SelectorFunctions"),
-    DartSassModule("function", "lib/src/functions/string.dart", "functions/StringFunctions.scala", "StringFunctions"),
+    DartSassModule("function", "lib/src/functions/color.dart", "functions/ColorFunctions.scala", "ColorFunctions"),
+    DartSassModule("function", "lib/src/functions/list.dart", "functions/ListFunctions.scala", "ListFunctions"),
+    DartSassModule("function", "lib/src/functions/map.dart", "functions/MapFunctions.scala", "MapFunctions"),
+    DartSassModule("function", "lib/src/functions/math.dart", "functions/MathFunctions.scala", "MathFunctions"),
+    DartSassModule("function", "lib/src/functions/meta.dart", "functions/MetaFunctions.scala", "MetaFunctions"),
+    DartSassModule("function", "lib/src/functions/selector.dart", "functions/SelectorFunctions.scala", "SelectorFunctions"),
+    DartSassModule("function", "lib/src/functions/string.dart", "functions/StringFunctions.scala", "StringFunctions")
   )
 
   val AllModules: List[DartSassModule] =
@@ -185,21 +198,22 @@ object DartSassEmitter:
   // --------------------------------------------------------------------------
 
   val dartTypeMap: Map[String, String] = Map(
-    "String"  -> "String",
-    "int"     -> "Int",
-    "double"  -> "Double",
-    "bool"    -> "Boolean",
-    "num"     -> "Double",
-    "void"    -> "Unit",
+    "String" -> "String",
+    "int" -> "Int",
+    "double" -> "Double",
+    "bool" -> "Boolean",
+    "num" -> "Double",
+    "void" -> "Unit",
     "dynamic" -> "Any",
-    "Object"  -> "Any",
-    "Never"   -> "Nothing",
-    "Null"    -> "Null",
+    "Object" -> "Any",
+    "Never" -> "Nothing",
+    "Null" -> "Null"
   )
 
   def dartTypeToScala(dartType: String): String =
     val trimmed = dartType.trim
-    dartTypeMap.getOrElse(trimmed, {
+    dartTypeMap.getOrElse(
+      trimmed,
       if trimmed.endsWith("?") then
         val base = trimmed.stripSuffix("?")
         s"Nullable[${dartTypeToScala(base)}]"
@@ -223,18 +237,17 @@ object DartSassEmitter:
       else if trimmed.startsWith("Iterable<") && trimmed.endsWith(">") then
         val elem = trimmed.stripPrefix("Iterable<").stripSuffix(">")
         s"Iterable[${dartTypeToScala(elem)}]"
-      else
-        trimmed
-    })
+      else trimmed
+    )
 
   private def findTopLevelComma(s: String): Int =
     var depth = 0
     for i <- 0 until s.length do
       s(i) match
-        case '<' | '(' | '[' => depth += 1
-        case '>' | ')' | ']' => depth -= 1
+        case '<' | '(' | '['   => depth += 1
+        case '>' | ')' | ']'   => depth -= 1
         case ',' if depth == 0 => return i
-        case _ =>
+        case _                 =>
     -1
 
   // --------------------------------------------------------------------------
@@ -242,39 +255,39 @@ object DartSassEmitter:
   // --------------------------------------------------------------------------
 
   final case class ParityEmitSummary(
-      moduleName: String,
-      totalMethods: Int,
-      matchedFromRast: Int,
-      keptFromReference: Int,
-      refusalCount: Int,
-      matchDetails: List[(String, String)] = Nil,
+    moduleName:        String,
+    totalMethods:      Int,
+    matchedFromRast:   Int,
+    keptFromReference: Int,
+    refusalCount:      Int,
+    matchDetails:      List[(String, String)] = Nil
   )
 
   private val dartUncompilablePatterns: List[String] = List(
-    "async ",           // async/await — ssg-sass is synchronous
-    "await ",           // async/await
-    "Future<",          // Future type
-    "dart:io",          // platform-specific I/O
-    "File(",            // file system
-    "HttpClient",       // HTTP
-    "js_interop",       // JS bindings
-    "dart:html",        // browser DOM
+    "async ", // async/await — ssg-sass is synchronous
+    "await ", // async/await
+    "Future<", // Future type
+    "dart:io", // platform-specific I/O
+    "File(", // file system
+    "HttpClient", // HTTP
+    "js_interop", // JS bindings
+    "dart:html", // browser DOM
     "StreamController", // async streams
-    "Zone.",            // Dart zones
+    "Zone." // Dart zones
   )
 
   private def containsDartUncompilablePatterns(body: String): Boolean =
     dartUncompilablePatterns.exists(body.contains)
 
   def emitWithParity(
-      rastFile: RastFile,
-      referencePath: Path,
+    rastFile:      RastFile,
+    referencePath: Path
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val rastBodies = buildTranslatedBodyMap(rastFile)
-    val policy = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
-    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
-    val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
+    val rastBodies      = buildTranslatedBodyMap(rastFile)
+    val policy          = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
+    val result          = ParityDerive.derive(referenceSource, rastBodies, policy)
+    val moduleName      = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
@@ -282,39 +295,36 @@ object DartSassEmitter:
       matchedFromRast = result.rastCount,
       keptFromReference = result.referenceCount,
       refusalCount = result.totalRefusals,
-      matchDetails = result.bodies.map(e => (e.methodName, e.source)),
+      matchDetails = result.bodies.map(e => (e.methodName, e.source))
     )
 
     (result.emittedSource, summary)
 
   /** Emit with parity using multiple RAST files (main + subclasses).
     *
-    * For modules like Expression.scala where the reference consolidates 20+
-    * Dart subclass files into one Scala file, this aggregates bodies from
-    * all subclass RASTs into a single body map for matching.
+    * For modules like Expression.scala where the reference consolidates 20+ Dart subclass files into one Scala file, this aggregates bodies from all subclass RASTs into a single body map for
+    * matching.
     */
   def emitWithParityMultiFile(
-      mainRast: RastFile,
-      subclassRasts: List[RastFile],
-      referencePath: Path,
+    mainRast:      RastFile,
+    subclassRasts: List[RastFile],
+    referencePath: Path
   ): (String, ParityEmitSummary) =
-    if subclassRasts.isEmpty then
-      return emitWithParity(mainRast, referencePath)
+    if subclassRasts.isEmpty then return emitWithParity(mainRast, referencePath)
 
     val referenceSource = new String(Files.readAllBytes(referencePath))
 
     val allBodies = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
     def addBodies(rast: RastFile): Unit =
       val bodies = buildTranslatedBodyMap(rast)
-      for (name, entries) <- bodies do
-        allBodies.getOrElseUpdate(name, mutable.ListBuffer.empty) ++= entries
+      for (name, entries) <- bodies do allBodies.getOrElseUpdate(name, mutable.ListBuffer.empty) ++= entries
 
     addBodies(mainRast)
     for sub <- subclassRasts do addBodies(sub)
 
     val rastBodies = allBodies.map { case (k, v) => k -> v.toList }.toMap
-    val policy = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
-    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
+    val policy     = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
+    val result     = ParityDerive.derive(referenceSource, rastBodies, policy)
     val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val summary = ParityEmitSummary(
@@ -323,7 +333,7 @@ object DartSassEmitter:
       matchedFromRast = result.rastCount,
       keptFromReference = result.referenceCount,
       refusalCount = result.totalRefusals,
-      matchDetails = result.bodies.map(e => (e.methodName, e.source)),
+      matchDetails = result.bodies.map(e => (e.methodName, e.source))
     )
 
     (result.emittedSource, summary)
@@ -333,29 +343,29 @@ object DartSassEmitter:
   // --------------------------------------------------------------------------
 
   final case class BatchSummary(
-      totalModules: Int,
-      foundRast: Int,
-      foundReference: Int,
-      parityMethods: Int,
-      parityMatched: Int,
-      byCategory: Map[String, Int],
+    totalModules:   Int,
+    foundRast:      Int,
+    foundReference: Int,
+    parityMethods:  Int,
+    parityMatched:  Int,
+    byCategory:     Map[String, Int]
   )
 
   def analyzeAll(
-      loadRast: String => Option[RastFile],
-      sassRefRoot: Path,
+    loadRast:    String => Option[RastFile],
+    sassRefRoot: Path
   ): BatchSummary =
-    var foundRast = 0
-    var foundRef = 0
+    var foundRast          = 0
+    var foundRef           = 0
     var totalParityMethods = 0
     var totalParityMatched = 0
-    val byCategory = mutable.Map.empty[String, Int].withDefaultValue(0)
+    val byCategory         = mutable.Map.empty[String, Int].withDefaultValue(0)
 
     for mod <- AllModules do
       val rastResource = s"/rast/dart-sass/${mod.dartPath}.rast.json"
-      val hasRast = loadRast(rastResource).isDefined
-      val refPath = sassRefRoot.resolve(mod.referenceSubPath)
-      val hasRef = Files.exists(refPath)
+      val hasRast      = loadRast(rastResource).isDefined
+      val refPath      = sassRefRoot.resolve(mod.referenceSubPath)
+      val hasRef       = Files.exists(refPath)
 
       if hasRast then foundRast += 1
       if hasRef then foundRef += 1
@@ -374,27 +384,27 @@ object DartSassEmitter:
       foundReference = foundRef,
       parityMethods = totalParityMethods,
       parityMatched = totalParityMatched,
-      byCategory = byCategory.toMap,
+      byCategory = byCategory.toMap
     )
 
   def emitAllWithParity(
-      loadRast: String => Option[RastFile],
-      sassRefRoot: Path,
-      outDir: Path,
+    loadRast:    String => Option[RastFile],
+    sassRefRoot: Path,
+    outDir:      Path
   ): List[(DartSassModule, ParityEmitSummary)] =
     Files.createDirectories(outDir)
     val results = mutable.ListBuffer.empty[(DartSassModule, ParityEmitSummary)]
 
     for mod <- AllModules do
       val rastResource = s"/rast/dart-sass/${mod.dartPath}.rast.json"
-      val refPath = sassRefRoot.resolve(mod.referenceSubPath)
+      val refPath      = sassRefRoot.resolve(mod.referenceSubPath)
       if Files.exists(refPath) then
         loadRast(rastResource).foreach { rast =>
           val subclassRasts = mod.subclassDartPaths.flatMap { subPath =>
             loadRast(s"/rast/dart-sass/$subPath.rast.json")
           }
           val (source, summary) = emitWithParityMultiFile(rast, subclassRasts, refPath)
-          val outFile = outDir.resolve(s"${mod.objectName}.scala")
+          val outFile           = outDir.resolve(s"${mod.objectName}.scala")
           Files.writeString(outFile, source)
           results += ((mod, summary))
         }
@@ -408,8 +418,7 @@ object DartSassEmitter:
     sb.append(s"RAST found: ${summary.foundRast}/${summary.totalModules}\n")
     sb.append(s"Reference found: ${summary.foundReference}/${summary.totalModules}\n")
     sb.append(s"\nBy category:\n")
-    for (cat, count) <- summary.byCategory.toList.sortBy(_._1) do
-      sb.append(f"  $cat%-12s $count%d\n")
+    for (cat, count) <- summary.byCategory.toList.sortBy(_._1) do sb.append(f"  $cat%-12s $count%d\n")
     if summary.parityMethods > 0 then
       val pct = summary.parityMatched * 100.0 / summary.parityMethods
       sb.append(f"\nParity: ${summary.parityMatched}/${summary.parityMethods} ($pct%.1f%%)\n")
@@ -427,7 +436,7 @@ object DartSassEmitter:
     sb.append("-" * 60)
     sb.append("\n")
     sb.append(f"${"TOTAL"}%-30s ${tTotal}%6d ${tRast}%6d ${tRef}%6d ${tRefusals}%9d\n")
-    val pctRast = if tTotal > 0 then (tRast * 100.0 / tTotal) else 0.0
+    val pctRast = if tTotal > 0 then tRast * 100.0 / tTotal else 0.0
     sb.append(f"\nRAST-derived bodies: $tRast/$tTotal (${pctRast}%.1f%%)\n")
     sb.toString
 
@@ -441,21 +450,20 @@ object DartSassEmitter:
 
     for fn <- allFns do
       val scalaName = dartToCamelCase(fn.name)
-      val bodyNode = findFunctionBody(rastFile, fn.name)
+      val bodyNode  = findFunctionBody(rastFile, fn.name)
       bodyNode.foreach { body =>
         // Normalize Dart node kinds to TS equivalents before translation
         val normalizedBody = DefmethodBodyTranslator.normalizeNodeTree(body)
-        val entry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalizedBody)
-        val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-        val bodyPair = (translated.scalaBody, translated.refusalCount)
+        val entry          = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalizedBody)
+        val translated     = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+        val bodyPair       = (translated.scalaBody, translated.refusalCount)
         result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += bodyPair
         // Also register under the Dart name with underscore prefix for private methods
         if fn.name.startsWith("_") then
           val privateName = "_" + scalaName
           result.getOrElseUpdate(privateName, mutable.ListBuffer.empty) += bodyPair
         // And the original Dart name as-is (for exact match)
-        if fn.name != scalaName then
-          result.getOrElseUpdate(fn.name, mutable.ListBuffer.empty) += bodyPair
+        if fn.name != scalaName then result.getOrElseUpdate(fn.name, mutable.ListBuffer.empty) += bodyPair
         // Register under known hand-port name aliases
         dartSassNameAliases.get(fn.name).foreach { alias =>
           result.getOrElseUpdate(alias, mutable.ListBuffer.empty) += bodyPair
@@ -470,27 +478,24 @@ object DartSassEmitter:
     extractTopLevelVarInitializers(rastFile).foreach { case (name, bodyPair) =>
       val scalaName = dartToCamelCase(name)
       result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += bodyPair
-      if name.startsWith("_") then
-        result.getOrElseUpdate("_" + scalaName, mutable.ListBuffer.empty) += bodyPair
-      if name != scalaName then
-        result.getOrElseUpdate(name, mutable.ListBuffer.empty) += bodyPair
+      if name.startsWith("_") then result.getOrElseUpdate("_" + scalaName, mutable.ListBuffer.empty) += bodyPair
+      if name != scalaName then result.getOrElseUpdate(name, mutable.ListBuffer.empty) += bodyPair
     }
 
     result.map { case (k, v) => k -> v.toList }.toMap
 
   final case class ExtractedFunction(
-      name: String,
-      params: List[String],
-      bodyKind: String,
+    name:     String,
+    params:   List[String],
+    bodyKind: String
   )
 
   def extractAllFunctions(file: RastFile): List[ExtractedFunction] =
-    val result = mutable.ListBuffer.empty[ExtractedFunction]
+    val result    = mutable.ListBuffer.empty[ExtractedFunction]
     val symbolMap = file.symbols
 
     def nameFromSymbol(node: RastNode): String =
-      node.symbol.flatMap(symbolMap.get).map(_.name).getOrElse(
-        node.children.find(c => c.kind.contains("Identifier")).flatMap(_.text).getOrElse(""))
+      node.symbol.flatMap(symbolMap.get).map(_.name).getOrElse(node.children.find(c => c.kind.contains("Identifier")).flatMap(_.text).getOrElse(""))
 
     def walk(node: RastNode): Unit =
       val kind = node.kind.stripSuffix("Impl")
@@ -499,63 +504,60 @@ object DartSassEmitter:
           val name = nameFromSymbol(node)
           if name.nonEmpty then
             // Dart FunctionDeclaration wraps params and body in FunctionExpression
-            val fnExpr = node.children.find(_.kind.contains("FunctionExpression"))
+            val fnExpr   = node.children.find(_.kind.contains("FunctionExpression"))
             val searchIn = fnExpr.map(_.children).getOrElse(node.children)
-            val params = searchIn
+            val params   = searchIn
               .find(c => c.kind.contains("FormalParameterList"))
-              .map(_.children.flatMap(p =>
-                nameFromSymbol(p) match
-                  case n if n.nonEmpty => Some(n)
-                  case _ => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
-              ))
+              .map(
+                _.children.flatMap(p =>
+                  nameFromSymbol(p) match
+                    case n if n.nonEmpty => Some(n)
+                    case _               => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
+                )
+              )
               .getOrElse(Nil)
-            val hasBody = searchIn.exists(c =>
-              c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
-            if hasBody then
-              result += ExtractedFunction(name, params, "Block")
+            val hasBody = searchIn.exists(c => c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
+            if hasBody then result += ExtractedFunction(name, params, "Block")
 
         case "ConstructorDeclaration" =>
-          val name = nameFromSymbol(node)
+          val name       = nameFromSymbol(node)
           val actualName = if name.isEmpty then "<init>" else name
-          val hasBody = node.children.exists(c =>
-            c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
+          val hasBody    = node.children.exists(c => c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
           if hasBody then
             val params = node.children
               .find(c => c.kind.contains("FormalParameterList"))
-              .map(_.children.flatMap(p =>
-                nameFromSymbol(p) match
-                  case n if n.nonEmpty => Some(n)
-                  case _ => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
-              ))
+              .map(
+                _.children.flatMap(p =>
+                  nameFromSymbol(p) match
+                    case n if n.nonEmpty => Some(n)
+                    case _               => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
+                )
+              )
               .getOrElse(Nil)
             result += ExtractedFunction(actualName, params, "Block")
 
         case "TopLevelVariableDeclaration" =>
           // TopLevelVariableDeclarationImpl > VariableDeclarationListImpl > VariableDeclarationImpl
-          val vdlChildren = node.children
-            .find(_.kind.contains("VariableDeclarationList"))
-            .map(_.children)
-            .getOrElse(node.children)
-          val varDecls = vdlChildren.filter(_.kind.contains("VariableDeclaration"))
+          val vdlChildren = node.children.find(_.kind.contains("VariableDeclarationList")).map(_.children).getOrElse(node.children)
+          val varDecls    = vdlChildren.filter(_.kind.contains("VariableDeclaration"))
           for vd <- varDecls do
             val varName = nameFromSymbol(vd)
             if varName.nonEmpty then
-              val fnInit = vd.children.find(c =>
-                c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
+              val fnInit = vd.children.find(c => c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
               fnInit.foreach { fn =>
                 val fnChildren = fn.children
-                val params = fnChildren
+                val params     = fnChildren
                   .find(c => c.kind.contains("FormalParameterList"))
-                  .map(_.children.flatMap(p =>
-                    nameFromSymbol(p) match
-                      case n if n.nonEmpty => Some(n)
-                      case _ => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
-                  ))
+                  .map(
+                    _.children.flatMap(p =>
+                      nameFromSymbol(p) match
+                        case n if n.nonEmpty => Some(n)
+                        case _               => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
+                    )
+                  )
                   .getOrElse(Nil)
-                val hasBody = fnChildren.exists(c =>
-                  c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
-                if hasBody then
-                  result += ExtractedFunction(varName, params, "Block")
+                val hasBody = fnChildren.exists(c => c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
+                if hasBody then result += ExtractedFunction(varName, params, "Block")
               }
 
         case _ => ()
@@ -566,19 +568,19 @@ object DartSassEmitter:
     result.toList
 
   private def extractBodyFromChildren(children: List[RastNode]): Option[RastNode] =
-    val bodyNode = children.find(c =>
-      c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
+    val bodyNode = children.find(c => c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
     bodyNode.flatMap { body =>
-      if body.kind.contains("BlockFunctionBody") then
-        body.children.find(_.kind.contains("Block")).orElse(Some(body))
+      if body.kind.contains("BlockFunctionBody") then body.children.find(_.kind.contains("Block")).orElse(Some(body))
       else if body.kind.contains("ExpressionFunctionBody") then
-        body.children.headOption
-          .filterNot(_.kind.contains("Type"))
-          .map { expr =>
-            RastNode("Block", 0, (0, 0), children = List(
-              RastNode("ReturnStatement", 0, (0, 0), children = List(expr))
-            ))
-          }
+        body.children.headOption.filterNot(_.kind.contains("Type")).map { expr =>
+          RastNode("Block",
+                   0,
+                   (0, 0),
+                   children = List(
+                     RastNode("ReturnStatement", 0, (0, 0), children = List(expr))
+                   )
+          )
+        }
       else Some(body)
     }
 
@@ -597,28 +599,23 @@ object DartSassEmitter:
           val fnName = nameFromSymbol(node)
           if fnName == name then
             // Dart FunctionDeclaration wraps body in FunctionExpression
-            val fnExpr = node.children.find(_.kind.contains("FunctionExpression"))
+            val fnExpr   = node.children.find(_.kind.contains("FunctionExpression"))
             val searchIn = fnExpr.map(_.children).getOrElse(node.children)
             found = extractBodyFromChildren(searchIn)
 
         case "ConstructorDeclaration" =>
-          val fnName = nameFromSymbol(node)
+          val fnName     = nameFromSymbol(node)
           val actualName = if fnName.isEmpty then "<init>" else fnName
-          if actualName == name then
-            found = extractBodyFromChildren(node.children)
+          if actualName == name then found = extractBodyFromChildren(node.children)
 
         case "TopLevelVariableDeclaration" =>
           // TopLevelVariableDeclarationImpl > VariableDeclarationListImpl > VariableDeclarationImpl
-          val vdlChildren = node.children
-            .find(_.kind.contains("VariableDeclarationList"))
-            .map(_.children)
-            .getOrElse(node.children)
-          val varDecls = vdlChildren.filter(_.kind.contains("VariableDeclaration"))
+          val vdlChildren = node.children.find(_.kind.contains("VariableDeclarationList")).map(_.children).getOrElse(node.children)
+          val varDecls    = vdlChildren.filter(_.kind.contains("VariableDeclaration"))
           for vd <- varDecls if found.isEmpty do
             val varName = nameFromSymbol(vd)
             if varName == name then
-              val fnInit = vd.children.find(c =>
-                c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
+              val fnInit = vd.children.find(c => c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
               fnInit.foreach { fn =>
                 found = extractBodyFromChildren(fn.children)
               }
@@ -646,15 +643,15 @@ object DartSassEmitter:
           name = v.name,
           flags = v.flags,
           declarationType = v.declarationType,
-          parent = v.parent,
+          parent = v.parent
         )
       },
       types = parsed.types.map { case (k, v) =>
         k -> balticporter.frontend.ts.RastType(
           kind = v.kind,
-          text = v.text,
+          text = v.text
         )
-      },
+      }
     )
 
   private def convertNode(n: DartNode): RastNode =
@@ -669,71 +666,66 @@ object DartSassEmitter:
       value = n.value,
       text = n.text,
       operator = n.operator,
-      flags = n.flags,
+      flags = n.flags
     )
 
   private case class DartRastJson(
-      version: Int = 1,
-      path: String = "",
-      sha256: String = "",
-      nodes: List[DartNode] = Nil,
-      symbols: Map[String, DartSymbol] = Map.empty,
-      types: Map[String, DartTypeEntry] = Map.empty,
+    version: Int = 1,
+    path:    String = "",
+    sha256:  String = "",
+    nodes:   List[DartNode] = Nil,
+    symbols: Map[String, DartSymbol] = Map.empty,
+    types:   Map[String, DartTypeEntry] = Map.empty
   )
 
   private case class DartNode(
-      kind: String = "",
-      pos: (Int, Int) = (0, 0),
-      children: List[DartNode] = Nil,
-      symbol: Option[String] = None,
-      `type`: Option[String] = None,
-      resolvedSymbol: Option[String] = None,
-      value: Option[RastValue] = None,
-      text: Option[String] = None,
-      operator: Option[String] = None,
-      flags: List[String] = Nil,
-      // Dart-specific fields (consumed but not mapped to TS RastNode)
-      isFactory: Option[Boolean] = None,
-      isLate: Option[Boolean] = None,
-      isExtension: Option[Boolean] = None,
-      mixins: Option[List[String]] = None,
+    kind:           String = "",
+    pos:            (Int, Int) = (0, 0),
+    children:       List[DartNode] = Nil,
+    symbol:         Option[String] = None,
+    `type`:         Option[String] = None,
+    resolvedSymbol: Option[String] = None,
+    value:          Option[RastValue] = None,
+    text:           Option[String] = None,
+    operator:       Option[String] = None,
+    flags:          List[String] = Nil,
+    // Dart-specific fields (consumed but not mapped to TS RastNode)
+    isFactory:   Option[Boolean] = None,
+    isLate:      Option[Boolean] = None,
+    isExtension: Option[Boolean] = None,
+    mixins:      Option[List[String]] = None
   )
 
   private case class DartSymbol(
-      name: String = "",
-      flags: List[String] = Nil,
-      declarationType: Option[String] = None,
-      parent: Option[String] = None,
-      isNullable: Option[Boolean] = None,
+    name:            String = "",
+    flags:           List[String] = Nil,
+    declarationType: Option[String] = None,
+    parent:          Option[String] = None,
+    isNullable:      Option[Boolean] = None
   )
 
   private case class DartTypeEntry(
-      kind: String = "",
-      text: String = "",
-      isNullable: Boolean = false,
-      typeArguments: Option[List[String]] = None,
-      returnType: Option[String] = None,
-      bound: Option[String] = None,
+    kind:          String = "",
+    text:          String = "",
+    isNullable:    Boolean = false,
+    typeArguments: Option[List[String]] = None,
+    returnType:    Option[String] = None,
+    bound:         Option[String] = None
   )
 
   import com.github.plokhotnyuk.jsoniter_scala.core.*
   import com.github.plokhotnyuk.jsoniter_scala.macros.*
 
   private given dartRastCodec: JsonValueCodec[DartRastJson] = JsonCodecMaker.make(
-    CodecMakerConfig
-      .withDiscriminatorFieldName(None)
-      .withAllowRecursiveTypes(true)
-      .withMapMaxInsertNumber(1000000)
-      .withSetMaxInsertNumber(1000000)
-      .withSkipUnexpectedFields(true)
+    CodecMakerConfig.withDiscriminatorFieldName(None).withAllowRecursiveTypes(true).withMapMaxInsertNumber(1000000).withSetMaxInsertNumber(1000000).withSkipUnexpectedFields(true)
   )
 
   // --------------------------------------------------------------------------
   // Helpers
   // --------------------------------------------------------------------------
 
-  /** Known hand-port name renames: Dart upstream name → ssg-sass reference name.
-    * Both the original Dart name and the camelCase version should be tried. */
+  /** Known hand-port name renames: Dart upstream name → ssg-sass reference name. Both the original Dart name and the camelCase version should be tried.
+    */
   private val dartSassNameAliases: Map[String, String] = Map(
     // SerializeVisitor renames (Dart → ssg-sass Scala)
     "writeNumberToString" -> "numberToString",
@@ -779,16 +771,15 @@ object DartSassEmitter:
     "compoundSelector" -> "_compoundSelector",
     "simpleSelector" -> "_simpleSelector",
     "pseudoSelector" -> "_pseudoSelector",
-    "attributeSelector" -> "_attributeSelector",
+    "attributeSelector" -> "_attributeSelector"
   )
 
   /** Extract TopLevelVariableDeclaration initializer expressions as body pairs.
     *
-    * For factory-pattern vars like `final _ceil = _singleArgumentMathFunc("ceil", ...)`,
-    * the initializer expression is extracted and translated as a one-line body.
+    * For factory-pattern vars like `final _ceil = _singleArgumentMathFunc("ceil", ...)`, the initializer expression is extracted and translated as a one-line body.
     */
   private def extractTopLevelVarInitializers(file: RastFile): List[(String, (String, Int))] =
-    val result = mutable.ListBuffer.empty[(String, (String, Int))]
+    val result    = mutable.ListBuffer.empty[(String, (String, Int))]
     val symbolMap = file.symbols
 
     def nameFromSymbol(node: RastNode): String =
@@ -797,30 +788,31 @@ object DartSassEmitter:
     for node <- file.nodes do
       val kind = node.kind.stripSuffix("Impl")
       if kind == "TopLevelVariableDeclaration" then
-        val vdlChildren = node.children
-          .find(_.kind.contains("VariableDeclarationList"))
-          .map(_.children)
-          .getOrElse(node.children)
+        val vdlChildren = node.children.find(_.kind.contains("VariableDeclarationList")).map(_.children).getOrElse(node.children)
         for vd <- vdlChildren.filter(_.kind.contains("VariableDeclaration")) do
           val varName = nameFromSymbol(vd)
           if varName.nonEmpty then
             // Check if this is NOT already handled by extractAllFunctions
             // (i.e., the initializer is not a FunctionExpression/ArrowFunction)
-            val hasFnInit = vd.children.exists(c =>
-              c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
+            val hasFnInit = vd.children.exists(c => c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
             if !hasFnInit then
               // Extract the initializer expression (method invocation, etc.)
               val initExpr = vd.children.find(c =>
                 c.kind.contains("MethodInvocation") || c.kind.contains("InstanceCreation") ||
-                c.kind.contains("PrefixedIdentifier") || c.kind.contains("SimpleIdentifier") ||
-                c.kind.contains("ListLiteral") || c.kind.contains("MapLiteral") ||
-                c.kind.contains("SetOrMapLiteral") || c.kind.contains("ConditionalExpression"))
+                  c.kind.contains("PrefixedIdentifier") || c.kind.contains("SimpleIdentifier") ||
+                  c.kind.contains("ListLiteral") || c.kind.contains("MapLiteral") ||
+                  c.kind.contains("SetOrMapLiteral") || c.kind.contains("ConditionalExpression")
+              )
               initExpr.foreach { expr =>
                 val normalizedExpr = DefmethodBodyTranslator.normalizeNodeTree(expr)
-                val syntheticBody = RastNode("Block", 0, (0, 0), children = List(
-                  RastNode("ReturnStatement", 0, (0, 0), children = List(normalizedExpr))
-                ))
-                val entry = TerserEmitter.DefmethodEntry("_free_", varName, Nil, syntheticBody)
+                val syntheticBody  = RastNode("Block",
+                                             0,
+                                             (0, 0),
+                                             children = List(
+                                               RastNode("ReturnStatement", 0, (0, 0), children = List(normalizedExpr))
+                                             )
+                )
+                val entry      = TerserEmitter.DefmethodEntry("_free_", varName, Nil, syntheticBody)
                 val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
                 result += ((varName, (translated.scalaBody, translated.refusalCount)))
               }

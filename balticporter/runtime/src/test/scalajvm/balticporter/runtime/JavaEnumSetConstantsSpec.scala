@@ -1,7 +1,7 @@
 package balticporter.runtime
 
-/** The three `JavaEnumSet` factories that need the enum's CONSTANTS, and therefore
-  * `java.lang.Class.getEnumConstants` — which NEITHER non-JVM backend implements. */
+/** The three `JavaEnumSet` factories that need the enum's CONSTANTS, and therefore `java.lang.Class.getEnumConstants` — which NEITHER non-JVM backend implements.
+  */
 class JavaEnumSetConstantsSpec extends munit.FunSuite:
 
   test("allOf is every constant IN ORDER — the token is load-bearing here and nowhere else") {
@@ -15,7 +15,6 @@ class JavaEnumSetConstantsSpec extends munit.FunSuite:
   }
 
   test("complementOf reads the enum off the SET, so an empty one throws — java's own limitation") {
-    assertEquals(JavaEnumSet.complementOf(JavaEnumSet.of(Level.Mid)).toList,
-                 List(Level.Low, Level.High))
+    assertEquals(JavaEnumSet.complementOf(JavaEnumSet.of(Level.Mid)).toList, List(Level.Low, Level.High))
     intercept[IllegalArgumentException](JavaEnumSet.complementOf(new JavaEnumSet[Level]))
   }

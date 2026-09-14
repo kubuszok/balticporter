@@ -1,11 +1,11 @@
 package balticporter.runtime
 
-/** `JavaEnumMap` / `JavaEnumSet` — the ORDINAL-ORDER guarantee, which is the whole reason they are
-  * shims rather than a mapping onto `mutable.HashMap`/`HashSet`. */
+/** `JavaEnumMap` / `JavaEnumSet` — the ORDINAL-ORDER guarantee, which is the whole reason they are shims rather than a mapping onto `mutable.HashMap`/`HashSet`.
+  */
 
-/** A java-shaped enum — `extends java.lang.Enum` is what the shims' bound asks for, and it is what
-  * a PORTED java enum emits, so the fixture is the shape the mapping will really meet. It has to be
-  * top-level: scala only admits that parent in a static scope. */
+/** A java-shaped enum — `extends java.lang.Enum` is what the shims' bound asks for, and it is what a PORTED java enum emits, so the fixture is the shape the mapping will really meet. It has to be
+  * top-level: scala only admits that parent in a static scope.
+  */
 enum Level extends java.lang.Enum[Level]:
   case Low, Mid, High
 
@@ -14,8 +14,8 @@ class JavaEnumCollectionsSpec extends munit.FunSuite:
   test("JavaEnumMap iterates in ORDINAL order, whatever the insertion order was") {
     val m = new JavaEnumMap[Level, String]
     m(Level.High) = "h"
-    m(Level.Low)  = "l"
-    m(Level.Mid)  = "m"
+    m(Level.Low) = "l"
+    m(Level.Mid) = "m"
     assertEquals(m.keys.toList, List(Level.Low, Level.Mid, Level.High))
     assertEquals(m.values.toList, List("l", "m", "h"))
   }
@@ -39,11 +39,11 @@ class JavaEnumCollectionsSpec extends munit.FunSuite:
 
   test("a null QUERY answers absent, as java's does — never an exception out of the ordering") {
     val m = new JavaEnumMap[Level, String]
-    m(Level.Mid) = "m"                      // NON-empty: an empty TreeMap never consults its ordering
+    m(Level.Mid) = "m" // NON-empty: an empty TreeMap never consults its ordering
     assertEquals(m.get(null.asInstanceOf[Level]), None)
     assertEquals(m.contains(null.asInstanceOf[Level]), false)
     assertEquals(m.remove(null.asInstanceOf[Level]), None)
-    assertEquals(m.size, 1)                 // …and the map is untouched
+    assertEquals(m.size, 1) // …and the map is untouched
   }
 
   test("…and on an EMPTY map too, so the two paths cannot answer differently") {

@@ -4,9 +4,9 @@ import balticporter.core.CommentScanner
 
 /** Compares source-text comments against emitted text to find dropped comments.
   *
-  * Re-lexes Java independently via `CommentScanner` (not the TIR). Comparison uses normalised
-  * body text, grouped by Java file. A finding is a §1(a) engine gap; a dropped member's
-  * Javadoc is classified as deliberate rather than lost. // CLAUDE.md §4.58 */
+  * Re-lexes Java independently via `CommentScanner` (not the TIR). Comparison uses normalised body text, grouped by Java file. A finding is a §1(a) engine gap; a dropped member's Javadoc is
+  * classified as deliberate rather than lost. // CLAUDE.md §4.58
+  */
 object TriviaCheck:
 
   /** One comment present in the Java and absent from everything that file emitted. */
@@ -16,10 +16,17 @@ object TriviaCheck:
       val one = text.linesIterator.map(_.trim).filter(_.nonEmpty).mkString(" ")
       if one.length <= 120 then one else one.take(117) + "…"
     def render: String = s"$kind dropped: $detail  ($javaPath:$line)"
+
     /** @param check the lane this finding is recorded under (must match the caller's lane name). */
     def report(check: String = "trivia"): CheckReport.Finding =
-      CheckReport.Finding(check, s"${kind.toString.toLowerCase} dropped",
-        CheckReport.relativise(javaPath), CheckReport.relativise(javaPath), line, detail)
+      CheckReport.Finding(
+        check,
+        s"${kind.toString.toLowerCase} dropped",
+        CheckReport.relativise(javaPath),
+        CheckReport.relativise(javaPath),
+        line,
+        detail
+      )
 
   /** One emitted unit: the Java file it came from, and its Scala text. */
   final case class Unit(javaPath: String, scala: String)
@@ -27,22 +34,29 @@ object TriviaCheck:
   /** One comment the backstop put back, read off the marker in the emitted file. */
   final case class Recovered(javaPath: String, line: Int):
     def report: CheckReport.Finding =
-      CheckReport.Finding("trivia(recovered)", "recovered by the backstop",
-        CheckReport.relativise(javaPath), CheckReport.relativise(javaPath), line,
+      CheckReport.Finding(
+        "trivia(recovered)",
+        "recovered by the backstop",
+        CheckReport.relativise(javaPath),
+        CheckReport.relativise(javaPath),
+        line,
         "the attachment channel could not place this comment; it was put back after the member it " +
-          "was written in, with its java coordinates — a counted residue, not a success")
+          "was written in, with its java coordinates — a counted residue, not a success"
+      )
 
-  /** @param lost comments absent from all emitted files (target: zero).
-    * @param recovered comments the backstop placed (a counted residue, not a success).
-    * @param deliberate comments whose declaration the port drops on purpose (derived from drops).
+  /** @param lost
+    *   comments absent from all emitted files (target: zero).
+    * @param recovered
+    *   comments the backstop placed (a counted residue, not a success).
+    * @param deliberate
+    *   comments whose declaration the port drops on purpose (derived from drops).
     */
   final case class Result(lost: List[Finding], recovered: List[Recovered], deliberate: List[Finding])
 
-  /** @param members declarations per java file ([[CommentAnchor]]); empty disables deliberate
-    *   classification (over-reporting `lost` is the safe direction). */
-  def check(emitted: List[Unit],
-            members: Map[String, List[CommentAnchor.Member]] = Map.empty,
-            read: String => Option[String] = readFile): Result =
+  /** @param members
+    *   declarations per java file ([[CommentAnchor]]); empty disables deliberate classification (over-reporting `lost` is the safe direction).
+    */
+  def check(emitted: List[Unit], members: Map[String, List[CommentAnchor.Member]] = Map.empty, read: String => Option[String] = readFile): Result =
     val groups = emitted.filter(_.javaPath.nonEmpty).groupBy(_.javaPath).toList.sortBy(_._1)
     val out    = groups.map { (path, units) =>
       read(path) match
@@ -64,17 +78,20 @@ object TriviaCheck:
             else if !seen.add(body) then Nil
             else
               val line = a.line(java)
-              val f = Finding(path, t.kind match
-                case balticporter.core.TriviaKind.Line    => TriviaKind.Line
-                case balticporter.core.TriviaKind.Block   => TriviaKind.Block
-                case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
-              , t.text, line)
+              val f    = Finding(
+                path,
+                t.kind match
+                  case balticporter.core.TriviaKind.Line    => TriviaKind.Line
+                  case balticporter.core.TriviaKind.Block   => TriviaKind.Block
+                  case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
+                ,
+                t.text,
+                line
+              )
               val owner = CommentAnchor.owner(lines, line, line + t.text.count(_ == '\n'), here)
               List(f -> owner.exists(!_.emitted))
           }
-          (found.filterNot(_._2).map(_._1),
-           units.flatMap(u => TriviaMark.scan(u.scala)).map(f => Recovered(f.javaPath, f.line)),
-           found.filter(_._2).map(_._1))
+          (found.filterNot(_._2).map(_._1), units.flatMap(u => TriviaMark.scan(u.scala)).map(f => Recovered(f.javaPath, f.line)), found.filter(_._2).map(_._1))
     }
     Result(out.flatMap(_._1), out.flatMap(_._2), out.flatMap(_._3))
 
@@ -86,9 +103,8 @@ object TriviaCheck:
     val head =
       if r.lost.isEmpty then s"  every comment in $compared source file(s) reached the emitted Scala"
       else
-        val byKind = r.lost.groupBy(_.kind).toList.sortBy(_._1.toString)
-          .map((k, fs) => s"${fs.size} × $k").mkString(", ")
-        val worst = r.lost.groupBy(_.javaPath).toList.sortBy(-_._2.size).take(5)
+        val byKind = r.lost.groupBy(_.kind).toList.sortBy(_._1.toString).map((k, fs) => s"${fs.size} × $k").mkString(", ")
+        val worst  = r.lost.groupBy(_.javaPath).toList.sortBy(-_._2.size).take(5)
         (s"  $byKind, over $compared compared source file(s)" ::
           worst.map((p, fs) => s"    ${fs.size} in ${CheckReport.relativise(p)}")).mkString("\n")
     // both lanes always print, zero included
@@ -101,18 +117,14 @@ object TriviaCheck:
     val del = s"  deliberate (the declaration they document is one this port drops): ${r.deliberate.size}"
     s"$head\n$rec\n$del"
 
-  /** Strip delimiters, gutter, indentation and repeated whitespace, leaving the words.
-    * `//` is stripped FIRST so a block comment re-emitted as `//` lines normalises correctly. */
+  /** Strip delimiters, gutter, indentation and repeated whitespace, leaving the words. `//` is stripped FIRST so a block comment re-emitted as `//` lines normalises correctly.
+    */
   def normalize(text: String): String =
-    text.linesIterator
-      .map(_.trim.stripPrefix("//").trim
-             .stripPrefix("/**").stripPrefix("/*").stripSuffix("*/").stripPrefix("*").trim)
-      .filter(_.nonEmpty)
-      .mkString(" ")
-      .replaceAll("\\s+", " ")
+    text.linesIterator.map(_.trim.stripPrefix("//").trim.stripPrefix("/**").stripPrefix("/*").stripSuffix("*/").stripPrefix("*").trim).filter(_.nonEmpty).mkString(" ").replaceAll("\\s+", " ")
 
   private def readFile(path: String): Option[String] =
     val p = java.nio.file.Path.of(path)
     if java.nio.file.Files.isRegularFile(p) then
-      try Some(java.nio.file.Files.readString(p)) catch case _: Throwable => scala.None
+      try Some(java.nio.file.Files.readString(p))
+      catch case _: Throwable => scala.None
     else scala.None
