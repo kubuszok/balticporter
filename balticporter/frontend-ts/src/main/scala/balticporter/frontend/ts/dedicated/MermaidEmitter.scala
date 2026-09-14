@@ -3693,6 +3693,221 @@ object MermaidEmitter {
     sb.toString
   }
 
+  // --------------------------------------------------------------------------
+  // Styles parity-derive
+  // --------------------------------------------------------------------------
+
+  /** Summary of styles parity-derive emission. */
+  final case class StylesParitySummary(
+      diagramType: String,
+      totalMethods: Int,
+      matchedFromRast: Int,
+      keptFromReference: Int,
+  )
+
+  /** Emit a styles module using parity-derive: reference structure with
+    * RAST-translated bodies where they match.
+    */
+  def emitStylesWithParity(
+      rastFile: RastFile,
+      referencePath: java.nio.file.Path,
+  ): (String, StylesParitySummary) =
+    val referenceSource = new String(java.nio.file.Files.readAllBytes(referencePath))
+    val lines = referenceSource.split("\n", -1).toList
+    val methods = TerserCompressEmitter.findMethodBoundaries(lines)
+
+    // Build body map from RAST functions
+    val rastBodies = buildStylesBodyMap(rastFile)
+    val diagramType = referencePath.getFileName.toString.stripSuffix("Styles.scala").toLowerCase
+
+    val sb = new StringBuilder
+    val matchDetails = scala.collection.mutable.ListBuffer.empty[(String, String)]
+
+    var lineIdx = 0
+    var methodIdx = 0
+
+    while lineIdx < lines.size do
+      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
+        val method = methods(methodIdx)
+        val usableRast = rastBodies.get(method.name).filter { case (body, _) =>
+          !containsMermaidUncompilablePatterns(body)
+        }
+
+        usableRast match
+          case Some((translatedBody, _)) =>
+            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
+            for i <- method.signatureLine to sigEndLineIdx do
+              val line = lines(i)
+              if i == sigEndLineIdx then
+                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
+                if eqIdx >= 0 then
+                  sb.append(line.substring(0, eqIdx + 1))
+                  sb.append("\n")
+                else
+                  sb.append(line)
+                  sb.append("\n")
+              else
+                sb.append(line)
+                sb.append("\n")
+            sb.append(translatedBody)
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((method.name, "rast"))
+
+          case _ =>
+            for i <- method.signatureLine to method.bodyEndLine do
+              sb.append(lines(i))
+              sb.append("\n")
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((method.name, "reference"))
+
+        methodIdx += 1
+      else
+        sb.append(lines(lineIdx))
+        sb.append("\n")
+        lineIdx += 1
+
+    val matched = matchDetails.count(_._2 == "rast")
+    val kept = matchDetails.count(_._2 == "reference")
+
+    val summary = StylesParitySummary(
+      diagramType = diagramType,
+      totalMethods = methods.size,
+      matchedFromRast = matched,
+      keptFromReference = kept,
+    )
+    (sb.toString, summary)
+
+  /** Build a body map from a styles RAST file.
+    *
+    * Includes Mermaid-specific name aliases: `getStyles` → `generate`,
+    * `fade` → `fade`, etc.
+    */
+  private def buildStylesBodyMap(rastFile: RastFile): Map[String, (String, Int)] =
+    val result = scala.collection.mutable.Map.empty[String, (String, Int)]
+    // Mermaid styles name aliases: upstream TS → reference Scala
+    val nameAliases = Map(
+      "getStyles" -> "generate",
+    )
+    for node <- rastFile.nodes do
+      node.kind match
+        case "VariableStatement" | "FunctionDeclaration" =>
+          val name = findFunctionName(node)
+          if name.nonEmpty then
+            val bodyNode = findBodyBlock(node)
+            bodyNode.foreach { body =>
+              val entry = TerserEmitter.DefmethodEntry("_free_", name, Nil, body)
+              val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+              val scalaName = toCamelCase(name)
+              result(scalaName) = (translated.scalaBody, translated.refusalCount)
+              // Register under alias if one exists
+              nameAliases.get(name).foreach { alias =>
+                result(alias) = (translated.scalaBody, translated.refusalCount)
+              }
+            }
+        case _ => ()
+    result.toMap
+
+  private def findFunctionName(node: RastNode): String =
+    node.children.find(_.kind == "VariableDeclarationList")
+      .flatMap(_.children.find(_.kind == "VariableDeclaration"))
+      .flatMap(_.children.headOption.flatMap(_.text))
+      .orElse(node.children.find(_.kind == "Identifier").flatMap(_.text))
+      .getOrElse("")
+
+  private def findBodyBlock(node: RastNode): Option[RastNode] =
+    node.children.find(_.kind == "VariableDeclarationList")
+      .flatMap(_.children.find(_.kind == "VariableDeclaration"))
+      .flatMap(_.children.find(c => c.kind == "ArrowFunction" || c.kind == "FunctionExpression"))
+      .flatMap(fn => fn.children.find(_.kind == "Block").orElse {
+        fn.children.find(c => c.kind != "Parameter").map(e =>
+          RastNode("Block", 0, (0, 0), children = List(
+            RastNode("ReturnStatement", 0, (0, 0), children = List(e)))))
+      })
+      .orElse(node.children.find(_.kind == "Block"))
+
+  private def containsMermaidUncompilablePatterns(body: String): Boolean =
+    val patterns = List("document.", "window.", "d3.", "selection.", "transition.")
+    patterns.exists(body.contains)
+
+  private def toCamelCase(s: String): String =
+    if s.contains("_") then
+      val parts = s.split("_")
+      parts.head + parts.tail.map(_.capitalize).mkString
+    else s
+
+  // --------------------------------------------------------------------------
+  // Module inventories
+  // --------------------------------------------------------------------------
+
+  /** A Mermaid module descriptor. */
+  final case class MermaidModule(
+      diagramType: String,
+      rastResource: String,
+      referenceSubPath: String,
+  )
+
+  /** Styles modules with both RAST files and reference counterparts. */
+  val AllStyles: List[MermaidModule] = List(
+    MermaidModule("block",       "/rast/mermaid/src/diagrams/block/styles.rast.json",       "block/BlockStyles.scala"),
+    MermaidModule("c4",          "/rast/mermaid/src/diagrams/c4/styles.rast.json",          "c4/C4Styles.scala"),
+    MermaidModule("class",       "/rast/mermaid/src/diagrams/class/styles.rast.json",       "class_/ClassStyles.scala"),
+    MermaidModule("er",          "/rast/mermaid/src/diagrams/er/styles.rast.json",          "er/ErStyles.scala"),
+    MermaidModule("flowchart",   "/rast/mermaid/src/diagrams/flowchart/styles.rast.json",   "flowchart/FlowchartStyles.scala"),
+    MermaidModule("gantt",       "/rast/mermaid/src/diagrams/gantt/styles.rast.json",       "gantt/GanttStyles.scala"),
+    MermaidModule("git",         "/rast/mermaid/src/diagrams/git/styles.rast.json",         "git/GitStyles.scala"),
+    MermaidModule("mindmap",     "/rast/mermaid/src/diagrams/mindmap/styles.rast.json",     "mindmap/MindmapStyles.scala"),
+    MermaidModule("packet",      "/rast/mermaid/src/diagrams/packet/styles.rast.json",      "packet/PacketStyles.scala"),
+    MermaidModule("requirement", "/rast/mermaid/src/diagrams/requirement/styles.rast.json", "requirement/RequirementStyles.scala"),
+    MermaidModule("sequence",    "/rast/mermaid/src/diagrams/sequence/styles.rast.json",    "sequence/SequenceStyles.scala"),
+    MermaidModule("state",       "/rast/mermaid/src/diagrams/state/styles.rast.json",       "state/StateStyles.scala"),
+    MermaidModule("timeline",    "/rast/mermaid/src/diagrams/timeline/styles.rast.json",    "timeline/TimelineStyles.scala"),
+    MermaidModule("journey",     "/rast/mermaid/src/diagrams/user-journey/styles.rast.json","journey/JourneyStyles.scala"),
+  )
+
+  /** Batch emit all styles with parity-derive.
+    *
+    * @param loadRast function to load a RAST file from a resource path
+    * @param mermaidRefRoot path to the ssg-mermaid diagrams source root
+    * @param outDir output directory for emitted files
+    */
+  def emitAllStylesWithParity(
+      loadRast: String => Option[RastFile],
+      mermaidRefRoot: java.nio.file.Path,
+      outDir: java.nio.file.Path,
+  ): List[(MermaidModule, StylesParitySummary)] =
+    java.nio.file.Files.createDirectories(outDir)
+    val results = scala.collection.mutable.ListBuffer.empty[(MermaidModule, StylesParitySummary)]
+
+    for mod <- AllStyles do
+      val refPath = mermaidRefRoot.resolve(mod.referenceSubPath)
+      if java.nio.file.Files.exists(refPath) then
+        loadRast(mod.rastResource).foreach { rast =>
+          val (source, summary) = emitStylesWithParity(rast, refPath)
+          val outFile = outDir.resolve(s"${mod.diagramType}Styles.scala")
+          java.nio.file.Files.writeString(outFile, source)
+          results += ((mod, summary))
+        }
+
+    results.toList
+
+  /** Format a styles parity summary table. */
+  def formatStylesParitySummaryTable(summaries: List[StylesParitySummary]): String =
+    val sb = new StringBuilder
+    sb.append(f"${"Diagram"}%-15s ${"Total"}%6s ${"RAST"}%6s ${"Ref"}%6s\n")
+    sb.append("-" * 40)
+    sb.append("\n")
+    var tTotal = 0; var tRast = 0; var tRef = 0
+    for s <- summaries do
+      sb.append(f"${s.diagramType}%-15s ${s.totalMethods}%6d ${s.matchedFromRast}%6d ${s.keptFromReference}%6d\n")
+      tTotal += s.totalMethods; tRast += s.matchedFromRast; tRef += s.keptFromReference
+    sb.append("-" * 40)
+    sb.append("\n")
+    sb.append(f"${"TOTAL"}%-15s ${tTotal}%6d ${tRast}%6d ${tRef}%6d\n")
+    if tTotal > 0 then
+      val pct = tRast * 100.0 / tTotal
+      sb.append(f"\nRAST-derived: $tRast/$tTotal ($pct%.1f%%)\n")
+    sb.toString
+
   @annotation.nowarn("msg=unused")
   private def header(tsPath: String, scalaFile: String): String = {
     s"""/*

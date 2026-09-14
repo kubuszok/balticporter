@@ -951,3 +951,52 @@ class MermaidEmitterSpec extends munit.FunSuite:
       println(s"[emit] $name.scala: ${source.linesIterator.size} lines -> $path")
     }
     println(s"[emit] Total: ${allFiles.size} wardley+ishikawa+venn diagram files written")
+
+  // -- Styles parity-derive ---------------------------------------------------
+
+  private val mermaidRefRoot: java.nio.file.Path =
+    val candidates = List(
+      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
+    ).flatten
+    candidates.map(_.resolve("ssg-mermaid/src/main/scala/ssg/mermaid/diagrams"))
+      .find(p => java.nio.file.Files.exists(p.resolve("flowchart/FlowchartStyles.scala")))
+      .getOrElse(java.nio.file.Path.of("nonexistent"))
+
+  private def tryLoadRastOpt(resource: String): Option[RastFile] =
+    val stream = getClass.getResourceAsStream(resource)
+    if stream == null then None
+    else
+      try
+        val json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)
+        stream.close()
+        Some(Rast.readFile(json))
+      catch
+        case _: Exception =>
+          stream.close()
+          None
+
+  test("styles parity: FlowchartStyles.scala"):
+    if !java.nio.file.Files.exists(mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")) then
+      println("SKIP: ssg-mermaid reference not found")
+    else
+      val rast = loadRast("/rast/mermaid/src/diagrams/flowchart/styles.rast.json")
+      val refPath = mermaidRefRoot.resolve("flowchart/FlowchartStyles.scala")
+      val (source, summary) = dedicated.MermaidEmitter.emitStylesWithParity(rast, refPath)
+      println(s"FlowchartStyles: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")
+      assert(source.contains("FlowchartStyles"), "should preserve FlowchartStyles object")
+
+  test("batch: styles parity for all diagram types"):
+    if !java.nio.file.Files.exists(mermaidRefRoot) then
+      println("SKIP: ssg-mermaid reference not found at " + mermaidRefRoot)
+    else
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-mermaid-parity")
+      val results = dedicated.MermaidEmitter.emitAllStylesWithParity(tryLoadRastOpt, mermaidRefRoot, outDir)
+      val summaries = results.map(_._2)
+
+      println("\n=== Mermaid Styles Parity ===")
+      println(dedicated.MermaidEmitter.formatStylesParitySummaryTable(summaries))
+      println(s"Emitted ${results.size} styles modules to $outDir")
+
+      assert(results.size >= 10, s"Expected >= 10 styles modules, got ${results.size}")
