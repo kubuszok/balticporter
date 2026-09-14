@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastValue}
 import java.nio.file.{Files, Path}
 import scala.collection.mutable
 
@@ -327,83 +327,22 @@ object KaTeXEmitter:
       referencePath: Path,
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val lines = referenceSource.split("\n", -1).toList
-
-    val methods = TerserCompressEmitter.findMethodBoundaries(lines)
-    val rastBodies = buildTranslatedBodyMap(rastFile)
-    val consumed = mutable.Map.empty[String, Int].withDefaultValue(0)
+    val rastBodiesMut = buildTranslatedBodyMap(rastFile)
+    val rastBodies = rastBodiesMut.map { case (k, v) => k -> v.toList }.toMap
+    val policy = ParityDerive.Policy(uncompilablePatterns = katexUncompilablePatterns)
+    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
     val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
-
-    val sb = new StringBuilder
-    val matchDetails = mutable.ListBuffer.empty[(String, String)]
-    var totalRefusals = 0
-
-    var lineIdx = 0
-    var methodIdx = 0
-
-    while lineIdx < lines.size do
-      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
-        val method = methods(methodIdx)
-
-        val idx = consumed(method.name)
-        val usableRast = rastBodies.get(method.name).flatMap { entries =>
-          if idx < entries.size then
-            val (body, refusals) = entries(idx)
-            if !containsKatexUncompilablePatterns(body) then Some((body, refusals))
-            else None
-          else None
-        }
-
-        usableRast match
-          case Some((translatedBody, refusals)) =>
-            consumed(method.name) = idx + 1
-            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
-            for i <- method.signatureLine to sigEndLineIdx do
-              val line = lines(i)
-              if i == sigEndLineIdx then
-                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
-                if eqIdx >= 0 then
-                  sb.append(line.substring(0, eqIdx + 1))
-                  sb.append("\n")
-                else
-                  sb.append(line)
-                  sb.append("\n")
-              else
-                sb.append(line)
-                sb.append("\n")
-
-            sb.append(translatedBody)
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "rast"))
-            totalRefusals += refusals
-
-          case _ =>
-            consumed(method.name) = idx + 1
-            for i <- method.signatureLine to method.bodyEndLine do
-              sb.append(lines(i))
-              sb.append("\n")
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "reference"))
-
-        methodIdx += 1
-      else
-        sb.append(lines(lineIdx))
-        sb.append("\n")
-        lineIdx += 1
-
-    val matched = matchDetails.count(_._2 == "rast")
-    val kept = matchDetails.count(_._2 == "reference")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
-      totalMethods = methods.size,
-      matchedFromRast = matched,
-      keptFromReference = kept,
-      refusalCount = totalRefusals,
-      matchDetails = matchDetails.toList,
+      totalMethods = result.totalMethods,
+      matchedFromRast = result.rastCount,
+      keptFromReference = result.referenceCount,
+      refusalCount = result.totalRefusals,
+      matchDetails = result.bodies.map(e => (e.methodName, e.source)),
     )
 
-    (sb.toString, summary)
+    (result.emittedSource, summary)
 
   /** Emit all core modules using parity-derive.
     *

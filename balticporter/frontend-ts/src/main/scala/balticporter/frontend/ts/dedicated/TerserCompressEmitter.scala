@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastValue}
 import java.nio.file.{Files, Path}
 import scala.collection.mutable
 
@@ -796,115 +796,27 @@ object TerserCompressEmitter:
       isDeFmethod: Boolean = false,
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val lines = referenceSource.split("\n", -1).toList
-
-    // Modules where body interleaving causes more errors than it fixes:
-    // use reference bodies for ALL methods (the RAST structure was validated,
-    // but findBodyEnd can't handle all Scala method boundary patterns)
-    val skipRastModules = Set.empty[String]
-    val refObjectName = lines.find(_.matches("^(object|class)\\s+.*\\{.*$"))
-      .flatMap("""^(object|class)\s+(\w+)""".r.findFirstMatchIn(_).map(_.group(2)))
-      .getOrElse("")
-    if skipRastModules.contains(refObjectName) then
-      val nMethods = findMethodBoundaries(lines).size
-      val summary = ParityEmitSummary(
-        moduleName = refObjectName,
-        objectName = refObjectName,
-        totalMethods = nMethods,
-        matchedFromRast = 0,
-        keptFromReference = nMethods,
-        refusalCount = 0,
-        matchDetails = Nil,
-      )
-      return (referenceSource, summary)
-
-    // Extract RAST functions and build name map: camelCase -> translated body
     val rastBodies = buildRastBodyMap(rastFile, hierarchy, isDeFmethod)
+    val policy = ParityDerive.Policy(uncompilablePatterns = uncompilablePatterns)
+    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
 
-    // Find all method boundaries in the reference file
-    val methods = findMethodBoundaries(lines)
-
-    // Determine the reference file's object name for the summary
+    val lines = referenceSource.split("\n", -1).toList
     val objectName = lines.find(_.matches("^(object|class)\\s+.*\\{.*$"))
       .flatMap("""^(object|class)\s+(\w+)""".r.findFirstMatchIn(_).map(_.group(2)))
       .getOrElse("Unknown")
-
     val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
-
-    // Build the output by replacing method bodies where we have RAST matches
-    val sb = new StringBuilder
-    val matchDetails = mutable.ListBuffer.empty[(String, String)]
-    var totalRefusals = 0
-
-    var lineIdx = 0
-    var methodIdx = 0
-
-    while lineIdx < lines.size do
-      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
-        val method = methods(methodIdx)
-        val camelName = method.name
-
-        // Look up matching RAST body — only use it when the translation
-        // does not contain un-compilable JS-API patterns.
-        val usableRast = rastBodies.get(camelName).filter { case (body, _) =>
-          !containsUncompilablePatterns(body)
-        }
-        usableRast match
-          case Some((translatedBody, refusals)) =>
-            // Emit the signature, stripping any trailing `{` after `=` so
-            // the RAST body can provide its own structure.
-            val sigEndLineIdx = findSignatureEnd(lines, method.signatureLine)
-            for i <- method.signatureLine to sigEndLineIdx do
-              val line = lines(i)
-              if i == sigEndLineIdx then
-                val eqIdx = findEqualsInSignature(line)
-                if eqIdx >= 0 then
-                  // Emit up to and including `=`, stripping trailing `{` and whitespace
-                  sb.append(line.substring(0, eqIdx + 1))
-                  sb.append("\n")
-                else
-                  sb.append(line)
-                  sb.append("\n")
-              else
-                sb.append(line)
-                sb.append("\n")
-
-            // Emit translated RAST body
-            sb.append(translatedBody)
-
-            // Skip original body lines
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((camelName, "rast"))
-            totalRefusals += refusals
-
-          case _ =>
-            // No RAST match or private method: keep original
-            for i <- method.signatureLine to method.bodyEndLine do
-              sb.append(lines(i))
-              sb.append("\n")
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((camelName, "reference"))
-
-        methodIdx += 1
-      else
-        sb.append(lines(lineIdx))
-        sb.append("\n")
-        lineIdx += 1
-
-    val matched = matchDetails.count(_._2 == "rast")
-    val kept = matchDetails.count(_._2 == "reference")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
       objectName = objectName,
-      totalMethods = methods.size,
-      matchedFromRast = matched,
-      keptFromReference = kept,
-      refusalCount = totalRefusals,
-      matchDetails = matchDetails.toList,
+      totalMethods = result.totalMethods,
+      matchedFromRast = result.rastCount,
+      keptFromReference = result.referenceCount,
+      refusalCount = result.totalRefusals,
+      matchDetails = result.bodies.map(e => (e.methodName, e.source)),
     )
 
-    (sb.toString, summary)
+    (result.emittedSource, summary)
 
   /** Build a map from camelCase method name to (translated body text, refusal count).
     *
@@ -1075,7 +987,7 @@ object TerserCompressEmitter:
     *
     * Handles multi-line signatures by tracking parenthesis depth.
     */
-  private[dedicated] def findSignatureEnd(lines: List[String], startLine: Int): Int =
+  def findSignatureEnd(lines: List[String], startLine: Int): Int =
     var depth = 0
     var i = startLine
     while i < lines.size do
@@ -1098,7 +1010,7 @@ object TerserCompressEmitter:
     * Rejects `==`, `!=`, `<=`, `>=`, and `=>`. Handles both `def f(): T = {`
     * (at end) and `def f(): T = expr` (in middle).
     */
-  private[dedicated] def findEqualsInSignature(line: String): Int =
+  def findEqualsInSignature(line: String): Int =
     var i = line.length - 1
     while i >= 1 do
       if line(i) == '=' then

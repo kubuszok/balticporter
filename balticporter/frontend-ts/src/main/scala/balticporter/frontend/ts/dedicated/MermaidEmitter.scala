@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue, Rast}
+import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastType, RastValue, Rast}
 import scala.collection.mutable
 
 /** Dedicated RAST-to-Scala emitter for Mermaid diagram modules.
@@ -3713,69 +3713,19 @@ object MermaidEmitter {
       referencePath: java.nio.file.Path,
   ): (String, StylesParitySummary) =
     val referenceSource = new String(java.nio.file.Files.readAllBytes(referencePath))
-    val lines = referenceSource.split("\n", -1).toList
-    val methods = TerserCompressEmitter.findMethodBoundaries(lines)
-
-    // Build body map from RAST functions
     val rastBodies = buildStylesBodyMap(rastFile)
+    val mermaidPatterns = List("document.", "window.", "d3.", "selection.", "transition.")
+    val policy = ParityDerive.Policy(uncompilablePatterns = mermaidPatterns)
+    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
     val diagramType = referencePath.getFileName.toString.stripSuffix("Styles.scala").toLowerCase
-
-    val sb = new StringBuilder
-    val matchDetails = scala.collection.mutable.ListBuffer.empty[(String, String)]
-
-    var lineIdx = 0
-    var methodIdx = 0
-
-    while lineIdx < lines.size do
-      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
-        val method = methods(methodIdx)
-        val usableRast = rastBodies.get(method.name).filter { case (body, _) =>
-          !containsMermaidUncompilablePatterns(body)
-        }
-
-        usableRast match
-          case Some((translatedBody, _)) =>
-            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
-            for i <- method.signatureLine to sigEndLineIdx do
-              val line = lines(i)
-              if i == sigEndLineIdx then
-                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
-                if eqIdx >= 0 then
-                  sb.append(line.substring(0, eqIdx + 1))
-                  sb.append("\n")
-                else
-                  sb.append(line)
-                  sb.append("\n")
-              else
-                sb.append(line)
-                sb.append("\n")
-            sb.append(translatedBody)
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "rast"))
-
-          case _ =>
-            for i <- method.signatureLine to method.bodyEndLine do
-              sb.append(lines(i))
-              sb.append("\n")
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "reference"))
-
-        methodIdx += 1
-      else
-        sb.append(lines(lineIdx))
-        sb.append("\n")
-        lineIdx += 1
-
-    val matched = matchDetails.count(_._2 == "rast")
-    val kept = matchDetails.count(_._2 == "reference")
 
     val summary = StylesParitySummary(
       diagramType = diagramType,
-      totalMethods = methods.size,
-      matchedFromRast = matched,
-      keptFromReference = kept,
+      totalMethods = result.totalMethods,
+      matchedFromRast = result.rastCount,
+      keptFromReference = result.referenceCount,
     )
-    (sb.toString, summary)
+    (result.emittedSource, summary)
 
   /** Build a body map from a styles RAST file.
     *

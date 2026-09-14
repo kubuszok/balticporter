@@ -1,6 +1,6 @@
 package balticporter.frontend.ts.dedicated
 
-import balticporter.frontend.ts.{RastFile, RastNode, RastValue}
+import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastValue}
 import java.nio.file.{Files, Path}
 import scala.collection.mutable
 
@@ -268,79 +268,21 @@ object DartSassEmitter:
       referencePath: Path,
   ): (String, ParityEmitSummary) =
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val lines = referenceSource.split("\n", -1).toList
-
-    val methods = TerserCompressEmitter.findMethodBoundaries(lines)
     val rastBodies = buildTranslatedBodyMap(rastFile)
+    val policy = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
+    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
     val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
-
-    val sb = new StringBuilder
-    val matchDetails = mutable.ListBuffer.empty[(String, String)]
-    var totalRefusals = 0
-
-    var lineIdx = 0
-    var methodIdx = 0
-    val usedNames = mutable.Map.empty[String, Int].withDefaultValue(0)
-
-    while lineIdx < lines.size do
-      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
-        val method = methods(methodIdx)
-
-        val bodyList = rastBodies.getOrElse(method.name, Nil)
-        val idx = usedNames(method.name)
-        usedNames(method.name) = idx + 1
-        val usableRast = bodyList.lift(idx).filter { case (body, _) =>
-          !containsDartUncompilablePatterns(body)
-        }
-
-        usableRast match
-          case Some((translatedBody, refusals)) =>
-            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
-            for i <- method.signatureLine to sigEndLineIdx do
-              val line = lines(i)
-              if i == sigEndLineIdx then
-                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
-                if eqIdx >= 0 then
-                  sb.append(line.substring(0, eqIdx + 1))
-                  sb.append("\n")
-                else
-                  sb.append(line)
-                  sb.append("\n")
-              else
-                sb.append(line)
-                sb.append("\n")
-
-            sb.append(translatedBody)
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "rast"))
-            totalRefusals += refusals
-
-          case _ =>
-            for i <- method.signatureLine to method.bodyEndLine do
-              sb.append(lines(i))
-              sb.append("\n")
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "reference"))
-
-        methodIdx += 1
-      else
-        sb.append(lines(lineIdx))
-        sb.append("\n")
-        lineIdx += 1
-
-    val matched = matchDetails.count(_._2 == "rast")
-    val kept = matchDetails.count(_._2 == "reference")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
-      totalMethods = methods.size,
-      matchedFromRast = matched,
-      keptFromReference = kept,
-      refusalCount = totalRefusals,
-      matchDetails = matchDetails.toList,
+      totalMethods = result.totalMethods,
+      matchedFromRast = result.rastCount,
+      keptFromReference = result.referenceCount,
+      refusalCount = result.totalRefusals,
+      matchDetails = result.bodies.map(e => (e.methodName, e.source)),
     )
 
-    (sb.toString, summary)
+    (result.emittedSource, summary)
 
   /** Emit with parity using multiple RAST files (main + subclasses).
     *
@@ -357,11 +299,7 @@ object DartSassEmitter:
       return emitWithParity(mainRast, referencePath)
 
     val referenceSource = new String(Files.readAllBytes(referencePath))
-    val lines = referenceSource.split("\n", -1).toList
 
-    val methods = TerserCompressEmitter.findMethodBoundaries(lines)
-
-    // Aggregate bodies from main + all subclass RASTs
     val allBodies = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
     def addBodies(rast: RastFile): Unit =
       val bodies = buildTranslatedBodyMap(rast)
@@ -372,75 +310,20 @@ object DartSassEmitter:
     for sub <- subclassRasts do addBodies(sub)
 
     val rastBodies = allBodies.map { case (k, v) => k -> v.toList }.toMap
+    val policy = ParityDerive.Policy(uncompilablePatterns = dartUncompilablePatterns)
+    val result = ParityDerive.derive(referenceSource, rastBodies, policy)
     val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
-
-    val sb = new StringBuilder
-    val matchDetails = mutable.ListBuffer.empty[(String, String)]
-    var totalRefusals = 0
-
-    var lineIdx = 0
-    var methodIdx = 0
-    val usedNames = mutable.Map.empty[String, Int].withDefaultValue(0)
-
-    while lineIdx < lines.size do
-      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
-        val method = methods(methodIdx)
-
-        val bodyList = rastBodies.getOrElse(method.name, Nil)
-        val idx = usedNames(method.name)
-        usedNames(method.name) = idx + 1
-        val usableRast = bodyList.lift(idx).filter { case (body, _) =>
-          !containsDartUncompilablePatterns(body)
-        }
-
-        usableRast match
-          case Some((translatedBody, refusals)) =>
-            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
-            for i <- method.signatureLine to sigEndLineIdx do
-              val line = lines(i)
-              if i == sigEndLineIdx then
-                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
-                if eqIdx >= 0 then
-                  sb.append(line.substring(0, eqIdx + 1))
-                  sb.append("\n")
-                else
-                  sb.append(line)
-                  sb.append("\n")
-              else
-                sb.append(line)
-                sb.append("\n")
-
-            sb.append(translatedBody)
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "rast"))
-            totalRefusals += refusals
-
-          case _ =>
-            for i <- method.signatureLine to method.bodyEndLine do
-              sb.append(lines(i))
-              sb.append("\n")
-            lineIdx = method.bodyEndLine + 1
-            matchDetails += ((method.name, "reference"))
-
-        methodIdx += 1
-      else
-        sb.append(lines(lineIdx))
-        sb.append("\n")
-        lineIdx += 1
-
-    val matched = matchDetails.count(_._2 == "rast")
-    val kept = matchDetails.count(_._2 == "reference")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
-      totalMethods = methods.size,
-      matchedFromRast = matched,
-      keptFromReference = kept,
-      refusalCount = totalRefusals,
-      matchDetails = matchDetails.toList,
+      totalMethods = result.totalMethods,
+      matchedFromRast = result.rastCount,
+      keptFromReference = result.referenceCount,
+      refusalCount = result.totalRefusals,
+      matchDetails = result.bodies.map(e => (e.methodName, e.source)),
     )
 
-    (sb.toString, summary)
+    (result.emittedSource, summary)
 
   // --------------------------------------------------------------------------
   // Batch operations
