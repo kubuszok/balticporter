@@ -164,10 +164,20 @@ class DartSassEmitterSpec extends munit.FunSuite:
     if rast.isEmpty then
       println("SKIP: expression.dart RAST not found")
     else
-      val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
-      val rastNames = fns.map(f => dedicated.DartSassEmitter.dartToCamelCase(f.name)).toSet
-      println(s"Expression RAST: ${fns.size} functions extracted")
-      println(s"  Names: ${fns.map(f => f.name + " -> " + dedicated.DartSassEmitter.dartToCamelCase(f.name)).mkString(", ")}")
+      // Also load subclass files
+      val subclassPaths = List(
+        "binary_operation", "boolean", "color", "function", "if",
+        "interpolated_function", "legacy_if", "list", "map", "null",
+        "number", "parenthesized", "selector", "string", "supports",
+        "unary_operation", "value", "variable",
+      )
+      val subclassRasts = subclassPaths.flatMap(name =>
+        tryLoadRast(s"/rast/dart-sass/lib/src/ast/sass/expression/$name.dart.rast.json"))
+      val allRasts = rast.get :: subclassRasts
+      val allFns = allRasts.flatMap(r => dedicated.DartSassEmitter.extractAllFunctions(r))
+      val rastNames = allFns.map(f => dedicated.DartSassEmitter.dartToCamelCase(f.name)).toSet
+      println(s"Expression RAST: ${allFns.size} functions extracted (from ${allRasts.size} files)")
+      println(s"  Names: ${allFns.map(f => f.name + " -> " + dedicated.DartSassEmitter.dartToCamelCase(f.name)).take(20).mkString(", ")}")
 
       if java.nio.file.Files.exists(sassRefRoot.resolve("ast/sass/Expression.scala")) then
         val refSource = new String(java.nio.file.Files.readAllBytes(sassRefRoot.resolve("ast/sass/Expression.scala")))

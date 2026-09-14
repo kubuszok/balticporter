@@ -134,10 +134,15 @@ object TerserCompressEmitter:
       case Some(paren) if paren.kind == "ParenthesizedExpression" =>
         paren.children.find(_.kind == "CallExpression")
       case Some(call) if call.kind == "CallExpression" =>
-        // Check if this is an IIFE (first child is FunctionExpression)
-        if call.children.headOption.exists(c =>
-          c.kind == "FunctionExpression" || c.kind == "ArrowFunction"
-        ) then Some(call)
+        // Check if this is an IIFE — first child is FunctionExpression directly,
+        // or ParenthesizedExpression wrapping a FunctionExpression
+        val firstChild = call.children.headOption
+        val isIife = firstChild.exists(c =>
+          c.kind == "FunctionExpression" || c.kind == "ArrowFunction" ||
+          (c.kind == "ParenthesizedExpression" && c.children.exists(cc =>
+            cc.kind == "FunctionExpression" || cc.kind == "ArrowFunction"))
+        )
+        if isIife then Some(call)
         else None
       case _ => None
 
@@ -146,9 +151,14 @@ object TerserCompressEmitter:
       case Some(call) =>
         val children = call.children
         // Need at least 2 function expressions: body and wrapper
-        val funcExprs = children.filter(c =>
-          c.kind == "FunctionExpression" || c.kind == "ArrowFunction"
-        )
+        // Unwrap ParenthesizedExpression to find FunctionExpression inside
+        val funcExprs = children.flatMap { c =>
+          c.kind match
+            case "FunctionExpression" | "ArrowFunction" => List(c)
+            case "ParenthesizedExpression" =>
+              c.children.filter(cc => cc.kind == "FunctionExpression" || cc.kind == "ArrowFunction")
+            case _ => Nil
+        }
         if funcExprs.size < 2 then return Nil
 
         val bodyFn = funcExprs.head
@@ -694,8 +704,10 @@ object TerserCompressEmitter:
     else varName
 
   private def snakeToCamel(s: String): String =
-    val parts = s.split("_")
-    val result = if parts.length <= 1 then s
+    // Strip leading underscore(s) for private JS methods like _dot_throw, _eval
+    val stripped = s.stripPrefix("_")
+    val parts = stripped.split("_").filter(_.nonEmpty)
+    val result = if parts.length <= 1 then stripped
     else parts.head + parts.tail.map(_.capitalize).mkString
     if scalaKeywords.contains(result) then s"${result}_" else result
 
@@ -908,20 +920,44 @@ object TerserCompressEmitter:
 
     if isDeFmethod then
       val entries = extractAllDefmethods(rastFile)
-      for entry <- entries do
-        val camelName = snakeToCamel(entry.methodName)
-        val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
-        result(camelName) = (translated.scalaBody, translated.refusalCount)
+
+      // Group entries by method name for multi-class family detection
+      val byMethod = entries.groupBy(_.methodName)
+
+      for (methodName, family) <- byMethod do
+        val camelName = snakeToCamel(methodName)
+
+        if family.size == 1 then
+          // Singleton: translate normally
+          val entry = family.head
+          val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ")
+          result(camelName) = (translated.scalaBody, translated.refusalCount)
+        else
+          // Multi-class family: assemble a `node match { ... }` body
+          val matchBody = assembleMatchBody(family, hierarchy, camelName)
+          result(camelName) = matchBody
+
         // Also store under methodName+ClassName alias for hand-ports that
         // inlined DEFMETHOD dispatch: AST_Block.optimize → optimizeBlock
-        if entry.className.startsWith("AST_") then
-          val classShort = entry.className.drop(4) // "AST_Block" → "Block"
-          val aliasName = camelName + classShort
-          result(aliasName) = (translated.scalaBody, translated.refusalCount)
-          // Also lowercase first: optimizeBlock, not optimizeblock
-          val lowerAlias = camelName + classShort.head.toUpper + classShort.tail
-          if lowerAlias != aliasName then
-            result(lowerAlias) = (translated.scalaBody, translated.refusalCount)
+        for entry <- family do
+          if entry.className.startsWith("AST_") then
+            val classShort = entry.className.drop(4) // "AST_Block" → "Block"
+            val aliasName = camelName + classShort
+            val translated = DefmethodBodyTranslator.translateBody(entry, hierarchy, "    ",
+              thisBinding = "n", nodeParamName = Some("n"))
+            result(aliasName) = (translated.scalaBody, translated.refusalCount)
+            val lowerAlias = camelName + classShort.head.toUpper + classShort.tail
+            if lowerAlias != aliasName then
+              result(lowerAlias) = (translated.scalaBody, translated.refusalCount)
+
+    // Register compound-word aliases for common camelCase mismatches
+    val compoundWordAliases = Map(
+      "isBigint" -> "isBigInt",
+      "isNumberOrBigint" -> "isNumberOrBigInt",
+      "is32bitInteger" -> "is32BitInteger",
+    )
+    for (from, to) <- compoundWordAliases do
+      result.get(from).foreach(body => result(to) = body)
 
     val freeFns = TerserEmitter.extractFreeFunctions(rastFile)
     for fn <- freeFns do
@@ -931,6 +967,68 @@ object TerserCompressEmitter:
       result(camelName) = (translated.scalaBody, translated.refusalCount)
 
     result.toMap
+
+  /** Assemble a `node match { case n: AstX => body; ... }` from a multi-class
+    * DEFMETHOD family.
+    *
+    * Each entry in the family has a different className (AST_Node, AST_Binary, etc.)
+    * and its own body. The assembled match dispatches to the correct body based on
+    * the runtime type of the node parameter.
+    */
+  private def assembleMatchBody(
+      family: List[TerserEmitter.DefmethodEntry],
+      hierarchy: List[TerserEmitter.DefnodeClass],
+      methodName: String,
+  ): (String, Int) =
+    val sb = new StringBuilder
+    var totalRefusals = 0
+
+    sb.append("    node match {\n")
+
+    // Sort by class hierarchy depth (specific first, general last)
+    // AST_Node should be last (most general)
+    val sorted = family.sortBy { entry =>
+      if entry.className == "AST_Node" then 999
+      else if entry.className == "AST_Toplevel" then 998
+      else if entry.className == "AST_Scope" then 997
+      else if entry.className == "AST_Lambda" then 996
+      else 0
+    }
+
+    for entry <- sorted do
+      val scalaClass = astVarToScalaName(entry.className)
+      val translated = DefmethodBodyTranslator.translateBody(
+        entry, hierarchy, "        ", thisBinding = "n", nodeParamName = Some("n"))
+      totalRefusals += translated.refusalCount
+
+      // If the body is a single expression, emit it inline
+      val bodyText = translated.scalaBody.trim
+      if bodyText.linesIterator.size <= 1 && !bodyText.startsWith("{") then
+        sb.append(s"      case n: $scalaClass => $bodyText\n")
+      else
+        sb.append(s"      case n: $scalaClass =>\n")
+        sb.append(translated.scalaBody)
+
+    // Default arm based on method semantics
+    val defaultValue = defaultForMethod(methodName)
+    sb.append(s"      case _ => $defaultValue\n")
+    sb.append("    }\n")
+
+    (sb.toString, totalRefusals)
+
+  /** Determine the default value for the catch-all arm of an assembled match. */
+  private def defaultForMethod(methodName: String): String =
+    methodName match
+      case n if n.startsWith("is") => "false"
+      case "hasSideEffects" | "mayThrow" | "mayThrowOnAccess" => "true"
+      case "eval_" | "evaluate" => "this"
+      case "size_" | "size" => "0"
+      case "aborts" => "null"
+      case "doPrint" | "print_" => "()"
+      case "equivalentTo" | "shallowCmp" => "false"
+      case "negate" | "bitwiseNegate" => "node"
+      case "dropSideEffectFree" => "null"
+      case _ => "???"
 
   /** Find method boundaries in a reference Scala file.
     *

@@ -30,6 +30,7 @@ object DartSassEmitter:
       dartPath: String,
       referenceSubPath: String,
       objectName: String,
+      subclassDartPaths: List[String] = Nil,
   )
 
   val TopLevelModules: List[DartSassModule] = List(
@@ -67,10 +68,61 @@ object DartSassEmitter:
   val AstSassModules: List[DartSassModule] = List(
     DartSassModule("ast", "lib/src/ast/sass/argument_declaration.dart", "ast/sass/ArgumentDeclaration.scala", "ArgumentDeclaration"),
     DartSassModule("ast", "lib/src/ast/sass/at_root_query.dart",       "ast/sass/AtRootQuery.scala",        "AtRootQuery"),
-    DartSassModule("ast", "lib/src/ast/sass/expression.dart",          "ast/sass/Expression.scala",          "Expression"),
+    DartSassModule("ast", "lib/src/ast/sass/expression.dart",          "ast/sass/Expression.scala",          "Expression",
+      subclassDartPaths = List(
+        "lib/src/ast/sass/expression/binary_operation.dart",
+        "lib/src/ast/sass/expression/boolean.dart",
+        "lib/src/ast/sass/expression/color.dart",
+        "lib/src/ast/sass/expression/function.dart",
+        "lib/src/ast/sass/expression/if.dart",
+        "lib/src/ast/sass/expression/interpolated_function.dart",
+        "lib/src/ast/sass/expression/legacy_if.dart",
+        "lib/src/ast/sass/expression/list.dart",
+        "lib/src/ast/sass/expression/map.dart",
+        "lib/src/ast/sass/expression/null.dart",
+        "lib/src/ast/sass/expression/number.dart",
+        "lib/src/ast/sass/expression/parenthesized.dart",
+        "lib/src/ast/sass/expression/selector.dart",
+        "lib/src/ast/sass/expression/string.dart",
+        "lib/src/ast/sass/expression/supports.dart",
+        "lib/src/ast/sass/expression/unary_operation.dart",
+        "lib/src/ast/sass/expression/value.dart",
+        "lib/src/ast/sass/expression/variable.dart",
+      )),
     DartSassModule("ast", "lib/src/ast/sass/import.dart",              "ast/sass/Import.scala",              "Import"),
     DartSassModule("ast", "lib/src/ast/sass/interpolation.dart",       "ast/sass/Interpolation.scala",       "Interpolation"),
-    DartSassModule("ast", "lib/src/ast/sass/statement.dart",           "ast/sass/Statement.scala",           "Statement"),
+    DartSassModule("ast", "lib/src/ast/sass/statement.dart",           "ast/sass/Statement.scala",           "Statement",
+      subclassDartPaths = List(
+        "lib/src/ast/sass/statement/at_root_rule.dart",
+        "lib/src/ast/sass/statement/at_rule.dart",
+        "lib/src/ast/sass/statement/callable_declaration.dart",
+        "lib/src/ast/sass/statement/content_block.dart",
+        "lib/src/ast/sass/statement/content_rule.dart",
+        "lib/src/ast/sass/statement/debug_rule.dart",
+        "lib/src/ast/sass/statement/declaration.dart",
+        "lib/src/ast/sass/statement/each_rule.dart",
+        "lib/src/ast/sass/statement/error_rule.dart",
+        "lib/src/ast/sass/statement/extend_rule.dart",
+        "lib/src/ast/sass/statement/for_rule.dart",
+        "lib/src/ast/sass/statement/forward_rule.dart",
+        "lib/src/ast/sass/statement/function_rule.dart",
+        "lib/src/ast/sass/statement/if_rule.dart",
+        "lib/src/ast/sass/statement/import_rule.dart",
+        "lib/src/ast/sass/statement/include_rule.dart",
+        "lib/src/ast/sass/statement/loud_comment.dart",
+        "lib/src/ast/sass/statement/media_rule.dart",
+        "lib/src/ast/sass/statement/mixin_rule.dart",
+        "lib/src/ast/sass/statement/parent.dart",
+        "lib/src/ast/sass/statement/return_rule.dart",
+        "lib/src/ast/sass/statement/silent_comment.dart",
+        "lib/src/ast/sass/statement/style_rule.dart",
+        "lib/src/ast/sass/statement/stylesheet.dart",
+        "lib/src/ast/sass/statement/supports_rule.dart",
+        "lib/src/ast/sass/statement/use_rule.dart",
+        "lib/src/ast/sass/statement/variable_declaration.dart",
+        "lib/src/ast/sass/statement/warn_rule.dart",
+        "lib/src/ast/sass/statement/while_rule.dart",
+      )),
   )
 
   val SelectorModules: List[DartSassModule] = List(
@@ -290,6 +342,106 @@ object DartSassEmitter:
 
     (sb.toString, summary)
 
+  /** Emit with parity using multiple RAST files (main + subclasses).
+    *
+    * For modules like Expression.scala where the reference consolidates 20+
+    * Dart subclass files into one Scala file, this aggregates bodies from
+    * all subclass RASTs into a single body map for matching.
+    */
+  def emitWithParityMultiFile(
+      mainRast: RastFile,
+      subclassRasts: List[RastFile],
+      referencePath: Path,
+  ): (String, ParityEmitSummary) =
+    if subclassRasts.isEmpty then
+      return emitWithParity(mainRast, referencePath)
+
+    val referenceSource = new String(Files.readAllBytes(referencePath))
+    val lines = referenceSource.split("\n", -1).toList
+
+    val methods = TerserCompressEmitter.findMethodBoundaries(lines)
+
+    // Aggregate bodies from main + all subclass RASTs
+    val allBodies = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
+    def addBodies(rast: RastFile): Unit =
+      val bodies = buildTranslatedBodyMap(rast)
+      for (name, entries) <- bodies do
+        allBodies.getOrElseUpdate(name, mutable.ListBuffer.empty) ++= entries
+
+    addBodies(mainRast)
+    for sub <- subclassRasts do addBodies(sub)
+
+    val rastBodies = allBodies.map { case (k, v) => k -> v.toList }.toMap
+    val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
+
+    val sb = new StringBuilder
+    val matchDetails = mutable.ListBuffer.empty[(String, String)]
+    var totalRefusals = 0
+
+    var lineIdx = 0
+    var methodIdx = 0
+    val usedNames = mutable.Map.empty[String, Int].withDefaultValue(0)
+
+    while lineIdx < lines.size do
+      if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
+        val method = methods(methodIdx)
+
+        val bodyList = rastBodies.getOrElse(method.name, Nil)
+        val idx = usedNames(method.name)
+        usedNames(method.name) = idx + 1
+        val usableRast = bodyList.lift(idx).filter { case (body, _) =>
+          !containsDartUncompilablePatterns(body)
+        }
+
+        usableRast match
+          case Some((translatedBody, refusals)) =>
+            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
+            for i <- method.signatureLine to sigEndLineIdx do
+              val line = lines(i)
+              if i == sigEndLineIdx then
+                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
+                if eqIdx >= 0 then
+                  sb.append(line.substring(0, eqIdx + 1))
+                  sb.append("\n")
+                else
+                  sb.append(line)
+                  sb.append("\n")
+              else
+                sb.append(line)
+                sb.append("\n")
+
+            sb.append(translatedBody)
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((method.name, "rast"))
+            totalRefusals += refusals
+
+          case _ =>
+            for i <- method.signatureLine to method.bodyEndLine do
+              sb.append(lines(i))
+              sb.append("\n")
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((method.name, "reference"))
+
+        methodIdx += 1
+      else
+        sb.append(lines(lineIdx))
+        sb.append("\n")
+        lineIdx += 1
+
+    val matched = matchDetails.count(_._2 == "rast")
+    val kept = matchDetails.count(_._2 == "reference")
+
+    val summary = ParityEmitSummary(
+      moduleName = moduleName,
+      totalMethods = methods.size,
+      matchedFromRast = matched,
+      keptFromReference = kept,
+      refusalCount = totalRefusals,
+      matchDetails = matchDetails.toList,
+    )
+
+    (sb.toString, summary)
+
   // --------------------------------------------------------------------------
   // Batch operations
   // --------------------------------------------------------------------------
@@ -352,7 +504,10 @@ object DartSassEmitter:
       val refPath = sassRefRoot.resolve(mod.referenceSubPath)
       if Files.exists(refPath) then
         loadRast(rastResource).foreach { rast =>
-          val (source, summary) = emitWithParity(rast, refPath)
+          val subclassRasts = mod.subclassDartPaths.flatMap { subPath =>
+            loadRast(s"/rast/dart-sass/$subPath.rast.json")
+          }
+          val (source, summary) = emitWithParityMultiFile(rast, subclassRasts, refPath)
           val outFile = outDir.resolve(s"${mod.objectName}.scala")
           Files.writeString(outFile, source)
           results += ((mod, summary))
