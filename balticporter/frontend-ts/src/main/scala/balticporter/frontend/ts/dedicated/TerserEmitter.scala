@@ -27,16 +27,7 @@ object TerserEmitter:
   // DEFNODE hierarchy extraction
   // --------------------------------------------------------------------------
 
-  /** A class extracted from a single `DEFNODE(type, props, ctor, methods, base)` call. */
-  final case class DefnodeClass(
-      varName: String,      // the JS variable name, e.g. "AST_Node"
-      typeName: String,     // the TYPE string, e.g. "Node"
-      selfProps: List[String],
-      base: Option[String], // parent variable name, None for root
-      methods: List[String],
-  ):
-    /** Whether any known subclasses exist (set after hierarchy is built). */
-    var isAbstract: Boolean = false
+  export _root_.balticporter.frontend.ts.dedicated.{DefnodeClass, DefmethodEntry, FreeFunction}
 
   /** Extract the DEFNODE class hierarchy from a Terser ast.js RAST file. */
   def extractHierarchy(file: RastFile): List[DefnodeClass] =
@@ -231,14 +222,6 @@ object TerserEmitter:
   // DEFMETHOD extraction and merging
   // --------------------------------------------------------------------------
 
-  /** A method added to a DEFNODE class via DEFMETHOD after definition. */
-  final case class DefmethodEntry(
-      className: String,   // e.g. "AST_Scope"
-      methodName: String,  // e.g. "figure_out_scope"
-      params: List[String],
-      bodyNode: RastNode,
-  )
-
   /** Extract all DEFMETHOD calls from a Terser source file RAST.
     *
     * The JS pattern is:
@@ -381,13 +364,6 @@ object TerserEmitter:
   // --------------------------------------------------------------------------
   // Free function extraction
   // --------------------------------------------------------------------------
-
-  /** A standalone function from a DEFMETHOD file. */
-  final case class FreeFunction(
-      name: String,
-      params: List[String],
-      bodyNode: RastNode,
-  )
 
   /** Extract standalone function declarations from a file.
     *
