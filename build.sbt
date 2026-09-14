@@ -25,6 +25,9 @@ ThisBuild / scalaVersion     := scalaV
 // ---------------------------------------------------------------------------------------------
 ThisBuild / version       := sys.env.getOrElse("BALTICPORTER_VERSION", "0.1.0-SNAPSHOT")
 ThisBuild / versionScheme := Some("early-semver")
+// sbt-kubuszok enables git.useGitDescribe; override it — the version must be reproducible from
+// the environment alone, not from local git state (see the comment above).
+ThisBuild / git.useGitDescribe := false
 
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
@@ -34,16 +37,10 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 // ---------------------------------------------------------------------------------------------
-// PUBLISHING (Maven-Central-shaped)
-//
-// Applied at `ThisBuild`, so every module inherits it; the modules that must NOT ship say
-// `publish / skip := true` individually (`corpus`, `sge`, `root`).
-//
-// NOT set up here, deliberately: CI credentials and the Sonatype Central portal bundle upload.
-// `publishTo` below is the classic OSSRH staging/snapshot shape, which is what `publishSigned` and
-// `sbt-sonatype` consume; moving to the Central Portal is a plugin plus a token, not a build
-// restructure. `publishLocal` — the only publish this repository can perform unattended — is
-// unaffected by either choice.
+// PUBLISHING — sbt-kubuszok provides publishTo (Maven Central Snapshots for SNAPSHOT, local
+// staging for release), sbt-pgp for signing, ci-release command, and projectType-based gating.
+// The version is still driven by BALTICPORTER_VERSION (baked into generated code), overriding
+// sbt-git's git-describe default. Modules that must NOT ship set projectType := NonPublished.
 // ---------------------------------------------------------------------------------------------
 ThisBuild / description := "Baltic Porter — a deterministic engine for porting Java libraries to Scala 3."
 ThisBuild / homepage    := Some(uri("https://github.com/kubuszok/balticporter"))
@@ -62,15 +59,6 @@ ThisBuild / developers := List(
     url = uri("https://kubuszok.com"),
   )
 )
-ThisBuild / publishMavenStyle := true
-ThisBuild / publishTo := Some(
-  if ((ThisBuild / version).value.endsWith("SNAPSHOT"))
-    "sonatype-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
-  else
-    "sonatype-staging" at "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
-)
-ThisBuild / pomIncludeRepository   := { _ => false }
-ThisBuild / Test / publishArtifact := false
 
 // SERIAL TESTS, ACROSS THE WHOLE BUILD, and not as tidiness: `CheckReport` is gated on process-global
 // system properties (`balticporter.report`, `balticporter.reportDir`), which `PortRunSpec.withReport`
@@ -146,6 +134,7 @@ lazy val runtime = (projectMatrix in file("balticporter/runtime"))
   .settings(
     name        := "balticporter-runtime",
     description := "Support types that Baltic-Porter-emitted Scala links against.",
+    projectType := ProjectType.ScalaLibrary,
     libraryDependencies += munit,
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
@@ -195,6 +184,7 @@ lazy val api = project
   .settings(
     name := "balticporter-api",
     description := "The Baltic Porter model and contracts a transform, check or frontend is written against.",
+    projectType := ProjectType.JarOnly,
     libraryDependencies += munit,
   )
 
@@ -213,6 +203,7 @@ lazy val engine = project
   .dependsOn(api, `frontend-spoon`)
   .settings(
     name := "balticporter-engine",
+    projectType := ProjectType.JarOnly,
     libraryDependencies ++= Seq(
       "org.scalameta" %% "scalameta" % "4.17.2", // `verify` — skeleton diff over emitted Scala
       // The CONFIG front door (`PortConfig`, `PortConfigMain`). Deliberately here and not in `api`:
@@ -296,6 +287,7 @@ lazy val `frontend-spoon` = project
   .dependsOn(api)
   .settings(
     name := "balticporter-frontend-spoon",
+    projectType := ProjectType.JarOnly,
     libraryDependencies ++= Seq(
       "fr.inria.gforge.spoon" % "spoon-core" % "11.5.0",
       munit,
@@ -310,6 +302,7 @@ lazy val `frontend-ts` = project
   .dependsOn(api)
   .settings(
     name := "balticporter-frontend-ts",
+    projectType := ProjectType.JarOnly,
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.36.4",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.36.4" % Provided,
@@ -324,6 +317,7 @@ lazy val `frontend-dart` = project
   .dependsOn(api, `frontend-ts`)
   .settings(
     name := "balticporter-frontend-dart",
+    projectType := ProjectType.JarOnly,
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.36.4",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.36.4" % Provided,
@@ -340,6 +334,7 @@ lazy val testkit = project
   .dependsOn(api, engine, `frontend-spoon`)
   .settings(
     name := "balticporter-testkit",
+    projectType := ProjectType.JarOnly,
     libraryDependencies += "org.scalameta" %% "munit" % "1.2.0",
   )
 
@@ -348,6 +343,7 @@ lazy val corpus = project
   .dependsOn(api, engine, testkit, `frontend-spoon`)
   .settings(
     name := "balticporter-corpus",
+    projectType := ProjectType.JarOnly,
     libraryDependencies += munit,
     Compile / run / fork := true,
     Compile / run / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
@@ -1380,7 +1376,7 @@ lazy val root = project
   // every row of the runtime matrix, not just the JVM one — `runtime` is a `ProjectMatrix` and
   // has no single reference, so a build-wide `compile`/`publishLocal` reaches all three or none.
   .aggregate(runtime.projectRefs *)
-  .aggregate(api, `frontend-spoon`, engine, testkit, corpus)
+  .aggregate(api, `frontend-spoon`, engine, testkit, corpus, `frontend-ts`, `frontend-dart`)
   .settings(
     name := "balticporter",
     publish / skip := true,

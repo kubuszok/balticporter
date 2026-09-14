@@ -32,8 +32,8 @@ object DefmethodBodyTranslator:
     * AST_X.prototype.method_name = identifier_ref;
     * }}}
     */
-  def extractPrototypeAssignments(file: RastFile): List[TerserEmitter.DefmethodEntry] =
-    val result = mutable.ListBuffer.empty[TerserEmitter.DefmethodEntry]
+  def extractPrototypeAssignments(file: RastFile): List[DefmethodEntry] =
+    val result = mutable.ListBuffer.empty[DefmethodEntry]
     for node <- file.nodes do
       extractProtoAssignment(node).foreach(result += _)
     result.toList
@@ -43,8 +43,8 @@ object DefmethodBodyTranslator:
     * @param nodeParamName when set, property accesses on this identifier are validated
     *   against the DEFNODE hierarchy for the entry's className */
   def translateBody(
-      entry: TerserEmitter.DefmethodEntry,
-      hierarchy: List[TerserEmitter.DefnodeClass],
+      entry: DefmethodEntry,
+      hierarchy: List[DefnodeClass],
       indent: String = "    ",
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
@@ -63,12 +63,12 @@ object DefmethodBodyTranslator:
     * Groups entries by class and emits each as an override chain. */
   def emitDefmethodFamily(
       familyName: String,
-      entries: List[TerserEmitter.DefmethodEntry],
-      hierarchy: List[TerserEmitter.DefnodeClass],
+      entries: List[DefmethodEntry],
+      hierarchy: List[DefnodeClass],
   ): String =
     val sb = new StringBuilder
     val grouped = entries.groupBy(_.className)
-    val sortedClasses = grouped.keys.toList.sorted
+    val sortedClasses = grouped.keys.toList.sorted(using Ordering.String)
 
     for cls <- sortedClasses do
       val methods = grouped(cls)
@@ -97,8 +97,8 @@ object DefmethodBodyTranslator:
 
   /** Compute translation statistics for a list of entries. */
   def computeStats(
-      entries: List[TerserEmitter.DefmethodEntry],
-      hierarchy: List[TerserEmitter.DefnodeClass],
+      entries: List[DefmethodEntry],
+      hierarchy: List[DefnodeClass],
   ): TranslationStats =
     var full = 0
     var partial = 0
@@ -116,7 +116,7 @@ object DefmethodBodyTranslator:
   // Private: prototype assignment extraction
   // --------------------------------------------------------------------------
 
-  private def extractProtoAssignment(node: RastNode): Option[TerserEmitter.DefmethodEntry] =
+  private def extractProtoAssignment(node: RastNode): Option[DefmethodEntry] =
     if node.kind != "ExpressionStatement" then None
     else node.children.find(_.kind == "BinaryExpression").flatMap { bin =>
       if bin.operator.getOrElse("") != "EqualsToken" || bin.children.size < 2 then None
@@ -144,7 +144,7 @@ object DefmethodBodyTranslator:
       className: String,
       methodName: String,
       rhs: RastNode,
-  ): Option[TerserEmitter.DefmethodEntry] =
+  ): Option[DefmethodEntry] =
       rhs.kind match
         case "FunctionExpression" | "ArrowFunction" =>
           val params = rhs.children.filter(_.kind == "Parameter").map { p =>
@@ -161,7 +161,7 @@ object DefmethodBodyTranslator:
               case None =>
                 RastNode("Block", 0, (0, 0))
           }
-          Some(TerserEmitter.DefmethodEntry(className, methodName, params, body))
+          Some(DefmethodEntry(className, methodName, params, body))
 
         case "Identifier" =>
           val refName = rhs.text.getOrElse("")
@@ -203,7 +203,7 @@ object DefmethodBodyTranslator:
                   RastNode("Identifier", 0, (0, 0), text = Some(refName))
                 ))
               ))
-          Some(TerserEmitter.DefmethodEntry(className, methodName, Nil, syntheticBody))
+          Some(DefmethodEntry(className, methodName, Nil, syntheticBody))
 
         case _ => None
 
@@ -212,8 +212,8 @@ object DefmethodBodyTranslator:
   // --------------------------------------------------------------------------
 
   private class BodyContext(
-      entry: TerserEmitter.DefmethodEntry,
-      hierarchy: List[TerserEmitter.DefnodeClass],
+      entry: DefmethodEntry,
+      hierarchy: List[DefnodeClass],
       baseIndent: String,
       thisBinding: String = "this",
       nodeParamName: Option[String] = None,
@@ -222,7 +222,7 @@ object DefmethodBodyTranslator:
     val refusals = mutable.ListBuffer.empty[String]
 
     // Build lookup of class properties for `this.x` resolution
-    private val byName: Map[String, TerserEmitter.DefnodeClass] =
+    private val byName: Map[String, DefnodeClass] =
       hierarchy.map(c => c.varName -> c).toMap
     private val allPropsForClass: Map[String, Set[String]] =
       hierarchy.map { cls =>
@@ -1428,7 +1428,7 @@ object DefmethodBodyTranslator:
     private def refuse(reason: String): Unit =
       refusals += reason
 
-    private def collectAllProps(cls: TerserEmitter.DefnodeClass): Set[String] =
+    private def collectAllProps(cls: DefnodeClass): Set[String] =
       val own = cls.selfProps.toSet
       cls.base.flatMap(byName.get).map(p => own ++ collectAllProps(p)).getOrElse(own)
 
