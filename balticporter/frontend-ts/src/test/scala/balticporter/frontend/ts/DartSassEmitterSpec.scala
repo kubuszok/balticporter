@@ -94,6 +94,33 @@ class DartSassEmitterSpec extends munit.FunSuite:
     assertEquals(dedicated.DartSassEmitter.dartTypeToScala("Map<String, List<int>>"), "Map[String, List[Int]]")
 
   // -----------------------------------------------------------------------
+  // Body normalization diagnostic
+  // -----------------------------------------------------------------------
+
+  test("normalizeNodeTree: Dart body becomes TS-compatible"):
+    val rast = tryLoadRast("/rast/dart-sass/lib/src/exception.dart.rast.json")
+    assert(rast.isDefined)
+    val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+    println(s"Extracted ${fns.size} functions from exception.dart")
+    // Try translating each function body
+    var translated = 0
+    var refused = 0
+    for fn <- fns do
+      val bodyOpt = dedicated.DartSassEmitter.findFunctionBody(rast.get, fn.name)
+      bodyOpt.foreach { body =>
+        val normalized = dedicated.DefmethodBodyTranslator.normalizeNodeTree(body)
+        val entry = dedicated.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalized)
+        val result = dedicated.DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+        if result.isComplete then translated += 1
+        else
+          refused += 1
+          if result.refusalReasons.size <= 2 then
+            println(s"  ${fn.name}: ${result.refusalReasons.mkString(", ")}")
+      }
+    println(s"exception.dart body translation: $translated complete, $refused partial/refused out of ${fns.size}")
+    assert(translated > 0, "should translate at least some bodies")
+
+  // -----------------------------------------------------------------------
   // Parity-derive
   // -----------------------------------------------------------------------
 
@@ -117,6 +144,12 @@ class DartSassEmitterSpec extends munit.FunSuite:
       val refPath = sassRefRoot.resolve("Compile.scala")
       val (source, summary) = dedicated.DartSassEmitter.emitWithParity(rast.get, refPath)
       println(s"Compile parity: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")
+      // Diagnostic: show RAST function names vs reference method names
+      val rastFns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+      val refSource = new String(java.nio.file.Files.readAllBytes(refPath))
+      val refMethods = dedicated.TerserCompressEmitter.findMethodBoundaries(refSource.split("\n", -1).toList)
+      println(s"  RAST functions: ${rastFns.map(f => dedicated.DartSassEmitter.dartToCamelCase(f.name)).take(10).mkString(", ")}")
+      println(s"  Ref methods: ${refMethods.map(_.name).take(10).mkString(", ")}")
 
   // -----------------------------------------------------------------------
   // Batch analysis

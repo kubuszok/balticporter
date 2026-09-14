@@ -430,7 +430,10 @@ object DartSassEmitter:
         case "MethodDeclaration" | "FunctionDeclaration" =>
           val name = nameFromSymbol(node)
           if name.nonEmpty then
-            val params = node.children
+            // Dart FunctionDeclaration wraps params and body in FunctionExpression
+            val fnExpr = node.children.find(_.kind.contains("FunctionExpression"))
+            val searchIn = fnExpr.map(_.children).getOrElse(node.children)
+            val params = searchIn
               .find(c => c.kind.contains("FormalParameterList"))
               .map(_.children.flatMap(p =>
                 nameFromSymbol(p) match
@@ -438,7 +441,7 @@ object DartSassEmitter:
                   case _ => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
               ))
               .getOrElse(Nil)
-            val hasBody = node.children.exists(c =>
+            val hasBody = searchIn.exists(c =>
               c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
             if hasBody then
               result += ExtractedFunction(name, params, "Block")
@@ -466,7 +469,7 @@ object DartSassEmitter:
     file.nodes.foreach(walk)
     result.toList
 
-  private def findFunctionBody(file: RastFile, name: String): Option[RastNode] =
+  def findFunctionBody(file: RastFile, name: String): Option[RastNode] =
     var found: Option[RastNode] = None
     val symbolMap = file.symbols
 
@@ -480,7 +483,10 @@ object DartSassEmitter:
         case "MethodDeclaration" | "FunctionDeclaration" =>
           val fnName = nameFromSymbol(node)
           if fnName == name then
-            found = node.children.find(c =>
+            // Dart FunctionDeclaration wraps body in FunctionExpression
+            val fnExpr = node.children.find(_.kind.contains("FunctionExpression"))
+            val searchIn = fnExpr.map(_.children).getOrElse(node.children)
+            found = searchIn.find(c =>
               c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
             // Unwrap BlockFunctionBody to its inner Block
             found = found.flatMap { body =>
@@ -488,11 +494,13 @@ object DartSassEmitter:
                 body.children.find(_.kind.contains("Block")).orElse(Some(body))
               else if body.kind.contains("ExpressionFunctionBody") then
                 // Wrap the expression in a synthetic return block
-                body.children.headOption.map { expr =>
-                  RastNode("Block", 0, (0, 0), children = List(
-                    RastNode("ReturnStatement", 0, (0, 0), children = List(expr))
-                  ))
-                }
+                body.children.headOption
+                  .filterNot(_.kind.contains("Type")) // skip return type annotation
+                  .map { expr =>
+                    RastNode("Block", 0, (0, 0), children = List(
+                      RastNode("ReturnStatement", 0, (0, 0), children = List(expr))
+                    ))
+                  }
               else Some(body)
             }
 
@@ -605,7 +613,7 @@ object DartSassEmitter:
   // Helpers
   // --------------------------------------------------------------------------
 
-  private def dartToCamelCase(s: String): String =
+  def dartToCamelCase(s: String): String =
     if !s.contains("_") then s
     else
       val parts = s.split("_")
