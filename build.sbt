@@ -1,5 +1,4 @@
 import kubuszok.sbt.KubuszokPlugin.autoImport._
-import com.github.sbt.git.SbtGit.git
 
 ThisBuild / organization     := "com.kubuszok"
 ThisBuild / organizationName := "Baltic Porter"
@@ -11,14 +10,12 @@ val scalaV = "3.8.4"
 ThisBuild / scalaVersion     := scalaV
 
 // ---------------------------------------------------------------------------------------------
-// VERSION SCHEME
+// VERSION — sbt-kubuszok's git-describe derivation, same as every kubuszok org repo.
 //
-// early-semver, driven from ONE place. `BALTICPORTER_VERSION` is what a release build sets (a tag
-// name, `0.1.0`); everything else is the snapshot of the next patch. There is no `version.sbt` and
-// no dynver: the version must be reproducible from the environment alone, because it is baked into
-// generated code (`balticporter.core.BuildVersion` -> `EngineInfo.version`) and therefore into
-// every emitted port's header and its `balticporter-runtime` dependency. A version derived from
-// local git state would make two checkouts of the same commit emit different bytes.
+// Tagged commit → release (e.g. `v0.1.0` → `0.1.0`); untagged → snapshot with commit hash
+// (e.g. `0.1.0-3-gabcdef1-SNAPSHOT`). The version is baked into generated code
+// (`balticporter.core.BuildVersion` → `EngineInfo.version`) and into every emitted port's header
+// and its `balticporter-runtime` dependency.
 //
 // Pre-1.0 policy (early-semver): the MINOR is the compatibility unit. A change to any emitted
 // construct, to the TIR, or to `balticporter.runtime`'s SHAPE bumps the minor; a fix that leaves
@@ -26,13 +23,6 @@ ThisBuild / scalaVersion     := scalaV
 // version with the engine on purpose — see `RuntimeArtifact` for why divergence there is a
 // correctness bug and not a packaging preference.
 // ---------------------------------------------------------------------------------------------
-// sbt-kubuszok enables sbt-git's version derivation; override it completely — the version must
-// be reproducible from the environment alone, not from local git state (see the comment above).
-// sbt-git reads the system property named by git.versionProperty (default "project.version")
-// before falling back to git-describe; set it so the env var wins.
-val bpVersion: String = sys.env.getOrElse("BALTICPORTER_VERSION", "0.1.0-SNAPSHOT")
-val _bpVersionSet: Unit = { System.setProperty("project.version", bpVersion); () }
-ThisBuild / versionScheme := Some("early-semver")
 
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
@@ -44,8 +34,7 @@ ThisBuild / scalacOptions ++= Seq(
 // ---------------------------------------------------------------------------------------------
 // PUBLISHING — sbt-kubuszok provides publishTo (Maven Central Snapshots for SNAPSHOT, local
 // staging for release), sbt-pgp for signing, ci-release command, and projectType-based gating.
-// The version is still driven by BALTICPORTER_VERSION (baked into generated code), overriding
-// sbt-git's git-describe default. Modules that must NOT ship set projectType := NonPublished.
+// Modules that must NOT ship set projectType := NonPublished.
 // ---------------------------------------------------------------------------------------------
 ThisBuild / description := "Baltic Porter — a deterministic engine for porting Java libraries to Scala 3."
 ThisBuild / homepage    := Some(uri("https://github.com/kubuszok/balticporter"))
