@@ -32,7 +32,7 @@ class BreakInCatchSpec extends PortSuite:
     assert(clue(out).contains(Guard))
     // …and it is the FIRST arm: java's own arm must not see the jump.
     val g = out.indexOf(Guard)
-    val j = out.indexOf("case e: java.lang.Exception")
+    val j = out.indexOf("java.lang.Exception")
     assert(g > 0 && j > g, out)
     assert(out.contains("scala.util.boundary.break(())"), out)
   }

@@ -21,6 +21,7 @@ object BuiltinFactories:
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
     new ClassToTraitFactory, new RegistryFactory, new ElementWitnessFactory,
     new NullaryArityFactory, new ClassTagParamsFactory, new VisibilityFactory,
+    new DiscriminatedUnionTransformFactory, new DefnodeNormalizationRuleFactory,
   )
 
 // (a) — no policy; empty config object

@@ -1,4 +1,4 @@
-package balticporter.runtime.js
+package balticporter.runtime
 
 /** JavaScript truthiness semantics for TS→Scala lowering.
   *

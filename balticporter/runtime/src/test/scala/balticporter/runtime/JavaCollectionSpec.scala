@@ -115,7 +115,7 @@ class JavaCollectionSpec extends munit.FunSuite:
     intercept[UnsupportedOperationException](c.add("b"))
     // …while `contains`/`isEmpty` are CONCRETE, which is `AbstractCollection`'s own split.
     assert(c.contains("a"))
-    assert(!c.isEmpty())
+    assert(!c.isEmpty)
   }
 
   test("containsAll / addAll / removeAll / retainAll") {

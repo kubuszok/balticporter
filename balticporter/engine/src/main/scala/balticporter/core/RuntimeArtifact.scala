@@ -89,7 +89,7 @@ object RuntimeArtifact:
     s"$Package.Wrapping" -> Set.empty,
     // Every concrete member of `JavaCollection` (all of `AbstractCollection` except `iterator()`/`size()`).
     s"$Package.JavaCollection" -> Set(
-      ("isEmpty", List(0)), ("contains", List(1)), ("add", List(1)), ("remove", List(1)),
+      ("isEmpty", Nil), ("contains", List(1)), ("add", List(1)), ("remove", List(1)),
       ("clear", List(0)), ("containsAll", List(1)), ("addAll", List(1)), ("removeAll", List(1)),
       ("retainAll", List(1)), ("removeIf", List(1)), ("toArray", List(0)), ("toArray", List(1)),
     ),
