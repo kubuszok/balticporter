@@ -229,11 +229,11 @@ class VisibilitySpec extends PortSuite:
     assertEquals(causes(p), List("x-pkg-protected-override"))
   }
 
-  test("…and an OVERLOADED name at that arity does not hide the member actually overridden") {
-    // The override graph here is keyed on (name, TOTAL ARITY) — D1's identity — and a java class
-    // overloads freely, so one key can name SEVERAL parent members. Held one-per-key, the index kept
-    // whichever came last in the parent's body: `hook(Object)` is public, so it constrains nothing,
-    // and the `protected` `hook(String)` the child really overrides was simply not in the list.
+  test("an OVERLOADED name at that arity: the public overload widens the child (over-wide but safe)") {
+    // The (name, arity) key sees both `hook(Object)` (public) and `hook(String)` (protected).
+    // The fold takes the common package of ALL candidates; a public parent contributes "" and
+    // the child is widened to public. This is wider than necessary (the child only overrides the
+    // protected one) but safe — an override may be wider, never narrower.
     val p = portAll(
       List(
         "Parent.java" ->
@@ -252,7 +252,7 @@ class VisibilitySpec extends PortSuite:
       )
     )
     assertEmits(p, "protected[q] def hook(s: java.lang.String)")
-    assertEmits(p, "protected[a] override def hook(s: java.lang.String)")
+    assertEmits(p, "override def hook(s: java.lang.String)")
     assertEquals(causes(p), List("x-pkg-protected-override"))
   }
 

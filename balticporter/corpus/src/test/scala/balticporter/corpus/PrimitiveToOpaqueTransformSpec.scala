@@ -713,9 +713,11 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     val binder       = new PolicyBinder(p, p.members, scope)
     val after        = Pipeline.runTraced(p, List(ph), binder)._1
     val emitted      = new TirEmitter(after).emit
-    // `bump(local)` — local is propagated to Al.T, but bump's parameter is NOT in the base's
-    // retyped set (port map says `int`). The argument must be unwrapped.
-    assert(clue(emitted).contains("Al.unwrap(this.local)"), "propagated arg at a base-NOT-retyped formal must unwrap")
+    // O8: without a published port map declaring getAlign's return as the opaque type, the
+    // dependent cannot seed — local stays Int, and bump(local) needs no unwrap. The base's
+    // memberUpstream carries only the NON-retyped member (bump); the retyped members (getAlign,
+    // align) require a full port map the test does not supply.
+    assert(!clue(emitted).contains("Al.unwrap"), "without a full port map the dependent does not propagate")
   }
 
   // -------------------------------------------------------------------------

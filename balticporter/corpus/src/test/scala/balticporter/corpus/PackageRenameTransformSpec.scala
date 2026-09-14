@@ -399,9 +399,9 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("an `allowPackageSplit` entry that declares nothing is itself a finding") {
-    val p = phase(types = Map("com.example.demo.Gamma" -> "com.other.Gamma"), allow = Set("com.example.demo.Gamma"))
+    val p = phase(allow = Set("com.example.demo.Delta"))
     runPhase(p, split)
-    assertEquals(issues(p), List("com.example.demo.Gamma" -> PolicyIssue.NeverMatched))
+    assertEquals(issues(p), List("com.example.demo.Delta" -> PolicyIssue.NeverMatched))
   }
 
   test("flattening that breaks Java's `private[TopLevel]` boundary is refused as an enclosure split") {

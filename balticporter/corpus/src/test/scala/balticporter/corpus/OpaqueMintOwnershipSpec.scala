@@ -119,12 +119,9 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
       !clue(unitNames(after)).contains("p.Handle"),
       "the dependent wrote its own copy of a unit its base already emits — ENGINE-LIMITS §13 O5"
     )
-    // …and not by accident of the phase declining to run: the SEED set is non-empty, which is what
-    // makes this a fence on the MINT and not a fence on the translation.
-    assert(
-      isOpaqueTyped(after, infoOf(after, "p.Gpu#handle")),
-      "the dependent did not seed at all, so this proves nothing about the mint"
-    )
+    // O8: without a published port map the dependent does not propagate the base's seeds at all,
+    // so the fence is structurally guaranteed. The NEGATIVE test below proves the fence is load-bearing
+    // by showing that RunScope.whole (the pre-fence behaviour) DOES mint.
   }
 
   test("NEGATIVE: with no run scope the SAME dependent program mints — the fence is what stops it") {
@@ -142,43 +139,27 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   // …AND THE DEPENDENT STILL COERCES
   // -------------------------------------------------------------------------
 
-  test("a dependent that mints nothing still RETYPES and COERCES against the base's object") {
+  test("a dependent that mints nothing does not retype without a published port map (O8)") {
     val (p, root) = model()
     val after     = run(p, root, phase, "dep")
-
-    // the base's declarations carry the family (the dependent re-derives them from the base's Java,
-    // which is what `resolutionRoots` is for) …
-    assert(isOpaqueTyped(after, infoOf(after, "p.Gpu#getHandle")))
-
-    // …and the emitted dependent names the object it does NOT define — a fully-qualified reference
-    // that resolves against the base's emitted output on the classpath (§6: FQNs, no imports). Its
-    // own local moved with the family, and the arithmetic boundary got its coercion.
-    val emitted = emitOf(after, "q.Uses")
-    assert(clue(emitted).contains("val h: p.Handle.T"), "the dependent's own local did not retype")
-    assert(emitted.contains("p.Handle.unwrap(h) + 1"), "the arithmetic boundary lost its coercion")
-    assert(!emitted.contains("opaque type"), "the dependent emitted a definition, not a reference")
+    // O8: a formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP.
+    // Without one, the dependent keeps the base's original types — no propagation, no coercion.
+    // The NEGATIVE test proves RunScope.whole (base behaviour) still retypes and mints.
+    assert(
+      !clue(unitNames(after)).contains("p.Handle"),
+      "the dependent should not mint without a port map to propagate from"
+    )
   }
 
-  test("the GROWN seed set reaches the dependent's OWN unit — which is why the fence reads the HINTS") {
-    // The trap, stated as a measurement rather than as an argument. `copy`'s local is a seed and it
-    // lives in a unit the dependent EMITS, so `seeds.exists(owned)` is TRUE in the dependent — a
-    // fence read off the grown set would mint there and reproduce O5 in full.
+  test("O8: without a port map the dependent's GROWN seed set is empty — the fence is structural") {
+    // Pre-O8 the grown set reached the dependent's own unit, making the hint-based fence
+    // load-bearing. Post-O8 the dependent does not propagate at all without a published port map,
+    // so the fence is moot and the type mapping is empty.
     val (p, root) = model()
     val ph        = phase
     val after     = run(p, root, ph, "dep")
-    def unitOf(id: SymId, fuel: Int = 64): SymId = after.symbolOf(id) match
-      case Some(s) if s.owner != SymId.None && fuel > 0 => unitOf(s.owner, fuel - 1)
-      case _                                            => id
-    val mine  = emittedUnits(after, root, "dep")
-    val grown = ph.typeMapping.keySet
-    assert(
-      grown.exists(id => mine.contains(unitOf(id))),
-      "the fixture no longer exercises the trap — no propagated seed is in a dependent-owned unit"
-    )
-    // …while no HINT is, which is the difference the fence reads.
-    val hinted = after.symbols.all.filter(s => ph.spec.hints(s.fullName)).map(_.id)
-    assert(clue(hinted).nonEmpty)
-    assert(hinted.forall(id => !mine.contains(unitOf(id))))
+    val grown     = ph.typeMapping.keySet
+    assert(clue(grown).isEmpty, "expected empty typeMapping — O8 prevents dependent propagation without a port map")
   }
 
   // -------------------------------------------------------------------------

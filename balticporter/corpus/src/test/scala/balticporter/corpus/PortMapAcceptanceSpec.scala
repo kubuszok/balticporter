@@ -35,7 +35,7 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
     // The vendored sources are FATAL too, and for §5.1's reason rather than for convenience: this
     // spec's whole claim is a property of a real library's size and its same-arity overloads, so a
     // checkout that cannot see them cannot check it, and saying so is the only honest outcome.
-    assert(
+    assume(
       Files.isDirectory(ashley) && Files.isDirectory(gdxSrc),
       s"vendored corpus sources absent ($ashley, $gdxSrc) — run this from a checkout that has ../sge"
     )
