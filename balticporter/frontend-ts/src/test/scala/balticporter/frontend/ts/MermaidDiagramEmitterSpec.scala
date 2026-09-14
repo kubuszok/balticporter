@@ -13,7 +13,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("infoDiagram.ts -> InfoDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "InfoDiagram", "info", "InfoDb",
       parserClass = Some("InfoParser"),
       rendererClass = Some("InfoRenderer"),
@@ -27,7 +27,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("pieDiagram.ts -> PieDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "PieDiagram", "pie", "PieDb",
       detectorClass = Some("PieDetector"),
     )
@@ -36,7 +36,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("sankeyDiagram.ts -> SankeyDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/sankey/sankeyDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "SankeyDiagram", "sankey", "SankeyDb",
       detectorClass = Some("SankeyDetector"),
     )
@@ -44,7 +44,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("packetDiagram.ts -> PacketDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/packet/diagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "PacketDiagram", "packet", "PacketDb",
       detectorClass = Some("PacketDetector"),
     )
@@ -54,7 +54,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("mindmapDiagram.ts -> MindmapDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/mindmap-definition.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "MindmapDiagram", "mindmap", "MindmapDb",
       detectorClass = Some("MindmapDetector"),
     )
@@ -62,7 +62,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("quadrantDiagram.ts -> QuadrantDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/quadrant-chart/quadrantDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "QuadrantDiagram", "quadrant", "QuadrantDb",
       detectorClass = Some("QuadrantDetector"),
     )
@@ -70,7 +70,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("blockDiagram.ts -> BlockDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/block/blockDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "BlockDiagram", "block", "BlockDb",
       detectorClass = Some("BlockDetector"),
     )
@@ -78,7 +78,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("xychartDiagram.ts -> XyChartDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/xychart/xychartDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "XyChartDiagram", "xychart", "XyChartDb",
       detectorClass = Some("XyChartDetector"),
     )
@@ -88,7 +88,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("erDiagram.ts -> ErDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/er/erDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "ErDiagram", "er", "ErDb",
       detectorClass = Some("ErDetector"),
     )
@@ -96,7 +96,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("c4Diagram.ts -> C4Diagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/c4/c4Diagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "C4Diagram", "c4", "C4Db",
       detectorClass = Some("C4Detector"),
     )
@@ -104,7 +104,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("stateDiagram.ts -> StateDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/state/stateDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "StateDiagram", "state", "StateDb",
       detectorClass = Some("StateDetector"),
     )
@@ -112,7 +112,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("journeyDiagram.ts -> JourneyDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/user-journey/journeyDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "JourneyDiagram", "journey", "JourneyDb",
       detectorClass = Some("JourneyDetector"),
     )
@@ -120,7 +120,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("timelineDiagram.ts -> TimelineDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/timeline/timeline-definition.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "TimelineDiagram", "timeline", "TimelineDb",
       detectorClass = Some("TimelineDetector"),
     )
@@ -128,7 +128,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("requirementDiagram.ts -> RequirementDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/requirement/requirementDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "RequirementDiagram", "requirement", "RequirementDb",
       detectorClass = Some("RequirementDetector"),
     )
@@ -136,7 +136,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
   test("gitGraphDiagram.ts -> GitDiagram from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/git/gitGraphDiagram.rast.json")
-    val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+    val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
       rast, "GitDiagram", "git", "GitDb",
       detectorClass = Some("GitDetector"),
     )
@@ -166,7 +166,7 @@ class MermaidDiagramEmitterSpec extends munit.FunSuite:
 
     for ((rastPath, className, pkg, dbClass) <- files) {
       val rast = loadRast(rastPath)
-      val scala = dedicated.MermaidDiagramEmitter.emitDiagram(
+      val scala = balticporter.corpus.mermaid.MermaidDiagramEmitter.emitDiagram(
         rast, className, pkg, dbClass,
         detectorClass = Some(className.replace("Diagram", "Detector")),
       )

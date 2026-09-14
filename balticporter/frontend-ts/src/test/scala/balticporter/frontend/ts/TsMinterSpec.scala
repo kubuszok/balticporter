@@ -261,7 +261,7 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
 
   test("hachure-fill → dedicated emitter"):
     val rast = loadRast("/rast/hachure-fill/src/hachure.rast.json")
-    val scala = dedicated.HachureFillEmitter.emit(rast)
+    val scala = balticporter.corpus.roughjs.HachureFillEmitter.emit(rast)
     println("=== HachureFill-dedicated.scala ===")
     println(scala)
     assert(scala.contains("object HachureFill"), "should emit HachureFill object")
@@ -271,7 +271,7 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
   test("points-on-curve → dedicated emitter"):
     val indexRast = loadRast("/rast/points-on-curve/src/index.rast.json")
     val ctbRast = loadRast("/rast/points-on-curve/src/curve-to-bezier.rast.json")
-    val emitted = dedicated.PointsOnCurveEmitter.emit(indexRast, ctbRast)
+    val emitted = balticporter.corpus.roughjs.PointsOnCurveEmitter.emit(indexRast, ctbRast)
     for ((name, source) <- emitted)
       println(s"=== $name-dedicated.scala ===")
       println(source)
@@ -280,7 +280,7 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
 
   test("points-on-path → dedicated emitter"):
     val rast = loadRast("/rast/points-on-path/src/index.rast.json")
-    val emitted = dedicated.PointsOnPathEmitter.emit(rast)
+    val emitted = balticporter.corpus.roughjs.PointsOnPathEmitter.emit(rast)
     for ((name, source) <- emitted)
       println(s"=== $name-dedicated.scala ===")
       println(source)
@@ -289,7 +289,7 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
   test("roughjs fillers → emitted Scala source (dedicated)"):
     val rastBase = java.nio.file.Path.of(sys.props.getOrElse("user.dir", "."))
       .resolve("src/test/resources/rast/roughjs/src/fillers")
-    val emitted = dedicated.RoughFillersEmitter.emit(rastBase)
+    val emitted = balticporter.corpus.roughjs.RoughFillersEmitter.emit(rastBase)
     for ((name, source) <- emitted.toList.sortBy(_._1))
       println(s"=== $name.scala ===")
       println(source)
@@ -299,7 +299,7 @@ final case class ActiveEdgeEntry(s: Double, edge: EdgeEntry)""",
   test("roughjs engine (renderer + generator) → emitted Scala source"):
     val rendererRast = loadRast("/rast/roughjs/src/renderer.rast.json")
     val generatorRast = loadRast("/rast/roughjs/src/generator.rast.json")
-    val emitted = dedicated.RoughEngineEmitter.emit(rendererRast, generatorRast)
+    val emitted = balticporter.corpus.roughjs.RoughEngineEmitter.emit(rendererRast, generatorRast)
     // Write full emitted files for inspection
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-rough")
     java.nio.file.Files.createDirectories(outDir)

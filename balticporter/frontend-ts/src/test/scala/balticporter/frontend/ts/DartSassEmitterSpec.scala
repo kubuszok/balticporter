@@ -9,7 +9,7 @@ class DartSassEmitterSpec extends munit.FunSuite:
       try
         val json = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)
         stream.close()
-        Some(dedicated.DartSassEmitter.readDartRast(json))
+        Some(balticporter.corpus.sass.DartSassEmitter.readDartRast(json))
       catch
         case e: Exception =>
           try stream.close() catch case _: Exception => ()
@@ -57,14 +57,14 @@ class DartSassEmitterSpec extends munit.FunSuite:
   test("exception.dart: extract functions"):
     val rast = tryLoadRast("/rast/dart-sass/lib/src/exception.dart.rast.json")
     assert(rast.isDefined)
-    val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+    val fns = balticporter.corpus.sass.DartSassEmitter.extractAllFunctions(rast.get)
     println(s"exception.dart: ${fns.size} functions: ${fns.map(_.name).take(10).mkString(", ")}")
     assert(fns.nonEmpty, "should extract functions from exception.dart")
 
   test("color_names.dart: extract functions"):
     val rast = tryLoadRast("/rast/dart-sass/lib/src/color_names.dart.rast.json")
     assert(rast.isDefined)
-    val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+    val fns = balticporter.corpus.sass.DartSassEmitter.extractAllFunctions(rast.get)
     println(s"color_names.dart: ${fns.size} functions")
 
   // -----------------------------------------------------------------------
@@ -72,29 +72,29 @@ class DartSassEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("dartTypeToScala: basic types"):
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("String"), "String")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("int"), "Int")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("double"), "Double")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("bool"), "Boolean")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("void"), "Unit")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("dynamic"), "Any")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("String"), "String")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("int"), "Int")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("double"), "Double")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("bool"), "Boolean")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("void"), "Unit")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("dynamic"), "Any")
 
   test("dartTypeToScala: nullable"):
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("String?"), "Nullable[String]")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("int?"), "Nullable[Int]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("String?"), "Nullable[String]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("int?"), "Nullable[Int]")
 
   test("dartTypeToScala: collections"):
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("List<String>"), "List[String]")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("Map<String, int>"), "Map[String, Int]")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("Set<String>"), "Set[String]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("List<String>"), "List[String]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("Map<String, int>"), "Map[String, Int]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("Set<String>"), "Set[String]")
 
   test("dartTypeToScala: Future unwrap"):
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("Future<void>"), "Unit")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("Future<String>"), "String")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("Future<void>"), "Unit")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("Future<String>"), "String")
 
   test("dartTypeToScala: nested"):
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("List<String?>"), "List[Nullable[String]]")
-    assertEquals(dedicated.DartSassEmitter.dartTypeToScala("Map<String, List<int>>"), "Map[String, List[Int]]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("List<String?>"), "List[Nullable[String]]")
+    assertEquals(balticporter.corpus.sass.DartSassEmitter.dartTypeToScala("Map<String, List<int>>"), "Map[String, List[Int]]")
 
   // -----------------------------------------------------------------------
   // Body normalization diagnostic
@@ -103,16 +103,16 @@ class DartSassEmitterSpec extends munit.FunSuite:
   test("normalizeNodeTree: Dart body becomes TS-compatible"):
     val rast = tryLoadRast("/rast/dart-sass/lib/src/exception.dart.rast.json")
     assert(rast.isDefined)
-    val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+    val fns = balticporter.corpus.sass.DartSassEmitter.extractAllFunctions(rast.get)
     println(s"Extracted ${fns.size} functions from exception.dart")
     // Try translating each function body
     var translated = 0
     var refused = 0
     for fn <- fns do
-      val bodyOpt = dedicated.DartSassEmitter.findFunctionBody(rast.get, fn.name)
+      val bodyOpt = balticporter.corpus.sass.DartSassEmitter.findFunctionBody(rast.get, fn.name)
       bodyOpt.foreach { body =>
         val normalized = dedicated.DefmethodBodyTranslator.normalizeNodeTree(body)
-        val entry = dedicated.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalized)
+        val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalized)
         val result = dedicated.DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
         if result.isComplete then translated += 1
         else
@@ -134,7 +134,7 @@ class DartSassEmitterSpec extends munit.FunSuite:
       val rast = tryLoadRast("/rast/dart-sass/lib/src/exception.dart.rast.json")
       assert(rast.isDefined)
       val refPath = sassRefRoot.resolve("SassException.scala")
-      val (source, summary) = dedicated.DartSassEmitter.emitWithParity(rast.get, refPath)
+      val (source, summary) = balticporter.corpus.sass.DartSassEmitter.emitWithParity(rast.get, refPath)
       println(s"SassException parity: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")
       assert(source.contains("SassException") || source.contains("class "), "should contain class definition")
 
@@ -145,13 +145,13 @@ class DartSassEmitterSpec extends munit.FunSuite:
       val rast = tryLoadRast("/rast/dart-sass/lib/src/compile.dart.rast.json")
       assert(rast.isDefined)
       val refPath = sassRefRoot.resolve("Compile.scala")
-      val (source, summary) = dedicated.DartSassEmitter.emitWithParity(rast.get, refPath)
+      val (source, summary) = balticporter.corpus.sass.DartSassEmitter.emitWithParity(rast.get, refPath)
       println(s"Compile parity: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")
       // Diagnostic: show RAST function names vs reference method names
-      val rastFns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+      val rastFns = balticporter.corpus.sass.DartSassEmitter.extractAllFunctions(rast.get)
       val refSource = new String(java.nio.file.Files.readAllBytes(refPath))
-      val refMethods = dedicated.TerserCompressEmitter.findMethodBoundaries(refSource.split("\n", -1).toList)
-      println(s"  RAST functions: ${rastFns.map(f => dedicated.DartSassEmitter.dartToCamelCase(f.name)).take(10).mkString(", ")}")
+      val refMethods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(refSource.split("\n", -1).toList)
+      println(s"  RAST functions: ${rastFns.map(f => balticporter.corpus.sass.DartSassEmitter.dartToCamelCase(f.name)).take(10).mkString(", ")}")
       println(s"  Ref methods: ${refMethods.map(_.name).take(10).mkString(", ")}")
 
   // -----------------------------------------------------------------------
@@ -177,14 +177,14 @@ class DartSassEmitterSpec extends munit.FunSuite:
       val subclassRasts = subclassPaths.flatMap(name =>
         tryLoadRast(s"/rast/dart-sass/lib/src/ast/sass/expression/$name.dart.rast.json"))
       val allRasts = rast.get :: subclassRasts
-      val allFns = allRasts.flatMap(r => dedicated.DartSassEmitter.extractAllFunctions(r))
-      val rastNames = allFns.map(f => dedicated.DartSassEmitter.dartToCamelCase(f.name)).toSet
+      val allFns = allRasts.flatMap(r => balticporter.corpus.sass.DartSassEmitter.extractAllFunctions(r))
+      val rastNames = allFns.map(f => balticporter.corpus.sass.DartSassEmitter.dartToCamelCase(f.name)).toSet
       println(s"Expression RAST: ${allFns.size} functions extracted (from ${allRasts.size} files)")
-      println(s"  Names: ${allFns.map(f => f.name + " -> " + dedicated.DartSassEmitter.dartToCamelCase(f.name)).take(20).mkString(", ")}")
+      println(s"  Names: ${allFns.map(f => f.name + " -> " + balticporter.corpus.sass.DartSassEmitter.dartToCamelCase(f.name)).take(20).mkString(", ")}")
 
       if java.nio.file.Files.exists(sassRefRoot.resolve("ast/sass/Expression.scala")) then
         val refSource = new String(java.nio.file.Files.readAllBytes(sassRefRoot.resolve("ast/sass/Expression.scala")))
-        val refMethods = dedicated.TerserCompressEmitter.findMethodBoundaries(refSource.split("\n", -1).toList)
+        val refMethods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(refSource.split("\n", -1).toList)
         val refNames = refMethods.map(_.name).toSet
         println(s"Expression reference: ${refMethods.size} methods")
         println(s"  Names: ${refMethods.map(_.name).mkString(", ")}")
@@ -202,7 +202,7 @@ class DartSassEmitterSpec extends munit.FunSuite:
     if rast.isEmpty then
       println("SKIP: math.dart RAST not found")
     else
-      val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+      val fns = balticporter.corpus.sass.DartSassEmitter.extractAllFunctions(rast.get)
       println(s"math.dart: ${fns.size} functions extracted")
       println(s"  Names: ${fns.map(_.name).mkString(", ")}")
       // Show top-level node kinds
@@ -217,8 +217,8 @@ class DartSassEmitterSpec extends munit.FunSuite:
     if !java.nio.file.Files.exists(sassRefRoot) then
       println("SKIP: ssg-sass reference not found at " + sassRefRoot)
     else
-      val summary = dedicated.DartSassEmitter.analyzeAll(tryLoadRast, sassRefRoot)
-      println("\n" + dedicated.DartSassEmitter.formatBatchSummary(summary))
+      val summary = balticporter.corpus.sass.DartSassEmitter.analyzeAll(tryLoadRast, sassRefRoot)
+      println("\n" + balticporter.corpus.sass.DartSassEmitter.formatBatchSummary(summary))
       assert(summary.foundRast >= 20, s"Expected >= 20 RAST files, got ${summary.foundRast}")
 
   test("batch: emitAllWithParity writes modules"):
@@ -226,10 +226,10 @@ class DartSassEmitterSpec extends munit.FunSuite:
       println("SKIP: ssg-sass reference not found at " + sassRefRoot)
     else
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-dart-sass-parity")
-      val results = dedicated.DartSassEmitter.emitAllWithParity(tryLoadRast, sassRefRoot, outDir)
+      val results = balticporter.corpus.sass.DartSassEmitter.emitAllWithParity(tryLoadRast, sassRefRoot, outDir)
 
       println("\n=== dart-sass Parity-derive Summary ===")
-      println(dedicated.DartSassEmitter.formatParitySummaryTable(results.map(_._2)))
+      println(balticporter.corpus.sass.DartSassEmitter.formatParitySummaryTable(results.map(_._2)))
 
       for (mod, summary) <- results do
         println(s"  ${mod.objectName}: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")

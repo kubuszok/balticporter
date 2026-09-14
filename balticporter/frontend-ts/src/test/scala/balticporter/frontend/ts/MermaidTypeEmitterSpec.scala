@@ -13,7 +13,7 @@ class MermaidTypeEmitterSpec extends munit.FunSuite:
 
   test("pieTypes.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieTypes.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "pie")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "pie")
     assert(scala.contains("package pie"), "should have correct package")
     // PieFields interface -> case class
     assert(scala.contains("case class PieFields") || scala.contains("PieFields"), "should emit PieFields")
@@ -32,37 +32,37 @@ class MermaidTypeEmitterSpec extends munit.FunSuite:
 
   test("infoTypes.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/info/infoTypes.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "info")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "info")
     assert(scala.contains("package info"), "should have correct package")
 
   test("blockTypes.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/block/blockTypes.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "block")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "block")
     assert(scala.contains("package block"), "should have correct package")
 
   test("mindmapTypes.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/mindmapTypes.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "mindmap")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "mindmap")
     assert(scala.contains("package mindmap"), "should have correct package")
 
   test("classTypes.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/class/classTypes.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "class_")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "class_")
     assert(scala.contains("package class_"), "should have correct package")
 
   test("commonTypes.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/common/commonTypes.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "common")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "common")
     assert(scala.contains("package common"), "should have correct package")
 
   test("config.type.ts -> config types from RAST"):
     val rast = loadRast("/rast/mermaid/src/config.type.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "")
     assert(scala.contains("package mermaid"), "should be in mermaid package")
 
   test("packet types.ts -> case classes from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/packet/types.rast.json")
-    val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", "packet")
+    val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", "packet")
     assert(scala.contains("package packet"), "should have correct package")
 
   // -- Write all to target/emitted-mermaid ----------------------------------
@@ -84,7 +84,7 @@ class MermaidTypeEmitterSpec extends munit.FunSuite:
 
     for ((rastPath, className, pkg) <- files) {
       val rast = loadRast(rastPath)
-      val scala = dedicated.MermaidTypeEmitter.emitTypes(rast, "", pkg)
+      val scala = balticporter.corpus.mermaid.MermaidTypeEmitter.emitTypes(rast, "", pkg)
       val path = outDir.resolve(s"${className}_rast.scala")
       java.nio.file.Files.writeString(path, scala)
       println(s"[emit-rast] ${className}.scala: ${scala.linesIterator.size} lines -> $path")

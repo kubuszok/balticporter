@@ -1,4 +1,6 @@
-package balticporter.frontend.ts.dedicated
+package balticporter.corpus.roughjs
+
+import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
 
 import balticporter.frontend.ts.{RastFile, RastNode, RastType, RastValue}
 import scala.collection.mutable

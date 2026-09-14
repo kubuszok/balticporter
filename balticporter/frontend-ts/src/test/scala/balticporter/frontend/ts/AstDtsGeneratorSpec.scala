@@ -15,8 +15,8 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("generate produces valid .d.ts for the full hierarchy"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     // Should contain class declarations
     assert(dts.contains("export declare class AST_Node"), "Should declare AST_Node")
     assert(dts.contains("export declare class AST_Statement"), "Should declare AST_Statement")
@@ -27,15 +27,15 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("AST_Node has start and end fields typed"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     assert(dts.contains("start: AST_Token | null;"), s"AST_Node should have typed start field")
     assert(dts.contains("end: AST_Token | null;"), s"AST_Node should have typed end field")
 
   test("AST_For has init, condition, step typed as AST_Node | null"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     // AST_For props are: init, condition, step
     val forSection = extractClassSection(dts, "AST_For")
     assert(forSection.contains("init: AST_Node | null;"), s"AST_For should have init field, got: $forSection")
@@ -44,22 +44,22 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("AST_Call args field is typed as AST_Node[]"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     val callSection = extractClassSection(dts, "AST_Call")
     assert(callSection.contains("args: AST_Node[];"), s"AST_Call should have args as AST_Node[], got: $callSection")
 
   test("AST_Block body field is typed as AST_Node[]"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     val blockSection = extractClassSection(dts, "AST_Block")
     assert(blockSection.contains("body: AST_Node[];"), s"AST_Block should have body as AST_Node[], got: $blockSection")
 
   test("boolean fields typed correctly"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     // AST_Lambda has is_generator, async props
     val lambdaSection = extractClassSection(dts, "AST_Lambda")
     assert(lambdaSection.contains("async: boolean;"), s"AST_Lambda should have async: boolean, got: $lambdaSection")
@@ -67,30 +67,30 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("scope-related fields typed as AST_Scope | null"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     val scopeSection = extractClassSection(dts, "AST_Scope")
     assert(scopeSection.contains("parent_scope: AST_Scope | null;"),
       s"AST_Scope should have parent_scope: AST_Scope | null, got: $scopeSection")
 
   test("symbol name is string"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     val symbolSection = extractClassSection(dts, "AST_Symbol")
     assert(symbolSection.contains("name: string;"), s"AST_Symbol should have name: string, got: $symbolSection")
 
   test("generate includes SymbolDef forward declaration"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy)
     assert(dts.contains("export declare class SymbolDef"), "Should have SymbolDef declaration")
     assert(dts.contains("name: string;"), "SymbolDef should have name: string")
 
   test("countTypedFields counts all selfProps"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val count = dedicated.AstDtsGenerator.countTypedFields(hierarchy)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val count = balticporter.corpus.terser.AstDtsGenerator.countTypedFields(hierarchy)
     assert(count >= 100, s"Expected >= 100 typed fields, got $count")
 
   // --------------------------------------------------------------------------
@@ -99,10 +99,10 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("generate with DEFMETHOD declarations"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(
       hierarchy,
-      dedicated.AstDtsGenerator.commonDefmethodDecls,
+      balticporter.corpus.terser.AstDtsGenerator.commonDefmethodDecls,
     )
     assert(dts.contains("export interface AST_Node"), "Should have AST_Node interface augmentation")
     assert(dts.contains("equivalent_to(node: AST_Node): boolean;"),
@@ -114,10 +114,10 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("generate with DEFMETHOD for AST_Scope"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(
       hierarchy,
-      dedicated.AstDtsGenerator.commonDefmethodDecls,
+      balticporter.corpus.terser.AstDtsGenerator.commonDefmethodDecls,
     )
     assert(dts.contains("export interface AST_Scope"), "Should have AST_Scope interface augmentation")
     assert(dts.contains("def_variable(symbol: AST_Symbol, init: AST_Node | null): SymbolDef;"),
@@ -128,27 +128,27 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
   // --------------------------------------------------------------------------
 
   test("scalaTypeToTs maps basic types"):
-    import dedicated.AstDtsGenerator.scalaTypeToTs
+    import balticporter.corpus.terser.AstDtsGenerator.scalaTypeToTs
     assertEquals(scalaTypeToTs("Boolean"), "boolean")
     assertEquals(scalaTypeToTs("Int"), "number")
     assertEquals(scalaTypeToTs("String"), "string")
     assertEquals(scalaTypeToTs("Any"), "any")
 
   test("scalaTypeToTs maps nullable types"):
-    import dedicated.AstDtsGenerator.scalaTypeToTs
+    import balticporter.corpus.terser.AstDtsGenerator.scalaTypeToTs
     assertEquals(scalaTypeToTs("AstNode | Null"), "AST_Node | null")
     assertEquals(scalaTypeToTs("AstScope | Null"), "AST_Scope | null")
 
   test("scalaTypeToTs maps array types"):
-    import dedicated.AstDtsGenerator.scalaTypeToTs
+    import balticporter.corpus.terser.AstDtsGenerator.scalaTypeToTs
     assertEquals(scalaTypeToTs("ArrayBuffer[AstNode]"), "AST_Node[]")
 
   test("scalaTypeToTs maps union types"):
-    import dedicated.AstDtsGenerator.scalaTypeToTs
+    import balticporter.corpus.terser.AstDtsGenerator.scalaTypeToTs
     assertEquals(scalaTypeToTs("String | AstNode"), "string | AST_Node")
 
   test("scalaTypeToTs maps collection types"):
-    import dedicated.AstDtsGenerator.scalaTypeToTs
+    import balticporter.corpus.terser.AstDtsGenerator.scalaTypeToTs
     assertEquals(scalaTypeToTs("mutable.Map[String, Any]"), "Map<string, any>")
     assertEquals(scalaTypeToTs("mutable.Set[String]"), "Set<string>")
 
@@ -165,7 +165,7 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
       |  var annotations: Int                  = 0
       |}
       """.stripMargin
-    val fields = dedicated.AstDtsGenerator.parseFieldsFromScala(source)
+    val fields = balticporter.corpus.terser.AstDtsGenerator.parseFieldsFromScala(source)
     assertEquals(fields.size, 4)
     assertEquals(fields.head.className, "AstCall")
     assertEquals(fields.head.fieldName, "expression")
@@ -180,24 +180,24 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
       |  var blockScope: AstScope | Null      = null
       |}
       """.stripMargin
-    val fields = dedicated.AstDtsGenerator.parseFieldsFromScala(source)
+    val fields = balticporter.corpus.terser.AstDtsGenerator.parseFieldsFromScala(source)
     assertEquals(fields.size, 2)
     assertEquals(fields(0).className, "AstBlock")
     assertEquals(fields(0).fieldName, "body")
 
   test("scalaNameToDefnode converts Ast prefix back to AST_"):
-    import dedicated.AstDtsGenerator.scalaNameToDefnode
+    import balticporter.corpus.terser.AstDtsGenerator.scalaNameToDefnode
     assertEquals(scalaNameToDefnode("AstCall"), "AST_Call")
     assertEquals(scalaNameToDefnode("AstSimpleStatement"), "AST_SimpleStatement")
     assertEquals(scalaNameToDefnode("AstNode"), "AST_Node")
 
   test("buildFieldTypeMap groups by JS class name"):
     val fields = List(
-      dedicated.AstDtsGenerator.ParsedField("AstCall", "expression", "AstNode | Null"),
-      dedicated.AstDtsGenerator.ParsedField("AstCall", "args", "ArrayBuffer[AstNode]"),
-      dedicated.AstDtsGenerator.ParsedField("AstBlock", "body", "ArrayBuffer[AstNode]"),
+      balticporter.corpus.terser.AstDtsGenerator.ParsedField("AstCall", "expression", "AstNode | Null"),
+      balticporter.corpus.terser.AstDtsGenerator.ParsedField("AstCall", "args", "ArrayBuffer[AstNode]"),
+      balticporter.corpus.terser.AstDtsGenerator.ParsedField("AstBlock", "body", "ArrayBuffer[AstNode]"),
     )
-    val map = dedicated.AstDtsGenerator.buildFieldTypeMap(fields)
+    val map = balticporter.corpus.terser.AstDtsGenerator.buildFieldTypeMap(fields)
     assertEquals(map.size, 2)
     assert(map.contains("AST_Call"), "Should have AST_Call key")
     assert(map.contains("AST_Block"), "Should have AST_Block key")
@@ -213,15 +213,15 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("full hierarchy .d.ts has reasonable size"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
-    val dts = dedicated.AstDtsGenerator.generate(hierarchy, dedicated.AstDtsGenerator.commonDefmethodDecls)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val dts = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy, balticporter.corpus.terser.AstDtsGenerator.commonDefmethodDecls)
     val lines = dts.linesIterator.size
     assert(lines >= 200, s"Expected >= 200 lines, got $lines")
     assert(lines <= 2000, s"Expected <= 2000 lines, got $lines")
     // Print first 50 lines for diagnostics
     println("=== .d.ts (first 50 lines) ===")
     dts.linesIterator.take(50).foreach(println)
-    println(s"=== total: $lines lines, ${dedicated.AstDtsGenerator.countTypedFields(hierarchy)} typed fields ===")
+    println(s"=== total: $lines lines, ${balticporter.corpus.terser.AstDtsGenerator.countTypedFields(hierarchy)} typed fields ===")
 
   // --------------------------------------------------------------------------
   // Reference-derived type improvement
@@ -256,7 +256,7 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
       |  val readOnlyField: Int = 0
       |}
       """.stripMargin
-    val fields = dedicated.AstDtsGenerator.parseFieldsFromScala(source)
+    val fields = balticporter.corpus.terser.AstDtsGenerator.parseFieldsFromScala(source)
     assertEquals(fields.size, 2)
     assertEquals(fields(0).fieldName, "mutableField")
     assertEquals(fields(1).fieldName, "readOnlyField")
@@ -266,24 +266,24 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
       println("SKIP: ssg reference not found at " + astReferenceRoot)
     else
       val rast = loadRast("/rast/terser/lib/ast.rast.json")
-      val hierarchy = dedicated.TerserEmitter.extractHierarchy(rast)
+      val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
       val sources = loadReferenceSources
       assert(sources.nonEmpty, "Should find reference sources")
 
       // Parse fields from reference
-      val allFields = sources.flatMap(dedicated.AstDtsGenerator.parseFieldsFromScala)
-      val fieldMap = dedicated.AstDtsGenerator.buildFieldTypeMap(allFields)
+      val allFields = sources.flatMap(balticporter.corpus.terser.AstDtsGenerator.parseFieldsFromScala)
+      val fieldMap = balticporter.corpus.terser.AstDtsGenerator.buildFieldTypeMap(allFields)
 
       println(s"\nReference field coverage:")
       println(s"  Total parsed fields: ${allFields.size}")
       println(s"  Distinct JS classes with fields: ${fieldMap.size}")
 
       // Generate with and without reference
-      val dtsHeuristic = dedicated.AstDtsGenerator.generate(hierarchy, dedicated.AstDtsGenerator.commonDefmethodDecls)
-      val dtsReference = dedicated.AstDtsGenerator.generateFromReference(hierarchy, sources)
+      val dtsHeuristic = balticporter.corpus.terser.AstDtsGenerator.generate(hierarchy, balticporter.corpus.terser.AstDtsGenerator.commonDefmethodDecls)
+      val dtsReference = balticporter.corpus.terser.AstDtsGenerator.generateFromReference(hierarchy, sources)
 
       // The reference version should differ from heuristic (more specific types)
-      val metrics = dedicated.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, fieldMap)
+      val metrics = balticporter.corpus.terser.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, fieldMap)
       println(s"\nDerivation metrics:")
       println(s"  Total DEFNODE fields: ${metrics.totalFields}")
       println(s"  Reference-derived:    ${metrics.referenceDerived}")
@@ -304,12 +304,12 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
 
   test("countDerivedVsHeuristic returns correct counts"):
     val hierarchy = List(
-      dedicated.TerserEmitter.DefnodeClass("AST_Foo", "Foo", List("bar", "baz"), Some("AST_Node"), Nil),
+      balticporter.corpus.terser.TerserEmitter.DefnodeClass("AST_Foo", "Foo", List("bar", "baz"), Some("AST_Node"), Nil),
     )
     val refFields = Map(
-      "AST_Foo" -> List(dedicated.AstDtsGenerator.DerivedField("bar", "string")),
+      "AST_Foo" -> List(balticporter.corpus.terser.AstDtsGenerator.DerivedField("bar", "string")),
     )
-    val metrics = dedicated.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, refFields)
+    val metrics = balticporter.corpus.terser.AstDtsGenerator.countDerivedVsHeuristic(hierarchy, refFields)
     assertEquals(metrics.totalFields, 2)
     assertEquals(metrics.referenceDerived, 1)
     assertEquals(metrics.heuristicFallback, 1)

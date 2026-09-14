@@ -1,6 +1,6 @@
 package balticporter.frontend.ts
 
-import balticporter.frontend.ts.dedicated.TerserEmitter
+import balticporter.corpus.terser.TerserEmitter
 
 class KaTeXEmitterSpec extends munit.FunSuite:
 
@@ -48,7 +48,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("Options: extract top-level functions"):
     val rast = loadRast("/rast/katex/src/Options.rast.json")
-    val fns = dedicated.KaTeXEmitter.extractTopLevelFunctions(rast)
+    val fns = balticporter.corpus.katex.KaTeXEmitter.extractTopLevelFunctions(rast)
     println(s"Options.ts: ${fns.size} top-level functions: ${fns.map(_.name).mkString(", ")}")
 
   test("Token: load RAST"):
@@ -61,7 +61,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("accent: extract defineFunction calls"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val defs = balticporter.corpus.katex.KaTeXEmitter.extractDefineFunctions(rast)
     assert(defs.size >= 1, s"Expected >= 1 defineFunction, got ${defs.size}")
     assert(defs.exists(_.nodeType == "accent"), s"should have accent type")
     val accentDef = defs.find(_.nodeType == "accent").get
@@ -71,7 +71,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("color: extract 2 defineFunction calls"):
     val rast = loadRast("/rast/katex/src/functions/color.rast.json")
-    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val defs = balticporter.corpus.katex.KaTeXEmitter.extractDefineFunctions(rast)
     assertEquals(defs.size, 2, s"Expected 2 defineFunctions, got ${defs.size}")
     assert(defs.forall(_.nodeType == "color"), "both should be type 'color'")
     val allNames = defs.flatMap(_.names)
@@ -80,7 +80,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("accent: emit function module"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val (source, summary) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
+    val (source, summary) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
     assert(source.contains("object AccentFunc"), "should emit AccentFunc object")
     assert(source.contains("def register()"), "should have register method")
     assert(source.contains("nodeType = \"accent\""), "should have accent nodeType")
@@ -89,7 +89,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("color: emit function module"):
     val rast = loadRast("/rast/katex/src/functions/color.rast.json")
-    val (source, summary) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "ColorFunc")
+    val (source, summary) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, "ColorFunc")
     assert(source.contains("object ColorFunc"), "should emit ColorFunc object")
     assert(source.contains("def register()"), "should have register method")
     assertEquals(summary.defineFunctionCount, 2)
@@ -109,21 +109,21 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-functions")
     java.nio.file.Files.createDirectories(outDir)
 
-    for mod <- dedicated.KaTeXEmitter.FunctionModules do
+    for mod <- balticporter.corpus.katex.KaTeXEmitter.FunctionModules do
       tryLoadRast(mod.rastResource) match
         case Some(rast) =>
           filesFound += 1
-          val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+          val defs = balticporter.corpus.katex.KaTeXEmitter.extractDefineFunctions(rast)
           totalDefs += defs.size
           totalNames += defs.flatMap(_.names).size
           if defs.nonEmpty then
-            val (source, _) = dedicated.KaTeXEmitter.emitFunctionModule(rast, mod.objectName)
+            val (source, _) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, mod.objectName)
             java.nio.file.Files.writeString(outDir.resolve(s"${mod.objectName}.scala"), source)
         case None =>
           filesMissing += 1
 
     println(s"\n=== KaTeX Function Extraction ===")
-    println(s"Files found: $filesFound / ${dedicated.KaTeXEmitter.FunctionModules.size}")
+    println(s"Files found: $filesFound / ${balticporter.corpus.katex.KaTeXEmitter.FunctionModules.size}")
     println(s"Files missing: $filesMissing")
     println(s"Total defineFunction calls: $totalDefs")
     println(s"Total LaTeX command names: $totalNames")
@@ -143,7 +143,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     else
       val source = new String(java.nio.file.Files.readAllBytes(katexRefRoot.resolve("Options.scala")))
       val lines = source.split("\n", -1).toList
-      val methods = dedicated.TerserCompressEmitter.findMethodBoundaries(lines)
+      val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
       println(s"Options.scala: found ${methods.size} methods")
       for m <- methods.take(10) do
         println(s"  ${m.name} (lines ${m.signatureLine}-${m.bodyEndLine}, private=${m.isPrivate})")
@@ -155,7 +155,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     else
       val rast = loadRast("/rast/katex/src/ParseError.rast.json")
       val refPath = katexRefRoot.resolve("ParseError.scala")
-      val (source, summary) = dedicated.KaTeXEmitter.emitWithParity(rast, refPath)
+      val (source, summary) = balticporter.corpus.katex.KaTeXEmitter.emitWithParity(rast, refPath)
       println(s"ParseError parity: ${summary.totalMethods} methods, ${summary.matchedFromRast} RAST-matched, ${summary.keptFromReference} kept")
       assert(source.contains("ParseError"), "should contain ParseError")
 
@@ -167,8 +167,8 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     if !java.nio.file.Files.exists(katexRefRoot) then
       println("SKIP: ssg-katex reference not found at " + katexRefRoot)
     else
-      val summary = dedicated.KaTeXEmitter.analyzeAll(tryLoadRast, katexRefRoot)
-      println("\n" + dedicated.KaTeXEmitter.formatBatchSummary(summary))
+      val summary = balticporter.corpus.katex.KaTeXEmitter.analyzeAll(tryLoadRast, katexRefRoot)
+      println("\n" + balticporter.corpus.katex.KaTeXEmitter.formatBatchSummary(summary))
       assert(summary.foundRast >= 50, s"Expected >= 50 RAST files, got ${summary.foundRast}")
       assert(summary.functionDefs >= 30, s"Expected >= 30 function defs, got ${summary.functionDefs}")
 
@@ -177,21 +177,21 @@ class KaTeXEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("tsTypeToScala: basic type conversions"):
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("string"), "String")
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("number"), "Double")
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("boolean"), "Boolean")
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("void"), "Unit")
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("any"), "Any")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("string"), "String")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("number"), "Double")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("boolean"), "Boolean")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("void"), "Unit")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("any"), "Any")
 
   test("tsTypeToScala: ParseNode generic"):
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("ParseNode<\"accent\">"), "ParseNodeAccent")
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("ParseNode<\"color\">"), "ParseNodeColor")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("ParseNode<\"accent\">"), "ParseNodeAccent")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("ParseNode<\"color\">"), "ParseNodeColor")
 
   test("tsTypeToScala: nullable"):
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("Token | null"), "Nullable[Token]")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("Token | null"), "Nullable[Token]")
 
   test("tsTypeToScala: array"):
-    assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("string[]"), "Array[String]")
+    assertEquals(balticporter.corpus.katex.KaTeXEmitter.tsTypeToScala("string[]"), "Array[String]")
 
   // -----------------------------------------------------------------------
   // Step 1: Batch parity-derive for core modules
@@ -203,10 +203,10 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     else
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", "."))
         .resolve("target/emitted-katex-parity")
-      val results = dedicated.KaTeXEmitter.emitAllWithParity(tryLoadRast, katexRefRoot, outDir)
+      val results = balticporter.corpus.katex.KaTeXEmitter.emitAllWithParity(tryLoadRast, katexRefRoot, outDir)
 
       println("\n=== KaTeX Core Module Parity ===")
-      println(dedicated.KaTeXEmitter.formatParitySummaryTable(results.map(_._2)))
+      println(balticporter.corpus.katex.KaTeXEmitter.formatParitySummaryTable(results.map(_._2)))
 
       for (mod, summary) <- results do
         println(s"  ${mod.objectName}: ${summary.totalMethods} methods, " +
@@ -229,12 +229,12 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     else
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", "."))
         .resolve("target/emitted-katex-functions-parity")
-      val results = dedicated.KaTeXEmitter.emitAllFunctionsWithParity(
+      val results = balticporter.corpus.katex.KaTeXEmitter.emitAllFunctionsWithParity(
         tryLoadRast, katexRefRoot, outDir)
 
       val summaries = results.map(_._3)
       println("\n=== KaTeX Function Module Parity ===")
-      println(dedicated.KaTeXEmitter.formatFunctionParitySummaryTable(summaries))
+      println(balticporter.corpus.katex.KaTeXEmitter.formatFunctionParitySummaryTable(summaries))
 
       val withParity = summaries.filter(_.usedParity)
       val stubs = summaries.filterNot(_.usedParity)
@@ -255,7 +255,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("emit AccentFunc to target for inspection"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val (source, _) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
+    val (source, _) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-functions")
     java.nio.file.Files.createDirectories(outDir)
     java.nio.file.Files.writeString(outDir.resolve("AccentFunc.scala"), source)
@@ -380,9 +380,9 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("handler body extraction: accent handler has Block"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val defs = balticporter.corpus.katex.KaTeXEmitter.extractDefineFunctions(rast)
     val accentDef = defs.find(_.nodeType == "accent").get
-    val body = dedicated.KaTeXEmitter.extractFunctionBody(accentDef.handlerNode)
+    val body = balticporter.corpus.katex.KaTeXEmitter.extractFunctionBody(accentDef.handlerNode)
     assert(body.isDefined, "accent handler should have extractable body")
     assert(body.get.kind == "Block", s"should be a Block, got ${body.get.kind}")
     val stmtCount = body.get.children.size
@@ -391,23 +391,23 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("handler body extraction: underline handler (MethodDeclaration)"):
     val rast = loadRast("/rast/katex/src/functions/underline.rast.json")
-    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val defs = balticporter.corpus.katex.KaTeXEmitter.extractDefineFunctions(rast)
     assert(defs.nonEmpty, "should find defineFunction calls")
-    val body = dedicated.KaTeXEmitter.extractFunctionBody(defs.head.handlerNode)
+    val body = balticporter.corpus.katex.KaTeXEmitter.extractFunctionBody(defs.head.handlerNode)
     assert(body.isDefined, "underline handler should have extractable body")
     println(s"underline handler: ${body.get.children.size} statements")
 
   test("handler param extraction"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val defs = balticporter.corpus.katex.KaTeXEmitter.extractDefineFunctions(rast)
     val accentDef = defs.find(_.nodeType == "accent").get
-    val params = dedicated.KaTeXEmitter.extractHandlerParams(accentDef.handlerNode)
+    val params = balticporter.corpus.katex.KaTeXEmitter.extractHandlerParams(accentDef.handlerNode)
     println(s"accent handler params: ${params.mkString(", ")}")
     assert(params.nonEmpty, "should extract handler params")
 
   test("handler body translation: accent produces plausible Scala"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val (source, summary) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
+    val (source, summary) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
     println(s"AccentFunc handler translation: ${summary.handlersTranslated} translated, ${summary.handlersPartial} partial")
     // At minimum, the handler should not be entirely `???`
     val handlerLines = source.linesIterator.filter(_.contains("handler = Nullable")).toList
@@ -416,7 +416,7 @@ class KaTeXEmitterSpec extends munit.FunSuite:
 
   test("katex API mapping: makeSpan resolves to BuildCommon.makeSpan"):
     val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
-    val (source, _) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
+    val (source, _) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
     // The accent file contains makeSpan/makeOrd/staticSvg calls
     if source.contains("BuildCommon.makeSpan") || source.contains("BuildCommon.makeOrd") then
       println("KaTeX API mapping confirmed: BuildCommon.* calls found")
@@ -439,9 +439,9 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     var translated = 0
     var partial = 0
 
-    for mod <- dedicated.KaTeXEmitter.FunctionModules do
+    for mod <- balticporter.corpus.katex.KaTeXEmitter.FunctionModules do
       tryLoadRast(mod.rastResource).foreach { rast =>
-        val (_, summary) = dedicated.KaTeXEmitter.emitFunctionModule(rast, mod.objectName)
+        val (_, summary) = balticporter.corpus.katex.KaTeXEmitter.emitFunctionModule(rast, mod.objectName)
         totalDefs += summary.defineFunctionCount
         translated += summary.handlersTranslated
         partial += summary.handlersPartial

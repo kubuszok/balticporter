@@ -1,4 +1,6 @@
-package balticporter.frontend.ts.dedicated
+package balticporter.corpus.mermaid
+
+import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
 
 import scala.collection.mutable
 

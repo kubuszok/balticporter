@@ -1,4 +1,7 @@
-package balticporter.frontend.ts.dedicated
+package balticporter.corpus.mermaid
+
+import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.corpus.terser.TerserEmitter
 
 import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastType, RastValue, Rast}
 import scala.collection.mutable

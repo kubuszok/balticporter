@@ -10,7 +10,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
     Rast.readFile(json)
 
   private lazy val astRast = loadRast("/rast/terser/lib/ast.rast.json")
-  private lazy val hierarchy = dedicated.TerserEmitter.extractHierarchy(astRast)
+  private lazy val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
 
   // -----------------------------------------------------------------------
   // scope.js DEFMETHOD extraction (existing extractor)
@@ -18,12 +18,12 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: extract 36 DEFMETHOD entries"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     assertEquals(entries.size, 36, s"Expected 36 DEFMETHOD entries, got ${entries.size}")
 
   test("scope.js: DEFMETHOD classes are correct"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     val classes = entries.map(_.className).distinct.sorted
     assert(classes.contains("AST_Scope"), s"Should contain AST_Scope, got $classes")
     assert(classes.contains("AST_Symbol"), s"Should contain AST_Symbol, got $classes")
@@ -95,7 +95,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: return_false references translate to false"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     // AST_Node.is_block_scope = return_false
     val isBlockScope = entries.find(e =>
       e.className == "AST_Node" && e.methodName == "is_block_scope")
@@ -106,7 +106,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: simple field access translates"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     // AST_Symbol.definition returns this.thedef
     val definition = entries.find(e =>
       e.className == "AST_Symbol" && e.methodName == "definition")
@@ -117,7 +117,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: instanceof translates correctly"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     // AST_Scope.find_variable has `name instanceof AST_Symbol`
     val findVariable = entries.find(e =>
       e.className == "AST_Scope" && e.methodName == "find_variable")
@@ -128,7 +128,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: this.thedef.global translates property chain"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     // AST_Symbol.global returns this.thedef.global
     val global = entries.find(e =>
       e.className == "AST_Symbol" && e.methodName == "global")
@@ -144,7 +144,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: translation statistics"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     val stats = dedicated.DefmethodBodyTranslator.computeStats(entries, hierarchy)
     println(s"scope.js DEFMETHOD translation stats:")
     println(s"  Total:    ${stats.total}")
@@ -200,7 +200,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: emit is_block_scope family"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     val isBlockScope = entries.filter(_.methodName == "is_block_scope")
     assert(isBlockScope.size >= 7, s"Expected >= 7 is_block_scope entries, got ${isBlockScope.size}")
     val output = dedicated.DefmethodBodyTranslator.emitDefmethodFamily(
@@ -215,7 +215,7 @@ class DefmethodBodyTranslatorSpec extends munit.FunSuite:
 
   test("scope.js: show sample translated bodies"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     println("=== Sample scope.js DEFMETHOD translations ===")
     val samples = List(
       ("AST_Symbol", "definition"),

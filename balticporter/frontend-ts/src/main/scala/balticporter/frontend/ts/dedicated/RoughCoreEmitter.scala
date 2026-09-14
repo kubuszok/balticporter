@@ -1,4 +1,6 @@
-package balticporter.frontend.ts.dedicated
+package balticporter.corpus.roughjs
+
+import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
 
 /** Dedicated emitter for roughjs core.ts → Core.scala. */
 object RoughCoreEmitter {

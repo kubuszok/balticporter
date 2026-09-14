@@ -12,7 +12,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
         |  def bar(x: Int, y: String): Boolean =
         |    x > 0
         |}""".stripMargin
-    val sigs = dedicated.ReferenceTypeOracle.parseFile("Foo", source)
+    val sigs = balticporter.corpus.terser.ReferenceTypeOracle.parseFile("Foo", source)
     assertEquals(sigs.size, 1)
     val (obj, sig) = sigs.head
     assertEquals(obj, "Foo")
@@ -31,7 +31,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
         |    array
         |  }
         |}""".stripMargin
-    val sigs = dedicated.ReferenceTypeOracle.parseFile("Foo", source)
+    val sigs = balticporter.corpus.terser.ReferenceTypeOracle.parseFile("Foo", source)
     assertEquals(sigs.size, 1)
     val (_, sig) = sigs.head
     assertEquals(sig.params(0).tpe, "ArrayBuffer[AstNode]")
@@ -43,7 +43,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
         |  def getKey(key: AstNode): AstNode | String | Double | Null =
         |    null
         |}""".stripMargin
-    val sigs = dedicated.ReferenceTypeOracle.parseFile("Foo", source)
+    val sigs = balticporter.corpus.terser.ReferenceTypeOracle.parseFile("Foo", source)
     assertEquals(sigs.size, 1)
     assertEquals(sigs.head._2.returnType, "AstNode | String | Double | Null")
 
@@ -55,7 +55,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
         |  private def priv(y: Int): Int =
         |    y
         |}""".stripMargin
-    val sigs = dedicated.ReferenceTypeOracle.parseFile("Foo", source)
+    val sigs = balticporter.corpus.terser.ReferenceTypeOracle.parseFile("Foo", source)
     // parseFile only captures top-level defs (2 spaces indent); private at 2 spaces is still captured
     // but that is fine -- the oracle is permissive
     assert(sigs.nonEmpty)
@@ -66,7 +66,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
         |  def negate(node: AstNode, compressor: CompressorLike, firstInStatement: Boolean = false): AstNode =
         |    node
         |}""".stripMargin
-    val sigs = dedicated.ReferenceTypeOracle.parseFile("Foo", source)
+    val sigs = balticporter.corpus.terser.ReferenceTypeOracle.parseFile("Foo", source)
     assertEquals(sigs.size, 1)
     val (_, sig) = sigs.head
     assertEquals(sig.params.size, 3)
@@ -78,14 +78,14 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("hardcoded oracle: Inference.isBoolean"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcoded()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcoded()
     val sig = oracle.get("Inference", "isBoolean")
     assert(sig.isDefined, "should find isBoolean")
     assertEquals(sig.get.returnType, "Boolean")
     assertEquals(sig.get.params.head.tpe, "AstNode")
 
   test("hardcoded oracle: Common.mergeSequence"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcoded()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcoded()
     val sig = oracle.get("Common", "mergeSequence")
     assert(sig.isDefined, "should find mergeSequence")
     assertEquals(sig.get.returnType, "ArrayBuffer[AstNode]")
@@ -93,13 +93,13 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     assertEquals(sig.get.params(1).tpe, "AstNode")
 
   test("hardcoded oracle: paramType fallback"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcoded()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcoded()
     assertEquals(oracle.paramType("Inference", "isBoolean", "node"), "AstNode")
     assertEquals(oracle.paramType("Inference", "isBoolean", "unknown"), "Any")
     assertEquals(oracle.paramType("Unknown", "unknown", "x"), "Any")
 
   test("hardcoded oracle: returnType fallback"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcoded()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcoded()
     assertEquals(oracle.returnType("Inference", "isBoolean"), "Boolean")
     assertEquals(oracle.returnType("Unknown", "unknown"), "Any")
 
@@ -108,7 +108,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("emitter oracle: CompressCommon maps to Common"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcodedForEmitter()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
     val sig = oracle.get("Common", "mergeSequence")
     assert(sig.isDefined, "should find via reference name")
 
@@ -123,7 +123,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
       else java.nio.file.Path.of("/nonexistent")
     }
     if java.nio.file.Files.exists(refRoot) then
-      val oracle = dedicated.ReferenceTypeOracle.buildFromDirectory(refRoot)
+      val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildFromDirectory(refRoot)
       // Inference methods
       val isBool = oracle.get("Inference", "isBoolean")
       assert(isBool.isDefined, "should find Inference.isBoolean from file")
@@ -158,12 +158,12 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     Rast.readFile(json)
 
   private lazy val astRast = loadRast("/rast/terser/lib/ast.rast.json")
-  private lazy val hierarchy = dedicated.TerserEmitter.extractHierarchy(astRast)
+  private lazy val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
 
   test("emitter with oracle: Inference methods have typed signatures"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcodedForEmitter()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
     val rast = loadRast("/rast/terser/lib/compress/inference.rast.json")
-    val (source, _) = dedicated.TerserCompressEmitter.emitDefmethodModule(
+    val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitDefmethodModule(
       rast, "inference", "Inference", hierarchy, Some(oracle)
     )
     // isBoolean should have Boolean return type, not Any
@@ -179,9 +179,9 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     }
 
   test("emitter with oracle: Common methods have typed signatures"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcodedForEmitter()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
     val rast = loadRast("/rast/terser/lib/compress/common.rast.json")
-    val (source, _) = dedicated.TerserCompressEmitter.emitFreeFunctionModule(
+    val (source, _) = balticporter.corpus.terser.TerserCompressEmitter.emitFreeFunctionModule(
       rast, "common", "CompressCommon", hierarchy, Some(oracle)
     )
     // mergeSequence should have ArrayBuffer[AstNode] return type
@@ -190,11 +190,11 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     assert(source.contains(": AstFunction"), s"should contain AstFunction return type")
 
   test("emitter with oracle: batch emit all 10 modules with types (hardcoded)"):
-    val oracle = dedicated.ReferenceTypeOracle.buildHardcodedForEmitter()
+    val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildHardcodedForEmitter()
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress-typed")
     java.nio.file.Files.createDirectories(outDir)
 
-    val results = dedicated.TerserCompressEmitter.emitAll(loadRast, hierarchy, Some(oracle))
+    val results = balticporter.corpus.terser.TerserCompressEmitter.emitAll(loadRast, hierarchy, Some(oracle))
 
     for (mod, source, _) <- results do
       val path = outDir.resolve(s"${mod.objectName}.scala")
@@ -212,11 +212,11 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     if !java.nio.file.Files.exists(refRoot) then
       println("SKIP: ssg-js reference not available")
     else
-      val oracle = dedicated.ReferenceTypeOracle.buildForEmitter(refRoot)
+      val oracle = balticporter.corpus.terser.ReferenceTypeOracle.buildForEmitter(refRoot)
       val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser-compress-fileoracle")
       java.nio.file.Files.createDirectories(outDir)
 
-      val results = dedicated.TerserCompressEmitter.emitAll(loadRast, hierarchy, Some(oracle))
+      val results = balticporter.corpus.terser.TerserCompressEmitter.emitAll(loadRast, hierarchy, Some(oracle))
 
       for (mod, source, _) <- results do
         val path = outDir.resolve(s"${mod.objectName}.scala")
@@ -225,7 +225,7 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
       assertEquals(results.size, 10, "should emit all 10 compress modules")
       reportTypeCoverage("file-based", results)
 
-  private def reportTypeCoverage(label: String, results: List[(dedicated.TerserCompressEmitter.CompressModule, String, dedicated.TerserCompressEmitter.ModuleTranslationSummary)]): Unit =
+  private def reportTypeCoverage(label: String, results: List[(balticporter.corpus.terser.TerserCompressEmitter.CompressModule, String, balticporter.corpus.terser.TerserCompressEmitter.ModuleTranslationSummary)]): Unit =
     var typedParams = 0
     var anyParams = 0
     var typedReturns = 0

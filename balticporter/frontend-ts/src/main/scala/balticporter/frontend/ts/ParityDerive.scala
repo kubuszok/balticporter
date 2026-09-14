@@ -51,7 +51,7 @@ object ParityDerive:
       policy: Policy = Policy(),
   ): ParityResult =
     val lines = referenceSource.split("\n", -1).toList
-    val methods = dedicated.TerserCompressEmitter.findMethodBoundaries(lines)
+    val methods = balticporter.corpus.terser.TerserCompressEmitter.findMethodBoundaries(lines)
 
     val sb = new StringBuilder
     val bodyEntries = mutable.ListBuffer.empty[BodyEntry]
@@ -84,11 +84,11 @@ object ParityDerive:
 
         usable match
           case Some((translatedBody, refusals)) =>
-            val sigEndLineIdx = dedicated.TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
+            val sigEndLineIdx = balticporter.corpus.terser.TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
             for i <- method.signatureLine to sigEndLineIdx do
               val line = lines(i)
               if i == sigEndLineIdx then
-                val eqIdx = dedicated.TerserCompressEmitter.findEqualsInSignature(line)
+                val eqIdx = balticporter.corpus.terser.TerserCompressEmitter.findEqualsInSignature(line)
                 if eqIdx >= 0 then
                   sb.append(line.substring(0, eqIdx + 1))
                   sb.append("\n")

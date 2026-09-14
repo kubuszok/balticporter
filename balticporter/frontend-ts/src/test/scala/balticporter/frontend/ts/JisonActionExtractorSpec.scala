@@ -30,8 +30,8 @@ class JisonActionExtractorSpec extends munit.FunSuite:
     if source.isEmpty then
       println("SKIP: ssg original-src not found")
     else
-      val summary = dedicated.JisonActionExtractor.extract(source, "sankey")
-      println(dedicated.JisonActionExtractor.formatSummary(summary))
+      val summary = balticporter.corpus.mermaid.JisonActionExtractor.extract(source, "sankey")
+      println(balticporter.corpus.mermaid.JisonActionExtractor.formatSummary(summary))
       assert(summary.dbCalls.nonEmpty, "should find db calls")
       assert(summary.dbMethodCounts.contains("findOrCreateNode"),
         s"should find findOrCreateNode, got: ${summary.dbMethodCounts.keys.mkString(", ")}")
@@ -43,8 +43,8 @@ class JisonActionExtractorSpec extends munit.FunSuite:
     if source.isEmpty then
       println("SKIP: ssg original-src not found")
     else
-      val summary = dedicated.JisonActionExtractor.extract(source, "er")
-      println(dedicated.JisonActionExtractor.formatSummary(summary))
+      val summary = balticporter.corpus.mermaid.JisonActionExtractor.extract(source, "er")
+      println(balticporter.corpus.mermaid.JisonActionExtractor.formatSummary(summary))
       assert(summary.dbMethodCounts.contains("addEntity"),
         s"should find addEntity, got: ${summary.dbMethodCounts.keys.mkString(", ")}")
       assert(summary.dbMethodCounts.contains("addRelationship"),
@@ -58,8 +58,8 @@ class JisonActionExtractorSpec extends munit.FunSuite:
     if source.isEmpty then
       println("SKIP: ssg original-src not found")
     else
-      val summary = dedicated.JisonActionExtractor.extract(source, "flowchart")
-      println(dedicated.JisonActionExtractor.formatSummary(summary))
+      val summary = balticporter.corpus.mermaid.JisonActionExtractor.extract(source, "flowchart")
+      println(balticporter.corpus.mermaid.JisonActionExtractor.formatSummary(summary))
       assert(summary.dbMethodCounts.contains("addVertex"),
         s"should find addVertex, got: ${summary.dbMethodCounts.keys.mkString(", ")}")
       assert(summary.dbMethodCounts.contains("setDirection"),
@@ -72,8 +72,8 @@ class JisonActionExtractorSpec extends munit.FunSuite:
     if source.isEmpty then
       println("SKIP: ssg original-src not found")
     else
-      val summary = dedicated.JisonActionExtractor.extract(source, "sequence")
-      println(dedicated.JisonActionExtractor.formatSummary(summary))
+      val summary = balticporter.corpus.mermaid.JisonActionExtractor.extract(source, "sequence")
+      println(balticporter.corpus.mermaid.JisonActionExtractor.formatSummary(summary))
       // Sequence diagram has LINETYPE constants
       assert(summary.constants.contains("LINETYPE"),
         s"should find LINETYPE constants, got: ${summary.constants.keys.mkString(", ")}")
@@ -88,9 +88,9 @@ class JisonActionExtractorSpec extends munit.FunSuite:
     if !java.nio.file.Files.exists(jisonRoot) then
       println("SKIP: ssg original-src not found at " + jisonRoot)
     else
-      val summaries = dedicated.JisonActionExtractor.analyzeAll(jisonRoot)
+      val summaries = balticporter.corpus.mermaid.JisonActionExtractor.analyzeAll(jisonRoot)
       println("\n=== Jison Grammar Analysis ===")
-      println(dedicated.JisonActionExtractor.formatCombinedTable(summaries))
+      println(balticporter.corpus.mermaid.JisonActionExtractor.formatCombinedTable(summaries))
 
       // Individual grammar details
       for s <- summaries do
@@ -108,7 +108,7 @@ class JisonActionExtractorSpec extends munit.FunSuite:
 
       // Count mapped vs unmapped methods
       val allMethods = summaries.flatMap(_.dbMethodCounts.keys).toSet
-      val mapped = allMethods.filter(dedicated.JisonActionExtractor.jisonToScalaMethodMap.contains)
+      val mapped = allMethods.filter(balticporter.corpus.mermaid.JisonActionExtractor.jisonToScalaMethodMap.contains)
       val unmapped = allMethods -- mapped
       println(s"\nMethod coverage: ${mapped.size}/${allMethods.size} mapped")
       if unmapped.nonEmpty then
@@ -119,21 +119,21 @@ class JisonActionExtractorSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("toScalaCall: translates yy.addVertex($1, $2) to db.addVertex(p1, p2)"):
-    val call = dedicated.JisonActionExtractor.DbCall(
+    val call = balticporter.corpus.mermaid.JisonActionExtractor.DbCall(
       methodName = "addVertex",
       argCount = 2,
       rawArgs = List("$1", "$2"),
       production = "vertex: ID ID",
     )
-    val scala = dedicated.JisonActionExtractor.toScalaCall(call)
+    val scala = balticporter.corpus.mermaid.JisonActionExtractor.toScalaCall(call)
     assertEquals(scala, "db.addVertex(p1, p2)")
 
   test("toScalaCall: translates string literal args"):
-    val call = dedicated.JisonActionExtractor.DbCall(
+    val call = balticporter.corpus.mermaid.JisonActionExtractor.DbCall(
       methodName = "setDirection",
       argCount = 1,
       rawArgs = List("'TB'"),
       production = "dir: DOWN",
     )
-    val scala = dedicated.JisonActionExtractor.toScalaCall(call)
+    val scala = balticporter.corpus.mermaid.JisonActionExtractor.toScalaCall(call)
     assertEquals(scala, """db.setDirection("TB")""")

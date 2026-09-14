@@ -15,14 +15,14 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast.js: extract 133 DEFNODE classes"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
     // Terser has 133-134 DEFNODE calls (AST_Node is also a DEFNODE)
     assert(classes.size >= 130, s"Expected >= 130 DEFNODE classes, got ${classes.size}")
     assert(classes.size <= 140, s"Expected <= 140 DEFNODE classes, got ${classes.size}")
 
   test("ast.js: AST_Node is root with start/end props"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
     val astNode = classes.find(_.varName == "AST_Node")
     assert(astNode.isDefined, "AST_Node should be in the hierarchy")
     assert(astNode.get.selfProps.contains("start"), "AST_Node should have 'start' prop")
@@ -30,14 +30,14 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast.js: AST_Statement extends AST_Node"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
     val stmt = classes.find(_.varName == "AST_Statement")
     assert(stmt.isDefined, "AST_Statement should exist")
     assert(stmt.get.base.contains("AST_Node"), s"AST_Statement base should be AST_Node, got ${stmt.get.base}")
 
   test("ast.js: AST_For has init/condition/step props"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
     val forNode = classes.find(_.varName == "AST_For")
     assert(forNode.isDefined, "AST_For should exist")
     assert(forNode.get.selfProps == List("init", "condition", "step"),
@@ -45,7 +45,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast.js: abstract vs concrete classification"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
     val byName = classes.map(c => c.varName -> c).toMap
     // AST_Statement should be abstract (has subclasses)
     assert(byName("AST_Statement").isAbstract, "AST_Statement should be abstract")
@@ -56,8 +56,8 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast.js: hierarchy summary is readable"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
-    val summary = dedicated.TerserEmitter.hierarchySummary(classes)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
+    val summary = balticporter.corpus.terser.TerserEmitter.hierarchySummary(classes)
     println("=== DEFNODE Hierarchy ===")
     println(summary)
     assert(summary.contains("AST_Node"), "Summary should contain AST_Node")
@@ -68,7 +68,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast.js: methods are extracted"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val classes = dedicated.TerserEmitter.extractHierarchy(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractHierarchy(rast)
     val astNode = classes.find(_.varName == "AST_Node").get
     // AST_Node should have methods like _clone, clone, $documentation
     assert(astNode.methods.nonEmpty, s"AST_Node should have methods, got ${astNode.methods}")
@@ -81,7 +81,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("compressor-flags.js: emit CompressorFlags object"):
     val rast = loadRast("/rast/terser/lib/compress/compressor-flags.rast.json")
-    val scala = dedicated.TerserEmitter.emitCompressorFlags(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitCompressorFlags(rast)
     println("=== CompressorFlags.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object CompressorFlags"), "should emit CompressorFlags object")
@@ -101,7 +101,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("first_in_statement.js: emit FirstInStatement object"):
     val rast = loadRast("/rast/terser/lib/utils/first_in_statement.rast.json")
-    val scala = dedicated.TerserEmitter.emitFirstInStatement(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitFirstInStatement(rast)
     println("=== FirstInStatement.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object FirstInStatement"), "should emit FirstInStatement object")
@@ -118,14 +118,14 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: extract DEFMETHOD entries"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     assert(entries.nonEmpty, "should find DEFMETHOD entries")
     // scope.js has 36 DEFMETHOD calls (including return_false/return_true/return_this references)
     assert(entries.size >= 35, s"Expected >= 35 DEFMETHOD entries, got ${entries.size}")
 
   test("scope.js: first DEFMETHOD is figure_out_scope on AST_Scope"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     val first = entries.head
     assert(first.className == "AST_Scope", s"Expected AST_Scope, got ${first.className}")
     assert(first.methodName == "figure_out_scope", s"Expected figure_out_scope, got ${first.methodName}")
@@ -133,13 +133,13 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: DEFMETHOD entries include def_global on AST_Toplevel"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     val defGlobal = entries.find(e => e.methodName == "def_global" && e.className == "AST_Toplevel")
     assert(defGlobal.isDefined, "should find def_global on AST_Toplevel")
 
   test("scope.js: DEFMETHOD entries include is_block_scope on multiple classes"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
     val blockScopes = entries.filter(_.methodName == "is_block_scope")
     assert(blockScopes.size >= 8, s"Expected >= 8 is_block_scope entries, got ${blockScopes.size}")
     val classNames = blockScopes.map(_.className).toSet
@@ -149,8 +149,8 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: groupByClass groups correctly"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
-    val grouped = dedicated.TerserEmitter.groupByClass(entries)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
+    val grouped = balticporter.corpus.terser.TerserEmitter.groupByClass(entries)
     assert(grouped.contains("AST_Scope"), "should have AST_Scope group")
     assert(grouped.contains("AST_Toplevel"), "should have AST_Toplevel group")
     assert(grouped.contains("AST_Symbol"), "should have AST_Symbol group")
@@ -160,8 +160,8 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: defmethodSummary is readable"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val entries = dedicated.TerserEmitter.extractDefmethods(rast)
-    val summary = dedicated.TerserEmitter.defmethodSummary(entries)
+    val entries = balticporter.corpus.terser.TerserEmitter.extractDefmethods(rast)
+    val summary = balticporter.corpus.terser.TerserEmitter.defmethodSummary(entries)
     println("=== DEFMETHOD Summary ===")
     println(summary)
     assert(summary.contains("DEFMETHOD summary"), "should have summary header")
@@ -171,9 +171,9 @@ class TerserEmitterSpec extends munit.FunSuite:
   test("scope.js: merge DEFMETHOD entries into hierarchy"):
     val astRast = loadRast("/rast/terser/lib/ast.rast.json")
     val scopeRast = loadRast("/rast/terser/lib/scope.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(astRast)
-    val defmethods = dedicated.TerserEmitter.extractDefmethods(scopeRast)
-    val merged = dedicated.TerserEmitter.mergeDefmethods(hierarchy, defmethods)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
+    val defmethods = balticporter.corpus.terser.TerserEmitter.extractDefmethods(scopeRast)
+    val merged = balticporter.corpus.terser.TerserEmitter.mergeDefmethods(hierarchy, defmethods)
     // Find AST_Scope and verify it has merged methods
     val scopeEntry = merged.find(_._1.varName == "AST_Scope")
     assert(scopeEntry.isDefined, "AST_Scope should be in merged result")
@@ -187,11 +187,11 @@ class TerserEmitterSpec extends munit.FunSuite:
   test("scope.js: emit merged AstScope class"):
     val astRast = loadRast("/rast/terser/lib/ast.rast.json")
     val scopeRast = loadRast("/rast/terser/lib/scope.rast.json")
-    val hierarchy = dedicated.TerserEmitter.extractHierarchy(astRast)
-    val defmethods = dedicated.TerserEmitter.extractDefmethods(scopeRast)
-    val merged = dedicated.TerserEmitter.mergeDefmethods(hierarchy, defmethods)
+    val hierarchy = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
+    val defmethods = balticporter.corpus.terser.TerserEmitter.extractDefmethods(scopeRast)
+    val merged = balticporter.corpus.terser.TerserEmitter.mergeDefmethods(hierarchy, defmethods)
     val scopeEntry = merged.find(_._1.varName == "AST_Scope").get
-    val scala = dedicated.TerserEmitter.emitMergedClass(scopeEntry._1, scopeEntry._2)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitMergedClass(scopeEntry._1, scopeEntry._2)
     println("=== AstScope (merged) ===")
     println(scala)
     assert(scala.contains("AstScope"), "should emit AstScope")
@@ -201,14 +201,14 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: extract free functions"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val funcs = dedicated.TerserEmitter.extractFreeFunctions(rast)
+    val funcs = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(rast)
     assert(funcs.nonEmpty, "should find free functions")
     val names = funcs.map(_.name)
     assert(names.contains("redefined_catch_def"), "should find redefined_catch_def")
 
   test("scope.js: extract class declarations"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val classes = dedicated.TerserEmitter.extractClassDeclarations(rast)
+    val classes = balticporter.corpus.terser.TerserEmitter.extractClassDeclarations(rast)
     assert(classes.contains("SymbolDef"), "should find SymbolDef class")
 
   // -----------------------------------------------------------------------
@@ -217,7 +217,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: emit SymbolDef class"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val scala = dedicated.TerserEmitter.emitSymbolDef(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitSymbolDef(rast)
     println("=== SymbolDef.scala (emitted) ===")
     println(scala)
     assert(scala.contains("class SymbolDef"), "should emit SymbolDef class")
@@ -255,7 +255,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: emitted SymbolDef matches hand-port structure"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val scala = dedicated.TerserEmitter.emitSymbolDef(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitSymbolDef(rast)
     // Verify key patterns from hand port
     assert(scala.contains("ArrayBuffer(origArg)"), "orig should be initialized with constructor param")
     assert(scala.contains("origArg.name"), "name should come from orig symbol")
@@ -266,7 +266,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("scope.js: write emitted SymbolDef to target"):
     val rast = loadRast("/rast/terser/lib/scope.rast.json")
-    val scala = dedicated.TerserEmitter.emitSymbolDef(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitSymbolDef(rast)
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val path = outDir.resolve("SymbolDef.scala")
@@ -279,7 +279,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("native-objects.js: emit NativeObjects object"):
     val rast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitNativeObjects(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitNativeObjects(rast)
     println("=== NativeObjects.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object NativeObjects"), "should emit NativeObjects object")
@@ -309,7 +309,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("native-objects.js: emitted NativeObjects matches hand-port API"):
     val rast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitNativeObjects(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitNativeObjects(rast)
     // Structure
     assert(scala.contains("Map[String, Set[String]]"), "pureNativeMethods should be Map[String, Set[String]]")
     assert(scala.contains("Set[String]"), "purePropAccessGlobals should be Set[String]")
@@ -324,7 +324,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("native-objects.js: write emitted NativeObjects to target"):
     val rast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitNativeObjects(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitNativeObjects(rast)
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val path = outDir.resolve("NativeObjects.scala")
@@ -337,7 +337,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("sourcemap: emit Base64 codec"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitBase64(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitBase64(dummyRast)
     println("=== Base64.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object Base64"), "should emit Base64 object")
@@ -351,7 +351,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("sourcemap: emit VlqCodec"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitVlqCodec(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitVlqCodec(dummyRast)
     println("=== VlqCodec.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object VlqCodec"), "should emit VlqCodec object")
@@ -365,7 +365,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("sourcemap: emit SourceMapTypes"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitSourceMapTypes(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitSourceMapTypes(dummyRast)
     println("=== SourceMapTypes.scala (emitted) ===")
     println(scala)
     assert(scala.contains("final case class SourceMapping"), "should have SourceMapping")
@@ -381,7 +381,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("sourcemap: emit InlineSourceMap"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitInlineSourceMap(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitInlineSourceMap(dummyRast)
     println("=== InlineSourceMap.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object InlineSourceMap"), "should emit InlineSourceMap object")
@@ -396,10 +396,10 @@ class TerserEmitterSpec extends munit.FunSuite:
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val files = List(
-      ("Base64", dedicated.TerserEmitter.emitBase64(dummyRast)),
-      ("VlqCodec", dedicated.TerserEmitter.emitVlqCodec(dummyRast)),
-      ("SourceMapTypes", dedicated.TerserEmitter.emitSourceMapTypes(dummyRast)),
-      ("InlineSourceMap", dedicated.TerserEmitter.emitInlineSourceMap(dummyRast)),
+      ("Base64", balticporter.corpus.terser.TerserEmitter.emitBase64(dummyRast)),
+      ("VlqCodec", balticporter.corpus.terser.TerserEmitter.emitVlqCodec(dummyRast)),
+      ("SourceMapTypes", balticporter.corpus.terser.TerserEmitter.emitSourceMapTypes(dummyRast)),
+      ("InlineSourceMap", balticporter.corpus.terser.TerserEmitter.emitInlineSourceMap(dummyRast)),
     )
     for ((name, source) <- files) {
       val path = outDir.resolve(s"$name.scala")
@@ -414,7 +414,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("output: emit OutputOptions case class"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitOutputOptions(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitOutputOptions(dummyRast)
     println("=== OutputOptions.scala (emitted) ===")
     println(scala)
     assert(scala.contains("final case class OutputOptions"), "should emit OutputOptions case class")
@@ -431,7 +431,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("output: emit JsNumber object"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitJsNumber(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitJsNumber(dummyRast)
     println("=== JsNumber.scala (emitted) ===")
     println(scala)
     assert(scala.contains("object JsNumber"), "should emit JsNumber object")
@@ -450,8 +450,8 @@ class TerserEmitterSpec extends munit.FunSuite:
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val files = List(
-      ("OutputOptions", dedicated.TerserEmitter.emitOutputOptions(dummyRast)),
-      ("JsNumber", dedicated.TerserEmitter.emitJsNumber(dummyRast)),
+      ("OutputOptions", balticporter.corpus.terser.TerserEmitter.emitOutputOptions(dummyRast)),
+      ("JsNumber", balticporter.corpus.terser.TerserEmitter.emitJsNumber(dummyRast)),
     )
     for ((name, source) <- files) {
       val path = outDir.resolve(s"$name.scala")
@@ -466,7 +466,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: emit AstToken case class"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstToken(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstToken(dummyRast)
     println("=== AstToken.scala (emitted) ===")
     println(scala)
     assert(scala.contains("final case class AstToken"), "should emit AstToken case class")
@@ -491,7 +491,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: write emitted AstToken to target"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstToken(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstToken(dummyRast)
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val path = outDir.resolve("AstToken.scala")
@@ -504,7 +504,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: emit AstConstants with leaf node classes"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstConstants(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstConstants(dummyRast)
     println("=== AstConstants.scala (emitted) ===")
     println(scala)
     assert(scala.contains("final case class RegExpValue"), "should have RegExpValue")
@@ -527,7 +527,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: write emitted AstConstants to target"):
     val dummyRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstConstants(dummyRast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstConstants(dummyRast)
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val path = outDir.resolve("AstConstants.scala")
@@ -540,7 +540,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: emit AST hierarchy from DEFNODE extraction"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstHierarchy(rast)
     println("=== AstHierarchy.scala (emitted, first 80 lines) ===")
     scala.linesIterator.take(80).foreach(println)
     // Check structural elements
@@ -561,7 +561,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: emitted hierarchy contains statement nodes"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstHierarchy(rast)
     assert(scala.contains("AstBlock"), "should contain AstBlock")
     assert(scala.contains("AstIf"), "should contain AstIf")
     assert(scala.contains("AstWhile"), "should contain AstWhile")
@@ -575,7 +575,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: emitted hierarchy contains expression nodes"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstHierarchy(rast)
     assert(scala.contains("AstBinary"), "should contain AstBinary")
     assert(scala.contains("AstUnary"), "should contain AstUnary")
     assert(scala.contains("AstCall"), "should contain AstCall")
@@ -589,7 +589,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: write emitted AST hierarchy to target"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstHierarchy(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstHierarchy(rast)
     val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-terser")
     java.nio.file.Files.createDirectories(outDir)
     val path = outDir.resolve("AstHierarchy.scala")
@@ -602,7 +602,7 @@ class TerserEmitterSpec extends munit.FunSuite:
 
   test("ast: emit AST statements file"):
     val rast = loadRast("/rast/terser/lib/ast.rast.json")
-    val scala = dedicated.TerserEmitter.emitAstStatements(rast)
+    val scala = balticporter.corpus.terser.TerserEmitter.emitAstStatements(rast)
     println("=== AstStatements.scala (emitted, first 60 lines) ===")
     scala.linesIterator.take(60).foreach(println)
     assert(scala.contains("AstStatement"), "should contain AstStatement")
@@ -626,17 +626,17 @@ class TerserEmitterSpec extends munit.FunSuite:
     java.nio.file.Files.createDirectories(outDir)
 
     val cfRast = loadRast("/rast/terser/lib/compress/compressor-flags.rast.json")
-    val cfScala = dedicated.TerserEmitter.emitCompressorFlags(cfRast)
+    val cfScala = balticporter.corpus.terser.TerserEmitter.emitCompressorFlags(cfRast)
     java.nio.file.Files.writeString(outDir.resolve("CompressorFlags.scala"), cfScala)
     println(s"[emit] CompressorFlags.scala: ${cfScala.linesIterator.size} lines")
 
     val fisRast = loadRast("/rast/terser/lib/utils/first_in_statement.rast.json")
-    val fisScala = dedicated.TerserEmitter.emitFirstInStatement(fisRast)
+    val fisScala = balticporter.corpus.terser.TerserEmitter.emitFirstInStatement(fisRast)
     java.nio.file.Files.writeString(outDir.resolve("FirstInStatement.scala"), fisScala)
     println(s"[emit] FirstInStatement.scala: ${fisScala.linesIterator.size} lines")
 
     val noRast = loadRast("/rast/terser/lib/compress/native-objects.rast.json")
-    val noScala = dedicated.TerserEmitter.emitNativeObjects(noRast)
+    val noScala = balticporter.corpus.terser.TerserEmitter.emitNativeObjects(noRast)
     java.nio.file.Files.writeString(outDir.resolve("NativeObjects.scala"), noScala)
     println(s"[emit] NativeObjects.scala: ${noScala.linesIterator.size} lines")
 
@@ -649,20 +649,20 @@ class TerserEmitterSpec extends munit.FunSuite:
     val commonRast = loadRast("/rast/terser/lib/compress/common.rast.json")
 
     // Run 1
-    val hierarchy1 = dedicated.TerserEmitter.extractHierarchy(astRast)
-    val summary1 = dedicated.TerserEmitter.hierarchySummary(hierarchy1)
-    val freeFns1 = dedicated.TerserEmitter.extractFreeFunctions(commonRast)
+    val hierarchy1 = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
+    val summary1 = balticporter.corpus.terser.TerserEmitter.hierarchySummary(hierarchy1)
+    val freeFns1 = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(commonRast)
     val bodies1 = freeFns1.map { fn =>
-      val entry = dedicated.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+      val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
       dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy1, "    ")
     }
 
     // Run 2
-    val hierarchy2 = dedicated.TerserEmitter.extractHierarchy(astRast)
-    val summary2 = dedicated.TerserEmitter.hierarchySummary(hierarchy2)
-    val freeFns2 = dedicated.TerserEmitter.extractFreeFunctions(commonRast)
+    val hierarchy2 = balticporter.corpus.terser.TerserEmitter.extractHierarchy(astRast)
+    val summary2 = balticporter.corpus.terser.TerserEmitter.hierarchySummary(hierarchy2)
+    val freeFns2 = balticporter.corpus.terser.TerserEmitter.extractFreeFunctions(commonRast)
     val bodies2 = freeFns2.map { fn =>
-      val entry = dedicated.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
+      val entry = balticporter.corpus.terser.TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, fn.bodyNode)
       dedicated.DefmethodBodyTranslator.translateBody(entry, hierarchy2, "    ")
     }
 
@@ -690,8 +690,8 @@ class TerserEmitterSpec extends munit.FunSuite:
   test("deterministic: Mermaid styles emission produces identical output"):
     val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieStyles.rast.json")
 
-    val out1 = dedicated.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
-    val out2 = dedicated.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
+    val out1 = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
+    val out2 = balticporter.corpus.mermaid.MermaidEmitter.emitStyles(rast, "PieStyles", "pie")
 
     assertEquals(out1, out2, "Mermaid styles emission should be byte-equal across runs")
     println(s"Mermaid styles determinism verified: ${out1.linesIterator.size} lines")

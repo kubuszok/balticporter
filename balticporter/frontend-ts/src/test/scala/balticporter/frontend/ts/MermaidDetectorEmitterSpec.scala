@@ -13,7 +13,7 @@ class MermaidDetectorEmitterSpec extends munit.FunSuite:
 
   test("infoDetector.ts -> InfoDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/info/infoDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "InfoDetector", "info")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "InfoDetector", "info")
     assert(scala.contains("object InfoDetector"), "should emit InfoDetector object")
     assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
     assert(scala.contains("val id: String = \"info\""), "should extract id")
@@ -21,44 +21,44 @@ class MermaidDetectorEmitterSpec extends munit.FunSuite:
 
   test("pieDetector.ts -> PieDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/pie/pieDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "PieDetector", "pie")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "PieDetector", "pie")
     assert(scala.contains("object PieDetector"), "should emit PieDetector object")
     assert(scala.contains("def detect(text: String): Boolean"), "should have detect method")
 
   test("sankeyDetector.ts -> SankeyDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/sankey/sankeyDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "SankeyDetector", "sankey")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "SankeyDetector", "sankey")
     assert(scala.contains("object SankeyDetector"), "should emit SankeyDetector object")
     assert(scala.contains("def detect"), "should have detect method")
     assert(scala.contains("sankey-beta"), "should extract sankey-beta keyword")
 
   test("packetDetector.ts -> PacketDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/packet/detector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "PacketDetector", "packet")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "PacketDetector", "packet")
     assert(scala.contains("object PacketDetector"), "should emit PacketDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("mindmapDetector.ts -> MindmapDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/mindmap/detector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "MindmapDetector", "mindmap")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "MindmapDetector", "mindmap")
     assert(scala.contains("object MindmapDetector"), "should emit MindmapDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("quadrantDetector.ts -> QuadrantDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/quadrant-chart/quadrantDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "QuadrantDetector", "quadrant")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "QuadrantDetector", "quadrant")
     assert(scala.contains("object QuadrantDetector"), "should emit QuadrantDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("blockDetector.ts -> BlockDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/block/blockDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "BlockDetector", "block")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "BlockDetector", "block")
     assert(scala.contains("object BlockDetector"), "should emit BlockDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("xychartDetector.ts -> XyChartDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/xychart/xychartDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "XyChartDetector", "xychart")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "XyChartDetector", "xychart")
     assert(scala.contains("object XyChartDetector"), "should emit XyChartDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
@@ -66,43 +66,43 @@ class MermaidDetectorEmitterSpec extends munit.FunSuite:
 
   test("erDetector.ts -> ErDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/er/erDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "ErDetector", "er")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "ErDetector", "er")
     assert(scala.contains("object ErDetector"), "should emit ErDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("c4Detector.ts -> C4Detector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/c4/c4Detector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "C4Detector", "c4")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "C4Detector", "c4")
     assert(scala.contains("object C4Detector"), "should emit C4Detector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("stateDetector.ts -> StateDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/state/stateDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "StateDetector", "state")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "StateDetector", "state")
     assert(scala.contains("object StateDetector"), "should emit StateDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("journeyDetector.ts -> JourneyDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/user-journey/journeyDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "JourneyDetector", "journey")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "JourneyDetector", "journey")
     assert(scala.contains("object JourneyDetector"), "should emit JourneyDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("timelineDetector.ts -> TimelineDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/timeline/detector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "TimelineDetector", "timeline")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "TimelineDetector", "timeline")
     assert(scala.contains("object TimelineDetector"), "should emit TimelineDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("requirementDetector.ts -> RequirementDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/requirement/requirementDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "RequirementDetector", "requirement")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "RequirementDetector", "requirement")
     assert(scala.contains("object RequirementDetector"), "should emit RequirementDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
   test("gitGraphDetector.ts -> GitDetector from RAST"):
     val rast = loadRast("/rast/mermaid/src/diagrams/git/gitGraphDetector.rast.json")
-    val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, "GitDetector", "git")
+    val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, "GitDetector", "git")
     assert(scala.contains("object GitDetector"), "should emit GitDetector object")
     assert(scala.contains("def detect"), "should have detect method")
 
@@ -132,7 +132,7 @@ class MermaidDetectorEmitterSpec extends munit.FunSuite:
 
     for ((rastPath, className, pkg) <- files) {
       val rast = loadRast(rastPath)
-      val scala = dedicated.MermaidDetectorEmitter.emitDetector(rast, className, pkg)
+      val scala = balticporter.corpus.mermaid.MermaidDetectorEmitter.emitDetector(rast, className, pkg)
       val path = outDir.resolve(s"${className}_rast.scala")
       java.nio.file.Files.writeString(path, scala)
       println(s"[emit-rast] ${className}.scala: ${scala.linesIterator.size} lines -> $path")

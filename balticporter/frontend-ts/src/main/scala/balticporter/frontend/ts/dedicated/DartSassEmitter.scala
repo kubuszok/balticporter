@@ -1,4 +1,7 @@
-package balticporter.frontend.ts.dedicated
+package balticporter.corpus.sass
+
+import balticporter.frontend.ts.dedicated.{DefmethodBodyTranslator, DefmethodEntry, DefnodeClass, FreeFunction}
+import balticporter.corpus.terser.TerserEmitter
 
 import balticporter.frontend.ts.{ParityDerive, RastFile, RastNode, RastValue}
 import java.nio.file.{Files, Path}
