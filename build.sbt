@@ -1,3 +1,6 @@
+import kubuszok.sbt.KubuszokPlugin.autoImport._
+import com.github.sbt.git.SbtGit.git
+
 ThisBuild / organization     := "com.kubuszok"
 ThisBuild / organizationName := "Baltic Porter"
 // The one Scala version this build compiles with, named because the `runtime` project matrix has
@@ -23,11 +26,13 @@ ThisBuild / scalaVersion     := scalaV
 // version with the engine on purpose — see `RuntimeArtifact` for why divergence there is a
 // correctness bug and not a packaging preference.
 // ---------------------------------------------------------------------------------------------
-ThisBuild / version       := sys.env.getOrElse("BALTICPORTER_VERSION", "0.1.0-SNAPSHOT")
+// sbt-kubuszok enables sbt-git's version derivation; override it completely — the version must
+// be reproducible from the environment alone, not from local git state (see the comment above).
+// sbt-git reads the system property named by git.versionProperty (default "project.version")
+// before falling back to git-describe; set it so the env var wins.
+val bpVersion: String = sys.env.getOrElse("BALTICPORTER_VERSION", "0.1.0-SNAPSHOT")
+val _bpVersionSet: Unit = { System.setProperty("project.version", bpVersion); () }
 ThisBuild / versionScheme := Some("early-semver")
-// sbt-kubuszok enables git.useGitDescribe; override it — the version must be reproducible from
-// the environment alone, not from local git state (see the comment above).
-ThisBuild / git.useGitDescribe := false
 
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
