@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/js/module.dart",
+  "sha256": "8d193fec2ffedcff6ed2208862d640f9ceeac8b23ae98082bbbf3b6eb239a938",
+  "nodes": [
+    {
+      "kind": "FunctionDeclarationImpl",
+      "pos": [
+        208,
+        47
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            208,
+            17
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                209,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                211,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "SimpleStringLiteralImpl",
+                  "pos": [
+                    212,
+                    12
+                  ],
+                  "type": "t1",
+                  "value": "nodeModule"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "NamedTypeImpl",
+          "pos": [
+            235,
+            8
+          ]
+        },
+        {
+          "kind": "FunctionExpressionImpl",
+          "pos": [
+            254,
+            1
+          ],
+          "type": "t2",
+          "children": [
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                254,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        257,
+        298
+      ],
+      "symbol": "s1",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            257,
+            129
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            387,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                388,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                390,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            393,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                394,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            423,
+            130
+          ],
+          "symbol": "s2",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                423,
+                71
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                506,
+                15
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                535,
+                17
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    536,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        536,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                552,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        557,
+        226
+      ],
+      "symbol": "s3",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            557,
+            62
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            620,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                621,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                623,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            626,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                627,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            663,
+            118
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                663,
+                74
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                749,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                763,
+                17
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    764,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        764,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                780,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "module",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t0"
+    },
+    "s1": {
+      "name": "JSModule",
+      "flags": []
+    },
+    "s2": {
+      "name": "createRequire",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s1"
+    },
+    "s3": {
+      "name": "JSModuleRequire",
+      "flags": []
+    },
+    "s4": {
+      "name": "resolve",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s3"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "JSModule",
+      "text": "JSModule",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "function",
+      "text": "JSModule Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t0"
+    },
+    "t3": {
+      "kind": "JSModuleRequire",
+      "text": "JSModuleRequire",
+      "isNullable": false
+    }
+  }
+}

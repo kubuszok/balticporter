@@ -1,0 +1,726 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/visitor/interface/selector.dart",
+  "sha256": "3107d6fa4b49d0a21a1ea6a7e7f9c20a274d424b06f33c44f355b8ec406e3df0",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        213,
+        748
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            213,
+            152
+          ],
+          "children": [
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                245,
+                0
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    245,
+                    0
+                  ],
+                  "text": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "TypeParameterListImpl",
+          "pos": [
+            406,
+            3
+          ],
+          "children": [
+            {
+              "kind": "TypeParameterImpl",
+              "pos": [
+                407,
+                1
+              ],
+              "symbol": "s1"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            414,
+            54
+          ],
+          "symbol": "s2",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                414,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                438,
+                29
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    439,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        439,
+                        17
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                467,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            471,
+            42
+          ],
+          "symbol": "s3",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                471,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                491,
+                21
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    492,
+                    19
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        492,
+                        13
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                512,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            516,
+            48
+          ],
+          "symbol": "s4",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                516,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                538,
+                25
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    539,
+                    23
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        539,
+                        15
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                563,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            567,
+            51
+          ],
+          "symbol": "s5",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                567,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                590,
+                27
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    591,
+                    25
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        591,
+                        16
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                617,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            621,
+            33
+          ],
+          "symbol": "s6",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                621,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                638,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    639,
+                    13
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        639,
+                        10
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                653,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            657,
+            50
+          ],
+          "symbol": "s7",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                657,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                678,
+                28
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    679,
+                    26
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        679,
+                        14
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                706,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            710,
+            60
+          ],
+          "symbol": "s8",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                710,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                736,
+                33
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    737,
+                    31
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        737,
+                        19
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                769,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            773,
+            45
+          ],
+          "symbol": "s9",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                773,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                794,
+                23
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    795,
+                    21
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        795,
+                        14
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                817,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            821,
+            39
+          ],
+          "symbol": "s10",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                821,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                840,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    841,
+                    17
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        841,
+                        12
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                859,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            863,
+            39
+          ],
+          "symbol": "s11",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                863,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                882,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    883,
+                    17
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        883,
+                        12
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                901,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            905,
+            54
+          ],
+          "symbol": "s12",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                905,
+                1
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                929,
+                29
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    930,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        930,
+                        17
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                958,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "SelectorVisitor",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "T",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "visitAttributeSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "visitClassSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "visitComplexSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "visitCompoundSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s6": {
+      "name": "visitIDSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "visitParentSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s8": {
+      "name": "visitPlaceholderSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s9": {
+      "name": "visitPseudoSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "visitSelectorList",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s11": {
+      "name": "visitTypeSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s12": {
+      "name": "visitUniversalSelector",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "dynamic",
+      "text": "dynamic"
+    },
+    "t0": {
+      "kind": "typeParameter",
+      "text": "T",
+      "isNullable": false,
+      "bound": "t1"
+    }
+  }
+}

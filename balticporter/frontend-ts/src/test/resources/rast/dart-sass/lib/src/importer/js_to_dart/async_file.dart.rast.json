@@ -1,0 +1,2153 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/importer/js_to_dart/async_file.dart",
+  "sha256": "8dc818d073e30bef62c5c72a412c87173611dfee82efc8eec0b5baa7071bada5",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        515,
+        1445
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            515,
+            112
+          ],
+          "children": [
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                612,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    612,
+                    13
+                  ],
+                  "text": "AsyncImporter",
+                  "resolvedSymbol": "s1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ExtendsClauseImpl",
+          "pos": [
+            666,
+            21
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                674,
+                13
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            692,
+            107
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                692,
+                39
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                734,
+                64
+              ],
+              "children": [
+                {
+                  "kind": "GenericFunctionTypeImpl",
+                  "pos": [
+                    740,
+                    45
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        740,
+                        7
+                      ]
+                    },
+                    {
+                      "kind": "FormalParameterListImpl",
+                      "pos": [
+                        756,
+                        29
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleFormalParameterImpl",
+                          "pos": [
+                            757,
+                            6
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                757,
+                                6
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleFormalParameterImpl",
+                          "pos": [
+                            765,
+                            19
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                765,
+                                19
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    786,
+                    12
+                  ],
+                  "symbol": "s2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            803,
+            45
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                803,
+                25
+              ],
+              "text": "JSToDartAsyncFileImporter",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                828,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    829,
+                    17
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                847,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            852,
+            755
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                852,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    860,
+                    6
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        861,
+                        4
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                879,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    880,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        880,
+                        3
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                889,
+                718
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    895,
+                    712
+                  ],
+                  "children": [
+                    {
+                      "kind": "IfStatementImpl",
+                      "pos": [
+                        901,
+                        74
+                      ],
+                      "children": [
+                        {
+                          "kind": "BinaryExpressionImpl",
+                          "pos": [
+                            905,
+                            20
+                          ],
+                          "type": "t3",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                905,
+                                10
+                              ],
+                              "type": "t4",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    905,
+                                    3
+                                  ],
+                                  "type": "t5",
+                                  "text": "url",
+                                  "resolvedSymbol": "s5"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    909,
+                                    6
+                                  ],
+                                  "type": "t4",
+                                  "text": "scheme",
+                                  "resolvedSymbol": "s6"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleStringLiteralImpl",
+                              "pos": [
+                                919,
+                                6
+                              ],
+                              "type": "t4",
+                              "value": "file"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "ReturnStatementImpl",
+                          "pos": [
+                            927,
+                            48
+                          ],
+                          "children": [
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                934,
+                                40
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    934,
+                                    22
+                                  ],
+                                  "type": "t6",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        934,
+                                        18
+                                      ],
+                                      "text": "FilesystemImporter",
+                                      "resolvedSymbol": "s8"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        953,
+                                        3
+                                      ],
+                                      "type": "t6",
+                                      "text": "cwd",
+                                      "resolvedSymbol": "s9"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    957,
+                                    12
+                                  ],
+                                  "type": "t7",
+                                  "text": "canonicalize",
+                                  "resolvedSymbol": "s10"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    969,
+                                    5
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        970,
+                                        3
+                                      ],
+                                      "type": "t5",
+                                      "text": "url",
+                                      "resolvedSymbol": "s5"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "VariableDeclarationStatementImpl",
+                      "pos": [
+                        981,
+                        100
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationListImpl",
+                          "pos": [
+                            981,
+                            99
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclarationImpl",
+                              "pos": [
+                                985,
+                                95
+                              ],
+                              "symbol": "s11",
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    994,
+                                    86
+                                  ],
+                                  "type": "t8",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        994,
+                                        16
+                                      ],
+                                      "type": "t8",
+                                      "text": "wrapJSExceptions"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        1010,
+                                        70
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "FunctionExpressionImpl",
+                                          "pos": [
+                                            1018,
+                                            55
+                                          ],
+                                          "type": "t9",
+                                          "children": [
+                                            {
+                                              "kind": "FormalParameterListImpl",
+                                              "pos": [
+                                                1018,
+                                                2
+                                              ]
+                                            },
+                                            {
+                                              "kind": "ExpressionFunctionBodyImpl",
+                                              "pos": [
+                                                1021,
+                                                52
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "FunctionExpressionInvocationImpl",
+                                                  "pos": [
+                                                    1024,
+                                                    49
+                                                  ],
+                                                  "type": "t10",
+                                                  "children": [
+                                                    {
+                                                      "kind": "SimpleIdentifierImpl",
+                                                      "pos": [
+                                                        1024,
+                                                        12
+                                                      ],
+                                                      "type": "t11",
+                                                      "text": "_findFileUrl",
+                                                      "resolvedSymbol": "s12"
+                                                    },
+                                                    {
+                                                      "kind": "ArgumentListImpl",
+                                                      "pos": [
+                                                        1036,
+                                                        37
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "MethodInvocationImpl",
+                                                          "pos": [
+                                                            1037,
+                                                            14
+                                                          ],
+                                                          "type": "t4",
+                                                          "children": [
+                                                            {
+                                                              "kind": "SimpleIdentifierImpl",
+                                                              "pos": [
+                                                                1037,
+                                                                3
+                                                              ],
+                                                              "type": "t5",
+                                                              "text": "url",
+                                                              "resolvedSymbol": "s5"
+                                                            },
+                                                            {
+                                                              "kind": "SimpleIdentifierImpl",
+                                                              "pos": [
+                                                                1041,
+                                                                8
+                                                              ],
+                                                              "type": "t13",
+                                                              "text": "toString",
+                                                              "resolvedSymbol": "s13"
+                                                            },
+                                                            {
+                                                              "kind": "ArgumentListImpl",
+                                                              "pos": [
+                                                                1049,
+                                                                2
+                                                              ]
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            1053,
+                                                            19
+                                                          ],
+                                                          "type": "t12",
+                                                          "text": "canonicalizeContext",
+                                                          "resolvedSymbol": "s14"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "IfStatementImpl",
+                      "pos": [
+                        1086,
+                        73
+                      ],
+                      "children": [
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            1090,
+                            17
+                          ],
+                          "type": "t3",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1090,
+                                9
+                              ],
+                              "type": "t14",
+                              "text": "isPromise",
+                              "resolvedSymbol": "s15"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                1099,
+                                8
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1100,
+                                    6
+                                  ],
+                                  "type": "t8",
+                                  "text": "result",
+                                  "resolvedSymbol": "s11"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "ExpressionStatementImpl",
+                          "pos": [
+                            1109,
+                            50
+                          ],
+                          "children": [
+                            {
+                              "kind": "AssignmentExpressionImpl",
+                              "pos": [
+                                1109,
+                                49
+                              ],
+                              "type": "t8",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1109,
+                                    6
+                                  ],
+                                  "text": "result",
+                                  "resolvedSymbol": "s11"
+                                },
+                                {
+                                  "kind": "AwaitExpressionImpl",
+                                  "pos": [
+                                    1118,
+                                    40
+                                  ],
+                                  "type": "t8",
+                                  "children": [
+                                    {
+                                      "kind": "MethodInvocationImpl",
+                                      "pos": [
+                                        1124,
+                                        34
+                                      ],
+                                      "type": "t8",
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1124,
+                                            15
+                                          ],
+                                          "type": "t8",
+                                          "text": "promiseToFuture"
+                                        },
+                                        {
+                                          "kind": "ArgumentListImpl",
+                                          "pos": [
+                                            1139,
+                                            19
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "AsExpressionImpl",
+                                              "pos": [
+                                                1140,
+                                                17
+                                              ],
+                                              "type": "t8",
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    1140,
+                                                    6
+                                                  ],
+                                                  "type": "t8",
+                                                  "text": "result",
+                                                  "resolvedSymbol": "s11"
+                                                },
+                                                {
+                                                  "kind": "NamedTypeImpl",
+                                                  "pos": [
+                                                    1150,
+                                                    7
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "IfStatementImpl",
+                      "pos": [
+                        1164,
+                        32
+                      ],
+                      "children": [
+                        {
+                          "kind": "BinaryExpressionImpl",
+                          "pos": [
+                            1168,
+                            14
+                          ],
+                          "type": "t3",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1168,
+                                6
+                              ],
+                              "type": "t8",
+                              "text": "result",
+                              "resolvedSymbol": "s11"
+                            },
+                            {
+                              "kind": "NullLiteralImpl",
+                              "pos": [
+                                1178,
+                                4
+                              ],
+                              "type": "t15"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "ReturnStatementImpl",
+                          "pos": [
+                            1184,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "NullLiteralImpl",
+                              "pos": [
+                                1191,
+                                4
+                              ],
+                              "type": "t15"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "IfStatementImpl",
+                      "pos": [
+                        1201,
+                        100
+                      ],
+                      "children": [
+                        {
+                          "kind": "PrefixExpressionImpl",
+                          "pos": [
+                            1205,
+                            16
+                          ],
+                          "type": "t3",
+                          "children": [
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                1206,
+                                15
+                              ],
+                              "type": "t3",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1206,
+                                    7
+                                  ],
+                                  "type": "t14",
+                                  "text": "isJSUrl",
+                                  "resolvedSymbol": "s16"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    1213,
+                                    8
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1214,
+                                        6
+                                      ],
+                                      "type": "t8",
+                                      "text": "result",
+                                      "resolvedSymbol": "s11"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "BlockImpl",
+                          "pos": [
+                            1223,
+                            78
+                          ],
+                          "children": [
+                            {
+                              "kind": "ExpressionStatementImpl",
+                              "pos": [
+                                1231,
+                                64
+                              ],
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    1231,
+                                    63
+                                  ],
+                                  "type": "t16",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1231,
+                                        7
+                                      ],
+                                      "type": "t17",
+                                      "text": "jsThrow",
+                                      "resolvedSymbol": "s17"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        1238,
+                                        56
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "MethodInvocationImpl",
+                                          "pos": [
+                                            1239,
+                                            54
+                                          ],
+                                          "type": "t8",
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1239,
+                                                7
+                                              ],
+                                              "type": "t8",
+                                              "text": "JsError"
+                                            },
+                                            {
+                                              "kind": "ArgumentListImpl",
+                                              "pos": [
+                                                1246,
+                                                47
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleStringLiteralImpl",
+                                                  "pos": [
+                                                    1247,
+                                                    45
+                                                  ],
+                                                  "type": "t4",
+                                                  "value": "The findFileUrl() method must return a URL."
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "VariableDeclarationStatementImpl",
+                      "pos": [
+                        1307,
+                        45
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationListImpl",
+                          "pos": [
+                            1307,
+                            44
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclarationImpl",
+                              "pos": [
+                                1311,
+                                40
+                              ],
+                              "symbol": "s18",
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    1323,
+                                    28
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1323,
+                                        11
+                                      ],
+                                      "type": "t19",
+                                      "text": "jsToDartUrl",
+                                      "resolvedSymbol": "s19"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        1334,
+                                        17
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "AsExpressionImpl",
+                                          "pos": [
+                                            1335,
+                                            15
+                                          ],
+                                          "type": "t20",
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1335,
+                                                6
+                                              ],
+                                              "type": "t8",
+                                              "text": "result",
+                                              "resolvedSymbol": "s11"
+                                            },
+                                            {
+                                              "kind": "NamedTypeImpl",
+                                              "pos": [
+                                                1345,
+                                                5
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "IfStatementImpl",
+                      "pos": [
+                        1357,
+                        186
+                      ],
+                      "children": [
+                        {
+                          "kind": "BinaryExpressionImpl",
+                          "pos": [
+                            1361,
+                            26
+                          ],
+                          "type": "t3",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1361,
+                                16
+                              ],
+                              "type": "t4",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1361,
+                                    9
+                                  ],
+                                  "type": "t5",
+                                  "text": "resultUrl",
+                                  "resolvedSymbol": "s18"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1371,
+                                    6
+                                  ],
+                                  "type": "t4",
+                                  "text": "scheme",
+                                  "resolvedSymbol": "s6"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleStringLiteralImpl",
+                              "pos": [
+                                1381,
+                                6
+                              ],
+                              "type": "t4",
+                              "value": "file"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "BlockImpl",
+                          "pos": [
+                            1389,
+                            154
+                          ],
+                          "children": [
+                            {
+                              "kind": "ExpressionStatementImpl",
+                              "pos": [
+                                1397,
+                                140
+                              ],
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    1397,
+                                    139
+                                  ],
+                                  "type": "t16",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1397,
+                                        7
+                                      ],
+                                      "type": "t17",
+                                      "text": "jsThrow",
+                                      "resolvedSymbol": "s17"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        1404,
+                                        132
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "MethodInvocationImpl",
+                                          "pos": [
+                                            1414,
+                                            113
+                                          ],
+                                          "type": "t8",
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1414,
+                                                7
+                                              ],
+                                              "type": "t8",
+                                              "text": "JsError"
+                                            },
+                                            {
+                                              "kind": "ArgumentListImpl",
+                                              "pos": [
+                                                1421,
+                                                106
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "AdjacentStringsImpl",
+                                                  "pos": [
+                                                    1433,
+                                                    83
+                                                  ],
+                                                  "type": "t4",
+                                                  "children": [
+                                                    {
+                                                      "kind": "SimpleStringLiteralImpl",
+                                                      "pos": [
+                                                        1433,
+                                                        63
+                                                      ],
+                                                      "type": "t4",
+                                                      "value": "The findFileUrl() must return a URL with scheme file://, was "
+                                                    },
+                                                    {
+                                                      "kind": "StringInterpolationImpl",
+                                                      "pos": [
+                                                        1507,
+                                                        9
+                                                      ],
+                                                      "type": "t4",
+                                                      "children": [
+                                                        {
+                                                          "kind": "InterpolationStringImpl",
+                                                          "pos": [
+                                                            1507,
+                                                            2
+                                                          ]
+                                                        },
+                                                        {
+                                                          "kind": "InterpolationExpressionImpl",
+                                                          "pos": [
+                                                            1509,
+                                                            4
+                                                          ],
+                                                          "children": [
+                                                            {
+                                                              "kind": "SimpleIdentifierImpl",
+                                                              "pos": [
+                                                                1510,
+                                                                3
+                                                              ],
+                                                              "type": "t5",
+                                                              "text": "url",
+                                                              "resolvedSymbol": "s5"
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "kind": "InterpolationStringImpl",
+                                                          "pos": [
+                                                            1513,
+                                                            3
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ReturnStatementImpl",
+                      "pos": [
+                        1549,
+                        54
+                      ],
+                      "children": [
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            1556,
+                            46
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1556,
+                                22
+                              ],
+                              "type": "t6",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1556,
+                                    18
+                                  ],
+                                  "text": "FilesystemImporter",
+                                  "resolvedSymbol": "s8"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1575,
+                                    3
+                                  ],
+                                  "type": "t6",
+                                  "text": "cwd",
+                                  "resolvedSymbol": "s9"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1579,
+                                12
+                              ],
+                              "type": "t7",
+                              "text": "canonicalize",
+                              "resolvedSymbol": "s10"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                1591,
+                                11
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1592,
+                                    9
+                                  ],
+                                  "type": "t5",
+                                  "text": "resultUrl",
+                                  "resolvedSymbol": "s18"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1611,
+            66
+          ],
+          "symbol": "s20",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1611,
+                15
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1631,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1632,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1632,
+                        3
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1641,
+                36
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1644,
+                    32
+                  ],
+                  "type": "t21",
+                  "children": [
+                    {
+                      "kind": "PrefixedIdentifierImpl",
+                      "pos": [
+                        1644,
+                        22
+                      ],
+                      "type": "t6",
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1644,
+                            18
+                          ],
+                          "text": "FilesystemImporter",
+                          "resolvedSymbol": "s8"
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1663,
+                            3
+                          ],
+                          "type": "t6",
+                          "text": "cwd",
+                          "resolvedSymbol": "s9"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1667,
+                        4
+                      ],
+                      "type": "t22",
+                      "text": "load",
+                      "resolvedSymbol": "s21"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1671,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1672,
+                            3
+                          ],
+                          "type": "t5",
+                          "text": "url",
+                          "resolvedSymbol": "s22"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1681,
+            89
+          ],
+          "symbol": "s23",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1681,
+                8
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1706,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1707,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1707,
+                        3
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1716,
+                54
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1725,
+                    44
+                  ],
+                  "type": "t23",
+                  "children": [
+                    {
+                      "kind": "PrefixedIdentifierImpl",
+                      "pos": [
+                        1725,
+                        22
+                      ],
+                      "type": "t6",
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1725,
+                            18
+                          ],
+                          "text": "FilesystemImporter",
+                          "resolvedSymbol": "s8"
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1744,
+                            3
+                          ],
+                          "type": "t6",
+                          "text": "cwd",
+                          "resolvedSymbol": "s9"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1748,
+                        16
+                      ],
+                      "type": "t24",
+                      "text": "modificationTime",
+                      "resolvedSymbol": "s24"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1764,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1765,
+                            3
+                          ],
+                          "type": "t5",
+                          "text": "url",
+                          "resolvedSymbol": "s25"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1774,
+            119
+          ],
+          "symbol": "s26",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1774,
+                4
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1796,
+                27
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1797,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1797,
+                        3
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1806,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1806,
+                        3
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1824,
+                69
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1833,
+                    59
+                  ],
+                  "type": "t3",
+                  "children": [
+                    {
+                      "kind": "PrefixedIdentifierImpl",
+                      "pos": [
+                        1833,
+                        22
+                      ],
+                      "type": "t6",
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1833,
+                            18
+                          ],
+                          "text": "FilesystemImporter",
+                          "resolvedSymbol": "s8"
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1852,
+                            3
+                          ],
+                          "type": "t6",
+                          "text": "cwd",
+                          "resolvedSymbol": "s9"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1856,
+                        17
+                      ],
+                      "type": "t25",
+                      "text": "couldCanonicalize",
+                      "resolvedSymbol": "s27"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1873,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1874,
+                            3
+                          ],
+                          "type": "t5",
+                          "text": "url",
+                          "resolvedSymbol": "s28"
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1879,
+                            12
+                          ],
+                          "type": "t5",
+                          "text": "canonicalUrl",
+                          "resolvedSymbol": "s29"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1897,
+            61
+          ],
+          "symbol": "s30",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1897,
+                4
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1922,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1923,
+                    13
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1923,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1938,
+                20
+              ],
+              "children": [
+                {
+                  "kind": "BinaryExpressionImpl",
+                  "pos": [
+                    1941,
+                    16
+                  ],
+                  "type": "t3",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1941,
+                        6
+                      ],
+                      "type": "t4",
+                      "text": "scheme",
+                      "resolvedSymbol": "s31"
+                    },
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        1951,
+                        6
+                      ],
+                      "type": "t4",
+                      "value": "file"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "JSToDartAsyncFileImporter",
+      "flags": []
+    },
+    "s1": {
+      "name": "AsyncImporter",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s2": {
+      "name": "_findFileUrl",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "canonicalize",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "url",
+      "flags": [],
+      "parent": "s4",
+      "isNullable": false
+    },
+    "s7": {
+      "name": "Uri",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s6": {
+      "name": "scheme",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t4",
+      "parent": "s7"
+    },
+    "s8": {
+      "name": "FilesystemImporter",
+      "flags": []
+    },
+    "s9": {
+      "name": "cwd",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t6",
+      "parent": "s8"
+    },
+    "s10": {
+      "name": "canonicalize",
+      "flags": [],
+      "declarationType": "t2",
+      "parent": "s8"
+    },
+    "s11": {
+      "name": "result",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s12": {
+      "name": "_findFileUrl",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s0"
+    },
+    "s13": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t4",
+      "parent": "s7"
+    },
+    "s14": {
+      "name": "canonicalizeContext",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t12"
+    },
+    "s15": {
+      "name": "isPromise",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t3"
+    },
+    "s16": {
+      "name": "isJSUrl",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t3"
+    },
+    "s17": {
+      "name": "jsThrow",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t16"
+    },
+    "s18": {
+      "name": "resultUrl",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s19": {
+      "name": "jsToDartUrl",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t5"
+    },
+    "s20": {
+      "name": "load",
+      "flags": [],
+      "declarationType": "t21",
+      "parent": "s0"
+    },
+    "s21": {
+      "name": "load",
+      "flags": [],
+      "declarationType": "t21",
+      "parent": "s8"
+    },
+    "s22": {
+      "name": "url",
+      "flags": [],
+      "parent": "s20",
+      "isNullable": false
+    },
+    "s23": {
+      "name": "modificationTime",
+      "flags": [],
+      "declarationType": "t23",
+      "parent": "s0"
+    },
+    "s24": {
+      "name": "modificationTime",
+      "flags": [],
+      "declarationType": "t23",
+      "parent": "s8"
+    },
+    "s25": {
+      "name": "url",
+      "flags": [],
+      "parent": "s23",
+      "isNullable": false
+    },
+    "s26": {
+      "name": "couldCanonicalize",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s0"
+    },
+    "s27": {
+      "name": "couldCanonicalize",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s8"
+    },
+    "s28": {
+      "name": "url",
+      "flags": [],
+      "parent": "s26",
+      "isNullable": false
+    },
+    "s29": {
+      "name": "canonicalUrl",
+      "flags": [],
+      "parent": "s26",
+      "isNullable": false
+    },
+    "s30": {
+      "name": "isNonCanonicalScheme",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s0"
+    },
+    "s31": {
+      "name": "scheme",
+      "flags": [],
+      "parent": "s30",
+      "isNullable": false
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "JSToDartAsyncFileImporter",
+      "text": "JSToDartAsyncFileImporter",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "Uri",
+      "text": "Uri?",
+      "isNullable": true
+    },
+    "t1": {
+      "kind": "FutureOr",
+      "text": "FutureOr<Uri?>",
+      "isNullable": false,
+      "typeArguments": [
+        "t2"
+      ]
+    },
+    "t3": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t4": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t5": {
+      "kind": "Uri",
+      "text": "Uri",
+      "isNullable": false
+    },
+    "t6": {
+      "kind": "FilesystemImporter",
+      "text": "FilesystemImporter",
+      "isNullable": false
+    },
+    "t7": {
+      "kind": "function",
+      "text": "Uri? Function(Uri)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "url",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t2"
+    },
+    "t8": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t10": {
+      "kind": "Object",
+      "text": "Object?",
+      "isNullable": true
+    },
+    "t9": {
+      "kind": "function",
+      "text": "Object? Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t10"
+    },
+    "t12": {
+      "kind": "CanonicalizeContext",
+      "text": "CanonicalizeContext",
+      "isNullable": false
+    },
+    "t11": {
+      "kind": "function",
+      "text": "Object? Function(String, CanonicalizeContext)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "",
+          "type": "t4",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "",
+          "type": "t12",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t10"
+    },
+    "t13": {
+      "kind": "function",
+      "text": "String Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t4"
+    },
+    "t14": {
+      "kind": "function",
+      "text": "bool Function(Object?)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "object",
+          "type": "t10",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t15": {
+      "kind": "Null",
+      "text": "Null",
+      "isNullable": false
+    },
+    "t16": {
+      "kind": "Never",
+      "text": "Never"
+    },
+    "t18": {
+      "kind": "Object",
+      "text": "Object",
+      "isNullable": false
+    },
+    "t17": {
+      "kind": "function",
+      "text": "Never Function(Object)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "error",
+          "type": "t18",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t16"
+    },
+    "t20": {
+      "kind": "JSUrl",
+      "text": "JSUrl",
+      "isNullable": false
+    },
+    "t19": {
+      "kind": "function",
+      "text": "Uri Function(JSUrl)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "url",
+          "type": "t20",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t5"
+    },
+    "t21": {
+      "kind": "ImporterResult",
+      "text": "ImporterResult?",
+      "isNullable": true
+    },
+    "t22": {
+      "kind": "function",
+      "text": "ImporterResult? Function(Uri)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "url",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t21"
+    },
+    "t23": {
+      "kind": "DateTime",
+      "text": "DateTime",
+      "isNullable": false
+    },
+    "t24": {
+      "kind": "function",
+      "text": "DateTime Function(Uri)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "url",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t23"
+    },
+    "t25": {
+      "kind": "function",
+      "text": "bool Function(Uri, Uri)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "url",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "canonicalUrl",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t3"
+    }
+  }
+}

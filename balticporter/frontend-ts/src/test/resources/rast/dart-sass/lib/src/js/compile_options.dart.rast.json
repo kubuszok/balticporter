@@ -1,0 +1,908 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/js/compile_options.dart",
+  "sha256": "e2127f37a8c7769a63b2479288c5aad764d554288764db48b0901d0cc3b15136",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        274,
+        605
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            274,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                275,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                277,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            280,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                281,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            316,
+            30
+          ],
+          "symbol": "s1",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                325,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                345,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            349,
+            30
+          ],
+          "symbol": "s2",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                358,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                378,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            382,
+            37
+          ],
+          "symbol": "s3",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                391,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    395,
+                    8
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        396,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                418,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            422,
+            29
+          ],
+          "symbol": "s4",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                431,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                450,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            454,
+            27
+          ],
+          "symbol": "s5",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                463,
+                7
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                480,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            484,
+            27
+          ],
+          "symbol": "s6",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                493,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                510,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            514,
+            27
+          ],
+          "symbol": "s7",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                523,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                540,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            544,
+            29
+          ],
+          "symbol": "s8",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                553,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                572,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            576,
+            43
+          ],
+          "symbol": "s9",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                585,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                618,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            622,
+            30
+          ],
+          "symbol": "s10",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                631,
+                9
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                651,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            655,
+            38
+          ],
+          "symbol": "s11",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                664,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    668,
+                    9
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        669,
+                        7
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                692,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            696,
+            31
+          ],
+          "symbol": "s12",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                705,
+                7
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                726,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            730,
+            46
+          ],
+          "symbol": "s13",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                739,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    743,
+                    9
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        744,
+                        7
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                775,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            779,
+            48
+          ],
+          "symbol": "s14",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                788,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    792,
+                    9
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        793,
+                        7
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                826,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            830,
+            47
+          ],
+          "symbol": "s15",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                839,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    843,
+                    9
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        844,
+                        7
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                876,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        881,
+        165
+      ],
+      "symbol": "s16",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            881,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                882,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                884,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            887,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                888,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "ExtendsClauseImpl",
+          "pos": [
+            925,
+            22
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                933,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            952,
+            28
+          ],
+          "symbol": "s17",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                961,
+                7
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                979,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            983,
+            24
+          ],
+          "symbol": "s18",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                992,
+                6
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1006,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1010,
+            34
+          ],
+          "symbol": "s19",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1019,
+                11
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1043,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "CompileOptions",
+      "flags": []
+    },
+    "s1": {
+      "name": "alertAscii",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "alertColor",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "loadPaths",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "quietDeps",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "style",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t3",
+      "parent": "s0"
+    },
+    "s6": {
+      "name": "verbose",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "charset",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s8": {
+      "name": "sourceMap",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s9": {
+      "name": "sourceMapIncludeSources",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "logger",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t4",
+      "parent": "s0"
+    },
+    "s11": {
+      "name": "importers",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s12": {
+      "name": "functions",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t6",
+      "parent": "s0"
+    },
+    "s13": {
+      "name": "fatalDeprecations",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s14": {
+      "name": "silenceDeprecations",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s15": {
+      "name": "futureDeprecations",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s16": {
+      "name": "CompileStringOptions",
+      "flags": []
+    },
+    "s17": {
+      "name": "syntax",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t3",
+      "parent": "s16"
+    },
+    "s18": {
+      "name": "url",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t7",
+      "parent": "s16"
+    },
+    "s19": {
+      "name": "importer",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t8",
+      "parent": "s16"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "bool",
+      "text": "bool?",
+      "isNullable": true
+    },
+    "t2": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "List",
+      "text": "List<String>?",
+      "isNullable": true,
+      "typeArguments": [
+        "t2"
+      ]
+    },
+    "t3": {
+      "kind": "String",
+      "text": "String?",
+      "isNullable": true
+    },
+    "t4": {
+      "kind": "JSLogger",
+      "text": "JSLogger?",
+      "isNullable": true
+    },
+    "t6": {
+      "kind": "Object",
+      "text": "Object?",
+      "isNullable": true
+    },
+    "t5": {
+      "kind": "List",
+      "text": "List<Object?>?",
+      "isNullable": true,
+      "typeArguments": [
+        "t6"
+      ]
+    },
+    "t7": {
+      "kind": "JSUrl",
+      "text": "JSUrl?",
+      "isNullable": true
+    },
+    "t8": {
+      "kind": "JSImporter",
+      "text": "JSImporter?",
+      "isNullable": true
+    }
+  }
+}

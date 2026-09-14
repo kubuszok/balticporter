@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/util/option.dart",
+  "sha256": "afb19d759db08c84dabff23c268c022cb5dab76f2d7f9458815cfd77fb4ba4f2",
+  "nodes": [
+    {
+      "kind": "GenericTypeAliasImpl",
+      "pos": [
+        178,
+        360
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            178,
+            333
+          ]
+        },
+        {
+          "kind": "TypeParameterListImpl",
+          "pos": [
+            526,
+            3
+          ],
+          "children": [
+            {
+              "kind": "TypeParameterImpl",
+              "pos": [
+                527,
+                1
+              ],
+              "symbol": "s1"
+            }
+          ]
+        },
+        {
+          "kind": "RecordTypeAnnotationImpl",
+          "pos": [
+            532,
+            5
+          ],
+          "children": [
+            {
+              "kind": "RecordTypeAnnotationPositionalFieldImpl",
+              "pos": [
+                533,
+                1
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    533,
+                    1
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Option",
+      "flags": []
+    },
+    "s1": {
+      "name": "T",
+      "flags": [],
+      "parent": "s0"
+    }
+  },
+  "types": {}
+}

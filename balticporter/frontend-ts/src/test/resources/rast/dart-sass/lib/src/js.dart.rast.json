@@ -1,0 +1,4235 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/js.dart",
+  "sha256": "441cbec3e77c06726556a5a27e4400a4b214c62b88dcab52c64965d409558061",
+  "nodes": [
+    {
+      "kind": "FunctionDeclarationImpl",
+      "pos": [
+        636,
+        2594
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            636,
+            102
+          ]
+        },
+        {
+          "kind": "NamedTypeImpl",
+          "pos": [
+            739,
+            4
+          ]
+        },
+        {
+          "kind": "FunctionExpressionImpl",
+          "pos": [
+            748,
+            2482
+          ],
+          "type": "t1",
+          "children": [
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                748,
+                2
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                751,
+                2479
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    751,
+                    2479
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        755,
+                        61
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            755,
+                            60
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                755,
+                                15
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    755,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    763,
+                                    7
+                                  ],
+                                  "text": "compile"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                773,
+                                42
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    773,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    790,
+                                    25
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        791,
+                                        14
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.compile"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        807,
+                                        7
+                                      ],
+                                      "type": "t7",
+                                      "text": "compile",
+                                      "resolvedSymbol": "s3"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        819,
+                        92
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            819,
+                            91
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                819,
+                                21
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    819,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    827,
+                                    13
+                                  ],
+                                  "text": "compileString"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                843,
+                                67
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    843,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    860,
+                                    50
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        866,
+                                        20
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.compileString"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        892,
+                                        13
+                                      ],
+                                      "type": "t10",
+                                      "text": "compileString",
+                                      "resolvedSymbol": "s4"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        914,
+                        76
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            914,
+                            75
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                914,
+                                20
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    914,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    922,
+                                    12
+                                  ],
+                                  "text": "compileAsync"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                937,
+                                52
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    937,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    954,
+                                    35
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        955,
+                                        19
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.compileAsync"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        976,
+                                        12
+                                      ],
+                                      "type": "t12",
+                                      "text": "compileAsync",
+                                      "resolvedSymbol": "s5"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        993,
+                        107
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            993,
+                            106
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                993,
+                                26
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    993,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1001,
+                                    18
+                                  ],
+                                  "text": "compileStringAsync"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                1022,
+                                77
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1022,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    1039,
+                                    60
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        1045,
+                                        25
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.compileStringAsync"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1076,
+                                        18
+                                      ],
+                                      "type": "t14",
+                                      "text": "compileStringAsync",
+                                      "resolvedSymbol": "s6"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1103,
+                        76
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1103,
+                            75
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1103,
+                                20
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1103,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1111,
+                                    12
+                                  ],
+                                  "text": "initCompiler"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                1126,
+                                52
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1126,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    1143,
+                                    35
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        1144,
+                                        19
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.initCompiler"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1165,
+                                        12
+                                      ],
+                                      "type": "t15",
+                                      "text": "initCompiler",
+                                      "resolvedSymbol": "s7"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1182,
+                        104
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1182,
+                            103
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1182,
+                                25
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1182,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1190,
+                                    17
+                                  ],
+                                  "text": "initAsyncCompiler"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                1210,
+                                75
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1210,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    1227,
+                                    58
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        1233,
+                                        24
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.initAsyncCompiler"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1263,
+                                        17
+                                      ],
+                                      "type": "t17",
+                                      "text": "initAsyncCompiler",
+                                      "resolvedSymbol": "s8"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1289,
+                        33
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1289,
+                            32
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1289,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1289,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1297,
+                                    8
+                                  ],
+                                  "text": "Compiler"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1308,
+                                13
+                              ],
+                              "type": "t18",
+                              "text": "compilerClass",
+                              "resolvedSymbol": "s9"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1325,
+                        43
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1325,
+                            42
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1325,
+                                21
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1325,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1333,
+                                    13
+                                  ],
+                                  "text": "AsyncCompiler"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1349,
+                                18
+                              ],
+                              "type": "t18",
+                              "text": "asyncCompilerClass",
+                              "resolvedSymbol": "s10"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1371,
+                        27
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1371,
+                            26
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1371,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1371,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1379,
+                                    5
+                                  ],
+                                  "text": "Value"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1387,
+                                10
+                              ],
+                              "type": "t18",
+                              "text": "valueClass",
+                              "resolvedSymbol": "s11"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1401,
+                        35
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1401,
+                            34
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1401,
+                                19
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1401,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1409,
+                                    11
+                                  ],
+                                  "text": "SassBoolean"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1423,
+                                12
+                              ],
+                              "type": "t18",
+                              "text": "booleanClass",
+                              "resolvedSymbol": "s12"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1439,
+                        45
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1439,
+                            44
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1439,
+                                24
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1439,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1447,
+                                    16
+                                  ],
+                                  "text": "SassArgumentList"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1466,
+                                17
+                              ],
+                              "type": "t18",
+                              "text": "argumentListClass",
+                              "resolvedSymbol": "s13"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1487,
+                        43
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1487,
+                            42
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1487,
+                                23
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1487,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1495,
+                                    15
+                                  ],
+                                  "text": "SassCalculation"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1513,
+                                16
+                              ],
+                              "type": "t18",
+                              "text": "calculationClass",
+                              "resolvedSymbol": "s14"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1533,
+                        57
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1533,
+                            56
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1533,
+                                28
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1533,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1541,
+                                    20
+                                  ],
+                                  "text": "CalculationOperation"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1564,
+                                25
+                              ],
+                              "type": "t18",
+                              "text": "calculationOperationClass",
+                              "resolvedSymbol": "s15"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1593,
+                        65
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1593,
+                            64
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1593,
+                                32
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1593,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1601,
+                                    24
+                                  ],
+                                  "text": "CalculationInterpolation"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1628,
+                                29
+                              ],
+                              "type": "t18",
+                              "text": "calculationInterpolationClass",
+                              "resolvedSymbol": "s16"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1661,
+                        31
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1661,
+                            30
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1661,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1661,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1669,
+                                    9
+                                  ],
+                                  "text": "SassColor"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1681,
+                                10
+                              ],
+                              "type": "t18",
+                              "text": "colorClass",
+                              "resolvedSymbol": "s17"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1695,
+                        37
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1695,
+                            36
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1695,
+                                20
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1695,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1703,
+                                    12
+                                  ],
+                                  "text": "SassFunction"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1718,
+                                13
+                              ],
+                              "type": "t18",
+                              "text": "functionClass",
+                              "resolvedSymbol": "s18"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1735,
+                        31
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1735,
+                            30
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1735,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1735,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1743,
+                                    9
+                                  ],
+                                  "text": "SassMixin"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1755,
+                                10
+                              ],
+                              "type": "t18",
+                              "text": "mixinClass",
+                              "resolvedSymbol": "s19"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1769,
+                        29
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1769,
+                            28
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1769,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1769,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1777,
+                                    8
+                                  ],
+                                  "text": "SassList"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1788,
+                                9
+                              ],
+                              "type": "t18",
+                              "text": "listClass",
+                              "resolvedSymbol": "s20"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1801,
+                        27
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1801,
+                            26
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1801,
+                                15
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1801,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1809,
+                                    7
+                                  ],
+                                  "text": "SassMap"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1819,
+                                8
+                              ],
+                              "type": "t18",
+                              "text": "mapClass",
+                              "resolvedSymbol": "s21"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1831,
+                        33
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1831,
+                            32
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1831,
+                                18
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1831,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1839,
+                                    10
+                                  ],
+                                  "text": "SassNumber"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1852,
+                                11
+                              ],
+                              "type": "t18",
+                              "text": "numberClass",
+                              "resolvedSymbol": "s22"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1867,
+                        33
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1867,
+                            32
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1867,
+                                18
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1867,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1875,
+                                    10
+                                  ],
+                                  "text": "SassString"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1888,
+                                11
+                              ],
+                              "type": "t18",
+                              "text": "stringClass",
+                              "resolvedSymbol": "s23"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1903,
+                        28
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1903,
+                            27
+                          ],
+                          "type": "t19",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1903,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1903,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1911,
+                                    8
+                                  ],
+                                  "text": "sassNull"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1922,
+                                8
+                              ],
+                              "type": "t19",
+                              "text": "sassNull",
+                              "resolvedSymbol": "s24"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1934,
+                        28
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1934,
+                            27
+                          ],
+                          "type": "t20",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1934,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1934,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1942,
+                                    8
+                                  ],
+                                  "text": "sassTrue"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1953,
+                                8
+                              ],
+                              "type": "t20",
+                              "text": "sassTrue",
+                              "resolvedSymbol": "s25"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1965,
+                        30
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1965,
+                            29
+                          ],
+                          "type": "t20",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1965,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1965,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1973,
+                                    9
+                                  ],
+                                  "text": "sassFalse"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1985,
+                                9
+                              ],
+                              "type": "t20",
+                              "text": "sassFalse",
+                              "resolvedSymbol": "s26"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1998,
+                        35
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1998,
+                            34
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                1998,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1998,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2006,
+                                    9
+                                  ],
+                                  "text": "Exception"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2018,
+                                14
+                              ],
+                              "type": "t18",
+                              "text": "exceptionClass",
+                              "resolvedSymbol": "s27"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2036,
+                        209
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2036,
+                            208
+                          ],
+                          "type": "t21",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2036,
+                                14
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2036,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2044,
+                                    6
+                                  ],
+                                  "text": "Logger"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "InstanceCreationExpressionImpl",
+                              "pos": [
+                                2053,
+                                191
+                              ],
+                              "type": "t21",
+                              "children": [
+                                {
+                                  "kind": "ConstructorNameImpl",
+                                  "pos": [
+                                    2053,
+                                    15
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedTypeImpl",
+                                      "pos": [
+                                        2053,
+                                        15
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    2068,
+                                    176
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        2074,
+                                        165
+                                      ],
+                                      "type": "t22",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            2074,
+                                            7
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                2074,
+                                                6
+                                              ],
+                                              "text": "silent",
+                                              "resolvedSymbol": "s28"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "InstanceCreationExpressionImpl",
+                                          "pos": [
+                                            2082,
+                                            157
+                                          ],
+                                          "type": "t22",
+                                          "children": [
+                                            {
+                                              "kind": "ConstructorNameImpl",
+                                              "pos": [
+                                                2082,
+                                                8
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "NamedTypeImpl",
+                                                  "pos": [
+                                                    2082,
+                                                    8
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "ArgumentListImpl",
+                                              "pos": [
+                                                2090,
+                                                149
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "NamedExpressionImpl",
+                                                  "pos": [
+                                                    2098,
+                                                    62
+                                                  ],
+                                                  "type": "t23",
+                                                  "children": [
+                                                    {
+                                                      "kind": "LabelImpl",
+                                                      "pos": [
+                                                        2098,
+                                                        5
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            2098,
+                                                            4
+                                                          ],
+                                                          "text": "warn",
+                                                          "resolvedSymbol": "s31"
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "MethodInvocationImpl",
+                                                      "pos": [
+                                                        2104,
+                                                        56
+                                                      ],
+                                                      "type": "t23",
+                                                      "children": [
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            2104,
+                                                            17
+                                                          ],
+                                                          "type": "t4",
+                                                          "text": "allowInteropNamed",
+                                                          "resolvedSymbol": "s2"
+                                                        },
+                                                        {
+                                                          "kind": "ArgumentListImpl",
+                                                          "pos": [
+                                                            2121,
+                                                            39
+                                                          ],
+                                                          "children": [
+                                                            {
+                                                              "kind": "SimpleStringLiteralImpl",
+                                                              "pos": [
+                                                                2122,
+                                                                25
+                                                              ],
+                                                              "type": "t5",
+                                                              "value": "sass.Logger.silent.warn"
+                                                            },
+                                                            {
+                                                              "kind": "FunctionExpressionImpl",
+                                                              "pos": [
+                                                                2149,
+                                                                10
+                                                              ],
+                                                              "type": "t23",
+                                                              "children": [
+                                                                {
+                                                                  "kind": "FormalParameterListImpl",
+                                                                  "pos": [
+                                                                    2149,
+                                                                    7
+                                                                  ],
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "SimpleFormalParameterImpl",
+                                                                      "pos": [
+                                                                        2150,
+                                                                        1
+                                                                      ]
+                                                                    },
+                                                                    {
+                                                                      "kind": "SimpleFormalParameterImpl",
+                                                                      "pos": [
+                                                                        2153,
+                                                                        2
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "kind": "BlockFunctionBodyImpl",
+                                                                  "pos": [
+                                                                    2157,
+                                                                    2
+                                                                  ],
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "BlockImpl",
+                                                                      "pos": [
+                                                                        2157,
+                                                                        2
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "NamedExpressionImpl",
+                                                  "pos": [
+                                                    2168,
+                                                    64
+                                                  ],
+                                                  "type": "t25",
+                                                  "children": [
+                                                    {
+                                                      "kind": "LabelImpl",
+                                                      "pos": [
+                                                        2168,
+                                                        6
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            2168,
+                                                            5
+                                                          ],
+                                                          "text": "debug",
+                                                          "resolvedSymbol": "s34"
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "MethodInvocationImpl",
+                                                      "pos": [
+                                                        2175,
+                                                        57
+                                                      ],
+                                                      "type": "t25",
+                                                      "children": [
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            2175,
+                                                            17
+                                                          ],
+                                                          "type": "t4",
+                                                          "text": "allowInteropNamed",
+                                                          "resolvedSymbol": "s2"
+                                                        },
+                                                        {
+                                                          "kind": "ArgumentListImpl",
+                                                          "pos": [
+                                                            2192,
+                                                            40
+                                                          ],
+                                                          "children": [
+                                                            {
+                                                              "kind": "SimpleStringLiteralImpl",
+                                                              "pos": [
+                                                                2193,
+                                                                26
+                                                              ],
+                                                              "type": "t5",
+                                                              "value": "sass.Logger.silent.debug"
+                                                            },
+                                                            {
+                                                              "kind": "FunctionExpressionImpl",
+                                                              "pos": [
+                                                                2221,
+                                                                10
+                                                              ],
+                                                              "type": "t25",
+                                                              "children": [
+                                                                {
+                                                                  "kind": "FormalParameterListImpl",
+                                                                  "pos": [
+                                                                    2221,
+                                                                    7
+                                                                  ],
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "SimpleFormalParameterImpl",
+                                                                      "pos": [
+                                                                        2222,
+                                                                        1
+                                                                      ]
+                                                                    },
+                                                                    {
+                                                                      "kind": "SimpleFormalParameterImpl",
+                                                                      "pos": [
+                                                                        2225,
+                                                                        2
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                {
+                                                                  "kind": "BlockFunctionBodyImpl",
+                                                                  "pos": [
+                                                                    2229,
+                                                                    2
+                                                                  ],
+                                                                  "children": [
+                                                                    {
+                                                                      "kind": "BlockImpl",
+                                                                      "pos": [
+                                                                        2229,
+                                                                        2
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2248,
+                        55
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2248,
+                            54
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2248,
+                                27
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2248,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2256,
+                                    19
+                                  ],
+                                  "text": "NodePackageImporter"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2278,
+                                24
+                              ],
+                              "type": "t18",
+                              "text": "nodePackageImporterClass",
+                              "resolvedSymbol": "s35"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2306,
+                        43
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2306,
+                            42
+                          ],
+                          "type": "t13",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2306,
+                                20
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2306,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2314,
+                                    12
+                                  ],
+                                  "text": "deprecations"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                2329,
+                                19
+                              ],
+                              "type": "t13",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2329,
+                                    5
+                                  ],
+                                  "type": "t13",
+                                  "text": "jsify"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    2334,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        2335,
+                                        12
+                                      ],
+                                      "type": "t27",
+                                      "text": "deprecations",
+                                      "resolvedSymbol": "s36"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2352,
+                        31
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2352,
+                            30
+                          ],
+                          "type": "t18",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2352,
+                                15
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2352,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2360,
+                                    7
+                                  ],
+                                  "text": "Version"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2370,
+                                12
+                              ],
+                              "type": "t18",
+                              "text": "versionClass",
+                              "resolvedSymbol": "s37"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2386,
+                        61
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2386,
+                            60
+                          ],
+                          "type": "t13",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2386,
+                                26
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2386,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2394,
+                                    18
+                                  ],
+                                  "text": "loadParserExports_"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                2415,
+                                31
+                              ],
+                              "type": "t13",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2415,
+                                    12
+                                  ],
+                                  "type": "t13",
+                                  "text": "allowInterop"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    2427,
+                                    19
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        2428,
+                                        17
+                                      ],
+                                      "type": "t29",
+                                      "text": "loadParserExports",
+                                      "resolvedSymbol": "s38"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2451,
+                        212
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2451,
+                            211
+                          ],
+                          "type": "t5",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2451,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2451,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2459,
+                                    4
+                                  ],
+                                  "text": "info"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "AdjacentStringsImpl",
+                              "pos": [
+                                2472,
+                                190
+                              ],
+                              "type": "t5",
+                              "children": [
+                                {
+                                  "kind": "StringInterpolationImpl",
+                                  "pos": [
+                                    2472,
+                                    74
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "InterpolationStringImpl",
+                                      "pos": [
+                                        2472,
+                                        12
+                                      ]
+                                    },
+                                    {
+                                      "kind": "InterpolationExpressionImpl",
+                                      "pos": [
+                                        2484,
+                                        42
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "InstanceCreationExpressionImpl",
+                                          "pos": [
+                                            2486,
+                                            39
+                                          ],
+                                          "type": "t5",
+                                          "children": [
+                                            {
+                                              "kind": "ConstructorNameImpl",
+                                              "pos": [
+                                                2492,
+                                                22
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "NamedTypeImpl",
+                                                  "pos": [
+                                                    2492,
+                                                    6
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    2499,
+                                                    15
+                                                  ],
+                                                  "text": "fromEnvironment",
+                                                  "resolvedSymbol": "s39"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "ArgumentListImpl",
+                                              "pos": [
+                                                2514,
+                                                11
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleStringLiteralImpl",
+                                                  "pos": [
+                                                    2515,
+                                                    9
+                                                  ],
+                                                  "type": "t5",
+                                                  "value": "version"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "InterpolationStringImpl",
+                                      "pos": [
+                                        2526,
+                                        20
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "SimpleStringLiteralImpl",
+                                  "pos": [
+                                    2553,
+                                    10
+                                  ],
+                                  "type": "t5",
+                                  "value": "[Dart]\n"
+                                },
+                                {
+                                  "kind": "StringInterpolationImpl",
+                                  "pos": [
+                                    2570,
+                                    60
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "InterpolationStringImpl",
+                                      "pos": [
+                                        2570,
+                                        10
+                                      ]
+                                    },
+                                    {
+                                      "kind": "InterpolationExpressionImpl",
+                                      "pos": [
+                                        2580,
+                                        47
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "InstanceCreationExpressionImpl",
+                                          "pos": [
+                                            2582,
+                                            44
+                                          ],
+                                          "type": "t5",
+                                          "children": [
+                                            {
+                                              "kind": "ConstructorNameImpl",
+                                              "pos": [
+                                                2588,
+                                                22
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "NamedTypeImpl",
+                                                  "pos": [
+                                                    2588,
+                                                    6
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    2595,
+                                                    15
+                                                  ],
+                                                  "text": "fromEnvironment",
+                                                  "resolvedSymbol": "s39"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "ArgumentListImpl",
+                                              "pos": [
+                                                2610,
+                                                16
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleStringLiteralImpl",
+                                                  "pos": [
+                                                    2611,
+                                                    14
+                                                  ],
+                                                  "type": "t5",
+                                                  "value": "dart-version"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "InterpolationStringImpl",
+                                      "pos": [
+                                        2627,
+                                        3
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "SimpleStringLiteralImpl",
+                                  "pos": [
+                                    2637,
+                                    25
+                                  ],
+                                  "type": "t5",
+                                  "value": "(Dart Compiler)\t[Dart]"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2667,
+                        37
+                      ],
+                      "children": [
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            2667,
+                            36
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2667,
+                                34
+                              ],
+                              "type": "t1",
+                              "text": "updateCanonicalizeContextPrototype",
+                              "resolvedSymbol": "s41"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                2701,
+                                2
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2707,
+                        28
+                      ],
+                      "children": [
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            2707,
+                            27
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2707,
+                                25
+                              ],
+                              "type": "t1",
+                              "text": "updateSourceSpanPrototype",
+                              "resolvedSymbol": "s42"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                2732,
+                                2
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2755,
+                        58
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2755,
+                            57
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2755,
+                                14
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2755,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2763,
+                                    6
+                                  ],
+                                  "text": "render"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                2772,
+                                40
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2772,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    2789,
+                                    23
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        2790,
+                                        13
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.render"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        2805,
+                                        6
+                                      ],
+                                      "type": "t31",
+                                      "text": "render",
+                                      "resolvedSymbol": "s43"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2816,
+                        70
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2816,
+                            69
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2816,
+                                18
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2816,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2824,
+                                    10
+                                  ],
+                                  "text": "renderSync"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "MethodInvocationImpl",
+                              "pos": [
+                                2837,
+                                48
+                              ],
+                              "type": "t2",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2837,
+                                    17
+                                  ],
+                                  "type": "t4",
+                                  "text": "allowInteropNamed",
+                                  "resolvedSymbol": "s2"
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    2854,
+                                    31
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        2855,
+                                        17
+                                      ],
+                                      "type": "t5",
+                                      "value": "sass.renderSync"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        2874,
+                                        10
+                                      ],
+                                      "type": "t36",
+                                      "text": "renderSync",
+                                      "resolvedSymbol": "s44"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        2890,
+                        255
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            2890,
+                            254
+                          ],
+                          "type": "t38",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                2890,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2890,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    2898,
+                                    5
+                                  ],
+                                  "text": "types"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "InstanceCreationExpressionImpl",
+                              "pos": [
+                                2906,
+                                238
+                              ],
+                              "type": "t38",
+                              "children": [
+                                {
+                                  "kind": "ConstructorNameImpl",
+                                  "pos": [
+                                    2906,
+                                    5
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedTypeImpl",
+                                      "pos": [
+                                        2906,
+                                        5
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ArgumentListImpl",
+                                  "pos": [
+                                    2911,
+                                    233
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        2917,
+                                        27
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            2917,
+                                            8
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                2917,
+                                                7
+                                              ],
+                                              "text": "Boolean",
+                                              "resolvedSymbol": "s45"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            2926,
+                                            18
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyBooleanClass",
+                                          "resolvedSymbol": "s48"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        2950,
+                                        23
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            2950,
+                                            6
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                2950,
+                                                5
+                                              ],
+                                              "text": "Color",
+                                              "resolvedSymbol": "s49"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            2957,
+                                            16
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyColorClass",
+                                          "resolvedSymbol": "s50"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        2979,
+                                        21
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            2979,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                2979,
+                                                4
+                                              ],
+                                              "text": "List",
+                                              "resolvedSymbol": "s51"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            2985,
+                                            15
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyListClass",
+                                          "resolvedSymbol": "s52"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        3006,
+                                        19
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            3006,
+                                            4
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                3006,
+                                                3
+                                              ],
+                                              "text": "Map",
+                                              "resolvedSymbol": "s53"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            3011,
+                                            14
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyMapClass",
+                                          "resolvedSymbol": "s54"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        3031,
+                                        21
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            3031,
+                                            5
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                3031,
+                                                4
+                                              ],
+                                              "text": "Null",
+                                              "resolvedSymbol": "s55"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            3037,
+                                            15
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyNullClass",
+                                          "resolvedSymbol": "s56"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        3058,
+                                        25
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            3058,
+                                            7
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                3058,
+                                                6
+                                              ],
+                                              "text": "Number",
+                                              "resolvedSymbol": "s57"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            3066,
+                                            17
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyNumberClass",
+                                          "resolvedSymbol": "s58"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        3089,
+                                        25
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            3089,
+                                            7
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                3089,
+                                                6
+                                              ],
+                                              "text": "String",
+                                              "resolvedSymbol": "s59"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            3097,
+                                            17
+                                          ],
+                                          "type": "t18",
+                                          "text": "legacyStringClass",
+                                          "resolvedSymbol": "s60"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "NamedExpressionImpl",
+                                      "pos": [
+                                        3120,
+                                        19
+                                      ],
+                                      "type": "t18",
+                                      "children": [
+                                        {
+                                          "kind": "LabelImpl",
+                                          "pos": [
+                                            3120,
+                                            6
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                3120,
+                                                5
+                                              ],
+                                              "text": "Error",
+                                              "resolvedSymbol": "s61"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            3127,
+                                            12
+                                          ],
+                                          "type": "t18",
+                                          "text": "jsErrorClass",
+                                          "resolvedSymbol": "s62"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        3148,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            3148,
+                            23
+                          ],
+                          "type": "t19",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                3148,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    3148,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    3156,
+                                    4
+                                  ],
+                                  "text": "NULL"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3163,
+                                8
+                              ],
+                              "type": "t19",
+                              "text": "sassNull",
+                              "resolvedSymbol": "s24"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        3175,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            3175,
+                            23
+                          ],
+                          "type": "t20",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                3175,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    3175,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    3183,
+                                    4
+                                  ],
+                                  "text": "TRUE"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3190,
+                                8
+                              ],
+                              "type": "t20",
+                              "text": "sassTrue",
+                              "resolvedSymbol": "s25"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        3202,
+                        26
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            3202,
+                            25
+                          ],
+                          "type": "t20",
+                          "children": [
+                            {
+                              "kind": "PrefixedIdentifierImpl",
+                              "pos": [
+                                3202,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    3202,
+                                    7
+                                  ],
+                                  "type": "t3",
+                                  "text": "exports",
+                                  "resolvedSymbol": "s1"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    3210,
+                                    5
+                                  ],
+                                  "text": "FALSE"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3218,
+                                9
+                              ],
+                              "type": "t20",
+                              "text": "sassFalse",
+                              "resolvedSymbol": "s26"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "main",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t0"
+    },
+    "s1": {
+      "name": "exports",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t3"
+    },
+    "s2": {
+      "name": "allowInteropNamed",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t6"
+    },
+    "s3": {
+      "name": "compile",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t9"
+    },
+    "s4": {
+      "name": "compileString",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t9"
+    },
+    "s5": {
+      "name": "compileAsync",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t13"
+    },
+    "s6": {
+      "name": "compileStringAsync",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t13"
+    },
+    "s7": {
+      "name": "initCompiler",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t16"
+    },
+    "s8": {
+      "name": "initAsyncCompiler",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t13"
+    },
+    "s9": {
+      "name": "compilerClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s10": {
+      "name": "asyncCompilerClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s11": {
+      "name": "valueClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s12": {
+      "name": "booleanClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s13": {
+      "name": "argumentListClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s14": {
+      "name": "calculationClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s15": {
+      "name": "calculationOperationClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s16": {
+      "name": "calculationInterpolationClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s17": {
+      "name": "colorClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s18": {
+      "name": "functionClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s19": {
+      "name": "mixinClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s20": {
+      "name": "listClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s21": {
+      "name": "mapClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s22": {
+      "name": "numberClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s23": {
+      "name": "stringClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s24": {
+      "name": "sassNull",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t19"
+    },
+    "s25": {
+      "name": "sassTrue",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t20"
+    },
+    "s26": {
+      "name": "sassFalse",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t20"
+    },
+    "s27": {
+      "name": "exceptionClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s30": {
+      "name": "LoggerNamespace",
+      "flags": []
+    },
+    "s29": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t21",
+      "parent": "s30"
+    },
+    "s28": {
+      "name": "silent",
+      "flags": [],
+      "parent": "s29",
+      "isNullable": false
+    },
+    "s33": {
+      "name": "JSLogger",
+      "flags": []
+    },
+    "s32": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t22",
+      "parent": "s33"
+    },
+    "s31": {
+      "name": "warn",
+      "flags": [],
+      "parent": "s32",
+      "isNullable": true
+    },
+    "s34": {
+      "name": "debug",
+      "flags": [],
+      "parent": "s32",
+      "isNullable": true
+    },
+    "s35": {
+      "name": "nodePackageImporterClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s36": {
+      "name": "deprecations",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t27"
+    },
+    "s37": {
+      "name": "versionClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s38": {
+      "name": "loadParserExports",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t30"
+    },
+    "s40": {
+      "name": "String",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s39": {
+      "name": "fromEnvironment",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t5",
+      "parent": "s40"
+    },
+    "s41": {
+      "name": "updateCanonicalizeContextPrototype",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t0"
+    },
+    "s42": {
+      "name": "updateSourceSpanPrototype",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t0"
+    },
+    "s43": {
+      "name": "render",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t0"
+    },
+    "s44": {
+      "name": "renderSync",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t37"
+    },
+    "s47": {
+      "name": "Types",
+      "flags": []
+    },
+    "s46": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t38",
+      "parent": "s47"
+    },
+    "s45": {
+      "name": "Boolean",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s48": {
+      "name": "legacyBooleanClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s49": {
+      "name": "Color",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s50": {
+      "name": "legacyColorClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s51": {
+      "name": "List",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s52": {
+      "name": "legacyListClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s53": {
+      "name": "Map",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s54": {
+      "name": "legacyMapClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s55": {
+      "name": "Null",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s56": {
+      "name": "legacyNullClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s57": {
+      "name": "Number",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s58": {
+      "name": "legacyNumberClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s59": {
+      "name": "String",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s60": {
+      "name": "legacyStringClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    },
+    "s61": {
+      "name": "Error",
+      "flags": [],
+      "parent": "s46",
+      "isNullable": true
+    },
+    "s62": {
+      "name": "jsErrorClass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t18"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t1": {
+      "kind": "function",
+      "text": "void Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t0"
+    },
+    "t2": {
+      "kind": "Function",
+      "text": "Function",
+      "isNullable": false
+    },
+    "t3": {
+      "kind": "Exports",
+      "text": "Exports",
+      "isNullable": false
+    },
+    "t5": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t6": {
+      "kind": "typeParameter",
+      "text": "T",
+      "isNullable": false,
+      "bound": "t2"
+    },
+    "t4": {
+      "kind": "function",
+      "text": "T Function<T extends Function>(String, T)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "function",
+          "type": "t6",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t6"
+    },
+    "t8": {
+      "kind": "CompileOptions",
+      "text": "CompileOptions?",
+      "isNullable": true
+    },
+    "t9": {
+      "kind": "NodeCompileResult",
+      "text": "NodeCompileResult",
+      "isNullable": false
+    },
+    "t7": {
+      "kind": "function",
+      "text": "NodeCompileResult Function(String, [CompileOptions?])",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "path",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t8",
+          "isNamed": false,
+          "isOptional": true,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t9"
+    },
+    "t11": {
+      "kind": "CompileStringOptions",
+      "text": "CompileStringOptions?",
+      "isNullable": true
+    },
+    "t10": {
+      "kind": "function",
+      "text": "NodeCompileResult Function(String, [CompileStringOptions?])",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "text",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t11",
+          "isNamed": false,
+          "isOptional": true,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t9"
+    },
+    "t13": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t12": {
+      "kind": "function",
+      "text": "InvalidType Function(String, [CompileOptions?])",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "path",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t8",
+          "isNamed": false,
+          "isOptional": true,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t13"
+    },
+    "t14": {
+      "kind": "function",
+      "text": "InvalidType Function(String, [CompileStringOptions?])",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "text",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t11",
+          "isNamed": false,
+          "isOptional": true,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t13"
+    },
+    "t16": {
+      "kind": "Compiler",
+      "text": "Compiler",
+      "isNullable": false
+    },
+    "t15": {
+      "kind": "function",
+      "text": "Compiler Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t16"
+    },
+    "t17": {
+      "kind": "function",
+      "text": "InvalidType Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t13"
+    },
+    "t18": {
+      "kind": "JSClass",
+      "text": "JSClass",
+      "isNullable": false
+    },
+    "t19": {
+      "kind": "Value",
+      "text": "Value",
+      "isNullable": false
+    },
+    "t20": {
+      "kind": "SassBoolean",
+      "text": "SassBoolean",
+      "isNullable": false
+    },
+    "t21": {
+      "kind": "LoggerNamespace",
+      "text": "LoggerNamespace",
+      "isNullable": false
+    },
+    "t22": {
+      "kind": "JSLogger",
+      "text": "JSLogger",
+      "isNullable": false
+    },
+    "t24": {
+      "kind": "WarnOptions",
+      "text": "WarnOptions",
+      "isNullable": false
+    },
+    "t23": {
+      "kind": "function",
+      "text": "void Function(String, WarnOptions)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t24",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t0"
+    },
+    "t26": {
+      "kind": "DebugOptions",
+      "text": "DebugOptions",
+      "isNullable": false
+    },
+    "t25": {
+      "kind": "function",
+      "text": "void Function(String, DebugOptions)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t26",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t0"
+    },
+    "t28": {
+      "kind": "Deprecation",
+      "text": "Deprecation?",
+      "isNullable": true
+    },
+    "t27": {
+      "kind": "Map",
+      "text": "Map<String, Deprecation?>",
+      "isNullable": false,
+      "typeArguments": [
+        "t5",
+        "t28"
+      ]
+    },
+    "t30": {
+      "kind": "ParserExports",
+      "text": "ParserExports",
+      "isNullable": false
+    },
+    "t29": {
+      "kind": "function",
+      "text": "ParserExports Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t30"
+    },
+    "t32": {
+      "kind": "RenderOptions",
+      "text": "RenderOptions",
+      "isNullable": false
+    },
+    "t34": {
+      "kind": "Object",
+      "text": "Object?",
+      "isNullable": true
+    },
+    "t35": {
+      "kind": "RenderResult",
+      "text": "RenderResult?",
+      "isNullable": true
+    },
+    "t33": {
+      "kind": "function",
+      "text": "void Function(Object?, RenderResult?)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "error",
+          "type": "t34",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "result",
+          "type": "t35",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t0"
+    },
+    "t31": {
+      "kind": "function",
+      "text": "void Function(RenderOptions, void Function(Object?, RenderResult?))",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t32",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "callback",
+          "type": "t33",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t0"
+    },
+    "t37": {
+      "kind": "RenderResult",
+      "text": "RenderResult",
+      "isNullable": false
+    },
+    "t36": {
+      "kind": "function",
+      "text": "RenderResult Function(RenderOptions)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "options",
+          "type": "t32",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t37"
+    },
+    "t38": {
+      "kind": "Types",
+      "text": "Types",
+      "isNullable": false
+    }
+  }
+}

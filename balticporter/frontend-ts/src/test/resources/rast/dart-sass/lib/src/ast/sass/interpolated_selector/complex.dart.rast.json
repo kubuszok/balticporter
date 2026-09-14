@@ -1,0 +1,1097 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/interpolated_selector/complex.dart",
+  "sha256": "3113cdf94fd28022c45ac1c0435361ea8b8bcedbd9cfd277e926b8e0bf8bd73c",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        425,
+        1259
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            425,
+            230
+          ],
+          "children": [
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                498,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    498,
+                    15
+                  ],
+                  "text": "ComplexSelector",
+                  "resolvedSymbol": "s1"
+                }
+              ]
+            },
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                613,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "PrefixedIdentifierImpl",
+                  "pos": [
+                    613,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        613,
+                        10
+                      ],
+                      "text": "Stylesheet"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        624,
+                        5
+                      ],
+                      "text": "parse"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ExtendsClauseImpl",
+          "pos": [
+            696,
+            28
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                704,
+                20
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            729,
+            185
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                729,
+                136
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                868,
+                45
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    874,
+                    21
+                  ],
+                  "children": [
+                    {
+                      "kind": "TypeArgumentListImpl",
+                      "pos": [
+                        882,
+                        12
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            883,
+                            10
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    896,
+                    17
+                  ],
+                  "symbol": "s2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            918,
+            167
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                918,
+                104
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    990,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        990,
+                        18
+                      ],
+                      "text": "leadingCombinators"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                1025,
+                59
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    1031,
+                    42
+                  ],
+                  "children": [
+                    {
+                      "kind": "TypeArgumentListImpl",
+                      "pos": [
+                        1035,
+                        38
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            1036,
+                            36
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    1074,
+                    10
+                  ],
+                  "symbol": "s3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            1089,
+            20
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                1089,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    1095,
+                    8
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    1104,
+                    4
+                  ],
+                  "symbol": "s4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            1113,
+            368
+          ],
+          "symbol": "s5",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                1113,
+                27
+              ],
+              "text": "InterpolatedComplexSelector",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1140,
+                109
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1148,
+                    57
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1148,
+                        46
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeArgumentListImpl",
+                          "pos": [
+                            1156,
+                            38
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                1157,
+                                36
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    1207,
+                    9
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    1225,
+                    22
+                  ],
+                  "children": [
+                    {
+                      "kind": "FieldFormalParameterImpl",
+                      "pos": [
+                        1225,
+                        22
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                1258,
+                42
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1258,
+                    10
+                  ],
+                  "text": "components",
+                  "resolvedSymbol": "s3"
+                },
+                {
+                  "kind": "InstanceCreationExpressionImpl",
+                  "pos": [
+                    1271,
+                    29
+                  ],
+                  "type": "t1",
+                  "children": [
+                    {
+                      "kind": "ConstructorNameImpl",
+                      "pos": [
+                        1271,
+                        17
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            1271,
+                            4
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1276,
+                            12
+                          ],
+                          "text": "unmodifiable",
+                          "resolvedSymbol": "s6"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1288,
+                        12
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1289,
+                            10
+                          ],
+                          "type": "t5",
+                          "text": "components",
+                          "resolvedSymbol": "s8"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                1301,
+                180
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    1301,
+                    180
+                  ],
+                  "children": [
+                    {
+                      "kind": "IfStatementImpl",
+                      "pos": [
+                        1307,
+                        170
+                      ],
+                      "children": [
+                        {
+                          "kind": "BinaryExpressionImpl",
+                          "pos": [
+                            1311,
+                            52
+                          ],
+                          "type": "t6",
+                          "children": [
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                1311,
+                                25
+                              ],
+                              "type": "t6",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1311,
+                                    17
+                                  ],
+                                  "type": "t7",
+                                  "text": "leadingCombinator",
+                                  "resolvedSymbol": "s9"
+                                },
+                                {
+                                  "kind": "NullLiteralImpl",
+                                  "pos": [
+                                    1332,
+                                    4
+                                  ],
+                                  "type": "t9"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "PropertyAccessImpl",
+                              "pos": [
+                                1340,
+                                23
+                              ],
+                              "type": "t6",
+                              "children": [
+                                {
+                                  "kind": "PropertyAccessImpl",
+                                  "pos": [
+                                    1340,
+                                    15
+                                  ],
+                                  "type": "t1",
+                                  "children": [
+                                    {
+                                      "kind": "ThisExpressionImpl",
+                                      "pos": [
+                                        1340,
+                                        4
+                                      ],
+                                      "type": "t0"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1345,
+                                        10
+                                      ],
+                                      "type": "t1",
+                                      "text": "components",
+                                      "resolvedSymbol": "s10"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1356,
+                                    7
+                                  ],
+                                  "type": "t6",
+                                  "text": "isEmpty",
+                                  "resolvedSymbol": "s11"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "BlockImpl",
+                          "pos": [
+                            1365,
+                            112
+                          ],
+                          "children": [
+                            {
+                              "kind": "ExpressionStatementImpl",
+                              "pos": [
+                                1373,
+                                98
+                              ],
+                              "children": [
+                                {
+                                  "kind": "ThrowExpressionImpl",
+                                  "pos": [
+                                    1373,
+                                    97
+                                  ],
+                                  "type": "t10",
+                                  "children": [
+                                    {
+                                      "kind": "InstanceCreationExpressionImpl",
+                                      "pos": [
+                                        1379,
+                                        91
+                                      ],
+                                      "type": "t11",
+                                      "children": [
+                                        {
+                                          "kind": "ConstructorNameImpl",
+                                          "pos": [
+                                            1379,
+                                            13
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "NamedTypeImpl",
+                                              "pos": [
+                                                1379,
+                                                13
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "ArgumentListImpl",
+                                          "pos": [
+                                            1392,
+                                            78
+                                          ],
+                                          "children": [
+                                            {
+                                              "kind": "SimpleStringLiteralImpl",
+                                              "pos": [
+                                                1402,
+                                                59
+                                              ],
+                                              "type": "t12",
+                                              "value": "components may not be empty if leadingCombinator is null."
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1485,
+            151
+          ],
+          "symbol": "s13",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1485,
+                52
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    1528,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1528,
+                        7
+                      ],
+                      "text": "visitor",
+                      "resolvedSymbol": "s14"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1540,
+                1
+              ]
+            },
+            {
+              "kind": "TypeParameterListImpl",
+              "pos": [
+                1548,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "TypeParameterImpl",
+                  "pos": [
+                    1549,
+                    1
+                  ],
+                  "symbol": "s15"
+                }
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1551,
+                40
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1552,
+                    38
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1552,
+                        30
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeArgumentListImpl",
+                          "pos": [
+                            1579,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                1580,
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1592,
+                44
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1601,
+                    34
+                  ],
+                  "type": "t13",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1601,
+                        7
+                      ],
+                      "type": "t14",
+                      "text": "visitor",
+                      "resolvedSymbol": "s14"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1609,
+                        20
+                      ],
+                      "type": "t15",
+                      "text": "visitComplexSelector",
+                      "resolvedSymbol": "s16"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1629,
+                        6
+                      ],
+                      "children": [
+                        {
+                          "kind": "ThisExpressionImpl",
+                          "pos": [
+                            1630,
+                            4
+                          ],
+                          "type": "t0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1640,
+            42
+          ],
+          "symbol": "s18",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1640,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1655,
+                2
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1658,
+                24
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1661,
+                    20
+                  ],
+                  "type": "t12",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1661,
+                        10
+                      ],
+                      "type": "t1",
+                      "text": "components",
+                      "resolvedSymbol": "s10"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1672,
+                        4
+                      ],
+                      "type": "t16",
+                      "text": "join",
+                      "resolvedSymbol": "s19"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1676,
+                        5
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1677,
+                            3
+                          ],
+                          "type": "t12",
+                          "value": " "
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "InterpolatedComplexSelector",
+      "flags": []
+    },
+    "s1": {
+      "name": "ComplexSelector",
+      "flags": []
+    },
+    "s2": {
+      "name": "leadingCombinator",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "components",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "span",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "List",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s6": {
+      "name": "unmodifiable",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t3",
+      "parent": "s7"
+    },
+    "s8": {
+      "name": "components",
+      "flags": [],
+      "parent": "s5",
+      "isNullable": false
+    },
+    "s9": {
+      "name": "leadingCombinator",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t7",
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "components",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s12": {
+      "name": "Iterable",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s11": {
+      "name": "isEmpty",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t6",
+      "parent": "s12"
+    },
+    "s13": {
+      "name": "accept",
+      "flags": [],
+      "declarationType": "t13",
+      "parent": "s0"
+    },
+    "s14": {
+      "name": "visitor",
+      "flags": [],
+      "parent": "s13",
+      "isNullable": false
+    },
+    "s15": {
+      "name": "T",
+      "flags": [],
+      "parent": "s13"
+    },
+    "s17": {
+      "name": "InterpolatedSelectorVisitor",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s16": {
+      "name": "visitComplexSelector",
+      "flags": [],
+      "declarationType": "t13",
+      "parent": "s17"
+    },
+    "s18": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t12",
+      "parent": "s0"
+    },
+    "s19": {
+      "name": "join",
+      "flags": [],
+      "declarationType": "t12",
+      "parent": "s12"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "InterpolatedComplexSelector",
+      "text": "InterpolatedComplexSelector",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "InterpolatedComplexSelectorComponent",
+      "text": "InterpolatedComplexSelectorComponent",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "List",
+      "text": "List<InterpolatedComplexSelectorComponent>",
+      "isNullable": false,
+      "typeArguments": [
+        "t2"
+      ]
+    },
+    "t4": {
+      "kind": "dynamic",
+      "text": "dynamic"
+    },
+    "t3": {
+      "kind": "List",
+      "text": "List<dynamic>",
+      "isNullable": false,
+      "typeArguments": [
+        "t4"
+      ]
+    },
+    "t5": {
+      "kind": "Iterable",
+      "text": "Iterable<InterpolatedComplexSelectorComponent>",
+      "isNullable": false,
+      "typeArguments": [
+        "t2"
+      ]
+    },
+    "t6": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t8": {
+      "kind": "Combinator",
+      "text": "Combinator",
+      "isNullable": false
+    },
+    "t7": {
+      "kind": "CssValue",
+      "text": "CssValue<Combinator>?",
+      "isNullable": true,
+      "typeArguments": [
+        "t8"
+      ]
+    },
+    "t9": {
+      "kind": "Null",
+      "text": "Null",
+      "isNullable": false
+    },
+    "t10": {
+      "kind": "Never",
+      "text": "Never"
+    },
+    "t11": {
+      "kind": "ArgumentError",
+      "text": "ArgumentError",
+      "isNullable": false
+    },
+    "t12": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t13": {
+      "kind": "typeParameter",
+      "text": "T",
+      "isNullable": false,
+      "bound": "t4"
+    },
+    "t14": {
+      "kind": "InterpolatedSelectorVisitor",
+      "text": "InterpolatedSelectorVisitor<T>",
+      "isNullable": false,
+      "typeArguments": [
+        "t13"
+      ]
+    },
+    "t15": {
+      "kind": "function",
+      "text": "T Function(InterpolatedComplexSelector)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "complex",
+          "type": "t0",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t13"
+    },
+    "t16": {
+      "kind": "function",
+      "text": "String Function([String])",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "separator",
+          "type": "t12",
+          "isNamed": false,
+          "isOptional": true,
+          "hasDefault": true
+        }
+      ],
+      "returnType": "t12"
+    }
+  }
+}

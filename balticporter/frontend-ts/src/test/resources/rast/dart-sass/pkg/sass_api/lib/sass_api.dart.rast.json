@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/pkg/sass_api/lib/sass_api.dart",
+  "sha256": "e7331f62778674955d370283b11bcb023cae7acb72b486325a341a7b99f7b65f",
+  "nodes": [
+    {
+      "kind": "FunctionDeclarationImpl",
+      "pos": [
+        1419,
+        215
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            1419,
+            146
+          ],
+          "children": [
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                1431,
+                4
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1431,
+                    4
+                  ],
+                  "text": "text",
+                  "resolvedSymbol": "s1"
+                }
+              ]
+            },
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                1499,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1499,
+                    19
+                  ],
+                  "text": "SassFormatException"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "NamedTypeImpl",
+          "pos": [
+            1566,
+            6
+          ]
+        },
+        {
+          "kind": "FunctionExpressionImpl",
+          "pos": [
+            1588,
+            46
+          ],
+          "type": "t1",
+          "children": [
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1588,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1589,
+                    11
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1589,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1602,
+                32
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1605,
+                    28
+                  ],
+                  "type": "t2",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1605,
+                        6
+                      ],
+                      "type": "t2",
+                      "text": "Parser"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1612,
+                        15
+                      ],
+                      "type": "t2",
+                      "text": "parseIdentifier"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1627,
+                        6
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1628,
+                            4
+                          ],
+                          "type": "t0",
+                          "text": "text",
+                          "resolvedSymbol": "s1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclarationImpl",
+      "pos": [
+        1636,
+        142
+      ],
+      "symbol": "s2",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            1636,
+            81
+          ],
+          "children": [
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                1657,
+                4
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1657,
+                    4
+                  ],
+                  "text": "text",
+                  "resolvedSymbol": "s3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "NamedTypeImpl",
+          "pos": [
+            1718,
+            4
+          ]
+        },
+        {
+          "kind": "FunctionExpressionImpl",
+          "pos": [
+            1735,
+            43
+          ],
+          "type": "t4",
+          "children": [
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1735,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1736,
+                    11
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1736,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1749,
+                29
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    1752,
+                    25
+                  ],
+                  "type": "t2",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1752,
+                        6
+                      ],
+                      "type": "t2",
+                      "text": "Parser"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1759,
+                        12
+                      ],
+                      "type": "t2",
+                      "text": "isIdentifier"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1771,
+                        6
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1772,
+                            4
+                          ],
+                          "type": "t0",
+                          "text": "text",
+                          "resolvedSymbol": "s3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "parseIdentifier",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t0"
+    },
+    "s1": {
+      "name": "text",
+      "flags": [],
+      "parent": "s0",
+      "isNullable": false
+    },
+    "s2": {
+      "name": "isIdentifier",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t3"
+    },
+    "s3": {
+      "name": "text",
+      "flags": [],
+      "parent": "s2",
+      "isNullable": false
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "function",
+      "text": "String Function(String)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "text",
+          "type": "t0",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t0"
+    },
+    "t2": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t3": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t4": {
+      "kind": "function",
+      "text": "bool Function(String)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "text",
+          "type": "t0",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t3"
+    }
+  }
+}

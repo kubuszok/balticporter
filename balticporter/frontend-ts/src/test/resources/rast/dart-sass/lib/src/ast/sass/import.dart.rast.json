@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/import.dart",
+  "sha256": "2f9343ff03a7225472768bdc0bcd7bb311f931fe47194e324c2b6f970b5f3a49",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        199,
+        136
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            199,
+            81
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            313,
+            19
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                324,
+                8
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Import",
+      "flags": [
+        "abstract"
+      ]
+    }
+  },
+  "types": {}
+}

@@ -1,0 +1,5859 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/deprecation.dart",
+  "sha256": "cc924ef1860c218acfebdd211ab43401604f02e0d371cecddd3a1afb41c5855d",
+  "nodes": [
+    {
+      "kind": "EnumDeclarationImpl",
+      "pos": [
+        333,
+        8797
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            333,
+            41
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            622,
+            182
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                622,
+                61
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                696,
+                108
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    696,
+                    108
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        697,
+                        13
+                      ],
+                      "type": "t0",
+                      "value": "call-string"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        718,
+                        21
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            718,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                718,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            732,
+                            7
+                          ],
+                          "type": "t0",
+                          "value": "0.0.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        747,
+                        56
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            747,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                747,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            760,
+                            43
+                          ],
+                          "type": "t0",
+                          "value": "Passing a string directly to meta.call()."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            809,
+            95
+          ],
+          "symbol": "s5",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                809,
+                28
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                846,
+                58
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    846,
+                    58
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        847,
+                        8
+                      ],
+                      "type": "t0",
+                      "value": "elseif"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        857,
+                        21
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            857,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                857,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            871,
+                            7
+                          ],
+                          "type": "t0",
+                          "value": "1.3.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        880,
+                        23
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            880,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                880,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            893,
+                            10
+                          ],
+                          "type": "t0",
+                          "value": "@elseif."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            909,
+            126
+          ],
+          "symbol": "s6",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                909,
+                35
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                958,
+                77
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    958,
+                    77
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        959,
+                        14
+                      ],
+                      "type": "t0",
+                      "value": "moz-document"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        981,
+                        21
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            981,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                981,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            995,
+                            7
+                          ],
+                          "type": "t0",
+                          "value": "1.7.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1004,
+                        30
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1004,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1004,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1017,
+                            17
+                          ],
+                          "type": "t0",
+                          "value": "@-moz-document."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            1040,
+            191
+          ],
+          "symbol": "s7",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1040,
+                58
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                1118,
+                113
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    1118,
+                    113
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        1119,
+                        20
+                      ],
+                      "type": "t0",
+                      "value": "relative-canonical"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1147,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1147,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1147,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1161,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.14.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1177,
+                        53
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1177,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1177,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1190,
+                            40
+                          ],
+                          "type": "t0",
+                          "value": "Imports using relative canonical URLs."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            1236,
+            173
+          ],
+          "symbol": "s8",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1236,
+                57
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                1305,
+                104
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    1305,
+                    104
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        1306,
+                        12
+                      ],
+                      "type": "t0",
+                      "value": "new-global"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1326,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1326,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1326,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1340,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.17.2"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1356,
+                        52
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1356,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1356,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1369,
+                            39
+                          ],
+                          "type": "t0",
+                          "value": "Declaring new variables with !global."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            1414,
+            248
+          ],
+          "symbol": "s9",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1414,
+                81
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                1515,
+                147
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    1515,
+                    147
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        1516,
+                        21
+                      ],
+                      "type": "t0",
+                      "value": "color-module-compat"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1545,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1545,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1545,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1559,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.23.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1575,
+                        86
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1575,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1575,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1598,
+                            63
+                          ],
+                          "type": "t0",
+                          "value": "Using color module functions in place of plain CSS functions."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            1667,
+            139
+          ],
+          "symbol": "s10",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1667,
+                44
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                1722,
+                84
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    1722,
+                    84
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        1723,
+                        11
+                      ],
+                      "type": "t0",
+                      "value": "slash-div"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1742,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1742,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1742,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1756,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.33.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1766,
+                        39
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1766,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1766,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1779,
+                            26
+                          ],
+                          "type": "t0",
+                          "value": "/ operator for division."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            1811,
+            201
+          ],
+          "symbol": "s11",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1811,
+                64
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                1894,
+                118
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    1894,
+                    118
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        1895,
+                        19
+                      ],
+                      "type": "t0",
+                      "value": "bogus-combinators"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1922,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1922,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1922,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1936,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.54.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        1952,
+                        59
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            1952,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1952,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            1965,
+                            46
+                          ],
+                          "type": "t0",
+                          "value": "Leading, trailing, and repeated combinators."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            2017,
+            153
+          ],
+          "symbol": "s12",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                2017,
+                48
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                2079,
+                91
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    2079,
+                    91
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        2080,
+                        14
+                      ],
+                      "type": "t0",
+                      "value": "strict-unary"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2102,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2102,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2102,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2116,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.55.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2126,
+                        43
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2126,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2126,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2139,
+                            30
+                          ],
+                          "type": "t0",
+                          "value": "Ambiguous + and - operators."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            2175,
+            195
+          ],
+          "symbol": "s13",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                2175,
+                64
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                2255,
+                115
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    2255,
+                    115
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        2256,
+                        16
+                      ],
+                      "type": "t0",
+                      "value": "function-units"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2280,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2280,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2280,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2294,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.56.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2310,
+                        59
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2310,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2310,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2323,
+                            46
+                          ],
+                          "type": "t0",
+                          "value": "Passing invalid units to built-in functions."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            2375,
+            242
+          ],
+          "symbol": "s14",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                2375,
+                78
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                2473,
+                144
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    2473,
+                    144
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        2474,
+                        21
+                      ],
+                      "type": "t0",
+                      "value": "duplicate-var-flags"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2503,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2503,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2503,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2517,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.62.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2533,
+                        83
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2533,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2533,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2556,
+                            60
+                          ],
+                          "type": "t0",
+                          "value": "Using !default or !global multiple times for one variable."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            2622,
+            212
+          ],
+          "symbol": "s15",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                2622,
+                76
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                2710,
+                124
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    2710,
+                    124
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        2711,
+                        12
+                      ],
+                      "type": "t0",
+                      "value": "null-alpha"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2731,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2731,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2731,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2745,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.62.3"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2761,
+                        72
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2761,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2761,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "StringInterpolationImpl",
+                          "pos": [
+                            2774,
+                            59
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "InterpolationStringImpl",
+                              "pos": [
+                                2774,
+                                30
+                              ]
+                            },
+                            {
+                              "kind": "InterpolationExpressionImpl",
+                              "pos": [
+                                2804,
+                                23
+                              ],
+                              "children": [
+                                {
+                                  "kind": "ConditionalExpressionImpl",
+                                  "pos": [
+                                    2806,
+                                    20
+                                  ],
+                                  "type": "t0",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        2806,
+                                        4
+                                      ],
+                                      "type": "t2",
+                                      "text": "isJS"
+                                    },
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        2813,
+                                        4
+                                      ],
+                                      "type": "t0",
+                                      "value": "JS"
+                                    },
+                                    {
+                                      "kind": "SimpleStringLiteralImpl",
+                                      "pos": [
+                                        2820,
+                                        6
+                                      ],
+                                      "type": "t0",
+                                      "value": "Dart"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "InterpolationStringImpl",
+                              "pos": [
+                                2827,
+                                6
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            2839,
+            195
+          ],
+          "symbol": "s16",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                2839,
+                67
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                2919,
+                115
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    2919,
+                    115
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        2920,
+                        13
+                      ],
+                      "type": "t0",
+                      "value": "abs-percent"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2941,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2941,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2941,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2955,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.65.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        2971,
+                        62
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            2971,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                2971,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            2984,
+                            49
+                          ],
+                          "type": "t0",
+                          "value": "Passing percentages to the Sass abs() function."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            3039,
+            240
+          ],
+          "symbol": "s17",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                3039,
+                81
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                3136,
+                143
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    3136,
+                    143
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        3137,
+                        17
+                      ],
+                      "type": "t0",
+                      "value": "fs-importer-cwd"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3162,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3162,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3162,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3176,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.73.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3192,
+                        86
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3192,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3192,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3215,
+                            63
+                          ],
+                          "type": "t0",
+                          "value": "Using the current working directory as an implicit load path."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            3284,
+            228
+          ],
+          "symbol": "s18",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                3284,
+                63
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                3366,
+                146
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    3366,
+                    146
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        3367,
+                        20
+                      ],
+                      "type": "t0",
+                      "value": "css-function-mixin"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3395,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3395,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3395,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3409,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.76.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3425,
+                        20
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3425,
+                            11
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3425,
+                                10
+                              ],
+                              "text": "obsoleteIn",
+                              "resolvedSymbol": "s19"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3437,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.94.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3453,
+                        58
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3453,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3453,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3466,
+                            45
+                          ],
+                          "type": "t0",
+                          "value": "Function and mixin names beginning with --."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            3517,
+            215
+          ],
+          "symbol": "s20",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                3517,
+                63
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                3593,
+                139
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    3593,
+                    139
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        3594,
+                        13
+                      ],
+                      "type": "t0",
+                      "value": "mixed-decls"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3615,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3615,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3615,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3629,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.77.7"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3645,
+                        20
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3645,
+                            11
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3645,
+                                10
+                              ],
+                              "text": "obsoleteIn",
+                              "resolvedSymbol": "s19"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3657,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.92.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3673,
+                        58
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3673,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3673,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3686,
+                            45
+                          ],
+                          "type": "t0",
+                          "value": "Declarations after or between nested rules."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            3737,
+            139
+          ],
+          "symbol": "s21",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                3737,
+                39
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                3792,
+                84
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    3792,
+                    84
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        3793,
+                        16
+                      ],
+                      "type": "t0",
+                      "value": "feature-exists"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3817,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3817,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3817,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3831,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.78.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3841,
+                        34
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3841,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3841,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3854,
+                            21
+                          ],
+                          "type": "t0",
+                          "value": "meta.feature-exists"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            3881,
+            192
+          ],
+          "symbol": "s22",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                3881,
+                66
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                3959,
+                114
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    3959,
+                    114
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        3960,
+                        13
+                      ],
+                      "type": "t0",
+                      "value": "color-4-api"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        3981,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            3981,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                3981,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            3995,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.79.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4011,
+                        61
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4011,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4011,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4024,
+                            48
+                          ],
+                          "type": "t0",
+                          "value": "Certain uses of built-in sass:color functions."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            4078,
+            211
+          ],
+          "symbol": "s23",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                4078,
+                71
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                4166,
+                123
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    4166,
+                    123
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        4167,
+                        17
+                      ],
+                      "type": "t0",
+                      "value": "color-functions"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4192,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4192,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4192,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4206,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.79.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4222,
+                        66
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4222,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4222,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4235,
+                            53
+                          ],
+                          "type": "t0",
+                          "value": "Using global color functions instead of sass:color."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            4294,
+            126
+          ],
+          "symbol": "s24",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                4294,
+                34
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                4342,
+                78
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    4342,
+                    78
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        4343,
+                        15
+                      ],
+                      "type": "t0",
+                      "value": "legacy-js-api"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4366,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4366,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4366,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4380,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.79.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4390,
+                        29
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4390,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4390,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4403,
+                            16
+                          ],
+                          "type": "t0",
+                          "value": "Legacy JS API."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            4425,
+            108
+          ],
+          "symbol": "s25",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                4425,
+                34
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                4468,
+                65
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    4468,
+                    65
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        4469,
+                        8
+                      ],
+                      "type": "t0",
+                      "value": "import"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4479,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4479,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4479,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4493,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.80.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4503,
+                        29
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4503,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4503,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4516,
+                            16
+                          ],
+                          "type": "t0",
+                          "value": "@import rules."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            4538,
+            241
+          ],
+          "symbol": "s26",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                4538,
+                82
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                4636,
+                143
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    4636,
+                    143
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        4637,
+                        16
+                      ],
+                      "type": "t0",
+                      "value": "global-builtin"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4661,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4661,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4661,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4675,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.80.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4691,
+                        87
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4691,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4691,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4714,
+                            64
+                          ],
+                          "type": "t0",
+                          "value": "Global built-in functions that are available in sass: modules."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            4784,
+            179
+          ],
+          "symbol": "s27",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                4784,
+                43
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                4842,
+                121
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    4842,
+                    121
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        4843,
+                        15
+                      ],
+                      "type": "t0",
+                      "value": "type-function"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4866,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4866,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4866,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4880,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.86.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4896,
+                        20
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4896,
+                            11
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4896,
+                                10
+                              ],
+                              "text": "obsoleteIn",
+                              "resolvedSymbol": "s19"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4908,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.92.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        4924,
+                        38
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            4924,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                4924,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            4937,
+                            25
+                          ],
+                          "type": "t0",
+                          "value": "Functions named \"type\"."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            4968,
+            215
+          ],
+          "symbol": "s28",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                4968,
+                62
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                5057,
+                126
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    5057,
+                    126
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        5058,
+                        29
+                      ],
+                      "type": "t0",
+                      "value": "compile-string-relative-url"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5095,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5095,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5095,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5109,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.88.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5125,
+                        57
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5125,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5125,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5138,
+                            44
+                          ],
+                          "type": "t0",
+                          "value": "Passing a relative url to compileString()."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            5188,
+            219
+          ],
+          "symbol": "s29",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                5188,
+                76
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                5280,
+                127
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    5280,
+                    127
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        5281,
+                        16
+                      ],
+                      "type": "t0",
+                      "value": "misplaced-rest"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5305,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5305,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5305,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5319,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.91.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5335,
+                        71
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5335,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5335,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5348,
+                            58
+                          ],
+                          "type": "t0",
+                          "value": "A rest parameter before a positional or named parameter."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            5412,
+            239
+          ],
+          "symbol": "s30",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                5412,
+                83
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                5509,
+                142
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    5509,
+                    142
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        5510,
+                        14
+                      ],
+                      "type": "t0",
+                      "value": "with-private"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5532,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5532,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5532,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5546,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.92.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5562,
+                        88
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5562,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5562,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5585,
+                            65
+                          ],
+                          "type": "t0",
+                          "value": "Configuring private variables in @use, @forward, or load-css()."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            5656,
+            215
+          ],
+          "symbol": "s31",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                5656,
+                77
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                5746,
+                125
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    5746,
+                    125
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        5747,
+                        13
+                      ],
+                      "type": "t0",
+                      "value": "if-function"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5768,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5768,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5768,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5782,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.95.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5798,
+                        72
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5798,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5798,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5811,
+                            59
+                          ],
+                          "type": "t0",
+                          "value": "The Sass if($condition, $if-true, $if-false) function."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            5876,
+            173
+          ],
+          "symbol": "s32",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                5876,
+                54
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                5945,
+                104
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    5945,
+                    104
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        5946,
+                        15
+                      ],
+                      "type": "t0",
+                      "value": "function-name"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5969,
+                        22
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5969,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5969,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            5983,
+                            8
+                          ],
+                          "type": "t0",
+                          "value": "1.98.0"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        5999,
+                        49
+                      ],
+                      "type": "t0",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            5999,
+                            12
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                5999,
+                                11
+                              ],
+                              "text": "description",
+                              "resolvedSymbol": "s4"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleStringLiteralImpl",
+                          "pos": [
+                            6012,
+                            36
+                          ],
+                          "type": "t0",
+                          "value": "Uppercase reserved function names."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            6083,
+            109
+          ],
+          "symbol": "s33",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                6083,
+                57
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                6155,
+                37
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    6155,
+                    37
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        6156,
+                        15
+                      ],
+                      "type": "t0",
+                      "value": "user-authored"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        6173,
+                        18
+                      ],
+                      "type": "t3",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            6173,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                6173,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "NullLiteralImpl",
+                          "pos": [
+                            6187,
+                            4
+                          ],
+                          "type": "t3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            6197,
+            109
+          ],
+          "symbol": "s34",
+          "children": [
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                6197,
+                61
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    6198,
+                    10
+                  ],
+                  "text": "Deprecated",
+                  "resolvedSymbol": "s35"
+                },
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    6208,
+                    50
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        6209,
+                        48
+                      ],
+                      "type": "t0",
+                      "value": "This deprecation name was never actually used."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                6271,
+                35
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    6271,
+                    35
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        6272,
+                        13
+                      ],
+                      "type": "t0",
+                      "value": "calc-interp"
+                    },
+                    {
+                      "kind": "NamedExpressionImpl",
+                      "pos": [
+                        6287,
+                        18
+                      ],
+                      "type": "t3",
+                      "children": [
+                        {
+                          "kind": "LabelImpl",
+                          "pos": [
+                            6287,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                6287,
+                                12
+                              ],
+                              "text": "deprecatedIn",
+                              "resolvedSymbol": "s2"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "NullLiteralImpl",
+                          "pos": [
+                            6301,
+                            4
+                          ],
+                          "type": "t3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            6311,
+            104
+          ],
+          "flags": [
+            "static",
+            "const"
+          ],
+          "children": [
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                6311,
+                45
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    6312,
+                    10
+                  ],
+                  "text": "Deprecated",
+                  "resolvedSymbol": "s35"
+                },
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    6322,
+                    34
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        6323,
+                        32
+                      ],
+                      "type": "t0",
+                      "value": "Use duplicateVarFlags instead."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                6366,
+                48
+              ],
+              "children": [
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    6372,
+                    42
+                  ],
+                  "symbol": "s36",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        6397,
+                        17
+                      ],
+                      "type": "t1",
+                      "text": "duplicateVarFlags",
+                      "resolvedSymbol": "s37"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            6419,
+            144
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                6419,
+                125
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                6547,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    6553,
+                    6
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    6560,
+                    2
+                  ],
+                  "symbol": "s38"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            6567,
+            224
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                6567,
+                193
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    6606,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        6606,
+                        12
+                      ],
+                      "text": "deprecatedIn",
+                      "resolvedSymbol": "s39"
+                    }
+                  ]
+                },
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    6660,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        6660,
+                        7
+                      ],
+                      "text": "Version"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                6763,
+                27
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    6769,
+                    7
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    6777,
+                    13
+                  ],
+                  "symbol": "s40"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            6795,
+            321
+          ],
+          "symbol": "s39",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                6795,
+                252
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                7050,
+                8
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                7076,
+                40
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    7079,
+                    36
+                  ],
+                  "type": "t2",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        7079,
+                        13
+                      ],
+                      "type": "t4",
+                      "text": "_deprecatedIn",
+                      "resolvedSymbol": "s41"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        7093,
+                        7
+                      ],
+                      "type": "t5",
+                      "text": "andThen",
+                      "resolvedSymbol": "s42"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        7100,
+                        15
+                      ],
+                      "children": [
+                        {
+                          "kind": "PrefixedIdentifierImpl",
+                          "pos": [
+                            7101,
+                            13
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                7101,
+                                7
+                              ],
+                              "type": "t2",
+                              "text": "Version"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                7109,
+                                5
+                              ],
+                              "type": "t2",
+                              "text": "parse"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            7120,
+            178
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                7120,
+                149
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                7272,
+                25
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    7278,
+                    7
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    7286,
+                    11
+                  ],
+                  "symbol": "s44"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            7302,
+            226
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                7302,
+                203
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                7508,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    7514,
+                    4
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    7519,
+                    8
+                  ],
+                  "symbol": "s45"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            7532,
+            220
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                7532,
+                191
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    7571,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        7571,
+                        10
+                      ],
+                      "text": "obsoleteIn",
+                      "resolvedSymbol": "s46"
+                    }
+                  ]
+                },
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    7623,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        7623,
+                        7
+                      ],
+                      "text": "Version"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                7726,
+                25
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    7732,
+                    7
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    7740,
+                    11
+                  ],
+                  "symbol": "s47"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            7756,
+            242
+          ],
+          "symbol": "s46",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                7756,
+                176
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                7935,
+                8
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                7959,
+                39
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    7962,
+                    35
+                  ],
+                  "type": "t2",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        7962,
+                        11
+                      ],
+                      "type": "t4",
+                      "text": "_obsoleteIn",
+                      "resolvedSymbol": "s48"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        7975,
+                        7
+                      ],
+                      "type": "t5",
+                      "text": "andThen",
+                      "resolvedSymbol": "s49"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        7982,
+                        15
+                      ],
+                      "children": [
+                        {
+                          "kind": "PrefixedIdentifierImpl",
+                          "pos": [
+                            7983,
+                            13
+                          ],
+                          "type": "t2",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                7983,
+                                7
+                              ],
+                              "type": "t2",
+                              "text": "Version"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                7991,
+                                5
+                              ],
+                              "type": "t2",
+                              "text": "parse"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            8002,
+            241
+          ],
+          "symbol": "s3",
+          "flags": [
+            "const"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                8002,
+                37
+              ]
+            },
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                8048,
+                11
+              ],
+              "text": "Deprecation",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                8059,
+                86
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    8060,
+                    7
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    8076,
+                    29
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        8076,
+                        29
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            8085,
+                            7
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    8107,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "FieldFormalParameterImpl",
+                      "pos": [
+                        8107,
+                        16
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    8125,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        8125,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            8125,
+                            7
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                8154,
+                28
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8154,
+                    13
+                  ],
+                  "text": "_deprecatedIn",
+                  "resolvedSymbol": "s40"
+                },
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8170,
+                    12
+                  ],
+                  "type": "t4",
+                  "text": "deprecatedIn",
+                  "resolvedSymbol": "s2"
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                8192,
+                24
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8192,
+                    11
+                  ],
+                  "text": "_obsoleteIn",
+                  "resolvedSymbol": "s47"
+                },
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8206,
+                    10
+                  ],
+                  "type": "t4",
+                  "text": "obsoleteIn",
+                  "resolvedSymbol": "s19"
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                8226,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8226,
+                    8
+                  ],
+                  "text": "isFuture",
+                  "resolvedSymbol": "s45"
+                },
+                {
+                  "kind": "BooleanLiteralImpl",
+                  "pos": [
+                    8237,
+                    5
+                  ],
+                  "type": "t11",
+                  "value": false
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                8242,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            8247,
+            229
+          ],
+          "symbol": "s50",
+          "flags": [
+            "const"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                8247,
+                36
+              ]
+            },
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                8346,
+                11
+              ],
+              "text": "Deprecation",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                8364,
+                29
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    8365,
+                    7
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    8375,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "FieldFormalParameterImpl",
+                      "pos": [
+                        8375,
+                        16
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                8402,
+                20
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8402,
+                    13
+                  ],
+                  "text": "_deprecatedIn",
+                  "resolvedSymbol": "s40"
+                },
+                {
+                  "kind": "NullLiteralImpl",
+                  "pos": [
+                    8418,
+                    4
+                  ],
+                  "type": "t3"
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                8432,
+                18
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8432,
+                    11
+                  ],
+                  "text": "_obsoleteIn",
+                  "resolvedSymbol": "s47"
+                },
+                {
+                  "kind": "NullLiteralImpl",
+                  "pos": [
+                    8446,
+                    4
+                  ],
+                  "type": "t3"
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorFieldInitializerImpl",
+              "pos": [
+                8460,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8460,
+                    8
+                  ],
+                  "text": "isFuture",
+                  "resolvedSymbol": "s45"
+                },
+                {
+                  "kind": "BooleanLiteralImpl",
+                  "pos": [
+                    8471,
+                    4
+                  ],
+                  "type": "t11",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                8475,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            8480,
+            36
+          ],
+          "symbol": "s51",
+          "children": [
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                8480,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8481,
+                    8
+                  ],
+                  "text": "override",
+                  "resolvedSymbol": "s52"
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                8492,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                8507,
+                2
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                8510,
+                6
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    8513,
+                    2
+                  ],
+                  "type": "t0",
+                  "text": "id",
+                  "resolvedSymbol": "s53"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            8520,
+            204
+          ],
+          "symbol": "s54",
+          "flags": [
+            "static"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                8520,
+                68
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                8598,
+                12
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                8617,
+                11
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    8618,
+                    9
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        8618,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                8629,
+                95
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    8632,
+                    91
+                  ],
+                  "type": "t2",
+                  "children": [
+                    {
+                      "kind": "PrefixedIdentifierImpl",
+                      "pos": [
+                        8632,
+                        18
+                      ],
+                      "type": "t14",
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            8632,
+                            11
+                          ],
+                          "text": "Deprecation",
+                          "resolvedSymbol": "s0"
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            8644,
+                            6
+                          ],
+                          "type": "t14",
+                          "text": "values",
+                          "resolvedSymbol": "s55"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        8651,
+                        16
+                      ],
+                      "type": "t2",
+                      "text": "firstWhereOrNull"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        8667,
+                        56
+                      ],
+                      "children": [
+                        {
+                          "kind": "FunctionExpressionImpl",
+                          "pos": [
+                            8677,
+                            37
+                          ],
+                          "type": "t15",
+                          "children": [
+                            {
+                              "kind": "FormalParameterListImpl",
+                              "pos": [
+                                8677,
+                                13
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleFormalParameterImpl",
+                                  "pos": [
+                                    8678,
+                                    11
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "ExpressionFunctionBodyImpl",
+                              "pos": [
+                                8691,
+                                23
+                              ],
+                              "children": [
+                                {
+                                  "kind": "BinaryExpressionImpl",
+                                  "pos": [
+                                    8694,
+                                    20
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "PrefixedIdentifierImpl",
+                                      "pos": [
+                                        8694,
+                                        14
+                                      ],
+                                      "type": "t8",
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            8694,
+                                            11
+                                          ],
+                                          "type": "t8",
+                                          "text": "deprecation",
+                                          "resolvedSymbol": "s56"
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            8706,
+                                            2
+                                          ],
+                                          "type": "t8",
+                                          "text": "id"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        8712,
+                                        2
+                                      ],
+                                      "type": "t0",
+                                      "text": "id",
+                                      "resolvedSymbol": "s58"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            8728,
+            400
+          ],
+          "symbol": "s59",
+          "flags": [
+            "static"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                8728,
+                68
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    8787,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        8787,
+                        7
+                      ],
+                      "text": "version",
+                      "resolvedSymbol": "s60"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                8806,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    8809,
+                    13
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        8810,
+                        11
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                8833,
+                17
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    8834,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        8834,
+                        7
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                8851,
+                277
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    8851,
+                    277
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableDeclarationStatementImpl",
+                      "pos": [
+                        8857,
+                        57
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationListImpl",
+                          "pos": [
+                            8857,
+                            56
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclarationImpl",
+                              "pos": [
+                                8861,
+                                52
+                              ],
+                              "symbol": "s61",
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    8869,
+                                    44
+                                  ],
+                                  "type": "t2",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        8869,
+                                        12
+                                      ],
+                                      "type": "t2",
+                                      "text": "VersionRange"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        8881,
+                                        32
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "NamedExpressionImpl",
+                                          "pos": [
+                                            8882,
+                                            12
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "LabelImpl",
+                                              "pos": [
+                                                8882,
+                                                4
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    8882,
+                                                    3
+                                                  ],
+                                                  "text": "max"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                8887,
+                                                7
+                                              ],
+                                              "type": "t2",
+                                              "text": "version",
+                                              "resolvedSymbol": "s60"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "NamedExpressionImpl",
+                                          "pos": [
+                                            8896,
+                                            16
+                                          ],
+                                          "type": "t11",
+                                          "children": [
+                                            {
+                                              "kind": "LabelImpl",
+                                              "pos": [
+                                                8896,
+                                                11
+                                              ],
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    8896,
+                                                    10
+                                                  ],
+                                                  "text": "includeMax"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "BooleanLiteralImpl",
+                                              "pos": [
+                                                8908,
+                                                4
+                                              ],
+                                              "type": "t11",
+                                              "value": true
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ReturnStatementImpl",
+                      "pos": [
+                        8919,
+                        205
+                      ],
+                      "children": [
+                        {
+                          "kind": "SetOrMapLiteralImpl",
+                          "pos": [
+                            8926,
+                            197
+                          ],
+                          "type": "t16",
+                          "children": [
+                            {
+                              "kind": "ForElementImpl",
+                              "pos": [
+                                8934,
+                                182
+                              ],
+                              "children": [
+                                {
+                                  "kind": "ForEachPartsWithDeclarationImpl",
+                                  "pos": [
+                                    8939,
+                                    37
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "DeclaredIdentifierImpl",
+                                      "pos": [
+                                        8939,
+                                        15
+                                      ],
+                                      "symbol": "s62"
+                                    },
+                                    {
+                                      "kind": "PrefixedIdentifierImpl",
+                                      "pos": [
+                                        8958,
+                                        18
+                                      ],
+                                      "type": "t14",
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            8958,
+                                            11
+                                          ],
+                                          "text": "Deprecation",
+                                          "resolvedSymbol": "s0"
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            8970,
+                                            6
+                                          ],
+                                          "type": "t14",
+                                          "text": "values",
+                                          "resolvedSymbol": "s55"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "IfElementImpl",
+                                  "pos": [
+                                    8986,
+                                    130
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "BinaryExpressionImpl",
+                                      "pos": [
+                                        8990,
+                                        103
+                                      ],
+                                      "type": "t11",
+                                      "children": [
+                                        {
+                                          "kind": "ParenthesizedExpressionImpl",
+                                          "pos": [
+                                            8990,
+                                            57
+                                          ],
+                                          "type": "t2",
+                                          "children": [
+                                            {
+                                              "kind": "BinaryExpressionImpl",
+                                              "pos": [
+                                                8991,
+                                                55
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "MethodInvocationImpl",
+                                                  "pos": [
+                                                    8991,
+                                                    46
+                                                  ],
+                                                  "type": "t2",
+                                                  "children": [
+                                                    {
+                                                      "kind": "PrefixedIdentifierImpl",
+                                                      "pos": [
+                                                        8991,
+                                                        24
+                                                      ],
+                                                      "type": "t2",
+                                                      "children": [
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            8991,
+                                                            11
+                                                          ],
+                                                          "type": "t1",
+                                                          "text": "deprecation",
+                                                          "resolvedSymbol": "s62"
+                                                        },
+                                                        {
+                                                          "kind": "SimpleIdentifierImpl",
+                                                          "pos": [
+                                                            9003,
+                                                            12
+                                                          ],
+                                                          "type": "t2",
+                                                          "text": "deprecatedIn",
+                                                          "resolvedSymbol": "s39"
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "kind": "SimpleIdentifierImpl",
+                                                      "pos": [
+                                                        9016,
+                                                        7
+                                                      ],
+                                                      "type": "t2",
+                                                      "text": "andThen"
+                                                    },
+                                                    {
+                                                      "kind": "ArgumentListImpl",
+                                                      "pos": [
+                                                        9023,
+                                                        14
+                                                      ],
+                                                      "children": [
+                                                        {
+                                                          "kind": "PrefixedIdentifierImpl",
+                                                          "pos": [
+                                                            9024,
+                                                            12
+                                                          ],
+                                                          "type": "t2",
+                                                          "children": [
+                                                            {
+                                                              "kind": "SimpleIdentifierImpl",
+                                                              "pos": [
+                                                                9024,
+                                                                5
+                                                              ],
+                                                              "type": "t2",
+                                                              "text": "range",
+                                                              "resolvedSymbol": "s61"
+                                                            },
+                                                            {
+                                                              "kind": "SimpleIdentifierImpl",
+                                                              "pos": [
+                                                                9030,
+                                                                6
+                                                              ],
+                                                              "type": "t2",
+                                                              "text": "allows"
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "kind": "BooleanLiteralImpl",
+                                                  "pos": [
+                                                    9041,
+                                                    5
+                                                  ],
+                                                  "type": "t11",
+                                                  "value": false
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "kind": "BinaryExpressionImpl",
+                                          "pos": [
+                                            9063,
+                                            30
+                                          ],
+                                          "type": "t11",
+                                          "children": [
+                                            {
+                                              "kind": "PrefixedIdentifierImpl",
+                                              "pos": [
+                                                9063,
+                                                22
+                                              ],
+                                              "type": "t2",
+                                              "children": [
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    9063,
+                                                    11
+                                                  ],
+                                                  "type": "t1",
+                                                  "text": "deprecation",
+                                                  "resolvedSymbol": "s62"
+                                                },
+                                                {
+                                                  "kind": "SimpleIdentifierImpl",
+                                                  "pos": [
+                                                    9075,
+                                                    10
+                                                  ],
+                                                  "type": "t2",
+                                                  "text": "obsoleteIn",
+                                                  "resolvedSymbol": "s46"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "kind": "NullLiteralImpl",
+                                              "pos": [
+                                                9089,
+                                                4
+                                              ],
+                                              "type": "t3"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        9105,
+                                        11
+                                      ],
+                                      "type": "t1",
+                                      "text": "deprecation",
+                                      "resolvedSymbol": "s62"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Deprecation",
+      "flags": []
+    },
+    "s1": {
+      "name": "callString",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "deprecatedIn",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": true
+    },
+    "s4": {
+      "name": "description",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": true
+    },
+    "s5": {
+      "name": "elseif",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s6": {
+      "name": "mozDocument",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "relativeCanonical",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s8": {
+      "name": "newGlobal",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s9": {
+      "name": "colorModuleCompat",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "slashDiv",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s11": {
+      "name": "bogusCombinators",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s12": {
+      "name": "strictUnary",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s13": {
+      "name": "functionUnits",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s14": {
+      "name": "duplicateVarFlags",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s15": {
+      "name": "nullAlpha",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s16": {
+      "name": "absPercent",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s17": {
+      "name": "fsImporterCwd",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s18": {
+      "name": "cssFunctionMixin",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s19": {
+      "name": "obsoleteIn",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": true
+    },
+    "s20": {
+      "name": "mixedDecls",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s21": {
+      "name": "featureExists",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s22": {
+      "name": "color4Api",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s23": {
+      "name": "colorFunctions",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s24": {
+      "name": "legacyJsApi",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s25": {
+      "name": "import",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s26": {
+      "name": "globalBuiltin",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s27": {
+      "name": "typeFunction",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s28": {
+      "name": "compileStringRelativeUrl",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s29": {
+      "name": "misplacedRest",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s30": {
+      "name": "withPrivate",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s31": {
+      "name": "ifFunction",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s32": {
+      "name": "functionName",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s33": {
+      "name": "userAuthored",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s34": {
+      "name": "calcInterp",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s35": {
+      "name": "Deprecated",
+      "flags": []
+    },
+    "s36": {
+      "name": "duplicateVariableFlags",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s37": {
+      "name": "duplicateVarFlags",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s38": {
+      "name": "id",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s39": {
+      "name": "deprecatedIn",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t2",
+      "parent": "s0"
+    },
+    "s40": {
+      "name": "_deprecatedIn",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s41": {
+      "name": "_deprecatedIn",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t4",
+      "parent": "s0"
+    },
+    "s43": {
+      "name": "NullableExtension",
+      "flags": []
+    },
+    "s42": {
+      "name": "andThen",
+      "flags": [],
+      "declarationType": "t9",
+      "parent": "s43"
+    },
+    "s44": {
+      "name": "description",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s45": {
+      "name": "isFuture",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s46": {
+      "name": "obsoleteIn",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t2",
+      "parent": "s0"
+    },
+    "s47": {
+      "name": "_obsoleteIn",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s48": {
+      "name": "_obsoleteIn",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t4",
+      "parent": "s0"
+    },
+    "s49": {
+      "name": "andThen",
+      "flags": [],
+      "declarationType": "t10",
+      "parent": "s43"
+    },
+    "s50": {
+      "name": "future",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s51": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s52": {
+      "name": "override",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t12"
+    },
+    "s53": {
+      "name": "id",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s54": {
+      "name": "fromId",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t13",
+      "parent": "s0"
+    },
+    "s55": {
+      "name": "values",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t14",
+      "parent": "s0"
+    },
+    "s57": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t11",
+      "parent": "s54"
+    },
+    "s56": {
+      "name": "deprecation",
+      "flags": [],
+      "parent": "s57",
+      "isNullable": false
+    },
+    "s58": {
+      "name": "id",
+      "flags": [],
+      "parent": "s54",
+      "isNullable": false
+    },
+    "s59": {
+      "name": "forVersion",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t16",
+      "parent": "s0"
+    },
+    "s60": {
+      "name": "version",
+      "flags": [],
+      "parent": "s59",
+      "isNullable": false
+    },
+    "s61": {
+      "name": "range",
+      "flags": [],
+      "parent": "s59"
+    },
+    "s62": {
+      "name": "deprecation",
+      "flags": [],
+      "parent": "s59"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "Deprecation",
+      "text": "Deprecation",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t3": {
+      "kind": "Null",
+      "text": "Null",
+      "isNullable": false
+    },
+    "t4": {
+      "kind": "String",
+      "text": "String?",
+      "isNullable": true
+    },
+    "t8": {
+      "kind": "dynamic",
+      "text": "dynamic"
+    },
+    "t7": {
+      "kind": "typeParameter",
+      "text": "V?",
+      "isNullable": true,
+      "bound": "t8"
+    },
+    "t6": {
+      "kind": "function",
+      "text": "V? Function(String)?",
+      "isNullable": true,
+      "parameters": [
+        {
+          "name": "value",
+          "type": "t0",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t7"
+    },
+    "t5": {
+      "kind": "function",
+      "text": "V? Function<V>(V? Function(String)?)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "fn",
+          "type": "t6",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t7"
+    },
+    "t9": {
+      "kind": "typeParameter",
+      "text": "V?",
+      "isNullable": true,
+      "bound": "t8"
+    },
+    "t10": {
+      "kind": "typeParameter",
+      "text": "V?",
+      "isNullable": true,
+      "bound": "t8"
+    },
+    "t11": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t12": {
+      "kind": "Object",
+      "text": "Object",
+      "isNullable": false
+    },
+    "t13": {
+      "kind": "Deprecation",
+      "text": "Deprecation?",
+      "isNullable": true
+    },
+    "t14": {
+      "kind": "List",
+      "text": "List<Deprecation>",
+      "isNullable": false,
+      "typeArguments": [
+        "t1"
+      ]
+    },
+    "t15": {
+      "kind": "function",
+      "text": "bool Function(dynamic)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "deprecation",
+          "type": "t8",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t11"
+    },
+    "t16": {
+      "kind": "Set",
+      "text": "Set<Deprecation>",
+      "isNullable": false,
+      "typeArguments": [
+        "t1"
+      ]
+    }
+  }
+}

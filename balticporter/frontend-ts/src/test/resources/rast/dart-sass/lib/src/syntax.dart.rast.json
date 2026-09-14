@@ -1,0 +1,721 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/syntax.dart",
+  "sha256": "280f581e953f39ff7d8c548e495dbae1d9218cf4f7c8cbfecb176efc5c0b0fc4",
+  "nodes": [
+    {
+      "kind": "EnumDeclarationImpl",
+      "pos": [
+        217,
+        638
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            217,
+            72
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            306,
+            48
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                306,
+                33
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                346,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    346,
+                    8
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        347,
+                        6
+                      ],
+                      "type": "t0",
+                      "value": "SCSS"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            359,
+            60
+          ],
+          "symbol": "s2",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                359,
+                45
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                411,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    411,
+                    8
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        412,
+                        6
+                      ],
+                      "type": "t0",
+                      "value": "Sass"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            424,
+            77
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                424,
+                64
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                494,
+                7
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    494,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        495,
+                        5
+                      ],
+                      "type": "t0",
+                      "value": "CSS"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            506,
+            234
+          ],
+          "symbol": "s4",
+          "flags": [
+            "static"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                506,
+                68
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    568,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        568,
+                        4
+                      ],
+                      "text": "path",
+                      "resolvedSymbol": "s5"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                584,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                598,
+                13
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    599,
+                    11
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        599,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                612,
+                128
+              ],
+              "children": [
+                {
+                  "kind": "SwitchExpressionImpl",
+                  "pos": [
+                    615,
+                    124
+                  ],
+                  "type": "t1",
+                  "children": [
+                    {
+                      "kind": "MethodInvocationImpl",
+                      "pos": [
+                        623,
+                        17
+                      ],
+                      "type": "t2",
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            623,
+                            1
+                          ],
+                          "text": "p",
+                          "resolvedSymbol": "s6"
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            625,
+                            9
+                          ],
+                          "type": "t2",
+                          "text": "extension"
+                        },
+                        {
+                          "kind": "ArgumentListImpl",
+                          "pos": [
+                            634,
+                            6
+                          ],
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                635,
+                                4
+                              ],
+                              "type": "t0",
+                              "text": "path",
+                              "resolvedSymbol": "s5"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        652,
+                        22
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            652,
+                            7
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                652,
+                                7
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleStringLiteralImpl",
+                                  "pos": [
+                                    652,
+                                    7
+                                  ],
+                                  "type": "t0",
+                                  "value": ".sass"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PrefixedIdentifierImpl",
+                          "pos": [
+                            663,
+                            11
+                          ],
+                          "type": "t1",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                663,
+                                6
+                              ],
+                              "text": "Syntax",
+                              "resolvedSymbol": "s0"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                670,
+                                4
+                              ],
+                              "type": "t1",
+                              "text": "sass",
+                              "resolvedSymbol": "s8"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        684,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            684,
+                            6
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                684,
+                                6
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleStringLiteralImpl",
+                                  "pos": [
+                                    684,
+                                    6
+                                  ],
+                                  "type": "t0",
+                                  "value": ".css"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PrefixedIdentifierImpl",
+                          "pos": [
+                            694,
+                            10
+                          ],
+                          "type": "t1",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                694,
+                                6
+                              ],
+                              "text": "Syntax",
+                              "resolvedSymbol": "s0"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                701,
+                                3
+                              ],
+                              "type": "t1",
+                              "text": "css",
+                              "resolvedSymbol": "s9"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        714,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            714,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "kind": "WildcardPatternImpl",
+                              "pos": [
+                                714,
+                                1
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "PrefixedIdentifierImpl",
+                          "pos": [
+                            719,
+                            11
+                          ],
+                          "type": "t1",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                719,
+                                6
+                              ],
+                              "text": "Syntax",
+                              "resolvedSymbol": "s0"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                726,
+                                4
+                              ],
+                              "type": "t1",
+                              "text": "scss",
+                              "resolvedSymbol": "s10"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            744,
+            49
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                744,
+                27
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                774,
+                18
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    780,
+                    6
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    787,
+                    5
+                  ],
+                  "symbol": "s11"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            797,
+            25
+          ],
+          "symbol": "s12",
+          "flags": [
+            "const"
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                803,
+                6
+              ],
+              "text": "Syntax",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                809,
+                12
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    810,
+                    10
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                821,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            826,
+            27
+          ],
+          "symbol": "s13",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                826,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                841,
+                2
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                844,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    847,
+                    5
+                  ],
+                  "type": "t0",
+                  "text": "_name",
+                  "resolvedSymbol": "s14"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Syntax",
+      "flags": []
+    },
+    "s1": {
+      "name": "scss",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "sass",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "css",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "forPath",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "path",
+      "flags": [],
+      "parent": "s4",
+      "isNullable": false
+    },
+    "s7": {
+      "name": "",
+      "flags": []
+    },
+    "s6": {
+      "name": "p",
+      "flags": [],
+      "parent": "s7"
+    },
+    "s8": {
+      "name": "sass",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s9": {
+      "name": "css",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "scss",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s11": {
+      "name": "_name",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s12": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s13": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s14": {
+      "name": "_name",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "Syntax",
+      "text": "Syntax",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    }
+  }
+}

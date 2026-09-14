@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/declaration.dart",
+  "sha256": "8c526a089a307165ff7aa06907ca6cf8987e1841aa1ced9dc88d5764f880e151",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        280,
+        437
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            280,
+            88
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            369,
+            7
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                370,
+                6
+              ],
+              "text": "sealed"
+            }
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            418,
+            19
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                429,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            442,
+            147
+          ],
+          "symbol": "s1",
+          "flags": [
+            "abstract",
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                442,
+                128
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                573,
+                6
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                588,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            593,
+            122
+          ],
+          "symbol": "s2",
+          "flags": [
+            "abstract",
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                593,
+                97
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                693,
+                8
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                714,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "SassDeclaration",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "name",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "nameSpan",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    }
+  }
+}

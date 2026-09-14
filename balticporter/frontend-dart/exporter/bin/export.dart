@@ -14,7 +14,7 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:crypto' show sha256;
+import 'package:crypto/crypto.dart' show sha256;
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
@@ -221,7 +221,7 @@ class DartExporter {
   }
 
   Map<String, dynamic> _exportType(DartType type) {
-    final text = type.getDisplayString();
+    final text = type.getDisplayString(withNullability: true);
     final isNullable = type.nullabilitySuffix.toString().contains('question');
 
     if (type is InterfaceType) {

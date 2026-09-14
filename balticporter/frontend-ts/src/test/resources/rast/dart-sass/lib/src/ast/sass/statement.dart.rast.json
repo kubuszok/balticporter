@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/statement.dart",
+  "sha256": "12ed395caf395d13cc900f05bcbd486f7c18dfd5730893d8bfb09a366207ea7f",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        389,
+        210
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            389,
+            62
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            477,
+            19
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                488,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            501,
+            96
+          ],
+          "symbol": "s1",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                501,
+                52
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    544,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        544,
+                        7
+                      ],
+                      "text": "visitor",
+                      "resolvedSymbol": "s2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                556,
+                1
+              ]
+            },
+            {
+              "kind": "TypeParameterListImpl",
+              "pos": [
+                564,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "TypeParameterImpl",
+                  "pos": [
+                    565,
+                    1
+                  ],
+                  "symbol": "s3"
+                }
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                567,
+                29
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    568,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        568,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeArgumentListImpl",
+                          "pos": [
+                            584,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                585,
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                596,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Statement",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "accept",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "visitor",
+      "flags": [],
+      "parent": "s1",
+      "isNullable": false
+    },
+    "s3": {
+      "name": "T",
+      "flags": [],
+      "parent": "s1"
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "dynamic",
+      "text": "dynamic"
+    },
+    "t0": {
+      "kind": "typeParameter",
+      "text": "T",
+      "isNullable": false,
+      "bound": "t1"
+    }
+  }
+}

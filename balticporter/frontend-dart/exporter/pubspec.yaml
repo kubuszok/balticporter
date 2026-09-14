@@ -8,4 +8,5 @@ environment:
 
 dependencies:
   analyzer: ^6.0.0
+  crypto: ^3.0.0
   path: ^1.8.0

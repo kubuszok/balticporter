@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/boolean_operator.dart",
+  "sha256": "4abb6d0c3bf63274d9f878c334e3d99819a89492ec884edc1165ffcfb287b273",
+  "nodes": [
+    {
+      "kind": "EnumDeclarationImpl",
+      "pos": [
+        178,
+        192
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            178,
+            124
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            328,
+            3
+          ],
+          "symbol": "s1"
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            335,
+            2
+          ],
+          "symbol": "s2"
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            342,
+            26
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                342,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                357,
+                2
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                360,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    363,
+                    4
+                  ],
+                  "type": "t0",
+                  "text": "name",
+                  "resolvedSymbol": "s4"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "BooleanOperator",
+      "flags": []
+    },
+    "s1": {
+      "name": "and",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "or",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "EnumName",
+      "flags": []
+    },
+    "s4": {
+      "name": "name",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s5"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    }
+  }
+}

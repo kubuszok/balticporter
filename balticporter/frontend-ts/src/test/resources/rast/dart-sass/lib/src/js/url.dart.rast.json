@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/js/url.dart",
+  "sha256": "4a303ded9230c50f9416893d85279e47c3fc5214ca2eaa025766812175b3129a",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        208,
+        178
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            208,
+            95
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            304,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                305,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                307,
+                7
+              ],
+              "children": [
+                {
+                  "kind": "SimpleStringLiteralImpl",
+                  "pos": [
+                    308,
+                    5
+                  ],
+                  "type": "t0",
+                  "value": "URL"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            315,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                316,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            342,
+            42
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                351,
+                5
+              ],
+              "text": "JSUrl",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                356,
+                27
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    357,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        357,
+                        6
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    370,
+                    11
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        370,
+                        11
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            370,
+                            6
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                383,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "JSUrl",
+      "flags": []
+    },
+    "s1": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "JSUrl",
+      "text": "JSUrl",
+      "isNullable": false
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/node.dart",
+  "sha256": "f45a8c3fc4e7b57974ad9bf6ecbb5366a41c2ebef9a9508a868d4019cb086a3d",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        236,
+        164
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            236,
+            100
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            337,
+            7
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                338,
+                6
+              ],
+              "text": "sealed"
+            }
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            379,
+            18
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                390,
+                7
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "SassNode",
+      "flags": [
+        "abstract"
+      ]
+    }
+  },
+  "types": {}
+}

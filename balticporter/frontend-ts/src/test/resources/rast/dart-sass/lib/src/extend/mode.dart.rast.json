@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/extend/mode.dart",
+  "sha256": "3c59bb970f6f87c3927086f3e7c99986c69591dd3b5b414ac734108a70ea23ea",
+  "nodes": [
+    {
+      "kind": "EnumDeclarationImpl",
+      "pos": [
+        178,
+        760
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            178,
+            47
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            246,
+            149
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                246,
+                130
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                385,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    385,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        386,
+                        8
+                      ],
+                      "type": "t0",
+                      "value": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            400,
+            204
+          ],
+          "symbol": "s2",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                400,
+                183
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                593,
+                11
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    593,
+                    11
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        594,
+                        9
+                      ],
+                      "type": "t0",
+                      "value": "replace"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "EnumConstantDeclarationImpl",
+          "pos": [
+            609,
+            214
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                609,
+                187
+              ]
+            },
+            {
+              "kind": "EnumConstantArgumentsImpl",
+              "pos": [
+                809,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    809,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        810,
+                        12
+                      ],
+                      "type": "t0",
+                      "value": "allTargets"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            828,
+            46
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                828,
+                25
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                856,
+                17
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    862,
+                    6
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    869,
+                    4
+                  ],
+                  "symbol": "s4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            878,
+            28
+          ],
+          "symbol": "s5",
+          "flags": [
+            "const"
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                884,
+                10
+              ],
+              "text": "ExtendMode",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                894,
+                11
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    895,
+                    9
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                905,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            910,
+            26
+          ],
+          "symbol": "s6",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                910,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                925,
+                2
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                928,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    931,
+                    4
+                  ],
+                  "type": "t0",
+                  "text": "name",
+                  "resolvedSymbol": "s7"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "ExtendMode",
+      "flags": []
+    },
+    "s1": {
+      "name": "normal",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "replace",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "allTargets",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "name",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s6": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "name",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "ExtendMode",
+      "text": "ExtendMode",
+      "isNullable": false
+    }
+  }
+}

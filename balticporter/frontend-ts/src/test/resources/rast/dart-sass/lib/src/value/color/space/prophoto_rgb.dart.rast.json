@@ -1,0 +1,1987 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/value/color/space/prophoto_rgb.dart",
+  "sha256": "0234866eeeddacece18bafdb5eb36731da37968a47a537c6efa2c6920c2823a3",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        343,
+        1466
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            343,
+            115
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            459,
+            9
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                460,
+                8
+              ],
+              "text": "internal"
+            }
+          ]
+        },
+        {
+          "kind": "ExtendsClauseImpl",
+          "pos": [
+            503,
+            18
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                511,
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            526,
+            35
+          ],
+          "symbol": "s1",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                526,
+                4
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                553,
+                8
+              ],
+              "children": [
+                {
+                  "kind": "BooleanLiteralImpl",
+                  "pos": [
+                    556,
+                    4
+                  ],
+                  "type": "t0",
+                  "value": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            565,
+            67
+          ],
+          "symbol": "s2",
+          "flags": [
+            "const"
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                571,
+                21
+              ],
+              "text": "ProphotoRgbColorSpace",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                592,
+                2
+              ]
+            },
+            {
+              "kind": "SuperConstructorInvocationImpl",
+              "pos": [
+                597,
+                34
+              ],
+              "children": [
+                {
+                  "kind": "ArgumentListImpl",
+                  "pos": [
+                    602,
+                    29
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleStringLiteralImpl",
+                      "pos": [
+                        603,
+                        14
+                      ],
+                      "type": "t2",
+                      "value": "prophoto-rgb"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        619,
+                        11
+                      ],
+                      "type": "t3",
+                      "text": "rgbChannels",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                631,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            636,
+            237
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                636,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    637,
+                    9
+                  ],
+                  "text": "protected"
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                649,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                664,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    665,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        665,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                681,
+                192
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    681,
+                    192
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableDeclarationStatementImpl",
+                      "pos": [
+                        766,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationListImpl",
+                          "pos": [
+                            766,
+                            23
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclarationImpl",
+                              "pos": [
+                                770,
+                                19
+                              ],
+                              "symbol": "s5",
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    776,
+                                    13
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        776,
+                                        7
+                                      ],
+                                      "type": "t5",
+                                      "text": "channel",
+                                      "resolvedSymbol": "s6"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        784,
+                                        3
+                                      ],
+                                      "type": "t6",
+                                      "text": "abs",
+                                      "resolvedSymbol": "s7"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        787,
+                                        2
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ReturnStatementImpl",
+                      "pos": [
+                        795,
+                        74
+                      ],
+                      "children": [
+                        {
+                          "kind": "ConditionalExpressionImpl",
+                          "pos": [
+                            802,
+                            66
+                          ],
+                          "type": "t5",
+                          "children": [
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                802,
+                                15
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    802,
+                                    3
+                                  ],
+                                  "type": "t5",
+                                  "text": "abs",
+                                  "resolvedSymbol": "s5"
+                                },
+                                {
+                                  "kind": "BinaryExpressionImpl",
+                                  "pos": [
+                                    809,
+                                    8
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "IntegerLiteralImpl",
+                                      "pos": [
+                                        809,
+                                        2
+                                      ],
+                                      "type": "t7",
+                                      "value": 16
+                                    },
+                                    {
+                                      "kind": "IntegerLiteralImpl",
+                                      "pos": [
+                                        814,
+                                        3
+                                      ],
+                                      "type": "t7",
+                                      "value": 512
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                820,
+                                12
+                              ],
+                              "type": "t5",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    820,
+                                    7
+                                  ],
+                                  "type": "t5",
+                                  "text": "channel",
+                                  "resolvedSymbol": "s6"
+                                },
+                                {
+                                  "kind": "IntegerLiteralImpl",
+                                  "pos": [
+                                    830,
+                                    2
+                                  ],
+                                  "type": "t7",
+                                  "value": 16
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                835,
+                                33
+                              ],
+                              "type": "t5",
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    835,
+                                    12
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        835,
+                                        7
+                                      ],
+                                      "type": "t5",
+                                      "text": "channel",
+                                      "resolvedSymbol": "s6"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        843,
+                                        4
+                                      ],
+                                      "type": "t5",
+                                      "text": "sign",
+                                      "resolvedSymbol": "s9"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    850,
+                                    18
+                                  ],
+                                  "type": "t8",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        850,
+                                        4
+                                      ],
+                                      "text": "math",
+                                      "resolvedSymbol": "s10"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        855,
+                                        3
+                                      ],
+                                      "type": "t9",
+                                      "text": "pow",
+                                      "resolvedSymbol": "s12"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        858,
+                                        10
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            859,
+                                            3
+                                          ],
+                                          "type": "t5",
+                                          "text": "abs",
+                                          "resolvedSymbol": "s5"
+                                        },
+                                        {
+                                          "kind": "DoubleLiteralImpl",
+                                          "pos": [
+                                            864,
+                                            3
+                                          ],
+                                          "type": "t5",
+                                          "value": 1.8
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            877,
+            258
+          ],
+          "symbol": "s13",
+          "children": [
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                877,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    878,
+                    9
+                  ],
+                  "text": "protected"
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                890,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                907,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    908,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        908,
+                        6
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                924,
+                211
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    924,
+                    211
+                  ],
+                  "children": [
+                    {
+                      "kind": "VariableDeclarationStatementImpl",
+                      "pos": [
+                        1009,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "kind": "VariableDeclarationListImpl",
+                          "pos": [
+                            1009,
+                            23
+                          ],
+                          "children": [
+                            {
+                              "kind": "VariableDeclarationImpl",
+                              "pos": [
+                                1013,
+                                19
+                              ],
+                              "symbol": "s14",
+                              "children": [
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    1019,
+                                    13
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1019,
+                                        7
+                                      ],
+                                      "type": "t5",
+                                      "text": "channel",
+                                      "resolvedSymbol": "s15"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1027,
+                                        3
+                                      ],
+                                      "type": "t6",
+                                      "text": "abs",
+                                      "resolvedSymbol": "s7"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        1030,
+                                        2
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ReturnStatementImpl",
+                      "pos": [
+                        1038,
+                        93
+                      ],
+                      "children": [
+                        {
+                          "kind": "ConditionalExpressionImpl",
+                          "pos": [
+                            1045,
+                            85
+                          ],
+                          "type": "t5",
+                          "children": [
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                1045,
+                                14
+                              ],
+                              "type": "t0",
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1045,
+                                    3
+                                  ],
+                                  "type": "t5",
+                                  "text": "abs",
+                                  "resolvedSymbol": "s14"
+                                },
+                                {
+                                  "kind": "BinaryExpressionImpl",
+                                  "pos": [
+                                    1052,
+                                    7
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "IntegerLiteralImpl",
+                                      "pos": [
+                                        1052,
+                                        1
+                                      ],
+                                      "type": "t7",
+                                      "value": 1
+                                    },
+                                    {
+                                      "kind": "IntegerLiteralImpl",
+                                      "pos": [
+                                        1056,
+                                        3
+                                      ],
+                                      "type": "t7",
+                                      "value": 512
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                1070,
+                                37
+                              ],
+                              "type": "t5",
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    1070,
+                                    12
+                                  ],
+                                  "type": "t5",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1070,
+                                        7
+                                      ],
+                                      "type": "t5",
+                                      "text": "channel",
+                                      "resolvedSymbol": "s15"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1078,
+                                        4
+                                      ],
+                                      "type": "t5",
+                                      "text": "sign",
+                                      "resolvedSymbol": "s9"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "MethodInvocationImpl",
+                                  "pos": [
+                                    1085,
+                                    22
+                                  ],
+                                  "type": "t8",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1085,
+                                        4
+                                      ],
+                                      "text": "math",
+                                      "resolvedSymbol": "s10"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1090,
+                                        3
+                                      ],
+                                      "type": "t9",
+                                      "text": "pow",
+                                      "resolvedSymbol": "s12"
+                                    },
+                                    {
+                                      "kind": "ArgumentListImpl",
+                                      "pos": [
+                                        1093,
+                                        14
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1094,
+                                            3
+                                          ],
+                                          "type": "t5",
+                                          "text": "abs",
+                                          "resolvedSymbol": "s14"
+                                        },
+                                        {
+                                          "kind": "BinaryExpressionImpl",
+                                          "pos": [
+                                            1099,
+                                            7
+                                          ],
+                                          "type": "t5",
+                                          "children": [
+                                            {
+                                              "kind": "IntegerLiteralImpl",
+                                              "pos": [
+                                                1099,
+                                                1
+                                              ],
+                                              "type": "t7",
+                                              "value": 1
+                                            },
+                                            {
+                                              "kind": "DoubleLiteralImpl",
+                                              "pos": [
+                                                1103,
+                                                3
+                                              ],
+                                              "type": "t5",
+                                              "value": 1.8
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "BinaryExpressionImpl",
+                              "pos": [
+                                1118,
+                                12
+                              ],
+                              "type": "t5",
+                              "children": [
+                                {
+                                  "kind": "IntegerLiteralImpl",
+                                  "pos": [
+                                    1118,
+                                    2
+                                  ],
+                                  "type": "t7",
+                                  "value": 16
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1123,
+                                    7
+                                  ],
+                                  "type": "t5",
+                                  "text": "channel",
+                                  "resolvedSymbol": "s15"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1139,
+            668
+          ],
+          "symbol": "s16",
+          "children": [
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                1139,
+                10
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1140,
+                    9
+                  ],
+                  "text": "protected"
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1152,
+                11
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1184,
+                17
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1185,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1185,
+                        10
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1202,
+                605
+              ],
+              "children": [
+                {
+                  "kind": "SwitchExpressionImpl",
+                  "pos": [
+                    1205,
+                    601
+                  ],
+                  "type": "t10",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1213,
+                        4
+                      ],
+                      "type": "t11",
+                      "text": "dest",
+                      "resolvedSymbol": "s17"
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1229,
+                        117
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1229,
+                            74
+                          ],
+                          "children": [
+                            {
+                              "kind": "LogicalOrPatternImpl",
+                              "pos": [
+                                1229,
+                                74
+                              ],
+                              "children": [
+                                {
+                                  "kind": "LogicalOrPatternImpl",
+                                  "pos": [
+                                    1229,
+                                    48
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "ConstantPatternImpl",
+                                      "pos": [
+                                        1229,
+                                        21
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "PrefixedIdentifierImpl",
+                                          "pos": [
+                                            1229,
+                                            21
+                                          ],
+                                          "type": "t11",
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1229,
+                                                10
+                                              ],
+                                              "text": "ColorSpace",
+                                              "resolvedSymbol": "s18"
+                                            },
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1240,
+                                                10
+                                              ],
+                                              "type": "t11",
+                                              "text": "srgbLinear",
+                                              "resolvedSymbol": "s19"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "ConstantPatternImpl",
+                                      "pos": [
+                                        1262,
+                                        15
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "PrefixedIdentifierImpl",
+                                          "pos": [
+                                            1262,
+                                            15
+                                          ],
+                                          "type": "t11",
+                                          "children": [
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1262,
+                                                10
+                                              ],
+                                              "text": "ColorSpace",
+                                              "resolvedSymbol": "s18"
+                                            },
+                                            {
+                                              "kind": "SimpleIdentifierImpl",
+                                              "pos": [
+                                                1273,
+                                                4
+                                              ],
+                                              "type": "t11",
+                                              "text": "srgb",
+                                              "resolvedSymbol": "s20"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ConstantPatternImpl",
+                                  "pos": [
+                                    1289,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixedIdentifierImpl",
+                                      "pos": [
+                                        1289,
+                                        14
+                                      ],
+                                      "type": "t11",
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1289,
+                                            10
+                                          ],
+                                          "text": "ColorSpace",
+                                          "resolvedSymbol": "s18"
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1300,
+                                            3
+                                          ],
+                                          "type": "t11",
+                                          "text": "rgb",
+                                          "resolvedSymbol": "s21"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1317,
+                            29
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToLinearSrgb",
+                          "resolvedSymbol": "s22"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1356,
+                        52
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1356,
+                            17
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                1356,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    1356,
+                                    17
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1356,
+                                        10
+                                      ],
+                                      "text": "ColorSpace",
+                                      "resolvedSymbol": "s18"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1367,
+                                        6
+                                      ],
+                                      "type": "t11",
+                                      "text": "a98Rgb",
+                                      "resolvedSymbol": "s23"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1377,
+                            31
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToLinearA98Rgb",
+                          "resolvedSymbol": "s24"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1418,
+                        106
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1418,
+                            58
+                          ],
+                          "children": [
+                            {
+                              "kind": "LogicalOrPatternImpl",
+                              "pos": [
+                                1418,
+                                58
+                              ],
+                              "children": [
+                                {
+                                  "kind": "ConstantPatternImpl",
+                                  "pos": [
+                                    1418,
+                                    20
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixedIdentifierImpl",
+                                      "pos": [
+                                        1418,
+                                        20
+                                      ],
+                                      "type": "t11",
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1418,
+                                            10
+                                          ],
+                                          "text": "ColorSpace",
+                                          "resolvedSymbol": "s18"
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1429,
+                                            9
+                                          ],
+                                          "type": "t11",
+                                          "text": "displayP3",
+                                          "resolvedSymbol": "s25"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "ConstantPatternImpl",
+                                  "pos": [
+                                    1450,
+                                    26
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "PrefixedIdentifierImpl",
+                                      "pos": [
+                                        1450,
+                                        26
+                                      ],
+                                      "type": "t11",
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1450,
+                                            10
+                                          ],
+                                          "text": "ColorSpace",
+                                          "resolvedSymbol": "s18"
+                                        },
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            1461,
+                                            15
+                                          ],
+                                          "type": "t11",
+                                          "text": "displayP3Linear",
+                                          "resolvedSymbol": "s26"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1490,
+                            34
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToLinearDisplayP3",
+                          "resolvedSymbol": "s27"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1534,
+                        54
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1534,
+                            18
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                1534,
+                                18
+                              ],
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    1534,
+                                    18
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1534,
+                                        10
+                                      ],
+                                      "text": "ColorSpace",
+                                      "resolvedSymbol": "s18"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1545,
+                                        7
+                                      ],
+                                      "type": "t11",
+                                      "text": "rec2020",
+                                      "resolvedSymbol": "s28"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1556,
+                            32
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToLinearRec2020",
+                          "resolvedSymbol": "s29"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1598,
+                        46
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1598,
+                            17
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                1598,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    1598,
+                                    17
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1598,
+                                        10
+                                      ],
+                                      "text": "ColorSpace",
+                                      "resolvedSymbol": "s18"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1609,
+                                        6
+                                      ],
+                                      "type": "t11",
+                                      "text": "xyzD65",
+                                      "resolvedSymbol": "s30"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1619,
+                            25
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToXyzD65",
+                          "resolvedSymbol": "s31"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1654,
+                        46
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1654,
+                            17
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                1654,
+                                17
+                              ],
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    1654,
+                                    17
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1654,
+                                        10
+                                      ],
+                                      "text": "ColorSpace",
+                                      "resolvedSymbol": "s18"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1665,
+                                        6
+                                      ],
+                                      "type": "t11",
+                                      "text": "xyzD50",
+                                      "resolvedSymbol": "s32"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1675,
+                            25
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToXyzD50",
+                          "resolvedSymbol": "s33"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1710,
+                        40
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1710,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "kind": "ConstantPatternImpl",
+                              "pos": [
+                                1710,
+                                14
+                              ],
+                              "children": [
+                                {
+                                  "kind": "PrefixedIdentifierImpl",
+                                  "pos": [
+                                    1710,
+                                    14
+                                  ],
+                                  "type": "t11",
+                                  "children": [
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1710,
+                                        10
+                                      ],
+                                      "text": "ColorSpace",
+                                      "resolvedSymbol": "s18"
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        1721,
+                                        3
+                                      ],
+                                      "type": "t11",
+                                      "text": "lms",
+                                      "resolvedSymbol": "s34"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            1728,
+                            22
+                          ],
+                          "type": "t10",
+                          "text": "linearProphotoRgbToLms",
+                          "resolvedSymbol": "s35"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SwitchExpressionCaseImpl",
+                      "pos": [
+                        1760,
+                        37
+                      ],
+                      "children": [
+                        {
+                          "kind": "GuardedPatternImpl",
+                          "pos": [
+                            1760,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "kind": "WildcardPatternImpl",
+                              "pos": [
+                                1760,
+                                1
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            1765,
+                            32
+                          ],
+                          "type": "t10",
+                          "children": [
+                            {
+                              "kind": "SuperExpressionImpl",
+                              "pos": [
+                                1765,
+                                5
+                              ],
+                              "type": "t1"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1771,
+                                20
+                              ],
+                              "type": "t12",
+                              "text": "transformationMatrix",
+                              "resolvedSymbol": "s36"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                1791,
+                                6
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1792,
+                                    4
+                                  ],
+                                  "type": "t11",
+                                  "text": "dest",
+                                  "resolvedSymbol": "s17"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "ProphotoRgbColorSpace",
+      "flags": []
+    },
+    "s1": {
+      "name": "isBoundedInternal",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "rgbChannels",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t3"
+    },
+    "s4": {
+      "name": "toLinear",
+      "flags": [],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "abs",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s6": {
+      "name": "channel",
+      "flags": [],
+      "parent": "s4",
+      "isNullable": false
+    },
+    "s8": {
+      "name": "double",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s7": {
+      "name": "abs",
+      "flags": [],
+      "declarationType": "t5",
+      "parent": "s8"
+    },
+    "s9": {
+      "name": "sign",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t5",
+      "parent": "s8"
+    },
+    "s11": {
+      "name": "",
+      "flags": []
+    },
+    "s10": {
+      "name": "math",
+      "flags": [],
+      "parent": "s11"
+    },
+    "s12": {
+      "name": "pow",
+      "flags": [
+        "static"
+      ],
+      "declarationType": "t8"
+    },
+    "s13": {
+      "name": "fromLinear",
+      "flags": [],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s14": {
+      "name": "abs",
+      "flags": [],
+      "parent": "s13"
+    },
+    "s15": {
+      "name": "channel",
+      "flags": [],
+      "parent": "s13",
+      "isNullable": false
+    },
+    "s16": {
+      "name": "transformationMatrix",
+      "flags": [],
+      "declarationType": "t10",
+      "parent": "s0"
+    },
+    "s17": {
+      "name": "dest",
+      "flags": [],
+      "parent": "s16",
+      "isNullable": false
+    },
+    "s18": {
+      "name": "ColorSpace",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s19": {
+      "name": "srgbLinear",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s20": {
+      "name": "srgb",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s21": {
+      "name": "rgb",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s22": {
+      "name": "linearProphotoRgbToLinearSrgb",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s23": {
+      "name": "a98Rgb",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s24": {
+      "name": "linearProphotoRgbToLinearA98Rgb",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s25": {
+      "name": "displayP3",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s26": {
+      "name": "displayP3Linear",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s27": {
+      "name": "linearProphotoRgbToLinearDisplayP3",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s28": {
+      "name": "rec2020",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s29": {
+      "name": "linearProphotoRgbToLinearRec2020",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s30": {
+      "name": "xyzD65",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s31": {
+      "name": "linearProphotoRgbToXyzD65",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s32": {
+      "name": "xyzD50",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s33": {
+      "name": "linearProphotoRgbToXyzD50",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s34": {
+      "name": "lms",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t11",
+      "parent": "s18"
+    },
+    "s35": {
+      "name": "linearProphotoRgbToLms",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t10"
+    },
+    "s36": {
+      "name": "transformationMatrix",
+      "flags": [],
+      "declarationType": "t10",
+      "parent": "s18"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "ProphotoRgbColorSpace",
+      "text": "ProphotoRgbColorSpace",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t4": {
+      "kind": "LinearChannel",
+      "text": "LinearChannel",
+      "isNullable": false
+    },
+    "t3": {
+      "kind": "List",
+      "text": "List<LinearChannel>",
+      "isNullable": false,
+      "typeArguments": [
+        "t4"
+      ]
+    },
+    "t5": {
+      "kind": "double",
+      "text": "double",
+      "isNullable": false
+    },
+    "t6": {
+      "kind": "function",
+      "text": "double Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t5"
+    },
+    "t7": {
+      "kind": "int",
+      "text": "int",
+      "isNullable": false
+    },
+    "t8": {
+      "kind": "num",
+      "text": "num",
+      "isNullable": false
+    },
+    "t9": {
+      "kind": "function",
+      "text": "num Function(num, num)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "x",
+          "type": "t8",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "exponent",
+          "type": "t8",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t8"
+    },
+    "t10": {
+      "kind": "Float64List",
+      "text": "Float64List",
+      "isNullable": false
+    },
+    "t11": {
+      "kind": "ColorSpace",
+      "text": "ColorSpace",
+      "isNullable": false
+    },
+    "t12": {
+      "kind": "function",
+      "text": "Float64List Function(ColorSpace)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "dest",
+          "type": "t11",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t10"
+    }
+  }
+}

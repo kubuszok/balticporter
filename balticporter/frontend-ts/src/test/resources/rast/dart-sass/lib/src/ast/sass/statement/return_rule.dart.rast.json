@@ -1,0 +1,492 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/statement/return_rule.dart",
+  "sha256": "4daa78035b078eb93e357186bcba6420e8f6106544d6f5023090deb028f8e98b",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        336,
+        431
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            336,
+            116
+          ]
+        },
+        {
+          "kind": "ExtendsClauseImpl",
+          "pos": [
+            476,
+            17
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                484,
+                9
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            498,
+            74
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                498,
+                43
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                544,
+                27
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    550,
+                    10
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    561,
+                    10
+                  ],
+                  "symbol": "s1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            576,
+            20
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                576,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    582,
+                    8
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    591,
+                    4
+                  ],
+                  "symbol": "s2"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            600,
+            39
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                600,
+                10
+              ],
+              "text": "ReturnRule",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                610,
+                28
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    611,
+                    15
+                  ]
+                },
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    628,
+                    9
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                638,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            643,
+            74
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                643,
+                1
+              ]
+            },
+            {
+              "kind": "TypeParameterListImpl",
+              "pos": [
+                651,
+                3
+              ],
+              "children": [
+                {
+                  "kind": "TypeParameterImpl",
+                  "pos": [
+                    652,
+                    1
+                  ],
+                  "symbol": "s5"
+                }
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                654,
+                29
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    655,
+                    27
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        655,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeArgumentListImpl",
+                          "pos": [
+                            671,
+                            3
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                672,
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                684,
+                33
+              ],
+              "children": [
+                {
+                  "kind": "MethodInvocationImpl",
+                  "pos": [
+                    687,
+                    29
+                  ],
+                  "type": "t1",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        687,
+                        7
+                      ],
+                      "type": "t3",
+                      "text": "visitor",
+                      "resolvedSymbol": "s6"
+                    },
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        695,
+                        15
+                      ],
+                      "type": "t4",
+                      "text": "visitReturnRule",
+                      "resolvedSymbol": "s7"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        710,
+                        6
+                      ],
+                      "children": [
+                        {
+                          "kind": "ThisExpressionImpl",
+                          "pos": [
+                            711,
+                            4
+                          ],
+                          "type": "t0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            721,
+            44
+          ],
+          "symbol": "s9",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                721,
+                6
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                736,
+                2
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                739,
+                26
+              ],
+              "children": [
+                {
+                  "kind": "StringInterpolationImpl",
+                  "pos": [
+                    742,
+                    22
+                  ],
+                  "type": "t5",
+                  "children": [
+                    {
+                      "kind": "InterpolationStringImpl",
+                      "pos": [
+                        742,
+                        9
+                      ]
+                    },
+                    {
+                      "kind": "InterpolationExpressionImpl",
+                      "pos": [
+                        751,
+                        11
+                      ],
+                      "children": [
+                        {
+                          "kind": "SimpleIdentifierImpl",
+                          "pos": [
+                            752,
+                            10
+                          ],
+                          "type": "t6",
+                          "text": "expression",
+                          "resolvedSymbol": "s10"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "InterpolationStringImpl",
+                      "pos": [
+                        762,
+                        2
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "ReturnRule",
+      "flags": []
+    },
+    "s1": {
+      "name": "expression",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "span",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "accept",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "T",
+      "flags": [],
+      "parent": "s4"
+    },
+    "s6": {
+      "name": "visitor",
+      "flags": [],
+      "parent": "s4",
+      "isNullable": false
+    },
+    "s8": {
+      "name": "StatementVisitor",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s7": {
+      "name": "visitReturnRule",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s8"
+    },
+    "s9": {
+      "name": "toString",
+      "flags": [],
+      "declarationType": "t5",
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "expression",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t6",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "ReturnRule",
+      "text": "ReturnRule",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "dynamic",
+      "text": "dynamic"
+    },
+    "t1": {
+      "kind": "typeParameter",
+      "text": "T",
+      "isNullable": false,
+      "bound": "t2"
+    },
+    "t3": {
+      "kind": "StatementVisitor",
+      "text": "StatementVisitor<T>",
+      "isNullable": false,
+      "typeArguments": [
+        "t1"
+      ]
+    },
+    "t4": {
+      "kind": "function",
+      "text": "T Function(ReturnRule)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "node",
+          "type": "t0",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t1"
+    },
+    "t5": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t6": {
+      "kind": "Expression",
+      "text": "Expression",
+      "isNullable": false
+    }
+  }
+}

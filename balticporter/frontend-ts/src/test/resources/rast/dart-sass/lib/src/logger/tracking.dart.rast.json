@@ -1,0 +1,1109 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/logger/tracking.dart",
+  "sha256": "01bee08e559e48589d37e94ec2dd1c2dd14f21aae4d63b5f0fbbc8328dc2bec7",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        299,
+        775
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            299,
+            75
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            402,
+            17
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                413,
+                6
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            424,
+            21
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                424,
+                20
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    430,
+                    6
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    437,
+                    7
+                  ],
+                  "symbol": "s1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            449,
+            96
+          ],
+          "symbol": "s2",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                449,
+                50
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    462,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        462,
+                        4
+                      ],
+                      "text": "warn",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                502,
+                4
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                526,
+                19
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    529,
+                    15
+                  ],
+                  "type": "t0",
+                  "text": "_emittedWarning",
+                  "resolvedSymbol": "s4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            548,
+            29
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                548,
+                28
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    548,
+                    4
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    553,
+                    23
+                  ],
+                  "symbol": "s5",
+                  "children": [
+                    {
+                      "kind": "BooleanLiteralImpl",
+                      "pos": [
+                        571,
+                        5
+                      ],
+                      "type": "t0",
+                      "value": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            581,
+            93
+          ],
+          "symbol": "s6",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                581,
+                51
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    594,
+                    5
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        594,
+                        5
+                      ],
+                      "text": "debug",
+                      "resolvedSymbol": "s7"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                635,
+                4
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                657,
+                17
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    660,
+                    13
+                  ],
+                  "type": "t0",
+                  "text": "_emittedDebug",
+                  "resolvedSymbol": "s8"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            677,
+            27
+          ],
+          "children": [
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                677,
+                26
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    677,
+                    4
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    682,
+                    21
+                  ],
+                  "symbol": "s9",
+                  "children": [
+                    {
+                      "kind": "BooleanLiteralImpl",
+                      "pos": [
+                        698,
+                        5
+                      ],
+                      "type": "t0",
+                      "value": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            708,
+            29
+          ],
+          "symbol": "s10",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                708,
+                14
+              ],
+              "text": "TrackingLogger",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                722,
+                14
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    723,
+                    12
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                736,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            741,
+            218
+          ],
+          "symbol": "s3",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                741,
+                4
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                750,
+                96
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    756,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        756,
+                        6
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    778,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        778,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            778,
+                            9
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    798,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        798,
+                        12
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            798,
+                            6
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    816,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        816,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            816,
+                            4
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "BooleanLiteralImpl",
+                      "pos": [
+                        835,
+                        5
+                      ],
+                      "type": "t0",
+                      "value": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                847,
+                112
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    847,
+                    112
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        853,
+                        23
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            853,
+                            22
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                853,
+                                15
+                              ],
+                              "text": "_emittedWarning"
+                            },
+                            {
+                              "kind": "BooleanLiteralImpl",
+                              "pos": [
+                                871,
+                                4
+                              ],
+                              "type": "t0",
+                              "value": true
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        881,
+                        74
+                      ],
+                      "children": [
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            881,
+                            73
+                          ],
+                          "type": "t1",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                881,
+                                7
+                              ],
+                              "type": "t3",
+                              "text": "_logger",
+                              "resolvedSymbol": "s11"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                889,
+                                4
+                              ],
+                              "type": "t4",
+                              "text": "warn",
+                              "resolvedSymbol": "s12"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                893,
+                                61
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    894,
+                                    7
+                                  ],
+                                  "type": "t5",
+                                  "text": "message",
+                                  "resolvedSymbol": "s14"
+                                },
+                                {
+                                  "kind": "NamedExpressionImpl",
+                                  "pos": [
+                                    903,
+                                    10
+                                  ],
+                                  "type": "t6",
+                                  "children": [
+                                    {
+                                      "kind": "LabelImpl",
+                                      "pos": [
+                                        903,
+                                        5
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            903,
+                                            4
+                                          ],
+                                          "text": "span",
+                                          "resolvedSymbol": "s15"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        909,
+                                        4
+                                      ],
+                                      "type": "t6",
+                                      "text": "span",
+                                      "resolvedSymbol": "s16"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "NamedExpressionImpl",
+                                  "pos": [
+                                    915,
+                                    12
+                                  ],
+                                  "type": "t6",
+                                  "children": [
+                                    {
+                                      "kind": "LabelImpl",
+                                      "pos": [
+                                        915,
+                                        6
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            915,
+                                            5
+                                          ],
+                                          "text": "trace",
+                                          "resolvedSymbol": "s17"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        922,
+                                        5
+                                      ],
+                                      "type": "t6",
+                                      "text": "trace",
+                                      "resolvedSymbol": "s18"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "NamedExpressionImpl",
+                                  "pos": [
+                                    929,
+                                    24
+                                  ],
+                                  "type": "t0",
+                                  "children": [
+                                    {
+                                      "kind": "LabelImpl",
+                                      "pos": [
+                                        929,
+                                        12
+                                      ],
+                                      "children": [
+                                        {
+                                          "kind": "SimpleIdentifierImpl",
+                                          "pos": [
+                                            929,
+                                            11
+                                          ],
+                                          "text": "deprecation",
+                                          "resolvedSymbol": "s19"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "SimpleIdentifierImpl",
+                                      "pos": [
+                                        942,
+                                        11
+                                      ],
+                                      "type": "t0",
+                                      "text": "deprecation",
+                                      "resolvedSymbol": "s20"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            963,
+            109
+          ],
+          "symbol": "s7",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                963,
+                4
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                973,
+                33
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    974,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        974,
+                        6
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    990,
+                    15
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        990,
+                        10
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "BlockFunctionBodyImpl",
+              "pos": [
+                1007,
+                65
+              ],
+              "children": [
+                {
+                  "kind": "BlockImpl",
+                  "pos": [
+                    1007,
+                    65
+                  ],
+                  "children": [
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1013,
+                        21
+                      ],
+                      "children": [
+                        {
+                          "kind": "AssignmentExpressionImpl",
+                          "pos": [
+                            1013,
+                            20
+                          ],
+                          "type": "t0",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1013,
+                                13
+                              ],
+                              "text": "_emittedDebug"
+                            },
+                            {
+                              "kind": "BooleanLiteralImpl",
+                              "pos": [
+                                1029,
+                                4
+                              ],
+                              "type": "t0",
+                              "value": true
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "ExpressionStatementImpl",
+                      "pos": [
+                        1039,
+                        29
+                      ],
+                      "children": [
+                        {
+                          "kind": "MethodInvocationImpl",
+                          "pos": [
+                            1039,
+                            28
+                          ],
+                          "type": "t1",
+                          "children": [
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1039,
+                                7
+                              ],
+                              "type": "t3",
+                              "text": "_logger",
+                              "resolvedSymbol": "s11"
+                            },
+                            {
+                              "kind": "SimpleIdentifierImpl",
+                              "pos": [
+                                1047,
+                                5
+                              ],
+                              "type": "t7",
+                              "text": "debug",
+                              "resolvedSymbol": "s21"
+                            },
+                            {
+                              "kind": "ArgumentListImpl",
+                              "pos": [
+                                1052,
+                                15
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1053,
+                                    7
+                                  ],
+                                  "type": "t5",
+                                  "text": "message",
+                                  "resolvedSymbol": "s22"
+                                },
+                                {
+                                  "kind": "SimpleIdentifierImpl",
+                                  "pos": [
+                                    1062,
+                                    4
+                                  ],
+                                  "type": "t6",
+                                  "text": "span",
+                                  "resolvedSymbol": "s23"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "TrackingLogger",
+      "flags": []
+    },
+    "s1": {
+      "name": "_logger",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "emittedWarning",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "warn",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "_emittedWarning",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "_emittedWarning",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s6": {
+      "name": "emittedDebug",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s7": {
+      "name": "debug",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s8": {
+      "name": "_emittedDebug",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s9": {
+      "name": "_emittedDebug",
+      "flags": [],
+      "parent": "s0"
+    },
+    "s10": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t2",
+      "parent": "s0"
+    },
+    "s11": {
+      "name": "_logger",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t3",
+      "parent": "s0"
+    },
+    "s13": {
+      "name": "Logger",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s12": {
+      "name": "warn",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s13"
+    },
+    "s14": {
+      "name": "message",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": false
+    },
+    "s15": {
+      "name": "span",
+      "flags": [],
+      "parent": "s12",
+      "isNullable": false
+    },
+    "s16": {
+      "name": "span",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": false
+    },
+    "s17": {
+      "name": "trace",
+      "flags": [],
+      "parent": "s12",
+      "isNullable": false
+    },
+    "s18": {
+      "name": "trace",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": false
+    },
+    "s19": {
+      "name": "deprecation",
+      "flags": [],
+      "parent": "s12",
+      "isNullable": false
+    },
+    "s20": {
+      "name": "deprecation",
+      "flags": [],
+      "parent": "s3",
+      "isNullable": false
+    },
+    "s21": {
+      "name": "debug",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s13"
+    },
+    "s22": {
+      "name": "message",
+      "flags": [],
+      "parent": "s7",
+      "isNullable": false
+    },
+    "s23": {
+      "name": "span",
+      "flags": [],
+      "parent": "s7",
+      "isNullable": false
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t2": {
+      "kind": "TrackingLogger",
+      "text": "TrackingLogger",
+      "isNullable": false
+    },
+    "t3": {
+      "kind": "Logger",
+      "text": "Logger",
+      "isNullable": false
+    },
+    "t5": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t6": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t4": {
+      "kind": "function",
+      "text": "void Function(String, {bool deprecation, InvalidType span, InvalidType trace})",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "deprecation",
+          "type": "t0",
+          "isNamed": true,
+          "isOptional": true,
+          "hasDefault": true
+        },
+        {
+          "name": "span",
+          "type": "t6",
+          "isNamed": true,
+          "isOptional": true,
+          "hasDefault": false
+        },
+        {
+          "name": "trace",
+          "type": "t6",
+          "isNamed": true,
+          "isOptional": true,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t1"
+    },
+    "t7": {
+      "kind": "function",
+      "text": "void Function(String, InvalidType)",
+      "isNullable": false,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "span",
+          "type": "t6",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t1"
+    }
+  }
+}

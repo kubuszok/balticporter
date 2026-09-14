@@ -1,0 +1,1024 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/js/logger.dart",
+  "sha256": "19f6d2e3bbe8bba207792c4864eb791ab2aaf8f6a3b218efc2226840d70083ca",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        284,
+        346
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            284,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                285,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                287,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            290,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                291,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            320,
+            70
+          ],
+          "symbol": "s1",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "GenericFunctionTypeImpl",
+              "pos": [
+                329,
+                51
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    329,
+                    4
+                  ]
+                },
+                {
+                  "kind": "FormalParameterListImpl",
+                  "pos": [
+                    342,
+                    37
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        343,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            343,
+                            6
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        359,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            359,
+                            11
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                389,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            393,
+            72
+          ],
+          "symbol": "s2",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "GenericFunctionTypeImpl",
+              "pos": [
+                402,
+                52
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    402,
+                    4
+                  ]
+                },
+                {
+                  "kind": "FormalParameterListImpl",
+                  "pos": [
+                    415,
+                    38
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        416,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            416,
+                            6
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        432,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            432,
+                            12
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                464,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            469,
+            159
+          ],
+          "symbol": "s3",
+          "flags": [
+            "factory"
+          ],
+          "isFactory": true,
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                486,
+                8
+              ],
+              "text": "JSLogger",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                494,
+                133
+              ],
+              "children": [
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    501,
+                    56
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        501,
+                        56
+                      ],
+                      "children": [
+                        {
+                          "kind": "GenericFunctionTypeImpl",
+                          "pos": [
+                            501,
+                            51
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                501,
+                                4
+                              ]
+                            },
+                            {
+                              "kind": "FormalParameterListImpl",
+                              "pos": [
+                                514,
+                                37
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleFormalParameterImpl",
+                                  "pos": [
+                                    515,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedTypeImpl",
+                                      "pos": [
+                                        515,
+                                        6
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "SimpleFormalParameterImpl",
+                                  "pos": [
+                                    531,
+                                    19
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedTypeImpl",
+                                      "pos": [
+                                        531,
+                                        11
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    563,
+                    58
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        563,
+                        58
+                      ],
+                      "children": [
+                        {
+                          "kind": "GenericFunctionTypeImpl",
+                          "pos": [
+                            563,
+                            52
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                563,
+                                4
+                              ]
+                            },
+                            {
+                              "kind": "FormalParameterListImpl",
+                              "pos": [
+                                576,
+                                38
+                              ],
+                              "children": [
+                                {
+                                  "kind": "SimpleFormalParameterImpl",
+                                  "pos": [
+                                    577,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedTypeImpl",
+                                      "pos": [
+                                        577,
+                                        6
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "SimpleFormalParameterImpl",
+                                  "pos": [
+                                    593,
+                                    20
+                                  ],
+                                  "children": [
+                                    {
+                                      "kind": "NamedTypeImpl",
+                                      "pos": [
+                                        593,
+                                        12
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                627,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        632,
+        325
+      ],
+      "symbol": "s4",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            632,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                633,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                635,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            638,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                639,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            671,
+            30
+          ],
+          "symbol": "s5",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                680,
+                4
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                700,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            704,
+            42
+          ],
+          "symbol": "s6",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                713,
+                12
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                745,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            749,
+            30
+          ],
+          "symbol": "s7",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                758,
+                11
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                778,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            782,
+            27
+          ],
+          "symbol": "s8",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                791,
+                7
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                808,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            813,
+            142
+          ],
+          "symbol": "s9",
+          "flags": [
+            "factory"
+          ],
+          "isFactory": true,
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                830,
+                11
+              ],
+              "text": "WarnOptions",
+              "resolvedSymbol": "s4"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                841,
+                113
+              ],
+              "children": [
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    848,
+                    25
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        848,
+                        25
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            857,
+                            4
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    879,
+                    28
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        879,
+                        28
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            879,
+                            12
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    913,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        913,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            913,
+                            11
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    935,
+                    13
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        935,
+                        13
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            935,
+                            7
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                954,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        959,
+        133
+      ],
+      "symbol": "s10",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            959,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                960,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                962,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            965,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                966,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            999,
+            29
+          ],
+          "symbol": "s11",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1008,
+                10
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1027,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            1032,
+            58
+          ],
+          "symbol": "s12",
+          "flags": [
+            "factory"
+          ],
+          "isFactory": true,
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                1049,
+                12
+              ],
+              "text": "DebugOptions",
+              "resolvedSymbol": "s10"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1061,
+                28
+              ],
+              "children": [
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    1063,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        1063,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            1072,
+                            10
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1089,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "JSLogger",
+      "flags": []
+    },
+    "s1": {
+      "name": "warn",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "debug",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t4",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t6",
+      "parent": "s0"
+    },
+    "s4": {
+      "name": "WarnOptions",
+      "flags": []
+    },
+    "s5": {
+      "name": "deprecation",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t7",
+      "parent": "s4"
+    },
+    "s6": {
+      "name": "deprecationType",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t8",
+      "parent": "s4"
+    },
+    "s7": {
+      "name": "span",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t9",
+      "parent": "s4"
+    },
+    "s8": {
+      "name": "stack",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t10",
+      "parent": "s4"
+    },
+    "s9": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t2",
+      "parent": "s4"
+    },
+    "s10": {
+      "name": "DebugOptions",
+      "flags": []
+    },
+    "s11": {
+      "name": "span",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t9",
+      "parent": "s10"
+    },
+    "s12": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t5",
+      "parent": "s10"
+    }
+  },
+  "types": {
+    "t1": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "WarnOptions",
+      "text": "WarnOptions",
+      "isNullable": false
+    },
+    "t3": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t0": {
+      "kind": "function",
+      "text": "void Function(String, WarnOptions)?",
+      "isNullable": true,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "t1",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t2",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t5": {
+      "kind": "DebugOptions",
+      "text": "DebugOptions",
+      "isNullable": false
+    },
+    "t4": {
+      "kind": "function",
+      "text": "void Function(String, DebugOptions)?",
+      "isNullable": true,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "t1",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        },
+        {
+          "name": "options",
+          "type": "t5",
+          "isNamed": false,
+          "isOptional": false,
+          "hasDefault": false
+        }
+      ],
+      "returnType": "t3"
+    },
+    "t6": {
+      "kind": "JSLogger",
+      "text": "JSLogger",
+      "isNullable": false
+    },
+    "t7": {
+      "kind": "bool",
+      "text": "bool",
+      "isNullable": false
+    },
+    "t8": {
+      "kind": "Deprecation",
+      "text": "Deprecation?",
+      "isNullable": true
+    },
+    "t9": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t10": {
+      "kind": "String",
+      "text": "String?",
+      "isNullable": true
+    }
+  }
+}

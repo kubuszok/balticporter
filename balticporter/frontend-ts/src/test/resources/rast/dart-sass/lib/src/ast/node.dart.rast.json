@@ -1,0 +1,599 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/node.dart",
+  "sha256": "96d286f1930c427631e95ca29395cb7e9a33be879a4c4b363b5e7c97c9897657",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        259,
+        982
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            259,
+            332
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            592,
+            7
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                593,
+                6
+              ],
+              "text": "sealed"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            637,
+            165
+          ],
+          "symbol": "s1",
+          "flags": [
+            "abstract",
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                637,
+                144
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                784,
+                8
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                801,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            806,
+            419
+          ],
+          "symbol": "s2",
+          "flags": [
+            "factory"
+          ],
+          "isFactory": true,
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                806,
+                338
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    822,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        822,
+                        7
+                      ],
+                      "text": "AstNode",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                },
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    896,
+                    8
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        896,
+                        8
+                      ],
+                      "text": "callback",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                },
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    942,
+                    7
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        942,
+                        7
+                      ],
+                      "text": "AstNode",
+                      "resolvedSymbol": "s0"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                1147,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1148,
+                    8
+                  ],
+                  "text": "internal"
+                }
+              ]
+            },
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                1167,
+                7
+              ],
+              "text": "AstNode",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1179,
+                30
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    1180,
+                    28
+                  ],
+                  "children": [
+                    {
+                      "kind": "GenericFunctionTypeImpl",
+                      "pos": [
+                        1180,
+                        19
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            1180,
+                            8
+                          ]
+                        },
+                        {
+                          "kind": "FormalParameterListImpl",
+                          "pos": [
+                            1197,
+                            2
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "ConstructorNameImpl",
+              "pos": [
+                1212,
+                12
+              ],
+              "children": [
+                {
+                  "kind": "NamedTypeImpl",
+                  "pos": [
+                    1212,
+                    12
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1224,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            1229,
+            10
+          ],
+          "symbol": "s4",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                1229,
+                7
+              ],
+              "text": "AstNode",
+              "resolvedSymbol": "s0"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1236,
+                2
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1238,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        1243,
+        270
+      ],
+      "symbol": "s5",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            1243,
+            73
+          ],
+          "children": [
+            {
+              "kind": "CommentReferenceImpl",
+              "pos": [
+                1251,
+                7
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    1251,
+                    7
+                  ],
+                  "text": "AstNode",
+                  "resolvedSymbol": "s0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            1336,
+            18
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1347,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            1359,
+            33
+          ],
+          "symbol": "s6",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                1359,
+                8
+              ]
+            },
+            {
+              "kind": "ExpressionFunctionBodyImpl",
+              "pos": [
+                1377,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "FunctionExpressionInvocationImpl",
+                  "pos": [
+                    1380,
+                    11
+                  ],
+                  "type": "t0",
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1380,
+                        9
+                      ],
+                      "type": "t2",
+                      "text": "_callback",
+                      "resolvedSymbol": "s7"
+                    },
+                    {
+                      "kind": "ArgumentListImpl",
+                      "pos": [
+                        1389,
+                        2
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "FieldDeclarationImpl",
+          "pos": [
+            1396,
+            82
+          ],
+          "flags": [
+            "final"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                1396,
+                43
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    1433,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        1433,
+                        4
+                      ],
+                      "text": "span",
+                      "resolvedSymbol": "s6"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "VariableDeclarationListImpl",
+              "pos": [
+                1442,
+                35
+              ],
+              "children": [
+                {
+                  "kind": "GenericFunctionTypeImpl",
+                  "pos": [
+                    1448,
+                    19
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        1448,
+                        8
+                      ]
+                    },
+                    {
+                      "kind": "FormalParameterListImpl",
+                      "pos": [
+                        1465,
+                        2
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "VariableDeclarationImpl",
+                  "pos": [
+                    1468,
+                    9
+                  ],
+                  "symbol": "s8"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            1482,
+            29
+          ],
+          "symbol": "s9",
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                1482,
+                12
+              ],
+              "text": "_FakeAstNode",
+              "resolvedSymbol": "s5"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                1494,
+                16
+              ],
+              "children": [
+                {
+                  "kind": "FieldFormalParameterImpl",
+                  "pos": [
+                    1495,
+                    14
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                1510,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "AstNode",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "span",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "fake",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "callback",
+      "flags": [],
+      "parent": "s2",
+      "isNullable": false
+    },
+    "s4": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s5": {
+      "name": "_FakeAstNode",
+      "flags": []
+    },
+    "s6": {
+      "name": "span",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s5"
+    },
+    "s7": {
+      "name": "_callback",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t2",
+      "parent": "s5"
+    },
+    "s8": {
+      "name": "_callback",
+      "flags": [],
+      "parent": "s5"
+    },
+    "s9": {
+      "name": "",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s5"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "dynamic",
+      "text": "InvalidType"
+    },
+    "t1": {
+      "kind": "AstNode",
+      "text": "AstNode",
+      "isNullable": false
+    },
+    "t2": {
+      "kind": "function",
+      "text": "InvalidType Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t0"
+    },
+    "t3": {
+      "kind": "_FakeAstNode",
+      "text": "_FakeAstNode",
+      "isNullable": false
+    }
+  }
+}

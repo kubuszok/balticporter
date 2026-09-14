@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/css/keyframe_block.dart",
+  "sha256": "bce55f7d35ea8f9422d60b43915e7175cad10e276458af2fdb06dd688e32e734",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        220,
+        227
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            220,
+            82
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            345,
+            24
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                356,
+                13
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            374,
+            71
+          ],
+          "symbol": "s1",
+          "flags": [
+            "abstract",
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                374,
+                32
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                409,
+                22
+              ],
+              "children": [
+                {
+                  "kind": "TypeArgumentListImpl",
+                  "pos": [
+                    417,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        418,
+                        12
+                      ],
+                      "children": [
+                        {
+                          "kind": "TypeArgumentListImpl",
+                          "pos": [
+                            422,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "kind": "NamedTypeImpl",
+                              "pos": [
+                                423,
+                                6
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                444,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "CssKeyframeBlock",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "selector",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t2": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "List",
+      "text": "List<String>",
+      "isNullable": false,
+      "typeArguments": [
+        "t2"
+      ]
+    },
+    "t0": {
+      "kind": "CssValue",
+      "text": "CssValue<List<String>>",
+      "isNullable": false,
+      "typeArguments": [
+        "t1"
+      ]
+    }
+  }
+}

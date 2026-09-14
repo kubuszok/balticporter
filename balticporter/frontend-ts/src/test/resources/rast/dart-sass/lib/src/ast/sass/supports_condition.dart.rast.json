@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/supports_condition.dart",
+  "sha256": "065052c7f22b0b6d85e9f364dd5ea697b00bcb26ed259e1b2a160a3e60339a13",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        309,
+        462
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            309,
+            100
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            453,
+            19
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                464,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            477,
+            151
+          ],
+          "symbol": "s1",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                477,
+                104
+              ]
+            },
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                584,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    585,
+                    8
+                  ],
+                  "text": "internal"
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                596,
+                13
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                625,
+                2
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                627,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            632,
+            137
+          ],
+          "symbol": "s2",
+          "flags": [
+            "abstract"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                632,
+                80
+              ],
+              "children": [
+                {
+                  "kind": "CommentReferenceImpl",
+                  "pos": [
+                    675,
+                    4
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleIdentifierImpl",
+                      "pos": [
+                        675,
+                        4
+                      ],
+                      "text": "span",
+                      "resolvedSymbol": "s3"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "AnnotationImpl",
+              "pos": [
+                715,
+                9
+              ],
+              "children": [
+                {
+                  "kind": "SimpleIdentifierImpl",
+                  "pos": [
+                    716,
+                    8
+                  ],
+                  "text": "internal"
+                }
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                727,
+                17
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                753,
+                15
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    754,
+                    13
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        754,
+                        8
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                768,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "SupportsCondition",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "toInterpolation",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "withSpan",
+      "flags": [],
+      "declarationType": "t1",
+      "parent": "s0"
+    },
+    "s3": {
+      "name": "span",
+      "flags": [],
+      "parent": "s2",
+      "isNullable": false
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "Interpolation",
+      "text": "Interpolation",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "SupportsCondition",
+      "text": "SupportsCondition",
+      "isNullable": false
+    }
+  }
+}

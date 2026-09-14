@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/ast/sass/callable_invocation.dart",
+  "sha256": "f08e5c1361a4b52b4cc7d4975cdc174d917703ba8a34bb8b3e8c12ea2b4fc30b",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        262,
+        232
+      ],
+      "symbol": "s0",
+      "flags": [
+        "abstract"
+      ],
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            262,
+            92
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            355,
+            7
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                356,
+                6
+              ],
+              "text": "sealed"
+            }
+          ]
+        },
+        {
+          "kind": "ImplementsClauseImpl",
+          "pos": [
+            397,
+            19
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                408,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            421,
+            71
+          ],
+          "symbol": "s1",
+          "flags": [
+            "abstract",
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "CommentImpl",
+              "pos": [
+                421,
+                41
+              ]
+            },
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                465,
+                12
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                491,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "CallableInvocation",
+      "flags": [
+        "abstract"
+      ]
+    },
+    "s1": {
+      "name": "arguments",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t0",
+      "parent": "s0"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "ArgumentList",
+      "text": "ArgumentList",
+      "isNullable": false
+    }
+  }
+}

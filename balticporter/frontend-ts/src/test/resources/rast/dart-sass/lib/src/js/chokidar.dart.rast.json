@@ -1,0 +1,548 @@
+{
+  "version": 1,
+  "path": "/Users/dev/Workspaces/kubuszok/ssg/original-src/dart-sass/lib/src/js/chokidar.dart",
+  "sha256": "caeb0b4e0df623e14639f2fc237c16cd266ac2a56197548e67dd4c7e014253f8",
+  "nodes": [
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        208,
+        96
+      ],
+      "symbol": "s0",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            208,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                209,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                211,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            233,
+            69
+          ],
+          "symbol": "s1",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                242,
+                15
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                263,
+                38
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    264,
+                    11
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        264,
+                        6
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    277,
+                    23
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        277,
+                        15
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                301,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        306,
+        132
+      ],
+      "symbol": "s2",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            306,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                307,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                309,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            312,
+            10
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                313,
+                9
+              ],
+              "text": "anonymous"
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            349,
+            30
+          ],
+          "symbol": "s3",
+          "flags": [
+            "getter"
+          ],
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                358,
+                5
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                378,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "ConstructorDeclarationImpl",
+          "pos": [
+            383,
+            53
+          ],
+          "symbol": "s4",
+          "flags": [
+            "factory"
+          ],
+          "isFactory": true,
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                400,
+                15
+              ],
+              "text": "ChokidarOptions",
+              "resolvedSymbol": "s2"
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                415,
+                20
+              ],
+              "children": [
+                {
+                  "kind": "DefaultFormalParameterImpl",
+                  "pos": [
+                    417,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "kind": "SimpleFormalParameterImpl",
+                      "pos": [
+                        417,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "kind": "NamedTypeImpl",
+                          "pos": [
+                            417,
+                            5
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                435,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClassDeclarationImpl",
+      "pos": [
+        440,
+        109
+      ],
+      "symbol": "s5",
+      "children": [
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            440,
+            5
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                441,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                443,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            472,
+            50
+          ],
+          "symbol": "s6",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                481,
+                4
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                488,
+                33
+              ],
+              "children": [
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    489,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        489,
+                        6
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "SimpleFormalParameterImpl",
+                  "pos": [
+                    503,
+                    17
+                  ],
+                  "children": [
+                    {
+                      "kind": "NamedTypeImpl",
+                      "pos": [
+                        503,
+                        8
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                521,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "MethodDeclarationImpl",
+          "pos": [
+            525,
+            22
+          ],
+          "symbol": "s7",
+          "children": [
+            {
+              "kind": "NamedTypeImpl",
+              "pos": [
+                534,
+                4
+              ]
+            },
+            {
+              "kind": "FormalParameterListImpl",
+              "pos": [
+                544,
+                2
+              ]
+            },
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                546,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "FunctionDeclarationImpl",
+      "pos": [
+        551,
+        143
+      ],
+      "symbol": "s8",
+      "children": [
+        {
+          "kind": "CommentImpl",
+          "pos": [
+            551,
+            95
+          ]
+        },
+        {
+          "kind": "AnnotationImpl",
+          "pos": [
+            647,
+            15
+          ],
+          "children": [
+            {
+              "kind": "SimpleIdentifierImpl",
+              "pos": [
+                648,
+                2
+              ],
+              "text": "JS"
+            },
+            {
+              "kind": "ArgumentListImpl",
+              "pos": [
+                650,
+                12
+              ],
+              "children": [
+                {
+                  "kind": "SimpleStringLiteralImpl",
+                  "pos": [
+                    651,
+                    10
+                  ],
+                  "type": "t5",
+                  "value": "chokidar"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "NamedTypeImpl",
+          "pos": [
+            672,
+            8
+          ]
+        },
+        {
+          "kind": "FunctionExpressionImpl",
+          "pos": [
+            693,
+            1
+          ],
+          "type": "t6",
+          "children": [
+            {
+              "kind": "EmptyFunctionBodyImpl",
+              "pos": [
+                693,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "symbols": {
+    "s0": {
+      "name": "Chokidar",
+      "flags": []
+    },
+    "s1": {
+      "name": "watch",
+      "flags": [],
+      "declarationType": "t0",
+      "parent": "s0"
+    },
+    "s2": {
+      "name": "ChokidarOptions",
+      "flags": []
+    },
+    "s3": {
+      "name": "usePolling",
+      "flags": [
+        "getter"
+      ],
+      "declarationType": "t1",
+      "parent": "s2"
+    },
+    "s4": {
+      "name": "",
+      "flags": [
+        "factory"
+      ],
+      "declarationType": "t2",
+      "parent": "s2"
+    },
+    "s5": {
+      "name": "ChokidarWatcher",
+      "flags": []
+    },
+    "s6": {
+      "name": "on",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s5"
+    },
+    "s7": {
+      "name": "close",
+      "flags": [],
+      "declarationType": "t3",
+      "parent": "s5"
+    },
+    "s8": {
+      "name": "chokidar",
+      "flags": [
+        "static",
+        "getter"
+      ],
+      "declarationType": "t4"
+    }
+  },
+  "types": {
+    "t0": {
+      "kind": "ChokidarWatcher",
+      "text": "ChokidarWatcher",
+      "isNullable": false
+    },
+    "t1": {
+      "kind": "bool",
+      "text": "bool?",
+      "isNullable": true
+    },
+    "t2": {
+      "kind": "ChokidarOptions",
+      "text": "ChokidarOptions",
+      "isNullable": false
+    },
+    "t3": {
+      "kind": "void",
+      "text": "void"
+    },
+    "t4": {
+      "kind": "Chokidar",
+      "text": "Chokidar",
+      "isNullable": false
+    },
+    "t5": {
+      "kind": "String",
+      "text": "String",
+      "isNullable": false
+    },
+    "t6": {
+      "kind": "function",
+      "text": "Chokidar Function()",
+      "isNullable": false,
+      "parameters": [],
+      "returnType": "t4"
+    }
+  }
+}
