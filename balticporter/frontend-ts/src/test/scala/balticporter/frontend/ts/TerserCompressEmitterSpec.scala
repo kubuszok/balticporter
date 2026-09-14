@@ -226,18 +226,20 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   private val referenceRoot: java.nio.file.Path =
-    val candidates = List(
-      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-      // ssg sibling to balticporter project root
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-      // balticporter is in a subdirectory; ssg sibling to that
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
-      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
-    ).flatten
-    val compressDir = "ssg-js/src/main/scala/ssg/js/compress"
-    candidates.map(_.resolve(compressDir))
-      .find(p => java.nio.file.Files.exists(p.resolve("Common.scala")))
-      .getOrElse(java.nio.file.Path.of("nonexistent"))
+    // Classpath resource first (self-contained)
+    val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
+    if cpRef != null && cpRef.getProtocol == "file" then
+      java.nio.file.Path.of(cpRef.toURI).getParent
+    else
+      val candidates = List(
+        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
+      ).flatten
+      val compressDir = "ssg-js/src/main/scala/ssg/js/compress"
+      candidates.map(_.resolve(compressDir))
+        .find(p => java.nio.file.Files.exists(p.resolve("Common.scala")))
+        .getOrElse(java.nio.file.Path.of("nonexistent"))
 
   test("parity: findMethodBoundaries on synthetic input"):
     val source = List(
@@ -401,16 +403,19 @@ class TerserCompressEmitterSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   private val ssgJsRoot: java.nio.file.Path =
-    val candidates = List(
-      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
-      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
-    ).flatten
-    val jsDir = "ssg-js/src/main/scala/ssg/js"
-    candidates.map(_.resolve(jsDir))
-      .find(p => java.nio.file.Files.exists(p.resolve("scope/ScopeAnalysis.scala")))
-      .getOrElse(java.nio.file.Path.of("nonexistent"))
+    val cpRef = getClass.getResource("/reference/terser/scope/ScopeAnalysis.scala")
+    if cpRef != null && cpRef.getProtocol == "file" then
+      java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from scope/ to terser/
+    else
+      val candidates = List(
+        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.getParent.resolve("ssg")),
+      ).flatten
+      val jsDir = "ssg-js/src/main/scala/ssg/js"
+      candidates.map(_.resolve(jsDir))
+        .find(p => java.nio.file.Files.exists(p.resolve("scope/ScopeAnalysis.scala")))
+        .getOrElse(java.nio.file.Path.of("nonexistent"))
 
   test("non-compress: emitAllNonCompressWithParity batch"):
     if !java.nio.file.Files.exists(ssgJsRoot) then

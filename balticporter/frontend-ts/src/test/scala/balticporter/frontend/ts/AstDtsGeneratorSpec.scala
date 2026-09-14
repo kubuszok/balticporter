@@ -227,9 +227,13 @@ class AstDtsGeneratorSpec extends munit.FunSuite:
   // Reference-derived type improvement
   // --------------------------------------------------------------------------
 
-  private val astReferenceRoot = java.nio.file.Path.of(
-    "/Users/dev/Workspaces/kubuszok/ssg/ssg-js/src/main/scala/ssg/js/ast"
-  )
+  private val astReferenceRoot = {
+    val cpRef = getClass.getResource("/reference/terser/ast/AstNode.scala")
+    if cpRef != null && cpRef.getProtocol == "file" then
+      java.nio.file.Path.of(cpRef.toURI).getParent
+    else
+      java.nio.file.Path.of("/nonexistent")
+  }
 
   private val astReferenceFiles = List(
     "AstNode.scala", "AstClasses.scala", "AstExpressions.scala",

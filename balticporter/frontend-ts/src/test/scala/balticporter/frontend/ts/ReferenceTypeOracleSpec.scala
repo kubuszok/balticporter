@@ -117,7 +117,11 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
   // -----------------------------------------------------------------------
 
   test("file-based oracle: parse actual ssg-js reference"):
-    val refRoot = java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg/ssg-js/src/main/scala/ssg/js/compress")
+    val refRoot = {
+      val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
+      if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
+      else java.nio.file.Path.of("/nonexistent")
+    }
     if java.nio.file.Files.exists(refRoot) then
       val oracle = dedicated.ReferenceTypeOracle.buildFromDirectory(refRoot)
       // Inference methods
@@ -200,7 +204,11 @@ class ReferenceTypeOracleSpec extends munit.FunSuite:
     reportTypeCoverage("hardcoded", results)
 
   test("emitter with oracle: batch emit with file-based oracle"):
-    val refRoot = java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg/ssg-js/src/main/scala/ssg/js/compress")
+    val refRoot = {
+      val cpRef = getClass.getResource("/reference/terser/compress/Common.scala")
+      if cpRef != null && cpRef.getProtocol == "file" then java.nio.file.Path.of(cpRef.toURI).getParent
+      else java.nio.file.Path.of("/nonexistent")
+    }
     if !java.nio.file.Files.exists(refRoot) then
       println("SKIP: ssg-js reference not available")
     else

@@ -955,14 +955,17 @@ class MermaidEmitterSpec extends munit.FunSuite:
   // -- Styles parity-derive ---------------------------------------------------
 
   private val mermaidRefRoot: java.nio.file.Path =
-    val candidates = List(
-      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
-    ).flatten
-    candidates.map(_.resolve("ssg-mermaid/src/main/scala/ssg/mermaid/diagrams"))
-      .find(p => java.nio.file.Files.exists(p.resolve("flowchart/FlowchartStyles.scala")))
-      .getOrElse(java.nio.file.Path.of("nonexistent"))
+    val cpRef = getClass.getResource("/reference/mermaid/flowchart/FlowchartStyles.scala")
+    if cpRef != null && cpRef.getProtocol == "file" then
+      java.nio.file.Path.of(cpRef.toURI).getParent.getParent // up from flowchart/ to mermaid/
+    else
+      val candidates = List(
+        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+      ).flatten
+      candidates.map(_.resolve("ssg-mermaid/src/main/scala/ssg/mermaid/diagrams"))
+        .find(p => java.nio.file.Files.exists(p.resolve("flowchart/FlowchartStyles.scala")))
+        .getOrElse(java.nio.file.Path.of("nonexistent"))
 
   private def tryLoadRastOpt(resource: String): Option[RastFile] =
     val stream = getClass.getResourceAsStream(resource)

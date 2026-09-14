@@ -25,14 +25,17 @@ class KaTeXEmitterSpec extends munit.FunSuite:
           None
 
   private val katexRefRoot: java.nio.file.Path =
-    val candidates = List(
-      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
-    ).flatten
-    candidates.map(_.resolve("ssg-katex/src/main/scala/ssg/katex"))
-      .find(p => java.nio.file.Files.exists(p.resolve("Options.scala")))
-      .getOrElse(java.nio.file.Path.of("nonexistent"))
+    val cpRef = getClass.getResource("/reference/katex/Options.scala")
+    if cpRef != null && cpRef.getProtocol == "file" then
+      java.nio.file.Path.of(cpRef.toURI).getParent
+    else
+      val candidates = List(
+        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+      ).flatten
+      candidates.map(_.resolve("ssg-katex/src/main/scala/ssg/katex"))
+        .find(p => java.nio.file.Files.exists(p.resolve("Options.scala")))
+        .getOrElse(java.nio.file.Path.of("nonexistent"))
 
   // -----------------------------------------------------------------------
   // Category 2: Classes — RAST node extraction

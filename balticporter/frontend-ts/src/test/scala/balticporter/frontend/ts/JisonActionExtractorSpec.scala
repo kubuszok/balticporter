@@ -3,14 +3,17 @@ package balticporter.frontend.ts
 class JisonActionExtractorSpec extends munit.FunSuite:
 
   private val jisonRoot: java.nio.file.Path =
-    val candidates = List(
-      sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
-      Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
-      Some(java.nio.file.Path.of("/Users/dev/Workspaces/kubuszok/ssg")),
-    ).flatten
-    candidates.map(_.resolve("original-src/mermaid/packages/mermaid/src/diagrams"))
-      .find(java.nio.file.Files.exists(_))
-      .getOrElse(java.nio.file.Path.of("nonexistent"))
+    val cpRef = getClass.getResource("/reference/jison/flowchart/parser/flow.jison")
+    if cpRef != null && cpRef.getProtocol == "file" then
+      java.nio.file.Path.of(cpRef.toURI).getParent.getParent.getParent // up to jison/
+    else
+      val candidates = List(
+        sys.props.get("ssg.root").map(java.nio.file.Path.of(_)),
+        Some(java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).getParent.resolve("ssg")),
+      ).flatten
+      candidates.map(_.resolve("original-src/mermaid/packages/mermaid/src/diagrams"))
+        .find(java.nio.file.Files.exists(_))
+        .getOrElse(java.nio.file.Path.of("nonexistent"))
 
   private def loadJison(path: String): String =
     val fullPath = jisonRoot.resolve(path)
