@@ -471,12 +471,57 @@ object DartSassEmitter:
               .getOrElse(Nil)
             result += ExtractedFunction(actualName, params, "Block")
 
+        case "TopLevelVariableDeclaration" =>
+          // TopLevelVariableDeclarationImpl > VariableDeclarationListImpl > VariableDeclarationImpl
+          val vdlChildren = node.children
+            .find(_.kind.contains("VariableDeclarationList"))
+            .map(_.children)
+            .getOrElse(node.children)
+          val varDecls = vdlChildren.filter(_.kind.contains("VariableDeclaration"))
+          for vd <- varDecls do
+            val varName = nameFromSymbol(vd)
+            if varName.nonEmpty then
+              val fnInit = vd.children.find(c =>
+                c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
+              fnInit.foreach { fn =>
+                val fnChildren = fn.children
+                val params = fnChildren
+                  .find(c => c.kind.contains("FormalParameterList"))
+                  .map(_.children.flatMap(p =>
+                    nameFromSymbol(p) match
+                      case n if n.nonEmpty => Some(n)
+                      case _ => p.children.find(c => c.kind.contains("Identifier")).flatMap(_.text)
+                  ))
+                  .getOrElse(Nil)
+                val hasBody = fnChildren.exists(c =>
+                  c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
+                if hasBody then
+                  result += ExtractedFunction(varName, params, "Block")
+              }
+
         case _ => ()
 
       node.children.foreach(walk)
 
     file.nodes.foreach(walk)
     result.toList
+
+  private def extractBodyFromChildren(children: List[RastNode]): Option[RastNode] =
+    val bodyNode = children.find(c =>
+      c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
+    bodyNode.flatMap { body =>
+      if body.kind.contains("BlockFunctionBody") then
+        body.children.find(_.kind.contains("Block")).orElse(Some(body))
+      else if body.kind.contains("ExpressionFunctionBody") then
+        body.children.headOption
+          .filterNot(_.kind.contains("Type"))
+          .map { expr =>
+            RastNode("Block", 0, (0, 0), children = List(
+              RastNode("ReturnStatement", 0, (0, 0), children = List(expr))
+            ))
+          }
+      else Some(body)
+    }
 
   def findFunctionBody(file: RastFile, name: String): Option[RastNode] =
     var found: Option[RastNode] = None
@@ -495,23 +540,29 @@ object DartSassEmitter:
             // Dart FunctionDeclaration wraps body in FunctionExpression
             val fnExpr = node.children.find(_.kind.contains("FunctionExpression"))
             val searchIn = fnExpr.map(_.children).getOrElse(node.children)
-            found = searchIn.find(c =>
-              c.kind.contains("BlockFunctionBody") || c.kind.contains("ExpressionFunctionBody"))
-            // Unwrap BlockFunctionBody to its inner Block
-            found = found.flatMap { body =>
-              if body.kind.contains("BlockFunctionBody") then
-                body.children.find(_.kind.contains("Block")).orElse(Some(body))
-              else if body.kind.contains("ExpressionFunctionBody") then
-                // Wrap the expression in a synthetic return block
-                body.children.headOption
-                  .filterNot(_.kind.contains("Type")) // skip return type annotation
-                  .map { expr =>
-                    RastNode("Block", 0, (0, 0), children = List(
-                      RastNode("ReturnStatement", 0, (0, 0), children = List(expr))
-                    ))
-                  }
-              else Some(body)
-            }
+            found = extractBodyFromChildren(searchIn)
+
+        case "ConstructorDeclaration" =>
+          val fnName = nameFromSymbol(node)
+          val actualName = if fnName.isEmpty then "<init>" else fnName
+          if actualName == name then
+            found = extractBodyFromChildren(node.children)
+
+        case "TopLevelVariableDeclaration" =>
+          // TopLevelVariableDeclarationImpl > VariableDeclarationListImpl > VariableDeclarationImpl
+          val vdlChildren = node.children
+            .find(_.kind.contains("VariableDeclarationList"))
+            .map(_.children)
+            .getOrElse(node.children)
+          val varDecls = vdlChildren.filter(_.kind.contains("VariableDeclaration"))
+          for vd <- varDecls if found.isEmpty do
+            val varName = nameFromSymbol(vd)
+            if varName == name then
+              val fnInit = vd.children.find(c =>
+                c.kind.contains("FunctionExpression") || c.kind.contains("ArrowFunction"))
+              fnInit.foreach { fn =>
+                found = extractBodyFromChildren(fn.children)
+              }
 
         case _ => ()
       if found.isEmpty then node.children.foreach(walk)

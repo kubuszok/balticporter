@@ -155,6 +155,51 @@ class DartSassEmitterSpec extends munit.FunSuite:
   // Batch analysis
   // -----------------------------------------------------------------------
 
+  // -----------------------------------------------------------------------
+  // Diagnostic: Expression/Statement getter name matching
+  // -----------------------------------------------------------------------
+
+  test("diagnostic: Expression RAST vs reference name mismatch"):
+    val rast = tryLoadRast("/rast/dart-sass/lib/src/ast/sass/expression.dart.rast.json")
+    if rast.isEmpty then
+      println("SKIP: expression.dart RAST not found")
+    else
+      val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+      val rastNames = fns.map(f => dedicated.DartSassEmitter.dartToCamelCase(f.name)).toSet
+      println(s"Expression RAST: ${fns.size} functions extracted")
+      println(s"  Names: ${fns.map(f => f.name + " -> " + dedicated.DartSassEmitter.dartToCamelCase(f.name)).mkString(", ")}")
+
+      if java.nio.file.Files.exists(sassRefRoot.resolve("ast/sass/Expression.scala")) then
+        val refSource = new String(java.nio.file.Files.readAllBytes(sassRefRoot.resolve("ast/sass/Expression.scala")))
+        val refMethods = dedicated.TerserCompressEmitter.findMethodBoundaries(refSource.split("\n", -1).toList)
+        val refNames = refMethods.map(_.name).toSet
+        println(s"Expression reference: ${refMethods.size} methods")
+        println(s"  Names: ${refMethods.map(_.name).mkString(", ")}")
+        val matched = rastNames.intersect(refNames)
+        val onlyInRast = rastNames -- refNames
+        val onlyInRef = refNames -- rastNames
+        println(s"  Matched: ${matched.size} (${matched.toList.sorted.take(10).mkString(", ")})")
+        println(s"  Only in RAST: ${onlyInRast.size} (${onlyInRast.toList.sorted.take(10).mkString(", ")})")
+        println(s"  Only in ref: ${onlyInRef.size} (${onlyInRef.toList.sorted.take(10).mkString(", ")})")
+      else
+        println("SKIP: Expression.scala reference not found")
+
+  test("diagnostic: MathFunctions RAST extraction"):
+    val rast = tryLoadRast("/rast/dart-sass/lib/src/functions/math.dart.rast.json")
+    if rast.isEmpty then
+      println("SKIP: math.dart RAST not found")
+    else
+      val fns = dedicated.DartSassEmitter.extractAllFunctions(rast.get)
+      println(s"math.dart: ${fns.size} functions extracted")
+      println(s"  Names: ${fns.map(_.name).mkString(", ")}")
+      // Show top-level node kinds
+      for n <- rast.get.nodes.take(10) do
+        println(s"  Node: ${n.kind}, children: ${n.children.size}")
+
+  // -----------------------------------------------------------------------
+  // Batch analysis
+  // -----------------------------------------------------------------------
+
   test("batch: analyze all dart-sass modules"):
     if !java.nio.file.Files.exists(sassRefRoot) then
       println("SKIP: ssg-sass reference not found at " + sassRefRoot)
