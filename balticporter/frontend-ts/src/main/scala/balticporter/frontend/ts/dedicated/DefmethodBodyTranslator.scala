@@ -643,7 +643,7 @@ object DefmethodBodyTranslator:
           refuse("ArgumentsObject")
           "??? /* arguments */"
         case n if n.startsWith("AST_") => astVarToScalaName(n)
-        case n => terserApiLookup.getOrElse(n, snakeToCamel(n))
+        case n => combinedApiLookup.getOrElse(n, snakeToCamel(n))
 
     private def translatePropertyAccess(node: RastNode): String =
       val children = node.children
@@ -1437,3 +1437,41 @@ object DefmethodBodyTranslator:
     "OPTIMIZED"      -> "CompressorFlags.OPTIMIZED",
     "TOP"            -> "CompressorFlags.TOP",
   )
+
+  /** KaTeX-specific API name mapping: JS identifier → Scala equivalent. */
+  private val katexApiLookup: Map[String, String] = Map(
+    "assertNodeType"       -> "ParseNode.assertNodeType",
+    "assertSymbolNodeType" -> "ParseNode.assertSymbolNodeType",
+    "checkNodeType"        -> "ParseNode.checkNodeType",
+    "normalizeArgument"    -> "normalizeArgument",
+    "ordargument"          -> "ordArgument",
+    "makeOrd"              -> "BuildCommon.makeOrd",
+    "makeSpan"             -> "BuildCommon.makeSpan",
+    "makeVList"            -> "BuildCommon.makeVList",
+    "makeFragment"         -> "BuildCommon.makeFragment",
+    "makeSymbol"           -> "BuildCommon.makeSymbol",
+    "staticSvg"            -> "BuildCommon.staticSvg",
+    "svgData"              -> "BuildCommon.svgData",
+    "mathsym"              -> "BuildCommon.mathsym",
+    "makeLineBreak"        -> "BuildCommon.makeLineBreak",
+    "makeEm"               -> "Units.makeEm",
+    "calculateSize"        -> "Units.calculateSize",
+    "isCharacterBox"       -> "Utils.isCharacterBox",
+    "escape"               -> "Utils.escape",
+    "getVariant"           -> "getVariant",
+    "htmlBuilder"          -> "htmlBuilder",
+    "mathmlBuilder"        -> "mathmlBuilder",
+    "buildExpression"      -> "BuildHTML.buildExpression",
+    "buildGroup"           -> "BuildHTML.buildGroup",
+    "buildMathML"          -> "BuildMathML.buildMathML",
+    "buildExpressionRow"   -> "BuildMathML.buildExpressionRow",
+    "stretchySvg"          -> "Stretchy.stretchySvg",
+    "stretchyMathML"       -> "Stretchy.stretchyMathML",
+    "MathNode"             -> "MathNode",
+    "SymbolNode"           -> "SymbolNode",
+    "SpaceNode"            -> "SpaceNode",
+  )
+
+  /** Combined API lookup: terser + katex. */
+  private val combinedApiLookup: Map[String, String] =
+    terserApiLookup ++ katexApiLookup

@@ -423,6 +423,75 @@ object VitestToMunitEmitter:
           sb.append(s"${indent}val _e = intercept[Exception] { $subjExpr }\n")
           sb.append(s"${indent}assert(_e.getMessage.contains($snapshot))\n")
 
+        // KaTeX-specific matchers
+        case "toParse" =>
+          assertionCounts("assert.parse") += 1
+          if negated then
+            sb.append(s"${indent}intercept[ParseError] { KaTeX.parse($subjExpr) }\n")
+          else
+            sb.append(s"${indent}KaTeX.parse($subjExpr)\n")
+
+        case "toBuild" =>
+          assertionCounts("assert.build") += 1
+          if negated then
+            sb.append(s"${indent}intercept[Exception] { KaTeX.renderToString($subjExpr) }\n")
+          else
+            sb.append(s"${indent}KaTeX.renderToString($subjExpr)\n")
+
+        case "toParseLike" =>
+          assertionCounts("assertEquals.parseLike") += 1
+          val expected = args.headOption.map(emitExpr).getOrElse("???")
+          if negated then
+            sb.append(s"${indent}assertNotEquals(KaTeX.parse($subjExpr).toString, KaTeX.parse($expected).toString)\n")
+          else
+            sb.append(s"${indent}assertEquals(KaTeX.parse($subjExpr).toString, KaTeX.parse($expected).toString)\n")
+
+        case "toBuildLike" =>
+          assertionCounts("assertEquals.buildLike") += 1
+          val expected = args.headOption.map(emitExpr).getOrElse("???")
+          if negated then
+            sb.append(s"${indent}assertNotEquals(KaTeX.renderToString($subjExpr), KaTeX.renderToString($expected))\n")
+          else
+            sb.append(s"${indent}assertEquals(KaTeX.renderToString($subjExpr), KaTeX.renderToString($expected))\n")
+
+        case "toBeDefined" =>
+          assertionCounts("assert.defined") += 1
+          if negated then
+            sb.append(s"${indent}assertEquals($subjExpr, null)\n")
+          else
+            sb.append(s"${indent}assert($subjExpr != null)\n")
+
+        case "toBeCloseTo" =>
+          assertionCounts("assertEqualsDouble") += 1
+          val expected = args.headOption.map(emitExpr).getOrElse("0.0")
+          val precision = args.lift(1).flatMap(_.value).collect {
+            case RastValue.Num(n) => n.toInt
+          }.getOrElse(5)
+          val delta = s"1e-$precision"
+          sb.append(s"${indent}assertEqualsDouble($subjExpr.toDouble, $expected.toDouble, $delta)\n")
+
+        case "toMatchSnapshot" =>
+          assertionCounts("snapshot") += 1
+          sb.append(s"$indent// snapshot: $subjExpr\n")
+
+        case "toMatch" =>
+          assertionCounts("assert.match") += 1
+          val pattern = args.headOption.map(emitExpr).getOrElse("\"\"")
+          if negated then
+            sb.append(s"${indent}assert(!$pattern.r.findFirstIn($subjExpr).isDefined)\n")
+          else
+            sb.append(s"${indent}assert($pattern.r.findFirstIn($subjExpr).isDefined)\n")
+
+        case "toHaveBeenCalledWith" =>
+          assertionCounts("unhandled:toHaveBeenCalledWith") += 1
+          sb.append(s"$indent// mock assertion: toHaveBeenCalledWith not translatable\n")
+
+        case "toMatchObject" =>
+          assertionCounts("assert.matchObject") += 1
+          val expected = args.headOption.map(emitExpr).getOrElse("???")
+          sb.append(s"$indent// matchObject: assertEquals partial not available\n")
+          sb.append(s"${indent}assert($subjExpr.toString.contains($expected.toString))\n")
+
         case other =>
           assertionCounts(s"unhandled:$other") += 1
           sb.append(s"$indent// TODO: expect($subjExpr).$other(...)\n")

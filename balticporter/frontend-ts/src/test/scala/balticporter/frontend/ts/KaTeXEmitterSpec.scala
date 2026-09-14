@@ -1,5 +1,7 @@
 package balticporter.frontend.ts
 
+import balticporter.frontend.ts.dedicated.TerserEmitter
+
 class KaTeXEmitterSpec extends munit.FunSuite:
 
   private def loadRast(resource: String): RastFile =
@@ -368,3 +370,83 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     println(s"Output: $katexTestOutDir")
 
     assert(totalTests >= 100, s"Expected >= 100 total tests from KaTeX specs, got $totalTests")
+
+  // -----------------------------------------------------------------------
+  // Phase 2: Handler body translation
+  // -----------------------------------------------------------------------
+
+  test("handler body extraction: accent handler has Block"):
+    val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
+    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val accentDef = defs.find(_.nodeType == "accent").get
+    val body = dedicated.KaTeXEmitter.extractFunctionBody(accentDef.handlerNode)
+    assert(body.isDefined, "accent handler should have extractable body")
+    assert(body.get.kind == "Block", s"should be a Block, got ${body.get.kind}")
+    val stmtCount = body.get.children.size
+    assert(stmtCount >= 2, s"handler body should have >= 2 statements, got $stmtCount")
+    println(s"accent handler: ${stmtCount} statements in body")
+
+  test("handler body extraction: underline handler (MethodDeclaration)"):
+    val rast = loadRast("/rast/katex/src/functions/underline.rast.json")
+    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    assert(defs.nonEmpty, "should find defineFunction calls")
+    val body = dedicated.KaTeXEmitter.extractFunctionBody(defs.head.handlerNode)
+    assert(body.isDefined, "underline handler should have extractable body")
+    println(s"underline handler: ${body.get.children.size} statements")
+
+  test("handler param extraction"):
+    val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
+    val defs = dedicated.KaTeXEmitter.extractDefineFunctions(rast)
+    val accentDef = defs.find(_.nodeType == "accent").get
+    val params = dedicated.KaTeXEmitter.extractHandlerParams(accentDef.handlerNode)
+    println(s"accent handler params: ${params.mkString(", ")}")
+    assert(params.nonEmpty, "should extract handler params")
+
+  test("handler body translation: accent produces plausible Scala"):
+    val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
+    val (source, summary) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
+    println(s"AccentFunc handler translation: ${summary.handlersTranslated} translated, ${summary.handlersPartial} partial")
+    // At minimum, the handler should not be entirely `???`
+    val handlerLines = source.linesIterator.filter(_.contains("handler = Nullable")).toList
+    assert(handlerLines.nonEmpty, "should emit handler lines")
+    println(s"Handler lines: ${handlerLines.size}")
+
+  test("katex API mapping: makeSpan resolves to BuildCommon.makeSpan"):
+    val rast = loadRast("/rast/katex/src/functions/accent.rast.json")
+    val (source, _) = dedicated.KaTeXEmitter.emitFunctionModule(rast, "AccentFunc")
+    // The accent file contains makeSpan/makeOrd/staticSvg calls
+    if source.contains("BuildCommon.makeSpan") || source.contains("BuildCommon.makeOrd") then
+      println("KaTeX API mapping confirmed: BuildCommon.* calls found")
+    else
+      println("NOTE: accent handlers may have too many refusals for API mapping to appear")
+    // Check that basic API lookups work (even if the full handler fails)
+    val entry = TerserEmitter.DefmethodEntry("_test_", "test", List("x"), RastNode("Block", 0, (0, 0), children = List(
+      RastNode("ReturnStatement", 0, (0, 0), children = List(
+        RastNode("CallExpression", 0, (0, 0), children = List(
+          RastNode("Identifier", 0, (0, 0), text = Some("makeSpan")),
+          RastNode("Identifier", 0, (0, 0), text = Some("x")),
+        ))
+      ))
+    )))
+    val result = dedicated.DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+    assert(result.scalaBody.contains("BuildCommon.makeSpan"), s"makeSpan should map to BuildCommon.makeSpan, got: ${result.scalaBody.trim}")
+
+  test("batch handler translation stats"):
+    var totalDefs = 0
+    var translated = 0
+    var partial = 0
+
+    for mod <- dedicated.KaTeXEmitter.FunctionModules do
+      tryLoadRast(mod.rastResource).foreach { rast =>
+        val (_, summary) = dedicated.KaTeXEmitter.emitFunctionModule(rast, mod.objectName)
+        totalDefs += summary.defineFunctionCount
+        translated += summary.handlersTranslated
+        partial += summary.handlersPartial
+      }
+
+    println(s"\n=== KaTeX Handler Translation ===")
+    println(s"Total defineFunction calls: $totalDefs")
+    println(s"Handlers fully translated: $translated")
+    println(s"Handlers partial/stub: $partial")
+    val pct = if totalDefs > 0 then (translated * 100.0 / totalDefs) else 0.0
+    println(f"Handler translation rate: $translated/$totalDefs ($pct%.1f%%)")

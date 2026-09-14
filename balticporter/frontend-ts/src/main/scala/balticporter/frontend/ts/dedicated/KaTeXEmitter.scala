@@ -39,6 +39,8 @@ object KaTeXEmitter:
       handlerNode: Option[RastNode],
       htmlBuilderRef: Option[String],
       mathmlBuilderRef: Option[String],
+      htmlBuilderNode: Option[RastNode] = None,
+      mathmlBuilderNode: Option[RastNode] = None,
   )
 
   /** Extract all defineFunction calls from a KaTeX function RAST file. */
@@ -58,11 +60,18 @@ object KaTeXEmitter:
     result.toList
 
   private def extractOneDefineFunction(objLit: RastNode): Option[DefineFunctionCall] =
+    // Collect PropertyAssignment entries
     val props = objLit.children.filter(_.kind == "PropertyAssignment")
     val propMap = props.flatMap { pa =>
       val key = pa.children.headOption.flatMap(_.text)
       val value = pa.children.lift(1)
       key.zip(value)
+    }.toMap
+
+    // Also collect MethodDeclaration entries (handler({ctx}, args) { ... } syntax)
+    val methodDecls = objLit.children.filter(_.kind == "MethodDeclaration")
+    val methodMap = methodDecls.flatMap { md =>
+      md.children.find(_.kind == "Identifier").flatMap(_.text).map(_ -> md)
     }.toMap
 
     val nodeType = propMap.get("type").flatMap(extractStringValue).getOrElse("")
@@ -81,7 +90,9 @@ object KaTeXEmitter:
     val primitive = propsObj.flatMap(extractPropBool("primitive", _)).getOrElse(false)
     val argTypes = propsObj.map(extractArgTypes).getOrElse(Nil)
 
-    val handlerNode = propMap.get("handler")
+    // Handler: PropertyAssignment (ArrowFunction/FunctionExpression) or MethodDeclaration
+    val handlerNode: Option[RastNode] = propMap.get("handler").orElse(
+      methodMap.get("handler"))
 
     // ShorthandPropertyAssignment: { htmlBuilder } has child[0] = Identifier
     // PropertyAssignment: { htmlBuilder: expr } has child[1] = expr
@@ -98,6 +109,18 @@ object KaTeXEmitter:
       else propMap.get("mathmlBuilder").flatMap(n =>
         if n.kind == "Identifier" then n.text else None)
 
+    // Inline builder nodes (PropertyAssignment with function value, or MethodDeclaration)
+    val htmlBuilderNode: Option[RastNode] =
+      if htmlBuilderRef.isDefined then None  // shorthand/identifier reference, not inline
+      else propMap.get("htmlBuilder").filter(n =>
+        n.kind == "ArrowFunction" || n.kind == "FunctionExpression"
+      ).orElse(methodMap.get("htmlBuilder"))
+    val mathmlBuilderNode: Option[RastNode] =
+      if mathmlBuilderRef.isDefined then None
+      else propMap.get("mathmlBuilder").filter(n =>
+        n.kind == "ArrowFunction" || n.kind == "FunctionExpression"
+      ).orElse(methodMap.get("mathmlBuilder"))
+
     Some(DefineFunctionCall(
       nodeType = nodeType,
       names = names,
@@ -112,6 +135,8 @@ object KaTeXEmitter:
       handlerNode = handlerNode,
       htmlBuilderRef = htmlBuilderRef,
       mathmlBuilderRef = mathmlBuilderRef,
+      htmlBuilderNode = htmlBuilderNode,
+      mathmlBuilderNode = mathmlBuilderNode,
     ))
 
   // --------------------------------------------------------------------------
@@ -129,6 +154,8 @@ object KaTeXEmitter:
   ): (String, FunctionEmitSummary) =
     val defs = extractDefineFunctions(file)
     val topLevelFns = extractTopLevelFunctions(file)
+    var handlerTranslated = 0
+    var handlerPartial = 0
 
     val sb = new StringBuilder
     sb.append(header(file.path, s"$objectName.scala"))
@@ -164,23 +191,68 @@ object KaTeXEmitter:
         sb.append(s",\n          argTypes = Nullable(Array(${argTypeStrs.mkString(", ")}))")
       sb.append("\n        ),\n")
 
-      // Handler
-      sb.append("        handler = Nullable { (context, args, optArgs) =>\n")
-      sb.append("          ??? // RAST handler body\n")
-      sb.append("        }")
+      // Handler — translate body from RAST where possible
+      val handlerBody = extractFunctionBody(df.handlerNode)
+      handlerBody match
+        case Some(block) =>
+          val entry = TerserEmitter.DefmethodEntry("_handler_", df.nodeType, List("context", "args", "optArgs"), block)
+          val result = DefmethodBodyTranslator.translateBody(entry, Nil, "          ")
+          if result.refusalCount == 0 then
+            sb.append("        handler = Nullable { (context, args, optArgs) =>\n")
+            sb.append(result.scalaBody)
+            sb.append("        }")
+            handlerTranslated += 1
+          else
+            sb.append(s"        handler = Nullable { (context, args, optArgs) =>\n")
+            sb.append(s"          ??? // ${result.refusalCount} untranslated: ${result.refusalReasons.take(3).mkString(", ")}\n")
+            sb.append("        }")
+            handlerPartial += 1
+        case None =>
+          sb.append("        handler = Nullable { (context, args, optArgs) =>\n")
+          sb.append("          ??? // no handler body in RAST\n")
+          sb.append("        }")
+          handlerPartial += 1
 
-      // Builders
+      // Builders — translate inline bodies, use references for shorthand
       df.htmlBuilderRef match
         case Some(ref) =>
           sb.append(s",\n        htmlBuilder = Nullable(${camelCase(ref)})")
         case None =>
-          sb.append(",\n        htmlBuilder = Nullable.Null")
+          val builderBody = extractFunctionBody(df.htmlBuilderNode)
+          builderBody match
+            case Some(block) =>
+              val entry = TerserEmitter.DefmethodEntry("_htmlBuilder_", df.nodeType, List("group", "options"), block)
+              val result = DefmethodBodyTranslator.translateBody(entry, Nil, "          ")
+              if result.refusalCount == 0 then
+                sb.append(",\n        htmlBuilder = Nullable { (group, options) =>\n")
+                sb.append(result.scalaBody)
+                sb.append("        }")
+              else
+                sb.append(s",\n        htmlBuilder = Nullable { (group, options) =>\n")
+                sb.append(s"          ??? // ${result.refusalCount} untranslated\n")
+                sb.append("        }")
+            case None =>
+              sb.append(",\n        htmlBuilder = Nullable.Null")
 
       df.mathmlBuilderRef match
         case Some(ref) =>
           sb.append(s",\n        mathmlBuilder = Nullable(${camelCase(ref)})")
         case None =>
-          sb.append(",\n        mathmlBuilder = Nullable.Null")
+          val builderBody = extractFunctionBody(df.mathmlBuilderNode)
+          builderBody match
+            case Some(block) =>
+              val entry = TerserEmitter.DefmethodEntry("_mathmlBuilder_", df.nodeType, List("group", "options"), block)
+              val result = DefmethodBodyTranslator.translateBody(entry, Nil, "          ")
+              if result.refusalCount == 0 then
+                sb.append(",\n        mathmlBuilder = Nullable { (group, options) =>\n")
+                sb.append(result.scalaBody)
+                sb.append("        }")
+              else
+                sb.append(s",\n        mathmlBuilder = Nullable { (group, options) =>\n")
+                sb.append(s"          ??? // ${result.refusalCount} untranslated\n")
+                sb.append("        }")
+            case None =>
+              sb.append(",\n        mathmlBuilder = Nullable.Null")
 
       sb.append("\n      )\n")
       sb.append("    )\n\n")
@@ -194,6 +266,8 @@ object KaTeXEmitter:
       totalNames = defs.flatMap(_.names).size,
       topLevelFunctions = topLevelFns.size,
       nodeTypes = defs.map(_.nodeType).distinct,
+      handlersTranslated = handlerTranslated,
+      handlersPartial = handlerPartial,
     )
 
     (sb.toString, summary)
@@ -204,6 +278,8 @@ object KaTeXEmitter:
       totalNames: Int,
       topLevelFunctions: Int,
       nodeTypes: List[String],
+      handlersTranslated: Int = 0,
+      handlersPartial: Int = 0,
   )
 
   // --------------------------------------------------------------------------
@@ -219,18 +295,20 @@ object KaTeXEmitter:
       matchDetails: List[(String, String)],
   )
 
-  /** Patterns in a translated KaTeX RAST body that cannot compile in ssg-katex. */
+  /** Patterns in a translated KaTeX RAST body that cannot compile in ssg-katex.
+    *
+    * Note: `setAttribute` is NOT blocked — in KaTeX it's a tree-node method,
+    * not a browser DOM API.
+    */
   private val katexUncompilablePatterns: List[String] = List(
     "document.",         // DOM API — ssg has no browser document
     "window.",           // DOM API — ssg has no browser window
     "console.",          // browser console
     "HTMLElement",       // DOM type
-    "Element",           // DOM type (bare)
     "addEventListener",  // DOM event API
     "createElement",     // DOM creation API
     "querySelector",     // DOM query API
     "innerHTML",         // DOM property
-    "setAttribute",      // DOM attribute API
     "DEFMETHOD(",        // Terser construct — not in KaTeX
   )
 
@@ -253,6 +331,7 @@ object KaTeXEmitter:
 
     val methods = TerserCompressEmitter.findMethodBoundaries(lines)
     val rastBodies = buildTranslatedBodyMap(rastFile)
+    val consumed = mutable.Map.empty[String, Int].withDefaultValue(0)
     val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val sb = new StringBuilder
@@ -266,12 +345,18 @@ object KaTeXEmitter:
       if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
         val method = methods(methodIdx)
 
-        val usableRast = rastBodies.get(method.name).filter { case (body, _) =>
-          !method.isPrivate && !containsKatexUncompilablePatterns(body)
+        val idx = consumed(method.name)
+        val usableRast = rastBodies.get(method.name).flatMap { entries =>
+          if idx < entries.size then
+            val (body, refusals) = entries(idx)
+            if !containsKatexUncompilablePatterns(body) then Some((body, refusals))
+            else None
+          else None
         }
 
         usableRast match
           case Some((translatedBody, refusals)) =>
+            consumed(method.name) = idx + 1
             val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
             for i <- method.signatureLine to sigEndLineIdx do
               val line = lines(i)
@@ -293,6 +378,7 @@ object KaTeXEmitter:
             totalRefusals += refusals
 
           case _ =>
+            consumed(method.name) = idx + 1
             for i <- method.signatureLine to method.bodyEndLine do
               sb.append(lines(i))
               sb.append("\n")
@@ -708,38 +794,43 @@ object KaTeXEmitter:
   private def buildBodyMap(fns: List[TopLevelFunction]): Map[String, Boolean] =
     fns.map(f => camelCase(f.name) -> true).toMap
 
-  /** Build a map from method name to (translated RAST body, refusal count).
+  /** Build a map from method name to a list of (translated RAST body, refusal count).
     *
     * Extracts all functions/methods from the RAST, translates each body using
     * DefmethodBodyTranslator (which handles general TS→Scala patterns), and
-    * builds the lookup map.
+    * builds the lookup map. Multiple RAST functions with the same name (e.g.,
+    * `toMarkup` on different classes) are stored in occurrence order.
     */
-  private def buildTranslatedBodyMap(rastFile: RastFile): Map[String, (String, Int)] =
-    val result = mutable.Map.empty[String, (String, Int)]
+  private def buildTranslatedBodyMap(rastFile: RastFile): mutable.Map[String, mutable.ListBuffer[(String, Int)]] =
+    val result = mutable.Map.empty[String, mutable.ListBuffer[(String, Int)]]
     val allFns = extractAllFunctions(rastFile)
 
     for fn <- allFns do
       val scalaName = camelCase(fn.name)
-      val bodyNode = findFunctionBody(rastFile, fn.name)
-      bodyNode.foreach { body =>
+      val bodyNode = findFunctionBody(rastFile, fn.name, allOccurrences = true)
+      for body <- bodyNode do
         val entry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, body)
         val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-        result(scalaName) = (translated.scalaBody, translated.refusalCount)
-      }
+        result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += ((translated.scalaBody, translated.refusalCount))
 
-    result.toMap
+    result
 
-  /** Find the Block body node for a named function in the RAST. */
-  private def findFunctionBody(file: RastFile, name: String): Option[RastNode] =
-    var found: Option[RastNode] = None
+  /** Find all Block body nodes for a named function in the RAST.
+    *
+    * When `allOccurrences` is true, returns all matching bodies (for functions
+    * with the same name in different classes, e.g., `toMarkup` on Span and MathNode).
+    * When false, returns only the first match.
+    */
+  private def findFunctionBody(file: RastFile, name: String, allOccurrences: Boolean = false): List[RastNode] =
+    val results = mutable.ListBuffer.empty[RastNode]
 
     def walk(node: RastNode): Unit =
-      if found.isDefined then return
+      if !allOccurrences && results.nonEmpty then return
       node.kind match
         case "FunctionDeclaration" =>
           val fnName = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
           if fnName == name then
-            found = node.children.find(_.kind == "Block")
+            node.children.find(_.kind == "Block").foreach(results += _)
 
         case "VariableStatement" =>
           for vdl <- node.children.find(_.kind == "VariableDeclarationList")
@@ -749,24 +840,62 @@ object KaTeXEmitter:
               val rhs = vd.children.find(c =>
                 c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
               rhs.foreach { fn =>
-                found = fn.children.find(_.kind == "Block").orElse {
+                val body = fn.children.find(_.kind == "Block").orElse {
                   val exprBody = fn.children.find(c => c.kind != "Parameter")
                   exprBody.map(e => RastNode("Block", 0, (0, 0), children = List(
                     RastNode("ReturnStatement", 0, (0, 0), children = List(e))
                   )))
                 }
+                body.foreach(results += _)
               }
 
         case "MethodDeclaration" =>
           val mName = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
           if mName == name then
-            found = node.children.find(_.kind == "Block")
+            node.children.find(_.kind == "Block").foreach(results += _)
 
         case _ => ()
       node.children.foreach(walk)
 
     file.nodes.foreach(walk)
-    found
+    results.toList
+
+  // --------------------------------------------------------------------------
+  // Function body extraction from handler/builder nodes
+  // --------------------------------------------------------------------------
+
+  /** Extract the Block body from a handler/builder RAST node.
+    *
+    * Handles three forms:
+    *   - ArrowFunction: `(context, args) => { body }`
+    *   - FunctionExpression: `function(context, args) { body }`
+    *   - MethodDeclaration: `handler(context, args) { body }` (object method shorthand)
+    *
+    * Returns the Block node for DefmethodBodyTranslator.
+    */
+  def extractFunctionBody(nodeOpt: Option[RastNode]): Option[RastNode] =
+    nodeOpt.flatMap { node =>
+      node.kind match
+        case "ArrowFunction" | "FunctionExpression" =>
+          node.children.find(_.kind == "Block").orElse {
+            val exprBody = node.children.find(c => c.kind != "Parameter" && !c.kind.contains("Type"))
+            exprBody.map(e => RastNode("Block", 0, (0, 0), children = List(
+              RastNode("ReturnStatement", 0, (0, 0), children = List(e))
+            )))
+          }
+        case "MethodDeclaration" =>
+          node.children.find(_.kind == "Block")
+        case _ => None
+    }
+
+  /** Extract handler parameter names from a handler RAST node. */
+  def extractHandlerParams(nodeOpt: Option[RastNode]): List[String] =
+    nodeOpt.toList.flatMap { node =>
+      node.children.filter(_.kind == "Parameter").flatMap { p =>
+        p.children.find(_.kind == "Identifier").flatMap(_.text)
+          .orElse(p.children.find(_.kind == "ObjectBindingPattern").map(_ => "_ctx"))
+      }
+    }
 
   // --------------------------------------------------------------------------
   // Private helpers
