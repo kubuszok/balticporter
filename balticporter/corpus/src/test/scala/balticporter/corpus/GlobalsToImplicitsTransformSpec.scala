@@ -219,8 +219,9 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
       h,
       statics.map(_ -> "verbosity").toMap,
       Set.empty,
-      (_, _, _, _, _, _) => (),
-      (_, _) => ()
+      Set.empty,
+      seam = (_, _, _, _, _, _) => (),
+      refuse = (_, _) => ()
     )
     need.grow()
     need.edges
