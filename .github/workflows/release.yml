@@ -1,10 +1,11 @@
-name: Publish Snapshots
+name: Sonatype Release
 
 on:
   push:
     branches: [master]
     tags: ["*"]
 
+# Cancel in-progress runs for the same branch/PR
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -13,26 +14,33 @@ env:
   JVM_VERSION: "zulu:22"
 
 jobs:
-  publish:
-    name: Publish to Maven Central
-    runs-on: ubuntu-latest
+  build-and-publish:
+    # Never publish from pull requests (no secrets, and would otherwise attempt a snapshot deploy).
+    # Snapshots publish on master pushes; full releases (sonaRelease) only on tag pushes — the
+    # tag/snapshot distinction is made inside the `ci-release` command (publishSigned vs
+    # +publishSigned + sonaRelease).  checkNoSnapshotDeps (sbt-kubuszok) guards a tagged release
+    # against depending on any -SNAPSHOT module.
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
+
+    name: ${{ startsWith(github.ref, 'refs/tags/') && 'Publish Tag as Release' || 'Publish Snapshot' }}
 
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-java@v6
+      - uses: coursier/cache-action@v8
+      - name: Import GPG key for signing the release
+        uses: crazy-max/ghaction-import-gpg@v7
         with:
-          distribution: zulu
-          java-version: "22"
-
-      - uses: sbt/setup-sbt@v1
-
-      - name: Publish
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - uses: coursier/setup-action@v3.0.2
+        with:
+          jvm: ${{ env.JVM_VERSION }}
+          apps: sbt
+      - name: Publish all projects
         run: sbt ci-release
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
