@@ -402,10 +402,19 @@ object DartSassEmitter:
       val scalaName = dartToCamelCase(fn.name)
       val bodyNode = findFunctionBody(rastFile, fn.name)
       bodyNode.foreach { body =>
-        val entry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, body)
+        // Normalize Dart node kinds to TS equivalents before translation
+        val normalizedBody = DefmethodBodyTranslator.normalizeNodeTree(body)
+        val entry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, normalizedBody)
         val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
-        result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) +=
-          ((translated.scalaBody, translated.refusalCount))
+        val bodyPair = (translated.scalaBody, translated.refusalCount)
+        result.getOrElseUpdate(scalaName, mutable.ListBuffer.empty) += bodyPair
+        // Also register under the Dart name with underscore prefix for private methods
+        if fn.name.startsWith("_") then
+          val privateName = "_" + scalaName
+          result.getOrElseUpdate(privateName, mutable.ListBuffer.empty) += bodyPair
+        // And the original Dart name as-is (for exact match)
+        if fn.name != scalaName then
+          result.getOrElseUpdate(fn.name, mutable.ListBuffer.empty) += bodyPair
       }
 
     result.map { case (k, v) => k -> v.toList }.toMap
@@ -614,7 +623,8 @@ object DartSassEmitter:
   // --------------------------------------------------------------------------
 
   def dartToCamelCase(s: String): String =
-    if !s.contains("_") then s
+    val stripped = s.stripPrefix("_") // Dart private prefix
+    if !stripped.contains("_") then stripped
     else
-      val parts = s.split("_")
+      val parts = stripped.split("_")
       parts.head + parts.tail.map(p => if p.nonEmpty then p(0).toUpper + p.substring(1) else "").mkString
