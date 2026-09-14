@@ -215,13 +215,34 @@ object KaTeXEmitter:
       totalMethods: Int,
       matchedFromRast: Int,
       keptFromReference: Int,
+      refusalCount: Int,
+      matchDetails: List[(String, String)],
   )
 
+  /** Patterns in a translated KaTeX RAST body that cannot compile in ssg-katex. */
+  private val katexUncompilablePatterns: List[String] = List(
+    "document.",         // DOM API — ssg has no browser document
+    "window.",           // DOM API — ssg has no browser window
+    "console.",          // browser console
+    "HTMLElement",       // DOM type
+    "Element",           // DOM type (bare)
+    "addEventListener",  // DOM event API
+    "createElement",     // DOM creation API
+    "querySelector",     // DOM query API
+    "innerHTML",         // DOM property
+    "setAttribute",      // DOM attribute API
+    "DEFMETHOD(",        // Terser construct — not in KaTeX
+  )
+
+  private def containsKatexUncompilablePatterns(body: String): Boolean =
+    katexUncompilablePatterns.exists(body.contains)
+
   /** Emit a KaTeX module using parity-derive: the reference file's structure
-    * with RAST-translated bodies where a match exists.
+    * with RAST-translated bodies where a match exists and compiles.
     *
     * Uses the TerserCompressEmitter's findMethodBoundaries and body
-    * replacement infrastructure.
+    * replacement infrastructure. RAST bodies are translated using
+    * DefmethodBodyTranslator (which handles general TS→Scala patterns).
     */
   def emitWithParity(
       rastFile: RastFile,
@@ -231,11 +252,12 @@ object KaTeXEmitter:
     val lines = referenceSource.split("\n", -1).toList
 
     val methods = TerserCompressEmitter.findMethodBoundaries(lines)
-    val rastFns = extractAllFunctions(rastFile)
-    val rastBodyMap = buildBodyMap(rastFns)
+    val rastBodies = buildTranslatedBodyMap(rastFile)
+    val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val sb = new StringBuilder
     val matchDetails = mutable.ListBuffer.empty[(String, String)]
+    var totalRefusals = 0
 
     var lineIdx = 0
     var methodIdx = 0
@@ -243,17 +265,40 @@ object KaTeXEmitter:
     while lineIdx < lines.size do
       if methodIdx < methods.size && lineIdx == methods(methodIdx).signatureLine then
         val method = methods(methodIdx)
-        val matched = rastBodyMap.contains(method.name)
-        if matched && !method.isPrivate then
-          matchDetails += ((method.name, "rast"))
-        else
-          matchDetails += ((method.name, "reference"))
-        // Always keep reference body for now — parity body interleaving
-        // is proven for Terser but KaTeX bodies need different lowering
-        for i <- method.signatureLine to method.bodyEndLine do
-          sb.append(lines(i))
-          sb.append("\n")
-        lineIdx = method.bodyEndLine + 1
+
+        val usableRast = rastBodies.get(method.name).filter { case (body, _) =>
+          !method.isPrivate && !containsKatexUncompilablePatterns(body)
+        }
+
+        usableRast match
+          case Some((translatedBody, refusals)) =>
+            val sigEndLineIdx = TerserCompressEmitter.findSignatureEnd(lines, method.signatureLine)
+            for i <- method.signatureLine to sigEndLineIdx do
+              val line = lines(i)
+              if i == sigEndLineIdx then
+                val eqIdx = TerserCompressEmitter.findEqualsInSignature(line)
+                if eqIdx >= 0 then
+                  sb.append(line.substring(0, eqIdx + 1))
+                  sb.append("\n")
+                else
+                  sb.append(line)
+                  sb.append("\n")
+              else
+                sb.append(line)
+                sb.append("\n")
+
+            sb.append(translatedBody)
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((method.name, "rast"))
+            totalRefusals += refusals
+
+          case _ =>
+            for i <- method.signatureLine to method.bodyEndLine do
+              sb.append(lines(i))
+              sb.append("\n")
+            lineIdx = method.bodyEndLine + 1
+            matchDetails += ((method.name, "reference"))
+
         methodIdx += 1
       else
         sb.append(lines(lineIdx))
@@ -262,16 +307,120 @@ object KaTeXEmitter:
 
     val matched = matchDetails.count(_._2 == "rast")
     val kept = matchDetails.count(_._2 == "reference")
-    val moduleName = referencePath.getFileName.toString.stripSuffix(".scala")
 
     val summary = ParityEmitSummary(
       moduleName = moduleName,
       totalMethods = methods.size,
       matchedFromRast = matched,
       keptFromReference = kept,
+      refusalCount = totalRefusals,
+      matchDetails = matchDetails.toList,
     )
 
     (sb.toString, summary)
+
+  /** Emit all core modules using parity-derive.
+    *
+    * @param loadRast function to load a RAST file from a resource path
+    * @param katexRefRoot path to the ssg-katex source root
+    * @param outDir output directory for emitted Scala files
+    */
+  def emitAllWithParity(
+      loadRast: String => Option[RastFile],
+      katexRefRoot: Path,
+      outDir: Path,
+  ): List[(KaTeXModule, ParityEmitSummary)] =
+    Files.createDirectories(outDir)
+    val results = mutable.ListBuffer.empty[(KaTeXModule, ParityEmitSummary)]
+
+    for mod <- CoreModules do
+      val refPath = katexRefRoot.resolve(mod.referenceSubPath)
+      if Files.exists(refPath) then
+        loadRast(mod.rastResource).foreach { rast =>
+          val (source, summary) = emitWithParity(rast, refPath)
+          val outFile = outDir.resolve(s"${mod.objectName}.scala")
+          Files.writeString(outFile, source)
+          results += ((mod, summary))
+        }
+
+    results.toList
+
+  /** Emit all function modules using parity-derive where reference exists,
+    * falling back to stub emission.
+    *
+    * @param loadRast function to load a RAST file from a resource path
+    * @param katexRefRoot path to the ssg-katex source root
+    * @param outDir output directory for emitted Scala files
+    */
+  def emitAllFunctionsWithParity(
+      loadRast: String => Option[RastFile],
+      katexRefRoot: Path,
+      outDir: Path,
+  ): List[(KaTeXModule, String, FunctionParitySummary)] =
+    Files.createDirectories(outDir)
+    val results = mutable.ListBuffer.empty[(KaTeXModule, String, FunctionParitySummary)]
+
+    for mod <- FunctionModules do
+      loadRast(mod.rastResource).foreach { rast =>
+        val refPath = katexRefRoot.resolve(mod.referenceSubPath)
+        val usedParity = Files.exists(refPath)
+        val (source, paritySummary) = if usedParity then
+          val (src, ps) = emitWithParity(rast, refPath)
+          (src, FunctionParitySummary(mod.objectName, usedParity = true,
+            totalMethods = ps.totalMethods, matchedFromRast = ps.matchedFromRast,
+            keptFromReference = ps.keptFromReference))
+        else
+          val (src, fs) = emitFunctionModule(rast, mod.objectName)
+          (src, FunctionParitySummary(mod.objectName, usedParity = false,
+            totalMethods = 0, matchedFromRast = 0,
+            keptFromReference = 0))
+
+        val outFile = outDir.resolve(s"${mod.objectName}.scala")
+        Files.writeString(outFile, source)
+        results += ((mod, source, paritySummary))
+      }
+
+    results.toList
+
+  final case class FunctionParitySummary(
+      objectName: String,
+      usedParity: Boolean,
+      totalMethods: Int,
+      matchedFromRast: Int,
+      keptFromReference: Int,
+  )
+
+  /** Format a parity summary table for core modules. */
+  def formatParitySummaryTable(summaries: List[ParityEmitSummary]): String =
+    val sb = new StringBuilder
+    sb.append(f"${"Module"}%-25s ${"Total"}%6s ${"RAST"}%6s ${"Ref"}%6s ${"Refusals"}%9s\n")
+    sb.append("-" * 55)
+    sb.append("\n")
+    var tTotal = 0; var tRast = 0; var tRef = 0; var tRefusals = 0
+    for s <- summaries do
+      sb.append(f"${s.moduleName}%-25s ${s.totalMethods}%6d ${s.matchedFromRast}%6d ${s.keptFromReference}%6d ${s.refusalCount}%9d\n")
+      tTotal += s.totalMethods; tRast += s.matchedFromRast; tRef += s.keptFromReference; tRefusals += s.refusalCount
+    sb.append("-" * 55)
+    sb.append("\n")
+    sb.append(f"${"TOTAL"}%-25s ${tTotal}%6d ${tRast}%6d ${tRef}%6d ${tRefusals}%9d\n")
+    val pctRast = if tTotal > 0 then (tRast * 100.0 / tTotal) else 0.0
+    sb.append(f"\nRAST-derived bodies: $tRast/$tTotal (${pctRast}%.1f%%)\n")
+    sb.toString
+
+  /** Format a function parity summary table. */
+  def formatFunctionParitySummaryTable(summaries: List[FunctionParitySummary]): String =
+    val sb = new StringBuilder
+    val withParity = summaries.filter(_.usedParity)
+    val stubs = summaries.filterNot(_.usedParity)
+    sb.append(s"Function modules: ${summaries.size} total\n")
+    sb.append(s"  With parity: ${withParity.size}\n")
+    sb.append(s"  Stub only: ${stubs.size}\n")
+    if withParity.nonEmpty then
+      val tTotal = withParity.map(_.totalMethods).sum
+      val tRast = withParity.map(_.matchedFromRast).sum
+      val pct = if tTotal > 0 then (tRast * 100.0 / tTotal) else 0.0
+      sb.append(f"\nParity function methods: $tRast/$tTotal ($pct%.1f%%)\n")
+    sb.toString
 
   // --------------------------------------------------------------------------
   // Module inventory
@@ -558,6 +707,66 @@ object KaTeXEmitter:
   /** Build a name→body-exists map from extracted functions. */
   private def buildBodyMap(fns: List[TopLevelFunction]): Map[String, Boolean] =
     fns.map(f => camelCase(f.name) -> true).toMap
+
+  /** Build a map from method name to (translated RAST body, refusal count).
+    *
+    * Extracts all functions/methods from the RAST, translates each body using
+    * DefmethodBodyTranslator (which handles general TS→Scala patterns), and
+    * builds the lookup map.
+    */
+  private def buildTranslatedBodyMap(rastFile: RastFile): Map[String, (String, Int)] =
+    val result = mutable.Map.empty[String, (String, Int)]
+    val allFns = extractAllFunctions(rastFile)
+
+    for fn <- allFns do
+      val scalaName = camelCase(fn.name)
+      val bodyNode = findFunctionBody(rastFile, fn.name)
+      bodyNode.foreach { body =>
+        val entry = TerserEmitter.DefmethodEntry("_free_", fn.name, fn.params, body)
+        val translated = DefmethodBodyTranslator.translateBody(entry, Nil, "    ")
+        result(scalaName) = (translated.scalaBody, translated.refusalCount)
+      }
+
+    result.toMap
+
+  /** Find the Block body node for a named function in the RAST. */
+  private def findFunctionBody(file: RastFile, name: String): Option[RastNode] =
+    var found: Option[RastNode] = None
+
+    def walk(node: RastNode): Unit =
+      if found.isDefined then return
+      node.kind match
+        case "FunctionDeclaration" =>
+          val fnName = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
+          if fnName == name then
+            found = node.children.find(_.kind == "Block")
+
+        case "VariableStatement" =>
+          for vdl <- node.children.find(_.kind == "VariableDeclarationList")
+              vd <- vdl.children.filter(_.kind == "VariableDeclaration") do
+            val varName = vd.children.headOption.flatMap(_.text).getOrElse("")
+            if varName == name then
+              val rhs = vd.children.find(c =>
+                c.kind == "ArrowFunction" || c.kind == "FunctionExpression")
+              rhs.foreach { fn =>
+                found = fn.children.find(_.kind == "Block").orElse {
+                  val exprBody = fn.children.find(c => c.kind != "Parameter")
+                  exprBody.map(e => RastNode("Block", 0, (0, 0), children = List(
+                    RastNode("ReturnStatement", 0, (0, 0), children = List(e))
+                  )))
+                }
+              }
+
+        case "MethodDeclaration" =>
+          val mName = node.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("")
+          if mName == name then
+            found = node.children.find(_.kind == "Block")
+
+        case _ => ()
+      node.children.foreach(walk)
+
+    file.nodes.foreach(walk)
+    found
 
   // --------------------------------------------------------------------------
   // Private helpers

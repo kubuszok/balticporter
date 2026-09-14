@@ -922,7 +922,7 @@ object TerserCompressEmitter:
     *
     * Handles multi-line signatures by tracking parenthesis depth.
     */
-  private def findSignatureEnd(lines: List[String], startLine: Int): Int =
+  private[dedicated] def findSignatureEnd(lines: List[String], startLine: Int): Int =
     var depth = 0
     var i = startLine
     while i < lines.size do
@@ -945,7 +945,7 @@ object TerserCompressEmitter:
     * Rejects `==`, `!=`, `<=`, `>=`, and `=>`. Handles both `def f(): T = {`
     * (at end) and `def f(): T = expr` (in middle).
     */
-  private def findEqualsInSignature(line: String): Int =
+  private[dedicated] def findEqualsInSignature(line: String): Int =
     var i = line.length - 1
     while i >= 1 do
       if line(i) == '=' then

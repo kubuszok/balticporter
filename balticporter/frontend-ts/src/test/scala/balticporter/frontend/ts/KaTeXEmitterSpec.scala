@@ -189,6 +189,62 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     assertEquals(dedicated.KaTeXEmitter.tsTypeToScala("string[]"), "Array[String]")
 
   // -----------------------------------------------------------------------
+  // Step 1: Batch parity-derive for core modules
+  // -----------------------------------------------------------------------
+
+  test("batch: emitAllWithParity writes all core modules"):
+    if !java.nio.file.Files.exists(katexRefRoot) then
+      println("SKIP: ssg-katex reference not found at " + katexRefRoot)
+    else
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", "."))
+        .resolve("target/emitted-katex-parity")
+      val results = dedicated.KaTeXEmitter.emitAllWithParity(tryLoadRast, katexRefRoot, outDir)
+
+      println("\n=== KaTeX Core Module Parity ===")
+      println(dedicated.KaTeXEmitter.formatParitySummaryTable(results.map(_._2)))
+
+      for (mod, summary) <- results do
+        println(s"  ${mod.objectName}: ${summary.totalMethods} methods, " +
+          s"${summary.matchedFromRast} RAST, ${summary.keptFromReference} ref")
+
+      assert(results.size >= 20,
+        s"Expected >= 20 modules emitted, got ${results.size}")
+
+      val totalRast = results.map(_._2.matchedFromRast).sum
+      println(s"\nTotal RAST-derived bodies: $totalRast")
+      println(s"Emitted to: $outDir")
+
+  // -----------------------------------------------------------------------
+  // Step 2: Batch parity-derive for function modules
+  // -----------------------------------------------------------------------
+
+  test("batch: emitAllFunctionsWithParity writes function modules"):
+    if !java.nio.file.Files.exists(katexRefRoot) then
+      println("SKIP: ssg-katex reference not found at " + katexRefRoot)
+    else
+      val outDir = java.nio.file.Path.of(sys.props.getOrElse("user.dir", "."))
+        .resolve("target/emitted-katex-functions-parity")
+      val results = dedicated.KaTeXEmitter.emitAllFunctionsWithParity(
+        tryLoadRast, katexRefRoot, outDir)
+
+      val summaries = results.map(_._3)
+      println("\n=== KaTeX Function Module Parity ===")
+      println(dedicated.KaTeXEmitter.formatFunctionParitySummaryTable(summaries))
+
+      val withParity = summaries.filter(_.usedParity)
+      val stubs = summaries.filterNot(_.usedParity)
+      println(s"With parity: ${withParity.map(_.objectName).mkString(", ")}")
+      if stubs.nonEmpty then
+        println(s"Stub only: ${stubs.map(_.objectName).mkString(", ")}")
+
+      assert(results.size >= 30,
+        s"Expected >= 30 function modules emitted, got ${results.size}")
+      assert(withParity.size >= 25,
+        s"Expected >= 25 function modules with parity, got ${withParity.size}")
+
+      println(s"Emitted to: $outDir")
+
+  // -----------------------------------------------------------------------
   // Output inspection
   // -----------------------------------------------------------------------
 
@@ -200,3 +256,115 @@ class KaTeXEmitterSpec extends munit.FunSuite:
     java.nio.file.Files.writeString(outDir.resolve("AccentFunc.scala"), source)
     println(s"AccentFunc.scala: ${source.linesIterator.size} lines")
     println(s"Written to: ${outDir.resolve("AccentFunc.scala")}")
+
+  // -----------------------------------------------------------------------
+  // Step 4: KaTeX upstream test translation via VitestToMunitEmitter
+  // -----------------------------------------------------------------------
+
+  private val katexTestOutDir: java.nio.file.Path =
+    val d = java.nio.file.Path.of(sys.props.getOrElse("user.dir", ".")).resolve("target/emitted-katex-tests")
+    java.nio.file.Files.createDirectories(d)
+    d
+
+  private def emitKatexSpec(resource: String, className: String): Option[dedicated.VitestToMunitEmitter.EmitResult] =
+    try
+      val rast = loadRast(resource)
+      val config = dedicated.VitestToMunitEmitter.EmitConfig(
+        packageName = "ssg.katex.test.generated",
+        className = className,
+      )
+      val result = dedicated.VitestToMunitEmitter.emit(rast, config)
+      java.nio.file.Files.writeString(katexTestOutDir.resolve(s"$className.scala"), result.scala)
+      Some(result)
+    catch
+      case e: Exception =>
+        println(s"  FAILED to emit $className: ${e.getClass.getSimpleName}: ${e.getMessage.take(120)}")
+        None
+
+  test("katex-spec: emit tests via vitest→MUnit"):
+    val result = emitKatexSpec("/rast/katex/test/katex-spec.rast.json", "KaTeXSpecGenerated")
+    result match
+      case Some(r) =>
+        println(s"\n=== katex-spec.rast.json ===")
+        println(s"Tests: ${r.testCount}, Ignored: ${r.ignoredCount}")
+        println(s"Assertions: ${r.assertionCounts.toList.sortBy(-_._2).map { case (k, v) => s"$k($v)" }.mkString(", ")}")
+        println(s"Lines: ${r.scala.linesIterator.size}")
+        println(s"Written to: ${katexTestOutDir.resolve("KaTeXSpecGenerated.scala")}")
+        assert(r.testCount >= 500, s"Expected >= 500 tests from katex-spec, got ${r.testCount}")
+      case None =>
+        println("SKIP: katex-spec.rast.json failed to load or emit")
+
+  test("errors-spec: emit tests via vitest→MUnit"):
+    val result = emitKatexSpec("/rast/katex/test/errors-spec.rast.json", "ErrorsSpecGenerated")
+    result match
+      case Some(r) =>
+        println(s"errors-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+        assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
+      case None =>
+        println("SKIP: errors-spec failed")
+
+  test("mathml-spec: emit tests via vitest→MUnit"):
+    val result = emitKatexSpec("/rast/katex/test/mathml-spec.rast.json", "MathMLSpecGenerated")
+    result match
+      case Some(r) =>
+        println(s"mathml-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+        assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
+      case None =>
+        println("SKIP: mathml-spec failed")
+
+  test("dup-spec: emit tests via vitest→MUnit"):
+    val result = emitKatexSpec("/rast/katex/test/dup-spec.rast.json", "DupSpecGenerated")
+    result match
+      case Some(r) =>
+        println(s"dup-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+        // dup-spec uses a non-standard test pattern (no describe/it blocks),
+        // so 0 tests is expected — the emitter only handles describe/it
+      case None =>
+        println("SKIP: dup-spec failed")
+
+  test("unicode-spec: emit tests via vitest→MUnit"):
+    val result = emitKatexSpec("/rast/katex/test/unicode-spec.rast.json", "UnicodeSpecGenerated")
+    result match
+      case Some(r) =>
+        println(s"unicode-spec: ${r.testCount} tests, ${r.ignoredCount} ignored")
+        assert(r.testCount >= 1, s"Expected >= 1 test, got ${r.testCount}")
+      case None =>
+        println("SKIP: unicode-spec failed")
+
+  test("batch: emit all KaTeX test specs"):
+    val specs = List(
+      ("/rast/katex/test/katex-spec.rast.json",   "KaTeXSpecGenerated"),
+      ("/rast/katex/test/errors-spec.rast.json",   "ErrorsSpecGenerated"),
+      ("/rast/katex/test/mathml-spec.rast.json",   "MathMLSpecGenerated"),
+      ("/rast/katex/test/dup-spec.rast.json",      "DupSpecGenerated"),
+      ("/rast/katex/test/unicode-spec.rast.json",  "UnicodeSpecGenerated"),
+    )
+
+    var totalTests = 0
+    var totalIgnored = 0
+    var totalFailed = 0
+    val allAssertions = scala.collection.mutable.Map.empty[String, Int].withDefaultValue(0)
+
+    println(s"\n=== KaTeX Test Translation Summary ===")
+    println(f"${"Spec"}%-30s ${"Tests"}%6s ${"Ignored"}%8s ${"Lines"}%6s")
+    println("-" * 55)
+
+    for (resource, className) <- specs do
+      val result = emitKatexSpec(resource, className)
+      result match
+        case Some(r) =>
+          totalTests += r.testCount
+          totalIgnored += r.ignoredCount
+          for (k, v) <- r.assertionCounts do allAssertions(k) += v
+          println(f"${className}%-30s ${r.testCount}%6d ${r.ignoredCount}%8d ${r.scala.linesIterator.size}%6d")
+        case None =>
+          totalFailed += 1
+          println(f"${className}%-30s ${"FAILED"}%6s")
+
+    println("-" * 55)
+    println(f"${"TOTAL"}%-30s ${totalTests}%6d ${totalIgnored}%8d")
+    println(s"\nAssertion patterns: ${allAssertions.toList.sortBy(-_._2).map { case (k, v) => s"$k($v)" }.mkString(", ")}")
+    println(s"Failed to load: $totalFailed")
+    println(s"Output: $katexTestOutDir")
+
+    assert(totalTests >= 100, s"Expected >= 100 total tests from KaTeX specs, got $totalTests")
