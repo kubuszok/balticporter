@@ -64,7 +64,57 @@ object TerserCompressEmitter:
     // Collect IIFE-wrapped DEFMETHODs
     for node <- file.nodes do
       result ++= extractIifeDefmethods(node)
+    // Collect def_optimize(AST_Xxx, fn) wrapper calls
+    result ++= extractDefOptimize(file)
     result.toList
+
+  /** Extract `def_optimize(AST_Xxx, function(self, compressor) { ... })` calls.
+    *
+    * Terser's compress/index.js wraps DEFMETHOD("optimize", ...) in a helper:
+    * `def_optimize(AST_Block, function(self, compressor) { ... })` which registers
+    * `AST_Block.prototype.optimize = fn`. The RAST sees these as CallExpression
+    * nodes with callee `def_optimize`.
+    */
+  def extractDefOptimize(file: RastFile): List[TerserEmitter.DefmethodEntry] =
+    val result = mutable.ListBuffer.empty[TerserEmitter.DefmethodEntry]
+
+    def walk(node: RastNode): Unit =
+      if node.kind == "ExpressionStatement" then
+        for call <- node.children if call.kind == "CallExpression" do
+          val callee = call.children.headOption
+          if callee.flatMap(_.text).contains("def_optimize") then
+            val args = call.children.drop(1)
+            if args.size >= 2 then
+              val classArg = args.head
+              val implArg = args(1)
+              val className = classArg.text.getOrElse("")
+              if className.startsWith("AST_") then
+                implArg.kind match
+                  case "FunctionExpression" | "ArrowFunction" =>
+                    val params = implArg.children.filter(_.kind == "Parameter").map { p =>
+                      p.children.find(_.kind == "Identifier").flatMap(_.text).getOrElse("_")
+                    }
+                    val body = implArg.children.find(_.kind == "Block").getOrElse(
+                      RastNode("Block", 0, (0, 0)))
+                    result += TerserEmitter.DefmethodEntry(className, "optimize", params, body)
+                  case "Identifier" =>
+                    // Reference to a named function: def_optimize(AST_Lambda, opt_AST_Lambda)
+                    val refName = implArg.text.getOrElse("")
+                    if refName.nonEmpty then
+                      // Find the referenced function in the file
+                      findNamedFunction(file, refName).foreach { fn =>
+                        result += TerserEmitter.DefmethodEntry(className, "optimize", fn.params,
+                          fn.bodyNode)
+                      }
+                  case _ => ()
+      node.children.foreach(walk)
+
+    file.nodes.foreach(walk)
+    result.toList
+
+  /** Find a named function declaration in a RAST file. */
+  private def findNamedFunction(file: RastFile, name: String): Option[TerserEmitter.FreeFunction] =
+    TerserEmitter.extractFreeFunctions(file).find(_.name == name)
 
   /** Extract DEFMETHOD entries from an IIFE wrapper node.
     *
@@ -739,7 +789,7 @@ object TerserCompressEmitter:
     // Modules where body interleaving causes more errors than it fixes:
     // use reference bodies for ALL methods (the RAST structure was validated,
     // but findBodyEnd can't handle all Scala method boundary patterns)
-    val skipRastModules = Set("Inference", "ReduceVars")
+    val skipRastModules = Set.empty[String]
     val refObjectName = lines.find(_.matches("^(object|class)\\s+.*\\{.*$"))
       .flatMap("""^(object|class)\s+(\w+)""".r.findFirstMatchIn(_).map(_.group(2)))
       .getOrElse("")
