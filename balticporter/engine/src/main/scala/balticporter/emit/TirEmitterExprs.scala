@@ -371,11 +371,14 @@ private[emit] trait TirEmitterExprs:
     // LABELLED break reaches it through Tree.Labeled or the loop's own label field.
     case Tree.Break(scala.None, _, _) if breakTarget.isDefined =>
       breakTarget.filter(_.nonEmpty) match
-        case Some(n) => s"scala.util.boundary.break(())(using $n)" // another boundary sits inside
-        case _       => "scala.util.boundary.break(())"
+        case Some(n) if throwBreaks(n) => s"throw $n" // throw/catch sentinel (Scala.js safe)
+        case Some(n)                   => s"scala.util.boundary.break(())(using $n)" // another boundary sits inside
+        case _                         => "scala.util.boundary.break(())"
     case Tree.Break(Some(l), _, _) if labelBreak.contains(l) =>
       val n = labelBreak(l)
-      if n.isEmpty then "scala.util.boundary.break(())" else s"scala.util.boundary.break(())(using $n)"
+      if n.isEmpty then "scala.util.boundary.break(())"
+      else if throwBreaks(n) then s"throw $n" // throw/catch sentinel (Scala.js safe)
+      else s"scala.util.boundary.break(())(using $n)"
     // an unlabelled break with no boundary belongs to a SWITCH terminator, already stripped by the
     // frontend — one reaching here is unrecognised. Say WHICH (§4.45).
     case b @ Tree.Break(scala.None, _, _) =>

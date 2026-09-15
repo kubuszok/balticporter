@@ -675,6 +675,12 @@ private[emit] trait TirEmitterMembers:
   private[emit] val labelBreak = collection.mutable.Map[String, String]()
   private[emit] val labelCont  = collection.mutable.Map[String, String]()
 
+  /** Break boundary names that use throw/catch with a `ControlThrowable` sentinel instead of `boundary/break`. A named break targeting one of these emits `throw name` instead of
+    * `boundary.break(())(using name)`. Required because Scala.js incorrectly lowers both `boundary.break` and `return`-from-local-def across nested while loops to a JS `break` that only exits the
+    * innermost loop, not the outer boundary. Exception propagation cannot be mis-optimised: it crosses every nesting level and `ControlThrowable` elides the stack trace.
+    */
+  private[emit] val throwBreaks = collection.mutable.Set[String]()
+
   /** Render a loop with whatever boundaries its jumps need — up to two, one around the LOOP for `break`, one around the BODY for `continue`, the outer one NAMED when both are present.
     */
 
@@ -763,6 +769,12 @@ private[emit] trait TirEmitterMembers:
       // boundary of its own (`interposes`) — all three put another `Label` nearer than this one.
       val bName = if hasB && (hasC || lblB.isDefined || shielded) then s"brk$$$seq" else ""
       val cName = if hasC && (lblC.isDefined || shielded) then s"cnt$$$seq" else ""
+      // Scala.js incorrectly lowers both `boundary.break` and `return`-from-local-def across
+      // nested while loops to a JS `break` that only exits the innermost loop. Use throw/catch
+      // with a ControlThrowable sentinel instead: exception propagation crosses every nesting
+      // level and cannot be mis-optimised. ControlThrowable elides the stack trace.
+      val useThrow = bName.nonEmpty
+      if useThrow then throwBreaks += bName
       lblB.foreach(l => labelBreak(l) = bName)
       lblC.foreach(l => labelCont(l) = cName)
       val inner =
@@ -772,10 +784,13 @@ private[emit] trait TirEmitterMembers:
             else if cName.isEmpty then s"scala.util.boundary { $bodyStr }"
             else s"scala.util.boundary { ($cName: scala.util.boundary.Label[scala.Unit]) ?=> $bodyStr }"
           }
-        finally { lblB.foreach(labelBreak.remove); lblC.foreach(labelCont.remove) }
+        finally
+          lblB.foreach(labelBreak.remove); lblC.foreach(labelCont.remove)
+          if useThrow then throwBreaks -= bName
       val loop = render(inner)
       if !hasB then loop
       else if bName.isEmpty then s"scala.util.boundary { $loop }"
+      else if useThrow then s"{ val $bName = new scala.util.control.ControlThrowable {}; try { $loop } catch { case $$e: scala.util.control.ControlThrowable if $$e eq $bName => () } }"
       else s"scala.util.boundary { ($bName: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
 
   /** does this loop body contain a construct the emitter renders with a `boundary` of ITS OWN? `boundary.break(())` with no `using` resolves the innermost `Label`, so an interposed boundary silently
