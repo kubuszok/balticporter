@@ -35,6 +35,9 @@ ThisBuild / scalacOptions ++= Seq(
 // PUBLISHING — sbt-kubuszok provides publishTo (Maven Central Snapshots for SNAPSHOT, local
 // staging for release), sbt-pgp for signing, ci-release command, and projectType-based gating.
 // Modules that must NOT ship set projectType := NonPublished.
+// Skip doc JARs for snapshots — DottydocRunner crashes on JDK 25 (ISS-799/scala3#24183),
+// and snapshot consumers never read the docs.
+ThisBuild / packageDoc / publishArtifact := !isSnapshot.value
 // ---------------------------------------------------------------------------------------------
 ThisBuild / description := "Baltic Porter — a deterministic engine for porting Java libraries to Scala 3."
 ThisBuild / homepage    := Some(uri("https://github.com/kubuszok/balticporter"))
