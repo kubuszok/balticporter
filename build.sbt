@@ -39,7 +39,6 @@ ThisBuild / scalacOptions ++= Seq(
 // (ISS-799, scala/scala3#24183, C2 JIT miscompilation of SignatureBuilder). Snapshot consumers
 // never read the docs; release builds generate them (the blocking `docs` CI job keeps them green).
 ThisBuild / packageDoc / publishArtifact := !isSnapshot.value
-ThisBuild / Compile / doc / skip := isSnapshot.value
 // ---------------------------------------------------------------------------------------------
 ThisBuild / description := "Baltic Porter — a deterministic engine for porting Java libraries to Scala 3."
 ThisBuild / homepage    := Some(uri("https://github.com/kubuszok/balticporter"))

@@ -1,3 +1,6 @@
 -Xmx6g
 -Xss4m
 -XX:+UseG1GC
+# ISS-799 (scala/scala3#24183): DottydocRunner's SignatureBuilder NPEs under C2 JIT on JDK 24/25.
+# Exclude the method from compilation so it stays interpreted. Drop when the build uses Scala >= 3.9.0.
+-XX:CompileCommand=exclude,dotty.tools.scaladoc.translators.SignatureBuilder::signature
