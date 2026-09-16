@@ -277,6 +277,8 @@ object ReferencePolicy:
       // under `fullName:field` (`DerivedPolicy.keysOf`): a bare key would also reach a same-named METHOD — `Cell#colspan` the field is
       // `Nullable[Int]`, `Cell#colspan(int)` the fluent setter returns `Cell[T]`, and one row must not retype both
       if nullWrapped(r.resultType) && reference_(v.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, fs.fullName + ":field", r.resultType)
+      // java declares the FIELD narrower than public, the reference ships it public (`var isChecked` read by a subclass in another package): widened, as a method is
+      if r.accessLevel == "public" && (fs.flags.isProtected || fs.flags.isPackagePrivate) then out += DerivedPolicy.Row(DerivedPolicy.Family.Public, fs.fullName + ":field", s"public ${fs.name}")
       out.result()
 
     program.units.filter(u => emitted(u.symbol)).foreach { unit =>

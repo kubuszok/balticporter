@@ -181,16 +181,32 @@ a discovery goes into whichever fits, in the same commit that learned it:
 
 | home | for |
 |---|---|
-| this file | a governing rule or constraint for all porting work |
-| `ENGINE-LIMITS.md` | a MEASURED dead end or engine limit — what not to retry, and what it cost |
+| this file | a governing rule or constraint for all porting work (core, ≤ 400 lines) |
+| `.claude/rules/<area>.md` | a MEASURED limit or dead end, as ONE RULE LINE with its trigger: the file's `paths:` loads it exactly when those files are edited (`phases.md` for transforms, `emitter.md`, `collections.md`, `measurement.md`, `dependents.md`). The number goes in the commit subject (`before->after`) |
+| a skill (`.claude/skills/**`) | a PROCEDURE, triggered by its description — a task shape an agent will meet again (see the index below) |
 | `DESIGN.md` | a DECISION about what the engine is or how it is built |
 | `PROGRESS.md` | the STATE of a port or of publishability — measurements, residues, remaining work |
-| a skill (`.claude/skills/**`) | a procedure, e.g. adding a library to the corpus |
 | an agent definition (`.claude/agents/**`) | what a reviewer should hunt for |
 
-**Do not add a seventh document.** A new file for one investigation is a file nothing loads; see §3.7.
-The rule goes above; the numbers stay in that library's `PROGRESS.md` section; a rule naming one
-library is that library's manifest policy (§1c). A dead end without its number is an opinion.
+`ENGINE-LIMITS.md` is the FROZEN archive of numbered entries (K/G/T/… ids are still cited); it takes
+no new entries — a lesson nobody loads is re-derived, and a 2,000-line file is loaded by nobody. Its
+entries move into the rule files above as they are touched (one rule line each, the id kept).
+**Do not add another document.** A new file for one investigation is a file nothing loads; see §3.7.
+A rule naming one library is that library's manifest policy (§1c). A dead end without its number is
+an opinion.
+
+### 3.6.1 Skills — each fires on the task shape in its description
+
+| skill | fires when |
+|---|---|
+| `sbt2-client` | before any sbt invocation; sbt behaves strangely (stale, wrong version label, hang) |
+| `cross-platform-port` | a JS/Native row fails to link or test; a JVM-only API is about to be emitted or injected |
+| `consumer-ci` | a sge/ssg CI job is red; before pushing to a consumer branch; a consumer file was patched to fit generated code |
+| `root-cause-port` | a consumer error points into `src_managed`; a lane row moved for no visible reason; a phase "did nothing"; before any workaround |
+| `iterate-lane` | a phase or policy change left a lane red and the cause is not yet known |
+| `read-port-issues` / `port-first-attempt` / `port-status` | reading what a run could not handle; the first run of a port; the status table |
+| `configure-port` / `customize-port` / `add-corpus-library` | writing a `.conf`; configuring or writing a (b)/(c) rule; a new library in the corpus |
+| `debug-port` | instrumenting one run (flags, dumps, `skipPhases`) |
 
 ## 3.7 A RESEARCH FILE IS NOT A DELIVERABLE
 

@@ -174,3 +174,22 @@ of them. `ResidualGlobalRead` carried a kept global read and an unsuppliable con
 given` every time). Where the mechanism's prose has a word for a population its lane does not, the
 lane is one kind short. A split is flat by construction (rows and count unchanged, `findings.tsv`
 sees the kind); the screen is *would a reader act differently*.
+
+## Rule lines moved out of the archive (2026-09-16; ids kept)
+
+- **K52** a `static final` scratch instance is one object per class: `ThreadConfinedStaticsTransform(fields)`
+  emits `new ThreadLocal[T] { override def initialValue(): T = e }` as trees — never text, never
+  `withInitial` (absent from the Scala.js javalib). Four counted guards: not static, not final, assigned
+  after init, initialiser not a fresh allocation.
+- **K53** a derived seed is exact, so a java STATIC whose reference twin is `extension (a: T) def m`
+  derives its slot from `SurfaceDecl.receiver` as parameter 0 (`slotTypes`); never for an instance method.
+- **K54** a member rename on an EXTERNAL redirected type: hits are the owned overrides whose closure is
+  anchored on `(source, member)`, within the redirect's scope, each request `detachedParents = Set(source)`.
+  A second unknown parent's surface is PORT policy (`TypeRedirectTransform(external = default ++ …)`),
+  never a new closed platform row. Walk such a policy on a spec before regenerating a consumer.
+- **K55** under a named/Option null target a boxed element is the primitive (`Nullable[Int]`); union keeps
+  the box. A wrapper over the box and over the primitive are one slot (`sameSlot`) — no ascription
+  between them. A field's derived rows are keyed `fullName:field`; a qualified-private reference member
+  is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
+  derives a `Public` row.
+- The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).

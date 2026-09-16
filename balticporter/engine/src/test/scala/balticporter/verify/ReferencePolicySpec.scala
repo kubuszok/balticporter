@@ -19,6 +19,7 @@ class ReferencePolicySpec extends FunSuite:
       |  public int size() { return 0; }
       |  public static int count() { return 0; }
       |  public static boolean isWide(int width) { return false; }
+      |  boolean pressed;
       |  public void set(float a) {}
       |  public void set(int a) {}
       |}
@@ -35,6 +36,7 @@ class ReferencePolicySpec extends FunSuite:
       |  def size: Int = 0
       |  def set(a: Seconds): Unit = ()
       |  def set(a: Int): Unit = ()
+      |  var pressed: Boolean = false
       |}
       |object Clock {
       |  def count: Int = 0
@@ -59,6 +61,17 @@ class ReferencePolicySpec extends FunSuite:
     )
     // `isWide(int)` is a STATIC the reference spells as an extension over the target: its receiver is slot 0
     assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Clock#update#width", "com.example.gfx.Clock#isWide#width"))
+  }
+
+  test("a package-private java FIELD the reference ships public derives a `Public` row, keyed `:field`") {
+    val r = derive()
+    assert(
+      r.policy.rows.exists(row => row.family == DerivedPolicy.Family.Public && row.upstream == "com.example.gfx.Clock#pressed:field")
+    )
+    assert(
+      !r.policy.rows.exists(row => row.family == DerivedPolicy.Family.Public && row.upstream == "com.example.gfx.Clock#delta:field"),
+      "a public java field derives nothing"
+    )
   }
 
   test("an extension member is never read as an INSTANCE method's missing parameter, nor parenless at a static") {
