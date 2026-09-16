@@ -612,7 +612,7 @@ final case class PortRun(
     // (measured: 2 `idiom(refused)` rows for a base type on a dependent, P10). CLAUDE.md §4.56
     val ownPaths  = checkedUnits.map(_.origin.javaPath).filter(p => p.nonEmpty && p != Origin.synthetic.javaPath).map(p => PortRun.real(java.nio.file.Paths.get(p)).toString).toSet
     val ownIdioms = new IdiomLog
-    ownIdioms.recordAll(translated.idioms.all.filter(c => ownPaths.contains(PortRun.real(java.nio.file.Paths.get(c.origin.javaPath)).toString)))
+    ownIdioms.recordAll(translated.idioms.all.filter(c => c.origin.javaPath.nonEmpty && c.origin != Origin.synthetic && ownPaths.contains(PortRun.real(java.nio.file.Paths.get(c.origin.javaPath)).toString)))
     IdiomCheck.Lanes.foreach(l => CheckReport.record(l, IdiomCheck.findings(ownIdioms, l)))
     println(IdiomCheck.summary(ownIdioms, effectivePhases.collect { case p: balticporter.tir.IdiomPhase => p.idiomKinds }.flatten.toSet))
     IdiomCheck.refusalsByGuard(ownIdioms).foreach(r => say(r))
