@@ -356,7 +356,17 @@ final class TypeRedirectTransform(
       val screened        = boundRenames.map(r => r -> targetRefusal(graph, r))
       val (refused, live) = (screened.collect { case (r, Some(why)) => (r, why) }, screened.collect { case (r, scala.None) => r })
       refused.foreach((r, why) => refuseRename(r, why))
-      val requests = live.flatMap(r => r.hits.map(h => MemberRenamer.Request(h, r.newName, Reason.Configured(name, r.key), r.key, r.key)))
+      // an EXTERNAL redirected type (`java.lang.Comparable`) binds no member of its own: its `compareTo` is the override
+      // component's external ANCHOR, so the hits are every owned member whose closure that anchor freezes — and the
+      // redirect DETACHES that parent, which is the licence `MemberRenamer` reads (`Request.detachedParents`) to move it
+      val anchoredHits = live.map { r =>
+        if r.hits.nonEmpty then r
+        else
+          val member = r.entry.drop(r.source.length + 1).takeWhile(_ != '(')
+          val hits   = program.symbols.all.filter(s => s.name == member && program.owned(s.id) && graph.closureOf(s.id).externalAnchors.contains((r.source, member))).map(_.id).toList.sortBy(_.raw)
+          r.copy(hits = hits)
+      }
+      val requests = anchoredHits.flatMap(r => r.hits.map(h => MemberRenamer.Request(h, r.newName, Reason.Configured(name, r.key), r.key, r.key, detachedParents = Set(r.source))))
       if requests.isEmpty then program
       else
         val (out, refusals) = MemberRenamer.rename(program, graph, requests, MemberRenamer.OnCollision.Refuse, decisions)
