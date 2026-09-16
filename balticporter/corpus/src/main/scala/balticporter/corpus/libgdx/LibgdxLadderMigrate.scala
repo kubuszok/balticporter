@@ -1194,10 +1194,8 @@ object LibgdxLadder:
             // scoped so `Sort`'s `T extends Comparable` bounds keep java's type
             "java.lang.Comparable" -> "scala.math.Ordered"
           ),
-          memberRenames = Map(
-            "com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"),
-            "java.lang.Comparable" -> Map("compareTo" -> "compare")
-          ),
+          // (`compareTo -> compare` is a MemberRename below: `Comparable` is EXTERNAL, so it has no bound member to rename over)
+          memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close")),
           scopes = Map(
             // the OVERRIDE COMPONENT: `Attribute` and every `attributes.*` subclass, `Attributes`, `TextureDescriptor` — the classes master spells
             // `Ordered`; `Shader`/`DefaultShader`/`VertexAttributes` keep java's `compareTo` there and are not named
@@ -1214,6 +1212,10 @@ object LibgdxLadder:
         new balticporter.transform.MemberRenameTransform(
           derive = derive,
           renames = Map(
+            // sge's `Ordered` spelling (the `Comparable -> Ordered` redirect above): the whole override component follows
+            "com.badlogic.gdx.graphics.g3d.Attribute#compareTo" -> "compare",
+            "com.badlogic.gdx.graphics.g3d.Attributes#compareTo" -> "compare",
+            "com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor#compareTo" -> "compare",
             "com.badlogic.gdx.scenes.scene2d.InputEvent#type" -> "eventType",
             "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)" -> "itemToString",
             // sge's vector spellings (`Vectors.scala`): the whole override component moves with `Vector`.
