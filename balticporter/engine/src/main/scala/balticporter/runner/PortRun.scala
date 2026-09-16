@@ -612,7 +612,9 @@ final case class PortRun(
     // (measured: 2 `idiom(refused)` rows for a base type on a dependent, P10). CLAUDE.md §4.56
     val ownPaths  = checkedUnits.map(_.origin.javaPath).filter(p => p.nonEmpty && p != Origin.synthetic.javaPath).map(p => PortRun.real(java.nio.file.Paths.get(p)).toString).toSet
     val ownIdioms = new IdiomLog
-    ownIdioms.recordAll(translated.idioms.all.filter(c => c.origin.javaPath.nonEmpty && c.origin != Origin.synthetic && ownPaths.contains(PortRun.real(java.nio.file.Paths.get(c.origin.javaPath)).toString)))
+    ownIdioms.recordAll(
+      translated.idioms.all.filter(c => c.origin.javaPath.nonEmpty && c.origin != Origin.synthetic && ownPaths.contains(PortRun.real(java.nio.file.Paths.get(c.origin.javaPath)).toString))
+    )
     IdiomCheck.Lanes.foreach(l => CheckReport.record(l, IdiomCheck.findings(ownIdioms, l)))
     println(IdiomCheck.summary(ownIdioms, effectivePhases.collect { case p: balticporter.tir.IdiomPhase => p.idiomKinds }.flatten.toSet))
     IdiomCheck.refusalsByGuard(ownIdioms).foreach(r => say(r))
@@ -799,7 +801,7 @@ final case class PortRun(
     // ---- injection: hand-written Scala copied verbatim, porter notes prepended ----
     var injected = 0
     ownSubs.inject.filter(Files.exists(_)).foreach { root =>
-      Files.walk(root).iterator().asScala.filter(p => p.toString.endsWith(".scala")).toList.sorted.foreach { src =>
+      Files.walk(root).iterator().asScala.filter(p => PortRun.injectSource(root, p)).toList.sorted.foreach { src =>
         val rel = root.relativize(src).toString.replace('\\', '/')
         val dst = emitDir.resolve(root.relativize(src).toString)
         Files.createDirectories(dst.getParent)
@@ -816,7 +818,7 @@ final case class PortRun(
       wipe(rowDir)
       var n = 0
       roots.filter(Files.exists(_)).foreach { root =>
-        Files.walk(root).iterator().asScala.filter(p => p.toString.endsWith(".scala")).toList.sorted.foreach { src =>
+        Files.walk(root).iterator().asScala.filter(p => PortRun.injectSource(root, p)).toList.sorted.foreach { src =>
           val rel = root.relativize(src).toString.replace('\\', '/')
           val dst = rowDir.resolve(rel)
           Files.createDirectories(dst.getParent)
@@ -1997,6 +1999,11 @@ object PortRun:
 
   /** Symlink-resolved path, falling back to normalisation. // §5.4 */
   def real(p: Path): String = balticporter.core.RealPath.str(p)
+
+  /** A `.scala` under an inject or platform root that is not inside a dot-directory: a scala-cli `.scala-build/` left beside a replacement file shipped its `snippet.scala` as a type of the port.
+    */
+  def injectSource(root: Path, p: Path): Boolean =
+    p.toString.endsWith(".scala") && !root.relativize(p).iterator().asScala.exists(_.toString.startsWith("."))
 
   // =========================================================================================
   // a SYNTHESISED unit, and the one module allowed to write it (ENGINE-LIMITS.md §13 O5)

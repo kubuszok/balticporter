@@ -107,6 +107,14 @@ object PortabilityCheck extends RemedySource:
         "java.nio.channels is FILE channels only",
       at = p(9)
     ),
+    // `URL` is the one member of the family Native does NOT implement: its linker names it
+    // (`Unknown type java.net.URL`, reached through `Class#getResource`). Precedes `java.net.`.
+    Rule(
+      "java.net.URL",
+      "absent from both non-JVM javalibs — Scala Native's linker reports the type unknown and Scala.js has no URL class; " +
+        "a classpath EXISTENCE probe is respelled `getResourceAsStream(...) != null`, which never names the type",
+      at = p(11)
+    ),
     Rule(
       "java.net.",
       "networking is JVM-only on Scala.js — a browser has no raw sockets, and " +
@@ -235,6 +243,21 @@ object PortabilityCheck extends RemedySource:
     Rule("java.lang.Class#getDeclaredMethod", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getField", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getMethod", "reflective member access is JVM-only", exactMember = true, at = p(24)),
+    // ---- CLASSPATH RESOURCES — the two twins split by backend. Scala Native's javalib declares
+    // `getResourceAsStream` (answers null: no resources are linked in) but neither `getResource` nor
+    // its `java.net.URL` result; Scala.js declares neither. An existence probe respelled through the
+    // stream form links on Native and stays COUNTED on JS, where a platform row answers instead.
+    Rule(
+      "java.lang.Class#getResource",
+      "answers a `java.net.URL` — neither the method nor the type exists on Scala Native, and Scala.js has no classpath",
+      exactMember = true
+    ),
+    Rule(
+      "java.lang.Class#getResourceAsStream",
+      "Scala.js has no classpath and no such method; Scala Native declares it and answers null",
+      exactMember = true,
+      on = Rule.JsOnly
+    ),
     // ---- TIME, TEXT AND LOCALE — the refusals. The whole area had ZERO rules. ----
     // Most of the area is a DEPENDENCY rather than a refusal (scala-java-time, scala-java-locales),
     // living on the dependency-coverage lane instead. What is HERE is the residue: classes with no

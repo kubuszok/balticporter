@@ -12,7 +12,7 @@ final class TextFormatter(locale: Locale, useAdvanced: Boolean) {
   def this(locale: Locale) = this(locale, false)
 
   def format(pattern: String, args: Array[java.lang.Object]): String = {
-    val safeArgs = if (args == null) Array[java.lang.Object](null.asInstanceOf[java.lang.Object]) else args
+    val safeArgs = if (args == null) Array[java.lang.Object](null) else args
     if (!advancedFormatter.isEmpty) {
       advancedFormatter.get.format(replaceEscapeChars(pattern), safeArgs.toSeq.asInstanceOf[Seq[AnyRef]])
     } else {
@@ -21,7 +21,7 @@ final class TextFormatter(locale: Locale, useAdvanced: Boolean) {
   }
 
   def format(pattern: String, args: java.lang.Object*): String =
-    format(pattern, if (args == null) Array[java.lang.Object](null.asInstanceOf[java.lang.Object]) else args.toArray)
+    format(pattern, if (args == null) Array[java.lang.Object](null) else args.toArray)
 
   private def replaceEscapeChars(pattern: String): String = {
     buffer.setLength(0)

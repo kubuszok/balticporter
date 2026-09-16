@@ -1,13 +1,13 @@
 package balticporter.transform
 
-import balticporter.core.{ PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy }
+import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy }
 import balticporter.tir.*
 
 /** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the call-level twin of [[MethodBodyTransform]] (`ENGINE-LIMITS.md` D7). A key is a [[MemberKey]] naming the
   * resolved callee (exact — else arity-ambiguous); the value is a template with `{recv}`, `{arg0}`…`{argN}`, `{{`/`}}`, parsed once, spliced as a [[Tree.Opaque]] over terms. §1(b): mechanism
   * universal, `calls` per-library; every refusal counted, not approximated.
   */
-final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name: String = "call-site-substitution"
 
   import CallSiteSubstitutionTransform.{ Bound as BoundCall, Setting, Template, receiverOf, siteFault }
@@ -88,6 +88,24 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
     */
   def surfaceFingerprint: String =
     calls.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
+
+  /** Independent keys union; the same callee with a different template refuses (a conflict only a human can resolve); the same key with the same template is the one decision stated twice, accepted.
+    * The contract `MethodBodyTransform` carries, so a dependent's instance folds into the base's at the base's position instead of a fatal `SurfaceDivergence` (CLAUDE.md §1.5).
+    */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: CallSiteSubstitutionTransform =>
+      val conflicts = for
+        (k, v) <- o.calls.toList.sorted
+        v2 <- calls.get(k)
+        if v != v2
+      yield s"$k: templates differ"
+      if conflicts.nonEmpty then Left(conflicts.mkString("; "))
+      else
+        val added = o.calls.keySet -- calls.keySet
+        Right(MergeablePolicy.Merged(new CallSiteSubstitutionTransform(calls ++ o.calls), added.map(MergeablePolicy.subjectOf)))
+    case _ => Left(s"expected CallSiteSubstitutionTransform, got ${later.getClass.getSimpleName}")
+
+  def subjects: Set[String] = calls.keySet.map(MergeablePolicy.subjectOf)
 
   // -------------------------------------------------------------------------
   // the run's own record

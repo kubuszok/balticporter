@@ -194,6 +194,7 @@ lls_diff_skip := "ported/lls/diff-incompatible.tsv"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
+sge_ref       := env_var_or_default("SGE_REF", "../sge")   # the sge checkout the derive step reads the HAND PORT from; a master worktree once ../sge is on a generated branch
 ashley_src    := "../sge/original-src/ashley"
 sg_src        := "../sge/original-src/simple-graphs"
 anim8_src     := "../sge/original-src/anim8-gdx"
@@ -623,7 +624,7 @@ gdx-l0-measure:
     # a zinc clean BEFORE the migrator (it deletes src_managed): the base's tree moves under this
     # port, and an incremental compile read six stale sites as 0 errors (PROGRESS.md §13.29)
     _sbt_run "port-sge-l0JVM/clean" >/dev/null 2>&1
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}} --reference=$ROOT/{{sge_ref}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||Exception in thread|^\s+at balticporter\." <<<"$MIGRATE_OUT" | head -20
@@ -861,7 +862,7 @@ gdx-l0-test-measure:
     # ABORT if the migration did not run — the same stale-output defect fixed in `gdx-measure`: piping
     # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
     # and reports it as a result.
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate --steps={{gdx_steps}} --reference=$ROOT/{{sge_ref}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
       echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|Exception in thread|^\s+at balticporter\.|^  [A-Z][A-Za-z]+: " <<<"$MIGRATE_OUT" | head -20

@@ -39,7 +39,7 @@ object LibgdxL0Migrate:
       // longer declares; without it on the classpath Spoon resolves no declaration for it.
       frontend = FrontendConfig(base, files, JnigenClasspath.entries(repoRoot), resolutionRoots = List(base)),
       phases = Nil,
-      manifest = Some(LibgdxLadder.universal(repoRoot, steps)),
+      manifest = Some(LibgdxLadder.universal(repoRoot, steps, LibgdxLadder.referenceFrom(args))),
       provenance = Some(
         Provenance(
           upstreamName = "libGDX",
@@ -61,7 +61,7 @@ object LibgdxLadder:
 
   /** The test manifest: JUnit -> MUnit only (`TestFrameworkTransform`), inheriting `universal`; `externalParenless` is P11 (munit's JS/Native `Description` is parenless). No sge policy.
     */
-  def universalTest(repoRoot: Path, steps: Set[String] = DefaultSteps): PortManifest = universal(repoRoot, steps).extendedBy(
+  def universalTest(repoRoot: Path, steps: Set[String] = DefaultSteps, reference: Option[Path] = None): PortManifest = universal(repoRoot, steps, reference).extendedBy(
     PortManifest(
       name = "sge-l0-test",
       dropMethods = Set(watcherDrop),
@@ -94,6 +94,14 @@ object LibgdxLadder:
 
   /** `--steps=a,b` on the command line; absent or empty = [[DefaultSteps]] (the steps landed so far), `--steps=none` = the bare universal translation.
     */
+  /** the sge checkout whose HAND PORT the derive step reads (`sge/src/main/{scala,scalajvm,scaladesktop}` under it). The sibling checkout by default; `--reference=<dir>` names another — a worktree of
+    * sge's master once the sibling is on a branch that has replaced the hand port with this engine's output, which would derive from nothing.
+    */
+  def defaultReference(repoRoot: Path): Path = repoRoot.resolve("../sge").normalize
+
+  def referenceFrom(args: Array[String]): Option[Path] =
+    args.collectFirst { case a if a.startsWith("--reference=") => a.stripPrefix("--reference=").trim }.filter(_.nonEmpty).map(v => Path.of(v).toAbsolutePath.normalize)
+
   def stepsFrom(args: Array[String]): Set[String] =
     args.collectFirst { case a if a.startsWith("--steps=") => a.stripPrefix("--steps=").trim }.filter(_.nonEmpty) match
       case None         => DefaultSteps
@@ -297,7 +305,11 @@ object LibgdxLadder:
             "com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool",
             "com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#edges",
             "com.badlogic.gdx.graphics.g3d.particles.ResourceData#data",
-            "com.badlogic.gdx.graphics.g3d.particles.ResourceData#uniqueData"
+            "com.badlogic.gdx.graphics.g3d.particles.ResourceData#uniqueData",
+            // java package-private, emitted `private[ui]`; sge's VisUI overrides it from `sge.visui.widget`
+            // (the hand port spelled it `private[sge]`) — a cross-package override is public or it is
+            // reflection, and reflection does not link on Scala.js/Native
+            "com.badlogic.gdx.scenes.scene2d.ui.TextField#changeText"
           ),
           derive = derive
         )
@@ -770,12 +782,15 @@ object LibgdxLadder:
                 false
               )
             ),
-            // sge's ModelInstance takes Nullable[Seq[String]]; port takes Array[String]
+            // sge's ModelInstance takes Nullable[Seq[String]]; port takes Array[String]. An ABSENT id
+            // list is java's `null` (ModelInstance.java:153: copy EVERY root node); an empty array is
+            // java's `new String[0]` (copy the nodes named by zero ids: none) — the two are not the
+            // same value, so the bridge hands `null` to the (Model, Matrix4, String...) ctor
             "com.badlogic.gdx.graphics.g3d.ModelInstance" -> List(
               balticporter.transform.AddMembersTransform.MemberSpec(
                 "this",
                 1,
-                "def this(model: sge.graphics.g3d.Model, rootNodeIds: lowlevel.Nullable[scala.collection.immutable.Seq[java.lang.String]]) = this(model, rootNodeIds.map(s => { val a = new scala.Array[java.lang.String](s.size); s.copyToArray(a); a }).getOrElse(new scala.Array[java.lang.String](0)))",
+                "def this(model: sge.graphics.g3d.Model, rootNodeIds: lowlevel.Nullable[scala.collection.immutable.Seq[java.lang.String]]) = this(model, lowlevel.Nullable.empty, rootNodeIds.map(s => { val a = new scala.Array[java.lang.String](s.size); s.copyToArray(a); a }).getOrElse(null))",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.ModelInstance#this(Model,Nullable[Seq])"),
                 Some("sge takes Nullable[Seq[String]]; port takes String*"),
                 false
@@ -1092,7 +1107,19 @@ object LibgdxLadder:
       // no runtime reflection: the reflective `Json` and the `reflect` package go (types below), the
       // one class lookup by name becomes a table (`AssetTypeRegistry`, injected), and `ClassReflection`'s
       // statics are `java.lang.Class`'s own — the full port's policy, lifted (`LibgdxPolicy`).
-      "net" -> Nil,
+      // `Class#getResource` answers a `java.net.URL`, which Scala Native's javalib lacks (its linker:
+      // `Unknown type java.net.URL`, from `FileHandle.exists`); the twin `getResourceAsStream` it has.
+      // libGDX's only use of the URL is an existence probe (`!= null`), so the probe is respelled and
+      // the stream closed — sge's hand port's own spelling. `PortabilityCheck` still counts the site
+      // on Scala.js, which has neither method and answers through its FileHandle platform row.
+      "net" -> List(
+        new balticporter.transform.CallSiteSubstitutionTransform(
+          Map(
+            "java.lang.Class#getResource(String)" ->
+              "({{ val bpResource = {recv}.getResourceAsStream({arg0}); if (bpResource != null) bpResource.close(); bpResource }})"
+          )
+        )
+      ),
       // sge's renames that need no injection: `Disposable -> java.lang.AutoCloseable` (`dispose` ->
       // `close`, whole override component), and the two member renames the full port carries
       // (`InputEvent.type` -> `eventType`, `List.toString(T)` -> `itemToString`: java overloads
@@ -2071,7 +2098,7 @@ object LibgdxLadder:
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames` for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix wins);
     * the `List` rename keeps `scala.List` out; `MutableParamsTransform` is inherited from the base. No drop, inject, resolutions or parity (PROGRESS.md §13.29).
     */
-  def universal(repoRoot: Path, steps: Set[String] = DefaultSteps): PortManifest =
+  def universal(repoRoot: Path, steps: Set[String] = DefaultSteps, reference: Option[Path] = None): PortManifest =
     val unknown = steps -- Steps.keySet
     require(unknown.isEmpty, s"unknown ladder steps: ${unknown.mkString(",")}; known: ${Steps.keySet.toList.sorted.mkString(",")}")
     LlsPolicy
@@ -2132,7 +2159,7 @@ object LibgdxLadder:
           parity = if steps("derive") then
             Some(
               balticporter.core.ParityRef(
-                roots = List("scala", "scalajvm", "scaladesktop").map(d => repoRoot.resolve(s"../sge/sge/src/main/$d").normalize),
+                roots = List("scala", "scalajvm", "scaladesktop").map(d => reference.getOrElse(defaultReference(repoRoot)).resolve(s"sge/src/main/$d").normalize),
                 compare = false
               )
             )
@@ -2185,7 +2212,7 @@ object LibgdxL0TestMigrate:
       // sees no `org.junit.Assert` call to convert — 161 `E008` on the first test compile.
       frontend = FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)),
       phases = Nil,
-      manifest = Some(LibgdxLadder.universalTest(repoRoot, steps)),
+      manifest = Some(LibgdxLadder.universalTest(repoRoot, steps, LibgdxLadder.referenceFrom(args))),
       provenance = Some(
         Provenance(
           upstreamName = "libGDX",
