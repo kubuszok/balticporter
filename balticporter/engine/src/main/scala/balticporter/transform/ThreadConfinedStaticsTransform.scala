@@ -126,8 +126,9 @@ final class ThreadConfinedStaticsTransform(val fields: Set[String] = Set.empty) 
                 val elem      = v.tpt.tpe
                 val tlType    = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, threadLocalSym), List(elem))
                 val holderSym = mint.member(holder, MemberKey(owner, holder).render, s.owner, tlType, Flags(isStatic = true, isFinal = true, isPrivate = true))
-                val anonSym   = mint.tpe(s"$holder$$anon", s"$owner.$holder$$anon")
-                val initSym   = mint.member("initialValue", s"$owner.$holder$$anon#initialValue", anonSym, TypeRepr.MethodType(Nil, elem), Flags(isOverride = true))
+                val anonFqn   = s"$owner.$holder$$anon"
+                val anonSym   = mint.tpe(s"$holder$$anon", anonFqn)
+                val initSym   = mint.member("initialValue", MemberKey(anonFqn, "initialValue").render, anonSym, TypeRepr.MethodType(Nil, elem), Flags(isOverride = true))
                 val initDef   = Tree.DefDef(initSym, paramss = List(Nil), returnTpt = v.tpt, rhs = Some(init), origin = v.origin)
                 val holderDef = Tree.ValDef(
                   holderSym,
