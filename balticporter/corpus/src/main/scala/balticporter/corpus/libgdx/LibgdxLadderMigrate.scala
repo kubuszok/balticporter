@@ -1107,19 +1107,8 @@ object LibgdxLadder:
       // no runtime reflection: the reflective `Json` and the `reflect` package go (types below), the
       // one class lookup by name becomes a table (`AssetTypeRegistry`, injected), and `ClassReflection`'s
       // statics are `java.lang.Class`'s own — the full port's policy, lifted (`LibgdxPolicy`).
-      // `Class#getResource` answers a `java.net.URL`, which Scala Native's javalib lacks (its linker:
-      // `Unknown type java.net.URL`, from `FileHandle.exists`); the twin `getResourceAsStream` it has.
-      // libGDX's only use of the URL is an existence probe (`!= null`), so the probe is respelled and
-      // the stream closed — sge's hand port's own spelling. `PortabilityCheck` still counts the site
-      // on Scala.js, which has neither method and answers through its FileHandle platform row.
-      "net" -> List(
-        new balticporter.transform.CallSiteSubstitutionTransform(
-          Map(
-            "java.lang.Class#getResource(String)" ->
-              "({{ val bpResource = {recv}.getResourceAsStream({arg0}); if (bpResource != null) bpResource.close(); bpResource }})"
-          )
-        )
-      ),
+      // the classpath probe respelled for Scala Native — the full port's own value (`LibgdxPolicy.ClasspathProbeCalls`)
+      "net" -> List(new balticporter.transform.CallSiteSubstitutionTransform(LibgdxPolicy.ClasspathProbeCalls)),
       // sge's renames that need no injection: `Disposable -> java.lang.AutoCloseable` (`dispose` ->
       // `close`, whole override component), and the two member renames the full port carries
       // (`InputEvent.type` -> `eventType`, `List.toString(T)` -> `itemToString`: java overloads

@@ -60,6 +60,15 @@ object LibgdxCoreMigrate:
   */
 object LibgdxPolicy:
 
+  /** `Class#getResource` answers a `java.net.URL`, which Scala Native's javalib lacks (its linker: `Unknown type java.net.URL`, from `FileHandle.exists`); the twin `getResourceAsStream` it has.
+    * libGDX's only use of the URL is an existence probe (`!= null`), so the probe is respelled and the stream closed — sge's hand port's own spelling. ONE value for the full port and the ladder;
+    * `PortabilityCheck` still counts the site on Scala.js, which has neither method and answers through its FileHandle platform row.
+    */
+  val ClasspathProbeCalls: Map[String, String] = Map(
+    "java.lang.Class#getResource(String)" ->
+      "({{ val bpResource = {recv}.getResourceAsStream({arg0}); if (bpResource != null) bpResource.close(); bpResource }})"
+  )
+
   /** libGDX core's policy AS A VALUE — imported and extended by every dependent module. Shared-surface policy only: drop/rename tables and the phases that reshape signatures a dependent compiles
     * against (CLAUDE.md §1.5). `governs` is the namespace claim; the test suite lives inside it too, so substitution agreement works from unit origins, not a prefix.
     */
@@ -1849,6 +1858,7 @@ object LibgdxPolicy:
         retargetIndexedFields = libRetargetIndexedFields
       ),
       new MutableParamsTransform,
+      new balticporter.transform.CallSiteSubstitutionTransform(LibgdxPolicy.ClasspathProbeCalls),
       new PanamaFfiTransform(),
       unwrapReflection,
       classTable,
