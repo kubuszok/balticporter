@@ -35,6 +35,7 @@ object BuiltinFactories:
     new NullaryArityFactory,
     new ClassTagParamsFactory,
     new VisibilityFactory,
+    new ThreadConfinedStaticsFactory,
     new DiscriminatedUnionTransformFactory,
     new DefnodeNormalizationRuleFactory
   )
@@ -303,6 +304,11 @@ final class VisibilityFactory extends TransformFactory:
   def name = "visibility"
   def fromConfig(config: ConfigView): Phase =
     new VisibilityTransform(config.strings("widen").getOrElse(Nil).toSet, config.bool("derive").getOrElse(false))
+
+final class ThreadConfinedStaticsFactory extends TransformFactory:
+  def name = "thread-confined-statics"
+  def fromConfig(config: ConfigView): Phase =
+    new ThreadConfinedStaticsTransform(config.strings("fields").getOrElse(Nil).toSet)
 
 /** `{ transform = "call-site-substitution", calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }`
   *

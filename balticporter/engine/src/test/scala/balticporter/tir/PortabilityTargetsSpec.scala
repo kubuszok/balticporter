@@ -39,6 +39,8 @@ class PortabilityTargetsSpec extends munit.FunSuite:
       List(
         // the eight re-scoped families…
         "java.lang.ProcessBuilder",
+        // …the classpath twin Native DECLARES (answering null) and JS does not…
+        "java.lang.Class#getResourceAsStream",
         "java.lang.System#getProperty",
         "java.lang.Thread",
         "java.net.",

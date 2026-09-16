@@ -832,7 +832,7 @@ object ApiRows:
       (Partial("URI string parsing works; URLConnection/HttpURLConnection are effectively unusable"), MapTo("fetch or XHR for the connection half")),
       (Full, Keep),
       JsNative,
-      "covers URL and URLConnection — pure string parsing ports, and the HTTP half does not without a browser-native call underneath"
+      "covers URLConnection — pure string parsing ports, and the HTTP half does not without a browser-native call underneath; `java.net.URL` itself is JS-P35 (absent on Native too)"
     ),
     row(
       p(13),
@@ -1048,6 +1048,20 @@ object ApiRows:
       (Full, Keep),
       JsNative,
       "Native implemented it for real while JS returns empty unconditionally — the OPPOSITE shape from getProperty, which a single conflated rule hides"
+    ),
+    row(
+      p(35),
+      "java.net.URL",
+      false,
+      (Full, Keep),
+      (Absent, Refuse("no URL class in the Scala.js javalib — URI is the parsing half it ships")),
+      (Absent,
+       Refuse(
+         "the javalib (0.5.11; 0.5.12 checked too) ships URI, URLEncoder/URLDecoder and MalformedURLException, no URL; the linker reports the type unknown"
+       )
+      ),
+      JsNative,
+      "the one member of the java.net family Native does NOT implement, so it needs a rule of its own ahead of the JS-only package rule; reached through `Class#getResource`, whose existence-probe respelling never names it"
     )
   )
 

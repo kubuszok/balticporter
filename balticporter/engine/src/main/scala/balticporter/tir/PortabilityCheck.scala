@@ -113,7 +113,7 @@ object PortabilityCheck extends RemedySource:
       "java.net.URL",
       "absent from both non-JVM javalibs — Scala Native's linker reports the type unknown and Scala.js has no URL class; " +
         "a classpath EXISTENCE probe is respelled `getResourceAsStream(...) != null`, which never names the type",
-      at = p(11)
+      at = p(35)
     ),
     Rule(
       "java.net.",

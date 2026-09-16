@@ -69,6 +69,12 @@ object LibgdxPolicy:
       "({{ val bpResource = {recv}.getResourceAsStream({arg0}); if (bpResource != null) bpResource.close(); bpResource }})"
   )
 
+  /** `Matrix4`'s `static final` scratch instances (`quat`, `l_vez`, `tmpMat`, …): java shares one per class across every thread, so two threads composing matrices corrupt each other's temporaries;
+    * `ThreadConfinedStaticsTransform` confines each to the reading thread. ONE value for the full port and the ladder.
+    */
+  val ThreadConfinedScratch: Set[String] =
+    Set("quat", "quat2", "l_vez", "l_vex", "l_vey", "tmpVec", "tmpMat", "right", "tmpForward", "tmpUp").map(f => s"com.badlogic.gdx.math.Matrix4#$f")
+
   /** libGDX core's policy AS A VALUE — imported and extended by every dependent module. Shared-surface policy only: drop/rename tables and the phases that reshape signatures a dependent compiles
     * against (CLAUDE.md §1.5). `governs` is the namespace claim; the test suite lives inside it too, so substitution agreement works from unit origins, not a prefix.
     */
@@ -1859,6 +1865,7 @@ object LibgdxPolicy:
       ),
       new MutableParamsTransform,
       new balticporter.transform.CallSiteSubstitutionTransform(LibgdxPolicy.ClasspathProbeCalls),
+      new balticporter.transform.ThreadConfinedStaticsTransform(LibgdxPolicy.ThreadConfinedScratch),
       new PanamaFfiTransform(),
       unwrapReflection,
       classTable,
@@ -2255,34 +2262,39 @@ object LibgdxPolicy:
     * `MergeablePolicy` (§1.5): a dependent unions its own `hints`.
     */
   def align: balticporter.transform.PrimitiveToOpaqueTransform =
-    new balticporter.transform.PrimitiveToOpaqueTransform(
-      balticporter.tir.OpaqueSpec(
-        fqn = "com.badlogic.gdx.utils.Align",
-        target = balticporter.tir.OpaqueSpec.Target.Existing(
-          typeFqn = "sge.utils.Align",
-          wrapName = "apply",
-          unwrapName = "toInt"
-        ),
-        hints = Set(
-          // 13 fields typed `int align` / `int alignment` / `int columnAlign` / `int rowAlign` /
-          // `int labelAlign` / `int lineAlign` across the scene2d UI types. Each is a seed; the
-          // propagation discovers every getter, setter, and parameter reachable from them.
-          "com.badlogic.gdx.scenes.scene2d.ui.Image#align",
-          "com.badlogic.gdx.scenes.scene2d.ui.Label#labelAlign",
-          "com.badlogic.gdx.scenes.scene2d.ui.Label#lineAlign",
-          "com.badlogic.gdx.scenes.scene2d.ui.List#alignment",
-          "com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#align",
-          "com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#columnAlign",
-          "com.badlogic.gdx.scenes.scene2d.ui.Table#align",
-          "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#alignment",
-          "com.badlogic.gdx.scenes.scene2d.ui.Container#align",
-          "com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#align",
-          "com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#rowAlign",
-          "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#align",
-          "com.badlogic.gdx.scenes.scene2d.actions.MoveToAction#alignment"
-        ),
-        underlying = balticporter.tir.OpaqueSpec.Primitive.Int
-      )
+    new balticporter.transform.PrimitiveToOpaqueTransform(LibgdxPolicy.AlignSpec)
+
+  /** the one `Align` spec the full port and the ladder share (the ladder derives its seeds from the reference and drops the field hints). */
+  val AlignSpec: balticporter.tir.OpaqueSpec =
+    balticporter.tir.OpaqueSpec(
+      fqn = "com.badlogic.gdx.utils.Align",
+      target = balticporter.tir.OpaqueSpec.Target.Existing(
+        typeFqn = "sge.utils.Align",
+        wrapName = "apply",
+        unwrapName = "toInt"
+      ),
+      hints = Set(
+        // 13 fields typed `int align` / `int alignment` / `int columnAlign` / `int rowAlign` /
+        // `int labelAlign` / `int lineAlign` across the scene2d UI types. Each is a seed; the
+        // propagation discovers every getter, setter, and parameter reachable from them.
+        "com.badlogic.gdx.scenes.scene2d.ui.Image#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.Label#labelAlign",
+        "com.badlogic.gdx.scenes.scene2d.ui.Label#lineAlign",
+        "com.badlogic.gdx.scenes.scene2d.ui.List#alignment",
+        "com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#columnAlign",
+        "com.badlogic.gdx.scenes.scene2d.ui.Table#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#alignment",
+        "com.badlogic.gdx.scenes.scene2d.ui.Container#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#rowAlign",
+        "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#align",
+        "com.badlogic.gdx.scenes.scene2d.actions.MoveToAction#alignment"
+      ),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+      // also every slot the reference spells `Align` that no field seed reaches — `GlyphLayout.setText`'s
+      // `halign`, `BitmapFont.draw`'s, which java types as plain `int` parameters (sge ISS-770)
+      derive = true
     )
 
   /** GL uniform locations — the `int` that is really a distinct domain value — as an opaque type following the Align pattern: no java class to drop, injected as `sge.graphics.UniformLocation` with

@@ -44,7 +44,8 @@ object PorterNote:
       RebuiltPerTest,
       ParenlessConversion,
       SuppressedWarning,
-      AddedMember
+      AddedMember,
+      ThreadConfinedStatic
     )
 
   /** Placement: [[AtDeclaration]] (emitted subject), [[InBody]] (dropped member, at body head), [[NotInTree]] (dropped type, carried by injected file). A kind in the wrong set never appears.

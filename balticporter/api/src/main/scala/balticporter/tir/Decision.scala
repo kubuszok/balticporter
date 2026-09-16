@@ -145,6 +145,11 @@ object Decision:
       */
     case DroppedFieldWrite
 
+    /** a java `static final` scratch field made THREAD-CONFINED by `ThreadConfinedStaticsTransform`: the companion `val` became a `def` over a `ThreadLocal` holder initialised per thread from the
+      * java initialiser, so the reference `Owner.f` keeps compiling and each thread reads its own instance. DETAIL: the holder's name and the shape the field had.
+      */
+    case ThreadConfinedStatic
+
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
   /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it. Recorded once per declaration (not per occurrence) since a site-level rewrite is already visible in the diff

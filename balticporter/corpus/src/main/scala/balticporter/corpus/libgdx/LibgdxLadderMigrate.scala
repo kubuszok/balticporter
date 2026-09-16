@@ -363,16 +363,17 @@ object LibgdxLadder:
             "com.badlogic.gdx.scenes.scene2d.Actor" -> List("x_=", "y_=", "width_=", "height_=", "scaleX_=", "scaleY_=", "rotation_=")
           )
         ),
-        // encodeResourceJson stub (the full body needs ParticleEffectCodecs injected)
+        // sge's ResourceData.encodeResourceJson: java writes the polymorphic resource with a `class` tag
+        // (ResourceData.java:216); the injected ParticleEffectCodecs (step `json`) emit the controller graph
         new balticporter.transform.AddMembersTransform(
           Map(
             "com.badlogic.gdx.graphics.g3d.particles.ResourceData" -> List(
               balticporter.transform.AddMembersTransform.MemberSpec(
                 "encodeResourceJson",
                 1,
-                "private[particles] def encodeResourceJson(resource: Any): sge.utils.Json = {\n    resource match {\n      case effect: sge.graphics.g3d.particles.ParticleEffect =>\n        val json = new sge.utils.LegacyJson(sge.utils.JsonWriter.OutputType.json)\n        val ctrls = scala.collection.immutable.Vector.newBuilder[sge.utils.Json]\n        for (ctrl <- effect.controllers) {\n          val text = json.toJson(ctrl.asInstanceOf[java.lang.Object])\n          ctrls += sge.utils.readFromString[sge.utils.Json](text)(using hearth.kindlings.jsoniterjson.codec.JsonCodec.jsonValueCodec)\n        }\n        sge.utils.Json.obj(\"controllers\" -> sge.utils.Json.arr(ctrls.result()*), \"class\" -> sge.utils.Json.fromString(resource.getClass.getName))\n      case _ => sge.utils.Json.Null\n    }\n  }",
+                "private[particles] def encodeResourceJson(resource: Any): sge.utils.Json = {\n    resource match {\n      case effect: sge.graphics.g3d.particles.ParticleEffect => sge.graphics.g3d.particles.ParticleEffectCodecs.encodeResource(effect)\n      case other => throw sge.utils.SgeError.InvalidInput(\"Cannot serialize particle resource of type: \" + other.getClass.getName)\n    }\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.particles.ResourceData#encodeResourceJson"),
-                Some("stub — the full body needs the codecs injected"),
+                Some("sge's ResourceData.encodeResourceJson over the injected ParticleEffectCodecs"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -959,7 +960,7 @@ object LibgdxLadder:
       // (`Actor.top`/`right` collide with the fluent `top()`/`right()` of `Table`/`Container`/`HorizontalGroup`:
       // 6 errors — sge respelled those; 2 suite sites stay)
       // sge's float opaques for tolerances and angles (`Epsilon`, `Degrees`, `Radians`), seeded off sge's tree
-      "mathunits" -> List("Epsilon", "Degrees", "Radians").map(n =>
+      "mathunits" -> (List("Epsilon", "Degrees", "Radians").map(n =>
         opaque(
           balticporter.tir.OpaqueSpec(
             fqn = "com.badlogic.gdx.math." + n,
@@ -967,7 +968,7 @@ object LibgdxLadder:
             underlying = balticporter.tir.OpaqueSpec.Primitive.Float
           )
         )
-      ),
+      ) :+ new balticporter.transform.ThreadConfinedStaticsTransform(LibgdxPolicy.ThreadConfinedScratch)), // Matrix4's scratch statics, per thread (the full port's own value)
       // sge's `Input.Key`/`Input.Button` opaques (its Input companion): spliced as the companion's members,
       // then seeded from sge's tree (the derive step) — `isKeyPressed(key: Key)`, `Keys.A: Key`, …
       "keys" -> List(
@@ -1008,6 +1009,9 @@ object LibgdxLadder:
           )
         )
       ),
+      // sge's `Align` opaque over java's `int` alignment bitmasks — the full port's spec, seeded here from
+      // the reference (`GlyphLayout.setText`'s `halign`, `BitmapFont.draw`'s, every scene2d field; ISS-770)
+      "align" -> List(opaque(LibgdxPolicy.AlignSpec)),
       // java's `Gdx.app.log/error/debug(tag, msg[, t])` become sge's context-free `Log` (PROGRESS.md
       // §13.31 step 2): a class that only LOGS then takes no context (sge commented the particle
       // values' call out — a skip; the port keeps java's call). Placed BEFORE the context step.
@@ -1035,7 +1039,75 @@ object LibgdxLadder:
       "backend-desktop" -> Nil,
       // sge's typed JSON/UBJSON documents with Kindlings-derived codecs replace java's reflective JSON stack, one
       // consumer family at a time (PROGRESS.md §13.30, JSON step): first the g3d model loader.
-      "json" -> Nil,
+      "json" -> List(
+        // the g3d particle loader reads sge's typed document (`ResourceData.fromJson` over the jsoniter AST)
+        // and rebuilds the effect through the injected `ParticleEffectCodecs` in `loadSync`, where the
+        // `Sge` context is in scope; java did both reflectively in `ResourceData.read` (ISS-507).
+        new balticporter.transform.MethodBodyTransform(
+          Map(
+            "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#getDependencies" ->
+              """{
+                |  val jsonAst = sge.utils.readFromString[sge.utils.Json](file.readString())(using hearth.kindlings.jsoniterjson.codec.JsonCodec.jsonValueCodec)
+                |  val data = sge.graphics.g3d.particles.ResourceData.fromJson[sge.graphics.g3d.particles.ParticleEffect](jsonAst)
+                |  val assets = this.items.synchronized {
+                |    val entry = new lowlevel.util.ObjectMap.Entry[java.lang.String, sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]]()
+                |    entry.key = fileName
+                |    entry.value = lowlevel.Nullable(data)
+                |    this.items.add(entry)
+                |    data.assets
+                |  }
+                |  val descriptors = new lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()
+                |  for (assetData <- assets) {
+                |    // If the asset doesn't exist try to load it from loading effect directory
+                |    if (!this.resolve(assetData.filename).exists()) {
+                |      assetData.filename = file.parent().child(scala.Predef.summon[sge.Sge].files.internal(assetData.filename).name).path
+                |    } else ()
+                |    if (assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type` eq classOf[sge.graphics.g3d.particles.ParticleEffect]) {
+                |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[sge.graphics.g3d.particles.ParticleEffect]], parameter))
+                |    } else {
+                |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
+                |    }
+                |  }
+                |  descriptors
+                |}""".stripMargin,
+            "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#loadSync" ->
+              """{
+                |  var effectData: lowlevel.Nullable[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]] = lowlevel.Nullable.empty
+                |  this.items.synchronized {
+                |    scala.util.boundary {
+                |      var i: scala.Int = 0
+                |      while (i < this.items.size) {
+                |        val entry = this.items.get(i)
+                |        if (entry.key.equals(fileName)) {
+                |          effectData = entry.value
+                |          this.items.removeIndex(i)
+                |          scala.util.boundary.break(())
+                |        } else ()
+                |        i = i + 1
+                |      }
+                |    }
+                |  }
+                |  val data = effectData.getOrElse(throw new java.lang.RuntimeException("No ResourceData found for " + fileName))
+                |  // the effect graph `ResourceData.fromJson` kept as an AST is rebuilt here, where the `Sge` context is in scope
+                |  if (data.resource.isEmpty) {
+                |    data.resourceJson.foreach { resourceJson =>
+                |      data.resource = lowlevel.Nullable(sge.graphics.g3d.particles.ParticleEffectCodecs.decodeResource(resourceJson))
+                |    }
+                |  } else ()
+                |  data.resource.foreach { res => res.load(manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]]) }
+                |  lowlevel.Nullable(parameter).foreach { p =>
+                |    p.batches.foreach { batchList =>
+                |      for (batch <- batchList) {
+                |        batch.asInstanceOf[sge.graphics.g3d.particles.batches.ParticleBatch[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]].load(manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]].asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
+                |      }
+                |      data.resource.foreach(_.setBatch(batchList))
+                |    }
+                |  }
+                |  data.resource.getOrElse(throw new java.lang.RuntimeException("ResourceData has no resource for " + fileName))
+                |}""".stripMargin
+          )
+        )
+      ),
       "witness" -> List(
         new balticporter.transform.GlobalsToImplicitsTransform(
           requiredGivens = balticporter.transform.ElementWitnessTransform.constructorGivens(CoreWitnessSubjects, LlsPolicy.Witness)
@@ -1528,11 +1600,14 @@ object LibgdxLadder:
             // BinaryHeap.contains: iterate only up to size, not the full backing array (sge fix)
             "com.badlogic.gdx.utils.BinaryHeap#contains" ->
               "{ if (node == null) { throw new java.lang.IllegalArgumentException(\"node cannot be null.\") }; var i = 0; if (identity) { while (i < this.size) { if (this.nodes(i) eq node) { return true }; i += 1 } } else { while (i < this.size) { if (this.nodes(i).equals(node.asInstanceOf[java.lang.Object])) { return true }; i += 1 } }; return false }",
-            // ctor-funnel bug: ResourceData(T) skips field init — use no-arg ctor + set resource
+            // ctor-funnel bug: ResourceData(T) skips field init — use no-arg ctor + set resource. The document
+            // is sge's `ResourceData.toJson` written through jsoniter (`LegacyJson` is the reflective stub
+            // the reflection step refuses at run time on every row); `ParticleEffectLoader#getDependencies`
+            // (json step) reads the same document back.
             "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#save" ->
               """{
                 |  val data = new sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]()
-                |  data.resource = effect
+                |  data.resource = lowlevel.Nullable(effect)
                 |  effect.save(parameter.manager, data.asInstanceOf[sge.graphics.g3d.particles.ResourceData[java.lang.Object]])
                 |  if (!parameter.batches.isEmpty) {
                 |    for (batch <- parameter.batches.get) {
@@ -1545,9 +1620,9 @@ object LibgdxLadder:
                 |      } else ()
                 |    }
                 |  } else ()
-                |  val json = new sge.utils.LegacyJson(parameter.jsonOutputType)
-                |  if (parameter.prettyPrint) { val prettyJson = json.prettyPrint(data); parameter.file.writeString(prettyJson, false) }
-                |  else { json.toJson(data, parameter.file) }
+                |  val jsonAst = data.toJson
+                |  val config = if (parameter.prettyPrint) com.github.plokhotnyuk.jsoniter_scala.core.WriterConfig.withIndentionStep(2) else com.github.plokhotnyuk.jsoniter_scala.core.WriterConfig
+                |  parameter.file.writeString(sge.utils.writeToString[sge.utils.Json](jsonAst, config)(using hearth.kindlings.jsoniterjson.codec.JsonCodec.jsonValueCodec), false)
                 |}""".stripMargin
           )
         ),
@@ -1901,6 +1976,8 @@ object LibgdxLadder:
       "com.badlogic.gdx.graphics.Pixmap"
     ),
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
+    // java's constants class; sge's own `opaque type Align` (injected) stands at the same name
+    "align" -> Set("com.badlogic.gdx.utils.Align"),
     // DataBuffer reads FilterOutputStream.out which Scala.js javalib doesn't expose; nobody
     // references it; sge rewrote it entirely
     "extras" -> Set(
@@ -1961,6 +2038,7 @@ object LibgdxLadder:
     "seconds" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-seconds")),
     "pool" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
     "pixels" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pixels")),
+    "align" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-align")),
     "worldunits" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-worldunits")),
     "audio" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-audio")),
     "time" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-time")),
@@ -2033,6 +2111,7 @@ object LibgdxLadder:
     "pool",
     "pixels",
     "keys",
+    "align",
     "mathunits",
     "worldunits",
     "properties",
@@ -2066,6 +2145,7 @@ object LibgdxLadder:
     "pool",
     "pixels",
     "keys",
+    "align",
     "mathunits",
     "graphics",
     "properties",
