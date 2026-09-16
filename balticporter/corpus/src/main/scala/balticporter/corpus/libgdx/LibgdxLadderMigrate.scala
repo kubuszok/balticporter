@@ -558,7 +558,7 @@ object LibgdxLadder:
               balticporter.transform.AddMembersTransform.MemberSpec(
                 "tableAlign",
                 0,
-                "def tableAlign: scala.Int = this.align" + "$field",
+                "def tableAlign: sge.utils.Align = this.align" + "$field",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#tableAlign"),
                 Some("sge's public tableAlign (renamed from align to avoid Widget collision)"),
                 false
