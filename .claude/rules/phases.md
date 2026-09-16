@@ -193,6 +193,10 @@ sees the kind); the screen is *would a reader act differently*.
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
+- **K56** a mechanism that DEFERS a class initialiser (`DeferredInit`'s `$set`/`$value` holder) stands in
+  for JLS 12.4.2's class-init LOCK as well as its trigger: the value is assigned under the companion's
+  monitor, double-checked, the flag written LAST. Only a parallel suite sees the race (sge textra 1 NPE
+  -> 0 at 0 compile errors); a green serial run is no evidence.
 
 ## The §1(b) phase table (moved from CLAUDE.md 2026-09-16 — loads with the transform files)
 
