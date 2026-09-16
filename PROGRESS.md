@@ -2628,3 +2628,14 @@ guard (`policy 40->36`). Residues:
   same drift of `../lls` master; `just baseline-accept LlsMigrate` answers them once the user acknowledges.
 - The full-port lane's parity numbers compare against `../sge`, a checkout of the generated branch whose hand
   tree is gone; `SGE_REF` reaches only the L0 lanes today.
+
+Later the same day (engine `fb1a946c`): the deferred static holder takes the class-init lock (K56; textra's
+parallel suite read `Table.cellPool` null); the broad-catch guard rethrows the `ControlThrowable` sentinel at a
+`Throwable` catch (rules/emitter.md, Jumps) and the five testkit specs assert the sentinel spelling; the `async`
+ladder step ships `AsyncExecutor`/`AsyncResult` per platform row (java's on JVM/Native, upstream's GWT emulation
+on JS — `portability(emitted) 53 -> 42`); `--reference` naming no hand port is refused. Consumer side: sge's
+generator compares the lls exclusion on slash paths (Windows rows had ported the twelve a second time), the
+Android smoke test's `JSON_XML` excusal is lifted by its own ratchet, the demo sub-build names the same lls
+as sge. Open: the `Native FFI IT tests (linux-x86_64)` job's "Setup Baltic Porter" step (a shallow clone +
+`publishLocal` whose version nothing resolves) failed once on a corrupt sbt `active.json` — a flake to rerun,
+and a step worth deleting since the pin resolves from Central.
