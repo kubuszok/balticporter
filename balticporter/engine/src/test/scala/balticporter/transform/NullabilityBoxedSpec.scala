@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Pipeline, RuleScope }
 
-/** A java BOXED primitive at a nullable slot is boxed only to admit `null`; under a wrapper that carries the absence the element is the primitive again (`Integer` → `Nullable[Int]`), the
-  * reference's own spelling. The union target keeps the box.
+/** A java BOXED primitive at a nullable slot is boxed only to admit `null`; under a wrapper that carries the absence the element is the primitive again (`Integer` → `Nullable[Int]`), the reference's
+  * own spelling. The union target keeps the box.
   */
 class NullabilityBoxedSpec extends munit.FunSuite:
   private val javaSrc =

@@ -1894,6 +1894,10 @@ final case class PortRun(
   /** the opaque targets of the deriving specs; empty when no phase derives. */
   private def derivingOpaqueTargets: Set[String] =
     effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive => p.spec.typeFqn }.toSet
+
+  /** target -> the carriers each deriving spec names (`OpaqueSpec.carriers`); a target without any contributes no entry. */
+  private def derivingOpaqueCarriers: Map[String, Set[String]] =
+    effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive && p.spec.carriers.nonEmpty => p.spec.typeFqn -> p.spec.carriers }.toMap
   private def anyPhaseDerives: Boolean =
     derivingOpaqueTargets.nonEmpty || effectivePhases.exists {
       case n: NullabilityTransform                         => n.deriveMembers
@@ -1960,7 +1964,8 @@ final case class PortRun(
         m.effectiveFlattenNestedTypes,
         derivingOpaqueTargets,
         m.effectivePackageRenames,
-        memberRenames
+        memberRenames,
+        opaqueCarriers = derivingOpaqueCarriers
       )
       lastDerived = Some(r)
       r.policy.resolved(parsed)

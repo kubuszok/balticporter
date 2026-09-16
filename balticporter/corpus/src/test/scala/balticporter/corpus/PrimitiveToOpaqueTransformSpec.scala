@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Flags, OpaqueSpec, Pipeline, PolicyBinder, RuleScope, RunScope, SymId, Symbol, TypeRepr }
-import balticporter.transform.PrimitiveToOpaqueTransform
+import balticporter.transform.{ OpaqueBoundaryCheck, PrimitiveToOpaqueTransform }
 
 /** The primitive → opaque-type transform: a semantically-tagged primitive becomes an `opaque type` with a synthesized companion, retyped everywhere it flows, wrapped at construction and unwrapped
   * where consumed as a plain value. Asserts the emitted Scala at each boundary.
@@ -746,4 +746,143 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       "O9 regression: the field hint must be seeded despite a duplicate scala.Int symbol"
     )
     assert(out.contains("def getLayer(): Layer.T"), "O9 regression: propagation must discover the getter from the seeded field")
+  }
+
+  // -------------------------------------------------------------------------
+  // OpaqueSpec.carriers — the primitive ONE level inside a nullability carrier (`Nullable[Integer]`)
+  // -------------------------------------------------------------------------
+
+  private val carried =
+    """package demo;
+      |import java.lang.annotation.*;
+      |@Retention(RetentionPolicy.CLASS) @interface Null {}
+      |class Sink {
+      |  static void take(@Null Integer x) { }
+      |  static @Null Integer give() { return null; }
+      |}
+      |class Cell {
+      |  @Null Integer align;
+      |  public @Null Integer getAlign() { return align; }
+      |  public void setAlign(int align) { this.align = align; }
+      |  public void copy(Cell c) { this.align = c.align; }
+      |  public void clear() { align = null; }
+      |  public int raw() { return align; }
+      |  public void out() { Sink.take(align); }
+      |  public void in() { this.align = Sink.give(); }
+      |  public String show() { return String.valueOf(align); }
+      |}
+      |""".stripMargin
+
+  private def nullability = new balticporter.transform.NullabilityTransform(
+    annotations = Set("demo.Null"),
+    target = balticporter.transform.NullabilityTransform.Target.Named("demo.Nullable"),
+    scope = RuleScope.Everywhere(Set.empty)
+  )
+  private def carrierSpec(carriers: Set[String]) =
+    OpaqueSpec(
+      fqn = "demo.Cell",
+      target = OpaqueSpec.Target.Existing(typeFqn = "mylib.Layer", wrapName = "apply", unwrapName = "toInt"),
+      hints = Set("demo.Cell#align"),
+      scope = RuleScope.Only(Set("demo.Cell")),
+      carriers = carriers
+    )
+
+  test("carriers: a `Nullable[Integer]` field and its getter seed through the carrier and retype to `Nullable[Opaque]`") {
+    val ph  = new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable")))
+    val out = new TirEmitter(Pipeline.run(SpoonTir.fromSource(carried, "Demo.java"), List(nullability, ph))).emit
+    assert(clue(out).contains("var align: demo.Nullable[mylib.Layer]"), "the field, one level inside the carrier")
+    assert(out.contains("def getAlign(): demo.Nullable[mylib.Layer]"), "the getter, discovered by propagation")
+    // the carrier's own constructor takes the scalar wrap INSIDE; its empty needs nothing
+    assert(out.contains("this.align = demo.Nullable(mylib.Layer("), "a plain value into the carrier seed wraps inside `W(...)`")
+    assert(out.contains("this.align = demo.Nullable.empty"), "`W.empty` conforms at every element and is left alone")
+    assert(out.contains("this.align = c.align"), "seed to seed moves without coercion")
+    // an element READ off the carrier is the opaque, and unwraps like any scalar
+    assert(out.contains("mylib.Layer.toInt(this.align.get)"), "`w.get` yields the opaque; the primitive slot unwraps it")
+  }
+
+  test(
+    "carriers: the boundary coerces through the carrier's `map`, as a lambda, in both directions — and the external seam is counted"
+  ) {
+    val ph    = new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable")))
+    val after = Pipeline.run(SpoonTir.fromSource(carried, "Demo.java"), List(nullability, ph))
+    val out   = new TirEmitter(after).emit
+    // OUT: a `Nullable[Opaque]` value at a formal that stayed `Nullable[Integer]`
+    assert(clue(out).contains("demo.Sink.take(this.align.map((v) => mylib.Layer.toInt(v)))"), "unwrap = map over the carrier")
+    // IN: a `Nullable[Integer]` value at the retyped slot
+    assert(clue(out).contains("this.align = demo.Sink.give().map((v) => mylib.Layer(v))"), "wrap = map over the carrier")
+    // `orNull` keeps java's null: the unwrap goes INSIDE the carrier, boxed, so an empty stays `null`
+    assert(
+      out.contains("java.lang.String.valueOf(this.align.map((v) => mylib.Layer.toInt(v).asInstanceOf[java.lang.Integer]).orNull)"),
+      "a null-preserving element read unwraps inside the carrier"
+    )
+    val ext = ph.boundary(after.units).filter(_.issue == OpaqueBoundaryCheck.Issue.ExternalCallee)
+    assertEquals(
+      ext.map(_.subject.dropWhile(_ != '#')),
+      List("#valueOf(java.lang.Object)"),
+      "the external callee is counted, as the scalar path counts it"
+    )
+  }
+
+  test("carriers: a carrier INSIDE a carrier is refused and counted — closed for ONE depth, as arrays are (O3)") {
+    val p0      = Pipeline.run(SpoonTir.fromSource(carried, "Demo.java"), List(nullability))
+    val nulls   = p0.symbols.all.find(_.fullName == "demo.Nullable").get
+    val integer = p0.symbols.all.find(_.fullName == "java.lang.Integer").get
+    val field   = p0.symbols.all.find(_.fullName == "demo.Cell#align").get
+    val one     = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, nulls.id), List(TypeRepr.TypeRef(TypeRepr.NoPrefix, integer.id)))
+    val two     = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, nulls.id), List(one))
+    val p1      = p0.rebuilt(symbols = p0.symbols.updated(field.copy(info = two)))
+    val ph      = new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable")))
+    val out     = new TirEmitter(Pipeline.run(p1, List(ph))).emit
+    assert(!clue(out).contains("mylib.Layer"), "nothing retyped")
+    val refused = ph.policyReport.findings.filter(_.key == "demo.Cell#align")
+    assertEquals(refused.size, 1)
+    assert(clue(refused.head.detail).contains("TWO carriers deep"))
+    assert(refused.head.detail.contains("O3"))
+  }
+
+  test(
+    "carriers: a DERIVED row at a carried slot seeds the same way — resolved on the parsed program, bound before the null model ran"
+  ) {
+    import balticporter.tir.DerivedPolicy
+    val parsed  = SpoonTir.fromSource(carried, "Demo.java")
+    val derived = DerivedPolicy(List(DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, "demo.Cell#align", "Nullable[Layer]", "mylib.Layer"))).resolved(parsed)
+    val scope   = RunScope.of(parsed.units.map(_.symbol).toSet, Map.empty, derivedPolicy = derived)
+    val ph      = new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable")).copy(hints = Set.empty, derive = true))
+    val after   = Pipeline.runTraced(parsed, List(nullability, ph), new PolicyBinder(parsed, parsed.members, scope))._1
+    val out     = new TirEmitter(after).emit
+    assert(clue(out).contains("var align: demo.Nullable[mylib.Layer]"), "the derived field seed")
+    assert(!out.contains("def getAlign(): demo.Nullable[mylib.Layer]"), "a derived seed is exact: nothing is grown from it")
+    assert(out.contains("this.align = demo.Nullable(mylib.Layer("), "the coercions follow")
+  }
+
+  test("carriers: empty is the no-op — the same program, the same bytes, no fingerprint segment") {
+    import balticporter.core.PortManifest.fingerprint
+    // the hint names a SCALAR (`int raw()`): a hint naming the carrier-typed field itself is, without
+    // a carrier, what it always was — a refused overlap with the null model's own wrapper type
+    def emit(spec: OpaqueSpec) = new TirEmitter(Pipeline.run(SpoonTir.fromSource(carried, "Demo.java"), List(nullability, new PrimitiveToOpaqueTransform(spec)))).emit
+    val none                   = emit(carrierSpec(Set.empty).copy(hints = Set("demo.Cell#raw")))
+    val nowhere                = emit(carrierSpec(Set("nowhere.Wrapper")).copy(hints = Set("demo.Cell#raw")))
+    assertEquals(none, nowhere, "a carrier the program never mentions changes nothing")
+    assert(clue(none).contains("def raw(): mylib.Layer"), "the scalar seed still moves")
+    assert(
+      none.contains("var align: demo.Nullable[scala.Int]"),
+      "without a carrier the field stays where the null model put it (the box unboxed under the wrapper)"
+    )
+    assert(!none.contains(".map("), "no coercion is minted")
+    assert(!fingerprint(new PrimitiveToOpaqueTransform(carrierSpec(Set.empty))).contains("carriers="))
+    assert(fingerprint(new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable")))).contains("carriers=demo.Nullable"))
+    // …and no ordering edge: the carrier is the null model's, so only a spec naming one runs after it
+    assertEquals(new PrimitiveToOpaqueTransform(carrierSpec(Set.empty)).runsAfter, Set.empty[String])
+    assertEquals(
+      new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable"))).runsAfter,
+      Set(balticporter.transform.NullabilityTransform.Name)
+    )
+  }
+
+  test(
+    "carriers: the phase runs after the null model whichever way the port lists them — listed first, it still sees the carrier"
+  ) {
+    val ph  = new PrimitiveToOpaqueTransform(carrierSpec(Set("demo.Nullable")))
+    val out = new TirEmitter(Pipeline.run(SpoonTir.fromSource(carried, "Demo.java"), List(ph, nullability))).emit
+    assert(clue(out).contains("var align: demo.Nullable[mylib.Layer]"))
   }

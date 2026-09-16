@@ -1532,7 +1532,7 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Numbers: 3 errors -> 0; Symbol.descript
 ### O3. An opaque family that lands on an ARRAY ELEMENT is INEXPRESSIBLE — not refused, unreachable
 (a) engine, in the phase's eligibility test/retype loop/coercion. Symptom: `taggablePrim` tested only a bare scalar or a method's bare return, so a declaration whose element is the domain value (`int[] locations`) was INVISIBLE to seeding and propagation (which runs between SYMBOLS, and an array element has none) — 33 real ported type positions the reference hand port types `Array[AttributeLocation]` were simply unreachable, not refused.
 Numbers: engine specs 984=984, corpus 430=430; libGDX core 0 errors, every check/suite identical.
-Rule: CLOSED for exactly ONE container depth (the erasure-identity boundary), not "arrays now work" generally — a deeper container has genuinely no coercion to name.
+Rule: CLOSED for exactly ONE container depth (the erasure-identity boundary), not "arrays now work" generally — a deeper container has genuinely no coercion to name. The same one-depth closure holds for a NAMED nullability carrier (`OpaqueSpec.carriers`, §1(b): `Nullable[Integer]` retypes to `Nullable[Align]` and coerces through the carrier's `map`; `Nullable[Nullable[Integer]]` is refused and counted under `policy`).
 Triage (2026-09-04): REFUSED-BY-DESIGN — family O: a container deeper than one erasure-identity level (e.g. `List[int[]]`) has no coercion to name at all — a card would need a per-element copying bridge with real allocation cost, not attempted
 
 ### O4. An `OpaqueSpec`'s `hints` is a PREDICATE, so the surface fingerprint cannot see it — CLOSED

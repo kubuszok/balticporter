@@ -11,6 +11,11 @@ import balticporter.tir.CtorFunnel
 final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
   def name = s"primitive->opaque:${spec.fqn}"
 
+  /** A carrier is a type the NULL MODEL puts into the program (its wrapper is the one carrier whose members this phase reads, K13), so a spec naming one runs after that phase — read earlier, the slot
+    * is still java's boxed scalar and the row seeds nothing (measured: 2 derived rows, 0 declarations moved). No carrier, no edge: the order every other port measured stays.
+    */
+  override def runsAfter: Set[String] = if spec.carriers.isEmpty then Set.empty else Set(NullabilityTransform.Name)
+
   /** [[OpaqueBoundaryCheck]] counts external callees whose class-file formals this phase cannot read, scope boundaries where opaque meets primitive, and unreachable boxed-primitive slots. Named as a
     * symbol so a renamed lane is a compile error, not a silently unwired claim.
     */
@@ -29,7 +34,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     // a deriving spec's surface is the REFERENCE's: the derived set's digest once bound, the
     // switch alone before (PROGRESS.md §13.31 step 1)
     val der = if spec.derive then ";derive=reference" else ""
-    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt$der"
+    // an empty carrier set contributes no segment (the fingerprint no-op rule)
+    val car = if spec.carriers.isEmpty then "" else s";carriers=${spec.carriers.toList.sorted.mkString(",")}"
+    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt$der$car"
 
   /** every shared-surface subject this instance's policy is keyed on — the leading type FQN of each hint and each scope entry, through [[MergeablePolicy.subjectOf]]. Over-approximate: an omitted
     * subject is a hole exactly where the §1.5 screen exists.
@@ -80,7 +87,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
               extraHints = spec.extraHints ++ o.spec.extraHints,
               scope = mergedScope,
               target = spec.target,
-              derive = spec.derive || o.spec.derive
+              derive = spec.derive || o.spec.derive,
+              carriers = spec.carriers ++ o.spec.carriers
             )
           )
           Right(MergeablePolicy.Merged(merged, o.subjects -- subjects))
@@ -120,6 +128,18 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   /** `Array[Int]` — the JVM-level array type the coercion wraps/unwraps. */
   private var primArrayRef: TypeRepr = TypeRepr.NoType
   private val minted = collection.mutable.ListBuffer[Symbol]()
+
+  /** the configured carriers (`OpaqueSpec.carriers`) present in this program, by symbol; empty is the no-op. Resolved before seeding — a carrier-typed symbol is taggable. */
+  private var carrierSyms: Set[SymId] = Set.empty
+
+  /** carrier symbol -> its `map` (reused where the program declares it, minted otherwise): the one member both carrier coercions go through. */
+  private var carrierMap: Map[SymId, SymId] = Map.empty
+
+  /** the parameter of the wrap lambda (`w.map(v => Opaque(v))`) and of the unwrap lambda (`w.map(v => Opaque.unwrap(v))`); one symbol each, every site shares it. */
+  private var vCarrierWrap, vCarrierUnwrap: SymId = SymId.None
+
+  /** the null-model contract's members this phase reads through (`NullabilityTransform.Target`, `ENGINE-LIMITS.md` K13): the element READS, whose result is the element itself. */
+  private val ElementReads = Set("get", "orNull")
 
   /** which top-level units this run emits; not derivable from the `Program` a phase is handed (a dependent's contains its base's units). Defaults to the base-port answer.
     */
@@ -167,6 +187,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
     boxedPrimSym = program.symbols.all.filter(_.fullName == spec.underlying.boxedFqn).minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
     arraySym = program.symbols.all.filter(_.fullName == "scala.Array").minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
+    // a carrier the program never mentions has nothing to retype — silent, like an unmatched hint
+    carrierSyms = spec.carriers.flatMap(fqn => program.symbols.all.filter(_.fullName == fqn).minByOption(_.id.raw).map(_.id))
+    carrierMap = Map.empty
 
     // the scope fences seeding as well as propagation. RuleScope.Everywhere() (default) fences
     // nothing, so this filter is then the identity.
@@ -307,6 +330,16 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
 
         None // no unit minted — the definition is the injected file
 
+    // the carrier coercions: `w.map(v => Opaque(v))` / `w.map(v => Opaque.unwrap(v))` through the
+    // carrier's own `map`, reused where the program declares it and minted as a phantom otherwise
+    carrierMap = carrierSyms.toList.map { c =>
+      val fqn = program.symbolOf(c).map(_.fullName).getOrElse("")
+      c -> program.symbols.all.filter(_.fullName == s"$fqn.map").minByOption(_.id.raw).map(_.id).getOrElse(mint("map", s"$fqn.map", Flags(), c))
+    }.toMap
+    if carrierSyms.nonEmpty then
+      vCarrierWrap = mint("v", "v", Flags(isParam = true))
+      vCarrierUnwrap = mint("v", "v", Flags(isParam = true), info = opaqueRef)
+
     // a retyped parameter's own method, by POSITION and never by name: a MethodType's parameter
     // list and its DefDef's are parallel by construction, but names are not (an earlier phase may
     // rewrite a parameter slot without touching the method's info). ENGINE-LIMITS §13 O2
@@ -328,7 +361,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     def methodType(id: SymId, mt: TypeRepr.MethodType): TypeRepr.MethodType =
       val slots = seedParamSlots.getOrElse(id, Set.empty)
       def retypeSlot(t: TypeRepr): TypeRepr =
-        if isPrim(t) then opaqueRef else if isArrayOfPrim(t) then opaqueArrayRef else t
+        if isPrim(t) then opaqueRef else if isArrayOfPrim(t) then opaqueArrayRef else if isCarrierOfPrim(t) then carrierOpaqueRef(t) else t
       TypeRepr.MethodType(
         mt.params.zipWithIndex.map((nt, i) => if slots(i) then nt._1 -> retypeSlot(nt._2) else nt),
         if seeds(id) then retypeSlot(mt.result) else mt.result,
@@ -340,8 +373,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     // retype Array[Prim] -> Array[Opaque.T].
     val retyped = program.symbols.all.map { s =>
       s.info match
-        case r if seeds(s.id) && isPrim(r)        => s.copy(info = opaqueRef)
-        case r if seeds(s.id) && isArrayOfPrim(r) => s.copy(info = opaqueArrayRef)
+        case r if seeds(s.id) && isPrim(r)          => s.copy(info = opaqueRef)
+        case r if seeds(s.id) && isArrayOfPrim(r)   => s.copy(info = opaqueArrayRef)
+        case r if seeds(s.id) && isCarrierOfPrim(r) => s.copy(info = carrierOpaqueRef(r))
         case mt: TypeRepr.MethodType =>
           val next = methodType(s.id, mt); if next == mt then s else s.copy(info = next)
         case TypeRepr.PolyType(tps, mt: TypeRepr.MethodType) =>
@@ -433,11 +467,24 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   private def reportUnreachable(program: Program, named: Iterable[Symbol]): Unit =
     given Program = program
     named.foreach { s =>
-      val value = valueTypeOf(s.info)
-      if !taggablePrim(s.info) && foreignOpaque(program, s.info).isEmpty && mentionsPrim(value) then
-        val setting =
-          if spec.extraHints(s.fullName) then s"OpaqueSpec(${spec.fqn}).extraHints(${s.fullName})"
-          else s"OpaqueSpec(${spec.fqn}).hints(${s.fullName})"
+      val value   = valueTypeOf(s.info)
+      val setting =
+        if spec.extraHints(s.fullName) then s"OpaqueSpec(${spec.fqn}).extraHints(${s.fullName})"
+        else s"OpaqueSpec(${spec.fqn}).hints(${s.fullName})"
+      // a carrier INSIDE a carrier (`Nullable[Nullable[Integer]]`): closed for ONE depth, refused and counted here
+      val nestedCarrier = carrierElem(value).exists((_, e) => carrierElem(e).exists((_, inner) => isPrim(inner) || isBoxedPrim(inner)))
+      if nestedCarrier then
+        unreachable += PolicyFinding(
+          name,
+          setting,
+          s.fullName,
+          PolicyIssue.Malformed,
+          s"this declaration's value type is `${TirPrinter.tpe(value, TirPrinter.Style.canonical)}`: the domain value " +
+            "sits TWO carriers deep, and this mechanism coerces through exactly ONE (`w.map(v => Opaque(v))`, " +
+            "the same one-container-depth closure arrays have). [§1(b) ENGINE, `ENGINE-LIMITS.md` §13 O3: " +
+            "the exits are to drop this hint or to widen the mechanism]"
+        )
+      else if !taggablePrim(s.info) && foreignOpaque(program, s.info).isEmpty && mentionsPrim(value) then
         unreachable += PolicyFinding(
           name,
           setting,
@@ -477,9 +524,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   /** the other opaque object a symbol's declared type belongs to, if any — read from the `isOpaque` flag. `None` for this phase's own (nothing is minted yet when this runs).
     */
   private def foreignOpaque(p: Program, info: TypeRepr): Option[String] =
-    val head = info match
-      case TypeRepr.MethodType(_, ret, _) => headSym(ret)
-      case other                          => headSym(other)
+    val value = info match
+      case TypeRepr.MethodType(_, ret, _) => ret
+      case other                          => other
+    // a configured CARRIER is no opaque family of its own (the null model flags it `isOpaque`): the
+    // family is its ELEMENT's, one level down; two levels down there is none
+    val head = carrierElem(value) match
+      case Some((_, e)) => if carrierElem(e).isDefined then None else headSym(e)
+      case None         => headSym(value)
     head.filter(_ != opaqueSym).flatMap(p.symbolOf).filter(_.flags.isOpaque).flatMap(t => p.symbolOf(t.owner).map(_.fullName).orElse(Some(t.fullName)))
 
   /** Fails the run when this spec's seeds overlap another `PrimitiveToOpaqueTransform`'s. Without this, whichever instance runs second finds those symbols already retyped, declines silently, and
@@ -514,7 +566,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
     if seeds(d.symbol) then
       val ref = seedTypeRef(d.returnTpt.tpe)
-      d.copy(returnTpt = TypeTree(ref, d.origin), rhs = d.rhs.map(wrapReturns))
+      d.copy(returnTpt = TypeTree(ref, d.origin), rhs = d.rhs.map(wrapReturns(_, d.returnTpt.tpe)))
     else d.copy(rhs = d.rhs.map(unwrapReturns))
 
   // retype seed REFERENCES so boundary detection reads a consistent `tpe` (the populator left
@@ -542,7 +594,11 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   override def transformIdent(t: Tree.Ident)(using Program): Term =
     if seeds(t.sym) then t.copy(tpe = seedTypeRef(t.tpe)) else t
   override def transformSelect(t: Tree.Select)(using Program): Term =
-    if seeds(t.sym) then t.copy(tpe = seedTypeRef(t.tpe)) else t
+    if seeds(t.sym) then t.copy(tpe = seedTypeRef(t.tpe))
+    // an element READ off a carrier holding the opaque (`w.get`) yields the opaque; the earlier
+    // phase typed it at the carrier's old element, which is what the boundary would otherwise read
+    else if carrierMember(t.sym, ElementReads) && isOpaqueCarrier(t.qual) then t.copy(tpe = opaqueRef)
+    else t
 
   override def transformApply(t0: Tree.Apply)(using Program): Term =
     val t = if isSeedMethod(t0.method) then t0.copy(tpe = seedMethodRetType(t0.method)) else t0
@@ -550,6 +606,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       // operator operands consumed as Int (`layer + 1`, `layer < other`) → unwrap the seed sides.
       case Tree.Select(recv, m, st, so) if summon[Program].symbolOf(m).exists(_.fullName.startsWith("scala.<op>#")) =>
         Tree.Apply(Tree.Select(unwrapIfOpaque(recv), m, st, so), t.args.map(unwrapIfOpaque), t.method, t.tpe, t.origin)
+      // the carrier's own constructor (`W(x)`) is polymorphic in its element: an opaque argument
+      // makes the value `W[Opaque]`, and the call is never a seam
+      case Tree.Ident(c, _, _) if carrierSyms(c) && t.args.size == 1 && carrierMember(t.method, Set("apply")) =>
+        if carriesOpaque(t.args.head) then t.copy(tpe = carrierRef(c, opaqueRef)) else t
       case _ =>
         // a plain-Int callee parameter fed a seed value → unwrap; a seed parameter fed a plain
         // Int → wrap. Read the callee's (retyped) param symbols from its definition.
@@ -639,10 +699,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     case Tree.Block(_, x, _, _, _)        => carriesOpaque(x)
     case Tree.Match(_, cases, _, _, _, _) => cases.exists(c => carriesOpaque(c.body))
     case Tree.ArrayAccess(arr, _, _, _)   => isOpaqueArray(arr) || carriesOpaque(arr)
-    case Tree.Ident(s, _, _)              => seeds(s) || isOpaque(e) || isOpaqueArray(e)
-    case Tree.Select(_, s, _, _)          => seeds(s) || isOpaque(e) || isOpaqueArray(e)
-    case Tree.Apply(_, _, m, _, _)        => isSeedMethod(m) || isOpaque(e) || isOpaqueArray(e)
-    case other                            => isOpaque(other) || isOpaqueArray(other)
+    case Tree.Ident(s, _, _)              => seeds(s) || isOpaque(e) || isOpaqueArray(e) || isOpaqueCarrier(e)
+    case Tree.Select(_, s, _, _)          => seeds(s) || isOpaque(e) || isOpaqueArray(e) || isOpaqueCarrier(e)
+    // the carrier's constructor carries what its argument carries; an ascription at the carrier's
+    // old element is the earlier phase's, over a value this phase moved
+    case Tree.Apply(Tree.Ident(c, _, _), List(x), m, _, _) if carrierSyms(c) && carrierMember(m, Set("apply")) => carriesOpaque(x) || isOpaqueCarrier(e)
+    case Tree.Typed(inner, tpt, _, _) if isCarrierOfPrim(tpt.tpe)                                              => carriesOpaque(inner)
+    case Tree.Apply(_, _, m, _, _)                                                                             => isSeedMethod(m) || isOpaque(e) || isOpaqueArray(e) || isOpaqueCarrier(e)
+    case other                                                                                                 => isOpaque(other) || isOpaqueArray(other) || isOpaqueCarrier(other)
 
   /** Inserts `f` where the value is — at each leaf of a carrying expression, never around the whole. Wrapping the whole is wrong for a mixed carrier: an `if` with one branch of each type has no type
     * a single coercion could take.
@@ -681,17 +745,28 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   private def unwrapIfOpaque(e: Term)(using Program): Term =
     if !carriesOpaque(e) then e
     else if isOpaqueArray(e) then unwrapArrayCall(e)
-    else
-      coerce(e,
-             primRef,
-             l =>
-               if isOpaqueArray(l) then unwrapArrayCall(l)
-               else if carriesOpaque(l) then unwrapCall(l)
-               else l
-      )
+    else coerce(e, primRef, unwrapLeaf)
 
-  private def wrapReturns(body: Term)(using Program): Term =
-    ReturnSites.map(body)(e => if isPrim(e.tpe) || widensToPrim(e.tpe) then wrap(e) else e, e => if isPrim(e.tpe) || widensToPrim(e.tpe) then wrap(e) else e)
+  /** one leaf out of the opaque family: an array, a carrier, a null-preserving element read, or the scalar. */
+  private def unwrapLeaf(l: Term)(using Program): Term = l match
+    case _ if isOpaqueArray(l)                                => unwrapArrayCall(l)
+    case _ if isOpaqueCarrier(l) || carriesOpaqueInCarrier(l) => unwrapCarrierCall(l)
+    // `w.orNull` keeps java's null through the read: the unwrap goes INSIDE the carrier, and boxed,
+    // so an empty carrier still reads `null` and never the primitive's zero
+    case Tree.Select(q, m, _, o) if carrierMember(m, Set("orNull")) && isOpaqueCarrier(q) =>
+      val c     = carrierElem(q.tpe).map(_._1).getOrElse(SymId.None)
+      val boxed = if boxedPrimSym == SymId.None then primRef else TypeRepr.TypeRef(TypeRepr.NoType, boxedPrimSym)
+      val box   = (v: Term) => if boxedPrimSym == SymId.None then unwrapCall(v) else Tree.Typed(unwrapCall(v), TypeTree(boxed, o), boxed, o)
+      Tree.Select(mapCall(q, vCarrierUnwrap, opaqueRef, box, carrierRef(c, boxed)), m, boxed, o)
+    case _ if carriesOpaque(l) => unwrapCall(l)
+    case _                     => l
+
+  /** the seed method's returns, wrapped: a scalar seed wraps a primitive; a CARRIER seed wraps a value at the carrier's old element (`decl` is the declaration's type BEFORE the retype). */
+  private def wrapReturns(body: Term, decl: TypeRepr)(using Program): Term =
+    if isCarrierOfPrim(decl) then
+      val f = (e: Term) => if isCarrierOfPrim(e.tpe) || carriesOpaqueInCarrier(e) then wrapCarrier(e, carrierOpaqueRef(decl)) else e
+      ReturnSites.map(body)(f, f)
+    else ReturnSites.map(body)(e => if isPrim(e.tpe) || widensToPrim(e.tpe) then wrap(e) else e, e => if isPrim(e.tpe) || widensToPrim(e.tpe) then wrap(e) else e)
 
   /** the dual, for a method that kept the primitive and returns a value carrying a seed. Only a `return` and the body's tail are coerced — an ordinary statement is not a value the method yields.
     */
@@ -715,21 +790,85 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     */
   private def isBoxedPrim(t: TypeRepr): Boolean = boxedPrimSym != SymId.None && headSym(t).contains(boxedPrimSym)
 
-  /** the retyped type for a seed: `Prim` -> `Opaque.T`, `Array[Prim]` -> `Array[Opaque.T]`. */
+  /** the retyped type for a seed: `Prim` -> `Opaque.T`, `Array[Prim]` -> `Array[Opaque.T]`, `Carrier[Prim]` -> `Carrier[Opaque.T]`. */
   private def seedTypeRef(origType: TypeRepr): TypeRepr =
-    if isArrayOfPrim(origType) then opaqueArrayRef else opaqueRef
+    if isArrayOfPrim(origType) then opaqueArrayRef else if isCarrierOfPrim(origType) then carrierOpaqueRef(origType) else opaqueRef
 
   /** the return type of a seed method, retyped. */
   private def seedMethodRetType(m: SymId)(using p: Program): TypeRepr =
     p.symbolOf(m).map(_.info) match
-      case Some(TypeRepr.MethodType(_, ret, _)) =>
-        if isArrayOfPrim(ret) then opaqueArrayRef else opaqueRef
-      case _ => opaqueRef
+      case Some(TypeRepr.MethodType(_, ret, _)) => seedTypeRef(ret)
+      case _                                    => opaqueRef
 
-  /** wraps a value for assignment to a seed, dispatching scalar vs array coercion — including when the declared type is already `Array[Opaque]` (read after the retype).
+  /** wraps a value for assignment to a seed, dispatching scalar vs array vs carrier coercion — including when the declared type is already `Array[Opaque]`/`Carrier[Opaque]` (read after the retype).
     */
   private def wrapFor(e: Term, origDeclType: TypeRepr)(using Program): Term =
-    if isArrayOfPrim(origDeclType) || isArrayOfOpaque(origDeclType) then wrapArrayCall(e) else wrap(e)
+    if isArrayOfPrim(origDeclType) || isArrayOfOpaque(origDeclType) then wrapArrayCall(e)
+    else if isCarrierOfPrim(origDeclType) || isCarrierOfOpaque(origDeclType) then wrapCarrier(e, carrierOpaqueRef(origDeclType))
+    else wrap(e)
+
+  // -------------------------------------------------------------------------
+  // carrier coercion — `w.map(v => Opaque(v))` / `w.map(v => Opaque.unwrap(v))` (OpaqueSpec.carriers)
+  // -------------------------------------------------------------------------
+
+  /** the carrier and element of a `Carrier[E]` type, for a configured carrier; `None` otherwise (and always when no carrier is configured: the no-op). */
+  private def carrierElem(t: TypeRepr): Option[(SymId, TypeRepr)] = t match
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), List(e)) if carrierSyms(c) => Some((c, e))
+    case _                                                                       => None
+
+  /** `Carrier[Prim]` or `Carrier[Boxed]` — a carrier holding the spec's primitive ONE level down (a deeper one is refused, [[reportUnreachable]]). */
+  private def isCarrierOfPrim(t: TypeRepr): Boolean = carrierElem(t).exists((_, e) => isPrim(e) || isBoxedPrim(e))
+
+  /** `Carrier[Opaque]` — what a carrier seed reads after the retype. */
+  private def isCarrierOfOpaque(t: TypeRepr): Boolean = carrierElem(t).exists((_, e) => headSym(e).contains(opaqueSym))
+  private def isOpaqueCarrier(e:   Term):     Boolean = isCarrierOfOpaque(e.tpe)
+
+  /** `W(x)` whose argument carries the opaque — a carrier value the node's own `tpe` may not yet say so about. */
+  private def carriesOpaqueInCarrier(e: Term)(using Program): Boolean = e match
+    case Tree.Apply(Tree.Ident(c, _, _), List(x), m, _, _) if carrierSyms(c) && carrierMember(m, Set("apply")) => carriesOpaque(x)
+    case _                                                                                                     => false
+
+  /** `Carrier[Opaque]` at the same carrier (and prefix) as `t`. */
+  private def carrierOpaqueRef(t: TypeRepr): TypeRepr = t match
+    case TypeRepr.AppliedType(tc, List(_)) => TypeRepr.AppliedType(tc, List(opaqueRef))
+    case other                             => other
+  private def carrierRef(c: SymId, elem: TypeRepr): TypeRepr = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, c), List(elem))
+
+  /** is `s` a member of a configured carrier by one of `names` — the null-model contract's own members ([[ElementReads]], `apply`, `empty`)? */
+  private def carrierMember(s: SymId, names: Set[String])(using p: Program): Boolean =
+    carrierSyms.nonEmpty && p.symbolOf(s).exists(m => carrierSyms(m.owner) && names(m.name))
+
+  /** coerce a carrier value into `Carrier[Opaque]` (`target`), at each leaf of a carrying expression. */
+  private def wrapCarrier(e: Term, target: TypeRepr)(using Program): Term = coerce(e, target, wrapCarrierLeaf)
+
+  /** one carrier leaf: `W.empty` conforms at every element and is only retyped; `W(x)` takes the scalar wrap INSIDE; an ascription at the old element moves; anything else at `Carrier[Prim]` maps. */
+  private def wrapCarrierLeaf(e: Term)(using Program): Term = e match
+    case _ if isOpaqueCarrier(e)                                                                                                               => e
+    case s @ Tree.Select(Tree.Ident(c, _, _), m, _, _) if carrierSyms(c) && carrierMember(m, Set("empty"))                                     => s.copy(tpe = carrierRef(c, opaqueRef))
+    case ta @ Tree.TypeApply(s @ Tree.Select(Tree.Ident(c, _, _), m, _, _), List(_), _, o) if carrierSyms(c) && carrierMember(m, Set("empty")) =>
+      ta.copy(fun = s.copy(tpe = carrierRef(c, opaqueRef)), targs = List(TypeTree(opaqueRef, o)), tpe = carrierRef(c, opaqueRef))
+    case a @ Tree.Apply(Tree.Ident(c, _, _), List(x), m, _, _) if carrierSyms(c) && carrierMember(m, Set("apply")) => a.copy(args = List(wrap(x)), tpe = carrierRef(c, opaqueRef))
+    case t @ Tree.Typed(inner, tpt, _, o) if isCarrierOfPrim(tpt.tpe) && carriesOpaque(inner)                      =>
+      t.copy(expr = wrapCarrierLeaf(inner), tpt = TypeTree(carrierOpaqueRef(tpt.tpe), o), tpe = carrierOpaqueRef(tpt.tpe))
+    case _ if isCarrierOfPrim(e.tpe) =>
+      val elem = carrierElem(e.tpe).map(_._2).getOrElse(TypeRepr.NoType)
+      mapCall(e, vCarrierWrap, elem, wrapCall, carrierOpaqueRef(e.tpe))
+    case other => other
+
+  /** coerce a `Carrier[Opaque]` value out to `Carrier[Prim]`: `W(x)` takes the scalar unwrap inside, anything else maps. */
+  private def unwrapCarrierCall(e: Term)(using Program): Term = e match
+    case a @ Tree.Apply(Tree.Ident(c, _, _), List(x), m, _, _) if carrierSyms(c) && carrierMember(m, Set("apply")) => a.copy(args = List(unwrapIfOpaque(x)), tpe = carrierRef(c, primRef))
+    case _                                                                                                         =>
+      val c = carrierElem(e.tpe).map(_._1).getOrElse(SymId.None)
+      mapCall(e, vCarrierUnwrap, opaqueRef, unwrapCall, carrierRef(c, primRef))
+
+  /** `recv.map(v => f(v))` through the carrier's `map`, as a [[Tree.Lambda]] — never opaque text. */
+  private def mapCall(recv: Term, v: SymId, vTpe: TypeRepr, f: Term => Term, result: TypeRepr): Term =
+    val c   = carrierElem(recv.tpe).map(_._1).getOrElse(SymId.None)
+    val m   = carrierMap.getOrElse(c, SymId.None)
+    val o   = recv.origin
+    val lam = Tree.Lambda(List(Tree.ValDef(v, TypeTree(TypeRepr.NoType, o), None, o)), f(Tree.Ident(v, vTpe, o)), TypeRepr.NoType, o)
+    Tree.Apply(Tree.Select(recv, m, TypeRepr.NoType, o), List(lam), m, result, o)
 
   /** the declared type of the LHS of an assignment, read from the declaration, not the node — an `ArrayAccess` LHS reads the element type of the array's declaration.
     */
@@ -785,7 +924,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   private def taggablePrim(info: TypeRepr): Boolean = info match
     case r if isPrim(r)                 => true
     case r if isArrayOfPrim(r)          => true
-    case TypeRepr.MethodType(_, ret, _) => isPrim(ret) || isArrayOfPrim(ret)
+    case r if isCarrierOfPrim(r)        => true
+    case TypeRepr.MethodType(_, ret, _) => isPrim(ret) || isArrayOfPrim(ret) || isCarrierOfPrim(ret)
     case _                              => false
 
   private def headSym(t: TypeRepr): Option[SymId] = t match

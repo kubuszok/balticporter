@@ -22,8 +22,17 @@ final case class OpaqueSpec(
   target: OpaqueSpec.Target = OpaqueSpec.Target.Mint,
   /** also seed from the run's [[DerivedPolicy]] — the slots the REFERENCE port spells at this spec's target type (`RunScope.derived`, `PROGRESS.md` §13.31 step 1). Off is the no-op.
     */
-  derive: Boolean = false
+  derive: Boolean = false,
+  /** FQNs of ONE-type-parameter wrappers (a nullability carrier, `lowlevel.Nullable`) whose element may be the primitive or its boxed form: a symbol typed `Carrier[Prim]`/`Carrier[Boxed]` is taggable
+    * and retypes to `Carrier[Opaque]`, coerced through the carrier's `map`. ONE level only (`ENGINE-LIMITS.md` O3); the phase then runs after the null model, which is what puts the carrier in the
+    * program; empty is the no-op (no edge either).
+    */
+  carriers: Set[String] = Set.empty
 ):
+  require(
+    carriers.forall(c => c.nonEmpty && !c.startsWith(".") && !c.endsWith(".") && !c.contains("..")),
+    s"OpaqueSpec.carriers must be fully-qualified type names: $carriers"
+  )
   // Refused LOUDLY at construction, because every one of these produces emitted Scala that is
   // wrong in a way no count would show.
   require(fqn.nonEmpty, "OpaqueSpec.fqn must not be empty")

@@ -168,6 +168,18 @@ final class NullabilityTransform(
     */
   private var primSyms: Set[SymId] = Set.empty
 
+  /** the JDK box symbol of each primitive present in the run → that primitive's symbol: a wrapper over the box and a wrapper over the primitive are ONE slot (`unboxed` in [[run]]), so [[coerceTo]]
+    * never ascribes a `Nullable[Integer]`-typed value at a `Nullable[Int]` slot — the call's recorded type is the callee's before retyping.
+    */
+  private var boxedElem: Map[SymId, SymId] = Map.empty
+
+  /** the wrapper type with a boxed element read as its primitive — the shape two spellings of one slot agree on. */
+  private def sameSlot(a: TypeRepr, b: TypeRepr): Boolean =
+    def norm(t: TypeRepr): TypeRepr = t match
+      case TypeRepr.AppliedType(w, List(TypeRepr.TypeRef(_, s))) if boxedElem.contains(s) => TypeRepr.AppliedType(w, List(TypeRepr.TypeRef(TypeRepr.NoPrefix, boxedElem(s))))
+      case _                                                                              => t
+    norm(a) == norm(b)
+
   /** the unit currently being walked — see the walk in [[run]] for why a seam cannot be attributed to the callee it was found at.
     */
   private var currentUnit: SymId = SymId.None
@@ -242,6 +254,9 @@ final class NullabilityTransform(
 
     // cache primitive symbol IDs so `coerceTo` can decide `.get` vs `.orNull` without `Program`
     primSyms = program.symbols.all.iterator.filter(s => PrimitiveNames(s.fullName)).map(_.id).toSet
+    boxedElem = NullabilityTransform.BoxedToPrimitive.toList.flatMap { (boxed, prim) =>
+      externalNamed(program, boxed).map(b => b -> mintOrReuse(prim, prim.split('.').last))
+    }.toMap
 
     /** java boxes a primitive ONLY to admit `null` (`Integer align`); under a wrapper that carries the absence, the element is the primitive again — `Nullable[Int]`, the reference's own spelling. A
       * read at an `int` slot coerces `.get` (a primitive, `coerceTo`), a write `Nullable(boxed)` unboxes through `Predef` at the expected type. The union target keeps the box: `Int | Null` is no
@@ -1028,7 +1043,7 @@ final class NullabilityTransform(
     if isWrapperType(want) && isNullLiteral(e) then wrap(want, e)
     else if isWrapperType(want) && !isWrapped(e) then wrap(want, e)
     else if !isWrapperType(want) && isWrapped(e) && want != TypeRepr.NoType then slotUnwrap(want, e)
-    else if isWrapperType(want) && isWrapped(e) && e.tpe != want then
+    else if isWrapperType(want) && isWrapped(e) && !sameSlot(e.tpe, want) then
       // unless the formal cannot be written here: a callee type variable doesn't resolve at the call site (G12).
       // W.empty needs no ascription — it conforms at every element type, so skip it (G20).
       if isEmptyOfWrapper(e) then e

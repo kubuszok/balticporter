@@ -2294,7 +2294,9 @@ object LibgdxPolicy:
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
       // also every slot the reference spells `Align` that no field seed reaches — `GlyphLayout.setText`'s
       // `halign`, `BitmapFont.draw`'s, which java types as plain `int` parameters (sge ISS-770)
-      derive = true
+      derive = true,
+      // a `@Null Integer` slot the nullability step wrapped (`Cell#align`), which the reference spells `Nullable[Align]`
+      carriers = Set("lowlevel.Nullable")
     )
 
   /** GL uniform locations — the `int` that is really a distinct domain value — as an opaque type following the Align pattern: no java class to drop, injected as `sge.graphics.UniformLocation` with

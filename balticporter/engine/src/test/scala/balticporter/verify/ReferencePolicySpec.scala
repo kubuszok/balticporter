@@ -423,6 +423,52 @@ class ReferencePolicySpec extends FunSuite:
     assert(!renames.exists(_.upstream.contains("isButtonPressed")))
   }
 
+  test(
+    "a boxed or primitive java slot the reference spells `Carrier[Target]` derives an OpaqueSlot for a carrier the spec names — one level, the NullableMember row kept"
+  ) {
+    val java =
+      """package com.example.gfx;
+        |public class Cell {
+        |  public Integer align;
+        |  public int width;
+        |  public Integer nested;
+        |  public Integer getAlign() { return align; }
+        |}
+        |""".stripMargin
+    val ref =
+      """package sge.gfx
+        |import lowlevel.Nullable
+        |class Cell {
+        |  var align: Nullable[Pixels] = Nullable.empty
+        |  var width: Nullable[Pixels] = Nullable.empty
+        |  var nested: Nullable[Nullable[Pixels]] = Nullable.empty
+        |  def getAlign: Nullable[Pixels] = align
+        |}
+        |""".stripMargin
+    val p                                       = SpoonTir.fromSource(java)
+    def run(carriers: Map[String, Set[String]]) =
+      ReferencePolicy.derive(p, refDecls(ref), p.units.map(_.symbol).toSet, Map.empty, Set.empty, Set("sge.Pixels"), opaqueCarriers = carriers)
+    val with_ = run(Map("sge.Pixels" -> Set("lowlevel.Nullable")))
+    assertEquals(
+      with_.policy.opaqueSeeds("sge.Pixels"),
+      Set("com.example.gfx.Cell#align", "com.example.gfx.Cell#width", "com.example.gfx.Cell#getAlign")
+    )
+    val row = with_.policy.rows.find(r => r.family == DerivedPolicy.Family.OpaqueSlot && r.upstream == "com.example.gfx.Cell#align").get
+    assertEquals(row.reference, "Nullable[Pixels]", "the row carries the reference's own spelling")
+    assert(
+      with_.policy.nullableMembers.contains("com.example.gfx.Cell#align:field"),
+      "the null-model row is unchanged (a FIELD row is keyed `:field`)"
+    )
+    assert(!with_.policy.opaqueSeeds("sge.Pixels").contains("com.example.gfx.Cell#nested"), "two carriers deep derives nothing")
+    // no carrier named: the carried slot is not an opaque slot
+    assertEquals(run(Map.empty).policy.opaqueSeeds("sge.Pixels"), Set.empty[String])
+    assertEquals(
+      run(Map("other.Target" -> Set("lowlevel.Nullable"))).policy.opaqueSeeds("sge.Pixels"),
+      Set.empty[String],
+      "a carrier is named per target"
+    )
+  }
+
   test("the digest moves with the rows and is stable under row order") {
     val a = derive().policy
     val b = DerivedPolicy(a.rows.reverse)

@@ -338,7 +338,8 @@ final class PortMapMigrationFactory extends TransformFactory:
         )*
     )
 
-/** `.conf` shape for `primitive-to-opaque`: `fqn`, `underlying`, `hints`/`extraHints` (exact FQN seeds, both reach the surface fingerprint), `scope`.
+/** `.conf` shape for `primitive-to-opaque`: `fqn`, `underlying`, `hints`/`extraHints` (exact FQN seeds, both reach the surface fingerprint), `scope`, `carriers` (one-type-parameter wrapper FQNs whose
+  * element may be the primitive; empty = none).
   */
 final class PrimitiveToOpaqueFactory extends TransformFactory:
   def name = "primitive-to-opaque"
@@ -350,7 +351,8 @@ final class PrimitiveToOpaqueFactory extends TransformFactory:
         underlying = config.string("underlying").map(OpaqueSpec.Primitive.fromScalaName).getOrElse(OpaqueSpec.Primitive.Int),
         extraHints = config.strings("extraHints").getOrElse(Nil).toSet,
         scope = TransformFactory.scopeOf(config),
-        derive = config.bool("derive").getOrElse(false)
+        derive = config.bool("derive").getOrElse(false),
+        carriers = config.strings("carriers").getOrElse(Nil).toSet
       )
     )
 

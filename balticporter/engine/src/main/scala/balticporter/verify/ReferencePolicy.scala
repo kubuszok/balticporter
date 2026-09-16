@@ -55,7 +55,10 @@ object ReferencePolicy:
     packageRenames:     Map[String, String] = Map.empty,
     /** the port's configured member renames (`C#m` -> new name): a java `len` the port spells `length` is read at the reference's `length`
       */
-    memberRenames: Map[String, String] = Map.empty
+    memberRenames: Map[String, String] = Map.empty,
+    /** opaque target FQN -> the one-type-parameter carriers its spec names (`OpaqueSpec.carriers`): `Carrier[Target]` at a primitive OR boxed java slot is an opaque slot too
+      */
+    opaqueCarriers: Map[String, Set[String]] = Map.empty
   ): Result =
     // a declaration with trailing DEFAULTS answers every arity down to its required ones
     val refByKey = reference.flatMap(d => (0 to d.defaults).map(k => key(d.path, kindClass(d.kind), d.name, d.explicitArity - k) -> d)).groupBy(_._1).map((k, vs) => k -> vs.map(_._2).distinct)
@@ -145,6 +148,42 @@ object ReferencePolicy:
       val stripped = NullWrappers.foldLeft(refType.trim)((acc, w) => if acc.startsWith(w + "[") && acc.endsWith("]") then acc.drop(w.length + 1).dropRight(1) else acc)
       simpleOf(stripped)
 
+    // a carrier's simple name is what the reference WRITES (`Nullable[Align]`), per target
+    val carriersOf: Map[String, Set[String]] = opaqueCarriers.map((t, cs) => t -> cs.map(_.split('.').last))
+    val boxedFqns = OpaqueSpec.Primitive.values.map(_.boxedFqn).toSet
+    def boxed(t: TypeRepr): Boolean = t match
+      case TypeRepr.TypeRef(_, sym) => program.symbolOf(sym).exists(s => boxedFqns(s.fullName))
+      case _                        => false
+
+    /** `Carrier[Inner]` -> (carrier simple name, inner spelling) for a ONE-argument applied type; `None` otherwise. */
+    def carried(refType: String): Option[(String, String)] =
+      val t = refType.trim
+      val i = t.indexOf('[')
+      if i <= 0 || !t.endsWith("]") then scala.None
+      else
+        val inner = t.substring(i + 1, t.length - 1)
+        var depth = 0
+        var comma = false
+        inner.foreach { ch => if ch == '[' then depth += 1 else if ch == ']' then depth -= 1 else if ch == ',' && depth == 0 then comma = true }
+        if comma then scala.None else Some((simpleOf(t.take(i)), inner.trim))
+
+    /** the OpaqueSlot row at one slot: the reference spells the target at a PRIMITIVE java slot, or `Carrier[Target]` — a carrier that target's spec names — at the primitive or its BOXED form. One
+      * carrier level: `Carrier[Carrier[Target]]` derives nothing.
+      */
+    def opaqueSlot(key: String, refType: String, javaT: TypeRepr): Option[DerivedPolicy.Row] =
+      targetBySimple
+        .get(simpleOf(refType))
+        .filter(_ => prim(javaT))
+        .map(t => DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, key, refType, t))
+        .orElse(
+          carried(refType).flatMap { (carrier, inner) =>
+            targetBySimple
+              .get(simpleOf(inner))
+              .filter(t => carriersOf.getOrElse(t, Set.empty)(carrier) && (prim(javaT) || boxed(javaT)))
+              .map(t => DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, key, refType, t))
+          }
+        )
+
     /** among several reference candidates at one key, those whose parameter types match java's best (`BitmapFont(data, Array<TextureRegion>, boolean)` against the primary taking a `DynamicArray` and
       * a secondary taking a `TextureRegion`); a tie keeps them all and agreement decides.
       */
@@ -200,7 +239,7 @@ object ReferencePolicy:
       val refParamTypes = if isProp && params.size == 1 then List(r.resultType) else r.slotTypes(ms.flags.isStatic)
       params.zip(refParamTypes).foreach { (p, refType) =>
         program.symbolOf(p.symbol).foreach { ps =>
-          targetBySimple.get(simpleOf(refType)).filter(_ => prim(p.tpt.tpe)).foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, paramKey(ms, ps, overloaded), refType, t))
+          opaqueSlot(paramKey(ms, ps, overloaded), refType, p.tpt.tpe).foreach(out += _)
           if nullWrapped(refType) && reference_(p.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, paramKey(ms, ps, overloaded), refType)
         }
       }
@@ -208,7 +247,7 @@ object ReferencePolicy:
       // a setter read at the reference's `var`: its type is the PARAMETER's, not the setter's result
       val setterAtProp = isProp && params.size == 1
       if !setterAtProp then
-        targetBySimple.get(simpleOf(r.resultType)).filter(_ => prim(res)).foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, rowKey(ms, overloaded), r.resultType, t))
+        opaqueSlot(rowKey(ms, overloaded), r.resultType, res).foreach(out += _)
         if nullWrapped(r.resultType) && reference_(res) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, rowKey(ms, overloaded), r.resultType)
       if !isProp && r.parenless && params.isEmpty && !isVoid(res) && !ms.flags.isStatic then
         out += DerivedPolicy.Row(DerivedPolicy.Family.Parenless, rowKey(ms, overloaded), s"def ${r.name}: ${r.resultType}")
@@ -226,7 +265,7 @@ object ReferencePolicy:
       val out = List.newBuilder[DerivedPolicy.Row]
       d.paramss.flatten.zip(r.explicitParamTypes).foreach { (p, refType) =>
         program.symbolOf(p.symbol).foreach { ps =>
-          targetBySimple.get(simpleOf(refType)).filter(_ => prim(p.tpt.tpe)).foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, paramKey(ms, ps, overloaded), refType, t))
+          opaqueSlot(paramKey(ms, ps, overloaded), refType, p.tpt.tpe).foreach(out += _)
           if nullWrapped(refType) && reference_(p.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, paramKey(ms, ps, overloaded), refType)
         }
       }
@@ -234,7 +273,7 @@ object ReferencePolicy:
 
     def fieldRows(v: Tree.ValDef, fs: Symbol, r: SurfaceDecl): List[DerivedPolicy.Row] =
       val out = List.newBuilder[DerivedPolicy.Row]
-      targetBySimple.get(simpleOf(r.resultType)).filter(_ => prim(v.tpt.tpe)).foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, fs.fullName, r.resultType, t))
+      opaqueSlot(fs.fullName, r.resultType, v.tpt.tpe).foreach(out += _)
       // under `fullName:field` (`DerivedPolicy.keysOf`): a bare key would also reach a same-named METHOD — `Cell#colspan` the field is
       // `Nullable[Int]`, `Cell#colspan(int)` the fluent setter returns `Cell[T]`, and one row must not retype both
       if nullWrapped(r.resultType) && reference_(v.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, fs.fullName + ":field", r.resultType)
