@@ -1199,7 +1199,16 @@ object LibgdxLadder:
             "java.lang.Comparable" -> Map("compareTo" -> "compare")
           ),
           scopes = Map(
-            "java.lang.Comparable" -> balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.graphics.g3d.Attribute", "com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor"))
+            // the OVERRIDE COMPONENT: `Attribute` and every `attributes.*` subclass, `Attributes`, `TextureDescriptor` — the classes master spells
+            // `Ordered`; `Shader`/`DefaultShader`/`VertexAttributes` keep java's `compareTo` there and are not named
+            "java.lang.Comparable" -> balticporter.tir.RuleScope.Only(
+              Set(
+                "com.badlogic.gdx.graphics.g3d.Attribute",
+                "com.badlogic.gdx.graphics.g3d.Attributes",
+                "com.badlogic.gdx.graphics.g3d.attributes",
+                "com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor"
+              )
+            )
           )
         ),
         new balticporter.transform.MemberRenameTransform(
