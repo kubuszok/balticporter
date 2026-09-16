@@ -2026,11 +2026,16 @@ object LibgdxLadder:
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
     // java's constants class; sge's own `opaque type Align` (injected) stands at the same name
     "align" -> Set("com.badlogic.gdx.utils.Align"),
-    // java.util.concurrent.{ExecutorService, Future} have no Scala.js javalib: the two types are
-    // PLATFORM ROWS (`stepPlatformInjects`) — java's own on JVM/Native, libGDX's GWT emulation on JS
-    // (the browser regression app was the first entry point to reach `AsyncResult.future`, CI run
-    // 35115474743: "Referring to non-existent class java.util.concurrent.Future")
-    "async" -> Set("com.badlogic.gdx.utils.async.AsyncExecutor", "com.badlogic.gdx.utils.async.AsyncResult"),
+    // java.util.concurrent.{ExecutorService, Future} and `Thread.yield` have no Scala.js javalib: the
+    // three types are PLATFORM ROWS (`stepPlatformInjects`) — java's own on JVM/Native, libGDX's GWT
+    // emulation on JS (the browser regression app was the first entry point to reach them, CI run
+    // 35115474743: "Referring to non-existent class java.util.concurrent.Future", then
+    // "non-existent method static java.lang.Thread.yield()" from `AssetManager.finishLoading`)
+    "async" -> Set(
+      "com.badlogic.gdx.utils.async.AsyncExecutor",
+      "com.badlogic.gdx.utils.async.AsyncResult",
+      "com.badlogic.gdx.utils.async.ThreadUtils"
+    ),
     // DataBuffer reads FilterOutputStream.out which Scala.js javalib doesn't expose; nobody
     // references it; sge rewrote it entirely
     "extras" -> Set(
