@@ -100,7 +100,14 @@ object LibgdxLadder:
   def defaultReference(repoRoot: Path): Path = repoRoot.resolve("../sge").normalize
 
   def referenceFrom(args: Array[String]): Option[Path] =
-    args.collectFirst { case a if a.startsWith("--reference=") => a.stripPrefix("--reference=").trim }.filter(_.nonEmpty).map(v => Path.of(v).toAbsolutePath.normalize)
+    args.collectFirst { case a if a.startsWith("--reference=") => a.stripPrefix("--reference=").trim }.filter(_.nonEmpty).map { v =>
+      val p = Path.of(v).toAbsolutePath.normalize
+      // a reference that is not there derives NOTHING and says so nowhere (CLAUDE.md §4.6): the L0 lane
+      // read 730 opaque-slot errors off a mistyped path with no engine change (2026-09-16)
+      val hand = p.resolve("sge/src/main/scala")
+      require(java.nio.file.Files.isDirectory(hand), s"--reference=$v names no hand port: $hand is not a directory")
+      p
+    }
 
   def stepsFrom(args: Array[String]): Set[String] =
     args.collectFirst { case a if a.startsWith("--steps=") => a.stripPrefix("--steps=").trim }.filter(_.nonEmpty) match

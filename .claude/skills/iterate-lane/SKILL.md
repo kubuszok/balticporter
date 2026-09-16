@@ -9,7 +9,10 @@ A full chain (base lanes, suite check, test lane, twelve demos) costs 30–40 mi
 nothing new while the port is red. A cycle is ONE lane plus three tables. sbt 2 caches a compile by
 input hash, so a regeneration that emits identical text costs the migrator alone (~80 s warm).
 
-1. Run the one lane the change is aimed at (`just gdx-l0-measure`, `just lls-measure`, …).
+1. Run the one lane the change is aimed at (`just gdx-l0-measure`, `just lls-measure`, …), with
+   `SGE_REF=../sge-master` exported: the Justfile's default reference is `../sge`, which is on the
+   generated branch with its hand port deleted, and the derive step then seeds from a gutted tree
+   (L0 `5 -> 499` errors, all opaque-slot mismatches, 2026-09-16 — the engine had not changed).
 2. Read, in this order, before touching anything:
    `. scripts/_lib.sh; iteration_summary port-report/<Report> <phase> <phase>`
    - **errors by member** — `run-latest/errors.tsv`, MEMBER column: a family per member, never the

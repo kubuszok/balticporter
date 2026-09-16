@@ -70,9 +70,17 @@ object Jumps:
   )
 
   /** Can an arm catching `t` match a `Break`? Unfolds multi-catch and applied types. */
-  def catchesBreak(t: TypeRepr)(using program: Program): Boolean = t match
-    case TypeRepr.OrType(l, r)      => catchesBreak(l) || catchesBreak(r)
-    case TypeRepr.AndType(l, r)     => catchesBreak(l) || catchesBreak(r)
-    case TypeRepr.AppliedType(c, _) => catchesBreak(c)
-    case TypeRepr.TypeRef(_, s)     => program.symbolOf(s).exists(sym => BreakCatchable(sym.fullName))
+  def catchesBreak(t: TypeRepr)(using program: Program): Boolean = catches(t, BreakCatchable)
+
+  /** The caught types the `ControlThrowable` SENTINEL a NAMED loop boundary throws is an instance of: `NonFatal` spares it, a `Throwable` arm does not (rules/emitter.md, Jumps). */
+  val SentinelCatchable: Set[String] = Set("java.lang.Throwable", "scala.util.control.ControlThrowable")
+
+  /** Can an arm catching `t` match the named-boundary sentinel? */
+  def catchesSentinel(t: TypeRepr)(using program: Program): Boolean = catches(t, SentinelCatchable)
+
+  private def catches(t: TypeRepr, names: Set[String])(using program: Program): Boolean = t match
+    case TypeRepr.OrType(l, r)      => catches(l, names) || catches(r, names)
+    case TypeRepr.AndType(l, r)     => catches(l, names) || catches(r, names)
+    case TypeRepr.AppliedType(c, _) => catches(c, names)
+    case TypeRepr.TypeRef(_, s)     => program.symbolOf(s).exists(sym => names(sym.fullName))
     case _                          => false

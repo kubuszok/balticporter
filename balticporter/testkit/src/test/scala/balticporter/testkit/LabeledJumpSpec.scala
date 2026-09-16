@@ -113,8 +113,11 @@ class LabeledJumpSpec extends PortSuite:
         void g(int n) {}
       }"""
     )
-    assert(clue(out).contains("(brk$"), out)
-    assert(out.contains("scala.util.boundary.break(())(using brk$"), out)
+    // a NAMED loop boundary is a ControlThrowable sentinel: Scala.js lowers a named `boundary.break`
+    // across nested `while`s to a JS `break` of the innermost loop (TimSort's mergeLo read index -1)
+    assert(clue(out).contains("val brk$1 = new scala.util.control.ControlThrowable {}"), out)
+    assert(out.contains("throw brk$1"), out)
+    assert(out.contains("case $e: scala.util.control.ControlThrowable if $e eq brk$1 => ()"), out)
     assert(!out.contains("/* break"), out)
   }
 
@@ -161,9 +164,10 @@ class LabeledJumpSpec extends PortSuite:
         void g(int n) {}
       }"""
     )
-    assert(clue(out).contains("(brk$"), out)
-    // the loop's own unlabelled break must NAME the loop boundary, not fall into `lbl$`
-    assert(out.contains("scala.util.boundary.break(())(using brk$"), out)
+    assert(clue(out).contains("val brk$1 = new scala.util.control.ControlThrowable {}"), out)
+    // the loop's own unlabelled break must NAME the loop boundary (the sentinel), not fall into `lbl$`
+    assert(out.contains("throw brk$1"), out)
+    assert(out.contains("scala.util.boundary.break(())(using lbl$"), out)
     assert(!out.contains("scala.util.boundary.break(())\n"), out)
   }
 
@@ -200,7 +204,7 @@ class LabeledJumpSpec extends PortSuite:
         void g(int n) {}
       }"""
     )
-    assert(clue(out).contains("scala.util.boundary.break(())(using brk$"), out)
+    assert(clue(out).contains("throw brk$1"), out)
     assert(!out.contains("/* break"), out)
   }
 

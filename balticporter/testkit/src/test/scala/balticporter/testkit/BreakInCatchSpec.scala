@@ -8,6 +8,9 @@ class BreakInCatchSpec extends PortSuite:
   /** the arm the emitter must interpose, spelled once. */
   private val Guard = "case brkThru$: scala.util.boundary.Break[?] => throw brkThru$"
 
+  /** the second arm, owed only where the catch can receive a `ControlThrowable` (a `Throwable` catch). */
+  private val SentinelGuard = "case brkThru$: scala.util.control.ControlThrowable => throw brkThru$"
+
   // ---- the jump crosses the catch ----
 
   test("`break` inside a try with `catch (Exception)` gets a re-throw arm ahead of it") {
@@ -100,7 +103,36 @@ class BreakInCatchSpec extends PortSuite:
       }"""
     )
     assert(clue(out).contains(Guard))
-    assert(out.contains("using brk$"), out)
+    assert(out.contains("throw brk$1"), out)
+    // `catch (Exception)` cannot receive a ControlThrowable: no sentinel arm, the guard is exact
+    assert(!out.contains(SentinelGuard), out)
+  }
+
+  test("a LABELLED break crossing `catch (Throwable)` rethrows the SENTINEL ahead of java's arm") {
+    // the named loop boundary is a ControlThrowable; `NonFatal` spares it, `case t: Throwable` does not
+    val out = emit(
+      """
+      package demo;
+      public class L {
+        void f(int[][] rows) {
+          outer:
+          for (int[] row : rows) {
+            for (int v : row) {
+              try {
+                if (v < 0) break outer;
+                g(v);
+              } catch (Throwable t) { h(t); }
+            }
+          }
+        }
+        void g(int n) {} void h(Object o) {}
+      }"""
+    )
+    assert(clue(out).contains(Guard))
+    assert(out.contains(SentinelGuard), out)
+    val s = out.indexOf(SentinelGuard)
+    val j = out.indexOf("case t: java.lang.Throwable")
+    assert(s > 0 && j > s, out)
   }
 
   test("a jump crossing TWO nested broad catches is guarded at both") {

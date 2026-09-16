@@ -103,7 +103,7 @@ class CatalogAreaSSpec extends PortSuite:
     val p = port("public class G { int n; void f(int i) { outer: while (true) { switch (i) { case 1: break outer; } n = 1; } } }")
     assertConsults(p, JS.S(7))
     // the jump survives — stripping it as a terminator is what silently deleted it
-    assertEmits(p, "boundary")
+    assertEmits(p, "throw brk$")
   }
 
   test("JS-S07 — an UNLABELLED trailing break IS the terminator, and it fires there") {

@@ -852,8 +852,13 @@ private[emit] trait TirEmitterExprs:
     val guard =
       if catches.exists(c => Jumps.catchesBreak(c.param.tpt.tpe)(using program)) && crossesCatch(body) then
         breakGuarded += t.id
+        // a NAMED loop boundary's jump is a ControlThrowable sentinel: only a `Throwable` arm can receive it
+        val sentinel =
+          if catches.exists(c => Jumps.catchesSentinel(c.param.tpt.tpe)(using program)) then
+            s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.control.ControlThrowable => throw ${TirEmitter.BreakGuard}\n"
+          else ""
         s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard}" +
-          s" // §4.4: a java jump is not catchable\n"
+          s" // §4.4: a java jump is not catchable\n" + sentinel
       else ""
     // JS-S11 — a translated CATCH swallows a translated JUMP; read off the guard just decided so
     // the consult cannot drift from the decision.
@@ -909,6 +914,7 @@ private[emit] trait TirEmitterExprs:
         b ++= s"${ind(i + 1)}try $inner\n"
         // the JUMP arm, AHEAD of the recorder — see the doc above.
         b ++= s"${ind(i + 1)}catch { case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard} // §4.4: a java jump carries no exception to suppress into\n"
+        b ++= s"${ind(i + 2)}case ${TirEmitter.BreakGuard}: scala.util.control.ControlThrowable => throw ${TirEmitter.BreakGuard}\n"
         b ++= s"${ind(i + 2)}case $thr: java.lang.Throwable => { $p = $thr; throw $thr } }\n"
         b ++= s"${ind(i + 1)}finally if $name != null then {\n"
         b ++= s"${ind(i + 2)}if $p != null then { try $name.close() catch { case $sup: java.lang.Throwable => $p.addSuppressed($sup) } }\n"

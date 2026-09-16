@@ -208,3 +208,13 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - A recorded decision the rewrite never applied hides a misclassification: the moment the
   unused-symbol rewrite reached anonymous bodies, 16 liqp tests failed — an anonymous class's
   private field is state its consumer reads reflectively (K21), so it is suppressed, never deleted.
+
+## Jumps (2026-09-16)
+
+- A NAMED loop boundary (`break L`, or an unlabelled `break` beside a `continue`/an interposed
+  boundary) is a `ControlThrowable` SENTINEL thrown and caught at the loop, never a named
+  `boundary.break`: Scala.js lowers the latter across nested `while`s to a JS `break` of the
+  INNERMOST loop (TimSort's merge read index -1 on every merging input). `continue L` keeps the
+  BODY boundary. The broad-catch guard (§4.4) rethrows BOTH shapes — `boundary.Break[?]` and, at a
+  `Throwable` catch, `ControlThrowable` — since `NonFatal` spares the sentinel but `case t:
+  Throwable` does not. A spec that asserts the spelling of a jump asserts THIS one.

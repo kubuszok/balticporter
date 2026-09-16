@@ -17,7 +17,8 @@ object BreakCatchCheck:
       case UnguardedJump =>
         "§1(a) ENGINE: this is a universal java-vs-scala fact, never per-library policy. The " +
           "emitter interposes `case brkThru$: scala.util.boundary.Break[?] => throw brkThru$` " +
-          "ahead of the java arms wherever a jump crosses a catch that could match it " +
+          "(and, at a `Throwable` catch, the same arm for the `ControlThrowable` sentinel a NAMED " +
+          "loop boundary throws) ahead of the java arms wherever a jump crosses a catch that could match it " +
           "(`TirEmitter.tryStr`/`crossesCatch`). A finding here means this walk sees a crossing " +
           "the emitter's boundary state did not — fix `crossesCatch`, not the port."
 
