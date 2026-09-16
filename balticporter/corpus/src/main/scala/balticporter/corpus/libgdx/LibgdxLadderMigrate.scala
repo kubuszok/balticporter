@@ -1199,6 +1199,23 @@ object LibgdxLadder:
             // `Comparable` is EXTERNAL: the hits are the owned overrides anchored on `Comparable#compareTo`, which the redirect detaches
             "java.lang.Comparable" -> Map("compareTo" -> "compare")
           ),
+          // `Attributes` is also a `java.util.Comparator`, whose surface the engine keeps deliberately UNKNOWN (a closed platform
+          // row would be a silent under-refusal if a release grew it); this port states the JDK 8..25 instance surface it relies on,
+          // so the graph can rule `compareTo` out there instead of anchoring the rename on it
+          external = balticporter.tir.ExternalSurface.default ++ balticporter.tir.ExternalSurface(
+            Map(
+              "java.util.Comparator" -> Set(
+                balticporter.tir.ExternalSurface.Member("compare", 2),
+                balticporter.tir.ExternalSurface.Member("equals", 1),
+                balticporter.tir.ExternalSurface.Member("reversed", 0),
+                balticporter.tir.ExternalSurface.Member("thenComparing", 1),
+                balticporter.tir.ExternalSurface.Member("thenComparing", 2),
+                balticporter.tir.ExternalSurface.Member("thenComparingInt", 1),
+                balticporter.tir.ExternalSurface.Member("thenComparingLong", 1),
+                balticporter.tir.ExternalSurface.Member("thenComparingDouble", 1)
+              )
+            )
+          ),
           scopes = Map(
             // the OVERRIDE COMPONENT: `Attribute` and every `attributes.*` subclass, `Attributes`, `TextureDescriptor` — the classes master spells
             // `Ordered`; `Shader`/`DefaultShader`/`VertexAttributes` keep java's `compareTo` there and are not named

@@ -4,8 +4,8 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** `TypeRedirectTransform.memberRenames` for an EXTERNAL redirected type: the type binds no member of its own, so the hits are the owned overrides anchored on it, and the redirect that detaches
-  * the parent is what licenses moving them (`MemberRenamer.Request.detachedParents`). `Comparable -> Ordered` with `compareTo -> compare` is the shape.
+/** `TypeRedirectTransform.memberRenames` for an EXTERNAL redirected type: the type binds no member of its own, so the hits are the owned overrides anchored on it, and the redirect that detaches the
+  * parent is what licenses moving them (`MemberRenamer.Request.detachedParents`). `Comparable -> Ordered` with `compareTo -> compare` is the shape.
   */
 class TypeRedirectExternalRenameSpec extends munit.FunSuite:
 
