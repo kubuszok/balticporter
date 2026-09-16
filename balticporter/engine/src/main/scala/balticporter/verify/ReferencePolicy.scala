@@ -235,7 +235,9 @@ object ReferencePolicy:
     def fieldRows(v: Tree.ValDef, fs: Symbol, r: SurfaceDecl): List[DerivedPolicy.Row] =
       val out = List.newBuilder[DerivedPolicy.Row]
       targetBySimple.get(simpleOf(r.resultType)).filter(_ => prim(v.tpt.tpe)).foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, fs.fullName, r.resultType, t))
-      if nullWrapped(r.resultType) && reference_(v.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, fs.fullName, r.resultType)
+      // under `fullName:field` (`DerivedPolicy.keysOf`): a bare key would also reach a same-named METHOD — `Cell#colspan` the field is
+      // `Nullable[Int]`, `Cell#colspan(int)` the fluent setter returns `Cell[T]`, and one row must not retype both
+      if nullWrapped(r.resultType) && reference_(v.tpt.tpe) then out += DerivedPolicy.Row(DerivedPolicy.Family.NullableMember, fs.fullName + ":field", r.resultType)
       out.result()
 
     program.units.filter(u => emitted(u.symbol)).foreach { unit =>

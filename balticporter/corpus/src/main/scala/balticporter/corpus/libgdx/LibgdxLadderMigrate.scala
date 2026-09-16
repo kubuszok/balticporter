@@ -326,7 +326,7 @@ object LibgdxLadder:
             "com.badlogic.gdx.math.Vector2" -> List("*", "copy", "cross"),
             "com.badlogic.gdx.math.Vector3" -> List("copy"),
             "com.badlogic.gdx.math.Vector4" -> List("copy"),
-            "com.badlogic.gdx.math.Octree$OctreeNode" -> List("isLeaf"),
+            // (`OctreeNode.isLeaf` no longer spliced: master's `private[math] def isLeaf` now derives as `KeepName`, so java's own `isLeaf()` stays)
             // `Table.isClip`/`tableAlign` (sge's private `_clip`, its `Align` opaque), `Timer.disposeThread`
             // (sge's thread holder), `FileHandleResolver.Prefix`/`ForResolution` (sge's 2-arg `FileHandle`)
             // lean on sge-only internals: each stays a suite residue until its family lands
@@ -1188,8 +1188,19 @@ object LibgdxLadder:
       // `Object.toString`, scala reads a clash).
       "renames" -> List(
         new balticporter.transform.TypeRedirectTransform(
-          redirects = Map("com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable"),
-          memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"))
+          redirects = Map(
+            "com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable",
+            // sge's `Comparable -> Ordered[T]` (`compareTo -> compare`), the two core classes it reshaped (their migration notes);
+            // scoped so `Sort`'s `T extends Comparable` bounds keep java's type
+            "java.lang.Comparable" -> "scala.math.Ordered"
+          ),
+          memberRenames = Map(
+            "com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"),
+            "java.lang.Comparable" -> Map("compareTo" -> "compare")
+          ),
+          scopes = Map(
+            "java.lang.Comparable" -> balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.graphics.g3d.Attribute", "com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor"))
+          )
         ),
         new balticporter.transform.MemberRenameTransform(
           derive = derive,

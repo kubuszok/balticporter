@@ -586,7 +586,10 @@ final class BeanPropertyTransform(
                       else {
                         val sComp        = graph.closureOf(s).members
                         val getterOwners = gComp.flatMap(gg => p.symbolOf(gg).map(_.owner))
-                        val setterOnly   = sComp.flatMap(sm => p.symbolOf(sm).map(_.owner)).filterNot(getterOwners.contains).flatMap(o => p.symbolOf(o).map(_.fullName)).toList.distinct.sorted
+                        // an owner that overrides only the setter still has the getter IN SCOPE when an ancestor declares it
+                        // (`Sprite.setU` under `TextureRegion.getU`): `sprite.u = v` resolves `u` through inheritance
+                        def getterInScope(o: SymId): Boolean = getterOwners.contains(o) || graph.ancestorsOf(o).exists(getterOwners.contains)
+                        val setterOnly = sComp.flatMap(sm => p.symbolOf(sm).map(_.owner)).filterNot(getterInScope).flatMap(o => p.symbolOf(o).map(_.fullName)).toList.distinct.sorted
                         if setterOnly.nonEmpty then
                           refuse(
                             e,

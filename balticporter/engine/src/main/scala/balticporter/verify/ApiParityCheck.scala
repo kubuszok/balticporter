@@ -298,10 +298,15 @@ object ApiParityCheck:
     out:   collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]],
     outer: List[String] = Nil
   ): Unit =
-    /** Public or protected -- both are API surface for subclassing. */
+    /** Public or protected -- both are API surface for subclassing. A QUALIFIED private (`private[ui]`) is recorded too, with its `accessLevel`: `compare` leaves it out, `ReferencePolicy` reads the
+      * hand port's underscore fields off it (`private[ui] var _isDisabled` is the `FieldName` row for java's `isDisabled` field).
+      */
     def isAccessible(mods: List[Mod]): Boolean =
       !mods.exists {
-        case _: Mod.Private => true
+        case p: Mod.Private =>
+          p.within match
+            case ref: Name if ref.value.nonEmpty => false
+            case _ => true
         case _ => false
       }
 
@@ -813,7 +818,8 @@ object ApiParityCheck:
   ): List[Divergence] =
     val inverseRenames = renames.map((k, v) => (v, k))
     // constructors are a derivation input, not a compared surface (the factory family reads them)
-    val normRef      = reference.filterNot(_.kind == "ctor").map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
+    // a qualified-private reference member is a derivation input (`ReferencePolicy`), not a compared surface
+    val normRef      = reference.filterNot(d => d.kind == "ctor" || d.accessLevel.startsWith("private")).map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
     val emittedByKey = emitted.filterNot(_.kind == "ctor").groupBy(_.matchKey)
     val refByKey     = normRef.groupBy(_.matchKey)
     val allKeys      = (emittedByKey.keySet ++ refByKey.keySet).toList.sorted
