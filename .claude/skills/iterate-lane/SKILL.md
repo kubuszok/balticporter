@@ -20,5 +20,12 @@ input hash, so a regeneration that emits identical text costs the migrator alone
 3. An ORDER question: `just debug-set balticporter.tracePhases true`, one migrator run, `just debug-clear`.
 4. A seam in INJECTED code is a reconciliation to undo (diff the file against the hand port); a seam
    in EMITTED code is the engine's. Keep the two in separate commits.
-5. Land only from a green lane: `measure-all`, the suite check, the demos, `baseline-accept` from
+5. A policy that changes what an EXTERNAL type spells at the consumer — a `ClassTableTransform`
+   redirect, a `MemberRenameTransform` over an external anchor, a retarget of a JDK interface — is
+   tried on a testkit spec or a `.balticporter/` scratch program that exercises every layer (redirect
+   scope, member rename, anchor binding, the anchor's own surface, hit scope) BEFORE any dependent
+   port is regenerated. Discovering the layers one per regeneration cost five publish/regenerate
+   round-trips (`Comparable`→`Ordered`, 2026-09-16), about an hour, for a redirect one spec would
+   have walked in minutes.
+6. Land only from a green lane: `measure-all`, the suite check, the demos, `baseline-accept` from
    that run, docs in the same commit.

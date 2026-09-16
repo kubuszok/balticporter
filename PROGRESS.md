@@ -2607,3 +2607,24 @@ at overloads (`Intersector.intersectSegmentCircle`, `SkinParameter`). *type-shap
 **Stop and report:** a derived spelling whose only faithful reading changes behaviour; a
 hand-port-extra member whose body needs a type sge defines and the port lacks; a platform row
 needing a dependency that is not on Central; the particle facade.
+
+### 13.32 sge CI landing (2026-09-16) — residues, named
+
+Engine `99b8d563`: sge core and every extension compile on JVM, JS and Native from the generated tree with the
+extensions at master's text (20 files un-patched: colorful `u_=`, gltf `compare`, textra); `TableCellTest` back
+to master's text. Landed mechanisms: K52–K55, the align step's drop+inject (`ladder-overrides-align`), ISS-507
+loader bodies, `JS-P35 java.net.URL`, `OpaqueSpec.carriers` (O3 rule line), the bean fold's inherited-getter
+guard (`policy 40->36`). Residues:
+
+- **`Table.skin` public** — java's package-private `Skin skin` is widened to public by `ctor-replay-widening`
+  (`scope=dependent-modules`); master keeps it `private var skin` on the class parameter, so visui's `VisDialog`
+  cannot declare its own `private var skin` (E: cannot override a mutable variable) and carries a `_dialogSkin`
+  rename with a `covenant methods-removed: skin` row. Engine (a): the replay may write a private field from a
+  secondary constructor of the same class; the widening's scope is the question.
+- **lls-master parenless drift** — `../lls` master spells `DynamicArray.isEmpty` parenless; the L0 lane's five
+  errors (`Pool.scala` ×2, `Timer.scala` ×2 injected from sge, `QuadTreeFloat#nearest` generated) call `isEmpty()`.
+  sge's build does not see it (its lls is generated from its own vendored tree). Not accepted into any baseline.
+- **lls lane `api-parity` moves** (`factory 17->0`, `hand-port-extra 58->0`, `port-extra 368->669`, …) are the
+  same drift of `../lls` master; `just baseline-accept LlsMigrate` answers them once the user acknowledges.
+- The full-port lane's parity numbers compare against `../sge`, a checkout of the generated branch whose hand
+  tree is gone; `SGE_REF` reaches only the L0 lanes today.
