@@ -1035,6 +1035,8 @@ object LibgdxLadder:
           )
         )
       ),
+      // the async executor per platform row (java's own on JVM/Native, libGDX's GWT emulation on JS): no phase, a drop and platform injections only.
+      "async" -> Nil,
       // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
       "backend-jvm" -> Nil,
       // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
@@ -2024,6 +2026,11 @@ object LibgdxLadder:
     "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
     // java's constants class; sge's own `opaque type Align` (injected) stands at the same name
     "align" -> Set("com.badlogic.gdx.utils.Align"),
+    // java.util.concurrent.{ExecutorService, Future} have no Scala.js javalib: the two types are
+    // PLATFORM ROWS (`stepPlatformInjects`) — java's own on JVM/Native, libGDX's GWT emulation on JS
+    // (the browser regression app was the first entry point to reach `AsyncResult.future`, CI run
+    // 35115474743: "Referring to non-existent class java.util.concurrent.Future")
+    "async" -> Set("com.badlogic.gdx.utils.async.AsyncExecutor", "com.badlogic.gdx.utils.async.AsyncResult"),
     // DataBuffer reads FilterOutputStream.out which Scala.js javalib doesn't expose; nobody
     // references it; sge rewrote it entirely
     "extras" -> Set(
@@ -2100,6 +2107,13 @@ object LibgdxLadder:
     * (`src_managed/jvm/scala`), which only that row compiles.
     */
   def stepPlatformInjects(repoRoot: Path): Map[String, Map[String, List[Path]]] = Map(
+    // the async executor and its result: java's own (java.util.concurrent) on the threaded rows,
+    // libGDX's GWT emulation (a task runs inside `submit`) on JS — see `stepTypeDrops("async")`
+    "async" -> Map(
+      "jvm" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-async/threaded")),
+      "native" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-async/threaded")),
+      "js" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-async/js"))
+    ),
     // sge's `scaladesktop` layer (GLFW over the platform ops traits) serves BOTH the JVM and the
     // Native rows, as in sge's own matrix: `desktop/` roots are listed under both
     "backend-jvm" -> Map(
@@ -2166,6 +2180,7 @@ object LibgdxLadder:
     "audio",
     "time",
     "glenum",
+    "async",
     "backend-jvm",
     "natives",
     "backend-desktop",
@@ -2200,6 +2215,7 @@ object LibgdxLadder:
     "audio",
     "time",
     "glenum",
+    "async",
     "backend-jvm",
     "natives",
     "backend-desktop",
