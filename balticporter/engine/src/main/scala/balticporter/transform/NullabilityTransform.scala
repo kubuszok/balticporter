@@ -243,11 +243,22 @@ final class NullabilityTransform(
     // cache primitive symbol IDs so `coerceTo` can decide `.get` vs `.orNull` without `Program`
     primSyms = program.symbols.all.iterator.filter(s => PrimitiveNames(s.fullName)).map(_.id).toSet
 
+    /** java boxes a primitive ONLY to admit `null` (`Integer align`); under a wrapper that carries the absence, the element is the primitive again — `Nullable[Int]`, the reference's own spelling. A
+      * read at an `int` slot coerces `.get` (a primitive, `coerceTo`), a write `Nullable(boxed)` unboxes through `Predef` at the expected type. The union target keeps the box: `Int | Null` is no
+      * reference type.
+      */
+    def unboxed(t: TypeRepr): TypeRepr = t match
+      case TypeRepr.TypeRef(_, s) =>
+        program.symbolOf(s).flatMap(sym => NullabilityTransform.BoxedToPrimitive.get(sym.fullName)) match
+          case Some(prim) => TypeRepr.TypeRef(TypeRepr.NoPrefix, mintOrReuse(prim, prim.split('.').last))
+          case scala.None => t
+      case _ => t
+
     /** the target shape, applied to the annotated occurrence's CURRENT type. */
     def nullable(t: TypeRepr): TypeRepr = target match
       case Target.Union                          => TypeRepr.OrType(t, nullRef)
       case Target.Named(_) | Target.OptionTarget =>
-        TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(t))
+        TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(unboxed(t)))
 
     def alreadyNullable(t: TypeRepr): Boolean = t match
       case TypeRepr.OrType(_, TypeRepr.TypeRef(_, s))      => s == nullSym
@@ -1232,6 +1243,18 @@ object NullabilityTransform:
   /** the stable name — a `Phase.name`, a `Reason.Configured` phase half, and the factory's config key, which is one identity on purpose.
     */
   val Name = "nullability"
+
+  /** the JDK box of each scala primitive — what a nullable slot's element unboxes to under a wrapper (`Integer` → `Nullable[Int]`). */
+  val BoxedToPrimitive: Map[String, String] = Map(
+    "java.lang.Integer" -> "scala.Int",
+    "java.lang.Long" -> "scala.Long",
+    "java.lang.Short" -> "scala.Short",
+    "java.lang.Byte" -> "scala.Byte",
+    "java.lang.Float" -> "scala.Float",
+    "java.lang.Double" -> "scala.Double",
+    "java.lang.Boolean" -> "scala.Boolean",
+    "java.lang.Character" -> "scala.Char"
+  )
 
   private val NullFqn   = "scala.Null"
   private val OptionFqn = "scala.Option"
