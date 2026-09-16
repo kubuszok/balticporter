@@ -39,6 +39,9 @@ object Align {
 
   given MkArray.OfInts[Align] = MkArray.ofIntAs[Align]
 
+  /** the port's wrap site (`OpaqueSpec.Target.Existing(wrapName = "apply")`): java kept these bit sets as `int` where sge spells `Align`. Not in the reference — the same addition the full port's copy carries. */
+  def apply(raw: Int): Align = raw
+
   val center: Align = 1 << 0
   val top:    Align = 1 << 1
   val bottom: Align = 1 << 2

@@ -18,6 +18,7 @@ class ReferencePolicySpec extends FunSuite:
       |  public String label() { return null; }
       |  public int size() { return 0; }
       |  public static int count() { return 0; }
+      |  public static boolean isWide(int width) { return false; }
       |  public void set(float a) {}
       |  public void set(int a) {}
       |}
@@ -35,7 +36,10 @@ class ReferencePolicySpec extends FunSuite:
       |  def set(a: Seconds): Unit = ()
       |  def set(a: Int): Unit = ()
       |}
-      |object Clock { def count: Int = 0 }
+      |object Clock {
+      |  def count: Int = 0
+      |  extension (p: Pixels) inline def isWide: Boolean = true
+      |}
       |""".stripMargin
 
   private def refDecls(src: String): List[ApiParityCheck.SurfaceDecl] =
@@ -53,7 +57,13 @@ class ReferencePolicySpec extends FunSuite:
       r.policy.opaqueSeeds("sge.utils.Seconds"),
       Set("com.example.gfx.Clock#delta", "com.example.gfx.Clock#getDelta", "com.example.gfx.Clock#update#dt")
     )
-    assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Clock#update#width"))
+    // `isWide(int)` is a STATIC the reference spells as an extension over the target: its receiver is slot 0
+    assertEquals(r.policy.opaqueSeeds("sge.Pixels"), Set("com.example.gfx.Clock#update#width", "com.example.gfx.Clock#isWide#width"))
+  }
+
+  test("an extension member is never read as an INSTANCE method's missing parameter, nor parenless at a static") {
+    val r = derive()
+    assert(!r.policy.parenless.contains("com.example.gfx.Clock#isWide"))
   }
 
   test("a using clause is not part of the arity a java member is matched against") {

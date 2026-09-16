@@ -218,8 +218,9 @@ object LlsPolicy:
       name = "lls",
       governs = LlsMigrate.Fqns,
       // the five references the twelve make outside themselves, answered the way lls did (K43):
-      // `Collections` -> the injected flag holder (dropped for the DEPENDENT, redirected here, where
-      // it is a class-file external); the reflective `Class`-typed constructors and `toArray(Class)`
+      // `Collections` -> lls's own hand-written flag holder (`lowlevel.util.Collections`, in its tree since
+      // lls 6cc2226 — no longer injected here, or the lane compiles it twice); dropped for the DEPENDENT,
+      // redirected there, where it is a class-file external; the reflective `Class`-typed constructors and `toArray(Class)`
       // go with `ArrayReflection`; `select(Predicate)` goes with `Predicate`; `ArraySupplier` retargets.
       dropTypes = Set("com.badlogic.gdx.utils.Collections"),
       dropMethods = Set(

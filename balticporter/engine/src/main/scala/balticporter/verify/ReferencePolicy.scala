@@ -153,13 +153,13 @@ object ReferencePolicy:
     def isTypeParamTyped(p: Tree.ValDef, tparams: Set[SymId]): Boolean = p.tpt.tpe match
       case TypeRepr.TypeRef(_, s) => tparams(s)
       case _                      => false
-    def bestByParams(cands: List[SurfaceDecl], params: List[Tree.ValDef], tparams: Set[SymId] = Set.empty): List[SurfaceDecl] =
+    def bestByParams(cands: List[SurfaceDecl], params: List[Tree.ValDef], tparams: Set[SymId] = Set.empty, static: Boolean = false): List[SurfaceDecl] =
       if cands.size <= 1 then cands
       else
         val js     = params.map(p => javaSimple(p.tpt.tpe))
         val tp     = params.map(isTypeParamTyped(_, tparams))
         val scored = cands.map { c =>
-          val rs = c.explicitParamTypes.map(refSimple)
+          val rs = c.slotTypes(static).map(refSimple)
           c -> js.zip(rs).zip(tp).count {
             case ((_, r), true) if r.startsWith("$") => true // a type parameter matches the canonical `$N`
             case ((Some(j), r), _)                   => j == r
@@ -193,10 +193,11 @@ object ReferencePolicy:
       if overloaded then rowKey(ms, true) + "#" + ps.name else ps.fullName
 
     def methodRows(d: Tree.DefDef, ms: Symbol, overloaded: Boolean, r: SurfaceDecl): List[DerivedPolicy.Row] =
-      val out           = List.newBuilder[DerivedPolicy.Row]
-      val params        = d.paramss.flatten
-      val isProp        = kindClass(r.kind) == "prop"
-      val refParamTypes = if isProp && params.size == 1 then List(r.resultType) else r.explicitParamTypes
+      val out    = List.newBuilder[DerivedPolicy.Row]
+      val params = d.paramss.flatten
+      val isProp = kindClass(r.kind) == "prop"
+      // a java STATIC the reference spells as an extension member reads its first parameter at the receiver (`SurfaceDecl.receiver`)
+      val refParamTypes = if isProp && params.size == 1 then List(r.resultType) else r.slotTypes(ms.flags.isStatic)
       params.zip(refParamTypes).foreach { (p, refType) =>
         program.symbolOf(p.symbol).foreach { ps =>
           targetBySimple.get(simpleOf(refType)).filter(_ => prim(p.tpt.tpe)).foreach(t => out += DerivedPolicy.Row(DerivedPolicy.Family.OpaqueSlot, paramKey(ms, ps, overloaded), refType, t))
@@ -309,10 +310,14 @@ object ReferencePolicy:
                         rows += DerivedPolicy.Row(DerivedPolicy.Family.PropertySetter, rowKey(ms, overloaded), s"def $acr", acr)
                   }
                   val renamedTo = memberRenames.get(ms.fullName).orElse(ms.descriptor.flatMap(dd => memberRenames.get(ms.fullName + "(" + dd.render + ")")))
-                  lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))) match
+                  // a java STATIC whose reference twin is an EXTENSION member sits one parameter short: `Align.isLeft(int)` is `extension (a: Align) def isLeft`,
+                  // the receiver standing for parameter 0 (the same reading `StaticForwarderTransform` gives a wrapper's statics)
+                  def asExtension(nm: String): Option[List[SurfaceDecl]] =
+                    if ms.flags.isStatic && n >= 1 then lookup(mp, "def", nm, n - 1, pkg).map(_.filter(_.receiver.nonEmpty)).filter(_.nonEmpty) else scala.None
+                  lookupMethod(mp, ms.name, n, pkg).orElse(renamedTo.flatMap(lookupMethod(mp, _, n, pkg))).orElse(asExtension(ms.name)).orElse(renamedTo.flatMap(asExtension)) match
                     case Some(cands) =>
                       val tps = d.tparams.map(_.symbol).toSet ++ cd.tparams.map(_.symbol).toSet
-                      agree(ms, bestByParams(cands, d.paramss.flatten, tps), methodRows(d, ms, overloaded, _))
+                      agree(ms, bestByParams(cands, d.paramss.flatten, tps, ms.flags.isStatic), methodRows(d, ms, overloaded, _))
                     case None =>
                       // a `Class<T>` parameter the reference turned into a `[T: ClassTag]` bound: its def
                       // sits at the java name (or the renamed one) one parameter short, the tag in its

@@ -575,6 +575,8 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
       "com.kubuszok"          %% "kindlings-jsoniter-derivation" % "0.3.2",
       "com.kubuszok"          %% "kindlings-jsoniter-json"       % "0.3.2",
       "com.kubuszok"          %% "kindlings-ubjson-derivation"   % "0.3.2",
+      // sge's `FastShowPretty[Align]` (the align step injects sge's own `Align.scala`)
+      "com.kubuszok"          %% "kindlings-fast-show-pretty"    % "0.3.2",
       // sge's logger (`sge.utils.LogPlatform`, injected verbatim; PROGRESS.md §13.31 step 2)
       "com.outr"              %% "scribe"                        % "3.19.0",
       // sge's HTTP stack (`Net.httpClient`; net step) — sttp core on every row

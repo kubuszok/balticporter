@@ -106,11 +106,18 @@ object ApiParityCheck:
     usingCount: Int = 0,
     /** the file's package — NOT part of the path or the match key (`compare` is package-blind); `ReferencePolicy` reads it to tell two same-named types apart.
       */
-    pkg: String = ""
+    pkg: String = "",
+    /** the receiver type of a member declared in an `extension (r: T)` group; empty elsewhere. `ReferencePolicy` reads it as a java STATIC's first parameter — `Align.isLeft(int)` is spelled
+      * `extension (a: Align) def isLeft` — so the slot derives like any other.
+      */
+    receiver: String = ""
   ):
     /** the explicit (non-`using`) parameter types — what a java signature can be matched against. */
     def explicitParamTypes: List[String] = paramTypes.dropRight(usingCount)
     def explicitArity:      Int          = arity - usingCount
+
+    /** the slots a JAVA member's parameters line up with: an extension member read at a static carries its receiver as slot 0. */
+    def slotTypes(static: Boolean): List[String] = if static && receiver.nonEmpty then receiver :: explicitParamTypes else explicitParamTypes
 
     /** A CONSTANT initialiser — the rhs is a literal, so the declaration has a constant type. */
     def constantInit: Boolean = constantType.nonEmpty
@@ -337,7 +344,7 @@ object ApiParityCheck:
     /** A DIRECT member of a template body, of a top-level scope or of an extension group — the only declarations that are public surface. A declaration inside a method body, a block, a lambda or an
       * INACCESSIBLE template is unreachable from outside and is not walked.
       */
-    def member(t: Tree, path: String, scope: List[String]): Unit = t match
+    def member(t: Tree, path: String, scope: List[String], receiver: String = ""): Unit = t match
       case d: Defn.Class if isAccessible(d.mods) =>
         val own   = tparamNames(d.tparamClause.values)
         val subst = substFor(scope, own)
@@ -425,7 +432,8 @@ object ApiParityCheck:
           targetName = extractTargetName(d.mods),
           parenless = clauses.isEmpty,
           usingCount = usingArity(clauses),
-          defaults = trailingDefaults(clauses)
+          defaults = trailingDefaults(clauses),
+          receiver = receiver
         )
       case d: Ctor.Secondary if isAccessible(d.mods) =>
         val subst = substFor(scope, Nil)
@@ -534,10 +542,13 @@ object ApiParityCheck:
           accessLevel = extractAccessLevel(d.mods)
         )
       case d: Defn.ExtensionGroup =>
-        val inner = scope ++ tparamNames(d.paramClauseGroup.toList.flatMap(_.tparamClause.values))
+        val own   = tparamNames(d.paramClauseGroup.toList.flatMap(_.tparamClause.values))
+        val inner = scope ++ own
+        // the receiver — `extension (a: Align)` — is the group's first parameter; a member carries it so a java STATIC's first slot can be read off it
+        val recv = d.paramClauseGroup.toList.flatMap(_.paramClauses).headOption.flatMap(_.values.headOption).map(p => renderType(p.decltpe, substFor(scope, own))).getOrElse("")
         d.body match
-          case b: Term.Block => b.stats.foreach(member(_, path, inner))
-          case one => member(one, path, inner)
+          case b: Term.Block => b.stats.foreach(member(_, path, inner, recv))
+          case one => member(one, path, inner, recv)
       case _ => ()
 
     /** Source, packages and package objects carry surface without being it. */
