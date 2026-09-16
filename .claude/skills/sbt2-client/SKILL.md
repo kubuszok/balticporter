@@ -62,4 +62,7 @@ A multi-command CI step is an sbt ALIAS in `build.sbt` (sbt-welcome lists it): s
 sge/ssg regenerate only when `target/balticporter-<port>/.generated-marker` is absent or the pin
 changed: after a new pin, `rm -f target/balticporter-sge/.generated-marker
 target/balticporter-lls/.generated-marker`, then `reload`. Parallel matrix rows share the generator
-(`BalticPorterGen` is `synchronized`).
+(`BalticPorterGen` is `synchronized`). The marker is keyed on the VENDORED java commit, not the
+engine pin: a run still ahead of yours on the server rewrites it after your `rm`, and your command
+then compiles the previous engine's tree — the log says `[Baltic Porter] Using cached generated
+sources`. Remove the markers only when the server is idle, and grep that line before reading errors.
