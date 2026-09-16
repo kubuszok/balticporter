@@ -160,6 +160,9 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     val c            = code(o)
     assert(clue(c).contains("def cellPool(using demo.Ctx)"), c)
     assert(c.contains("cellPool$set"), c)
+    // the JVM's class-init lock: assigned under the companion's monitor, double-checked, the flag written last
+    assert(c.contains("this.synchronized {"), c)
+    assert(c.indexOf("cellPool$value = ") < c.indexOf("cellPool$set = true"), "the value is written before the flag")
     assert(c.contains("cellPool$value"), c)
 
     val ds = l.of(Decision.Kind.DeferredInit)

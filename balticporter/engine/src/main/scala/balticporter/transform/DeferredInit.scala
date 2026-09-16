@@ -3,8 +3,9 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Turns a static whose class initialiser reads the threaded holder into a `def` over a `$set`/ `$value` cache pair, taking the context clause — per site, never by default, since deferring init to
-  * first read changes java's first-ACTIVE-USE trigger (recorded as `Decision.Kind.DeferredInit`, counted `deferred-init`). Does NOT reproduce the JVM's class-init lock; reads are unchanged since the
-  * field's symbol is reused as a parameterless `def`.
+  * first read changes java's first-ACTIVE-USE trigger (recorded as `Decision.Kind.DeferredInit`, counted `deferred-init`). The JVM's class-init lock IS reproduced: the value is assigned under the
+  * companion's monitor, double-checked, the flag written last (a parallel test run measured the race: `Table.cellPool` read null). Reads are unchanged since the field's symbol is reused as a
+  * parameterless `def`.
   */
 final class DeferredInit(
   program:       Program,
@@ -54,18 +55,28 @@ final class DeferredInit(
     val setSym = mint.member(s"$nm$$set", s"$full$$set", owner, boolT, flags)
     val valSym = mint.member(s"$nm$$value", s"$full$$value", owner, v.tpt.tpe, flags)
 
-    val at    = v.origin
-    val cond  = Tree.Apply(Tree.Select(Tree.Ident(setSym, boolT, at), notSym, TypeRepr.NoType, at), Nil, notSym, boolT, at)
-    val thenp = Tree.Block(
+    val at   = v.origin
+    val cond = Tree.Apply(Tree.Select(Tree.Ident(setSym, boolT, at), notSym, TypeRepr.NoType, at), Nil, notSym, boolT, at)
+    // the JVM runs a class initialiser ONCE, under the class-init lock; two threads reading the holder at the same time
+    // (parallel suites constructing the class) must see the same value — the value is written BEFORE the flag, under the
+    // companion's monitor, and the flag is re-read inside it (double-checked)
+    val assign = Tree.Block(
       List(
-        Tree.Assign(Tree.Ident(setSym, boolT, at), Tree.Literal(Constant.BoolC(true), boolT, at), unitT, at),
-        Tree.Assign(Tree.Ident(valSym, v.tpt.tpe, at), d.rhs, unitT, at)
+        Tree.Assign(Tree.Ident(valSym, v.tpt.tpe, at), d.rhs, unitT, at),
+        Tree.Assign(Tree.Ident(setSym, boolT, at), Tree.Literal(Constant.BoolC(true), boolT, at), unitT, at)
       ),
       Tree.Literal(Constant.UnitC, unitT, at),
       unitT,
       at
     )
-    val body = Tree.Block(List(Tree.If(cond, thenp, Tree.Literal(Constant.UnitC, unitT, at), unitT, at)), Tree.Ident(valSym, v.tpt.tpe, at), v.tpt.tpe, at)
+    val guarded = Tree.If(cond, assign, Tree.Literal(Constant.UnitC, unitT, at), unitT, at)
+    val locked  = Tree.Opaque(s"this.synchronized { ${Tree.Opaque.hole(0)} }", unitT, at, holes = List(guarded))
+    val body    = Tree.Block(
+      List(Tree.If(cond, locked, Tree.Literal(Constant.UnitC, unitT, at), unitT, at)),
+      Tree.Ident(valSym, v.tpt.tpe, at),
+      v.tpt.tpe,
+      at
+    )
 
     List(
       Tree.ValDef(setSym, TypeTree(boolT, at), Some(Tree.Literal(Constant.BoolC(false), boolT, at)), at),
