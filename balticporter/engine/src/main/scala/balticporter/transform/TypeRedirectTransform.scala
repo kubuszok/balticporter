@@ -363,7 +363,13 @@ final class TypeRedirectTransform(
         if r.hits.nonEmpty then r
         else
           val member = r.entry.drop(r.source.length + 1).takeWhile(_ != '(')
-          val hits   = program.symbols.all.filter(s => s.name == member && program.owned(s.id) && graph.closureOf(s.id).externalAnchors.contains((r.source, member))).map(_.id).toList.sortBy(_.raw)
+          // …within the redirect's own scope: a class the redirect leaves on the source type keeps the source's spelling
+          val sc   = scopeOf(r.source)
+          val hits = program.symbols.all
+            .filter(s => s.name == member && program.owned(s.id) && inScope(sc, program, s.owner) && graph.closureOf(s.id).externalAnchors.contains((r.source, member)))
+            .map(_.id)
+            .toList
+            .sortBy(_.raw)
           r.copy(hits = hits)
       }
       val requests = anchoredHits.flatMap(r => r.hits.map(h => MemberRenamer.Request(h, r.newName, Reason.Configured(name, r.key), r.key, r.key, detachedParents = Set(r.source))))
