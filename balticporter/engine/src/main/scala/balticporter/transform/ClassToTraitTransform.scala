@@ -4,7 +4,7 @@ import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.tir.*
 
 /** Rewrite a nominated abstract class into a trait and transform every subclass (named and anonymous) to use `override val` members instead of constructor arguments. The nominated type's `ClassDef`
-  * is rewritten in the TIR even when emission drops it (injected file), so `CtorFunnel` sees a parent with no constructor to replay. CLAUDE.md §1(b). Empty specs = no-op.
+  * is rewritten in the TIR even when emission drops it (injected file), so `CtorFunnel` sees a parent with no constructor to replay. Empty specs = no-op.
   */
 final class ClassToTraitTransform(
   val specs: Map[String, List[ClassToTraitTransform.ParamMapping]] = Map.empty
@@ -147,7 +147,7 @@ final class ClassToTraitTransform(
   private def transformNominatedType(cd: Tree.ClassDef, spec: ResolvedSpec, program: Program): Tree.ClassDef =
     val origin           = cd.origin
     val mappedFieldNames = spec.mappings.map(_.valName).toSet
-    // Mapped fields are replaced by abstract vals; keeping both triggers the §4.55 shadow-rename
+    // Mapped fields are replaced by abstract vals; keeping both triggers the shadow-rename
     // pass, renaming the field to `max$field` and breaking every `pool.max` reference.
     val bodyNoCtors = cd.body.filterNot {
       case d: Tree.DefDef => program.symbolOf(d.symbol).exists(_.name == "<init>")
@@ -156,7 +156,7 @@ final class ClassToTraitTransform(
     }
     // DefDef, not ValDef: `resolveFieldShadowing`'s `implementsInherited` test matches a
     // parameterless, bodyless DefDef, treating the subclass's override val as an implementation
-    // pair rather than a shadow (§4.55).
+    // pair rather than a shadow.
     val abstractVals = spec.mappings.flatMap { m =>
       if m.index < spec.formalTypes.size then
         val tpe   = spec.formalTypes(m.index)
@@ -554,7 +554,7 @@ final class ClassToTraitTransform(
       .collectFirst { case s if resolved.contains(s) => resolved(s) }
 
   /** Strip a constructor's `super(args)` arguments, preserving the block's `expr`. `CtorFunnel.stmtsOf` reads only `Block.stats`, so a statement sitting in `expr` is invisible to every downstream
-    * consumer. The block is rebuilt with its ORIGINAL `expr` preserved and all real statements in `stats`. ENGINE-LIMITS CT13.
+    * consumer. The block is rebuilt with its ORIGINAL `expr` preserved and all real statements in `stats`.
     */
   private def stripSuperArgs(d: Tree.DefDef)(using program: Program): Tree.DefDef =
     val stmts = CtorFunnel.stmtsOf(d)

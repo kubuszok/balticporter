@@ -3,7 +3,7 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** The `return this` census — an INERT phase (writes nothing, 0 member digests) at the position its eventual transformer would occupy, so it measures the same input a transformer would. Once a
-  * construct gets a real transformer, its census retires — the transformer's own refusal population becomes the denominator (§4.6, one mechanism per seam).
+  * construct gets a real transformer, its census retires — the transformer's own refusal population becomes the denominator (one mechanism per seam).
   */
 object IdiomCensus:
 
@@ -36,7 +36,7 @@ object IdiomCensus:
     * produces no row.
     */
 
-/** the `return this;` census — §1.3's go/no-go, taken at §1.3's planned position. */
+/** the `return this;` census — the go/no-go for a `this.type` narrowing, taken at the position the eventual transformer would occupy. */
 final class ReturnThisCensus extends Phase, IdiomPhase:
 
   def name: String = "idiom-return-this-census"
@@ -84,8 +84,8 @@ final class ReturnThisCensus extends Phase, IdiomPhase:
       else if retSym.contains(clsSym) then Some(SelfTyped)
       else Some(AncestorTyped)
 
-  /** every `return`'s operand in this body, via `StandardTraversal` (§3). Deliberately includes a `return` inside a nested lambda/anonymous body — over-counting here only lands a row in
-    * `NotAlwaysThis`, never in a bucket that would convert.
+  /** every `return`'s operand in this body, via `StandardTraversal`. Deliberately includes a `return` inside a nested lambda/anonymous body — over-counting here only lands a row in `NotAlwaysThis`,
+    * never in a bucket that would convert.
     */
   private def collectReturns(t: Term)(using Program): List[Option[Term]] =
     StandardTraversal.scanTerm(t, List.empty[Option[Term]]) { (acc, x) =>

@@ -19,12 +19,12 @@ final class DeferredInit(
 
   private val byField = deferrals.map(d => d.field -> d).toMap
 
-  /** Only deferrals out of a class initialiser have one to strip — a field carrying its own initialiser is replaced whole by `deferField` and its `clinit` is `SymId.None` (ENGINE-LIMITS CT6).
+  /** Only deferrals out of a class initialiser have one to strip — a field carrying its own initialiser is replaced whole by `deferField` and its `clinit` is `SymId.None`.
     */
   private val byClinit = deferrals.filter(_.clinit != SymId.None).groupBy(_.clinit)
   private val o        = Origin.synthetic
 
-  // minted rather than looked up: a name string test is the §4.56 hazard the transform lint forbids
+  // minted rather than looked up: a name string test is the hazard the transform lint forbids
   private lazy val boolSym = mint.tpe("Boolean", "scala.Boolean")
   private lazy val unitSym = mint.tpe("Unit", "scala.Unit")
   private lazy val boolT   = TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym)

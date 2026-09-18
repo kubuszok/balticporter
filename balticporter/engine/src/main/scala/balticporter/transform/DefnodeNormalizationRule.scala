@@ -4,8 +4,8 @@ import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.tir.*
 import balticporter.tir.Tree.*
 
-/** §1(c) project-specific rule using a §1(b) mechanism: recognizes Terser's `DEFNODE(type, props, ctor, methods, base)` runtime class-building pattern and normalizes it into explicit `ClassDef` nodes
-  * in TIR.
+/** A library-specific rule built on a reusable mechanism: recognizes Terser's `DEFNODE(type, props, ctor, methods, base)` runtime class-building pattern and normalizes it into explicit `ClassDef`
+  * nodes in TIR.
   *
   * The DEFNODE pattern builds a prototype-based class hierarchy at runtime. A static frontend cannot see these as classes. This rule pattern-matches the call shape and extracts: class name (string),
   * field names (space-split string), parent class (variable reference), and method implementations (object literal). The result is a normal TIR ClassDef with fields, methods, and inheritance.

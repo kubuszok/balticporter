@@ -25,17 +25,17 @@ final class CollectionsTransform(
     */
   val retargetTypeArgs: Map[String, List[CollectionsTransform.RetargetArg]] = Map.empty,
   /** External generic types whose type arguments a third party reifies at run time. Arguments stay in java's namespace; values bridged at use via [[externalProducer]]. [[UniversalCarriers]]
-    * (`java.lang.Class`) always added. Empty = no-op. // ENGINE-LIMITS K20
+    * (`java.lang.Class`) always added. Empty = no-op.
     */
   val reifiedCarriers: Set[String] = Set.empty,
   /** External types that read the runtime representation of a value at an opaque slot. Bridge is [[ReifiedFqn]]`.toJavaValue` (identity for non-retyped, deep-by-view for retyped). Per-library policy;
-    * empty = no-op. NOT part of [[surfaceFingerprint]]. // ENGINE-LIMITS K21
+    * empty = no-op. NOT part of [[surfaceFingerprint]].
     */
   val reflectiveSinks: Set[String] = Set.empty,
   /** Additional collection families — java FQN to (scala FQN, Kind), merged into [[typeMap]] at construction. Collisions with JDK entries or `retarget` refused. Empty = no-op.
     */
   val families: Map[String, (String, CollectionsTransform.Kind)] = Map.empty,
-  /** Per-entry scopes for [[families]] — java source FQN to `RuleScope`. A key with no family entry is ignored. Default `Everywhere(Set.empty)`. // ENGINE-LIMITS D12
+  /** Per-entry scopes for [[families]] — java source FQN to `RuleScope`. A key with no family entry is ignored. Default `Everywhere(Set.empty)`.
     */
   val familyScopes: Map[String, RuleScope] = Map.empty,
   /** Retarget coercions — `(actualHeadFQN, expectedHeadFQN)` to template string. `$0` = actual value. Rendered as `Tree.Opaque.spliced` at type boundaries. Empty = no-op. `MergeablePolicy` unions;
@@ -43,7 +43,7 @@ final class CollectionsTransform(
     */
   val retargetCoercions: Map[(String, String), String] = Map.empty,
   /** Indexed field rewrites keyed by (source FQN, field name) to [[RetargetRewrite.IndexedField]]. Separate from [[retargetRewrites]] so a field and a method of the same name can coexist (e.g.
-    * ArrayMap `keys` method -> Collect AND `keys` field -> IndexedField). Scanned alongside [[retargetRewrites]] for `indexedFieldSyms`. Empty = no-op. // CLAUDE.md §1(b)
+    * ArrayMap `keys` method -> Collect AND `keys` field -> IndexedField). Scanned alongside [[retargetRewrites]] for `indexedFieldSyms`. Empty = no-op.
     */
   val retargetIndexedFields: Map[String, Map[String, CollectionsTransform.RetargetRewrite.IndexedField]] = Map.empty
 ) extends Phase,
@@ -69,7 +69,7 @@ final class CollectionsTransform(
   /** fullName to minted SymId fallback for `transformType` — covers dependent-interned SymIds. */
   private[transform] var remapByFullName: Map[String, SymId] = Map.empty
 
-  /** source SymId to java FQN for family remap entries — for per-entry scope (D12). */
+  /** source SymId to java FQN for family remap entries — for per-entry scope. */
   private[transform] var familyRemapSources: Map[SymId, String] = Map.empty
 
   /** Declared classes by symbol — source of class type parameters. */
@@ -127,8 +127,8 @@ final class CollectionsTransform(
   private[transform] var recvBindSym:  SymId         = SymId.None
   private[transform] var argParamSyms: Vector[SymId] = Vector.empty
 
-  /** the scala side of a BRIDGED member (`ENGINE-LIMITS.md` K28.1) — the types its signature is written in, and the two `asScala` views its body reaches java's answer through. `iteratorMemberSym` is
-    * scala's parameterless `iterator`, for a `Map` with no java `iterator()` reaching `entrySet().iterator()`. Resolved-or-minted like `unsupportedOpSym`.
+  /** the scala side of a BRIDGED member — the types its signature is written in, and the two `asScala` views its body reaches java's answer through. `iteratorMemberSym` is scala's parameterless
+    * `iterator`, for a `Map` with no java `iterator()` reaching `entrySet().iterator()`. Resolved-or-minted like `unsupportedOpSym`.
     */
   private[transform] var optionSym, scalaIteratorSym, scalaIterableSym, iterableOnceSym: SymId    = SymId.None
   private[transform] var tuple2Sym, boolSym, intSym, unitSym:                            SymId    = SymId.None
@@ -181,13 +181,13 @@ final class CollectionsTransform(
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private[transform] var iteratorFromSym, javaIteratorSym: SymId = SymId.None
 
-  /** `JavaListIterator` and its write-through cursor `JavaListIterator.over` — the `listIterator` rewrite's target (`ENGINE-LIMITS.md` K23). `SymId.None` unless the program names
-    * `java.util.ListIterator`, so the arm declines by arithmetic everywhere else.
+  /** `JavaListIterator` and its write-through cursor `JavaListIterator.over` — the `listIterator` rewrite's target. `SymId.None` unless the program names `java.util.ListIterator`, so the arm declines
+    * by arithmetic everywhere else.
     */
   private[transform] var javaListIteratorSym, listIteratorOverSym: SymId = SymId.None
 
-  /** `JavaCollections.{spliterator, orderedSpliterator, distinctSpliterator}` — java's THREE own defaults for `spliterator()`, one per owner it re-declares the member at (`ENGINE-LIMITS.md` K23).
-    * Three symbols and not one, because the emitted call has to NAME which java declaration it reproduces rather than carry a characteristics constant.
+  /** `JavaCollections.{spliterator, orderedSpliterator, distinctSpliterator}` — java's THREE own defaults for `spliterator()`, one per owner it re-declares the member at. Three symbols and not one,
+    * because the emitted call has to NAME which java declaration it reproduces rather than carry a characteristics constant.
     */
   private[transform] var orderedSpliteratorSym, distinctSpliteratorSym: SymId = SymId.None
 
@@ -208,7 +208,7 @@ final class CollectionsTransform(
     */
   private[transform] var objectSym: SymId = SymId.None
 
-  /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test (§4.56), and computed once per run because the external-seam arms ask it per call.
+  /** is this symbol one the PROGRAM declares? Structural (`Program.owned`), never a name test, and computed once per run because the external-seam arms ask it per call.
     */
   private[transform] var ownedSym: SymId => Boolean = _ => true
 
@@ -221,7 +221,7 @@ final class CollectionsTransform(
     */
   private[transform] var excluded: Set[SymId] = Set.empty
 
-  /** …read back, so [[CollectionBoundaryCheck]] can classify a seam the scope created from the phase's OWN record of what it held back rather than guessing from a type name (§4.56).
+  /** …read back, so [[CollectionBoundaryCheck]] can classify a seam the scope created from the phase's OWN record of what it held back rather than guessing from a type name.
     */
   def scopedOut: Set[SymId] = excluded
 
@@ -235,7 +235,7 @@ final class CollectionsTransform(
     */
   private[transform] var retainedOwners: Set[SymId] = Set.empty
 
-  /** …read back, for [[scopedOut]]'s reason and with a DIFFERENT classification: the scope's seam names a manifest key, and this one names nothing a port can edit (§4.56).
+  /** …read back, for [[scopedOut]]'s reason and with a DIFFERENT classification: the scope's seam names a manifest key, and this one names nothing a port can edit.
     */
   def classFileOverrides: Set[SymId] = retainedOverrides
 
@@ -244,7 +244,7 @@ final class CollectionsTransform(
   private[transform] def literal(s: SymId): Boolean = excluded(s) || retainedOverrides(s) || retainedOwners(s)
   private[transform] def literalEmpty:      Boolean = excluded.isEmpty && retainedOverrides.isEmpty
 
-  /** the declaration → the scope ENTRY that admitted it, for `Reason.Configured`'s key (§4.575: the key is the manifest entry VERBATIM, because it is the string an agent edits).
+  /** the declaration → the scope ENTRY that admitted it, for `Reason.Configured`'s key (the key is the manifest entry VERBATIM, because it is the string an agent edits).
     */
   private[transform] var admittedBy:  Map[SymId, String] = Map.empty
   override def run(program: Program): Program            =
@@ -255,7 +255,7 @@ final class CollectionsTransform(
     var next  = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     def mint(name: String, full: String): SymId =
       val id = SymId(next); next += 1
-      // inherit isFinal from the frontend's interned symbol when it read the class file (K18)
+      // inherit isFinal from the frontend's interned symbol when it read the class file
       val flags = program.symbols.all.find(_.fullName == full).map(s => Flags(isFinal = s.flags.isFinal)).getOrElse(Flags())
       added += Symbol(id, name, full, flags, SymId.None, TypeRepr.NoType)
       id
@@ -269,7 +269,7 @@ final class CollectionsTransform(
         .get(s.fullName)
         .map { sc =>
           // a source with its own rewrite table/type args gets a DISTINCT SymId, so multiple
-          // sources sharing a target do not collapse onto one entry (§4.55: a loose key -> List).
+          // sources sharing a target do not collapse onto one entry (a loose key -> List).
           val needsOwnSym = retargetTypeArgs.contains(s.fullName) ||
             retargetRewrites.contains(s.fullName) || retargetRewritesByDesc.contains(s.fullName)
           val sym = if needsOwnSym then mint(sc.substring(sc.lastIndexOf('.') + 1), sc)
@@ -287,7 +287,7 @@ final class CollectionsTransform(
     remapByFullName = program.symbols.all.flatMap { s =>
       remap.get(s.id).map(tgt => s.fullName -> tgt)
     }.toMap
-    // …and the reverse map for per-entry family scoping (D12): which remap entries came from
+    // …and the reverse map for per-entry family scoping: which remap entries came from
     // `families` (not the JDK companion typeMap, not retarget). Used by `finishRun` to narrow
     // the mapping per pass, so a dependent's family entries only retype its own declarations.
     familyRemapSources = program.symbols.all.flatMap { s =>
@@ -337,7 +337,7 @@ final class CollectionsTransform(
     unmodifiableSym = mint("unmodifiable", JavaCollectionFqn + ".unmodifiable")
     // `asScalaBuffer` is an EXTENSION in JavaCollection's companion, which is exactly where scala 3
     // looks for one on that receiver type — so it needs no import, like every other name the
-    // structural backend emits fully qualified (CLAUDE.md §6).
+    // structural backend emits fully qualified.
     asScalaBufferSym = mint("asScalaBuffer", JavaCollectionFqn + ".asScalaBuffer")
     filteredSym = mint("filtered", JavaCollectionFqn + ".filtered")
     bufferSym = byScala.getOrElse("scala.collection.mutable.Buffer", SymId.None)
@@ -353,7 +353,7 @@ final class CollectionsTransform(
     fromSyms = byScala.collect {
       // …and the RUNTIME targets that publish a `from` of their own. Listed rather than matched on
       // the package, because "is this one of mine" is a membership test against the phase's own
-      // record and a prefix is not a structural fact about anything (§4.56). `JavaEnumMap` is the
+      // record and a prefix is not a structural fact about anything. `JavaEnumMap` is the
       // only one: `JavaStack`'s java type has no copy constructor and `JavaEnumSet`'s copy is a
       // STATIC, so neither is ever reached through a `new`.
       case (fqn, id) if fqn.startsWith("scala.collection.") || fqn == CollectionsTransform.JavaEnumMapFqn =>
@@ -362,7 +362,7 @@ final class CollectionsTransform(
     // The scala collections whose only paramful constructor is `(initialCapacity, loadFactor)`.
     // Listed rather than derived because there is nothing in the TIR to derive it FROM — these are
     // external types with no declaration the frontend ever saw — but the list is closed over the
-    // phase's own `typeMap` targets, so it is the phase's record and not a name test (§4.56).
+    // phase's own `typeMap` targets, so it is the phase's record and not a name test.
     loadFactorSyms = List(
       "scala.collection.mutable.HashMap",
       "scala.collection.mutable.LinkedHashMap",
@@ -398,12 +398,12 @@ final class CollectionsTransform(
     unmappedSupertypeSyms = program.symbols.all.collect {
       case s if CollectionsTransform.unmappedSupertypes(s.fullName) => s.id
     }.toSet
-    // …and the REIFIED CARRIERS this program actually names (K20). Resolved BEFORE the traversal
+    // …and the REIFIED CARRIERS this program actually names. Resolved BEFORE the traversal
     // starts, because `preservesTypeArgsOf` is asked from inside it.
     carrierSyms = program.symbols.all.collect {
       case s if effectiveCarriers(s.fullName) => s.id
     }.toSet
-    // …and the REFLECTIVE SINKS (K21), read the same way and for the same reason: a sink is a type
+    // …and the REFLECTIVE SINKS, read the same way and for the same reason: a sink is a type
     // this phase leaves alone, so its symbol keeps the id it arrived with.
     sinkSyms = program.symbols.all.collect {
       case s if reflectiveSinks(s.fullName) => s.id
@@ -462,7 +462,7 @@ final class CollectionsTransform(
     indexedFieldSyms = rwIdxFields ++ separateIdxFields
 
     // resolve FixedType and Applied FQNs — reuse an EXISTING symbol where one is already in
-    // byScala or in the program, so no FQN ends up with two SymIds. 3.1ai / O9: minting a
+    // byScala or in the program, so no FQN ends up with two SymIds. Minting a
     // duplicate `scala.Int` gives `SymbolTable` two entries with the same `fullName`, and any
     // phase resolving a primitive by `fullName` may bind the wrong one.
     // 3.1aw-3: Applied entries contribute their OWN FQN (the type constructor) to the same pool.
@@ -572,11 +572,11 @@ final class CollectionsTransform(
     // symbols for one FQN print the same text and compare unequal, which is how a later reader ends
     // up asking about a type this run has twice.
     def named(fqn: String, nm: String): SymId =
-      // 3.1ai / O9: check `byScala` too — a FixedType resolution may have already minted a symbol
+      // check `byScala` too — a FixedType resolution may have already minted a symbol
       // for this FQN (e.g. `scala.Int`), and a second mint gives `SymbolTable` two entries with the
-      // same `fullName`. Minting duplicates is the root cause of textra's 58 Align opaque errors.
+      // same `fullName`.
       byScala.get(fqn).orElse(program.symbols.all.find(_.fullName == fqn).map(_.id)).getOrElse(mint(nm, fqn))
-    // …the BRIDGED members' own vocabulary (K28.1). `named` for every type, minted for the two
+    // …the BRIDGED members' own vocabulary. `named` for every type, minted for the two
     // `asScala` views and for scala's `iterator`, which nothing in a java program declares.
     optionSym = named("scala.Option", "Option")
     scalaIteratorSym = named("scala.collection.Iterator", "Iterator")
@@ -616,7 +616,7 @@ final class CollectionsTransform(
     detachedEntries = detachedEntriesIn(summon[Program])
     parentClash = declaredParentKinds(summon[Program])
     superDefaults.clear()
-    // …and the SURFACE the minted parent declares (K28.1). Planned here, where the java members
+    // …and the SURFACE the minted parent declares. Planned here, where the java members
     // still carry java's names, and APPLIED as a rename before anything else reads the table: every
     // later step — the traversal, `mapSignatures`, `strippedOverrides` — must see the name the
     // emitted member will actually have, or two of them disagree about one declaration.
@@ -629,7 +629,7 @@ final class CollectionsTransform(
     given Program = program.rebuilt(symbols = symbols)
     ownedSym = summon[Program].owned
 
-    // per-entry family scoping (D12): a family scoped non-Everywhere must only retype
+    // per-entry family scoping: a family scoped non-Everywhere must only retype
     // declarations within that scope. One pass for JDK + everywhere-scoped families, then one
     // pass per distinct non-everywhere family scope with a narrowed remap.
     val fullRemap = remap
@@ -704,7 +704,7 @@ final class CollectionsTransform(
         }
         remap = fullRemap
         tbl
-    // the modifier the re-parenting invalidated (K28); applied here rather than inside
+    // the modifier the re-parenting invalidated; applied here rather than inside
     // mapSignatures, whose contract is about types, not flags.
     val stripped = strippedOverrides(symbols2)
     val symbols3 =
@@ -753,12 +753,12 @@ final class CollectionsTransform(
       // stripping the upper bound is licensed only at a CAST TARGET, see [[stripCastWildcard]].
       // An UNBOUNDED wildcard (`?`) from a raw java type is bounded by Object: java's raw erasure
       // is Object (JLS 4.8), so `T[?]` must read as `T[? <: Object]` — without this, `apply`
-      // returns `Any` and does not conform to `Object` slots. G2, CLAUDE.md §1(b).
+      // returns `Any` and does not conform to `Object` slots.
       val objectRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
       val stripped  = args.map {
         case TypeRepr.TypeBounds(lo, _) if lo != TypeRepr.NoType => lo
         // only at a type THIS PHASE retargeted: a runtime shim declares `[?]` itself, and an override
-        // of its member must keep that spelling or clash after erasure (simplegraphs 0 -> 4)
+        // of its member must keep that spelling or clash after erasure
         case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) if retargetTargetToSource.contains(s) =>
           TypeRepr.TypeBounds(TypeRepr.NoType, objectRef)
         case a => a
@@ -816,13 +816,13 @@ final class CollectionsTransform(
     if stripped == t.tpe then t else t.copy(tpt = TypeTree(stripped, t.tpt.origin), tpe = stripped)
 
   /** WHICH type constructors' arguments this run must not move — the carriers, resolved to this program's own symbols. `false` by arithmetic where the port declares none and the program names no
-    * `java.lang.Class`, which is the §1(b) no-op with no code path.
+    * `java.lang.Class`, which is the no-op with no code path.
     */
   override def preservesTypeArgsOf(tc: TypeRepr)(using Program): Boolean =
     carrierSyms.nonEmpty && headSym(tc).exists(carrierSyms.contains)
 
   /** does this type mention a java type THIS PHASE maps? The question `mentionsRetyped` asks in the other direction — that one reads the types the phase PRODUCED, this one the keys it consumes — and
-    * both are §4.56's "conclude only from what the phase itself did".
+    * both follow the same rule: conclude only from what the phase itself did.
     */
   private[transform] def mentionsMapped(t: TypeRepr)(using Program): Boolean =
     var hit  = false
@@ -848,7 +848,7 @@ final class CollectionsTransform(
     case _         => t
 
   /** An assignment's LHS declares the expected type as a `val`'s `tpt` does; a cast this phase made IMPOSSIBLE (both sides sent to unrelated families) is dropped rather than emitted, turning a
-    * runtime `ClassCastException` into a compile error. // CLAUDE.md §4.4, ENGINE-LIMITS M6
+    * runtime `ClassCastException` into a compile error.
     */
   override def transformTerm(t: Term)(using Program): Term = t match
     case a: Tree.Assign =>
@@ -888,7 +888,7 @@ final class CollectionsTransform(
     if retargetEntryTargets.isEmpty then b
     else foldEntryCopyConstruction(b)
 
-  /** A METHOD REFERENCE at a member this phase rewrites — `Map.Entry::getKey` inside a stream, or `C::new` at a retarget source with a `Construct` entry (CT6 face C, CLAUDE.md §4.56).
+  /** A METHOD REFERENCE at a member this phase rewrites — `Map.Entry::getKey` inside a stream, or `C::new` at a retarget source with a `Construct` entry.
     *
     * Lowers the reference into a lambda with the rewritten term as body. Bound references (`expr::m`) bind the receiver ONCE (JLS 15.13.3). Parameters left unannotated (scalac infers from expected
     * function type).
@@ -896,14 +896,14 @@ final class CollectionsTransform(
   private[transform] def lowerMethodRef(mr: Tree.MethodRef)(using p: Program): Term =
     if selfParamSym == SymId.None then return mr
     // the NODE's answer and not the symbol's, which is the same one derivation the emitter reads
-    // (`Tree.MethodRef.referent`, F8): an external member is interned with no `Flags`, so
+    // (`Tree.MethodRef.referent`): an external member is interned with no `Flags`, so
     // `flags.isStatic` reads `false` for every JDK static and this phase would lower one.
     mr.qualifier match
       case Left(tt) if !mr.referent.isInstanceOf[Referent.Static] =>
         kindOf.get(headSym(tt.tpe).getOrElse(SymId.None)) match
           case None =>
-            // CT6: a `C::new` reference at a retarget source with a Construct entry —
-            // emit the factory lambda through `retargetConstruct` (one derivation). §4.56
+            // a `C::new` reference at a retarget source with a Construct entry —
+            // emit the factory lambda through `retargetConstruct` (one derivation).
             retargetConstructRef(mr, tt) match
               case Some(lam)  => lam
               case scala.None => mr
@@ -921,7 +921,7 @@ final class CollectionsTransform(
                 val param = Tree.ValDef(selfParamSym, TypeTree(TypeRepr.NoType, o), scala.None, o)
                 Tree.Lambda(List(param), body, mr.tpe, o)
       // …and the BOUND form, whose receiver is a TERM. The arity is java's, off the node
-      // (`Tree.MethodRef.referent` — `G27`'s field, and the same one the emitter's own expansion
+      // (`Tree.MethodRef.referent` — the same field the emitter's own expansion
       // reads), never off the symbol: an external member is interned with no `MethodType` and would
       // read as taking no arguments.
       case Right(recv) if recvBindSym != SymId.None =>
@@ -953,7 +953,7 @@ final class CollectionsTransform(
       case _ => mr
 
   /** `C::new` at a retarget source — builds a synthetic `Tree.Apply(Tree.New, args)` and delegates to `retargetConstruct` so the factory-call derivation is ONE path. The result is wrapped in a lambda
-    * whose parameters match the constructor's arity. CT6 face C.
+    * whose parameters match the constructor's arity.
     */
   private[transform] def retargetConstructRef(mr: Tree.MethodRef, tt: TypeTree)(using p: Program): Option[Term] =
     val isCtor = p.symbolOf(mr.method).exists(_.name == "<init>")
@@ -1016,7 +1016,7 @@ final class CollectionsTransform(
               case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
               case None    => retargetRewrite(recv, m, so, t2).orElse(pinnedByObject(recv, m, t2)).getOrElse(t2)
           // retargetSelectRewrite may have replaced the fun Select with an Apply/Opaque wrap
-          // (JavaIterator.from, K36 removing iterator); collapse the outer Nil-arg Apply
+          // (JavaIterator.from, a removing iterator); collapse the outer Nil-arg Apply
           case inner: Tree.Apply if t2.args.isEmpty  => inner
           case inner: Tree.Opaque if t2.args.isEmpty => inner
           case _ => t2
@@ -1035,7 +1035,6 @@ final class CollectionsTransform(
       case other => other
 
   // ---- Inherited collection call with no receiver (anonymous class double-brace idiom) ----
-  // // ENGINE-LIMITS K5
 
   /** Call sites recorded by [[transformApply]], awaiting an enclosing class that can supply `this`. Keyed by ORIGIN, not node identity — `StandardTraversal.mapTerm` rebuilds every node, so no
     * identity survives. Cleared per translation in [[run]].
@@ -1078,9 +1077,8 @@ final class CollectionsTransform(
     case _ => t
 
   // ---- External callee seam — boundary at compiled class files, both directions ----
-  // // ENGINE-LIMITS K15, M6
 
-  /** Does `needle` occur anywhere inside `hay`, as a whole type? Structural equality via [[StandardTraversal.mapType]] (§3).
+  /** Does `needle` occur anywhere inside `hay`, as a whole type? Structural equality via [[StandardTraversal.mapType]].
     */
   private[transform] def occursIn(needle: TypeRepr, hay: TypeRepr)(using Program): Boolean =
     if hay == needle then true
@@ -1094,8 +1092,8 @@ final class CollectionsTransform(
       StandardTraversal.mapType(scan, hay)
       hit
 
-  /** Does this callee name a member one of the phase's own static arms covers (§4.56, `MemberKey` form)? A call still standing at such a name is one the phase DECLINED to rewrite — its value is
-    * whatever java's was, whatever the node's retyped `tpe` now says.
+  /** Does this callee name a member one of the phase's own static arms covers (`MemberKey` form)? A call still standing at such a name is one the phase DECLINED to rewrite — its value is whatever
+    * java's was, whatever the node's retyped `tpe` now says.
     */
   private[transform] def handledStatic(m: SymId)(using p: Program): Boolean =
     memberKeyOf(m).exists(CollectionsTransform.handledStatics.contains)
@@ -1177,8 +1175,8 @@ object CollectionsTransform:
       */
     case class Collect(via: String, into: String) extends RetargetRewrite
 
-    /** Member chain: `recv.sourceMethod(args)` -> `recv.m1.m2…`. First member takes the original arguments; later members take none. Parenless by default (F9's arity-from-callee rule); `parens` opts
-      * a member into `()`. `dropArgs` drops the source call's arguments entirely (parenless first member) for a source parameter the target does not need.
+    /** Member chain: `recv.sourceMethod(args)` -> `recv.m1.m2…`. First member takes the original arguments; later members take none. Parenless by default (the arity-from-callee rule); `parens` opts a
+      * member into `()`. `dropArgs` drops the source call's arguments entirely (parenless first member) for a source parameter the target does not need.
       */
     case class Chain(members: List[String], parens: Set[String] = Set.empty, dropArgs: Boolean = false) extends RetargetRewrite
 
@@ -1188,17 +1186,17 @@ object CollectionsTransform:
     case class FieldWrite(field: String, method: String) extends RetargetRewrite
 
     /** Dropped field write: `recv.field = value` is elided (the target's field is immutable or the write is a no-op), and `recv.field` on the read side maps to `readTarget`. A
-      * `Decision.Kind.DroppedFieldWrite` is recorded at each dropped site. K36.
+      * `Decision.Kind.DroppedFieldWrite` is recorded at each dropped site.
       */
     case class DropWrite(field: String, readTarget: String, why: String) extends RetargetRewrite
 
     /** Indexed field bypass: `recv.field[i]` -> `recv.via(i)`, `field[i] = v` -> `recv.viaWrite(i, v)`. `via`/`viaWrite` default to `apply`/`update`; non-default enters the fingerprint. Fires in
-      * `retargetSelectRewrite` by stripping the field select. // CLAUDE.md §1(b)
+      * `retargetSelectRewrite` by stripping the field select.
       */
     case class IndexedField(field: String, via: String = "apply", viaWrite: String = "update") extends RetargetRewrite
 
     /** Expression template with placeholders (`$recv`, `$0`/`$1`… for arguments, `$T0`… for the receiver's type arguments as text, `$Target` for the retarget target's FQN as text), rendered as
-      * `Tree.Opaque.spliced`. A term placeholder used more than once is bound to a temporary to avoid double side effects (CLAUDE.md §4.4/F7); type placeholders may repeat freely.
+      * `Tree.Opaque.spliced`. A term placeholder used more than once is bound to a temporary to avoid double side effects; type placeholders may repeat freely.
       */
     case class Template(expr: String) extends RetargetRewrite
 
@@ -1258,7 +1256,7 @@ object CollectionsTransform:
     */
   val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
 
-  /** Targets with no `scala.collection.*` parent (standalone shims per CLAUDE.md §4.5). Keyed by FQN, not package — three runtime targets DO extend scala collections.
+  /** Targets with no `scala.collection.*` parent (standalone shims). Keyed by FQN, not package — three runtime targets DO extend scala collections.
     */
   val standaloneTargets: Set[String] =
     Set(JavaIterableFqn, JavaCollectionFqn, JavaIteratorFqn, JavaListIteratorFqn)
@@ -1282,20 +1280,20 @@ object CollectionsTransform:
     "java.util.LinkedList" -> ("scala.collection.mutable.Queue", Kind.Seq),
     // Vector: legacy, absent from Scala.js. Does NOT preserve `synchronized`.
     "java.util.Vector" -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq),
-    // Stack: own shim (NOT mutable.Stack — different ordering semantics, CLAUDE.md §4.4).
+    // Stack: own shim (NOT mutable.Stack — different ordering semantics).
     "java.util.Stack" -> (JavaStackFqn, Kind.Stack),
     // Queue/Deque/ArrayDeque: all to ArrayDeque (java/scala order these types oppositely).
     "java.util.Queue" -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.Deque" -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque" -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
-    // Collection/AbstractCollection: both to shim (must preserve subtype relation; CLAUDE.md §4.5).
+    // Collection/AbstractCollection: both to shim (must preserve subtype relation).
     "java.util.Collection" -> (JavaCollectionFqn, Kind.Seq),
     "java.util.AbstractCollection" -> (JavaCollectionFqn, Kind.Seq),
     // Iterable: shim (java's iterator has remove; scala's does not).
     "java.lang.Iterable" -> (JavaIterableFqn, Kind.Seq),
     // Iterator: shim (java has `remove`, scala does not).
     "java.util.Iterator" -> (JavaIteratorFqn, Kind.Seq),
-    // ListIterator: shim, preserves `ListIterator extends Iterator` edge. // ENGINE-LIMITS K23
+    // ListIterator: shim, preserves `ListIterator extends Iterator` edge.
     "java.util.ListIterator" -> (JavaListIteratorFqn, Kind.Seq),
     "java.util.Map" -> ("scala.collection.mutable.Map", Kind.Map),
     "java.util.HashMap" -> ("scala.collection.mutable.HashMap", Kind.Map),
@@ -1315,7 +1313,7 @@ object CollectionsTransform:
     "java.util.OptionalLong" -> (JavaOptionalLongFqn, Kind.Opt),
     "java.util.OptionalDouble" -> (JavaOptionalDoubleFqn, Kind.Opt),
     "java.util.Set" -> ("scala.collection.mutable.Set", Kind.Set),
-    // AbstractSet: preserves `AbstractSet <: Set`; JDK defaults supplied by the phase. // ENGINE-LIMITS K29
+    // AbstractSet: preserves `AbstractSet <: Set`; JDK defaults supplied by the phase.
     "java.util.AbstractSet" -> ("scala.collection.mutable.Set", Kind.Set),
     "java.util.HashSet" -> ("scala.collection.mutable.HashSet", Kind.Set),
     "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
@@ -1326,7 +1324,7 @@ object CollectionsTransform:
   private[transform] def mappingDigest: String =
     balticporter.tir.TirPrinter.sha256(typeMap.toList.map((k, v) => s"$k->${v._1}:${v._2}").sorted.mkString(",")).take(16)
 
-  /** True if `fromJava`/`toJava` can express a live view for this target. `JavaCollection` has no live wrapper (copy would detach both directions). // ENGINE-LIMITS M6
+  /** True if `fromJava`/`toJava` can express a live view for this target. `JavaCollection` has no live wrapper (copy would detach both directions).
     */
   private[transform] def liveWrappable(target: String): Boolean = Set(
     "scala.collection.mutable.Buffer",
@@ -1336,7 +1334,7 @@ object CollectionsTransform:
     JavaIterableFqn
   ).contains(target)
 
-  /** Targets where a reified occurrence (instanceof/cast) can be translated via `Reified`. Concrete targets absent (no live view can be one); those are refused and counted. // ENGINE-LIMITS K18
+  /** Targets where a reified occurrence (instanceof/cast) can be translated via `Reified`. Concrete targets absent (no live view can be one); those are refused and counted.
     */
   private[transform] val reifiedHelper: Map[String, String] = Map(
     "scala.collection.mutable.Buffer" -> "Buffer",
@@ -1350,7 +1348,7 @@ object CollectionsTransform:
   /** `JavaCollections.Reified`, whose members [[reifiedHelper]] names. */
   val ReifiedFqn = s"$JavaCollectionsFqn.Reified"
 
-  /** JDK supertypes a retyped value stops being (derived from typeMap keys' class hierarchy). Excludes `java.lang.Object`. // ENGINE-LIMITS K18
+  /** JDK supertypes a retyped value stops being (derived from typeMap keys' class hierarchy). Excludes `java.lang.Object`.
     */
   private[transform] lazy val unmappedSupertypes: Set[String] =
     def closure(c: Class[?]): Set[String] =
@@ -1376,7 +1374,7 @@ object CollectionsTransform:
     */
   private[balticporter] val UninheritableTargets: Set[String] = Set("scala.Tuple2")
 
-  /** `java.lang.Class` — the one reified carrier java itself guarantees. // ENGINE-LIMITS K20 */
+  /** `java.lang.Class` — the one reified carrier java itself guarantees. */
   private[balticporter] val UniversalCarriers: Set[String] = Set("java.lang.Class")
 
   /** Members a retained parent declares that its mapping target cannot carry. `setValue` on `Map.Entry` is the only entry.
@@ -1397,14 +1395,13 @@ object CollectionsTransform:
     // `mutable.Buffer`: `contains`/`indexOf`/`lastIndexOf` take `A`. `remove` is deliberately NOT
     // here — scala's is `remove(Int)`, which java's `remove(Object)` does not clash with at a
     // reference argument, and where the element IS an `Integer` the phase already answers through
-    // `removeValue` (§4.4's own row).
+    // `removeValue`.
     Kind.Seq.toString -> Set(MemberSig("contains", 1), MemberSig("indexOf", 1), MemberSig("lastIndexOf", 1)),
     // a `JavaStack` IS a `mutable.ArrayBuffer`, so it inherits exactly the Seq row's three.
     Kind.Stack.toString -> Set(MemberSig("contains", 1), MemberSig("indexOf", 1), MemberSig("lastIndexOf", 1))
   )
 
   // ---- WHAT A MINTED PARENT ACTUALLY OVERRIDES ----
-  // // ENGINE-LIMITS K28
   // Table, not derivation (far side is an unparsed scala trait). Both error directions loud
   // except abstract parent strips (silent, read against error rows via members.tsv).
 
@@ -1449,7 +1446,7 @@ object CollectionsTransform:
   )
 
   /** Override surface of standalone shim targets (engine's own runtime traits). */
-  /** Shims already subsumed by a Kind's target (e.g. `JavaIterable` subsumed by any `scala.collection.Iterable`-derived target). Keyed by Kind. // ENGINE-LIMITS K28.1
+  /** Shims already subsumed by a Kind's target (e.g. `JavaIterable` subsumed by any `scala.collection.Iterable`-derived target). Keyed by Kind.
     */
   private[balticporter] val SubsumesShim: Map[String, Set[String]] = Map(
     // every one of these targets is a `scala.collection.Iterable`, which declares `iterator` — the
@@ -1497,7 +1494,7 @@ object CollectionsTransform:
 
   // ---- Surface the minted parent declares that java's member cannot satisfy ----
   // Rename java member to `<name>$java`, synthesise scala-shaped bridge.
-  // Both error directions loud. // ENGINE-LIMITS K28.1
+  // Both error directions loud.
 
   /** One bridged member: scala name/arity, with `from` = java member preference list to delegate to. `from = Nil` means unconditional (no java counterpart; body from `JavaCollections`).
     */
@@ -1513,7 +1510,7 @@ object CollectionsTransform:
     Kind.Map.toString -> List(
       // MapOps.put is concrete and returns Option[V]; java's returns the value or null.
       Bridged("put", 2, List(ExternalSurface.Member("put", 2)), required = false),
-      // MapOps.get is abstract and takes K; java's takes Object on purpose (K24) — a legal overload pair.
+      // MapOps.get is abstract and takes K; java's takes Object on purpose — a legal overload pair.
       Bridged("get", 1, List(ExternalSurface.Member("get", 1, ObjectArg))),
       // Growable.addOne / Shrinkable.subtractOne ride on the two rows above; no java member is named for them.
       Bridged("addOne", 1, List(ExternalSurface.Member("put", 2))),
@@ -1571,7 +1568,7 @@ object CollectionsTransform:
       ExternalSurface.Member("remove", 1, ObjectArg),
       ExternalSurface.Member("iterator", 0)
     ),
-    // SeqOps.size is final — the rename is the only repair there is here. ENGINE-LIMITS K28
+    // SeqOps.size is final — the rename is the only repair there is here.
     Kind.Seq.toString -> Set(
       ExternalSurface.Member("size", 0),
       ExternalSurface.Member("remove", 1, IntArg),
@@ -1581,14 +1578,13 @@ object CollectionsTransform:
     )
   )
 
-  /** the SUFFIX a captured java member is renamed with. `$java` and not `$1` or a counter: an emitted name keyed on anything wider than the declaration that holds it turns `members.tsv` into churn
-    * (`ENGINE-LIMITS.md` M10).
+  /** the SUFFIX a captured java member is renamed with. `$java` and not `$1` or a counter: an emitted name keyed on anything wider than the declaration that holds it turns `members.tsv` into churn.
     */
   private[balticporter] val BridgeSuffix = "$java"
 
   // the JDK defaults a re-parenting removes — licensed per-member by the JDK body reaching only
   // public virtual members of the receiver (ArrayList.clone/AbstractList.subList read fields
-  // instead and are refused via superPlaced). ENGINE-LIMITS K29
+  // instead and are refused via superPlaced).
 
   /** member NAME → the [[balticporter.runtime.JavaCollections]] helper that reproduces its `java.util.AbstractCollection` default.
     */
@@ -1599,8 +1595,8 @@ object CollectionsTransform:
     "retainAll" -> "retainAll"
   )
 
-  /** the body each entry above stands for, from the JDK's own source, so the licence is readable at the emitted call. Rendered into the decision (§4.575). Every member named is public and virtual on
-    * the receiver, which IS the argument.
+  /** the body each entry above stands for, from the JDK's own source, so the licence is readable at the emitted call. Rendered into the decision. Every member named is public and virtual on the
+    * receiver, which IS the argument.
     */
   private[balticporter] val VirtualJdkDefaultBodies: Map[String, String] = Map(
     "containsAll" -> "for (Object e : c) if (!contains(e)) return false; return true;",
@@ -1663,7 +1659,7 @@ object CollectionsTransform:
       "entrySetView",
       "optionalOrElse",
       // the three mutable.Buffer members a re-parented java.util.List owes with no java
-      // counterpart (K28.1). Named buffer* to avoid an ambiguity with insertAll's own overload.
+      // counterpart. Named buffer* to avoid an ambiguity with insertAll's own overload.
       "bufferRemoveRange",
       "bufferInsertAll",
       "bufferPatchInPlace"
@@ -1791,7 +1787,7 @@ object CollectionsTransform:
       "removeAll",
       "retainAll",
       "ensureCapacity",
-      // java's bidirectional cursor; only on Kind.Seq since only List declares it. K23
+      // java's bidirectional cursor; only on Kind.Seq since only List declares it.
       "listIterator",
       // spliterator's own ORDERED|SIZED|SUBSIZED characteristics, not an asJava wrapper's.
       "spliterator"
@@ -1846,7 +1842,7 @@ object CollectionsTransform:
       shimMembers = RuntimeArtifact.concreteMembers.view.mapValues(_.map(_._1)).toMap,
       iterableShim = Some(JavaIterableFqn),
       // `new` on a retyped type is rewritten by three paths, none a member table entry — a
-      // constructor is not a member call. ENGINE-LIMITS K11
+      // constructor is not a member call.
       constructors = true
     )
 

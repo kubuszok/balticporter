@@ -21,7 +21,7 @@ final class ClassTableTransform private (private[transform] val entries: List[Cl
 
   def name: String = "class-table"
 
-  /** What the run resolved each declared key to, before the pipeline started — the only thing this phase learns about which members its keys name. CLAUDE.md §4.56
+  /** What the run resolved each declared key to, before the pipeline started — the only thing this phase learns about which members its keys name.
     */
   private var bound:   Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
   private var records: List[PolicyBinder.Record]                    = Nil
@@ -34,7 +34,7 @@ final class ClassTableTransform private (private[transform] val entries: List[Cl
     records = binder.recordsFor(name)
 
   /** The redirect table is part of the emitted surface a dependent module must match; sorted so two agreeing manifests compare equal regardless of map iteration order. An entry's scope contributes
-    * NOTHING while it is the unrestricted default (§1(b)'s fingerprint no-op rule).
+    * NOTHING while it is the unrestricted default.
     */
   def surfaceFingerprint: String =
     entries
@@ -45,8 +45,8 @@ final class ClassTableTransform private (private[transform] val entries: List[Cl
       .sorted
       .mkString(",")
 
-  /** Independent callees UNION. The SAME callee at a DIFFERENT table composes only where the two scopes are DISJOINT — no site can then be claimed twice — and REFUSES where they overlap
-    * (`ENGINE-LIMITS.md` P10, D12): two tables over one call is a conflict only a human resolves.
+  /** Independent callees UNION. The SAME callee at a DIFFERENT table composes only where the two scopes are DISJOINT — no site can then be claimed twice — and REFUSES where they overlap: two tables
+    * over one call is a conflict only a human resolves.
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: ClassTableTransform =>
@@ -141,7 +141,7 @@ final class ClassTableTransform private (private[transform] val entries: List[Cl
       }.toMap
 
       // CLASSIFY every call site FIRST: the scope is read through the DECLARATION the call is in,
-      // never through the call node, so a narrowed scope leaves a site java's own (§1(b)).
+      // never through the call node, so a narrowed scope leaves a site java's own.
       program.units.foreach { u =>
         val subject = program.symbolOf(u.symbol).map(_.fullName).getOrElse("")
         StandardTraversal.scanClassDef(u, ()) {
@@ -194,6 +194,6 @@ final class ClassTableTransform private (private[transform] val entries: List[Cl
 
 object ClassTableTransform:
 
-  /** One redirect: `from` and `to` are `owner#member`, `scope` is WHERE it applies. A list and not a map, so one callee can carry two tables over disjoint scopes (`ENGINE-LIMITS.md` P10).
+  /** One redirect: `from` and `to` are `owner#member`, `scope` is WHERE it applies. A list and not a map, so one callee can carry two tables over disjoint scopes.
     */
   final case class Entry(from: String, to: String, scope: RuleScope)

@@ -5,11 +5,11 @@ import balticporter.tir.*
 
 /** GLOBALS → CONTEXT: a Java class whose `static` state is an ambient CONTEXT becomes a value threaded through the program as a Scala 3 `using` parameter, found by a five-edge closure over
   * [[ContextNeed]] and rewritten through [[ContextHolder]]'s member map. A class/field initialiser is a BOUNDARY; a framework-constructed class takes [[ContextHolder.selfSupplied]] instead of a
-  * clause. CLAUDE.md §1(b), §1.5; `ENGINE-LIMITS.md` CT4, CT6, CT7, CT8, CT9.
+  * clause.
   */
 final class GlobalsToImplicitsTransform(
   val holders: List[ContextHolder] = Nil,
-  /** the per-declaration half of a holder the BASE declares; empty in a base. ENGINE-LIMITS CT8 */
+  /** the per-declaration half of a holder the BASE declares; empty in a base. */
   val extensions: List[ContextHolderExtension] = Nil,
   /** Adds `(using GivenType[T])` to a class's constructors, `T` its own type parameter at a given index. Keyed on the class's upstream FQN; value is the given type FQN, optionally suffixed `:N` for
     * the type-parameter index (0-based, default 0). Propagates to subclass constructors through `extends`. Empty map is the no-op.
@@ -29,11 +29,11 @@ final class GlobalsToImplicitsTransform(
     */
   def accountedBy: Set[String] = Set(ContextSeamCheck.Name)
 
-  /** policy keys are written in the UPSTREAM namespace; package rename runs LAST (§4.56). */
+  /** policy keys are written in the UPSTREAM namespace; package rename runs LAST. */
   override def runsBefore: Set[String] = Set("package-rename")
 
   /** a call a port SUBSTITUTED is never a global read: the threading closure must see the calls as they will be emitted, or a class whose only read was the replaced call keeps a clause nothing
-    * supplies (`PROGRESS.md` §13.31 step 2; the merged instance sits at the EARLIEST declared slot, so declaration order alone cannot place it).
+    * supplies (the merged instance sits at the EARLIEST declared slot, so declaration order alone cannot place it).
     */
   override def runsAfter: Set[String] = Set("call-site-substitution")
 
@@ -45,8 +45,8 @@ final class GlobalsToImplicitsTransform(
   private lazy val dangling: List[ContextHolderExtension] =
     extensions.filterNot(e => holders.exists(_.holder == e.holder))
 
-  /** the effective policy, sorted and rendered — two modules that agree must compare equal (§1.5). Read off [[effectiveHolders]] so a holder stated inline and one stated as holder+extension
-    * fingerprint the same.
+  /** the effective policy, sorted and rendered — two modules that agree must compare equal. Read off [[effectiveHolders]] so a holder stated inline and one stated as holder+extension fingerprint the
+    * same.
     */
   def surfaceFingerprint: String =
     val rg = if requiredGivens.isEmpty then "" else "|rg=" + requiredGivens.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
@@ -64,9 +64,8 @@ final class GlobalsToImplicitsTransform(
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
 
-  /** THE MERGE CONTRACT (DESIGN.md §8.13); division is `ContextHolder.sharedSurface`. Holders UNION by FQN, adding a one-side-only holder; a holder BOTH sides declare must AGREE on shared surface or
-    * the merge refuses; `sites`/`selfSupplied` UNION, refusing same-key-different-value. `added` is every subject the later instance holds that this one did not — what `SurfaceFold` screens against
-    * `governs`.
+  /** THE MERGE CONTRACT; division is `ContextHolder.sharedSurface`. Holders UNION by FQN, adding a one-side-only holder; a holder BOTH sides declare must AGREE on shared surface or the merge refuses;
+    * `sites`/`selfSupplied` UNION, refusing same-key-different-value. `added` is every subject the later instance holds that this one did not — what `SurfaceFold` screens against `governs`.
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: GlobalsToImplicitsTransform =>
@@ -167,11 +166,11 @@ final class GlobalsToImplicitsTransform(
   private var boundPromote: Map[String, Set[SymId]]               = Map.empty
   private var boundForce:   Map[String, Set[SymId]]               = Map.empty
 
-  /** `sites` entries resolved per holder: key -> symbols named. Used for the CT6 dead-binding report and as a `lazy-init` entry's candidate subjects.
+  /** `sites` entries resolved per holder: key -> symbols named. Used for the dead-binding report and as a `lazy-init` entry's candidate subjects.
     */
   private var boundSites: Map[String, Map[String, List[SymId]]] = Map.empty
 
-  /** `selfSupplied` entries resolved per holder: TYPE symbol -> its policy key (§4.575). */
+  /** `selfSupplied` entries resolved per holder: TYPE symbol -> its policy key. */
   private var boundSelf: Map[String, Map[SymId, String]] = Map.empty
 
   /** `retain` entries resolved per holder: TYPE symbol -> the policy key that named it. */
@@ -208,7 +207,7 @@ final class GlobalsToImplicitsTransform(
             "engine refuses. Map at least one static onto a path on the context type"
         )
 
-      // class attachment: the constructor region (DESIGN.md §8.2) owns its emission — ENGINE-LIMITS CT4
+      // class attachment: the constructor region owns its emission
 
       h.context match
         case ContextType.Minted(fqn) =>
@@ -252,7 +251,7 @@ final class GlobalsToImplicitsTransform(
         h.sites.keys.toList.sorted.flatMap(k => binder.bindMembers(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.sites", k).toOption.map(hits => k -> hits.flatMap(_.sym))).toMap
       )
 
-      // THE THIRD ANSWER's keys are TYPE keys (`ENGINE-LIMITS.md` CT7): the shape is a class a
+      // THE THIRD ANSWER's keys are TYPE keys: the shape is a class a
       // framework CONSTRUCTS, so what a port names here is a type. A member key would be a different
       // question (a method a framework CALLS reflectively) with a different answer, and `bindType`
       // reports the `#` form as malformed rather than guessing which was meant.
@@ -276,7 +275,7 @@ final class GlobalsToImplicitsTransform(
       // …and `retain`'s keys are TYPE keys for the same reason, with the VALUE screened here rather
       // than at emission: it is spliced into a `val <name>:` header, so anything that is not a plain
       // identifier is a SYNTAX error in the emitted file — an error scalac reports at a line the port
-      // never wrote, which is the one shape §4.45 says a policy must not produce.
+      // never wrote, which is the one shape a policy must not produce.
       h.retain.toList.sorted.foreach { (t, nm) =>
         if !isPlainIdentifier(nm) then
           malformedEntry(
@@ -399,7 +398,6 @@ final class GlobalsToImplicitsTransform(
       PolicyReport(malformed ++ danglingFindings ++ refusals.toList ++ deadSites.toList)
 
   /** an extension naming a holder nothing in the chain declares — `PolicyBinder` cannot see this, since the extension's own keys bind against a program that has them; it is the HOLDER that's missing.
-    * ENGINE-LIMITS CT8
     */
   private def danglingFindings: List[PolicyFinding] = dangling.map { e =>
     PolicyFinding(
@@ -423,7 +421,7 @@ final class GlobalsToImplicitsTransform(
   private val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
 
   /** a bound `sites` entry that selected no site — `bindMembers` asks whether the program declares the member, not whether the run ever reaches it, so this reports the residue that binding alone
-    * cannot see. Only entries whose binding succeeded are reported, so a truly absent member is reported once, by the binder, and not twice. ENGINE-LIMITS CT6
+    * cannot see. Only entries whose binding succeeded are reported, so a truly absent member is reported once, by the binder, and not twice.
     */
   private val deadSites = collection.mutable.ListBuffer.empty[PolicyFinding]
 
@@ -457,7 +455,7 @@ final class GlobalsToImplicitsTransform(
 
   private val seamLog = collection.mutable.ListBuffer.empty[ContextSeamCheck.Finding]
 
-  /** every seam this run drew, restricted to the units it actually emits — a dependent's `Program` holds its base's units too, and a seam inside one of those is the base's finding. ENGINE-LIMITS D2
+  /** every seam this run drew, restricted to the units it actually emits — a dependent's `Program` holds its base's units too, and a seam inside one of those is the base's finding.
     */
   def seams(program: Program, units: List[Tree.ClassDef]): List[ContextSeamCheck.Finding] =
     val own = units.map(_.symbol).toSet
@@ -654,7 +652,7 @@ final class GlobalsToImplicitsTransform(
     val cacheOf: Map[SymId, String] =
       boundCache.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.cache.get(k).map(s -> _))
 
-    /** the types a `cache` entry actually minted on — complements the dead-binding report, since a `cache` key binds against a real class whether or not the closure threaded it. ENGINE-LIMITS CT6
+    /** the types a `cache` entry actually minted on — complements the dead-binding report, since a `cache` key binds against a real class whether or not the closure threaded it.
       */
     val cacheFired = collection.mutable.Set.empty[SymId]
 
@@ -849,7 +847,7 @@ final class GlobalsToImplicitsTransform(
     )
     need.grow()
 
-    // CT11: remove stale UnsuppliableUse seams for fields that became holders — the growth
+    // remove stale UnsuppliableUse seams for fields that became holders — the growth
     // records the seam BEFORE discoverFieldHolders resolves it, so the stale row stays.
     if need.fieldHolders.nonEmpty then
       val held = need.fieldHolders.keySet
@@ -874,7 +872,7 @@ final class GlobalsToImplicitsTransform(
       plainHops.getOrElseUpdate(id, seg)
       id
 
-    /** `scala.Predef.summon[T]`, or `T.apply()`. Built structurally, not as text — a name spliced into a string would be the one reference the package rename (§4.56) cannot see.
+    /** `scala.Predef.summon[T]`, or `T.apply()`. Built structurally, not as text — a name spliced into a string would be the one reference the package rename cannot see.
       */
     def contextExpr: Term = h.reader match
       case ContextReader.Summon =>
@@ -976,7 +974,7 @@ final class GlobalsToImplicitsTransform(
             kind = Decision.Kind.DeferredInit,
             subject = d.field,
             subjectFqn = s.fullName,
-            // no `key` in detail: `Reason.Configured` already carries it (§4.575).
+            // no `key` in detail: `Reason.Configured` already carries it.
             detail = Map(
               "from" -> (if d.clinit == SymId.None then "the field's own initialiser"
                          else "assigned by the class initialiser"),
@@ -1091,7 +1089,7 @@ final class GlobalsToImplicitsTransform(
         case _ => t
 
       /** the java static's type against the type of the member its path ends on: where an earlier phase WRAPPED that member (`getGL30(): Nullable[GL30]` under a static `GL30 gl30`), the read is
-        * unwrapped null-preservingly (`.orNull`) — the seam this rewrite creates, closed where the shapes differ by exactly one wrapper (CLAUDE.md §1(b): every seam is counted).
+        * unwrapped null-preservingly (`.orNull`) — the seam this rewrite creates, closed where the shapes differ by exactly one wrapper (every seam is counted).
         */
       private val orNullSym = mint.member("orNull", MemberKey(ctxFqn, "<orNull>").render, ctxSym, TypeRepr.NoType, Flags())
       private def unwrapIfWrapped(term: Term, path: String, staticTpe: TypeRepr, at: Origin)(using p: Program): Term =
@@ -1148,7 +1146,7 @@ final class GlobalsToImplicitsTransform(
         else t
 
       /** [[ContextHolder.cache]]: emits the private holder, the throwing accessor, and `<held> = summon[T]` at the head of every threaded METHOD this type declares. Runs ahead of the arms below, for
-        * an all-`static` holder no `threadedClasses` arm would otherwise see. A constructor is excluded — its body is the constructor region (DESIGN.md §8.2), and a cache written from one is
+        * an all-`static` holder no `threadedClasses` arm would otherwise see. A constructor is excluded — its body is the constructor region, and a cache written from one is
         * [[ContextHolder.retain]]'s question instead.
         */
       private def cached(t: Tree.ClassDef)(using Program): Tree.ClassDef =
@@ -1171,7 +1169,7 @@ final class GlobalsToImplicitsTransform(
             )
         }
 
-      /** CT11: static field constructing a threaded class becomes a holder + throwing accessor. No manifest key -- the accessor keeps the field's name. Like [[cached]], runs ahead of the arms below.
+      /** static field constructing a threaded class becomes a holder + throwing accessor. No manifest key -- the accessor keeps the field's name. Like [[cached]], runs ahead of the arms below.
         */
       private def fieldHeld(t: Tree.ClassDef)(using Program): Tree.ClassDef =
         val p        = summon[Program]
@@ -1345,7 +1343,7 @@ final class GlobalsToImplicitsTransform(
               case scala.None => t
       override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
         val t = fieldHeld(cached(captureEdit(t0)))
-        // ENGINE-LIMITS CT7: no clause anywhere; a `given` member at the HEAD of the body instead
+        // no clause anywhere; a `given` member at the HEAD of the body instead
         // (a class body is a constructor, so a use ahead of it would read `null`).
         if need.selfSuppliedClasses(t.symbol) then t.copy(body = mint.givenMembers(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin, companion = needsStaticGiven(t)) ++ t.body)
         else if !need.threadedClasses(t.symbol) then t
@@ -1392,7 +1390,7 @@ final class GlobalsToImplicitsTransform(
     val prog1  = program0.rebuilt(symbols = SymbolTable(promotedTbl.all ++ mint.minted))
     val units1 = prog1.units.map(u => deferred.apply(u)(using prog1))
     val units2 = units1.map(u => StandardTraversal.mapClassDef(rewrite, u)(using prog1))
-    // every elided alias refresh is a decision on the declaration it sat in (rules/phases.md K57)
+    // every elided alias refresh is a decision on the declaration it sat in
     // (the hop is a minted symbol with no usages: the elided line is found through the holder static it wrote)
     locally {
       val lines = aliasRefreshes.toList.map((_, at) => (at.javaPath, at.line)).toSet
@@ -1558,8 +1556,8 @@ final class GlobalsToImplicitsTransform(
         )
     }
 
-  /** One row per FRAMEWORK-INSTANTIATED type — CLAUDE.md §1(b)'s third answer, recorded. An `InjectedMember` and not a `RetypedSignature`: the signature did not move, the port gained a member
-    * instead. Subject is the TYPE, so the note sits above the emitted `class` line.
+  /** One row per FRAMEWORK-INSTANTIATED type — the third answer, recorded. An `InjectedMember` and not a `RetypedSignature`: the signature did not move, the port gained a member instead. Subject is
+    * the TYPE, so the note sits above the emitted `class` line.
     */
   private def recordSelfSupplied(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String, bound: Map[SymId, String], src: Map[SymId, String]): Unit =
     need.selfSuppliedClasses.toList.sortBy(_.raw).foreach { c =>
@@ -1714,7 +1712,7 @@ final class GlobalsToImplicitsTransform(
         )
     }
 
-  /** CT11: one `InjectedMember` row per field holder. */
+  /** one `InjectedMember` row per field holder. */
   private def recordFieldHolders(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String): Unit =
     need.fieldHolders.toList.sortBy(_._1.raw).foreach { (field, rhs) =>
       p.symbolOf(field)
@@ -1778,7 +1776,7 @@ final class GlobalsToImplicitsTransform(
       )
     }
 
-  /** A bound `selfSupplied` entry the closure never reached: emits no `given` member, so removing it changes no emitted byte — the same blindness CT6 measured for `sites`.
+  /** A bound `selfSupplied` entry the closure never reached: emits no `given` member, so removing it changes no emitted byte — the same blindness measured for `sites`.
     */
   private def recordDeadSelf(h: ContextHolder, need: ContextNeed): Unit =
     val reached = need.selfSuppliedClasses
@@ -1897,8 +1895,8 @@ object GlobalsToImplicitsTransform:
       val id = usings.getOrElseUpdate(owner, member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), scala.None, at)
 
-    /** `private given <ctx> = <the port's expression>`, at the head of a framework-instantiated type's body (ENGINE-LIMITS CT7). Anonymous and `private` for [[usingParam]]'s reasons — off the
-      * published surface. RHS is [[Tree.Opaque]] (Scala the frontend never saw), emitted verbatim and not type-checked here; the target compiler is the gate.
+    /** `private given <ctx> = <the port's expression>`, at the head of a framework-instantiated type's body. Anonymous and `private` for [[usingParam]]'s reasons — off the published surface. RHS is
+      * [[Tree.Opaque]] (Scala the frontend never saw), emitted verbatim and not type-checked here; the target compiler is the gate.
       */
     def givenMember(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin): Tree.ValDef =
       val id = givens.getOrElseUpdate(owner, member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef, Flags(isGiven = true, isPrivate = true)))
@@ -1933,8 +1931,8 @@ object GlobalsToImplicitsTransform:
     private val caches = collection.mutable.Map.empty[SymId, (SymId, SymId)]
 
     /** a PRIVATE `var` holder and a PUBLIC accessor, both `static`, on the type's companion. Two members deliberately: a public `var` would answer `null` before anything wrote it, so the accessor
-      * THROWS instead (`IllegalStateException`, java's own precondition contract, CLAUDE.md §1). The holder has no initialiser (renders as `scala.compiletime.uninitialized`, tested with `eq null`).
-      * The message names the type's SIMPLE name, stable under a package rename (§4.56).
+      * THROWS instead (`IllegalStateException`, java's own precondition contract). The holder has no initialiser (renders as `scala.compiletime.uninitialized`, tested with `eq null`). The message
+      * names the type's SIMPLE name, stable under a package rename.
       */
     def cachedContext(owner: SymId, nm: String, ctxFqn: String, ctxRef: TypeRepr, at: Origin): (Tree.ValDef, Tree.DefDef) =
       val ownerFqn    = program.symbolOf(owner).map(_.fullName).getOrElse("?")
@@ -1988,11 +1986,11 @@ object GlobalsToImplicitsTransform:
         case b: Tree.Block => b.copy(stats = store :: b.stats)
         case other => Tree.Block(List(store), other, other.tpe, other.origin)
 
-    // ---- STATIC FIELD HOLDERS (CT11) -----------------------------------------------------------
+    // ---- STATIC FIELD HOLDERS -----------------------------------------------------------
 
     private val fieldHolderCache = collection.mutable.Map.empty[SymId, (SymId, SymId)]
 
-    /** CT11: a `private var` holder + throwing `def` accessor for a static field whose initialiser constructs a threaded class. Accessor keeps the field's name. Parallel to [[cachedContext]].
+    /** a `private var` holder + throwing `def` accessor for a static field whose initialiser constructs a threaded class. Accessor keeps the field's name. Parallel to [[cachedContext]].
       */
     def fieldHolder(field: SymId, fieldTpe: TypeRepr, at: Origin): (Tree.ValDef, Tree.DefDef) =
       val sym         = program.symbolOf(field)
@@ -2040,7 +2038,7 @@ object GlobalsToImplicitsTransform:
       )
       (Tree.ValDef(hold, TypeTree(fieldTpe, at), scala.None, at), Tree.DefDef(acc, Nil, TypeTree(fieldTpe, at), Some(Tree.If(cond, boom, Tree.Ident(hold, fieldTpe, at), fieldTpe, at)), at))
 
-    /** CT11: `if (<held> eq null) { <held> = <init>; <clinit stmts> }` at the head of a threaded method. The method already has `(using T)` from the thread pass.
+    /** `if (<held> eq null) { <held> = <init>; <clinit stmts> }` at the head of a threaded method. The method already has `(using T)` from the thread pass.
       */
     def prependFieldInit(hold: SymId, rhs: Term, body: Term, clinitStmts: List[Statement] = Nil): Term =
       val tpe  = rhs.tpe
@@ -2062,7 +2060,7 @@ object GlobalsToImplicitsTransform:
         case b: Tree.Block => b.copy(stats = init :: b.stats)
         case other => Tree.Block(List(init), other, other.tpe, other.origin)
 
-    /** `eq` — reference identity, the faithful spelling of java's `== null` (CLAUDE.md §4.4). The `scala.<op>#` prefix is what the emitter reads to render an operator infix.
+    /** `eq` — reference identity, the faithful spelling of java's `== null`. The `scala.<op>#` prefix is what the emitter reads to render an operator infix.
       */
     private lazy val eqOp:             SymId    = member("eq", "scala.<op>#eq", SymId.None, TypeRepr.NoType, Flags())
     private lazy val illegalStateSym:  SymId    = tpe("IllegalStateException", "java.lang.IllegalStateException")

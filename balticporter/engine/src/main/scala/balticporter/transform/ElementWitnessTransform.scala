@@ -4,8 +4,8 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** An array whose element type is an owner's TYPE PARAMETER is allocated, copied and cleared through a WITNESS type class (`lowlevel.MkArray`-shaped) instead of `new Object[]`/`java.util.Arrays`, and
-  * the parameter's `<: java.lang.Object` bound is dropped so a primitive or opaque element is admissible. §1(b): mechanism universal; witness, member names and subjects are policy; empty
-  * `subjectTypes` is the no-op (`CLAUDE.md` §1(b), §4.56; `ENGINE-LIMITS.md` K41).
+  * the parameter's `<: java.lang.Object` bound is dropped so a primitive or opaque element is admissible. The mechanism is universal; witness, member names and subjects are policy; empty
+  * `subjectTypes` is the no-op.
   */
 final class ElementWitnessTransform(
   /** the witness type's FQN — `lowlevel.MkArray`. Empty is the no-op. */
@@ -21,16 +21,16 @@ final class ElementWitnessTransform(
   val dropBound: Set[String] = Set.empty,
   /** A library's own DEFAULT ARRAY FACTORY, which the witness subsumes: member key -> the Scala that replaces a call to it, with one hole, `{elem}`. Read at an ARGUMENT position, so the element type
     * comes from the CALLEE'S FORMAL and the replacement can name it — a fixed template resolved by inference instead resolves against the wrong scope in a constructor delegation, and Scala Native
-    * refuses the `this` it needs (PROGRESS.md §13.29).
+    * refuses the `this` it needs.
     */
   val defaultSuppliers: Map[String, String] = Map.empty,
   /** The witness for an element type that KEEPS java's `Object` bound, as Scala with one hole, `{elem}`. A class the threading cannot reach — it is not a subject, and its element type is still
-    * `<: java.lang.Object` — constructs a subject that now asks for a clause; this is the value it takes without taking a parameter (`ENGINE-LIMITS.md` CT7). Empty REFUSES and counts
-    * (`UnhandledCreation`) rather than emitting a file that cannot compile.
+    * `<: java.lang.Object` — constructs a subject that now asks for a clause; this is the value it takes without taking a parameter. Empty REFUSES and counts (`UnhandledCreation`) rather than
+    * emitting a file that cannot compile.
     */
   val boxedWitness: Option[String] = None,
   /** WHERE the rule applies. This phase MINTS a clause, so the no-op default is `Only(Set.empty)` — but `subjectTypes` already names every declaration, so the scope is a second, narrower screen a
-    * dependent uses to hold a base's type back (CLAUDE.md §1(b), D12).
+    * dependent uses to hold a base's type back.
     */
   val scope: RuleScope = RuleScope.Only(Set.empty)
 ) extends Phase,
@@ -44,15 +44,15 @@ final class ElementWitnessTransform(
 
   def name: String = "type-class-array"
 
-  /** policy keys are written in the UPSTREAM namespace; package rename runs LAST (§4.56). */
+  /** policy keys are written in the UPSTREAM namespace; package rename runs LAST. */
   override def runsBefore: Set[String] = Set("package-rename")
 
   /** after the context step: `carriesClause` reads the `MkArray` clause `requiredGivens` threads, and mints the boxed fallback only where none stands — the other order minted both, and two givens of
-    * one type made every construction ambiguous (12 errors, `PROGRESS.md` §13.31 step 2).
+    * one type made every construction ambiguous.
     */
   override def runsAfter: Set[String] = Set("globals->implicits")
 
-  /** every seam this retyping opened and could not close (CLAUDE.md §1(b)). */
+  /** every seam this retyping opened and could not close. */
   def accountedBy: Set[String] = Set(ElementWitnessCheck.Name)
 
   /** is this instance a no-op? Read by `PortRun` so an empty instance requires no lane. */
@@ -60,7 +60,7 @@ final class ElementWitnessTransform(
 
   // ---- surface ------------------------------------------------------------------------------
 
-  /** Fingerprint: witness, member names, subjects with their indexes, dropped bounds, scope. EMPTY when nothing is configured — the §1(b) fingerprint no-op rule.
+  /** Fingerprint: witness, member names, subjects with their indexes, dropped bounds, scope. EMPTY when nothing is configured — the fingerprint no-op rule.
     */
   def surfaceFingerprint: String =
     if isNoOp then ""
@@ -198,7 +198,7 @@ final class ElementWitnessTransform(
 
   private val refusalLog = collection.mutable.ListBuffer.empty[ElementWitnessCheck.Finding]
 
-  /** every refusal this run made, restricted to the units it emits — a dependent's `Program` holds its base's units too, and a refusal inside one of those is the base's finding (D2).
+  /** every refusal this run made, restricted to the units it emits — a dependent's `Program` holds its base's units too, and a refusal inside one of those is the base's finding.
     */
   def refusals(program: Program, units: List[Tree.ClassDef]): List[ElementWitnessCheck.Finding] =
     val own = units.map(_.symbol).toSet
@@ -221,7 +221,7 @@ final class ElementWitnessTransform(
     val ownedClasses: List[Tree.ClassDef] =
       program0.units.flatMap(StandardTraversal.allClassDefs(_))
 
-    /** every type parameter of an owned class whose upper bound is java's IMPLICIT `Object` — the only ones this phase may move (a bound java WROTE is a fact about the library, §4.56).
+    /** every type parameter of an owned class whose upper bound is java's IMPLICIT `Object` — the only ones this phase may move (a bound java WROTE is a fact about the library).
       */
     val objectBounded: Set[SymId] =
       ownedClasses
@@ -252,7 +252,7 @@ final class ElementWitnessTransform(
       ownedClasses.map(cd => cd.symbol -> cd.tparams.map(_.symbol)).toMap
 
     /** THE TYPE PARAMETERS whose implicit `<: java.lang.Object` bound goes — the `dropBound` entries' own (a SUBJECT's element positions, another entry's all), CLOSED under application: a parameter
-      * handed an already-unbounded argument cannot keep a bound the argument does not satisfy. An obligation this phase's own drop created (CLAUDE.md §1(b)).
+      * handed an already-unbounded argument cannot keep a bound the argument does not satisfy. An obligation this phase's own drop created.
       */
     val unboundClassTparams: Set[SymId] =
       var dropped = boundUnbound.toList.flatMap { cls =>
@@ -362,7 +362,7 @@ final class ElementWitnessTransform(
     val mint = new WitnessMinter(program0)
 
     /** `Object[] local = <element-typed array>` — java's raw view of its own array (the frontend's covariance cast). Once the element may be a PRIMITIVE the view is a run-time `ClassCastException`
-      * (an `int[]` is no `Object[]`), so such a LOCAL keeps the element type and the cast goes; a view this phase cannot repair stays counted (`ErasedArrayCast`, K41).
+      * (an `int[]` is no `Object[]`), so such a LOCAL keeps the element type and the cast goes; a view this phase cannot repair stays counted (`ErasedArrayCast`).
       */
     val retypedLocals = collection.mutable.LinkedHashMap.empty[SymId, TypeRepr]
     val pendingErased = collection.mutable.LinkedHashMap.empty[Origin, (String, String, SymId)]
@@ -393,8 +393,8 @@ final class ElementWitnessTransform(
         case _                                                          => ()
       Tree.Typed(unwrapArrayCast(t), TypeTree(arrayTpe, at), arrayTpe, at)
 
-    /** WHAT EACH CLASS MUST SUPPLY ITSELF — the element types at which a class this phase did NOT thread constructs a subject whose constructors now take a clause (`ENGINE-LIMITS.md` CT7). Rendered
-      * text, since the given is spliced: a type PARAMETER by its emitted name, anything else as `java.lang.Object`, which is what java's own raw construction meant.
+    /** WHAT EACH CLASS MUST SUPPLY ITSELF — the element types at which a class this phase did NOT thread constructs a subject whose constructors now take a clause. Rendered text, since the given is
+      * spliced: a type PARAMETER by its emitted name, anything else as `java.lang.Object`, which is what java's own raw construction meant.
       */
     val needsBoxed = collection.mutable.Map.empty[SymId, collection.mutable.LinkedHashSet[String]]
 
@@ -469,7 +469,7 @@ final class ElementWitnessTransform(
         // (4) `java.util.Arrays.fill(x, null)` / `fill(x, from, to, null)` — the same, in bulk.
         case ap @ Tree.Apply(_, args, m, _, o) if isArraysMember(program0, m, "fill") =>
           // the receiver may already carry the engine's own `asInstanceOf[Array[Object]]`, so the
-          // element is read through the cast as well as at it (CLAUDE.md §1(b): read the DECLARATION).
+          // element is read through the cast as well as at it (read the DECLARATION).
           val head = args.headOption
           head.flatMap(h => elemOf(h.tpe, elemSet).orElse(elemOf(unwrapArrayCast(h).tpe, elemSet)).map(h -> _)) match
             case Some((arr, (e, arrTpe))) if args.sizeIs == 2 && isNullLiteral(args(1)) =>
@@ -628,7 +628,7 @@ final class ElementWitnessTransform(
         case _                                               => scala.None
 
       /** An element-typed array cast to `Array[Object]` — java's RAW view of its own array, which this phase's bound drop turns into a run-time `ClassCastException` at a primitive element type.
-        * Counted, never repaired: the repair is the RECEIVER's raw type (CLAUDE.md §3).
+        * Counted, never repaired: the repair is the RECEIVER's raw type.
         */
       private def erasedArrayCast(inner: Term, target: TypeRepr, o: Origin): Unit =
         val castsToObjectArray = target match
@@ -725,7 +725,7 @@ final class ElementWitnessTransform(
         )
       val ownTps = cd.tparams.map(_.symbol).toSet
       val body   = cd.body.map(rewriteStat(_, here, fqn, unit, boundUnbound(cd.symbol), cd.symbol, ownTps, here.nonEmpty))
-      // …and the witness this class must supply itself, minted at the head of its body (CT7).
+      // …and the witness this class must supply itself, minted at the head of its body.
       val givens = needsBoxed.get(cd.symbol).toList.flatMap(_.toList).zipWithIndex.map { (elem, i) =>
         record(
           Decision(
@@ -842,7 +842,7 @@ final class ElementWitnessTransform(
 
     // ---- what the fill OWES: a class literal's payload, and java's unchecked conversion ---------
     // `mapClassDef` maps a literal's TYPE but not the type a class literal CARRIES (a reified
-    // position other phases must not touch, K18/K20 — this phase fills only what it unbound); and a
+    // position other phases must not touch — this phase fills only what it unbound); and a
     // formal filled to `C[Object]` is INVARIANT where java's raw `C` took any `C<X>` — the argument
     // gets java's own unchecked conversion (JLS 5.1.9), counted (`Issue.RawConversion`).
     val filledClasses: Set[SymId] = tparamsOfClass.collect {
@@ -942,9 +942,9 @@ final class ElementWitnessTransform(
 
     program0.rebuilt(units = units3, symbols = symbols2)
 
-  /** The policy's COMPLEMENT over every owned generic class (CLAUDE.md §4.56): a class keeping its bound that compares an element-typed value with `null` is an empty-slot sentinel no coercion moves
+  /** The policy's COMPLEMENT over every owned generic class: a class keeping its bound that compares an element-typed value with `null` is an empty-slot sentinel no coercion moves
     * (`OccupancySentinel`); a class the policy never names creating an array at its own parameter is `NonSubject`. Read off the TYPE: `x[i] == null`, `k != null`, and `while ((k = x[n]) != null)` are
-    * one question (ENGINE-LIMITS K41).
+    * one question.
     */
   private def census(program: Program): Unit =
     given Program = program
@@ -1060,7 +1060,7 @@ final class ElementWitnessTransform(
 
 object ElementWitnessTransform:
 
-  /** The witness's member names — one per operation the mechanism performs. A library naming them differently is a POLICY value, never an engine change (CLAUDE.md §1(b)).
+  /** The witness's member names — one per operation the mechanism performs. A library naming them differently is a POLICY value, never an engine change.
     */
   final case class Members(
     create:       String = "create",
@@ -1074,8 +1074,8 @@ object ElementWitnessTransform:
   object Members:
     val Default: Members = Members()
 
-  /** the `requiredGivens` entry each subject owes `GlobalsToImplicitsTransform` — the CONSTRUCTOR half of the clause, threaded by the phase that already owns that mechanism (`ENGINE-LIMITS.md` CT7).
-    * One value, two phases: a port never states the subject list twice.
+  /** the `requiredGivens` entry each subject owes `GlobalsToImplicitsTransform` — the CONSTRUCTOR half of the clause, threaded by the phase that already owns that mechanism. One value, two phases: a
+    * port never states the subject list twice.
     */
   def constructorGivens(subjectTypes: Map[String, List[Int]], witness: String): Map[String, String] =
     if witness.isEmpty then Map.empty
@@ -1085,7 +1085,7 @@ object ElementWitnessTransform:
           fqn -> idxs.distinct.sorted.map(i => s"$witness:$i").mkString("|")
       }
 
-  /** `TypeBounds` with JAVA'S IMPLICIT `Object` upper bound removed — a bound the java source WROTE (`<T extends Comparable>`) is a fact about the library and stays (CLAUDE.md §4.56).
+  /** `TypeBounds` with JAVA'S IMPLICIT `Object` upper bound removed — a bound the java source WROTE (`<T extends Comparable>`) is a fact about the library and stays.
     */
   def withoutObjectBound(program: Program, t: TypeRepr): TypeRepr = t match
     case TypeRepr.TypeBounds(lo, hi) if isObjectType(program, hi) => TypeRepr.TypeBounds(lo, TypeRepr.NoType)
@@ -1102,7 +1102,7 @@ object ElementWitnessTransform:
     case _ => false
 
   /** a member of `java.util.Arrays` — read through the OWNER SYMBOL, never off the member's own `fullName`: the frontend interns an unresolved owner as `@<id>`, so a name test on the member matches
-    * nothing at exactly the JDK calls this phase exists to rewrite (CLAUDE.md §4.56).
+    * nothing at exactly the JDK calls this phase exists to rewrite.
     */
   def isArraysMember(program: Program, m: SymId, member: String): Boolean =
     program.symbolOf(m).exists(s => s.name == member && ownerNamed(program, s, "java.util.Arrays"))

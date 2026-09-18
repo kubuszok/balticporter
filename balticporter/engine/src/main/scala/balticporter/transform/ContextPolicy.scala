@@ -2,10 +2,10 @@ package balticporter.transform
 
 import balticporter.tir.RuleScope
 
-/** The POLICY half of [[GlobalsToImplicitsTransform]] — CLAUDE.md §1(b), one value per holder, turning a static global into a threaded `using` parameter. @param holder/context/members/attach/
-  * reader/boundary/sites the threading itself (an absent field is a counted residual global)
+/** The POLICY half of [[GlobalsToImplicitsTransform]] — one value per holder, turning a static global into a threaded `using` parameter. @param holder/context/members/attach/ reader/boundary/sites
+  * the threading itself (an absent field is a counted residual global)
   * @param selfSupplied/retain/cache
-  *   escape hatches for a caller the closure cannot reach (`ENGINE-LIMITS.md` CT7/CT8) @param promoteToClass explicit class promotions @param scope the standard grammar.
+  *   escape hatches for a caller the closure cannot reach @param promoteToClass explicit class promotions @param scope the standard grammar.
   */
 final case class ContextHolder(
   holder:       String,
@@ -19,24 +19,24 @@ final case class ContextHolder(
   retain:       Map[String, String] = Map.empty,
   cache:        Map[String, String] = Map.empty,
   /** TYPE -> the name of its OWN member (a field or stored constructor parameter) whose type is a mapped static's: reads of that static, and of paths under it, go through `this.<member>` and seed no
-    * clause — the shape a hand port gives a class already handed the service (`GLProfiler(graphics)`). Per-declaration; a dependent may add entries (DESIGN.md §8.4).
+    * clause — the shape a hand port gives a class already handed the service (`GLProfiler(graphics)`). Per-declaration; a dependent may add entries.
     */
   through: Map[String, String] = Map.empty,
   /** TYPE -> `"<static>.<method>() as <param> = <default>"`: the VALUE a mapped static's nullary method yields becomes a `protected var <param>` of the type plus a companion `apply` per constructor
     * taking it last; reads inside the type go to the field, generated callers pass the context's value at construction (the read moves from use to construction — the hand port's shape,
-    * `FileHandle(file, type, externalStoragePath)`). Per-declaration (DESIGN.md §8.4).
+    * `FileHandle(file, type, externalStoragePath)`). Per-declaration.
     */
   capture:        Map[String, String] = Map.empty,
   promoteToClass: Set[String] = Set.empty,
   forceThread:    Set[String] = Set.empty,
   scope:          RuleScope = RuleScope.everywhere
 ):
-  /** a stable, order-independent rendering — two modules that agree must compare equal (§1.5). */
+  /** a stable, order-independent rendering — two modules that agree must compare equal. */
   def fingerprint: String =
     s"$sharedSurface|${ContextHolder.perDeclaration(sites, selfSupplied, retain, cache, through, capture)}"
 
-  /** THE HALF A DEPENDENT MAY NOT RESTATE — `ENGINE-LIMITS.md` CT8. These fields are facts about the EMITTED SIGNATURES of the types this policy threads, so a base and dependent must AGREE (§1.5) —
-    * except `promoteToClass`/`scope`, which compose by ENTRY since both key on types a dependent may itself own.
+  /** THE HALF A DEPENDENT MAY NOT RESTATE. These fields are facts about the EMITTED SIGNATURES of the types this policy threads, so a base and dependent must AGREE — except `promoteToClass`/`scope`,
+    * which compose by ENTRY since both key on types a dependent may itself own.
     */
   def sharedSurface: String =
     val ms = members.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
@@ -72,7 +72,7 @@ object ContextHolder:
     val fs = selfSupplied.toList.map((k, v) => s"$k=>${v.hashCode.toHexString}").sorted.mkString(",")
     val rs = retain.toList.map((k, v) => s"$k~$v").sorted.mkString(",")
     // `retain` and `cache` are separate segments: two different emissions, so one type keyed in
-    // both is two members, not a contradiction. Segment omitted when empty (CLAUDE.md §1(b)'s
+    // both is two members, not a contradiction. Segment omitted when empty (the
     // no-op rule read at the fingerprint) so an unused key taxes no baseline.
     val cs = cache.toList.map((k, v) => s"$k^$v").sorted.mkString(",")
     val ts = through.toList.map((k, v) => s"$k@$v").sorted.mkString(",")
@@ -80,9 +80,8 @@ object ContextHolder:
     s"$ss|$fs|$rs" + (if cs.isEmpty then "" else s"|$cs") + (if ts.isEmpty then "" else s"|$ts") +
       (if ps.isEmpty then "" else s"|$ps")
 
-/** WHAT A DEPENDENT MAY ADD to a base's holder — `ENGINE-LIMITS.md` CT8. [[ContextHolder]] is SHARED SURFACE (§1.5); `sites`/`selfSupplied` key on DECLARATIONS a dependent may itself own, so an
-  * extension has no field to restate the shared half in — structural, not convention. In config, a `holders` entry with no `context` block IS an extension. A holder no chain manifest declares is a
-  * counted `Malformed`.
+/** WHAT A DEPENDENT MAY ADD to a base's holder. [[ContextHolder]] is SHARED SURFACE; `sites`/`selfSupplied` key on DECLARATIONS a dependent may itself own, so an extension has no field to restate the
+  * shared half in — structural, not convention. In config, a `holders` entry with no `context` block IS an extension. A holder no chain manifest declares is a counted `Malformed`.
   */
 final case class ContextHolderExtension(
   holder:       String,

@@ -5,7 +5,7 @@ import balticporter.tir.*
 
 /** Calls into a DROPPED type follow the INJECTED file's spelling: a java getter/setter of a type the port replaced (`Pixmap.getWidth()` against sge's `Pixmap` with `width`) is renamed on the SYMBOL —
   * never emitted as a declaration, rendered at every use — when the injected surface lacks the java name at that arity but spells the property (`x`, `x_=`, `x(i)`). The emitter's arity follow
-  * (`InjectedSurface.memberHasParens`) then drops the `()`. Derived, no key; §1(a): a replacement's surface is a fact the port already stated by injecting it. `PROGRESS.md` §13.31.
+  * (`InjectedSurface.memberHasParens`) then drops the `()`. Derived, no key: a replacement's surface is a fact the port already stated by injecting it.
   */
 final class InjectedSurfaceFollowTransform(
   surface: InjectedSurface.Surface,

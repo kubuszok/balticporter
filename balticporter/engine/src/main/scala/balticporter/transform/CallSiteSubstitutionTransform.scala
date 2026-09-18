@@ -3,9 +3,9 @@ package balticporter.transform
 import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy }
 import balticporter.tir.*
 
-/** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the call-level twin of [[MethodBodyTransform]] (`ENGINE-LIMITS.md` D7). A key is a [[MemberKey]] naming the
-  * resolved callee (exact — else arity-ambiguous); the value is a template with `{recv}`, `{arg0}`…`{argN}`, `{{`/`}}`, parsed once, spliced as a [[Tree.Opaque]] over terms. §1(b): mechanism
-  * universal, `calls` per-library; every refusal counted, not approximated.
+/** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the call-level twin of [[MethodBodyTransform]], used where a base drops a member a dependent still calls and
+  * only that one call, never the whole declaration, can be rewritten. A key is a [[MemberKey]] naming the resolved callee (exact — else arity-ambiguous); the value is a template with `{recv}`,
+  * `{arg0}`…`{argN}`, `{{`/`}}`, parsed once, spliced as a [[Tree.Opaque]] over terms. Mechanism universal, `calls` per-library; every refusal counted, not approximated.
   */
 final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name: String = "call-site-substitution"
@@ -13,7 +13,7 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
   import CallSiteSubstitutionTransform.{ Bound as BoundCall, Setting, Template, receiverOf, siteFault }
 
   // -------------------------------------------------------------------------
-  // BINDING — every question about what a key names is answered here, once (§8.1)
+  // BINDING — every question about what a key names is answered here, once
   // -------------------------------------------------------------------------
 
   private var bound:     Map[String, Binding[PolicyBinder.Hit]] = Map.empty
@@ -58,7 +58,7 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
     hit.key.descriptor.map(_.arity).orElse(hit.sym.flatMap(program.symbolOf).flatMap(_.descriptor).map(_.arity))
 
   /** Can the engine prove which overload this key named? `Some(why)` when it cannot — an external member the frontend could not resolve interns with no descriptor, so a bare key matches by owner and
-    * name alone, the same string for every overload. DESIGN.md §8.1
+    * name alone, the same string for every overload.
     */
   private def exactnessFault(program: Program, hit: PolicyBinder.Hit): Option[String] =
     if hit.key.descriptor.isDefined then None
@@ -84,13 +84,13 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
     else if t.usesRecv && hit.sym.flatMap(program.symbolOf).exists(_.flags.isStatic) then Some("the template names {recv} and the callee is STATIC, so there is no receiver to splice")
     else None
 
-  /** Two modules rewriting one shared call differently produce sites that cannot compile together (§1.5), so the template is fingerprinted along with the key.
+  /** Two modules rewriting one shared call differently produce sites that cannot compile together, so the template is fingerprinted along with the key.
     */
   def surfaceFingerprint: String =
     calls.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
 
   /** Independent keys union; the same callee with a different template refuses (a conflict only a human can resolve); the same key with the same template is the one decision stated twice, accepted.
-    * The contract `MethodBodyTransform` carries, so a dependent's instance folds into the base's at the base's position instead of a fatal `SurfaceDivergence` (CLAUDE.md §1.5).
+    * The contract `MethodBodyTransform` carries, so a dependent's instance folds into the base's at the base's position instead of a fatal `SurfaceDivergence`.
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: CallSiteSubstitutionTransform =>
@@ -234,7 +234,7 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
 /** the template grammar, and the two structural questions the phase asks of a site. */
 object CallSiteSubstitutionTransform:
 
-  /** the `setting` every finding this phase makes is filed under (§4.575). */
+  /** the `setting` every finding this phase makes is filed under. */
   val Setting = "CallSiteSubstitutionTransform(calls)"
 
   /** one installed key: what an individual call site needs, resolved once at bind time. */
@@ -266,8 +266,8 @@ object CallSiteSubstitutionTransform:
     case Recv
     case Arg(index: Int)
 
-  /** A parsed expression template — literal parts interleaved with holes. Parsed once at bind time, so a template fault becomes a finding before the pipeline runs. DESIGN.md §8.1 `parts` always has
-    * exactly one more element than `holes`.
+  /** A parsed expression template — literal parts interleaved with holes. Parsed once at bind time, so a template fault becomes a finding before the pipeline runs. `parts` always has exactly one more
+    * element than `holes`.
     */
   final case class Template(parts: List[String], holes: List[Hole]):
     def usesRecv: Boolean = holes.contains(Hole.Recv)

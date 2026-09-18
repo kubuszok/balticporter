@@ -2,7 +2,7 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** BOUNDARY/seam recording (seam findings, class-file-override and bridge synthesis, uninheritable-parent restoration) split out of CollectionsTransform (context diet S3). */
+/** BOUNDARY/seam recording (seam findings, class-file-override and bridge synthesis, uninheritable-parent restoration) split out of CollectionsTransform. */
 private[transform] trait CollectionsBoundary:
   self: CollectionsTransform =>
   import CollectionsTransform.Kind
@@ -11,7 +11,7 @@ private[transform] trait CollectionsBoundary:
   def closure(program: Program): List[CollectionClosureCheck.Finding] =
     closure(program, program.units)
 
-  /** Closure check scoped to emitted units only. // ENGINE-LIMITS D2 */
+  /** Closure check scoped to emitted units only. */
   def closure(program: Program, units: List[Tree.ClassDef]): List[CollectionClosureCheck.Finding] =
     CollectionClosureCheck.check(program, units, mappedTypes, targetOf)
 
@@ -22,9 +22,9 @@ private[transform] trait CollectionsBoundary:
   /** Boundary check scoped to emitted units. [[scopedOut]] classifies scope-created seams. */
   def boundary(program: Program, units: List[Tree.ClassDef]): List[CollectionBoundaryCheck.Finding] =
     CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut, classFileOverrides) ++
-      // external seams recorded during traversal, filtered to emitted units (D2)
+      // external seams recorded during traversal, filtered to emitted units
       externalSeams.toList.filter(f => emittedPaths(units).contains(f.origin.javaPath)) ++
-      // opaque egress review list (K21) — one row per external callee, deduped per (callee, java file), D2-filtered
+      // opaque egress review list — one row per external callee, deduped per (callee, java file), filtered to emitted units
       opaqueEgressSites.toList
         .filter((k, _) => emittedPaths(units).contains(k._2))
         .groupBy((k, _) => k._1)
@@ -50,7 +50,7 @@ private[transform] trait CollectionsBoundary:
   private[transform] def memberKeyOf(m: SymId)(using p: Program): Option[String] =
     p.symbolOf(m).flatMap(c => p.symbolOf(c.owner).map(o => MemberKey(o.fullName, c.name).render))
 
-  /** Java source paths of emitted units — the D2 filter. */
+  /** Java source paths of emitted units — used to filter reports to what this run emits. */
   private[transform] def emittedPaths(units: List[Tree.ClassDef]): Set[String] =
     units.map(_.origin.javaPath).toSet
 
@@ -95,7 +95,7 @@ private[transform] trait CollectionsBoundary:
     */
   private[transform] val retargetRefusals = collection.mutable.ListBuffer[RetargetBoundaryCheck.Finding]()
 
-  /** A parent whose target cannot be inherited (e.g. `Map.Entry` to `Tuple2` which is final) is left as java's; the seam is counted. No-op when [[uninheritableSyms]] is empty. // ENGINE-LIMITS K5.7
+  /** A parent whose target cannot be inherited (e.g. `Map.Entry` to `Tuple2` which is final) is left as java's; the seam is counted. No-op when [[uninheritableSyms]] is empty.
     */
   private[transform] def restoreUninheritableParents(orig: Tree.ClassDef, mapped: Tree.ClassDef)(using Program): Tree.ClassDef =
     if uninheritableSyms.isEmpty then mapped
@@ -118,7 +118,7 @@ private[transform] trait CollectionsBoundary:
                 val target = TirPrinter.tpe(tpeOf(m), TirPrinter.Style.canonical)
                 headSym(tpeOf(m)).flatMap(summon[Program].symbolOf).map(_.fullName).flatMap(CollectionsTransform.UnsupportedOnTarget.get).foreach(unimplementable ++= _)
                 seam("parent (implements)", target, kept, orig.origin, orig.symbol, CollectionBoundaryCheck.Issue.InexpressibleParent)
-                // a porter note beside the class (§4.575) — the diff against upstream shows
+                // a porter note beside the class — the diff against upstream shows
                 // nothing at exactly the line the question is asked at.
                 record(
                   Decision(
@@ -152,14 +152,14 @@ private[transform] trait CollectionsBoundary:
       mapped.copy(parents = parents, body = body)
 
   /** Is this the interface's member, or a method that merely shares its name? Tested by the retained parent's own signature (e.g. `Map.Entry` declares exactly `setValue(V)`), never the bare name — a
-    * class may declare `setValue(int, int)` beside it, which java resolves separately. See [[CollectionsTransform.MemberSig]] for `arity`. CLAUDE.md §3
+    * class may declare `setValue(int, int)` beside it, which java resolves separately. See [[CollectionsTransform.MemberSig]] for `arity`.
     */
   private[transform] def declaresUnimplementable(d: Tree.DefDef, sigs: Set[CollectionsTransform.MemberSig])(using p: Program): Boolean =
     p.symbolOf(d.symbol).exists(s => sigs.contains(CollectionsTransform.MemberSig(s.name, d.paramss.map(_.size).sum)))
 
   /** Can this phase point at what it broke? The second condition, keeping the refusal a translation rather than a policy: `Map.Entry.setValue` throwing is conforming only for an entry that genuinely
-    * cannot perform the write, so the licence is read off the BODY (a call to a member `UnsupportedOnTarget` says the retyped receiver's target cannot express), never off the declaration (§4.56).
-    * Returns the reference found, so the decision can name what it broke.
+    * cannot perform the write, so the licence is read off the BODY (a call to a member `UnsupportedOnTarget` says the retyped receiver's target cannot express), never off the declaration. Returns the
+    * reference found, so the decision can name what it broke.
     */
   private[transform] def brokenByMapping(d: Tree.DefDef)(using p: Program): Option[String] =
     d.rhs.flatMap { body =>
@@ -179,7 +179,7 @@ private[transform] trait CollectionsBoundary:
     }
 
   /** Substitute `UnsupportedOperationException` for a member the retained parent declares and the mapping target cannot carry. Both guards required: [[declaresUnimplementable]] and
-    * [[brokenByMapping]]. // ENGINE-LIMITS K5.7
+    * [[brokenByMapping]].
     */
   private[transform] def refuseOnTarget(d: Tree.DefDef, owner: Tree.ClassDef, broke: String)(using p: Program): Tree.DefDef =
     val nm  = p.symbolOf(d.symbol).map(_.name).getOrElse("")
@@ -259,8 +259,7 @@ private[transform] trait CollectionsBoundary:
     // a held member's parameter symbols go with it, since restoreExcluded splices the original ValDefs back.
     retainedOwners = p.symbols.all.collect { case s if retainedOverrides(s.owner) => s.id }.toSet
 
-  /** is this external type one the phase's OWN tables move — so that the emitted parent is a shim and an override of its members belongs in shim shape? Read from the tables, never from the name
-    * (§4.56).
+  /** is this external type one the phase's OWN tables move — so that the emitted parent is a shim and an override of its members belongs in shim shape? Read from the tables, never from the name.
     */
   private[transform] def coveredExternally(fqn: String): Boolean =
     typeMap.contains(fqn) || effectiveRetarget.contains(fqn)
@@ -271,11 +270,11 @@ private[transform] trait CollectionsBoundary:
     p.definitionOf(graph.ownerOf(m)).exists(_.isInstanceOf[Tree.ClassDef])
 
   // -------------------------------------------------------------------------
-  // …and the MODIFIER a re-parenting invalidated — `ENGINE-LIMITS.md` K28
+  // …and the MODIFIER a re-parenting invalidated
   // -------------------------------------------------------------------------
 
   /** Strip `override` from members whose only anchor was a parent this phase re-parented and whose emitted target does not declare it. Four conjuncts: owned + `isOverride`, re-parented owner
-    * ([[parentClash]]), no program ancestor declares it, no unknown ancestor could declare it. No-op when `parentClash` is empty. // ENGINE-LIMITS K28
+    * ([[parentClash]]), no program ancestor declares it, no unknown ancestor could declare it. No-op when `parentClash` is empty.
     */
   private[transform] def strippedOverrides(before: SymbolTable)(using p: Program): Set[SymId] =
     if parentClash.isEmpty then return Set.empty
@@ -296,8 +295,8 @@ private[transform] trait CollectionsBoundary:
       .toSet
 
   /** Did this phase move `fqn` to a target THIS FILE tabulates the surface of? Deliberately not [[coveredExternally]] (a wider question whose `retarget` disjunct has no surface here — a parent moved
-    * into one is as unknown as any unparsed type, and excluding it lost an `override` that `scala.math.Ordering` really does declare). The positive test §4.56 asks for: what did the phase do, and can
-    * it answer for the result.
+    * into one is as unknown as any unparsed type, and excluding it lost an `override` that `scala.math.Ordering` really does declare). The positive test asks: what did the phase do, and can it answer
+    * for the result.
     */
   private[transform] def tabulatedTarget(fqn: String): Boolean =
     typeMap.get(fqn).exists { (tgt, k) =>
@@ -306,15 +305,14 @@ private[transform] trait CollectionsBoundary:
     }
 
   /** Does an ancestor THIS PROGRAM DECLARES declare `sig`, by name and arity, deliberately looser than the override edge? `OverrideGraph.overridden` is exact and wrong here — a java interface may
-    * permute a type-parameter name its implementor uses differently, so `overridden` answers empty for a real override. Asked at the looser key; the error direction is refusal. D1
+    * permute a type-parameter name its implementor uses differently, so `overridden` answers empty for a real override. Asked at the looser key; the error direction is refusal.
     */
   private[transform] def programAncestorDeclares(graph: OverrideGraph, owner: SymId, sig: OverrideGraph.Signature)(using Program): Boolean =
     graph.ancestorsOf(owner).exists { a =>
       graph.membersOf(a).exists(m => graph.signatureOf(m).exists(o => o.name == sig.name && o.arity == sig.arity))
     }
 
-  /** Does any parent this phase minted for `cls` declare `sig`? OR across the parents, not AND: a class routinely has several (§4.5), and one parent declaring the member is enough to keep the
-    * modifier true.
+  /** Does any parent this phase minted for `cls` declare `sig`? OR across the parents, not AND: a class routinely has several, and one parent declaring the member is enough to keep the modifier true.
     */
   private[transform] def mintedParentDeclares(cls: SymId, sig: OverrideGraph.Signature): Boolean =
     parentClash.get(cls).exists { mp =>
@@ -347,7 +345,7 @@ private[transform] trait CollectionsBoundary:
     }
 
   // -------------------------------------------------------------------------
-  // the surface the re-parenting owes. ENGINE-LIMITS K28.1
+  // the surface the re-parenting owes.
   // -------------------------------------------------------------------------
 
   /** one bridge this run will build: the class, the kind it was minted at, the parent's java type arguments, the row, and the java member the body delegates to. `rename` is `CapturedByTarget`'s
@@ -363,13 +361,13 @@ private[transform] trait CollectionsBoundary:
   private[transform] def shimSource(target: String): Set[String] =
     typeMap.collect { case (fqn, (tgt, _)) if tgt == target => fqn }.toSet
 
-  /** how many type arguments a kind's target needs before a bridge can name its key, value or element type. A RAW clause supplies none, and inventing `java.lang.Object` for them would be §4.6's
-    * fabricated fact at the emitted signature — so the whole class declines, counted.
+  /** how many type arguments a kind's target needs before a bridge can name its key, value or element type. A RAW clause supplies none, and inventing `java.lang.Object` for them would be a fabricated
+    * fact at the emitted signature — so the whole class declines, counted.
     */
   private[transform] def kindArity(k: Kind): Int = if k == Kind.Map then 2 else 1
 
   /** Which bridges this run owes — one row per (class, row) the table names and the class can answer. Asked of `declared`, never `kinds`, so the synthesis lands on the base and not on each subclass
-    * (a second copy there would define one surface twice — §1.5's shape one module in).
+    * (a second copy there would define one surface twice).
     */
   private[transform] def planBridges(p: Program): List[Bridge] =
     if parentClash.isEmpty then return Nil
@@ -435,7 +433,7 @@ private[transform] trait CollectionsBoundary:
       }
     }
 
-  /** the refusal lane: one row per bridge this run could not build, naming the guard (§3), on `collection-boundary` under its own `Issue` — the class is missing a member scalac will demand.
+  /** the refusal lane: one row per bridge this run could not build, naming the guard, on `collection-boundary` under its own `Issue` — the class is missing a member scalac will demand.
     */
   private[transform] def refuseBridge(p: Program, cls: SymId, k: Kind, guard: String, why: String): Unit =
     seam(
@@ -447,7 +445,7 @@ private[transform] trait CollectionsBoundary:
       CollectionBoundaryCheck.Issue.UnbridgedMember
     )
 
-  /** Renames every captured delegate out of the way through `MemberRenamer` (§4.55): expands through the override closure, screens for an external anchor, reads effective names parents-first.
+  /** Renames every captured delegate out of the way through `MemberRenamer`: expands through the override closure, screens for an external anchor, reads effective names parents-first.
     * `SuffixUntilFree`, not `Refuse` — the body reads the delegate's name back out of the symbol table. Refused per owning class, since half a bridged surface compiles worse than the class this
     * started from.
     */
@@ -457,7 +455,7 @@ private[transform] trait CollectionsBoundary:
     val graph  = OverrideGraph.build(p)
     val owners = bridges.filter(b => b.java != SymId.None).map(b => b.java -> b.cls).toMap
     // parents this phase removed from this class: java types the mapping re-parented away from,
-    // plus shim clauses dropSubsumedParents deleted (K28.1). Per request, not per call.
+    // plus shim clauses dropSubsumedParents deleted. Per request, not per call.
     val reParented: Set[String] = typeMap.collect {
       case (fqn, (tgt, _))
           if !CollectionsTransform.standaloneTargets(tgt) &&
@@ -490,8 +488,8 @@ private[transform] trait CollectionsBoundary:
       bridges = bridges.filterNot(b => lost.contains(b.cls))
     renamed.symbols
 
-  /** The synthesis, appended to each owning class's body — not spliced at a position, since these members have no java counterpart to sit beside and JLS 12.5's ordering rule (§4.55) has nothing to
-    * say about them.
+  /** The synthesis, appended to each owning class's body — not spliced at a position, since these members have no java counterpart to sit beside and JLS 12.5's ordering rule has nothing to say about
+    * them.
     */
   private[transform] def synthesiseBridges(units: List[Tree.ClassDef], symbols: SymbolTable)(using p: Program): (List[Tree.ClassDef], List[Symbol]) =
     if bridges.isEmpty then return (units, Nil)
@@ -542,8 +540,8 @@ private[transform] trait CollectionsBoundary:
     def opt(x: Term, of: TypeRepr): Term =
       Tree.Apply(Tree.Ident(optionSym, TypeRepr.NoType, o), List(x), optionSym, tpe(optionSym, of), o)
 
-    /** the shim result at a `scala.collection` slot. Asked of the phase's OWN record — is the head one of the shims this mapping produces — and never of the name (§4.56); a java member the mapping
-      * already retyped to a `scala.collection` type conforms as it stands.
+    /** the shim result at a `scala.collection` slot. Asked of the phase's OWN record — is the head one of the shims this mapping produces — and never of the name; a java member the mapping already
+      * retyped to a `scala.collection` type conforms as it stands.
       */
     def asIterable(x: Term, elem: TypeRepr): Term =
       if headSym(javaRes).exists(shimSyms.contains)
@@ -664,7 +662,7 @@ private[transform] trait CollectionsBoundary:
       case _ => scala.None
 
   /** DECISION PROVENANCE for one bridge — see [[Decision.Kind.BridgedMember]] for what the detail has to carry and why. `Reason.Universal`, because there is no key: java said
-    * `implements java.util.Map`, this phase chose the target, and telling the reader to edit a scope would cost them the session §4.45 is about.
+    * `implements java.util.Map`, this phase chose the target, and telling the reader to edit a scope would send them looking for a key that does not exist.
     */
   private[transform] def recordBridge(b: Bridge, sym: SymId, fqn: String, delegate: String, o: Origin): Unit =
     record(
@@ -687,7 +685,7 @@ private[transform] trait CollectionsBoundary:
       )
     )
 
-  /** Records the `super` -> `this` substitution per declaration, filtered to classes whose `super` this run substituted. ENGINE-LIMITS K29
+  /** Records the `super` -> `this` substitution per declaration, filtered to classes whose `super` this run substituted.
     */
   private[transform] def recordSuperDefaults(using p: Program): Unit =
     if superDefaults.isEmpty then return
@@ -716,8 +714,8 @@ private[transform] trait CollectionsBoundary:
       }
     }
 
-  /** One decision row per [[applyClassFileOverrides]] retention — the other §1 classification from [[recordScopedOut]], since a reader told to widen a scope that does not exist has been sent after a
-    * key nothing in the port can supply. CLAUDE.md §4.45
+  /** One decision row per [[applyClassFileOverrides]] retention — the other classification from [[recordScopedOut]], since a reader told to widen a scope that does not exist has been sent after a key
+    * nothing in the port can supply.
     */
   private[transform] def recordRetainedSignatures(before: SymbolTable)(using p: Program): Unit =
     if retainedOverrides.isEmpty then return
@@ -755,7 +753,7 @@ private[transform] trait CollectionsBoundary:
                  "pure-move flow from something it names), and a signature that moves without its " +
                  "call sites is a compile error one call away"
               )
-            // a retarget entry is per-library policy, so it may not read as the engine's own doing (§4.45).
+            // a retarget entry is per-library policy, so it may not read as the engine's own doing.
             case scala.None if retargetKeysIn(s.info).nonEmpty =>
               val ks = retargetKeysIn(s.info).toList.sorted
               (Reason.Configured(name, ks.map(k => s"$k -> ${effectiveRetarget(k)}").mkString(", ")),
@@ -789,8 +787,8 @@ private[transform] trait CollectionsBoundary:
       }
     }
 
-  /** does this signature mention one of the two ordinal-order shims anywhere inside it? Read off the phase's own mapping (§4.56) and walked with `StandardTraversal.mapType`, not a private recursion
-    * that would miss a `MethodType`'s parameters.
+  /** does this signature mention one of the two ordinal-order shims anywhere inside it? Read off the phase's own mapping and walked with `StandardTraversal.mapType`, not a private recursion that
+    * would miss a `MethodType`'s parameters.
     */
   private[transform] def mentionsOrderedShim(t: TypeRepr)(using Program): Boolean =
     val targets = Set(byScalaSym(CollectionsTransform.JavaEnumMapFqn), byScalaSym(CollectionsTransform.JavaEnumSetFqn)) - SymId.None
@@ -865,9 +863,8 @@ private[transform] trait CollectionsBoundary:
 
   // -------------------------------------------------------------------------------------------
   // ---- Reified occurrences — instanceof/cast over retyped collections ----
-  // // ENGINE-LIMITS K18
 
-  /** Wrap an external FIELD whose class-file type is a mapped collection. Uses `declaredFieldHead` (not the node type) to distinguish fields from methods. // ENGINE-LIMITS K15
+  /** Wrap an external FIELD whose class-file type is a mapped collection. Uses `declaredFieldHead` (not the node type) to distinguish fields from methods.
     */
   private[transform] def externalFieldProducer(sel: Tree.Select)(using p: Program): Term =
     if fromJavaSym == SymId.None || !externalCallee(sel.sym) then sel
@@ -890,7 +887,6 @@ private[transform] trait CollectionsBoundary:
               Tree.Apply(Tree.Ident(fromJavaSym, TypeRepr.NoType, sel.origin), List(sel), fromJavaSym, sel.tpe, sel.origin)
 
   /** Wrap an external call whose result is a collection this phase retypes. Guards: unowned callee, owner not in `typeMap`, node type is a `liveWrappable` target, type args mention nothing retyped.
-    * // ENGINE-LIMITS K6, K15
     */
   private[transform] def externalProducer(t: Tree.Apply)(using p: Program): Term =
     if fromJavaSym == SymId.None || !externalCallee(t.method) || instantiation(t) then t
@@ -941,8 +937,7 @@ private[transform] trait CollectionsBoundary:
         case _                          => false))
     }
 
-  /** Does the class file declare this callee's result to be a mapped collection? Read literally, never through `remap` (§4.56) — `None` (no signature) answers `false`, leaving the structural guess in
-    * charge.
+  /** Does the class file declare this callee's result to be a mapped collection? Read literally, never through `remap` — `None` (no signature) answers `false`, leaving the structural guess in charge.
     */
   private[transform] def declaredResultIsMapped(t: Tree.Apply)(using p: Program): Boolean =
     declaredResult(t).flatMap(headSym).flatMap(p.symbolOf).exists(s => typeMap.contains(s.fullName))
@@ -954,7 +949,7 @@ private[transform] trait CollectionsBoundary:
       case TypeRepr.PolyType(_, TypeRepr.MethodType(_, ret, _)) => ret
     }
 
-  /** True when the call reads a wildcard capture java answered with `Object` (JLS 4.4). Structural: none of the standalone shims' members return bare `Object`. // ENGINE-LIMITS G23, G33
+  /** True when the call reads a wildcard capture java answered with `Object` (JLS 4.4). Structural: none of the standalone shims' members return bare `Object`.
     */
   private[transform] def capturedObjectRead(t: Tree.Apply)(using p: Program): Boolean =
     def isObject(x: TypeRepr): Boolean =
@@ -967,7 +962,7 @@ private[transform] trait CollectionsBoundary:
     p.symbolOf(t.method).exists(_.info != TypeRepr.NoType)
 
   /** Is this a method the program does not declare, and not the collection API's own? Excludes a minted symbol, a callee owned by a mapped type or its target, an owner-less symbol, and one
-    * `[[handledStatic]]` covers (a REFUSED arm, kept under the JDK name — M6).
+    * `[[handledStatic]]` covers (a REFUSED arm, kept under the JDK name).
     */
   private[transform] def externalCallee(m: SymId)(using p: Program): Boolean =
     m != SymId.None && !ownedSym(m) && !mintedSyms.contains(m) &&
@@ -975,15 +970,15 @@ private[transform] trait CollectionsBoundary:
       !p.symbolOf(m).flatMap(c => p.symbolOf(c.owner)).exists(o => typeMap.contains(o.fullName) || retypedTargets.contains(o.fullName)) &&
       !handledStatic(m)
 
-  /** The source half: a value PRODUCED by a call this phase refused to rewrite (`Arrays.asList`, K6.5) — emitted text keeps the JDK name, node's `tpe` says `Buffer`. Read from the node alone,
-    * [[coerce]] would name the wrapper instead of the boundary (K2.5).
+  /** The source half: a value PRODUCED by a call this phase refused to rewrite (`Arrays.asList`) — emitted text keeps the JDK name, node's `tpe` says `Buffer`. Read from the node alone, [[coerce]]
+    * would name the wrapper instead of the boundary.
     */
   private[transform] def refusedRewriteSource(t: Term)(using Program): Boolean = t match
     case a: Tree.Apply => handledStatic(a.method)
     case _ => false
 
   /** Does this type mention, inside its ARGUMENTS, a type this phase produced? The node is already mapped, so a nested `java.util.List<java.util.List<String>>` reads `Buffer[Buffer[String]]` — a
-    * one-level `asScala` would leave a stale inner `List`. Walked with [[StandardTraversal.mapType]] (§3); head excluded, already established by the caller.
+    * one-level `asScala` would leave a stale inner `List`. Walked with [[StandardTraversal.mapType]]; head excluded, already established by the caller.
     */
   private[transform] def mentionsRetyped(t: TypeRepr)(using p: Program): Boolean = t match
     case TypeRepr.AppliedType(_, args) =>
@@ -1018,7 +1013,7 @@ private[transform] trait CollectionsBoundary:
       }
     opaqueEgress(t)
 
-  /** record one external seam this phase could not close, for [[boundary]] to report. A refusal that is not counted is indistinguishable from a seam that does not exist (M6).
+  /** record one external seam this phase could not close, for [[boundary]] to report. A refusal that is not counted is indistinguishable from a seam that does not exist.
     */
   private[transform] def seam(
     slot:      String,
@@ -1042,7 +1037,7 @@ private[transform] trait CollectionsBoundary:
     retargetRefusals += RetargetBoundaryCheck.Finding(issue, what, produced, slot, origin, enclosing)
 
   /** Bridge a scala collection into a shim-typed parameter, at the call site — `java.util.List` becomes `Buffer`, `java.lang.Iterable` becomes [[JavaIterable]], and together they leave the port
-    * unable to pass its own collections where java accepted `List` as `Iterable`. Both obvious repairs are dead ends (K2): `given Conversion` never fires without an overload match, and widening the
+    * unable to pass its own collections where java accepted `List` as `Iterable`. Both obvious repairs are dead ends: `given Conversion` never fires without an overload match, and widening the
     * parameter breaks iterate-and-remove bodies.
     */
   private[transform] def wrapIterableArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
@@ -1057,7 +1052,7 @@ private[transform] trait CollectionsBoundary:
         if as == t.args then t else t.copy(args = as)
 
   /** Substitute type variables in formals from this call's own argument types. Only method-owned type parameters are bound (class parameters skipped). Parameterised formals bind; bare type variables
-    * pass through unchanged. K26
+    * pass through unchanged.
     */
   private[transform] def instantiatedFormals(t: Tree.Apply, formals: List[TypeRepr])(using p: Program): List[TypeRepr] =
     if formals.sizeIs != t.args.size then formals
@@ -1096,14 +1091,14 @@ private[transform] trait CollectionsBoundary:
           case other                                     => other
         }
 
-  /** The type parameters a class declares, in order, or `Nil` for one the program does not declare (a class-file fact, §4.56, not bindable here either way).
+  /** The type parameters a class declares, in order, or `Nil` for one the program does not declare (a class-file fact, not bindable here either way).
     */
   private[transform] def classTparams(owner: SymId)(using p: Program): List[SymId] =
     classDefsBySym.get(owner).map(_.tparams.map(_.symbol)).getOrElse(Nil)
 
   /** Does this call's callee keep java formals — i.e. is its signature one this phase did not and cannot move? Three cases: the callee is a declaration this run's scope held back; the receiver
     * resolves through a held-back declaration to a java collection; or the callee is a genuine external seam ([[externalCallee]]). Not "not owned" alone: a refused `super.putAll` bridged anyway would
-    * name the helper instead of the member it could not rewrite (K6.5).
+    * name the helper instead of the member it could not rewrite.
     */
   private[transform] def keepsJavaFormals(t: Tree.Apply)(using Program): Boolean =
     literal(t.method) || externalCallee(t.method) || (t.fun match
@@ -1120,7 +1115,7 @@ private[transform] trait CollectionsBoundary:
       }
       .getOrElse(Nil)
 
-  /** The consumer half of the external seam — a value this phase retyped, at a formal it did not and cannot (a class file's, K15, or a held-back declaration's). Bridged with a live
+  /** The consumer half of the external seam — a value this phase retyped, at a formal it did not and cannot (a class file's, or a held-back declaration's). Bridged with a live
     * `JavaCollections.toJava` view. Runs where the seam count runs, never in `wrapIterableArgs`: a `java.util.*` formal may belong to a method about to be RETARGETED, and bridging first would hand
     * the rewritten call an argument its new target does not want.
     */
@@ -1133,7 +1128,7 @@ private[transform] trait CollectionsBoundary:
         // an Object formal bridges only at a CLASS FILE's slot — a scoped-out or held-back
         // declaration's own body keeps expecting what it always did
         val external = externalCallee(t.method)
-        // a declared reflective sink reads the runtime representation it is handed (K21 face 1);
+        // a declared reflective sink reads the runtime representation it is handed;
         // asked here and not in coerce, since the sink is a fact about the CALLEE
         val sink = if external then sinkOf(t.method) else scala.None
         val as   = t.args.zip(formals).map((a, f) => coerce(f, a, expectedScoped = true, expectedExternal = external, expectedSink = sink.isDefined))
@@ -1141,7 +1136,7 @@ private[transform] trait CollectionsBoundary:
         if as == t.args then t else t.copy(args = as)
 
   /** Bridge a scala collection into a shim-typed slot (argument, val, assignment, return). Wraps only when the source is a scala collection this phase introduced (`kindOf`). `Kind.Map` into
-    * `JavaCollection` is refused (java `Map` is not a `Collection`). Shims are excluded on both sides. // ENGINE-LIMITS M6
+    * `JavaCollection` is refused (java `Map` is not a `Collection`). Shims are excluded on both sides.
     */
   private[transform] def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false, expectedExternal: Boolean = false, expectedSink: Boolean = false)(using p: Program): Term =
     // the symbol table is retyped AFTER the trees, so a formal read here is still java's
@@ -1160,9 +1155,9 @@ private[transform] trait CollectionsBoundary:
     val wants                   = headSym(expected).map(scalaSym(_, expectedScoped))
     val got                     = headSym(actualT).map(scalaSym(_, actualScoped))
     // where the value is a type the PROGRAM declares, kindOf says nothing (keyed on this
-    // phase's own scala targets); mintedSourceKind reads the minted ancestry instead. K26
+    // phase's own scala targets); mintedSourceKind reads the minted ancestry instead.
     val from = got.filterNot(shimSyms.contains).flatMap(g => kindOf.get(g).orElse(mintedSourceKind(g, wants)))
-    // the slot that is literally a java collection (K15): expectedScoped means the expected
+    // the slot that is literally a java collection: expectedScoped means the expected
     // side is a scope hold-back or an external callee's formal, so a retyped value meets a
     // java.util.* that stayed and the wrap goes the other way.
     val wantsJava = expectedScoped &&
@@ -1180,11 +1175,11 @@ private[transform] trait CollectionsBoundary:
     def wantsIs(s: SymId) = s != SymId.None && wants.contains(s)
     val factory           = from match
       case _ if wants.isEmpty || refusedRewriteSource(actual) => SymId.None
-      // the egress bridge (K21 face 1), ahead of every arm below: a declared reflective sink
+      // the egress bridge, ahead of every arm below: a declared reflective sink
       // walks the whole tree where toJava is only one level. Fired on the formal, not on `from`.
       case _ if expectedSink && wantsUniversal && toJavaValueSym != SymId.None => toJavaValueSym
       // Kind.Stack rides with Kind.Seq here: JavaStack extends mutable.ArrayBuffer, so at a
-      // boundary slot it IS a Kind.Seq value and conforms to both bridges. K2.5
+      // boundary slot it IS a Kind.Seq value and conforms to both bridges.
       case Some(Kind.Seq | Kind.Stack | Kind.Set | Kind.Map) if wantsIs(javaIterableSym) => iterableFromSym
       case Some(Kind.Seq | Kind.Stack) if wantsIs(javaCollectionSym)                     => collectionFromSym
       case Some(Kind.Set) if wantsIs(javaCollectionSym)                                  => collectionFromSetSym
@@ -1193,7 +1188,7 @@ private[transform] trait CollectionsBoundary:
       case Some(Kind.Seq | Kind.Stack | Kind.Set | Kind.Map) if (wantsJava || wantsUniversal) && toJavaSym != SymId.None                 => toJavaSym
       // a Stream formal takes the collapse's result back to java; Kind.Map excluded (no stream() on java Map).
       case Some(Kind.Seq | Kind.Stack | Kind.Set) if wantsStream && toStreamSym != SymId.None => toStreamSym
-      // the retained parent's own slot (K5.7): a class keeping java's Map.Entry meets the
+      // the retained parent's own slot: a class keeping java's Map.Entry meets the
       // Tuple2 slot every use of that interface got. Decided in detachedEntriesIn, never here.
       case _
           if entryToPairSym != SymId.None &&
@@ -1207,7 +1202,7 @@ private[transform] trait CollectionsBoundary:
         iteratorFromSym
       case _ => SymId.None
     if factory == SymId.None then
-      // retarget coercion: a §1(b) parameterised boundary wrap between a retarget target and
+      // retarget coercion: a parameterised boundary wrap between a retarget target and
       // its expected type via a `retargetCoercions` template, keyed (actual FQN, expected FQN).
       if retargetCoercions.nonEmpty then
         val gotFqn   = got.flatMap(p.symbolOf).map(_.fullName)
@@ -1220,7 +1215,7 @@ private[transform] trait CollectionsBoundary:
       else actual
     else
       // typed as the RETYPED expected type, not the one read above (the symbol table retypes
-      // after the trees) — else this node would claim a java type the port no longer produces. K6
+      // after the trees) — else this node would claim a java type the port no longer produces.
       val tpe = wants.map(withHead(expected, _)).getOrElse(expected)
       Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual), factory, tpe, actual.origin)
 
@@ -1262,7 +1257,7 @@ private[transform] trait CollectionsBoundary:
               // …this class's OWN mapped clauses, and its ANCESTORS' read THROUGH the clause that
               // names them. An inherited clause with the ancestor's own variables in it is the
               // an ancestor's clause must arrive substituted into THIS class's own type variables
-              // or the emitted signature names types out of scope (§4.56); ParentSubst does it.
+              // or the emitted signature names types out of scope; ParentSubst does it.
               val declared = targets.collect {
                 case ((tgt, k), tp) if !CollectionsTransform.standaloneTargets(tgt) => k -> typeArgs(tp)
               } ++ heads.flatMap { (h, tp) =>
@@ -1284,7 +1279,7 @@ private[transform] trait CollectionsBoundary:
               val scalas = targets.collect {
                 case ((tgt, _), _) if !CollectionsTransform.standaloneTargets(tgt) => tgt
               }.toSet
-              // the duplicate relation among this class's OWN clauses only (K28.1) — an inherited
+              // the duplicate relation among this class's OWN clauses only — an inherited
               // kind's element type is the ancestor's, unsubstituted; reading it here would guess.
               val subsumed = shimParents.flatMap { (sh, shTpe) =>
                 kindParents.collectFirst {
@@ -1315,7 +1310,7 @@ private[transform] trait CollectionsBoundary:
     case TypeRepr.AppliedType(_, a :: _) => Some(a)
     case _                               => scala.None
 
-  /** every type argument the clause writes — `Nil` for a raw one, since inventing `Object` for a raw `implements Map` would be §4.6's fabricated fact.
+  /** every type argument the clause writes — `Nil` for a raw one, since inventing `Object` for a raw `implements Map` would be a fabricated fact.
     */
   private[transform] def typeArgs(t: TypeRepr): List[TypeRepr] = t match
     case TypeRepr.AppliedType(_, as) => as
@@ -1338,7 +1333,7 @@ private[transform] trait CollectionsBoundary:
       case _ => false
 
   /** Classes with a retained (uninheritable) parent where every unsupported member throws first, allowing a copy-projection to `Tuple2`. Read from ORIGINAL units (not mapped, to avoid this phase's
-    * own refuseOnTarget licensing its own projection). // ENGINE-LIMITS K5.7
+    * own refuseOnTarget licensing its own projection).
     */
   private[transform] def detachedEntriesIn(p: Program): Map[SymId, String] =
     if uninheritableSyms.isEmpty then Map.empty

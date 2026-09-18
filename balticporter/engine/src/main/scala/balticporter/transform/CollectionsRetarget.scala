@@ -2,7 +2,7 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** Per-library RETARGET mechanism (retarget/retargetRewrites/retargetTypeArgs, templates, forEach lowering, wrapReturnBoundary) split out of CollectionsTransform (context diet S3). */
+/** Per-library RETARGET mechanism (retarget/retargetRewrites/retargetTypeArgs, templates, forEach lowering, wrapReturnBoundary) split out of CollectionsTransform. */
 private[transform] trait CollectionsRetarget:
   self: CollectionsTransform =>
   import CollectionsTransform.{ JavaCollectionFqn, JavaIterableFqn, JavaIteratorFqn, Kind }
@@ -178,7 +178,7 @@ private[transform] trait CollectionsRetarget:
                     case _                                                                         => Tree.Select(recv, m, t.tpe, so)
                 else if mName == "iterator" && iteratorFromSym != SymId.None && javaIteratorSym != SymId.None then
                   // Wrap .iterator with JavaIterator.from when the caller expects JavaIterator.
-                  // K36: if this Collect block's receiver is tracked, emit a REMOVING iterator
+                  // If this Collect block's receiver is tracked, emit a REMOVING iterator
                   // that removes from the original MAP by key rather than wrapping the read-only
                   // DynamicArray snapshot.
                   headSym(t.tpe) match
@@ -271,10 +271,9 @@ private[transform] trait CollectionsRetarget:
           case None => TypeRepr.AnyBounds
 
   // ---- Reified carrier type arguments — preserved in java's namespace ----
-  // // ENGINE-LIMITS K20
 
-  /** A type test at a retarget target keeps no type ARGUMENT: java checked the erased class only, and scalac refuses an unchecked one (E092); the element kind stays untested — counted (K18). When the
-    * target head is KNOWN final and unrelated to the operand's static type the test is the literal `false` — no subclass can bridge two unrelated hierarchies (K18).
+  /** A type test at a retarget target keeps no type ARGUMENT: java checked the erased class only, and scalac refuses an unchecked one (E092); the element kind stays untested — counted. When the
+    * target head is KNOWN final and unrelated to the operand's static type the test is the literal `false` — no subclass can bridge two unrelated hierarchies.
     */
   private[transform] def wildcardReifiedTest(t: Tree.InstanceOf)(using p: Program): Term =
     t.tpt.tpe match
@@ -310,7 +309,7 @@ private[transform] trait CollectionsRetarget:
       case _ => t
 
   /** The target's ancestry IS KNOWN and does NOT include `operand`. Looks up by FQN to find the FRONTEND's SymId (the minted target SymId is distinct). A class-file fact read from what the FRONTEND
-    * interned; `false` when the ancestry is unknowable (K18, CLAUDE.md §4.56).
+    * interned; `false` when the ancestry is unknowable.
     */
   private def provablyUnrelated(target: SymId, operand: SymId)(using p: Program): Boolean =
     val targetFqn = p.symbolOf(target).map(_.fullName).getOrElse("")
@@ -333,11 +332,11 @@ private[transform] trait CollectionsRetarget:
       case None => false // no frontend symbol, ancestry unknowable
 
   /** A `classOf[T]` literal whose inner type was retarget-mapped — syncs the `const` field to match, since `mapTerm` remaps `tpe` but not the `Constant.ClassOfC` the emitter reads. Counted on
-    * `collection-retarget`: a third party sees the lls class, not the upstream one (K20).
+    * `collection-retarget`: a third party sees the lls class, not the upstream one.
     */
   private[transform] def retargetClassOf(lit: Tree.Literal, tp: TypeRepr, tpe: TypeRepr)(using p: Program): Term =
-    // maps only through retarget entries, never the JDK §1(a) table — a classOf on a JDK-table
-    // source keeps java's class (K20: a reified carrier holds java's own class; fromJava bridges at the use).
+    // maps only through retarget entries, never the JDK table — a classOf on a JDK-table
+    // source keeps java's class (a reified carrier holds java's own class; fromJava bridges at the use).
     def mapInner(t: TypeRepr): TypeRepr = t match
       case TypeRepr.TypeRef(prefix, s) if remap.get(s).exists(retargetTargetToSource.contains) =>
         TypeRepr.TypeRef(prefix, remap(s))
@@ -361,7 +360,7 @@ private[transform] trait CollectionsRetarget:
       lit.copy(const = Constant.ClassOfC(mapped))
     else lit
 
-  /** K36: record a DroppedFieldWrite decision. Side-effect-free RHS: empty opaque (emitter strips it from the statement list). Effectful RHS: bare expression statement.
+  /** record a DroppedFieldWrite decision. Side-effect-free RHS: empty opaque (emitter strips it from the statement list). Effectful RHS: bare expression statement.
     */
   private def dropWriteResult(sel: Tree.Select, srcFqn: String, dw: CollectionsTransform.RetargetRewrite.DropWrite, rhs: Term, so: Origin)(using p: Program): Option[Term] =
     val fqn = p.symbolOf(sel.sym).map(_.fullName).getOrElse(MemberKey(srcFqn, dw.field, None).render)
@@ -379,7 +378,7 @@ private[transform] trait CollectionsRetarget:
     else Some(rhs)
 
   /** A field write on a retarget target — `recv.field = value` -> `recv.method(value)` — for a java field the target exposes only as a method. Keyed on symbol via [[retargetTargetToSource]], never a
-    * name (§4.56).
+    * name.
     */
   private[transform] def retargetFieldWrite(a: Tree.Assign)(using p: Program): Option[Term] =
     if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
@@ -401,11 +400,11 @@ private[transform] trait CollectionsRetarget:
                   case None => a.rhs
                 Tree.Apply(Tree.Select(sel.qual, tgtSym, TypeRepr.NoType, a.origin), List(effectiveRhs), tgtSym, TypeRepr.NoType, a.origin)
               }
-            // K36: drop the write — the target's field is immutable. Record a decision.
+            // drop the write — the target's field is immutable. Record a decision.
             case Some(dw: CollectionsTransform.RetargetRewrite.DropWrite) =>
               dropWriteResult(sel, srcFqn, dw, a.rhs, a.origin)
             case _ =>
-              // K36: the read-side Select handler may have renamed the LHS to readTarget already
+              // the read-side Select handler may have renamed the LHS to readTarget already
               // (bottom-up traversal). Try matching the mName as a DropWrite's readTarget.
               retargetRewrites.get(srcFqn).flatMap { tbl =>
                 tbl.values.collectFirst {
@@ -488,7 +487,7 @@ private[transform] trait CollectionsRetarget:
       case _ => scala.None
 
   /** A field access on a retarget target — `entry.key` -> `entry._1`, `entry.value` -> `entry._2`. [[retargetRewrite]] handles call sites; a bare field select has no call node for it to see. Keyed on
-    * symbol (§4.56), not a name.
+    * symbol, not a name.
     */
   private[transform] def retargetSelectRewrite(sel: Tree.Select)(using p: Program): Option[Term] =
     // Entry field rewrites: .key/.value -> ._1/._2
@@ -527,19 +526,19 @@ private[transform] trait CollectionsRetarget:
               retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
                 Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
               }
-            // DropWrite read side: rename to readTarget (same as Rename). K36.
+            // DropWrite read side: rename to readTarget (same as Rename).
             case CollectionsTransform.RetargetRewrite.DropWrite(_, readTarget, _) =>
               retargetRewriteSyms.get((srcFqn, readTarget)).map { tgtSym =>
                 Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
               }
             // A chain ending in `iterator` at a retarget target: wrap with JavaIterator.from
-            // only when the SLOT expects JavaIterator, mirroring the Apply path (K36).
+            // only when the SLOT expects JavaIterator, mirroring the Apply path.
             case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, _) if members.lastOption.contains("iterator") && iteratorFromSym != SymId.None =>
               // The iterator type itself may be retargeted to scala.collection.Iterator (e.g.
               // ObjectSetIterator -> Iterator). In that case the slot accepts Iterator and
               // no JavaIterator.from wrap is needed; the return-seam coercion handles it
               // where the slot expects JavaIterator. Check the method's declared return type
-              // (sel.tpe is NoType for a Select inside an Apply). K36.
+              // (sel.tpe is NoType for a Select inside an Apply).
               val iterRetHead        = p.symbolOf(sel.sym).flatMap(s => infoResultHead(s.info))
               val iterTypeRetargeted = iterRetHead.flatMap(h => p.symbolOf(h).flatMap(s => effectiveRetarget.get(s.fullName))).isDefined
               if iterTypeRetargeted then
@@ -557,7 +556,7 @@ private[transform] trait CollectionsRetarget:
                 val retTpe = StandardTraversal.mapType(self, rawRet)
                 chainSelect(sel.qual, srcFqn, members, hasParens, sel.origin, retTpe)
               else
-                // K36: for targets supporting indexed removal, emit a removing iterator.
+                // for targets supporting indexed removal, emit a removing iterator.
                 val targetFqn      = effectiveRetarget.get(srcFqn)
                 val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(sel.qual, tgt, sel.tpe, sel.origin))
                 if removingResult.isDefined then Some(removingResult.get)
@@ -622,11 +621,11 @@ private[transform] trait CollectionsRetarget:
     }
 
   /** Rewrite `entry.setValue(v)` to `map.put(entry._1, v)` when the map is reachable from the enclosing for-each loop. Guards: map-kind source, loop-binding receiver, pure path, no reassignment.
-    * Detached entries (no loop) stay refused. `ENGINE-LIMITS.md` K2.
+    * Detached entries (no loop) stay refused.
     */
 
-  /** K36: when the emitter would render a non-Unit expression as the forEach lambda's last line, append `()` so `-Wvalue-discard` does not warn — java's for body has no value. The emitter strips a
-    * trailing `Literal(UnitC)` from a Block with stats, so the effective tail is the last stat; only non-Unit-shaped stats (Opaque/Block from a retarget Template) need the fix. K36, CLAUDE.md S4.4.
+  /** when the emitter would render a non-Unit expression as the forEach lambda's last line, append `()` so `-Wvalue-discard` does not warn — java's for body has no value. The emitter strips a
+    * trailing `Literal(UnitC)` from a Block with stats, so the effective tail is the last stat; only non-Unit-shaped stats (Opaque/Block from a retarget Template) need the fix.
     */
   private def ensureUnitBody(body: Term, so: Origin): Term =
     def mayReturnValue(s: Statement): Boolean = s match
@@ -670,7 +669,7 @@ private[transform] trait CollectionsRetarget:
       case _ if mayReturnValue(body) => appendUnit(body)
       case _                         => body
 
-  /** K36: apply `ensureUnitBody` to a non-retarget ForEach node whose body was rewritten by a Template. The emitter lowers ForEach to `.foreach { x => body }`, which discards body's value under
+  /** apply `ensureUnitBody` to a non-retarget ForEach node whose body was rewritten by a Template. The emitter lowers ForEach to `.foreach { x => body }`, which discards body's value under
     * `-Wvalue-discard` when it is not Unit.
     */
   private[transform] def ensureUnitForEachBody(fe: Tree.ForEach): Tree.ForEach =
@@ -722,7 +721,7 @@ private[transform] trait CollectionsRetarget:
     // a NESTED for-each whose inner was already lowered may have registered its Apply for
     // boundary wrapping. Collect those labels BEFORE the rewrite methods (which create new
     // tree nodes and break identity), so we can register the OUTER apply with the inner's
-    // label after construction. CLAUDE.md §4.4 (boundary interposition).
+    // label after construction (boundary interposition).
     val liftedLabels =
       if hasReturn || retFeReturnApplies.isEmpty then Nil
       else collectAndDrainNestedLabels(fe.body)
@@ -752,7 +751,7 @@ private[transform] trait CollectionsRetarget:
         // recv.foreachKey(k => body) or recv.foreachValue(v => body)
         // Derive the lambda parameter type from the RECEIVER's type arguments (one derivation),
         // not the loop variable's declared type: a TypeRedirectTransform may have narrowed the
-        // receiver's value type while the loop variable still names the parent. G2, CLAUDE.md §1(b).
+        // receiver's value type while the loop variable still names the parent.
         val paramTpe =
           if rewrite.targetMethod.contains("Key") then keyType(recv.tpe).getOrElse(fe.binding.tpt.tpe)
           else if rewrite.targetMethod.contains("Value") then valueType(recv.tpe).getOrElse(fe.binding.tpt.tpe)
@@ -822,7 +821,7 @@ private[transform] trait CollectionsRetarget:
       Some(outer)
     else Some(block)
 
-  /** `recv.entries()` outside a for-each header: an `Iterator[(K, V)]` over a snapshot taken through the 2-ary `via`; reads only, a cursor write is counted (K36). ArrayBuffer-backed, so no typeclass.
+  /** `recv.entries()` outside a for-each header: an `Iterator[(K, V)]` over a snapshot taken through the 2-ary `via`; reads only, a cursor write is counted. ArrayBuffer-backed, so no typeclass.
     */
   private[transform] def emitEntriesIterator(recv: Term, srcFqn: String, via: String, tpe: TypeRepr, so: Origin)(using p: Program): Option[Term] =
     val viaSym = retargetRewriteSyms.getOrElse((srcFqn, via), SymId.None)
@@ -857,7 +856,7 @@ private[transform] trait CollectionsRetarget:
   private[transform] def isIteratorType(t: TypeRepr)(using p: Program): Boolean =
     headSym(t).exists(h => p.symbolOf(h).exists(_.fullName == "scala.collection.Iterator"))
 
-  /** K36: emit a removing iterator for a direct `recv.iterator` on a retarget target, keyed on the target FQN. `None` for targets the shim does not support (caller falls back to read-only
+  /** emit a removing iterator for a direct `recv.iterator` on a retarget target, keyed on the target FQN. `None` for targets the shim does not support (caller falls back to read-only
     * `JavaIterator.from`).
     */
   /** A `Chain` rewrite applied at a parenless Select: `qual.m1.m2…`, each member with or without `()` as the row says; `None` when a member has no minted symbol.
@@ -898,7 +897,7 @@ private[transform] trait CollectionsRetarget:
           )
         )
       case "lowlevel.util.OrderedSet" =>
-        // K36: size and apply via orderedItems, removal via removeIndex on the SET (shrinks both).
+        // size and apply via orderedItems, removal via removeIndex on the SET (shrinks both).
         val n       = { collectSeq += 1; collectSeq }
         val tmpName = s"bp$$os$n"
         val riName  = "bp$ri"
@@ -915,8 +914,8 @@ private[transform] trait CollectionsRetarget:
         )
       case _ => scala.None
 
-  /** K36: emit a removing iterator for a map Collect whose `.iterator()` was chained — a block collecting both keys and values into parallel DynamicArrays, whose `removeAt` removes from the original
-    * map (`mapRecv`) by key and prunes both snapshots.
+  /** emit a removing iterator for a map Collect whose `.iterator()` was chained — a block collecting both keys and values into parallel DynamicArrays, whose `removeAt` removes from the original map
+    * (`mapRecv`) by key and prunes both snapshots.
     */
   private[transform] def emitRemovingIteratorForCollect(mapRecv: Term, srcFqn: String, via: String, tpe: TypeRepr, so: Origin)(using p: Program): Term =
     val isValues = via == "foreachValue"
@@ -1091,7 +1090,7 @@ private[transform] trait CollectionsRetarget:
           fe.copy(body = StandardTraversal.mapTerm(rw, fe.body))
 
   /** The map a for-loop's entry source is a view OF — this phase's own `entrySet()` rewrite, whichever shape it took: an application of the `entrySetView` symbol this run minted, or (where that
-    * helper is absent) a source retyped to `Kind.Map`. §4.56: asked of the phase's own record, never a name.
+    * helper is absent) a source retyped to `Kind.Map`. Asked of the phase's own record, never a name.
     */
   private[transform] def entrySource(src: Term)(using Program): Option[Term] = src match
     case Tree.Apply(_, List(m), f, _, _) if f != SymId.None && f == sym("entrySetView") => Some(m)
@@ -1106,8 +1105,8 @@ private[transform] trait CollectionsRetarget:
     case Tree.Select(q, _, _, _)      => purePath(q)
     case _                            => false
 
-  /** is `s` the target of an assignment anywhere under `body`? `StandardTraversal`'s walk, per CLAUDE.md §3 — a hand-rolled recursion that stopped one node short would answer "no" for the shape this
-    * test exists to catch.
+  /** is `s` the target of an assignment anywhere under `body`? `StandardTraversal`'s walk — a hand-rolled recursion that stopped one node short would answer "no" for the shape this test exists to
+    * catch.
     */
   private[transform] def reassigned(s: SymId, body: Term)(using Program): Boolean =
     var hit  = false
@@ -1130,7 +1129,7 @@ private[transform] trait CollectionsRetarget:
     case x: Tree.ForEach      => x.copy(body = coerceReturns(want, x.body))
     case x: Tree.Synchronized => x.copy(body = coerceReturns(want, x.body))
     case x: Tree.Labeled      => x.copy(stmt = coerceReturns(want, x.stmt))
-    // must read through the comment wrapper (§4.58) — a return under a comment is still a return
+    // must read through the comment wrapper — a return under a comment is still a return
     case x: Tree.Commented => x.copy(stmt = coerceReturns(want, x.stmt))
     case x: Tree.Try       =>
       x.copy(
@@ -1242,7 +1241,7 @@ private[transform] trait CollectionsRetarget:
       val baseName = renderTypeForBoundary(tc)
       s"$baseName[${args.map(renderTypeForBoundary).mkString(", ")}]"
     // a wildcard type argument is a TypeBounds in the TIR; render as `?` with its bounds so
-    // boundary[BaseLight[?]] is legal — writable inside an argument position (CLAUDE.md §4.56).
+    // boundary[BaseLight[?]] is legal — writable inside an argument position.
     case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => "?"
     case TypeRepr.TypeBounds(TypeRepr.NoType, hi)              => s"? <: ${renderTypeForBoundary(hi)}"
     case TypeRepr.TypeBounds(lo, TypeRepr.NoType)              => s"? >: ${renderTypeForBoundary(lo)}"
@@ -1277,7 +1276,7 @@ private[transform] trait CollectionsRetarget:
   private[transform] var templateSeq: Int = 0
 
   /** Renders a `RetargetRewrite.Template(expr)` into a `Tree.Opaque.spliced` (or a `Tree.Block` wrapping one when temp `val` bindings are needed for repeated term placeholders). Type-level
-    * placeholders (`$Target`, `$T0`…) are text-substituted; term-level ones (`$recv`, `$0`…) become AST holes. A term placeholder used more than once is bound to a `val` (CLAUDE.md §4.4/F7).
+    * placeholders (`$Target`, `$T0`…) are text-substituted; term-level ones (`$recv`, `$0`…) become AST holes. A term placeholder used more than once is bound to a `val` to avoid double side effects.
     */
   private[transform] def renderTemplate(expr: String, recv: Term, args: List[Term], srcFqn: String, tpe: TypeRepr, so: Origin)(using p: Program): Term =
     // $Target is text-only; also check retarget (not just typeMap) or it resolves to the source FQN.
@@ -1388,9 +1387,9 @@ private[transform] trait CollectionsRetarget:
       }
       Tree.Block(stmts, opaque, tpe, so)
 
-  /** The value's own minted ancestry, as a coercion source — K26's `DeclaredSubtype` half. `coerce` reads a source's kind out of `kindOf`, keyed on the phase's own scala targets, so it answers `None`
+  /** The value's own minted ancestry, as a coercion source — the `DeclaredSubtype` half. `coerce` reads a source's kind out of `kindOf`, keyed on the phase's own scala targets, so it answers `None`
     * for a type the PROGRAM declares (java's `Set <: Collection` edge has no image). `None` where the value already conforms. Which kind, where a class carries two, is [[Kind]]'s own declaration
-    * order (deterministic), never a `Set`'s iteration order (K26).
+    * order (deterministic), never a `Set`'s iteration order.
     */
   private[transform] def mintedSourceKind(head: SymId, wants: Option[SymId]): Option[Kind] =
     parentClash
@@ -1449,7 +1448,7 @@ private[transform] trait CollectionsRetarget:
                   }
                 case _ =>
                   // non-literal boolean: emit `if (flag) recv.onTrue(args) else recv.onFalse(args)`,
-                  // evaluate-once binding for receiver and args (CLAUDE.md §4.4/F7).
+                  // evaluate-once binding for receiver and args.
                   (retargetRewriteSyms.get((srcFqn, onTrue)), retargetRewriteSyms.get((srcFqn, onFalse))) match
                     case (Some(trueSym), Some(falseSym)) =>
                       val n         = { templateSeq += 1; templateSeq }
@@ -1521,7 +1520,7 @@ private[transform] trait CollectionsRetarget:
                   case Some(h) if p.symbolOf(h).exists(s => s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator") => true
                   case _                                                                                                                             => false
                 if wantsJavaIterator then
-                  // K36: for targets supporting indexed removal, emit a removing iterator over the
+                  // for targets supporting indexed removal, emit a removing iterator over the
                   // receiver rather than a read-only JavaIterator.from wrapping.
                   val targetFqn      = effectiveRetarget.get(srcFqn)
                   val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(recv, tgt, t.tpe, so))
@@ -1598,7 +1597,7 @@ private[transform] trait CollectionsRetarget:
                 case _ => Nil
               // derive element type from a dropped supplier argument: a raw-type constructor
               // interns with no/Object type arg, but a dropped Sprite[]::new MethodRef's
-              // qualifier carries the real component type — use it rather than fabricate [Object]. §4.56
+              // qualifier carries the real component type — use it rather than fabricate [Object].
               val targs: List[TypeTree] =
                 // `[Object]` is what the frontend's unchecked conversion fills a RAW `new` with;
                 // it is not a fact about the element and is replaced exactly as `Nil` is.

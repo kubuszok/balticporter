@@ -4,10 +4,10 @@ import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.tir.*
 import balticporter.tir.Tree.*
 
-/** §1(b) idiom phase: a literal-discriminated object-type union becomes a sealed trait with case classes, and narrowing sites become `match` arms. The policy says WHICH unions and whether fields are
+/** An idiom phase: a literal-discriminated object-type union becomes a sealed trait with case classes, and narrowing sites become `match` arms. The policy says WHICH unions and whether fields are
   * `var`; the mechanism (discriminator field, narrowing, member access) is language-independent.
   *
-  * The no-op default is `Only(Set.empty)`: a scope that names nothing converts nothing, meeting §1(b)'s empty-parameter-is-a-no-op obligation.
+  * The no-op default is `Only(Set.empty)`: a scope that names nothing converts nothing, meeting the empty-parameter-is-a-no-op obligation.
   */
 final class DiscriminatedUnionTransform(
   val scope:              RuleScope,

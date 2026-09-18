@@ -2,7 +2,7 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** JDK kind-aware call rewrites, static utility rewrites and their helpers, split out of CollectionsTransform (context diet S3). */
+/** JDK kind-aware call rewrites, static utility rewrites and their helpers, split out of CollectionsTransform. */
 private[transform] trait CollectionsCalls:
   self: CollectionsTransform =>
   import CollectionsTransform.{ JavaCollectionFqn, JavaCollectionsFqn, JavaIterableFqn, JavaIteratorFqn, Kind }
@@ -42,7 +42,7 @@ private[transform] trait CollectionsCalls:
     case _ => scala.None
 
   /** Java's capacity-hint constructor at a HASHED collection — `new HashMap<>(16)`. Unlike the sequence targets, scala's `mutable.HashMap` has no one-arg `(initialCapacity: Int)` constructor, so the
-    * java one-arg form is completed with `defaultLoadFactor` (0.75, java's own `DEFAULT_LOAD_FACTOR`) rather than left to fail (M6). Disjoint from [[copyConstructor]] by argument type.
+    * java one-arg form is completed with `defaultLoadFactor` (0.75, java's own `DEFAULT_LOAD_FACTOR`) rather than left to fail. Disjoint from [[copyConstructor]] by argument type.
     */
   private[transform] def capacityConstructor(t: Tree.Apply)(using Program): Option[Term] = t.fun match
     case n: Tree.New =>
@@ -92,7 +92,7 @@ private[transform] trait CollectionsCalls:
       case (Some("java.util.Collections#singletonList"), List(x))   => Some(factory(sym("singletonList"), List(x)))
       case (Some("java.util.Collections#singleton"), List(x))       => Some(factory(sym("singleton"), List(x)))
       case (Some("java.util.Collections#singletonMap"), List(k, v)) => Some(factory(sym("singletonMap"), List(k, v)))
-      // unmodifiable VIEWS: scala has no read-only Buffer/Set/Map view (K6), so the runtime's
+      // unmodifiable VIEWS: scala has no read-only Buffer/Set/Map view, so the runtime's
       // Frozen* delegate every READ to the wrapped collection.
       // java.util.EnumSet has no public constructor; class tokens are KEPT (not dropped) since
       // allOf/range/complementOf need the enum's constants via Class.getEnumConstants
@@ -136,7 +136,7 @@ private[transform] trait CollectionsCalls:
       case (Some("java.util.Map$Entry#comparingByValue" | "java.util.Map.Entry#comparingByValue"), List(cmp)) =>
         Some(factory(sym("comparingByValue"), List(cmp)))
 
-      // java.util.stream: chain collapses to scala collection operations // ENGINE-LIMITS K6
+      // java.util.stream: chain collapses to scala collection operations
       case (Some("java.util.Collection#stream" | "java.util.List#stream" | "java.util.Set#stream"), Nil) =>
         recv.map(streamSource(_, t.method))
       // `IntStream.range(a, b)` is a stream SOURCE with no collection behind it — the one shape the
@@ -192,7 +192,7 @@ private[transform] trait CollectionsCalls:
       case _ => None
 
   /** Build args for `JavaCollections.asList`. Elements (packed or `Repeated`) are opened; a single caller-held array becomes a live `asListView` (aliased writes preserved). Returns `AsList.Refuse` to
-    * leave the JDK call untranslated. // ENGINE-LIMITS K6.5
+    * leave the JDK call untranslated.
     */
   private[transform] def asListArgs(args: List[Term])(using p: Program): AsList =
     def isArray(t: TypeRepr) = headSym(t).flatMap(p.symbolOf).exists(_.fullName == "scala.Array")
@@ -206,8 +206,8 @@ private[transform] trait CollectionsCalls:
       case List(a) if isArray(a.tpe)                    => AsList.Aliased(a)
       case _                                            => AsList.Elements(args)
 
-  /** The element type a `TypeTree` may be written for — java's own inference, made explicit. Yielded only when the result really names one type: not a wildcard (K10), not an unresolved marker (G2),
-    * not `NoType`. Otherwise left to scala's own inference.
+  /** The element type a `TypeTree` may be written for — java's own inference, made explicit. Yielded only when the result really names one type: not a wildcard, not an unresolved marker, not
+    * `NoType`. Otherwise left to scala's own inference.
     */
   private[transform] def elementArg(t: Tree.Apply)(using p: Program): Option[TypeTree] =
     soleTypeArg(t.tpe).collect {
@@ -215,8 +215,8 @@ private[transform] trait CollectionsCalls:
         TypeTree(a, t.origin)
     }
 
-  /** Does this type mention an inference marker (G2) or wildcard (K10) anywhere inside it — either of which cannot be written as an explicit type argument? Read through `Symbol.isUnresolvedTypeVar`,
-    * never a local spelling.
+  /** Does this type mention an inference marker or wildcard anywhere inside it — either of which cannot be written as an explicit type argument? Read through `Symbol.isUnresolvedTypeVar`, never a
+    * local spelling.
     */
   private[transform] def namesUnresolved(t: TypeRepr)(using p: Program): Boolean = t match
     case TypeRepr.TypeRef(_, s)      => p.symbolOf(s).exists(x => Symbol.isUnresolvedTypeVar(x.fullName))
@@ -226,9 +226,9 @@ private[transform] trait CollectionsCalls:
     case TypeRepr.OrType(l, r)  => namesUnresolved(l) || namesUnresolved(r)
     case _                      => false
 
-  /** The argument `asListView` should receive at `Arrays.asList(T[])`. Java's erased formal is `Object[]`, so the frontend synthesises `arr.asInstanceOf[Array[Object]]` off it (G14); `asListView[A]`
-    * infers `A` from the argument, so the cast must be stripped or it infers `Object`. Strip when the cast wraps an array whose element type is the call's own result type (§4.56, structural, names no
-    * type) — a genuine `(Object[]) value` cast survives underneath.
+  /** The argument `asListView` should receive at `Arrays.asList(T[])`. Java's erased formal is `Object[]`, so the frontend synthesises `arr.asInstanceOf[Array[Object]]` off it; `asListView[A]` infers
+    * `A` from the argument, so the cast must be stripped or it infers `Object`. Strip when the cast wraps an array whose element type is the call's own result type (structural, names no type) — a
+    * genuine `(Object[]) value` cast survives underneath.
     */
   private[transform] def asListViewArg(arg: Term, call: Tree.Apply): Term = arg match
     case Tree.Typed(inner, _, _, _) =>
@@ -296,7 +296,7 @@ private[transform] trait CollectionsCalls:
       val h = withHead(t, bufferSym)
       if headSym(h).contains(bufferSym) then h else TypeRepr.TypeRef(TypeRepr.NoPrefix, bufferSym)
 
-  /** Could this value be a representation this phase introduced? A type it retyped, one of its own shims, or `java.lang.Object` (says nothing). Read from the phase's own tables (§4.56).
+  /** Could this value be a representation this phase introduced? A type it retyped, one of its own shims, or `java.lang.Object` (says nothing). Read from the phase's own tables.
     */
   private[transform] def mayBeRetypedValue(a: Term)(using p: Program): Boolean =
     headSym(a.tpe).exists(s =>
@@ -355,21 +355,18 @@ private[transform] trait CollectionsCalls:
       */
     val onSuper = recv.isInstanceOf[Tree.Super]
     val out     = (name, t.args, k) match
-      // java 8's forEach has no shim counterpart; JavaIterable supplies foreach as an extension (§4.5).
+      // java 8's forEach has no shim counterpart; JavaIterable supplies foreach as an extension.
       case ("forEach", List(f), _) => Some(call(recv, foreachSym, List(f), t, so))
-      // `toArray`: strip erasure coercion via `arrayArg` (no call reshape needed)
-      // // ENGINE-LIMITS G14
+      // `toArray`: strip erasure coercion via `arrayArg` (no call reshape needed) rather
       // than a new callee.
       case ("toArray", List(a), _) if onShim =>
         val stripped = arrayArg(a, t)
         Option.when(stripped ne a)(t.copy(args = List(stripped)))
       // wildcard capture read coercion: `asInstanceOf[Object]` for unbounded `?` on a shim
-      // // ENGINE-LIMITS G23, G24, G33
       case _ if onShim && wildcardElement(recv.tpe) && capturedObjectRead(t) =>
         Some(Tree.Typed(t, TypeTree(t.tpe, t.origin), t.tpe, t.origin))
       case _ if onShim => None
       // JDK bulk defaults (`containsAll`/`addAll`/`removeAll`/`retainAll`) via VirtualJdkDefaults
-      // // ENGINE-LIMITS K29
       case (n, List(c), Kind.Seq | Kind.Set)
           if onSuper && CollectionsTransform.VirtualJdkDefaults.contains(n)
             && sym(CollectionsTransform.VirtualJdkDefaults(n)) != SymId.None
@@ -388,7 +385,7 @@ private[transform] trait CollectionsCalls:
         Some(Tree.Select(recv, getSym, t.tpe, t.origin))
       case ("isPresent", Nil, Kind.Opt) => Some(Tree.Select(recv, isDefinedSym, t.tpe, t.origin))
       // orElse is the one non-rename: java evaluates the argument eagerly, Option.getOrElse
-      // lazily — optionalOrElse restores java's by-value evaluation. CLAUDE.md §4.4
+      // lazily — optionalOrElse restores java's by-value evaluation.
       case ("orElse", List(d), Kind.Opt) if sym("optionalOrElse") != SymId.None =>
         val f = sym("optionalOrElse")
         Some(Tree.Apply(Tree.Ident(f, TypeRepr.NoType, so), List(recv, d), f, t.tpe, t.origin))
@@ -401,12 +398,12 @@ private[transform] trait CollectionsCalls:
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
       // list.listIterator()/listIterator(i) — java's bidirectional cursor, refused as
-      // scala.collection.Iterator (K23) but the receiver is mutable.Buffer, whose indexed
-      // read/update/insert/remove ARE ListIterator's contract — a §4.5 standalone shim.
+      // scala.collection.Iterator but the receiver is mutable.Buffer, whose indexed
+      // read/update/insert/remove ARE ListIterator's contract — a standalone shim.
       // `over` writes through to the caller's buffer; Kind.Seq only, java declares it on List
       case ("listIterator", args @ (Nil | List(_)), Kind.Seq | Kind.Stack) if listIteratorOverSym != SymId.None =>
         Some(Tree.Apply(Tree.Ident(listIteratorOverSym, TypeRepr.NoType, so), recv :: args, listIteratorOverSym, t.tpe, so))
-      // c.spliterator() — K23's other refusal, kept refused unlike listIterator: nothing about
+      // c.spliterator() — the other refusal, kept refused unlike listIterator: nothing about
       // streams is modelled, so java's DEFAULT METHOD characteristics are stated directly
       // (Collection=0, List=ORDERED, Set=DISTINCT, all OR SIZED|SUBSIZED) rather than delegated
       // to the converter's wrapper — they follow JAVA'S declaration at the receiver's kind.
@@ -450,19 +447,19 @@ private[transform] trait CollectionsCalls:
       // likewise `Map.remove`, which returns the value that was there.
       case ("remove", List(key), Kind.Map) =>
         Some(call(call(recv, removeSym, List(keyArg(key, recv)), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
-      // `remove(Object)` by-value overload — distinguished from `remove(int)` by result type (CLAUDE.md §4.4)
+      // `remove(Object)` by-value overload — distinguished from `remove(int)` by result type
       case ("remove", List(x), Kind.Seq) if removesByValue(t) && sym("removeValue") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("removeValue"), TypeRepr.NoType, so), List(recv, x), sym("removeValue"), t.tpe, t.origin))
       // Collection.toArray()/toArray(T[]): scala's toArray is parenless, so xs.toArray() misparses
       // as an Array index (missing argument for apply). JavaCollections helpers restore java's
       // contract — toArray() allocates Object[]; toArray(T[]) fills the caller's array or
-      // allocates on the runtime component type with a null terminator (§4.4).
+      // allocates on the runtime component type with a null terminator.
       case ("toArray", Nil, Kind.Seq | Kind.Set) if sym("toArray") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("toArray"), TypeRepr.NoType, so), List(recv), sym("toArray"), t.tpe, t.origin))
       case ("toArray", List(a), Kind.Seq | Kind.Set) if sym("toArray") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("toArray"), TypeRepr.NoType, so), List(recv, arrayArg(a, t)), sym("toArray"), t.tpe, t.origin))
       // subList is a write-through view (java) where slice is a copy; putIfAbsent returns the
-      // PREVIOUS value (null on success), the opposite of getOrElseUpdate — §4.4 shapes.
+      // PREVIOUS value (null on success), the opposite of getOrElseUpdate.
       case ("subList", List(a, b), Kind.Seq) if sym("subList") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("subList"), TypeRepr.NoType, so), List(recv, a, b), sym("subList"), t.tpe, t.origin))
       case ("putIfAbsent", List(key, v), Kind.Map) if sym("putIfAbsent") != SymId.None =>
@@ -522,7 +519,7 @@ private[transform] trait CollectionsCalls:
         Some(Tree.Apply(Tree.Ident(sym("addAll"), TypeRepr.NoType, so), List(recv, c), sym("addAll"), t.tpe, t.origin))
       // java's positional addAll(int, Collection), insert's bulk sibling — left to fall through,
       // scala AUTO-TUPLES the two arguments against Growable.addAll(IterableOnce), silently
-      // appending a pair at an Any element type instead of inserting (§4.4).
+      // appending a pair at an Any element type instead of inserting.
       case ("addAll", List(i, c), Kind.Seq | Kind.Stack) if sym("insertAll") != SymId.None =>
         Some(Tree.Apply(Tree.Ident(sym("insertAll"), TypeRepr.NoType, so), List(recv, i, c), sym("insertAll"), t.tpe, t.origin))
       case ("addAll" | "putAll", List(c), _) => Some(infix(recv, opPlusPlusEq, List(c), t, so)) // xs ++= c
@@ -601,7 +598,7 @@ private[transform] trait CollectionsCalls:
     case other                    => other
 
   /** Does every `super` in this rewritten term stand where scala allows one — a member selection's qualifier, nowhere else? Java has no such restriction, so a rewrite can put `super` where scala
-    * forbids it (`E040`). Asked of the RESULT, not the arm, so a later rewrite is covered by construction. `ENGINE-LIMITS.md` M6.
+    * forbids it (`E040`). Asked of the RESULT, not the arm, so a later rewrite is covered by construction.
     */
   private[transform] def superPlaced(t: Term)(using Program): Boolean =
     var bad  = false
@@ -641,7 +638,7 @@ private[transform] trait CollectionsCalls:
   private[transform] def call(recv: Term, member: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
     Tree.Apply(Tree.Select(recv, member, TypeRepr.NoType, so), args, member, t.tpe, t.origin)
 
-  /** `JavaCollections.member(args)` — a runtime helper, typed as what the java call it replaces was recorded at (ENGINE-LIMITS K6's first rule: a node describes what it emits).
+  /** `JavaCollections.member(args)` — a runtime helper, typed as what the java call it replaces was recorded at (a node describes what it emits).
     */
   private[transform] def staticCall(member: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
     Tree.Apply(Tree.Ident(member, TypeRepr.NoType, so), args, member, t.tpe, t.origin)
@@ -671,16 +668,16 @@ private[transform] trait CollectionsCalls:
     case _                                => None
 
   /** A key argument, with the coercion java's formal required stripped when the scala member's formal is exactly what lies beneath it. Java's `Map.get`/`remove`/`containsKey` widen a type-variable
-    * key with `asInstanceOf[Object]` (G14); after this phase retypes the receiver, that widening is all that stands between the argument and `K` (`ENGINE-LIMITS.md` K5.6). Structural, names no type —
-    * stripped only when what it wraps already has the wanted type.
+    * key with `asInstanceOf[Object]`; after this phase retypes the receiver, that widening is all that stands between the argument and `K`. Structural, names no type — stripped only when what it
+    * wraps already has the wanted type.
     */
   private[transform] def keyArg(arg: Term, recv: Term): Term = (arg, keyType(recv.tpe)) match
     case (Tree.Typed(inner, _, _, _), Some(k)) if k != TypeRepr.NoType && inner.tpe == k => inner
     case _                                                                               => arg
 
   /** [[keyArg]]'s rule at `toArray(T[])`: the erasure coercion the frontend synthesised off java's `Object[]` formal, stripped when `JavaCollections.toArray[A]` (which infers `A` from the argument)
-    * wants what lies beneath the cast — else it infers `Object` where java inferred the real element type. Structural and names no type (CLAUDE.md §4.56): strip only when the cast's inner already has
-    * the call's own result type.
+    * wants what lies beneath the cast — else it infers `Object` where java inferred the real element type. Structural and names no type: strip only when the cast's inner already has the call's own
+    * result type.
     */
   private[transform] def arrayArg(arg: Term, t: Tree.Apply): Term = arg match
     case Tree.Typed(inner, _, _, _) if inner.tpe != TypeRepr.NoType && inner.tpe == t.tpe => inner
@@ -705,7 +702,7 @@ private[transform] trait CollectionsCalls:
     if literalEmpty then (t.tpe, false)
     else CollectionsTransform.scopedType(t, literal).map(_ -> true).getOrElse(t.tpe -> false)
 
-  // resolving the ambiguous-overload clash this phase's own parent made (§4.5): a scala
+  // resolving the ambiguous-overload clash this phase's own parent made: a scala
   // parent's remove(K) beside a kept java remove(Object) resolves scala's E051 where java did not.
 
   private[transform] def headSym(t: TypeRepr): Option[SymId] = t match

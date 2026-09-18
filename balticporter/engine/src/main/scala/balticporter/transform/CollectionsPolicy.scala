@@ -3,7 +3,7 @@ package balticporter.transform
 import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, RequiresRuntime, RuntimeArtifact, SurfacePolicy }
 import balticporter.tir.*
 
-/** Policy shape, surface fingerprint, merge, scope and validation split out of CollectionsTransform (context diet S3). */
+/** Policy shape, surface fingerprint, merge, scope and validation split out of CollectionsTransform. */
 private[transform] trait CollectionsPolicy:
   self: CollectionsTransform =>
   import CollectionsTransform.{ JavaCollectionFqn, JavaCollectionsFqn, JavaIterableFqn, JavaIteratorFqn, Kind }
@@ -112,8 +112,8 @@ private[transform] trait CollectionsPolicy:
         )
       else
         // the SCOPE composes like `NullaryArityTransform`'s: `Only` unions, `Everywhere` unions its
-        // exceptions, a no-op side yields; `Only` against `Everywhere` is refused below (D12 — a
-        // dependent widening its base's `Only` onto its own entry is the ladder's shape, K43).
+        // exceptions, a no-op side yields; `Only` against `Everywhere` is refused below — a
+        // dependent widening its base's `Only` onto its own entry would silently change what the base emits.
         val noOp = RuleScope.Only(Set.empty)
         val mergedScope: Either[String, RuleScope] = (scope, o.scope) match
           case (s, `noOp`)                                        => Right(s)
@@ -290,7 +290,7 @@ private[transform] trait CollectionsPolicy:
 
   private[transform] var report: PolicyReport = PolicyReport.empty
 
-  /** the setting every retarget finding is filed under — the string an agent greps for (§4.575). */
+  /** the setting every retarget finding is filed under — the string an agent greps for. */
   private[transform] val RetargetSetting = "CollectionsTransform(retarget) entry"
 
   /** …and the same for a reified carrier. */
@@ -329,7 +329,7 @@ private[transform] trait CollectionsPolicy:
       }
     )
 
-  /** is this symbol one the given scope admits? IN for `Everywhere` (pre-scope code path), OUT for `Only` (rewrites nothing unasked). Used by the per-entry family scope pass (D12).
+  /** is this symbol one the given scope admits? IN for `Everywhere` (pre-scope code path), OUT for `Only` (rewrites nothing unasked). Used by the per-entry family scope pass.
     */
   private[transform] def inFamilyScope(sc: RuleScope, p: Program, id: SymId): Boolean =
     if sc.isUnrestricted then true
@@ -345,7 +345,7 @@ private[transform] trait CollectionsPolicy:
     excluded = Set.empty; admittedBy = Map.empty; report = PolicyReport.empty
     if scope.isUnrestricted then return
 
-    // owned symbols only (CLAUDE.md §4.56): a JDK-type entry would otherwise match the
+    // owned symbols only: a JDK-type entry would otherwise match the
     // externally-interned symbol and count as fired while doing nothing.
     val owned = p.owned
     val named: List[(Symbol, String)] =
@@ -436,7 +436,7 @@ private[transform] trait CollectionsPolicy:
         else mapped.copy(parents = orig.parents, selfType = orig.selfType, tparams = orig.tparams, enumCases = orig.enumCases)
       own.copy(body = body)
 
-  /** Drop a minted parent already subsumed by another minted parent (e.g. `JavaIterable` subsumed by `mutable.Map <: Iterable`). No-op when no subsumption exists. // ENGINE-LIMITS K28.1
+  /** Drop a minted parent already subsumed by another minted parent (e.g. `JavaIterable` subsumed by `mutable.Map <: Iterable`). No-op when no subsumption exists.
     */
   private[transform] def dropSubsumedParents(u: Tree.ClassDef)(using p: Program): Tree.ClassDef =
     if parentClash.forall((_, mp) => mp.subsumed.isEmpty) then u
@@ -488,14 +488,14 @@ private[transform] trait CollectionsPolicy:
   private[transform] def mapSignatures(tbl: SymbolTable)(using p: Program): SymbolTable =
     if literalEmpty then StandardTraversal.mapSymbols(this, tbl)
     // same ownership guard mapSymbols carries: an external member's signature belongs to a class
-    // file this phase cannot move. K15
+    // file this phase cannot move.
     else
       tbl.all.foldLeft(tbl) { (t, s) =>
         if literal(s.id) || !p.owns(s.id) then t
         else t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))
       }
 
-  /** One decision row per declaration the scope held back that the mapping would otherwise have moved — without it, the `Everywhere(except)` direction is invisible in `decisions.tsv` (§5.1). Only
+  /** One decision row per declaration the scope held back that the mapping would otherwise have moved — without it, the `Everywhere(except)` direction is invisible in `decisions.tsv`. Only
     * declarations, and only ones a retyping would actually have reached.
     */
   private[transform] def recordScopedOut(before: SymbolTable)(using p: Program): Unit =

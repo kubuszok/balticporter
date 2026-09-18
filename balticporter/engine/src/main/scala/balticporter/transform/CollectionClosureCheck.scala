@@ -3,16 +3,16 @@ package balticporter.transform
 import balticporter.tir.{ CheckReport, Origin, Program, SymId, Tree, UsageKind }
 
 /** A retyping map must be CLOSED DOWNWARDS over the source library's own subtype relations — counts every place `CollectionsTransform.typeMap` is not. A mapped type's declared subtypes must map too
-  * or be REPORTED, or java's own relation breaks silently (ENGINE-LIMITS K5). [[jdkSupertypes]] is DATA transcribed from the JDK's frozen hierarchy (§4.56); an unknown type is a missed finding, never
-  * a wrong one. Empty mapped set is a no-op.
+  * or be REPORTED, or java's own relation breaks silently. [[jdkSupertypes]] is DATA transcribed from the JDK's frozen hierarchy; an unknown type is a missed finding, never a wrong one. Empty mapped
+  * set is a no-op.
   */
 object CollectionClosureCheck:
 
   /** The check's name in `findings.tsv`. */
   val Name = "collection-closure"
 
-  /** CLAUDE.md §1's classification, stated once for the whole check: every finding here has the same fix shape, which is what makes it a §1(b) — the mechanism (retype a JDK collection) is already
-    * built and only the POLICY (which types) is short.
+  /** The classification, stated once for the whole check: every finding here has the same fix shape — the mechanism (retype a JDK collection) is already built and only the POLICY (which types) is
+    * short.
     */
   val Classification: String =
     "port policy: add the type to CollectionsTransform.typeMap with a target that preserves the JDK " +
@@ -36,8 +36,8 @@ object CollectionClosureCheck:
         detail
       )
 
-  /** DIRECT supertypes, as the JDK declares them. Interfaces and abstract bases alike, since a port can break on either (K5). Nested types are keyed with `$` (CLAUDE.md §4.56), with a dotted alias
-    * added below for a frontend that names nested types with `.`. `RandomAccess` and `Dictionary` appear only as TARGETS: real, unmapped supertypes where a walk simply ends.
+  /** DIRECT supertypes, as the JDK declares them. Interfaces and abstract bases alike, since a port can break on either. Nested types are keyed with `$`, with a dotted alias added below for a
+    * frontend that names nested types with `.`. `RandomAccess` and `Dictionary` appear only as TARGETS: real, unmapped supertypes where a walk simply ends.
     */
   val jdkSupertypes: Map[String, List[String]] = Map(
     // ---- the interface spine ----
@@ -52,7 +52,7 @@ object CollectionClosureCheck:
     "java.util.NavigableMap" -> List("java.util.SortedMap"),
     "java.util.ListIterator" -> List("java.util.Iterator"),
     "java.util.PrimitiveIterator" -> List("java.util.Iterator"),
-    // ---- the abstract bases a library EXTENDS (K5) ----
+    // ---- the abstract bases a library EXTENDS ----
     "java.util.AbstractCollection" -> List("java.util.Collection"),
     "java.util.AbstractList" -> List("java.util.AbstractCollection", "java.util.List"),
     "java.util.AbstractSequentialList" -> List("java.util.AbstractList"),
@@ -129,14 +129,13 @@ object CollectionClosureCheck:
 
   /** Every JDK collection type the program REFERENCES that `mapped` does not cover while covering one of its JDK supertypes — one finding per usage site, as `PortabilityCheck` does. `mapped` is
     * `CollectionsTransform`'s `typeMap` keys; `mapsTo` is looked up through the same map (a caller with only the key set can pass `_ => "?"`). NOT reported: a type `mapped` already contains, or a
-    * type no mapped supertype covers (CLAUDE.md §4.56).
+    * type no mapped supertype covers.
     */
   def check(program: Program, mapped: Set[String], target: String => String = _ => "?"): List[Finding] =
     check(program, program.units, mapped, target)
 
   /** …restricted to the units the run actually EMITS: a DEPENDENT port's `Program` carries the base module's units too, and a finding attributed to one of those is the BASE's, reported by a
-    * repository that cannot act on it (ENGINE-LIMITS D2). Measured: unfiltered, this check reported the SAME two findings four times over across libGDX core, its test suite and both Ashley source
-    * sets. A BASE port passes `program.units`.
+    * repository that cannot act on it. A BASE port passes `program.units`.
     */
   def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], target: String => String): List[Finding] =
     val owned = ownedBy(program, units)

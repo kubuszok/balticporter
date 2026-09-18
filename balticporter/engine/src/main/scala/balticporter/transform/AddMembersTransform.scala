@@ -3,12 +3,12 @@ package balticporter.transform
 import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy }
 import balticporter.tir.*
 
-/** Append hand-written Scala MEMBERS to a mechanically-translated class, at the end of its body — the seam for hand-port-added API that `inject`/`MethodBodyTransform` cannot express. §1(b): mechanism
+/** Append hand-written Scala MEMBERS to a mechanically-translated class, at the end of its body — the seam for hand-port-added API that `inject`/`MethodBodyTransform` cannot express. The mechanism
   * (locate owner by FQN, append verbatim Scala) is universal; WHICH/WHAT is per-library. MINTS members, so no-op is `Only(Set.empty)`. Never changes an EXISTING member; does not type-check — the
   * target compiler is the gate. @param members owner FQN (upstream) -> specs
   * @param fromReference
-  *   owner FQN (upstream) -> member NAMES read verbatim from the manifest's reference port (`RunScope.referenceSource`, DESIGN.md §8.30): the hand port's own extras, spliced where the reference
-  *   declares them (class or companion), its imports they mention ahead of them.
+  *   owner FQN (upstream) -> member NAMES read verbatim from the manifest's reference port (`RunScope.referenceSource`): the hand port's own extras, spliced where the reference declares them (class
+  *   or companion), its imports they mention ahead of them.
   */
 final class AddMembersTransform(val members: Map[String, List[AddMembersTransform.MemberSpec]] = Map.empty, val fromReference: Map[String, List[String]] = Map.empty)
     extends Phase,
@@ -22,7 +22,7 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
 
   private var runScope: RunScope = RunScope.whole
 
-  /** `fromReference` owners bound to their type symbols (a name is not a structural fact, §4.56). */
+  /** `fromReference` owners bound to their type symbols (a name is not a structural fact). */
   private var boundRef:                 Map[String, SymId]        = Map.empty
   private var records:                  List[PolicyBinder.Record] = Nil
   def bindPolicy(binder: PolicyBinder): Unit                      =
@@ -193,8 +193,8 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
 object AddMembersTransform:
   /** One member to add to a class body. @param name for parity-check/port-map visibility
     * @param arity
-    *   non-using value parameters (0 for a val/var) @param source verbatim Scala, spliced at statement position, FQN-qualified no imports (CLAUDE.md §6) @param reason §1 classification @param why
-    *   free text for the porter note.
+    *   non-using value parameters (0 for a val/var) @param source verbatim Scala, spliced at statement position, FQN-qualified no imports @param reason universal/configured/library-specific
+    *   classification @param why free text for the porter note.
     */
   final case class MemberSpec(
     name:   String,
@@ -202,7 +202,7 @@ object AddMembersTransform:
     source: String,
     reason: Reason = Reason.Configured("add-members", ""),
     why:    Option[String] = None,
-    /** splice into the COMPANION object rather than the class body — a java static's home, and the only shape a FACTORY can take (`CLAUDE.md` §1(b)).
+    /** splice into the COMPANION object rather than the class body — a java static's home, and the only shape a FACTORY can take.
       */
     static: Boolean = false
   )

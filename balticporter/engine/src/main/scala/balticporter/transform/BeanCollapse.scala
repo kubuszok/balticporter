@@ -2,9 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** THE `var`/`val` COLLAPSE'S DECISION — every guard, stated once (`DESIGN.md` §8.5). A java bean pair over a trivial backing field and a scala `var` are the same value with two spellings, so
-  * [[BeanPropertyTransform]] can collapse the `def` pair — `Converted` or `Refused(guard)`, what `idiom(refused)` reads. Each guard blocks one delta from the faithful translation. The pairs map IS
-  * the include list; no `RuleScope` (would let a pair be listed then silently scoped out).
+/** THE `var`/`val` COLLAPSE'S DECISION — every guard, stated once. A java bean pair over a trivial backing field and a scala `var` are the same value with two spellings, so [[BeanPropertyTransform]]
+  * can collapse the `def` pair — `Converted` or `Refused(guard)`, what `idiom(refused)` reads. Each guard blocks one delta from the faithful translation. The pairs map IS the include list; no
+  * `RuleScope` (would let a pair be listed then silently scoped out).
   */
 object BeanCollapse:
 
@@ -72,8 +72,8 @@ object BeanCollapse:
     case Collapse(field: SymId)
     case Refuse(guard: Guard)
 
-  /** THE DECISION, for one pair the def-pair path accepted. Stated obligations-first and `target` LAST, deliberately: a pair the port has not asked for still gets a §8.5 verdict, so `NotRequested`
-    * reports only after the collapse is shown possible — the reading a maintainer deciding whether to widen an enablement needs.
+  /** THE DECISION, for one pair the def-pair path accepted. Stated obligations-first and `target` LAST, deliberately: a pair the port has not asked for still gets a verdict, so `NotRequested` reports
+    * only after the collapse is shown possible — the reading a maintainer deciding whether to widen an enablement needs.
     */
   def decide(p: Program, graph: OverrideGraph, prop: BeanPropertyTransform.Property, target: BeanPropertyTransform.Target, exposed: RuleScope, written: Set[SymId]): Verdict =
     import BeanPropertyTransform.Target
@@ -97,14 +97,14 @@ object BeanCollapse:
           else if isExposed(p, exposed, f) then Verdict.Refuse(Guard.ExposedField)
           else Verdict.Collapse(f)
 
-  /** does the port ALSO ask for java-bean accessors on this field? See [[Guard.ExposedField]]. Asked of the FIELD through [[PublicFieldAccessorTransform]]'s own `RuleScope` (§4.56); its default scope
+  /** does the port ALSO ask for java-bean accessors on this field? See [[Guard.ExposedField]]. Asked of the FIELD through [[PublicFieldAccessorTransform]]'s own `RuleScope`; its default scope
     * (`Only(Set.empty)`) includes nothing, so a port without that phase asks nothing.
     */
   private def isExposed(p: Program, exposed: RuleScope, field: SymId): Boolean =
     p.symbolOf(field).exists(exposed.includes(p, _))
 
-  /** is `f` a FIELD of the accessor's OWN class, declared by this program? Structural: `p.owns` (§4.56), matching owners, and the `Tree.ValDef`-under-`Tree.ClassDef` shape — never a local or a
-    * parameter, and never an inherited field this phase may not move.
+  /** is `f` a FIELD of the accessor's OWN class, declared by this program? Structural: `p.owns`, matching owners, and the `Tree.ValDef`-under-`Tree.ClassDef` shape — never a local or a parameter, and
+    * never an inherited field this phase may not move.
     */
   private def ownedFieldOf(p: Program, f: SymId, getter: SymId): Boolean =
     p.owns(f) &&
@@ -121,7 +121,7 @@ object BeanCollapse:
       p.definitionOf(f).collect { case v: Tree.ValDef => v }.exists(_.rhs.isDefined)
 
   /** every symbol the WHOLE PROGRAM assigns or increments, taken once — a setter in another member or type is invisible from the declaration (the same argument `CtorFunnel.writesPerField` makes).
-    * Through `StandardTraversal`, so a node kind added tomorrow is visited (§3).
+    * Through `StandardTraversal`, so a node kind added tomorrow is visited.
     */
   def writtenSymbols(p: Program): Set[SymId] =
     given Program = p
@@ -160,7 +160,7 @@ object BeanCollapse:
     }
 
   /** the ONE thing a body does, or `None` where it does more than one. A `Tree.Block`'s value position is a filler unit literal for a `void`-shaped body (the real work sits in `stats`), so "exactly
-    * one statement" is the question, counting the value position only when `stats` is empty. Anything else does more than move a field — the refusal §8.5 kept bodies verbatim for.
+    * one statement" is the question, counting the value position only when `stats` is empty. Anything else does more than move a field — the refusal kept bodies verbatim for.
     */
   def soleStatement(t: Term): Option[Statement] = t match
     case Tree.Block(Nil, e, _, _, _)       => soleStatement(e)

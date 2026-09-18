@@ -3,14 +3,14 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** The TYPE-CLASS ARRAY boundary, counted — every place [[ElementWitnessTransform]] declined to move an element-typed array onto the witness, and why. Parameterised by the phase's own `subjects`; an
-  * empty subject map is a no-op and this lane records nothing (CLAUDE.md §1(b)).
+  * empty subject map is a no-op and this lane records nothing.
   */
 object ElementWitnessCheck:
 
   /** the check's name in `findings.tsv`. */
   val Name = "witness"
 
-  /** what kind of refusal this is, which decides who fixes it (CLAUDE.md §1). */
+  /** what kind of refusal this is, which decides who fixes it. */
   enum Issue:
     /** a `null` read or write standing for TABLE OCCUPANCY, not for an absent value — the element type cannot lose its `<: java.lang.Object` bound without a representation change.
       */
@@ -33,7 +33,7 @@ object ElementWitnessCheck:
     case RawConversion
 
   object Issue:
-    /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
+    /** whether the fix is universal, configured, or library-specific. */
     def classification(i: Issue): String = i match
       case OccupancySentinel =>
         "port policy, and it is a REPRESENTATION question the engine may not answer: this " +
@@ -82,13 +82,13 @@ object ElementWitnessCheck:
           "library, or keep the declaring class out of `dropBound` so the element stays boxed. " +
           "Until then this call is correct for a reference element type and throws for a primitive one."
 
-  /** one refusal. `unit` is the top-level symbol for D2 ownership filtering. */
+  /** one refusal. `unit` is the top-level symbol for ownership filtering. */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):
     def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** grouped one-line summary, worst family first, each with its §1 classification. */
+  /** grouped one-line summary, worst family first, each with its universal/configured/library-specific classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

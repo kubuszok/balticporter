@@ -4,7 +4,7 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** A method's `Class<T>` parameter, `T` its own type parameter, becomes a `ClassTag[T]` context clause: the body reads the class off the tag, an owned call passing `X.class` names `[X]`. Whole
-  * override component or none; a call passing a `Class` VALUE, a method reference, a type parameter the literals do not determine, or an unowned component member refuses, counted (DESIGN.md §8.30).
+  * override component or none; a call passing a `Class` VALUE, a method reference, a type parameter the literals do not determine, or an unowned component member refuses, counted.
   * @param members
   *   method keys (`C#m`, `C#m(desc)`) @param derive `ClassTagParam` rows off the reference.
   */

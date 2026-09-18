@@ -2,9 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** THE CLOSURE — which declarations must be able to supply the context, and where it stops. A DIRECTED reachability over five edge kinds (DESIGN.md §8.4): `Seed` (a mapped static read), `Use` (a
-  * call/reference to a threaded declaration), `Override` (the whole override component), `Instantiate` (`new C` and subclasses), `Capture` (a nested body's need lands on its enclosing declaration).
-  * Computed once per holder, exposed via [[edges]] for pinning.
+/** THE CLOSURE — which declarations must be able to supply the context, and where it stops. A DIRECTED reachability over five edge kinds: `Seed` (a mapped static read), `Use` (a call/reference to a
+  * threaded declaration), `Override` (the whole override component), `Instantiate` (`new C` and subclasses), `Capture` (a nested body's need lands on its enclosing declaration). Computed once per
+  * holder, exposed via [[edges]] for pinning.
   */
 final class ContextNeed(
   program: Program,
@@ -17,10 +17,10 @@ final class ContextNeed(
   forceThreaded:  Set[SymId] = Set.empty,
   seam:           (ContextSeamCheck.Kind, String, String, String, Origin, SymId) => Unit,
   refuse:         (SymId, String) => Unit,
-  /** the `sites` entries that BOUND: the policy key → the symbols it named. Empty is the pre-CT6 code path. // ENGINE-LIMITS CT6
+  /** the `sites` entries that BOUND: the policy key → the symbols it named. Empty is the code path from before per-site instantiation detection existed.
     */
   boundSites: Map[String, List[SymId]] = Map.empty,
-  /** the `selfSupplied` entries that BOUND: the TYPE a framework instantiates → the policy key that said so. Empty is the pre-CT7 code path. // ENGINE-LIMITS CT7
+  /** the `selfSupplied` entries that BOUND: the TYPE a framework instantiates → the policy key that said so. Empty is the code path from before framework-instantiated classes were handled.
     */
   selfSupplied: Map[SymId, String] = Map.empty,
   /** the `through` entries that BOUND: TYPE -> (own member, its type, the context hop it stands for). A read under that hop inside an instance member of the type is no seed.
@@ -143,8 +143,7 @@ final class ContextNeed(
               case _ => Site.Boundary(s, "it is outside any declaration")
 
   /** an anonymous-class body → the DECLARATION it was WRITTEN INSIDE. The frontend interns an anonymous class under its enclosing CLASS, losing the method — so the lexical home is read off the `New`
-    * node's usage site (`enclosing`) instead of the owner chain (CLAUDE.md §3). The usage KIND is not consulted — `Xref.walkType` mislabels a generic constructor's `Instantiate` as `Tycon`
-    * (`ENGINE-LIMITS.md` CT6).
+    * node's usage site (`enclosing`) instead of the owner chain. The usage KIND is not consulted — `Xref.walkType` mislabels a generic constructor's `Instantiate` as `Tycon`.
     */
   private val anonHome: Map[SymId, SymId] =
     program.referenced.toList
@@ -156,21 +155,21 @@ final class ContextNeed(
       .toMap
 
   /** Is this usage of `c` a CONSTRUCTION of `c`? — reads the `New` NODE's constructed head rather than the recorded `UsageKind` (`Xref.walkType`'s `AppliedType` arm mislabels a generic constructor's
-    * `Instantiate` as `Tycon`, `ENGINE-LIMITS.md` CT6). A kind-blind "any usage at a `New` site" is also wrong: `Cell` in `new Pool<Cell>()` is a TYPE ARGUMENT. Off a `New`, the recorded kind is
-    * still the answer (`NewArray` has no constructed head).
+    * `Instantiate` as `Tycon`). A kind-blind "any usage at a `New` site" is also wrong: `Cell` in `new Pool<Cell>()` is a TYPE ARGUMENT. Off a `New`, the recorded kind is still the answer (`NewArray`
+    * has no constructed head).
     */
   private def instantiates(u: Usage, c: SymId): Boolean = u.site match
     case n: Tree.New => constructedBy(n) == c
     case _ => u.kind == UsageKind.Instantiate
 
   /** `C::new` IS a construction of `C`, which [[instantiates]] cannot answer: `Xref` records the reference's TYPE at the qualifier's `TypeTree`, a site every type mention shares, so the constructor's
-    * own symbol is read off the `MethodRef` node instead (`ENGINE-LIMITS.md` CT6). Consulted by both growth and [[constructedByProgram]] (stop warning about a factory-built class).
+    * own symbol is read off the `MethodRef` node instead. Consulted by both growth and [[constructedByProgram]] (stop warning about a factory-built class).
     */
   private def ctorRefUses(c: SymId): List[Usage] =
     ctorsOf(c).flatMap(program.usages).filter(_.site.isInstanceOf[Tree.MethodRef])
 
-  /** the constructors THIS PROGRAM declares for `c`. Read off the `ClassDef` and the frontend's own `<init>` name, which is engine-minted and therefore a structural fact rather than a §4.56 string
-    * test — the same reading [[climb]] makes one line above its own boundary test.
+  /** the constructors THIS PROGRAM declares for `c`. Read off the `ClassDef` and the frontend's own `<init>` name, which is engine-minted and therefore a structural fact rather than a string test —
+    * the same reading [[climb]] makes one line above its own boundary test.
     */
   private def ctorsOf(c: SymId): List[SymId] =
     program
@@ -203,7 +202,7 @@ final class ContextNeed(
   // -------------------------------------------------------------------------
 
   /** the statics whose initialisation a `sites` policy asked to move out of an initialiser. The trigger is the POLICY, not a read: candidates come from the `sites` entries themselves (via
-    * [[boundSites]]), with the read-derived set kept beside them as a subset that also covers keys the binder refuses (`<clinit>`, `ENGINE-LIMITS.md` CT6).
+    * [[boundSites]]), with the read-derived set kept beside them as a subset that also covers keys the binder refuses (`<clinit>`).
     */
   val deferrals: List[Deferral] = lazyInitSubjects.flatMap(planDeferral)
 
@@ -227,7 +226,7 @@ final class ContextNeed(
     key.flatMap(holder.sites.get) match
       case Some(s) =>
         // A `lazy-init` entry is judged by its OUTCOME, not by this lookup — counting it here would
-        // mark it fired before anything was planned. // ENGINE-LIMITS CT6
+        // mark it fired before anything was planned.
         if s != ContextSite.LazyInit then key.foreach(firedS += _)
         s
       case scala.None =>
@@ -265,7 +264,7 @@ final class ContextNeed(
     else v.rhs.filter(needsContext).map(rhs => Deferral(SymId.None, v.symbol, rhs, key)).toList
 
   /** Does this initialiser reach the context AT ALL? Either it READS a mapped static, or it CONSTRUCTS a type this program declares. The second is a deliberate over-approximation — the deferral plan
-    * runs BEFORE the growth, so `threadedClasses` does not exist yet — made safe by `lazy-init` being per-site opt-in, never a default. // ENGINE-LIMITS CT6
+    * runs BEFORE the growth, so `threadedClasses` does not exist yet — made safe by `lazy-init` being per-site opt-in, never a default.
     */
   private def needsContext(t: Term): Boolean = readsHolder(t) || constructsOwned(t)
 
@@ -309,7 +308,7 @@ final class ContextNeed(
   private val deferredReads: Set[(SymId, Origin)] = deferrals.flatMap(d => staticIn(d.rhs)).toSet
 
   /** WHICH `sites` entries this run's decisions actually turned on — the input to the phase's dead-binding report. A `lazy-init` entry counts as fired iff it produced a [[Deferral]]; the other two
-    * count when [[policyFor]] resolved a boundary through them. Read AFTER [[readPlan]] has been forced. // ENGINE-LIMITS CT6
+    * count when [[policyFor]] resolved a boundary through them. Read AFTER [[readPlan]] has been forced.
     */
   def firedSites: Set[String] = firedS.toSet
 
@@ -337,8 +336,8 @@ final class ContextNeed(
   def scopedOut:       Set[SymId]     = scopedS.toSet
   def via(s: SymId):   Option[String] = viaMap.get(s)
 
-  /** the classes the port declared framework-instantiated that this run REACHED — CT7's third answer, applied. They carry no clause and are not in [[threadedClasses]]; what they carry is a `given`
-    * member the emitter fills from the policy's expression.
+  /** the classes the port declared framework-instantiated that this run REACHED — the third answer for a framework-instantiated class, applied. They carry no clause and are not in
+    * [[threadedClasses]]; what they carry is a `given` member the emitter fills from the policy's expression.
     */
   def selfSuppliedClasses: Set[SymId] = selfS.toSet
 
@@ -378,7 +377,7 @@ final class ContextNeed(
         case Node.M(m) => expandMethod(m)
         case Node.C(c) => expandClass(c)
 
-    // CT11: static field holders — seeds readers of held fields, re-runs to fixpoint.
+    // static field holders — seeds readers of held fields, re-runs to fixpoint.
     discoverFieldHolders()
 
     // AFTER the fixpoint, because both questions are about the finished closure: whether a
@@ -386,15 +385,15 @@ final class ContextNeed(
     selfS.toList.sortBy(_.raw).foreach(checkSelfSupplied)
     classes.toList.sortBy(_.raw).foreach(warnUnconstructed)
 
-  // ---- STATIC FIELD HOLDERS (CT11) ------------------------------------------------------------
+  // ---- STATIC FIELD HOLDERS ------------------------------------------------------------
 
   /** static fields whose initialisers construct a threaded class — they become holders with a throwing accessor, initialised at the head of every threaded static method on the same class. Populated
     * by [[discoverFieldHolders]] after the first growth pass.
     */
   private val fieldHolderSet = collection.mutable.LinkedHashMap.empty[SymId, Term]
 
-  /** clinit statements that read a held field — they are deferred alongside the field's initialiser, because the static block and the field are ONE JLS step-9 sequence (CT11). Key is the owning
-    * type's symbol.
+  /** clinit statements that read a held field — they are deferred alongside the field's initialiser, because the static block and the field are ONE JLS step-9 sequence. Key is the owning type's
+    * symbol.
     */
   private val fieldHolderClinitStmts = collection.mutable.LinkedHashMap.empty[SymId, List[Statement]]
 
@@ -416,7 +415,7 @@ final class ContextNeed(
         case _ => false)
     }
 
-  /** CT11: find static fields whose initialisers construct a threaded class, seed readers, re-grow. */
+  /** find static fields whose initialisers construct a threaded class, seed readers, re-grow. */
   private def discoverFieldHolders(): Unit =
     val candidates = program.units.flatMap(u => StandardTraversal.allClassDefs(u)).flatMap { cd =>
       cd.body.collect {
@@ -457,7 +456,7 @@ final class ContextNeed(
       }
     }
 
-    // Clinit statements reading a held field are deferred alongside it (JLS step 9, CT11).
+    // Clinit statements reading a held field are deferred alongside it (JLS step 9).
     val heldSyms = fieldHolderSet.keySet
     program.units.flatMap(u => StandardTraversal.allClassDefs(u)).foreach { cd =>
       val owner = cd.symbol
@@ -502,7 +501,7 @@ final class ContextNeed(
     }
 
   /** A SELF-SUPPLIED CLASS WHOSE PARENT TOOK THE CLAUSE — the one shape the third answer cannot cover. A `given` member is in scope for the class BODY, not for its `extends` clause: the parent
-    * constructor runs before this class's own members exist, so there is no argument to pass and no rewrite that repairs it — refused, named and counted. CLAUDE.md §1
+    * constructor runs before this class's own members exist, so there is no argument to pass and no rewrite that repairs it — refused, named and counted.
     */
   private def checkSelfSupplied(c: SymId): Unit =
     graph.parentsOf(c).filter(classes).sortBy(_.raw).foreach { p =>
@@ -524,9 +523,9 @@ final class ContextNeed(
       )
     }
 
-  /** THE CT7 WARNING — a threaded class NOTHING IN THIS PROGRAM CONSTRUCTS, whose ancestry leaves the program (a reflectively-instantiated test suite's shape). WARNS rather than refuses: the engine
+  /** THE WARNING for a threaded class NOTHING IN THIS PROGRAM CONSTRUCTS, whose ancestry leaves the program (a reflectively-instantiated test suite's shape). WARNS rather than refuses: the engine
     * cannot distinguish a framework construction from an ordinary caller. Fires when no `Instantiate` edge reaches it (nor a constructed descendant) AND an ancestor other than `java.lang.Object` is
-    * undeclared here (`ENGINE-LIMITS.md` CT7).
+    * undeclared here.
     */
   private def warnUnconstructed(c: SymId): Unit =
     if selfS(c) || constructedByProgram(c) then return
@@ -550,7 +549,7 @@ final class ContextNeed(
       )
 
   /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it? An ARRAY ALLOCATION is not a construction (`new Suite[8]` runs no constructor) — excluded here rather than in
-    * [[instantiates]], since fixing it there moves emitted signatures (a separate change). This one decides only whether a warning fires (`ENGINE-LIMITS.md` CT7).
+    * [[instantiates]], since fixing it there moves emitted signatures (a separate change). This one decides only whether a warning fires.
     */
   private def constructedByProgram(c: SymId): Boolean =
     (c :: graph.descendantsOf(c)).exists(t =>
@@ -587,7 +586,7 @@ final class ContextNeed(
 
   private def expandClass(c: SymId): Unit =
     if classes(c) || frozen(c) || selfS(c) then return
-    // THE THIRD ANSWER (ENGINE-LIMITS CT7): a framework-constructed class takes the context WITHOUT
+    // THE THIRD ANSWER: a framework-constructed class takes the context WITHOUT
     // a parameter — no signature edit, no propagation — but its body still reads it via a `given`
     // member the emitter fills, so this is a resolution and not a refusal.
     if selfSupplied.contains(c) then
@@ -648,7 +647,7 @@ final class ContextNeed(
       enqueue(Node.C(d), Edge(Edge.Kind.Instantiate, c, d, Decision.originOf(program, d)))
     }
     // INSTANTIATE: `new C` needs a context in scope wherever written. Reads the NODE, not the
-    // recorded kind — a generic `new` is labelled `Tycon` by the shared index. ENGINE-LIMITS CT6
+    // recorded kind — a generic `new` is labelled `Tycon` by the shared index.
     program.usages(c).foreach { u =>
       if instantiates(u, c) && u.enclosing != SymId.None && u.enclosing != c then impose(u.enclosing, c, u.site.origin, Edge.Kind.Instantiate)
     }
@@ -673,7 +672,7 @@ final class ContextNeed(
         case Site.Boundary(sub, why) =>
           // A declaration that CANNOT take a clause uses one that requires it — its own kind
           // (`UnsuppliableUse`), distinct from a residual global read: this is `No given` at that
-          // line every time. PROGRESS.md §10.8.9
+          // line every time.
           seam(
             ContextSeamCheck.Kind.UnsuppliableUse,
             fqn(sub),
@@ -684,7 +683,7 @@ final class ContextNeed(
             sub
           )
 
-  /** what the boundary DID with the threaded declaration, in the finding's own sentence — distinguishes "constructs" from "uses" so a reader need not open the file to find out. §4.45
+  /** what the boundary DID with the threaded declaration, in the finding's own sentence — distinguishes "constructs" from "uses" so a reader need not open the file to find out.
     */
   private def useVerb(k: Edge.Kind): String = k match
     case Edge.Kind.Instantiate => "CONSTRUCTS"
@@ -759,13 +758,13 @@ final class ContextNeed(
 
 object ContextNeed:
 
-  /** the frontend's names for the two executables that are not methods. Engine-minted, not a library's, so naming them here is a structural fact and not a §4.56 string test.
+  /** the frontend's names for the two executables that are not methods. Engine-minted, not a library's, so naming them here is a structural fact and not a string test.
     */
   val ClinitName    = "<clinit>"
   val InitBlockName = "<initblock>"
   val CtorName      = "<init>"
 
-  /** every class's ancestor, which is why the CT7 warning excludes it: "has an external ancestor" is true of the whole program with this one counted. A JDK name, not a ported library's (§1).
+  /** every class's ancestor, which is why the warning above excludes it: "has an external ancestor" is true of the whole program with this one counted. A JDK name, not a ported library's.
     */
   val JavaLangObject = "java.lang.Object"
 

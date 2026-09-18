@@ -2,7 +2,7 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** REIFIED positions (K18/K20/K21: instanceof/cast over both representations, reified type-argument carriers, reflective-sink egress bridging) split out of CollectionsTransform (context diet S3). */
+/** REIFIED positions (instanceof/cast over both representations, reified type-argument carriers, reflective-sink egress bridging) split out of CollectionsTransform. */
 private[transform] trait CollectionsReified:
   self: CollectionsTransform =>
 
@@ -12,7 +12,7 @@ private[transform] trait CollectionsReified:
   private[transform] var liveWrappableSyms: Set[SymId] = Set.empty
 
   /** each mapping target this run named → the `JavaCollections.Reified` member that answers java's `instanceof` / performs java's cast at it. Keyed on `byScala`, so a target the program never names
-    * is simply absent and the reified arms decline by arithmetic — the same shape [[liveWrappableSyms]] takes, and for the same reason (§4.56: the phase's own record).
+    * is simply absent and the reified arms decline by arithmetic — the same shape [[liveWrappableSyms]] takes, and for the same reason (the phase's own record).
     */
   private[transform] var reifiedIsSyms, reifiedAsSyms: Map[SymId, SymId] = Map.empty
 
@@ -22,7 +22,7 @@ private[transform] trait CollectionsReified:
   private[transform] var unmappedSupertypeSyms: Set[SymId] = Set.empty
 
   /** did a REIFIED occurrence get translated inside the declaration currently being closed? The traversal is bottom-up, so this is set at the rewrite and drained at the nearest enclosing
-    * `DefDef`/`ValDef` — a citation is per DECLARATION (§5.1).
+    * `DefDef`/`ValDef` — a citation is per DECLARATION.
     */
   private[transform] var reifiedHere: Boolean = false
 
@@ -41,21 +41,21 @@ private[transform] trait CollectionsReified:
     */
   private[transform] var sinkSyms: Set[SymId] = Set.empty
 
-  /** `JavaCollections.Reified.toJavaValue` — the EGRESS bridge (K21 face 1). Minted like every other `Reified` member: nothing in a java program declares it.
+  /** `JavaCollections.Reified.toJavaValue` — the EGRESS bridge. Minted like every other `Reified` member: nothing in a java program declares it.
     */
   private[transform] var toJavaValueSym: SymId = SymId.None
 
-  /** every (sink callee, declared sink FQN) the egress bridge actually fired on, drained into `decisions.tsv` at the end of the run. A per-SITE rewrite recorded per DECLARATION (§5.1).
+  /** every (sink callee, declared sink FQN) the egress bridge actually fired on, drained into `decisions.tsv` at the end of the run. A per-SITE rewrite recorded per DECLARATION.
     */
   private[transform] val bridgedSinkCallees = collection.mutable.Set[(SymId, String)]()
 
   /** …and every external callee with an OPAQUE formal this port has NOT declared a sink, keyed by (callee, JAVA FILE) with the earliest site in that file — the review list [[opaqueEgress]] exists to
-    * publish. Keyed per-file, not globally, so D2's per-module filter applies AFTER the site is chosen and a dependent's row does not vanish behind its base's earlier path.
+    * publish. Keyed per-file, not globally, so per-module filtering applies AFTER the site is chosen and a dependent's row does not vanish behind its base's earlier path.
     */
   private[transform] val opaqueEgressSites = collection.mutable.Map[(SymId, String), Origin]()
 
-  /** Records why a reified type-argument (K20) at a declaration was preserved rather than retyped, one row per declaration. `Universal` for `java.lang.Class`, `Configured` for a port-declared
-    * carrier. Only fires where the argument mentions a type this phase maps — an untouched carrier decided nothing and would be noise. // CLAUDE.md §4.56, K20
+  /** Records why a reified type-argument at a declaration was preserved rather than retyped, one row per declaration. `Universal` for `java.lang.Class`, `Configured` for a port-declared carrier. Only
+    * fires where the argument mentions a type this phase maps — an untouched carrier decided nothing and would be noise.
     */
   private[transform] def recordReifiedTypeArgs(after: SymbolTable)(using p: Program): Unit =
     if carrierSyms.isEmpty then return
@@ -93,8 +93,7 @@ private[transform] trait CollectionsReified:
           )
     }
 
-  /** Records the egress bridge (K21 face 1) at each declaration handing a value to a declared reflective sink, keyed on the sink FQN. No porter note: the emitted call already names the bridge. //
-    * CLAUDE.md §4.56, K21
+  /** Records the egress bridge at each declaration handing a value to a declared reflective sink, keyed on the sink FQN. No porter note: the emitted call already names the bridge.
     */
   private[transform] def recordEgressBridges()(using p: Program): Unit =
     bridgedSinkCallees.toList.sortBy((m, fqn) => (fqn, m.raw)).foreach { (callee, sink) =>
@@ -120,7 +119,7 @@ private[transform] trait CollectionsReified:
       }
     }
 
-  /** Every (carrier FQN, preserved argument) pair in a signature whose argument mentions a type this phase maps. Walked with [[StandardTraversal.mapType]], never a private recursion. // CLAUDE.md §3
+  /** Every (carrier FQN, preserved argument) pair in a signature whose argument mentions a type this phase maps. Walked with [[StandardTraversal.mapType]], never a private recursion.
     */
   private[transform] def preservedCarrierArgs(t: TypeRepr)(using Program): List[(String, TypeRepr)] =
     val hits = collection.mutable.ListBuffer[(String, TypeRepr)]()
@@ -172,17 +171,17 @@ private[transform] trait CollectionsReified:
               reifiedSeam("reified cast", t.tpt.tpe, t.origin)
               t
 
-  /** the head symbol of a type THIS PHASE produced, or `None` (§4.56, asked of the phase's own tables, never a name) — nothing in java source names a scala collection or a runtime shim.
+  /** the head symbol of a type THIS PHASE produced, or `None` (asked of the phase's own tables, never a name) — nothing in java source names a scala collection or a runtime shim.
     */
   private[transform] def reifiedTarget(t: TypeRepr): Option[SymId] =
     headSym(t).filter(s => kindOf.contains(s) || shimSyms.contains(s))
 
-  /** Can this phase vouch for the representation this expression produces? Yes for a declaration it retyped or one the program owns; no for an external producer (K15).
+  /** Can this phase vouch for the representation this expression produces? Yes for a declaration it retyped or one the program owns; no for an external producer.
     */
   private[transform] def vouched(e: Term)(using p: Program): Boolean =
     (reifiedTarget(e.tpe).isDefined || headSym(e.tpe).exists(p.owns)) && !foreignProducer(e)
 
-  /** the one exception: a call or field read the program does not declare (`externalCallee`, K15). */
+  /** the one exception: a call or field read the program does not declare (`externalCallee`). */
   private[transform] def foreignProducer(e: Term)(using p: Program): Boolean = e match
     case a: Tree.Apply  => externalCallee(a.method)
     case s: Tree.Select => externalCallee(s.sym)
@@ -194,7 +193,7 @@ private[transform] trait CollectionsReified:
     case Tree.Literal(Constant.NullC, _, _) => true
     case _                                  => false
 
-  /** a reified occurrence at a target no live view can BE. Refused and counted (M6). */
+  /** a reified occurrence at a target no live view can BE. Refused and counted. */
   /** drains [[reifiedHere]] at the declaration the rewrite happened in. */
   private[transform] def citeIfReified(sym: SymId)(using p: Program): Unit =
     if reifiedHere then
@@ -211,7 +210,7 @@ private[transform] trait CollectionsReified:
       CollectionBoundaryCheck.Issue.ReifiedOccurrence
     )
 
-  /** reified occurrence at an unmapped JDK supertype (e.g. `RandomAccess`). Refused and counted, derived from `typeMap`'s supertype closure. K18
+  /** reified occurrence at an unmapped JDK supertype (e.g. `RandomAccess`). Refused and counted, derived from `typeMap`'s supertype closure.
     */
   private[transform] def unmappedReified(slot: String, target: TypeRepr, origin: Origin)(using Program): Unit =
     if headSym(target).exists(unmappedSupertypeSyms) then
@@ -228,8 +227,8 @@ private[transform] trait CollectionsReified:
     */
 
   /** A cast to a runtime shim whose source this phase retyped OUT of the shim family — no value can satisfy it, since the phase guaranteed the runtime value is a scala collection. Decided from
-    * `remap`/`kindOf` (the phase's own record), never from the source type's name — a prefix test swept up `java.lang.Object` and broke an ordinary downcast the phase never touched (§4.56). Dropping
-    * the cast also lets `coerce` see and bridge the argument properly.
+    * `remap`/`kindOf` (the phase's own record), never from the source type's name — a prefix test swept up `java.lang.Object` and broke an ordinary downcast the phase never touched. Dropping the cast
+    * also lets `coerce` see and bridge the argument properly.
     */
   private[transform] def impossibleShimCast(t: Tree.Typed): Boolean =
     def scalaSym(s: SymId) = remap.getOrElse(s, s)
@@ -238,8 +237,8 @@ private[transform] trait CollectionsReified:
     to.exists(shimSyms.contains) && from.exists(f => !shimSyms.contains(f) && kindOf.contains(f))
 
   /** The seam with nothing type-wrong: a `java.lang.Object` formal on an external callee takes a retyped value, and the port compiles, but the callee's `toString`/`instanceof`/serialiser see
-    * something different. Only the port knows which such callees READ the representation ([[reflectiveSinks]]); this is the review list that makes a missing entry visible (K21 face 1). Deduplicated
-    * by CALLEE, not by site — a declared sink is bridged and skipped.
+    * something different. Only the port knows which such callees READ the representation ([[reflectiveSinks]]); this is the review list that makes a missing entry visible. Deduplicated by CALLEE, not
+    * by site — a declared sink is bridged and skipped.
     */
   private[transform] def opaqueEgress(t: Tree.Apply)(using p: Program): Unit =
     if !externalCallee(t.method) || sinkOf(t.method).isDefined then return
@@ -279,28 +278,27 @@ private[transform] trait CollectionsReified:
             bridgedSinkCallees += (t.method -> fqn)
             t.copy(args = as)
 
-  /** The declared reflective sink this callee belongs to, by its OWNER — the phase's own policy read as symbols, never a name test (§4.56). `None` where the port declares none.
+  /** The declared reflective sink this callee belongs to, by its OWNER — the phase's own policy read as symbols, never a name test. `None` where the port declares none.
     */
   private[transform] def sinkOf(m: SymId)(using p: Program): Option[String] =
     if sinkSyms.isEmpty then scala.None
     else p.symbolOf(m).map(_.owner).filter(sinkSyms.contains).flatMap(p.symbolOf).map(_.fullName)
 
   /** is this source's sole element type an unnameable wildcard? `java.util.List<?>` means `List<? extends Object>` and type-checks in java with no cast; scala's `?` is bounded by `Any`, so `++=` on
-    * `Buffer[Object]` fails. Widening scala's `?` is a measured dead end (G2); the difference is stated at this one operation instead. Narrow to a sole `TypeBounds` argument — a real element type
-    * stays the idiomatic `++=`. F11
+    * `Buffer[Object]` fails. Widening scala's `?` is a measured dead end; the difference is stated at this one operation instead. Narrow to a sole `TypeBounds` argument — a real element type stays
+    * the idiomatic `++=`.
     */
   private[transform] def wildcardElement(t: TypeRepr): Boolean = t match
     case TypeRepr.AppliedType(_, List(_: TypeRepr.TypeBounds)) => true
     case _                                                     => false
 
-  /** The other reason `++=` cannot serve java's `addAll`: the source is one of this phase's standalone targets, not a `scala.collection` type — `JavaCollection extends JavaIterable` and nothing else
-    * (§4.5), so it is never an `IterableOnce`. The helper this routes to already takes `IterableOnce[?] | JavaIterable[?]`. Read from `shimSyms`, never a package name (§4.56).
+  /** The other reason `++=` cannot serve java's `addAll`: the source is one of this phase's standalone targets, not a `scala.collection` type — `JavaCollection extends JavaIterable` and nothing else,
+    * so it is never an `IterableOnce`. The helper this routes to already takes `IterableOnce[?] | JavaIterable[?]`. Read from `shimSyms`, never a package name.
     */
   private[transform] def standaloneSource(t: TypeRepr): Boolean = headSym(t).exists(shimSyms.contains)
 
   /** Is this a call on a map whose type arguments are wildcards, at one of the three members java declares over `Object` (`get`/`containsKey`/`remove`)? Scala's `Map[K,V]` declares the same three
-    * over `K`, so a wildcard receiver would emit an unnameable `K`/`V`. `put`/`getOrDefault` are absent: each needs a value at the capture, which javac itself rejects on `Map<?,?>`. Measured on liqp
-    * at 10 and 8 errors from the same nine call sites. K10
+    * over `K`, so a wildcard receiver would emit an unnameable `K`/`V`. `put`/`getOrDefault` are absent: each needs a value at the capture, which javac itself rejects on `Map<?,?>`.
     */
 
   /** does this type mention a wildcard at any depth? Not a nameability test — a wildcard-applied type IS nameable (`Class[? <: N]`) — but a narrower question for [[wildcardMapCall]]: could scala's
@@ -339,8 +337,8 @@ private[transform] trait CollectionsReified:
       want.exists(w => w != TypeRepr.NoType && !headSym(w).contains(objectSym))
 
   /** The third face of the same seam: a probe at a proper ancestor of the element type. [[objectProbe]] is exact only at `java.lang.Object`; scala's `Map[K,V]` is invariant in `K`, so an unrelated
-    * ancestor also needs the helper. Answered structurally by walking this run's `extends` edges (§4.56) — no subtype test. Not a cast: widens the erased probe position instead of throwing where
-    * java's probe answers `false`. `ENGINE-LIMITS.md` K24.
+    * ancestor also needs the helper. Answered structurally by walking this run's `extends` edges — no subtype test. Not a cast: widens the erased probe position instead of throwing where java's probe
+    * answers `false`.
     */
   private[transform] def ancestorProbe(arg: Term, want: Option[TypeRepr]): Boolean =
     (headSym(arg.tpe), want.flatMap(headSym)) match

@@ -4,7 +4,7 @@ import balticporter.tir.*
 
 /** The collections residue INSIDE the program — sites where java's own subtyping carried a value across an edge the mapping has no image for. `CollectionBoundaryCheck` sees only the JDK's own half of
   * a slot; this counts the third population where BOTH sides are the phase's own output. Distinct from [[CollectionClosureCheck]] (about TYPES): this is about SITES where both ends map to unrelated
-  * targets. Empty mapping is a no-op. CLAUDE.md §1's third-population para; K2.5
+  * targets. Empty mapping is a no-op.
   */
 object CollectionInternalCheck:
 
@@ -22,7 +22,7 @@ object CollectionInternalCheck:
     case DeclaredSubtype
 
   object Issue:
-    /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
+    /** whether the fix is universal, configured, or library-specific. */
     def classification(i: Issue): String = i match
       case SplitTypeVariable =>
         "engine gap: java bound ONE type variable from two arguments whose types it related " +
@@ -58,8 +58,8 @@ object CollectionInternalCheck:
         detail
       )
 
-  /** Every in-program seam in `program`, which must be the program AFTER the phase ran. `mapped`, `targetOf` and `standalone` are the phase's own policy, read back (§4.56). Held to units the run
-    * EMITS — a dependent's `Program` carries its base's units, whose seams are the base's finding (ENGINE-LIMITS D2).
+  /** Every in-program seam in `program`, which must be the program AFTER the phase ran. `mapped`, `targetOf` and `standalone` are the phase's own policy, read back. Held to units the run EMITS — a
+    * dependent's `Program` carries its base's units, whose seams are the base's finding.
     */
   def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targetOf: String => String, standalone: Set[String]): List[Finding] =
     // broken edges: a java subtype pair both of whose ends the mapping covers, whose two targets
@@ -102,8 +102,8 @@ object CollectionInternalCheck:
         for x <- fqn(a); y <- fqn(b); e <- broken(x, y)
         yield (e, s"$x / $y")
 
-      /** every type a class the PROGRAM declares was emitted UNDER — read from the tree, not a name test (§4.56). Asked only of a program-declared head — an external type's ancestry is a class-file
-        * fact this run cannot read (§4.6).
+      /** every type a class the PROGRAM declares was emitted UNDER — read from the tree, not a name test. Asked only of a program-declared head — an external type's ancestry is a class-file fact this
+        * run cannot read.
         */
       def ancestry(h: SymId): List[String] =
         graph.externalAncestorsOf(h) ++
@@ -140,8 +140,8 @@ object CollectionInternalCheck:
             .foreach(fs => t.args.zip(fs).foreach((a, f) => declaredSlot("argument", f, a.tpe, a.origin, t.method)))
           t
 
-        /** java bound one type variable from two arguments; the mapping sent the two java types to unrelated targets. Which variables are the CALL's to bind is read from OWNERSHIP, never a name
-          * (§4.56) — a class's own type parameter is fixed by the receiver and skipped.
+        /** java bound one type variable from two arguments; the mapping sent the two java types to unrelated targets. Which variables are the CALL's to bind is read from OWNERSHIP, never a name — a
+          * class's own type parameter is fixed by the receiver and skipped.
           */
         private def typeVariableSplit(t: Tree.Apply)(using Program): Unit =
           program
@@ -205,7 +205,7 @@ object CollectionInternalCheck:
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
     case _                           => scala.None
 
-  /** grouped one-line summary, worst family first, each with its §1 classification. */
+  /** grouped one-line summary, worst family first, each with its universal/configured/library-specific classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

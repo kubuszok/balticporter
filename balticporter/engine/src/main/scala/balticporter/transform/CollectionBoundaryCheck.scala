@@ -5,17 +5,17 @@ import balticporter.core.RuntimeArtifact
 import balticporter.tir.*
 
 /** The JDK/Scala collection BOUNDARY, counted — every slot the retyping opened and did not close. `CollectionsTransform` retypes signatures while JDK types the mapping does not cover stay put, so a
-  * `Found/Required` error reaches the compiler with no §1 classification (§4.45). Counts the same four slot kinds `coerce` reaches, plus a call on a SCOPED-OUT receiver. STRANDED when the two sides
-  * fall on opposite sides of a line the phase itself drew. §1(a), an empty mapping is a no-op.
+  * `Found/Required` error reaches the compiler with no universal/configured/library-specific classification. Counts the same four slot kinds `coerce` reaches, plus a call on a SCOPED-OUT receiver.
+  * STRANDED when the two sides fall on opposite sides of a line the phase itself drew. An empty mapping is a no-op.
   */
 object CollectionBoundaryCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "collection-boundary"
 
-  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Two entries, both `accept`-shaped, at an EXTERNAL callee (ONE-SPELLING rules out the rest: `UnmappedSubtype`/ `ScopedOut`
-    * already have a manifest key). `wrap-at-seam`/`copy-detach` are ABSENT, not unspelled (no factory found, or a copy would detach both directions). `InexpressibleParent`/`ReifiedOccurrence` are
-    * known divergences the engine refuses to repair.
+  /** THE MENU — see [[balticporter.tir.Remedy]]. Two entries, both `accept`-shaped, at an EXTERNAL callee (ONE-SPELLING rules out the rest: `UnmappedSubtype`/ `ScopedOut` already have a manifest
+    * key). `wrap-at-seam`/`copy-detach` are ABSENT, not unspelled (no factory found, or a copy would detach both directions). `InexpressibleParent`/`ReifiedOccurrence` are known divergences the
+    * engine refuses to repair.
     */
   def remedies: List[Remedy] = List(
     Remedy(
@@ -42,7 +42,7 @@ object CollectionBoundaryCheck extends RemedySource:
     )
   )
 
-  /** what kind of stranding this is, which is what decides who fixes it (CLAUDE.md §1). */
+  /** what kind of stranding this is, which is what decides who fixes it. */
   enum Issue:
     /** the JDK type is a SUBTYPE of one the mapping covers — [[CollectionClosureCheck]]'s closure hole, met here as a site.
       */
@@ -66,7 +66,7 @@ object CollectionBoundaryCheck extends RemedySource:
       */
     case ScopedOut
 
-    /** the same slot where NO POLICY held the declaration back: it OVERRIDES a member whose signature lives in a COMPILED CLASS FILE, so the phase could not move its formals (§4.56). Kept apart from
+    /** the same slot where NO POLICY held the declaration back: it OVERRIDES a member whose signature lives in a COMPILED CLASS FILE, so the phase could not move its formals. Kept apart from
       * [[ScopedOut]] — there is no key anywhere to change here.
       */
     case ClassFileOverride
@@ -80,8 +80,8 @@ object CollectionBoundaryCheck extends RemedySource:
       */
     case InexpressibleParent
 
-    /** a class the phase RE-PARENTED onto a `scala.collection` target owes a member that target declares, and the bridge could not be built (`ENGINE-LIMITS.md` K28.1) — not a slot: the class is
-      * simply missing a member scalac will demand the moment `RefChecks` runs.
+    /** a class the phase RE-PARENTED onto a `scala.collection` target owes a member that target declares, and the bridge could not be built — not a slot: the class is simply missing a member scalac
+      * will demand the moment `RefChecks` runs.
       */
     case UnbridgedMember
 
@@ -96,7 +96,7 @@ object CollectionBoundaryCheck extends RemedySource:
     case OpaqueEgress
 
   object Issue:
-    /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
+    /** whether the fix is universal, configured, or library-specific — the thing a bare typer error cannot say. */
     def classification(i: Issue): String = i match
       case UnmappedSubtype =>
         "port policy: the JDK type is a subtype of one CollectionsTransform maps, so the mapping is not " +
@@ -219,17 +219,17 @@ object CollectionBoundaryCheck extends RemedySource:
     def owner(using program: Program): String =
       program.symbolOf(enclosing).map(_.fullName).getOrElse("?")
 
-  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. Returns the findings that remain; the rest are in the plan's ledger and become `remediation(resolved)` rows.
+  /** DRAIN what this port selected — see [[remedies]]. Returns the findings that remain; the rest are in the plan's ledger and become `remediation(resolved)` rows.
     */
   def resolved(plan: ResolutionPlan, findings: List[Finding])(using Program): List[Finding] =
     plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.issue.toString, f.enclosing, f.owner, f.origin, f.detail))
 
   /** JDK collection families that are NOT in the closure of anything `typeMap` covers and are not retyped at all. `java.util.stream` is the whole of it today; the refusal is deliberate and its sites
-    * must still be counted, not left as prose (CLAUDE.md §5.1).
+    * must still be counted, not left as prose.
     */
   val untranslatedFamilies: List[String] = List("java.util.stream.")
 
-  /** WHY a declaration's type is read LITERALLY rather than through the mapping. An enum rather than a flag because the two refusals have different §1 classifications: `Scoped` names a manifest key a
+  /** WHY a declaration's type is read LITERALLY rather than through the mapping. An enum rather than a flag because the two refusals have different classifications: `Scoped` names a manifest key a
     * port can edit (`CollectionsTransform(scope)`); `ClassFile` — java put this signature in a compiled class file — names none. Reported as one kind, half the rows would send their reader after a
     * key that does not exist.
     */
@@ -258,13 +258,13 @@ object CollectionBoundaryCheck extends RemedySource:
     else Side.Other
 
   /** Every stranded slot in `program`, which must be the program AFTER the phase ran: this counts the residue the retyping created, so running it before means counting nothing. `mapped` and `targets`
-    * are the phase's own policy, read back, so the check concludes about a type only from what the phase did to it (CLAUDE.md §4.56).
+    * are the phase's own policy, read back, so the check concludes about a type only from what the phase did to it.
     */
   def check(program: Program, mapped: Set[String], targets: Set[String] = Set.empty, scopedOut: Set[SymId] = Set.empty, classFileOverrides: Set[SymId] = Set.empty): List[Finding] =
     check(program, program.units, mapped, targets, scopedOut, classFileOverrides)
 
   /** …restricted to the units the run actually EMITS: a DEPENDENT port's `Program` holds the base module's units too, and a stranded slot inside one of those is the BASE's finding, reported by a
-    * repository that cannot act on it (ENGINE-LIMITS D2). A base port passes `program.units`.
+    * repository that cannot act on it. A base port passes `program.units`.
     */
   def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targets: Set[String], scopedOut: Set[SymId], classFileOverrides: Set[SymId]): List[Finding] =
     val out       = collection.mutable.ListBuffer[Finding]()
@@ -275,7 +275,7 @@ object CollectionBoundaryCheck extends RemedySource:
 
     def issueFor(jdk: String, held: Held, external: Boolean = false): Issue =
       // a MAPPED type reached from a CLASS FILE's own signature is not the same fact as one
-      // surviving `transformType`, and must not be reported under `MappedTypeSurvived` (§1(a)
+      // surviving `transformType`, and must not be reported under `MappedTypeSurvived` (an
       // engine bug) — check `external` first.
       if external && mapped.contains(jdk) then Issue.ExternalCallee
       else if held == Held.Scoped && mapped.contains(jdk) then Issue.ScopedOut
@@ -287,7 +287,7 @@ object CollectionBoundaryCheck extends RemedySource:
       else Issue.UnmappedSubtype
 
     /** The type a term REALLY has: for a reference to a declaration the phase read LITERALLY, not the one the node carries — `CollectionsTransform.scopedType`, read through the same function the
-      * transform uses, so what it refuses to rewrite and what this counts agree. Returns WHICH literal-reading set answered, since the two carry different §1 classifications.
+      * transform uses, so what it refuses to rewrite and what this counts agree. Returns WHICH literal-reading set answered, since the two carry different classifications.
       */
     def actualOf(t: Term): (TypeRepr, Held) =
       CollectionsTransform.scopedType(t, scopedOut).map(_ -> Held.Scoped).orElse(CollectionsTransform.scopedType(t, classFileOverrides).map(_ -> Held.ClassFile)).getOrElse(t.tpe -> Held.No)
@@ -303,7 +303,7 @@ object CollectionBoundaryCheck extends RemedySource:
       !program.owns(m) && !program.symbolOf(m).flatMap(c => program.symbolOf(c.owner)).exists(o => mapped.contains(o.fullName) || targets.contains(o.fullName))
 
     /** is this value produced by a call the phase's own static arms cover and DECLINED to rewrite? Every arm that FIRED left its minted helper's symbol behind, so a callee still standing at one of
-      * these `owner#name` keys is one the phase left under the JDK's name (§4.56).
+      * these `owner#name` keys is one the phase left under the JDK's name.
       */
     def refusedSource(t: Term): Boolean = t match
       case a: Tree.Apply =>
@@ -412,7 +412,8 @@ object CollectionBoundaryCheck extends RemedySource:
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
     case _                           => scala.None
 
-  /** grouped one-line summary, worst family first, each with its §1 classification — the whole point of the check is that a reader does not have to work out who fixes it.
+  /** grouped one-line summary, worst family first, each with its universal/configured/library-specific classification — the whole point of the check is that a reader does not have to work out who
+    * fixes it.
     */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
