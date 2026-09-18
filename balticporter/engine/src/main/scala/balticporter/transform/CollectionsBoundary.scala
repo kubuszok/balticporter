@@ -217,7 +217,7 @@ private[transform] trait CollectionsBoundary:
           "broke" -> broke,
           "why" -> ("the RETAINED PARENT declares this member and the mapping target cannot carry " +
             "it, so the body is java's own documented refusal for an optional operation. Writing to " +
-            "the detached pair would compile and change nothing (K2); dropping the member would " +
+            "the detached pair would compile and change nothing; dropping the member would " +
             "leave the class abstract against the parent it kept")
         ),
         reason = Reason.Universal("inexpressible-parent"),
