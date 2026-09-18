@@ -71,19 +71,21 @@ Rules that keep it that way:
 - A tagged release: built from source, remote cache off.
 - Fork PRs have no secrets: the remote cache is off and nothing is published; everything still works.
 
-## One sbt server per job — and it keeps the FIRST step's environment
+## On a runner sbt runs in the FOREGROUND
 
-On a runner, `sbt <command>` is a thin client: the first call of a job starts a server in the
-background and every later call of that job talks to it. The server has the environment of the step
-that started it, so a later step's `env:` never reaches the build: Sonatype credentials on a publish
-step after a generation step ("Unable to find credentials"), `SGE_REMOTE_CACHE=off` on a doc step
-after a compile step, `JAVA21_HOME` exported after the first sbt call. Either put such variables at
-JOB level (or in `$GITHUB_ENV` before the first sbt call), or run `sbt shutdown` between the two
-steps — the `generated-port` action does that itself after generating.
+For an sbt 2 build the `sbt` launcher defaults to a thin client that starts a background server
+(locally that is exactly what we want: `sbt --client`). On a runner it is wrong:
 
-In **bash on Windows** that thin client cannot start its server at all (`Cannot run program
-"C:/Program Files"`): call `sbt.bat` there, which is what `sbt` means in a PowerShell step. The
-`sbt-guarded` action does the substitution.
+- the server keeps the environment of the step that started it, so a later step's `env:` never
+  reaches the build — Sonatype credentials on a publish step after a generation step ("Unable to
+  find credentials"), `SGE_REMOTE_CACHE=off` on a doc step after a compile step;
+- in bash on Windows the client cannot start the server at all (`Cannot run program "C:/Program
+  Files"`);
+- the older `sbt/setup-sbt` launcher ran in the foreground, which is what every job was written for.
+
+`setup-scala` therefore puts a wrapper first on the PATH that calls the real launcher with
+`--server` ("run sbt in the foreground instead of using sbtn") — one JVM per call, no state between
+steps. Never install sbt in a workflow any other way, and never add `--client` there.
 
 ## Reading a run
 
