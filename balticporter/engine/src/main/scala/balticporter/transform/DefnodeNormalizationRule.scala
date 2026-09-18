@@ -12,7 +12,7 @@ import balticporter.tir.Tree.*
   *
   * 134 DEFNODE calls in Terser's `ast.js` produce the entire AST hierarchy.
   *
-  * Scope: `Only(Set.empty)` default (it mints declarations). See `docs/spikes/terser-defnode.md` for the feasibility assessment.
+  * Scope: `Only(Set.empty)` default (it mints declarations). See `docs/contributing/architecture/non-java-frontends.md` for how this fits beside the other Terser-specific emitters.
   */
 final class DefnodeNormalizationRule(
   val scope: RuleScope

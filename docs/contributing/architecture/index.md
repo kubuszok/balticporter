@@ -48,6 +48,12 @@ every decision is recorded and attributed.
   generated code; how original Java comments are carried across verbatim; and why generated code lives
   in a separate, gitignored directory from hand-written shims.
 
+- **[Non-Java frontends](non-java-frontends.md)** — the experimental TypeScript, JavaScript and Dart
+  frontends built on the same frontend seam as the Java one: the shared interchange format they
+  export to, the exporters and the readers that turn it into the typed tree, the generic and
+  per-library emitters, and how a hand-written reference port is combined with translated method
+  bodies while the mechanism is still being worked out.
+
 ## What these pages are not
 
 These pages describe how the engine is built, not how to configure a port of a particular library —
@@ -72,7 +78,9 @@ worked examples of the phase-and-policy model applied to two of the engine's har
 provenance and licensing closes the loop by describing how every decision made along the way is
 recorded and attributed back to its origin. A contributor changing one specific mechanism can usually
 start directly at the page that names it, using the overview only to place that mechanism within the
-pipeline as a whole.
+pipeline as a whole. Non-Java frontends stands apart from that sequence — it describes an
+experimental second and third source-language path beside the Java one, and assumes only the
+overview and the intermediate representation.
 
 ## A note on verification
 
