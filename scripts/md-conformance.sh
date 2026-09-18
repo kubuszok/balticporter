@@ -3,8 +3,8 @@
 # — the `md_*` variables arrive as the environment below and nothing here names a path a variable
 # already holds.
 #
-# WHAT THIS LANE IS FOR. `PROGRESS.md` §10.6.7 quotes "1,870 of 1,870 spec examples (100 %), against
-# a MEASURED green java control" and a per-example table beside it. That census was produced BY HAND,
+# What this lane is for. A status table quotes "1,870 of 1,870 spec examples (100 %), against
+# a measured green java control" and a per-example table beside it. That census was produced by hand,
 # and `CLAUDE.md` §5's rule is that a number is reproduced by a lane or it is not quoted. This is the
 # lane. It measures the CONTROL — the upstream java — because the control is the half nothing else in
 # this repository ever touches: `md-test-measure` runs the PORT's suites and would report a green
@@ -133,7 +133,7 @@ RUN_CP="$BUILD/classes:$JARS:$MD_SPEC_RES:$MD_LIB_RES:$MD_TUTIL_RES"
 # ---------------------------------------------------------------------------------------------
 # (b) THE SUITE AS UPSTREAM RUNS IT — four classes, `org.junit.runner.JUnitCore`, one assertion each.
 #
-# This is the claim `PROGRESS.md` §10.6.7 calls "a MEASURED green java control", and it is reported
+# This is the claim a status table calls "a measured green java control", and it is reported
 # BEFORE the per-example split because it is the coarser and more authoritative of the two: the split
 # is this repository's reading of the suite, the `OK (4 tests)` is the suite.
 #

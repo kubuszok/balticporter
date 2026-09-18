@@ -3,8 +3,8 @@
 //
 // WHY THIS FILE EXISTS AT ALL. `FullSpecTestCase.testSpecExample` is ONE `assertEquals` over the
 // WHOLE rendered spec, so the suite answers pass/fail per spec FILE — 4 tests, and `OK (4 tests)`
-// says nothing about how much of CommonMark either side implements. The per-EXAMPLE reading
-// `PROGRESS.md` §10.6.7 quotes is that same comparison split at the spec format's own delimiter, and
+// says nothing about how much of CommonMark either side implements. The per-example reading a
+// status table quotes is that same comparison split at the spec format's own delimiter, and
 // it was produced by hand. `CLAUDE.md` §5's rule is that a number is reproduced by a lane or it is
 // not quoted.
 //
@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public final class MdConformanceControl {
-    // The four suites, in the order `PROGRESS.md` §10.6.7's table has them. The `live` flag is
+    // The four suites, in the order a status table has them. The `live` flag is
     // UPSTREAM's own answer — whether `getSpecResourceLocation()` returns the location or NULL —
     // and it is what keeps 0.29 out of the conformance total.
     private static final String[] KEYS = { "spec.txt", "spec.0.27.txt", "spec.0.28.txt", "spec.0.29.txt" };

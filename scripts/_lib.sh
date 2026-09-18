@@ -150,7 +150,7 @@ write_run_props() {
 # reported "TESTS LOST — 1 of 17 would never run, and the suite would report success" on a port that
 # had lost nothing. That is the worst possible failure for this particular check: it is the one guard
 # against a suite that runs ZERO tests and reports success, and a check whose first firing is a false
-# positive teaches its reader to ignore it (ENGINE-LIMITS M5).
+# positive teaches its reader to ignore it.
 #
 # PER FILE and LINE-ORIENTED, tracking block-comment state — not a slurp-and-regex.
 #
@@ -213,7 +213,7 @@ java_test_count() {
 # commented-out `GridPoint` class with a `@Test public void testExample()` inside it, and once that
 # comment reached the emitted file the plain `grep -rh "@Test"` counted it — "TESTS LOST — -1 of 16
 # would never run", on a suite that had lost nothing and ran all 16. A NEGATIVE loss is the tell,
-# and a guard whose firing is a false positive teaches its reader to ignore it (ENGINE-LIMITS M5).
+# and a guard whose firing is a false positive teaches its reader to ignore it.
 #
 # PER FILE and LINE-ORIENTED for the reason spelled out on `java_test_count`: concatenating a tree
 # lets one unbalanced `/*` swallow across file boundaries, which is the direction that HIDES a lost
@@ -263,7 +263,7 @@ junit_residue() { scala_code "$@" | grep -c "@org.junit.Test\|@Test" | tr -d ' '
 # correctly, for that suite — that the two it missed sat in files the census excluded. Asked of the
 # next library's reference suite the same anchor missed 37 calls across 18 files, **21 of them in
 # files the census KEEPS**, which would have handed `reconcile_outcomes` a denominator BELOW the real
-# outcome count (CLAUDE.md §4.56's instrument-silence rule; PROGRESS.md §10.8.13).
+# outcome count (`CLAUDE.md` §4.56's instrument-silence rule).
 #
 # So what is counted is MUnit's registration SHAPE — a CURRIED application, `test(<name>) { … }` or
 # `test(<name>)(…)`. A name that wraps onto the next line, an interpolated `test(s"…")`, a computed
@@ -533,10 +533,9 @@ declared_dep_flags() {
 # SBT SERVER ISOLATION AND WARM COMPILE
 #
 # sbt 2.0's sbtn (native thin client) derives a server hash from the base directory, but the
-# derivation COLLIDES across git worktrees that share a common .git directory: every worktree of
-# the same repository resolves to the SAME hash, so sbtn in w21 connects to w20's background
-# server (measured: `lsof -p <server pid> | grep cwd` showed w20-dep-residue after an invocation
-# from w21-sbt-ports, with every project listing from w20's build.sbt, ENGINE-LIMITS M5.11).
+# derivation collides across git worktrees that share a common .git directory: every worktree of
+# the same repository resolves to the same hash, so sbtn in one worktree can connect to another's
+# background server.
 #
 # The fix: `SBT_GLOBAL_SERVER_DIR` — a per-worktree directory for the server socket. Each
 # worktree's lane sets this to a short path in /tmp derived from the worktree's absolute path,
@@ -560,10 +559,10 @@ mkdir -p "$SBT_GLOBAL_SERVER_DIR"
 # background server (or start one). The per-worktree SBT_GLOBAL_SERVER_DIR ensures isolation.
 # Caller captures output and exit status as needed.
 _sbt_run() {
-  # The client runs in the background and is WATCHED: a wedged server (M5.6b's shape — the client
-  # idle at 0% CPU, measured at 47 min in promote17 and 48 min on 2026-09-02 when a Metals
-  # `sbt -bsp` launcher attached to the lane's server dir) is detected by the capture's mtime going
-  # stale, the server is jstack-dumped under .balticporter/, and BOTH are killed — the server is
+  # The client runs in the background and is WATCHED: a wedged server (the client idle at 0% CPU,
+  # which can happen when a Metals `sbt -bsp` launcher attaches to the lane's server dir) is
+  # detected by the capture's mtime going stale, the server is jstack-dumped under
+  # .balticporter/, and BOTH are killed — the server is
   # this checkout's private one (SBT_GLOBAL_SERVER_DIR), so nothing else is using it. The lane then
   # fails loudly instead of waiting for someone to notice.
   local stale_secs="${BP_SBT_STALE_SECS:-600}" out
@@ -642,7 +641,7 @@ sbt_test() {
 
 # sbt_watchdog <active-json-path> <log-file> <stale-minutes>
 #
-# A watchdog for the sbt server hang (M5.11/M5.6b: sbtn idle at 0% CPU for 47 minutes).
+# A watchdog for the sbt server hang: sbtn idle at 0% CPU for an extended period.
 # Checks whether the sbt log file's mtime is stale beyond $stale_minutes. If so:
 #   1. Reads the server PID from active.json
 #   2. Takes a jstack thread dump and saves it under .balticporter/
@@ -1027,10 +1026,9 @@ findings_baseline_guard() {
 #
 # It went stale TWICE, and both times it was found by accident:
 #   - publishing `Surface.MemberShape.form` moved 60 member rows in the libGDX base's map, seen only
-#     because somebody diffed the file by hand (`PROGRESS.md` §12.2.5);
+#     because somebody diffed the file by hand;
 #   - nine DEPENDENT maps carried a stale `policy=` header for days, because two bases' manifests
-#     moved the policy chain every dependent digests and only the two bases were re-accepted
-#     (`PROGRESS.md` §12.4.6).
+#     moved the policy chain every dependent digests and only the two bases were re-accepted.
 #
 # WHAT IS COMPARED IS THE WHOLE FILE — no column is stripped, and that is a decision rather than an
 # omission. `findings_baseline_guard` drops `Finding.id` because it is a hash with a `/2`, `/3`
@@ -1123,7 +1121,7 @@ port_map_guard() {
         sources) why="the base's JAVA changed (content digest, not paths)" ;;
         files)   why="how many java files that digest covers" ;;
         policy)  why="the base's MANIFEST changed — the field nine dependents carried stale" ;;
-        jdk)     why="the JVM that PUBLISHED this map implements a different JDK specification, and the frontend reads external members out of ITS class files (ENGINE-LIMITS M5.10)" ;;
+        jdk)     why="the JVM that PUBLISHED this map implements a different JDK specification, and the frontend reads external members out of ITS class files" ;;
       esac
       echo "     $f=  $bv  ->  $rv"
       echo "         $why"
@@ -1151,8 +1149,8 @@ port_map_guard() {
 }
 
 # correlate <out-report-dir> [--scalac f] [--tests f] [--srcmap [scope=]f]...
-# Join compiler and test-runner output back to the MEMBER and the JAVA ORIGIN that produced it
-# (DESIGN.md §6.3, and the amendment that extends it to the TEST runner). Without this, a
+# Join compiler and test-runner output back to the MEMBER and the JAVA ORIGIN that produced it.
+# Without this, a
 # diagnostic over emitted Scala is a file and a line and nothing else, and every triage starts by
 # reverse-engineering the emitter by hand.
 #
@@ -1691,7 +1689,7 @@ shim_tree() {
 
 # classify_errors <compile log> <families.tsv> <out dir>
 # Attributes every `-- [Exxx]` block of a scalac log to the FIRST family whose regex matches the
-# block (mechanism; the table is the port's policy, PROGRESS.md §13.31 step 0). Writes
+# block (mechanism; the table is the port's policy). Writes
 # <out>/families.tsv (family, count) and <out>/errors-by-family.tsv (family, file, line).
 classify_errors() {
   local log="$1" table="$2" out="$3"

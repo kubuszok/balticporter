@@ -88,7 +88,7 @@ ThisBuild / Test / parallelExecution := false
 // Tags.Test, 1)` was tried first and measured NOT to prevent the overlap (1 contaminated run in 6
 // with the line in place), so the fix is the one that cannot miss: a JVM per project's test task.
 // Properties cannot cross processes, and "one migration per JVM" becomes true of tests too.
-// Side effect, welcome: a forked test JVM is fresh, so the M5.5 classloader-layer staleness cannot
+// Side effect, welcome: a forked test JVM is fresh, so classloader-layer staleness cannot
 // bite a test run.
 ThisBuild / Test / fork := true
 
@@ -174,8 +174,7 @@ lazy val runtimeJvmRow: Project = runtime.jvm(scalaV)
 // as a value.
 //
 // It depends on NOTHING. That is the property worth keeping: the day it needs the emitter or the
-// runner to compile, it has stopped being the surface a rule author codes against. See DESIGN.md
-// §3.2 for the cut and the two judgement calls in it.
+// runner to compile, it has stopped being the surface a rule author codes against.
 // ---------------------------------------------------------------------------------------------
 lazy val api = project
   .in(file("balticporter/api"))
@@ -194,7 +193,7 @@ lazy val api = project
 //
 // It depends on `frontend-spoon` because `PortRun` models a source set with `SpoonTir`; the
 // direction is engine → frontend, never the reverse, which is what keeps the insulation rule
-// (DESIGN.md §3.2) true: no Spoon type is visible here.
+// true: no Spoon type is visible here.
 // ---------------------------------------------------------------------------------------------
 lazy val engine = project
   .in(file("balticporter/engine"))
@@ -206,7 +205,7 @@ lazy val engine = project
       "org.scalameta" %% "scalameta" % "4.17.2", // `verify` — skeleton diff over emitted Scala
       // The CONFIG front door (`PortConfig`, `PortConfigMain`). Deliberately here and not in `api`:
       // the SPI a rule author implements takes `balticporter.tir.ConfigView`, so `api` keeps the
-      // property DESIGN.md §3.2 asks of it — it depends on nothing. No derivation library beside
+      // property of depending on nothing. No derivation library beside
       // it: the schema is ~15 keys read by hand, and a derived reader could not produce the
       // unknown-key refusal that is half the point (HOCON tolerates junk; a port must not).
       "com.typesafe"   % "config"    % "1.4.5",
@@ -467,7 +466,7 @@ val portNativeSettings: Seq[Setting[?]] = Seq(
 )
 
 // ---------------------------------------------------------------------------------------------
-// REFERENCE-BUILD SCALAC OPTIONS (DESIGN.md §8.24)
+// REFERENCE-BUILD SCALAC OPTIONS
 //
 // The flag list is READ from the reference repo's SgePlugin / ssg's build.sbt, not hand-copied.
 // `-Xmacro-settings:*` is dropped (macro timeouts, not diagnostics). The Justfile declares the
@@ -583,8 +582,8 @@ lazy val `port-sge-graphs` = (projectMatrix in file("ported/sge-graphs"))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
 
 // ---------------------------------------------------------------------------------------------
-// port-sge-l0 — libGDX core, rung L0 of the ladder (ported/sge-l0): the universal translation
-// alone, JVM only. Its compile count is the ladder's floor (PROGRESS.md §13).
+// port-sge-l0 — libGDX core, step L0 of the ladder (ported/sge-l0): the universal translation
+// alone, JVM only. Its compile count is the ladder's floor.
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
@@ -595,14 +594,14 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
     name := "balticporter-port-sge-l0",
     resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
     libraryDependencies ++= Seq(
-      // sge's JVM platform layer (PROGRESS.md §13.30): Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE).
-      // sge's typed JSON/UBJSON documents (Kindlings-derived codecs; PROGRESS.md §13.30, JSON step)
+      // sge's JVM platform layer: Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE).
+      // sge's typed JSON/UBJSON documents (Kindlings-derived codecs)
       "com.kubuszok"          %% "kindlings-jsoniter-derivation" % "0.3.2",
       "com.kubuszok"          %% "kindlings-jsoniter-json"       % "0.3.2",
       "com.kubuszok"          %% "kindlings-ubjson-derivation"   % "0.3.2",
       // sge's `FastShowPretty[Align]` (the align step injects sge's own `Align.scala`)
       "com.kubuszok"          %% "kindlings-fast-show-pretty"    % "0.3.2",
-      // sge's logger (`sge.utils.LogPlatform`, injected verbatim; PROGRESS.md §13.31 step 2)
+      // sge's logger (`sge.utils.LogPlatform`, injected verbatim)
       "com.outr"              %% "scribe"                        % "3.19.0",
       // sge's HTTP stack (`Net.httpClient`; net step) — sttp core on every row
       "com.softwaremill.sttp.client4" %% "core"                  % "4.0.26",
@@ -610,7 +609,7 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
       "junit"                  % "junit"             % "4.13.2" % Test,
       "org.junit.jupiter"      % "junit-jupiter"     % "5.10.2" % Test,
     ),
-    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a REAL compile (ENGINE-LIMITS M5.14).
+    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a real compile.
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
     Test / scalacOptions    += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
   )
@@ -619,7 +618,7 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
   .jvmPlatform(scalaVersions = Seq(scalaV), settings = Seq(
     libraryDependencies ++= Seq(
       "com.badlogicgames.gdx"  % "gdx-jnigen-loader" % "2.5.2",
-      // sge's JVM platform layer (PROGRESS.md §13.30): Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE)
+      // sge's JVM platform layer: Panama loader + the native providers (GLFW, miniaudio, ops; ANGLE)
       "com.kubuszok"          %% "multiarch-core"         % "0.4.0",
       "com.kubuszok"          %% "multiarch-panama-api"   % "0.4.0",
       "com.kubuszok"          %% "multiarch-panama-jdk"   % "0.4.0",
@@ -940,7 +939,7 @@ lazy val `port-ssg-md-ext` = (projectMatrix in file("ported/ssg-md-ext"))
 // Standalone, and deliberately WITHOUT `com.kubuszok %% lls`: this port replaces that artifact.
 //
 // lls's HAND-WRITTEN half (Nullable, MkArray, ArrayView, Eval, Resource) and its whole test tree
-// are read IN PLACE from the lls checkout — never copied (CLAUDE.md §5.5, PROGRESS.md §13.28).
+// are read IN PLACE from the lls checkout — never copied (`CLAUDE.md` §5.5).
 // The excludeFilter names the twelve this port EMITS, so the two halves cannot both define a type
 // and a file lls hand-writes later arrives with no build edit. Test coordinates are lls's own.
 // ---------------------------------------------------------------------------------------------
@@ -958,7 +957,7 @@ lazy val `port-lls` = (projectMatrix in file("ported/lls"))
   .settings(portSourceGenerators("lls") *)
   .settings(
     name := "balticporter-port-lls",
-    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a REAL compile (ENGINE-LIMITS M5.14).
+    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a real compile.
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
     libraryDependencies ++= Seq(
       "org.scalameta"  %% "munit"            % "1.3.5"  % Test,
@@ -1014,8 +1013,8 @@ lazy val `port-lls-diff` = (project in file(".ports/lls-diff"))
     name := "balticporter-port-lls-diff",
     publish / skip := true,
     scalacOptions := Seq("-nowarn"),
-    // sbt prints at most `maxErrors` diagnostics and this lane COUNTS diagnostics (§5, M5.10's
-    // neighbour): capped at 100 the residue would read as a floor it never reached.
+    // sbt prints at most `maxErrors` diagnostics and this lane COUNTS diagnostics (§5):
+    // capped at 100 the residue would read as a floor it never reached.
     maxErrors := 100000,
     Test / unmanagedSourceDirectories := Seq(
       (ThisBuild / baseDirectory).value / "ported" / "lls" / "src_managed" / "diff" / "scala"
@@ -1096,7 +1095,7 @@ lazy val `port-sge-visui-diff` = (project in file(".ports/sge-visui-diff"))
 // JVM-only plain projects that share the port's source generators and hand-written `src/`
 // directories but compile with the reference repo's scalacOptions rather than `-nowarn`. This
 // is the FOURTH compile in every lane (after JVM, JS, Native): a port that is green under
-// `-nowarn` and red under `-no-indent -Werror -Wunused:…` is not at the bar (DESIGN.md §8.24).
+// `-nowarn` and red under `-no-indent -Werror -Wunused:…` is not at the bar.
 //
 // A dependent's `-ref` project `dependsOn` the base port's JVM row (NOT the base's ref),
 // because the base's emitted Scala is compiled with `-nowarn` — its own ref lane already
@@ -1407,10 +1406,10 @@ lazy val root = project
     publish / skip := true,
   )
 
-// The GOAL's instrument (PROGRESS.md 13.29, standing order 1): sge's demo GAME code — the
+// The goal's instrument: sge's demo game code — the
 // platform-agnostic `src/main/scala` of a demo plus `demos/shared` — compiled against the ladder
 // port. Compile only, JVM only; the launchers (`scaladesktop`, `scalajs`, `scala-android`) are the
-// backends' step. `DEMO_CHECK` narrows the demos (default: all twelve, PROGRESS.md §13.29).
+// backends' step. `DEMO_CHECK` narrows the demos (default: all twelve).
 val DemoCheckAll = "pong,space-shooter,hex-tactics,tile-world,viewer-3d,particle-show,shader-lab,net-chat,game-screens,curve-playground,asset-showcase,viewport-gallery"
 lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
@@ -1427,7 +1426,7 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
       ("shared" +: picked).flatMap(d => Seq(demos / d / "src" / "main" / "scala", demos / d / "src" / "main" / "scaladesktop")) :+
         (ThisBuild / baseDirectory).value / "ported" / "demo-check" / "adjusted"
     },
-    // `just demo-run`: sge's DesktopMain forked on the ported stack (PROGRESS.md §13.30 step 4) — Panama
+    // `just demo-run`: sge's DesktopMain forked on the ported stack — Panama
     // needs native access, GLFW needs the first thread on macOS; the frame budget arrives as -Dsge.demo.frames.
     Compile / run / fork := true,
     Compile / run / javaOptions ++= Seq("--enable-native-access=ALL-UNNAMED") ++
@@ -1459,7 +1458,7 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
 
-// sge-suite-check — sge core's OWN test tree compiled against the ladder port (PROGRESS.md §13.31 step 0):
+// sge-suite-check — sge core's OWN test tree compiled against the ladder port:
 // the drop-in gate for the JVM row. sge is never edited; an adjusted copy under
 // ported/sge-suite-check/adjusted replaces sge's file of the same relative path (ADJUSTMENTS.tsv).
 lazy val `sge-suite-check` = (projectMatrix in file("ported/sge-suite-check"))

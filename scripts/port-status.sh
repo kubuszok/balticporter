@@ -3,7 +3,7 @@
 # progress): module, errors per platform, tests, failing/skipped names, declared exceptions,
 # last baseline date, live/frozen. Mechanism only; the wording is the `port-status` skill's.
 cd "$(dirname "$0")/.." || exit 1
-# POLICY: the reports the loop still measures (PROGRESS.md §13.29 standing order 5). Everything
+# Policy: the reports the loop still measures. Everything
 # else is the frozen family on the OLD full-policy core; update this list when a port moves.
 LIVE="LlsMigrate LlsDifferential LibgdxL0Migrate LibgdxL0TestMigrate DemoCheck DemoRun SgeSuiteCheck"
 printf "report\tmodule\tstatus\tjvm\tjs\tnative\tref-suite\ttests\tpass\tfail\tskipped\tfailing\tskipped-names\tdeclared-failures\tdeclared-lost\truns\tlast-baseline\n"

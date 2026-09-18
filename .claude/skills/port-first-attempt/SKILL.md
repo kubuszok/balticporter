@@ -106,7 +106,7 @@ Each of those the engine classifies, it classifies IN THE OUTPUT. You do not hav
 [simple-graphs] OMISSIONS (emitted code silently loses these): 2
 [simple-graphs]   §1(a) ENGINE: the TIR carries these constructs and emission loses them. A green
                   compile says nothing about them (CLAUDE.md §3). Fix in the engine, or record the
-                  limit in ENGINE-LIMITS.md.
+                  limit.
 ```
 
 ## 4. Four measurements that are NOT check counts

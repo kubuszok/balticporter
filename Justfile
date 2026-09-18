@@ -146,8 +146,8 @@ core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 
 # ported modules (their emitted Scala lives in <module>/src_managed/{main,test}/scala)
 gdx_module    := "ported/sge"
-gdx_steps     := env_var_or_default("GDX_STEPS", "")   # ladder steps to apply on top of the landed set ("none" = bare); PROGRESS.md 13.29
-gdx_l0_module := "ported/sge-l0"             # rung L0 of the libGDX ladder (PROGRESS 13): universal translation only
+gdx_steps     := env_var_or_default("GDX_STEPS", "")   # ladder steps to apply on top of the landed set ("none" = bare)
+gdx_l0_module := "ported/sge-l0"             # step L0 of the libGDX ladder: universal translation only
 ashley_module := "ported/sge-ecs"
 sg_module     := "ported/sge-graphs"
 anim8_module  := "ported/sge-anim8"
@@ -177,8 +177,8 @@ md_module     := "ported/ssg-md"
 md_ext_module := "ported/ssg-md-ext"
 # lls's port root. Its upstream is `{{gdx_src}}/src` — the same vendored libGDX tree `gdx_module`
 # converts, restricted to the twelve sources lls carries `Ported from` headers for
-# (`LlsMigrate.Files` is the authority; `PROGRESS.md` §13.28).
-lls_rungs     := env_var_or_default("LLS_RUNGS", "renames,arity,nullable,ordering,enrich,witness")   # decision rungs on lls (PROGRESS 13.29); override for an experiment
+# (`LlsMigrate.Files` is the authority).
+lls_rungs     := env_var_or_default("LLS_RUNGS", "renames,arity,nullable,ordering,enrich,witness")   # decision steps on lls; override for an experiment
 lls_module    := "ported/lls"
 
 # The lls CHECKOUT: the HAND-WRITTEN half `port-lls` compiles beside the emitted twelve, and the
@@ -272,8 +272,8 @@ md_modules    := "flexmark flexmark-util-ast flexmark-util-builder flexmark-util
 # MILESTONE 2's scope, restated for the same reason and read the same way: `ext.conf`'s
 # `includeGlobs` is the authority, nothing compares the two, and `md-ext-measure` re-derives its
 # denominator from THIS list on every run — so a module added to one and not the other shows up as a
-# scope figure that no longer matches the port's `converted` line. A BATCH WAVE IS ONE MODULE NAME
-# ADDED HERE AND ONE GLOB ADDED THERE (`PROGRESS.md` §10.6.8). How many of the 29 are IN is a number
+# scope figure that no longer matches the port's `converted` line. A batch change is one module name
+# added here and one glob added there. How many of the 29 are in scope is a number
 # the lane PRINTS (`modules in scope: N of 29 covered`) rather than one this comment carries: a count
 # written here is one a wave has to remember to edit, and a stale one reads exactly like a scope that
 # drifted.
@@ -296,19 +296,19 @@ md_ext_deps   := "--dependency org.nibor.autolink:autolink:0.6.0"
 
 # …and the extension suite's java-side denominator, `ext-test.conf`'s `includeGlobs` restated.
 #
-# FILES AND NOT DIRECTORIES, which is `md_test_src`'s third entry for `md_test_src`'s reason. An
+# Files, not directories, is `md_test_src`'s third entry for `md_test_src`'s reason. An
 # extension's `src/test` is overwhelmingly `@RunWith(Parameterized.class)` `ComboSpecTestCase`
-# subclasses (`PROGRESS.md` §10.6.1's documented refusal) and a `@RunWith(Suite.class)` aggregator, so
-# a directory here would put their `@Test`s in `test_discovery_guard`'s denominator and report a
-# SCOPE DECISION as tests the port LOST — the one failure that check must not have
-# (`ENGINE-LIMITS.md` M5). `java_test_count` takes `find` starting points, and a file is one.
+# subclasses and a `@RunWith(Suite.class)` aggregator, so a directory here would put their
+# `@Test`s in `test_discovery_guard`'s denominator and report a scope decision as tests the port
+# lost — the one failure that check must not have. `java_test_count` takes `find` starting
+# points, and a file is one.
 md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/test/java/com/vladsch/flexmark/ext/aside/AsideParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-autolink/src/test/java/com/vladsch/flexmark/ext/autolink/MergeAutoLinkTest.java ../ssg/original-src/flexmark-java/flexmark-ext-admonition/src/test/java/com/vladsch/flexmark/ext/admonition/AdmonitionParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-jekyll-tag/src/test/java/com/vladsch/flexmark/ext/jekyll/tag/MergeJekyllTagTest.java ../ssg/original-src/flexmark-java/flexmark-ext-abbreviation/src/test/java/com/vladsch/flexmark/ext/abbreviation/MergeAbbreviationsTest.java ../ssg/original-src/flexmark-java/flexmark-ext-footnotes/src/test/java/com/vladsch/flexmark/ext/footnotes/MergeFootnotesTest.java ../ssg/original-src/flexmark-java/flexmark-ext-definition/src/test/java/com/vladsch/flexmark/ext/definition/DefinitionParserTest.java ../ssg/original-src/flexmark-java/flexmark-ext-macros/src/test/java/com/vladsch/flexmark/ext/macros/MergeMacrosTest.java ../ssg/original-src/flexmark-java/flexmark-ext-attributes/src/test/java/com/vladsch/flexmark/ext/attributes/MergeAttributesTest.java ../ssg/original-src/flexmark-java/flexmark-ext-tables/src/test/java/com/vladsch/flexmark/ext/tables/TableTextCollectingVisitorTest.java ../ssg/original-src/flexmark-java/flexmark-ext-tables/src/test/java/com/vladsch/flexmark/ext/tables/MarkdownTableTest.java ../ssg/original-src/flexmark-java/flexmark-ext-tables/src/test/java/com/vladsch/flexmark/ext/tables/MarkdownTransposeTableTest.java ../ssg/original-src/flexmark-java/flexmark-ext-tables/src/test/java/com/vladsch/flexmark/ext/tables/TableCellOffsetInfoTest.java ../ssg/original-src/flexmark-java/flexmark-ext-tables/src/test/java/com/vladsch/flexmark/ext/tables/MarkdownSortTableTest.java ../ssg/original-src/flexmark-java/flexmark-ext-tables/src/test/java/com/vladsch/flexmark/ext/tables/MarkdownTableTestBase.java ../ssg/original-src/flexmark-java/flexmark-ext-enumerated-reference/src/test/java/com/vladsch/flexmark/ext/enumerated/reference/MergeEnumeratedReferenceTest.java"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
 
-# …AND THE JDK EVERY LANE COMPILES WITH — the OTHER half of "one compiler", and the half that was
-# ambient until it broke a measurement (`ENGINE-LIMITS.md` M5.10, `scripts/_lib.sh`'s `jdk_guard`).
+# …and the JDK every lane compiles with — the other half of "one compiler", and the half that was
+# ambient until it broke a measurement (checked by `scripts/_lib.sh`'s `jdk_guard`).
 #
 # `scala-cli` picks its JVM from `--jvm`, then `JAVA_HOME`, then the system default — so with no
 # flag the lanes compiled on whatever JDK the operator's shell happened to hold, and the migration
@@ -322,8 +322,7 @@ scala_version := "3.8.4"
 # on; `-release 17` on a JDK 22 is exactly what that build does. What this variable decides is which
 # JDK's CLASS FILES scalac reads for `java.*` signatures, and 22 is the state every committed
 # baseline in this repository was measured on. Moving it is a change to the measurement and is
-# ACKNOWLEDGED by re-accepting every baseline (§5) — not absorbed. `DESIGN.md` §8.24 records the
-# delta between the two numbers.
+# acknowledged by re-accepting every baseline (§5) — not absorbed.
 #
 # EXPORTED, so `scripts/_lib.sh`'s `jdk_guard` check reads the SAME variable rather than a
 # second copy that can drift. With sbt doing all compiles (JVM, JS, Native, ref), the JDK is
@@ -333,20 +332,19 @@ export jdk_version := "22"
 
 # The MIGRATOR invocation. `sbt --client` connects to the warm server whose socket directory is
 # set by SBT_GLOBAL_SERVER_DIR (computed in scripts/_lib.sh from the worktree's absolute path).
-# This gives each worktree a PRIVATE server, solving M5.11's cross-worktree collision: sbt 2's
-# sbtn derived a hash that collided across worktrees sharing a common .git, so sbtn in w21
-# attached to w20's background server (measured: lsof showed w20-dep-residue cwd). With a
-# per-worktree SBT_GLOBAL_SERVER_DIR, the first invocation starts a background server IN THIS
-# DIRECTORY, and subsequent ones (compile, test, correlate) reuse it — zinc's incremental cache
-# and sbt 2's compile cache make a second compile near-instant.
+# This gives each worktree a private server: sbt 2's sbtn derives a hash that can collide across
+# worktrees sharing a common .git, so one worktree's sbtn can attach to another's background
+# server. With a per-worktree SBT_GLOBAL_SERVER_DIR, the first invocation starts a background
+# server in this directory, and subsequent ones (compile, test, correlate) reuse it — zinc's
+# incremental cache and sbt 2's compile cache make a second compile near-instant.
 sbt_migrate := "sbt --client"
 
-# Reference-build scalacOptions (DESIGN.md §8.24, PROGRESS.md §13 wave 1.0).
+# Reference-build scalacOptions.
 #
 # The flag list is READ from the reference repo's SgePlugin / ssg's build.sbt, not hand-copied:
 # - `sge_strict_flags`: SgePlugin.defaultScalacOptions ++ SgePlugin.strictScalacOptions, with
 #   -Xmacro-settings:* dropped (macro timeouts, not diagnostics). Source: sge-build/src/main/scala/
-#   sge/sbt/SgePlugin.scala (§8.24). Used by the core `sge` project and every module whose
+#   sge/sbt/SgePlugin.scala. Used by the core `sge` project and every module whose
 #   build.sbt applies `commonSettings` + `strictSettings`.
 # - `sge_relaxed_flags`: the strict set MINUS -Wunused:imports,privates,locals,patvars,nowarn,
 #   which is what `SgePlugin.relaxedSettings` removes. Used by sge extension modules.
@@ -481,7 +479,7 @@ visui_deps    := "--dependency com.kubuszok::lls:0.3.0"
 # `visui_closure` IS THIS LANE'S ONE UNUSUAL VARIABLE, and it exists because this is the first
 # differential gate over a port that is NOT at zero. §3's rule is that a single typer error skips
 # `RefChecks` for the WHOLE program, so a compile carrying the port's 8-error floor
-# (`PROGRESS.md` §10.9.10) can never take the second, `RefChecks`-honest census pass the two earlier
+# can never take the second, `RefChecks`-honest census pass the two earlier
 # differential lanes both required — and it can never RUN anything either, since scalac reaching no
 # backend phase writes no class file. These five files are the TRANSITIVE CLOSURE, over the emitted
 # tree, of what the adapted suites name; the lane VERIFIES rather than asserts that none of them is
@@ -496,7 +494,7 @@ visui_closure := "Sizes.scala util/ColorUtils.scala util/OsUtils.scala util/Vali
 # dependencies is rare enough that the day one appears, that derivation is what says so.
 usl_src       := "../sge/original-src/vis-ui/usl"
 usl_deps      := ""
-# THE ORACLE'S TWO INPUT SETS, and they are not the same kind of evidence (`PROGRESS.md` §10.9.13).
+# The oracle's two input sets, and they are not the same kind of evidence.
 # `usl_styles` is the 19 shipped `.usl` fixtures the root `build.gradle` compiles the skin FROM;
 # `usl_known_good` is the artifact it compiled — checked into the SIBLING module's resources, which
 # is the whole reason this is a zero-authoring gate rather than a test somebody wrote.
@@ -504,10 +502,10 @@ usl_styles     := "../sge/original-src/vis-ui/usl/styles"
 usl_known_good := "../sge/original-src/vis-ui/ui/src/main/resources/com/kotcrab/vis/ui/skin/x1/uiskin.json"
 # …and the suite's own inputs, which are RESOURCES rather than sources and are therefore the one
 # thing the emitted code cannot carry. Every test reads `/test-*.usl` through
-# `getResourceAsStream`, a STRING LITERAL no rename may touch (§4.56) — so the upstream tree has to
-# be handed to the runner at its upstream paths, unchanged. That is `PROGRESS.md` §11's item 7
-# ("the port's own classpath resources are not part of its output, and nothing says so") met at the
-# smallest scale in the corpus: 12 files, and the lane supplying them IS the obligation being paid.
+# `getResourceAsStream`, a string literal no rename may touch (§4.56) — so the upstream tree has to
+# be handed to the runner at its upstream paths, unchanged. That is the obligation that a port's own
+# classpath resources are not part of its output, and nothing else says so, met at the smallest
+# scale in the corpus: 12 files, and the lane supplying them is the obligation being paid.
 usl_test_res  := "../sge/original-src/vis-ui/usl/src/test/resources"
 usl_test_deps := "--dependency org.scalameta::munit:1.0.2"
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
@@ -522,9 +520,9 @@ usl_test_deps := "--dependency org.scalameta::munit:1.0.2"
 # The coordinate goes on the compile line rather than the emission being changed, because those are
 # two different acts and only one of them belongs to this milestone: the emitted code NAMES that
 # type, so a compile without it reports unresolved references as this port's wall, which is the same
-# refusal `liqp-measure` makes about the generated parser. WHETHER a marker whose family the port
-# does not claim should be emitted at all is an engine question (`PROGRESS.md` §10.6 states it with
-# the number), and it has a portability half beside it — this module claims all three platforms and
+# refusal `liqp-measure` makes about the generated parser. Whether a marker whose family the port
+# does not claim should be emitted at all is an engine question, and it has a portability half
+# beside it — this module claims all three platforms and
 # that jar is JVM-only. Both are the next wave's, with a measurement each.
 md_deps       := "--dependency org.jetbrains:annotations:24.0.1"
 
@@ -536,8 +534,8 @@ md_deps       := "--dependency org.jetbrains:annotations:24.0.1"
 # THE THIRD ENTRY IS FIVE FILES AND NOT A DIRECTORY, and that is the whole point of writing it out.
 # `flexmark-core-test/src/test/java` holds 40 files of which 35 are `@RunWith(Parameterized)` combo
 # suites this milestone does not carry, so a directory here would put their `@Test`s in the
-# denominator and report them as tests the port LOST — a discovery guard crying wolf about a scope
-# decision, which is the one failure that check must not have (ENGINE-LIMITS M5). `java_test_count`
+# denominator and report them as tests the port lost — a discovery guard crying wolf about a scope
+# decision, which is the one failure that check must not have. `java_test_count`
 # takes `find` starting points, and a file is one.
 #
 # The five contribute ZERO to it: `FullOrigSpec*CoreTest` declare no `@Test` of their own, they
@@ -566,9 +564,9 @@ md_test_src   := "../ssg/original-src/flexmark-java/flexmark-util/src/test ../ss
 #      count moves when it is missing.
 #      **IT IS NOW THE PORT'S OWN OUTPUT** — `md_lib_res` points at what the run WRITES, not at
 #      upstream. `main.conf`'s `resources` key declares the file and the run copies it verbatim into
-#      `src_managed/main/resources` (`DESIGN.md` §8.22). Pointed at upstream, this flag made the
-#      SUITE pass while the PORT shipped nothing, which is exactly the consumer obligation
-#      `PROGRESS.md` §11 item 7 raised; pointed here, the lane measures the deliverable.
+#      `src_managed/main/resources`. Pointed at upstream, this flag made the
+#      suite pass while the port shipped nothing, which is exactly the consumer obligation of
+#      shipping its own classpath resources; pointed here, the lane measures the deliverable.
 #   3. `flexmark-test-util` — one `com.vladsch.flexmark.test.util.txt` marker the module-root
 #      helpers locate a source tree by.
 #
@@ -610,7 +608,7 @@ _default:
 # ---------------------------------------------------------------------------------------------
 # libGDX core, rung L0 — the UNIVERSAL translation alone (no drop/inject/surface policy) ON THE LLS
 # BASE, emitted to `ported/sge-l0`; a DEPENDENT of `ported/lls`, so it runs AFTER `lls-measure`
-# (it reads lls's published port map). JVM compile + correlation only (PROGRESS.md §13.29).
+# (it reads lls's published port map). JVM compile + correlation only.
 # ---------------------------------------------------------------------------------------------
 [doc("libGDX core rung L0 — universal translation only: emit, checks, compile, correlate")]
 gdx-l0-measure:
@@ -622,7 +620,7 @@ gdx-l0-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
     REPORT="$ROOT/port-report/LibgdxL0Migrate"
     # a zinc clean BEFORE the migrator (it deletes src_managed): the base's tree moves under this
-    # port, and an incremental compile read six stale sites as 0 errors (PROGRESS.md §13.29)
+    # port, and an incremental compile once read six stale sites as 0 errors
     _sbt_run "port-sge-l0JVM/clean" >/dev/null 2>&1
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}} --reference=$ROOT/{{sge_ref}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
@@ -647,9 +645,9 @@ gdx-l0-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0measure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxl0measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxl0measure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
-    # the JS and Native rows (PROGRESS.md §13.31 step 3): BP_FULL=1 compiles them, baselined as expected-errors.{js,native}
+    # the JS and Native rows: BP_FULL=1 compiles them, baselined as expected-errors.{js,native}
     full_compiles "port-sge-l0JS/compile" "port-sge-l0Native/compile" "" "$REPORT"
-    # the residue as one table (the suite lane's families, PROGRESS.md §13.31 step 0): read this, not the raw blocks
+    # the residue as one table (the suite lane's families): read this, not the raw blocks
     classify_errors "$MEASURE_TMP"/gdxl0measure.txt "$ROOT/ported/sge-suite-check/families.tsv" "$REPORT/run-latest"
     echo "-- by family --"; cat "$REPORT/run-latest/families.tsv"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0measure.txt | sort | uniq -c | sort -rn | head
@@ -709,7 +707,7 @@ gdx-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     echo "-- compile (sbt port-sgeJVM/compile) --"
     # sbt_compile runs `sbt --batch port-sgeJVM/compile`, strips sbt line prefixes, and sets
@@ -724,8 +722,8 @@ gdx-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
-    # split it into "at a region the engine marked approximate" vs "engine gap" (DESIGN.md §6.3).
+    # A count is not a triage. Join every error back to the member and the Java line it came from, and
+    # split it into "at a region the engine marked approximate" vs "engine gap".
     # With no markers minted yet everything lands in the second lane — which is the honest answer,
     # and the lane an agent in another repository has to act on.
     echo
@@ -791,13 +789,13 @@ gdx-test-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # `{{gdx_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
     # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
     # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
     # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
-    # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
+    # generated one is not. Leaving it off compiles the
     # emitted suite against a fixture that is not there — one error, and it is the port's own.
     # sbt's port-sgeJVM project has src_managed/{main,test}/scala via sourceGenerators and
     # src/test/scala as an unmanaged source directory. Dependencies are in build.sbt.
@@ -898,13 +896,13 @@ gdx-l0-test-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # `{{gdx_l0_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
     # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
     # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
     # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
-    # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
+    # generated one is not. Leaving it off compiles the
     # emitted suite against a fixture that is not there — one error, and it is the port's own.
     # sbt's port-sgeJVM project has src_managed/{main,test}/scala via sourceGenerators and
     # src/test/scala as an unmanaged source directory. Dependencies are in build.sbt.
@@ -914,7 +912,7 @@ gdx-l0-test-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0testmeasure.txt
     echo "TOTAL ERRORS: $ERRORS"
     error_baseline_guard "$ERRORS" "$REPORT"
-    # JVM only at this step: the JS/Native gates come with the steps that unblock them (PROGRESS.md 13.29).
+    # JVM only at this step: the JS/Native gates come with the steps that unblock them.
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0testmeasure.txt | sort | uniq -c | sort -rn | head
 
     # -------------------------------------------------------------------------------------------
@@ -1008,7 +1006,7 @@ ashley-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     echo "-- compile (sbt port-sge-ecsJVM/Test/compile) --"
     # sbt handles the dependency on sge via `dependsOn` in build.sbt. Dependencies (mockito,
@@ -1110,7 +1108,7 @@ anim8-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -1233,7 +1231,7 @@ gltf-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
@@ -1349,7 +1347,7 @@ screens-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -1455,7 +1453,7 @@ vfx-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture
     # (`sge.SgeTestFixture`), on this line for the reason `screens-measure` states: the base retires
@@ -1508,9 +1506,9 @@ vfx-measure:
 # source sets go on the same scala-cli invocation and this lane must run AFTER `gdx-measure` has
 # re-emitted the base. At 166 files it is the largest dependent port in the corpus.
 #
-# THE TEST STORY, and it is the one number a reader of this port is most likely to get wrong.
-# PROGRESS.md's own hand-port table records "24 / 196" against `sge-ai`; that figure describes the
-# REFERENCE HAND PORT's MUnit suite (`../sge/sge-extension/ai/src/test/scala`, 24 files), not
+# The test story, and it is the one number a reader of this port is most likely to get wrong.
+# A hand-port status table elsewhere records "24 / 196" against `sge-ai`; that figure describes the
+# reference hand port's MUnit suite (`../sge/sge-extension/ai/src/test/scala`, 24 files), not
 # anything upstream gdx-ai ships. Upstream's real JUnit surface is TWO files and TEN `@Test`
 # methods, in `gdx-ai/gdx-ai/tests` — `IndexedAStarPathFinderTest` (5) and `ParallelTest` (5, with a
 # `@Before`) — and the separate top-level `gdx-ai/tests` gradle project is an LWJGL DEMO
@@ -1582,7 +1580,7 @@ ai-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -1619,9 +1617,9 @@ ai-measure:
 # ---------------------------------------------------------------------------------------------
 # gdx-ai's OWN JUnit suite — the first evidence of BEHAVIOUR this port has.
 #
-# TWO upstream files and TEN `@Test`, and the number is the whole point. `PROGRESS.md` §1.1's
-# hand-port column reads `24 / 196` against `sge-ai`; that is the REFERENCE HAND PORT's own MUnit
-# suite, hand-WRITTEN for the port, and it is not what upstream ships. Upstream ships
+# Two upstream files and ten `@Test`, and the number is the whole point. A hand-port status table's
+# column reads `24 / 196` against `sge-ai`; that is the reference hand port's own MUnit
+# suite, hand-written for the port, and it is not what upstream ships. Upstream ships
 # `IndexedAStarPathFinderTest` (5) and `ParallelTest` (5, with a `@Before`) in `gdx-ai/gdx-ai/tests`
 # — while the separate top-level `gdx-ai/tests` gradle project, 111 files with 54 named
 # `*Test*.java`, declares ZERO `@Test` and is an LWJGL demo application. `ai-measure` already
@@ -1687,7 +1685,7 @@ ai-test-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # `--test`: without it `scala-cli` READS the test directories and reports only the MAIN scope,
     # so a suite that does not compile measures 0 (§4.56's instrument-invocation rule — measured at
@@ -1733,12 +1731,12 @@ ai-test-measure:
 # nothing translated at all. That is the jbump precedent (`jbump-measure`'s probe: a port with no
 # upstream suite gated by hand-written code) at suite scale.
 #
-# WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). The
+# What this is not: these are not ported tests and are never counted as any. The
 # emitted-test figures belong to `ai-test-measure`; this lane's population is a number about the
-# CENSUS, and the two must not be added.
+# census, and the two must not be added.
 #
-# THE CENSUS IS RE-DERIVED HERE, NOT ASSERTED. `PROGRESS.md` §10.7.12 classifies each of the 24
-# reference files (a) compatible as-is / (b) compatible after the mapping / (c) incompatible, and
+# The census is re-derived here, not asserted. Each of the 24 reference files is classified
+# (a) compatible as-is / (b) compatible after the mapping / (c) incompatible, and
 # the population that classification was made against is READ OFF THE REFERENCE TREE on every run.
 # A hand port that gains a file, loses one, or gains a `test(…)` makes the census stale, and
 # nothing else in this repository could say so — the adapted copies would keep passing at their own
@@ -1788,7 +1786,7 @@ ai-diff-measure:
     echo
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$ROOT/port-report/GdxAiMigrate"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so
     # a differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
@@ -1894,7 +1892,7 @@ sg-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip. Dropped once, and `grep -cE '^-- .*Error'` then matched nothing because every
     # line begins with a colour escape — reporting 0 errors for a port that had 20. A false NEGATIVE on
@@ -1954,8 +1952,7 @@ sg-measure:
 # and nothing else — so there is no Java suite to put through the pipeline and no `test.conf`. The
 # lane therefore ASSERTS that fact instead of skipping the discovery block: a lane that silently
 # has no tests is indistinguishable from a lane whose tests all vanished, which is the failure
-# `java_test_count` exists to catch. Everything CLAUDE.md §4.4 lists is UNMEASURED for this port;
-# `PROGRESS.md` §noise4j says so in the same words.
+# `java_test_count` exists to catch. Everything `CLAUDE.md` §4.4 lists is unmeasured for this port.
 # ---------------------------------------------------------------------------------------------
 [doc("noise4j — emit, checks, break residue, compile, correlate (no test set upstream)")]
 noise4j-measure:
@@ -2002,7 +1999,7 @@ noise4j-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
@@ -2101,8 +2098,8 @@ lls-measure:
     echo
     break_residue {{lls_module}}/src_managed/main/scala
 
-    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
-    # the compile below runs on another (ENGINE-LIMITS M5.10).
+    # The JDK is an input to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another.
     jdk_guard "$REPORT"
     echo "-- compile (sbt port-llsJVM/compile; zinc state cleaned before the migrator) --"
     sbt_compile "port-llsJVM/compile" "$MEASURE_TMP"/llsmeasure.txt
@@ -2223,8 +2220,8 @@ lls-diff-measure:
     grep -vE '^\s*(#|$)' "{{lls_diff_skip}}" | sed 's/^/     /'
 
     echo
-    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and the
-    # compile below runs on another (ENGINE-LIMITS M5.10). The port's own report carries the pin.
+    # The JDK is an input to this measurement: the frontend read its class files on ONE JVM and the
+    # compile below runs on another. The port's own report carries the pin.
     jdk_guard "$ROOT/port-report/LlsMigrate"
     echo "-- compile (sbt port-lls-diff/Test/compile) --"
     sbt_compile "port-lls-diff/Test/compile" "$MEASURE_TMP"/llsdiffmeasure.txt
@@ -2328,7 +2325,7 @@ jbump-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
     # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
@@ -2492,7 +2489,7 @@ usl-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
     # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
@@ -2582,7 +2579,7 @@ usl-measure:
     # below would report as "the oracle did not run" rather than as the ambiguity it is.
     #
     # …and the transcript is cut from `fixtures:` ONWARD rather than filtered line by line. The port
-    # compiles with 5 deprecation warnings (§4.4's non-local return, `PROGRESS.md` §10.9.13), and a
+    # compiles with 5 deprecation warnings (§4.4's non-local return), and a
     # `grep -v` list of warning shapes is a filter that has to be extended every time scalac phrases
     # one differently — the same enumerate-the-accepted-forms mistake §4.56's counter rule is about.
     # The probe's own first line is a marker nothing else emits, so anchoring on it is exact.
@@ -2646,9 +2643,9 @@ usl-measure:
 #
 # Every test calls `getResourceAsStream("/test-visui.usl")` and compares against
 # `/test-visui-expected.json` beside it. A classpath string is a STRING LITERAL and no rename may
-# touch one (CLAUDE.md §4.56), so the emitted Scala names the upstream paths and the RUNNER has to
-# supply that tree — which is `PROGRESS.md` §11 item 7's standing obligation ("the port's own
-# classpath resources are not part of its output, and nothing says so") met at the smallest scale
+# touch one (`CLAUDE.md` §4.56), so the emitted Scala names the upstream paths and the runner has to
+# supply that tree — which is the standing obligation that a port's own classpath resources are not
+# part of its output, and nothing else says so, met at the smallest scale
 # the corpus has. Absent, every test fails on a null stream; supplied, the suite is a conformance
 # gate over six real templates whose expected output UPSTREAM WROTE.
 #
@@ -2713,7 +2710,7 @@ usl-test-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$TREPORT"
     # BOTH source sets on ONE invocation: the main port is RuntimeMode.Vendored, so the shims live
     # in `src_managed/main` and the suite links against them there. Compiling either alone measures
@@ -2776,7 +2773,7 @@ usl-test-measure:
 #     failures as the port's error count.
 #   * ONE COMPILE, TWO NUMBERS. Both source sets go through scalac together — they must, the suite
 #     links against what the main port emitted — and the count is then SPLIT by the path scalac
-#     itself printed, so `PROGRESS.md` §10.5's main-port figure stays a number this lane reproduces
+#     itself printed, so the main port's figure stays a number this lane reproduces
 #     rather than one merged past recovery. A test-set error is frequently a CASCADE of a main-set
 #     one, which is exactly why the two are never added up into a single wall.
 #   * THE SUITE IS EMITTED AND, TODAY, NOT RUN. The main port stands at a measured wall, and the
@@ -2870,10 +2867,10 @@ liqp-measure:
     # on the day the port went green, which is the one day nobody is looking for a missing fixture.
     # A missing input is fatal, never a smaller measurement (CLAUDE.md §5.1).
     # -------------------------------------------------------------------------------------------
-    # The SPI descriptor is now EMITTED (`serviceProviders` in main.conf, ENGINE-LIMITS.md P5) — a
-    # build product under `src_managed/`, not the hand-written file this used to guard. The guard
-    # stays, and is now a guard on the RUN: if the run stopped writing it the suite's ServiceLoader
-    # lookups find zero providers and say nothing, which is the whole reason the key exists.
+    # The SPI descriptor is emitted (`serviceProviders` in main.conf) — a
+    # build product under `src_managed/`. The guard is on the run: if the run stopped writing it
+    # the suite's ServiceLoader lookups find zero providers and say nothing, which is the whole
+    # reason the key exists.
     SERVICES="{{liqp_module}}/src_managed/main/resources/META-INF/services/ssg.liquid.spi.TypesSupport"
     if [ ! -f "$SERVICES" ]; then
       echo "!! $SERVICES is MISSING — the suite's ServiceLoader lookups would find zero providers,"
@@ -2895,7 +2892,7 @@ liqp-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # The generated parser is a directory of CLASS FILES the frontend already read (D-liqp-1). If
     # scalac does not read the same `liquid.parser.v4` the two halves of the port disagree about
@@ -2920,7 +2917,7 @@ liqp-measure:
     error_baseline_guard "$ERRORS" "$TREPORT"
     full_compiles "port-ssg-liquidJS/compile" "port-ssg-liquidNative/compile" "port-ssg-liquid-ref/compile" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. The two source sets are one
-    # compile and two walls: the main port's figure is what `PROGRESS.md` §10.5 quotes, and a
+    # compile and two walls: the main port's figure is what a status table quotes, and a
     # test-set error is often a cascade of a main-set one. `correlate` below attributes every one of
     # them to a member and a Java origin; this is only the shape of the total.
     E_MAIN=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt | grep -c "/src_managed/main/")
@@ -2949,10 +2946,9 @@ liqp-measure:
       # `--workspace` keeps scala-cli's own `.scala-build/` beside the fixture rather than under the
       # cwd it inherits; `--resource-dir` is what puts the EMITTED
       # META-INF/services/ssg.liquid.spi.TypesSupport on the test JVM's classpath, and without it the
-      # suite's ServiceLoader lookups find nothing AND SAY NOTHING (ENGINE-LIMITS.md P5). It reads
+      # suite's ServiceLoader lookups find nothing and say nothing. It reads
       # `src_managed/main/resources` because the descriptor is a build product the run writes from
-      # the port's `serviceProviders` key — it was a hand-written `src/main/resources` file until
-      # that key existed, which is the state P5's second half described.
+      # the port's `serviceProviders` key.
       sbt_test "port-ssg-liquidJVM/testOnly *" "$MEASURE_TMP"/liqprun.txt
       reconcile_outcomes "$MEASURE_TMP"/liqprun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
@@ -2998,9 +2994,9 @@ liqp-measure:
 #     the split util libraries are tested from that aggregator. So `java_test_count` over the
 #     scoped trees is 0 and this lane re-derives it, exactly as `noise4j-measure` and
 #     `jbump-measure` re-derive theirs: a lane that silently has no tests is indistinguishable from
-#     a lane whose tests all vanished. What that leaves UNMEASURED is everything CLAUDE.md §4.4
+#     a lane whose tests all vanished. What that leaves unmeasured is everything `CLAUDE.md` §4.4
 #     lists, on a library that is a character-level parser — which is a larger gap here than on any
-#     port before it, and `PROGRESS.md` §10.6 says so in the same words.
+#     port before it.
 #   * THE COMPILE CARRIES THE ANNOTATION JAR, and it is not the frontend's copy of it. flexmark's
 #     one compile-scope coordinate is resolved by `FlexmarkClasspath` so SPOON can read
 #     `@NotNull`/`@Nullable`, and it turns out to be needed AGAIN by scalac, because a MARKER
@@ -3081,7 +3077,7 @@ md-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
@@ -3110,7 +3106,7 @@ md-measure:
 # ssg-md's SUITE — `flexmark-util/src/test/java`, 52 files and 730 plain `@Test`.
 #
 # `gdx-test-measure`'s two-lane shape rather than `liqp-measure`'s one-lane one, and the reason is
-# `md-measure`'s number: ssg-md MAIN is a census this repository quotes (`PROGRESS.md` §10.6.3), so
+# `md-measure`'s number: ssg-md main is a census this repository quotes, so
 # it keeps a lane of its own that reproduces it alone. This lane then compiles BOTH source sets on
 # one invocation — it must, the suite links against what the main port emitted, and the main port is
 # `RuntimeMode.Vendored` so the shims live in `src_managed/main` — and SPLITS the count by the path
@@ -3186,7 +3182,7 @@ md-test-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$TREPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3201,7 +3197,7 @@ md-test-measure:
     error_baseline_guard "$ERRORS" "$TREPORT"
     full_compiles "port-ssg-mdJS/Test/compile" "port-ssg-mdNative/Test/compile" "port-ssg-md-ref/Test/compile" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is
-    # what PROGRESS.md §10.6.3 quotes, and a test-set error is often a cascade of a main-set one.
+    # what a status table quotes, and a test-set error is often a cascade of a main-set one.
     E_MAIN=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt | grep -c "/src_managed/main/")
     E_TEST=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt | grep -c "/src_managed/test/")
     echo "  main source set: $E_MAIN   test source set: $E_TEST   elsewhere: $((ERRORS - E_MAIN - E_TEST))"
@@ -3215,7 +3211,7 @@ md-test-measure:
       # `--resource-dir` is what puts the spec files, the library's OWN `entities.properties` and the
       # harness marker on the test JVM's classpath; see `md_spec_res` for all three, for why the
       # harness's two are the upstream's own bytes at the upstream's own paths, and for why the
-      # library's own is now the PORT's output instead (`DESIGN.md` §8.22).
+      # library's own is now the port's output instead.
       sbt_test "port-ssg-mdJVM/testOnly *" "$MEASURE_TMP"/mdtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/mdtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
@@ -3232,7 +3228,7 @@ md-test-measure:
       # The OUTPUT goes to the TEST report and not the main one, which is the difference a two-lane
       # split makes: this compile carries both source sets, so writing its 87-row `errors.tsv` into
       # `FlexmarkMigrate/run-latest` would overwrite the 43-row artifact `md-measure` had just
-      # written — the file `PROGRESS.md` §10.6.3's census is counted from, replaced by a superset
+      # written — the file the status table's census is counted from, replaced by a superset
       # after the lane that produced it had already passed.
       correlate "$TREPORT/run-latest" --scalac "$MEASURE_TMP"/mdtestmeasure.txt \
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
@@ -3248,8 +3244,8 @@ md-test-measure:
 # ---------------------------------------------------------------------------------------------
 # ssg-md's COMMONMARK CONFORMANCE CONTROL — the upstream JAVA, measured.
 #
-# THE ONE LANE HERE THAT DOES NOT MEASURE A PORT. `PROGRESS.md` §10.6.7 quotes "1,870 of 1,870 spec
-# examples (100 %), against a MEASURED green java control" and a per-example table beside it; the
+# The one lane here that does not measure a port. A status table quotes "1,870 of 1,870 spec
+# examples (100 %), against a measured green java control" and a per-example table beside it; the
 # port's half of that is `md-test-measure`'s, and the CONTROL's half was produced by hand. §5's rule
 # is that a number is reproduced by a lane or it is not quoted, and a control is exactly the number
 # an agent cannot re-derive from anything else in this repository: `md-test-measure` reporting green
@@ -3396,11 +3392,11 @@ md-ext-measure:
     # Both frameworks summed: a ported suite is MUnit and any residue is still JUnit, so counting one
     # under-reports by every converted suite — in the safe-looking direction.
     #
-    # THE DENOMINATOR IS `md_ext_test_src` AND NOT THE MODULES' `src/test`, and that is a scope
+    # The denominator is `md_ext_test_src` and not the modules' `src/test`, and that is a scope
     # decision rather than an omission: the extension suites are overwhelmingly
-    # `@RunWith(Parameterized.class)` `ComboSpecTestCase` subclasses (`PROGRESS.md` §10.6.1's
-    # documented refusal), and counting their `@Test`s here would report a decision as tests the port
-    # LOST — the one failure this guard must not have (ENGINE-LIMITS M5). `java_test_count` takes
+    # `@RunWith(Parameterized.class)` `ComboSpecTestCase` subclasses, and counting their `@Test`s
+    # here would report a decision as tests the port
+    # lost — the one failure this guard must not have. `java_test_count` takes
     # `find` starting points and a file is one, which is why the variable names files.
     JAVA_TESTS=$(java_test_count {{md_ext_test_src}})
     JUNIT_LEFT=$(junit_residue {{md_ext_module}}/src_managed/test/scala)
@@ -3414,7 +3410,7 @@ md-ext-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$EREPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3442,7 +3438,7 @@ md-ext-measure:
     error_baseline_guard "$ERRORS" "$EREPORT"
     full_compiles "port-ssg-md-extJS/compile" "port-ssg-md-extNative/compile" "port-ssg-md-ext-ref/compile" "$EREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is what
-    # `PROGRESS.md` §10.6.3 quotes and it must not absorb an extension's error, nor the reverse: an
+    # a status table quotes and it must not absorb an extension's error, nor the reverse: an
     # extension error is THIS port's wall and a base error is a regression `md-measure` already failed
     # on.
     E_BASE=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt | grep -c "/ssg-md/src_managed/")
@@ -3457,8 +3453,8 @@ md-ext-measure:
       echo
       echo "-- run --"
       # `--resource-dir` puts the LIBRARY'S OWN `entities.properties` on the test JVM's classpath —
-      # `md_lib_res`, which is the BASE PORT'S OWN OUTPUT and no longer the upstream tree
-      # (`DESIGN.md` §8.22): `Html5Entities` reads it in a static initialiser to build the HTML5
+      # `md_lib_res`, which is the base port's own output and no longer the upstream tree:
+      # `Html5Entities` reads it in a static initialiser to build the HTML5
       # entity table, so every `&nbsp;` in every document needs it and its absence is an
       # `ExceptionInInitializerError` that no compile, check or count can see. Pointed at upstream
       # this flag made the suite pass while the port shipped nothing. The spec files and the harness
@@ -3479,7 +3475,7 @@ md-ext-measure:
       # in an extension through this port's and one in the library through the base's, so the three
       # walls stay distinguishable after the join. The OUTPUT goes to the TEST report and not the
       # main one — writing it into `FlexmarkMigrate/run-latest` would overwrite the artifact
-      # `md-measure` had just written, which is `PROGRESS.md` §10.6.3's census.
+      # `md-measure` had just written, which is the status table's census.
       correlate "$ETREPORT/run-latest" --scalac "$MEASURE_TMP"/mdextmeasure.txt \
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
         --srcmap "$EREPORT/run-latest/srcmap.tsv" \
@@ -3499,8 +3495,7 @@ md-ext-measure:
 # ONE source set and no suite stage, for the two reasons the lane prints rather than asserts:
 # upstream's `src/test/java` declares zero `@Test` (it is 128 manual LWJGL3 demos), and this port
 # has no hand-written suite yet. That makes it `jbump-measure`'s shape without the differential
-# probe — the probe against the reference hand port's own 32-file MUnit suite is a later wave, and
-# PROGRESS.md §10.8 holds its scope.
+# probe — the probe against the reference hand port's own 32-file MUnit suite is a later wave.
 #
 # The compile line carries NO coordinate of its own (`textra_deps` is empty and says why): libGDX
 # arrives as the base's emitted SOURCE, and regexodus is derived from what the run published.
@@ -3608,7 +3603,7 @@ textra-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3651,7 +3646,7 @@ textra-measure:
 # (CLAUDE.md §3), and `textra-measure`'s own comment said so. The reference hand port
 # (`../sge/sge-extension/textra`) wrote its own suite over the same library — 32 files, 239
 # `test(…)` — and that suite is hand-written Scala, so a compiled port can be run against it with
-# nothing translated. `ai-diff-measure` is the precedent and `PROGRESS.md` §10.8.17 is the census.
+# nothing translated. `ai-diff-measure` is the precedent.
 #
 # WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). Upstream
 # ships no suite for this library, so there is no emitted-test figure to add them to — which makes
@@ -3703,7 +3698,7 @@ textra-diff-measure:
     echo
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$ROOT/port-report/TextraTypistMigrate"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so a
     # differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
@@ -3754,8 +3749,8 @@ textra-diff-measure:
 # ONE source set and no suite stage. Upstream's `ui/src/test` declares TWO real `@Test`, which is
 # `gltf-measure`'s shape rather than `jbump-measure`'s — a suite exists and is nearly empty — so the
 # lane re-derives that 2 and refuses to let it drift, while the port itself has no test source set
-# yet. `PROGRESS.md` §10.9 holds both later waves (the two-test port, and the differential probe
-# against the reference hand port's 72-case MUnit suite).
+# yet. Both later waves (the two-test port, and the differential probe against the reference hand
+# port's 72-case MUnit suite) are the next steps.
 #
 # The compile line carries NO coordinate of its own (`visui_deps` is empty and says why): libGDX
 # arrives as the base's emitted SOURCE, and there is no third-party jar in this library at all.
@@ -3845,8 +3840,7 @@ visui-measure:
 
     echo
     echo "-- the resources this port SHIPS: byte-for-byte against upstream --"
-    # WAS a printed residue — "24 upstream, 9 paths named in emitted Scala, 0 shipped" — and is a
-    # GATE now that the mechanism exists (`DESIGN.md` §8.22): `PortManifest.resources` declares the
+    # A gate on the mechanism that copies resources: `PortManifest.resources` declares the
     # files and the run copies them into `src_managed/main/resources`, unrenamed, because a classpath
     # lookup is a STRING LITERAL no rename may move (§4.56).
     #
@@ -3915,7 +3909,7 @@ visui-measure:
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$REPORT"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3958,14 +3952,15 @@ visui-measure:
 # surface is a widget toolkit. The reference hand port (`../sge/sge-extension/visui`) wrote 72
 # MUnit cases over the same library, an 8x richer suite, and it is hand-written Scala, so a compiled
 # port can be run against it with nothing translated. `ai-diff-measure` and `textra-diff-measure`
-# are the precedents; `PROGRESS.md` §10.9.12 is the census.
+# are the precedents.
 #
-# WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). Upstream
+# What this is not: these are not ported tests and are never counted as any (CLAUDE.md §3). Upstream
 # ships two `@Test` for this library and this lane touches neither of them.
 #
-# AND THE COMPILE IS SCOPED, WHICH NO EARLIER DIFFERENTIAL LANE HAD TO BE. gdx-ai and TextraTypist
-# were both at ZERO when their gates were built; this port stands at its attributed 8-error floor
-# (`PROGRESS.md` §10.9.10 — 3 C3 refusals, 3 upstream version skew, 1 K13-base, 1 unsuppliable-use)
+# And the compile is scoped, which no earlier differential lane had to be. gdx-ai and TextraTypist
+# were both at zero when their gates were built; this port stands at its attributed 8-error floor
+# (3 refusals where a Scala secondary constructor cannot call `super(args)`, 3 from upstream version
+# skew, 1 from the base module's nullable-union limit, 1 unsuppliable-use)
 # and nothing on that list is close to moving. §3's rule then bites twice over: with any typer error
 # outstanding `RefChecks` never runs, so the census's second pass would be impossible, and scalac
 # reaching no backend phase writes no class file, so NOTHING could be run at all. So the compile
@@ -4013,7 +4008,7 @@ visui-diff-measure:
     echo
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$ROOT/port-report/VisUiMigrate"
     echo "-- compile scope: the CLOSURE, because this port is not at zero --"
     # The whole-tree compile is `visui-measure`'s and its floor is that lane's baseline; what this
@@ -4700,7 +4695,7 @@ lane-selfcheck:
     case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
 
     echo "-- jdk_guard --"
-    # THE JDK IS AN INPUT TO THE MEASUREMENT (ENGINE-LIMITS M5.10). The three cases below are the
+    # The JDK is an input to the measurement. The three cases below are the
     # three answers the guard can give, and the middle one is why it exists at all: a frontend on a
     # JDK the compiler does not have produces a port that fails to compile with every check count,
     # every finding and every port-map fingerprint flat.
@@ -4912,7 +4907,7 @@ lane-selfcheck:
     echo "-- port_map_guard --"
     # The SIXTH promoted baseline and the second one nothing read — and the only one another RUN
     # reads, because a dependent's emitted text comes out of its base's map. It went stale twice
-    # (PROGRESS.md §12.2.5's 60 member rows, §12.4.6's nine stale `policy=` headers) and both were
+    # (60 member rows once, nine stale `policy=` headers another time) and both were
     # found by hand. The fixtures below are those two shapes plus the three absences.
     mkdir -p "$T/pm/baseline" "$T/pm/run-latest"
     pmhdr() { printf '# balticporter port map\tschema=3\tmodule=sge\tengine=bp/0.1\tsources=aaaa\tfiles=2\tpolicy=%s\n' "$1"; }
@@ -5082,8 +5077,8 @@ baseline-accept PORT:
     #                                `findings.tsv` by `findings_baseline_guard`, which diffs it with
     #                                the ID COLUMN STRIPPED: the id is a hash with a `/2`, `/3`
     #                                sequence assigned in line order, so an upstream whitespace edit
-    #                                renumbers rows that did not change. Ungated it hid eight stale
-    #                                dependent baselines for two waves (PROGRESS.md §12.2.5), because
+    #                                renumbers rows that did not change. Ungated it once hid eight
+    #                                stale dependent baselines for two waves, because
     #                                a moved OWNER, a moved `UsageKind` and a moved running total are
     #                                none of them a count
     #   members.tsv                — one digest per emitted member; this is what makes "you changed
@@ -5096,7 +5091,7 @@ baseline-accept PORT:
     #                                strips nothing: the file has no id column and every field it
     #                                does have is a fact somebody has to acknowledge. Ungated it went
     #                                stale twice — 60 member rows in one commit, and nine dependent
-    #                                `policy=` headers for days (PROGRESS.md §12.2.5, §12.4.6)
+    #                                `policy=` headers for days
     #   errors-count               — the LANE's compile-error total, promoted as `expected-errors`.
     #                                Written by `error_baseline_guard` on every run precisely so
     #                                that nobody ever types this number: a hand-edited floor is the
@@ -5120,7 +5115,7 @@ baseline-accept PORT:
         echo "expected-errors.${plat_suffix}: $(cat "$DIR/baseline/expected-errors.${plat_suffix}")"
       fi
     done
-    # Reference-flags error baseline (CLAUDE.md §5, DESIGN.md §8.24): promoted as
+    # Reference-flags error baseline (§5): promoted as
     # expected-errors.ref, written by flags_compile on every run.
     if [ -f "$DIR/run-latest/errors-count.ref" ]; then
       cp "$DIR/run-latest/errors-count.ref" "$DIR/baseline/expected-errors.ref"
@@ -5211,7 +5206,7 @@ comment-lint RANGE="":
 
 # ---------------------------------------------------------------------------------------------
 # DEPENDENCY LINT — verifies that each port's `build.sbt` coordinates agree with what the port's
-# manifest published in `run-latest/dependencies.tsv` (DESIGN.md §8.24).
+# manifest published in `run-latest/dependencies.tsv`.
 #
 # Dependencies are declared in TWO places: the port's `.conf` manifest (`dependencies = [...]`)
 # and `build.sbt`'s `libraryDependencies`. This lint fails when the `onClasspath=yes` coordinates
@@ -5571,7 +5566,7 @@ ecs-dropin:
     echo
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another. Nothing compared them until an `override` emitted on
-    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    # JDK 24 failed a JDK-22 compile with every other artifact flat.
     jdk_guard "$ROOT/port-report/AshleyMigrate"
     echo "-- compile and test --"
     # Project ids: sge-ecs (JVM — no suffix), sge-ecsJS, sge-ecsNative. The JVM project does
@@ -5753,8 +5748,8 @@ metals-call +ARGS:
     scripts/metals-call.sh {{ARGS}}
 
 # ---------------------------------------------------------------------------------------------
-# The GOAL's instrument: sge's demo game code compiled against the ladder port (PROGRESS.md 13.29,
-# standing order 1). `DEMO_CHECK=pong,space-shooter just demo-check`. Compile only; the error list
+# The goal's instrument: sge's demo game code compiled against the ladder port.
+# `DEMO_CHECK=pong,space-shooter just demo-check`. Compile only; the error list
 # IS the remaining API distance, by file and by kind.
 # ---------------------------------------------------------------------------------------------
 [doc("sge's demo game code against the ladder port — compile, count, classify (DEMO_CHECK=pong)")]
@@ -5784,7 +5779,7 @@ demo-check:
     headline "$ERRORS" "$REPORT"
 
 # sge-suite-check — sge core's OWN test tree (sge/src/test/{scala,scalajvm}) compiled against
-# ported/sge-l0 (PROGRESS.md §13.31 step 0). Errors attributed to the plan's families through
+# ported/sge-l0. Errors attributed to the plan's families through
 # ported/sge-suite-check/families.tsv; baselined like demo-check (a drop-in style count).
 [doc("sge core's own test suite against the ladder port — compile, count, attribute to families")]
 sge-suite-check:
