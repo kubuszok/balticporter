@@ -3,7 +3,7 @@ package balticporter.tir
 import java.nio.file.{ Files, Path }
 
 /** Plans, rewrites and writes `META-INF/services/` descriptors with both namespaces moved via the run's own `emittedName`. Reports four residues: dropped provider, dropped service, unrenamed name,
-  * and off-JVM-unwired. // ENGINE-LIMITS P5, P9
+  * and off-JVM-unwired (Scala.js and Native resolve providers by a registration nothing in a ported library triggers, so `load` returns empty there).
   */
 object ServiceProviders:
 
@@ -81,7 +81,7 @@ object ServiceProviders:
     case first :: rest if first.nonEmpty && first.head == Bom => first.tail :: rest
     case all                                                  => all
 
-  /** One finding per provider shipped plus one per residue. `isDropped` is asked of the UPSTREAM name (§4.56). `offJvm` produces one row per descriptor.
+  /** One finding per provider shipped plus one per residue. `isDropped` is asked of the UPSTREAM name. `offJvm` produces one row per descriptor.
     */
   def findings(ds: List[Descriptor], isDropped: String => Boolean, renaming: Boolean, offJvm: Set[balticporter.catalog.Platform] = Set.empty): List[CheckReport.Finding] =
     ds.flatMap { d =>

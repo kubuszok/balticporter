@@ -2,9 +2,9 @@ package balticporter.tir
 
 import java.nio.file.{ Files, Path }
 
-/** Attribute a COMPILER ERROR or a TEST FAILURE over emitted Scala back to the member that produced it and the Java it came from (DESIGN.md §6.3, CLAUDE.md §4.4). TWO LANES: scalac errors and
-  * test-runner output, both joined to (member, java origin), diffed run-over-run. A failing test anchors on the first STACK FRAME in ported code. EXPECTED FAILURES ARE DERIVED FIRST from
-  * `dropped-types.tsv`; `expected-failures.tsv` is the explicit fallback, kept APART.
+/** Attribute a COMPILER ERROR or a TEST FAILURE over emitted Scala back to the member that produced it and the Java it came from. TWO LANES: scalac errors and test-runner output, both joined to
+  * (member, java origin), diffed run-over-run. A failing test anchors on the first STACK FRAME in ported code. EXPECTED FAILURES ARE DERIVED FIRST from `dropped-types.tsv`; `expected-failures.tsv` is
+  * the explicit fallback, kept APART.
   */
 object Correlate:
 
@@ -65,8 +65,8 @@ object Correlate:
     */
   private val MarkLine = raw"^==> ([XiI]) (\S+)\s*(.*)$$".r
 
-  /** MUnit's THIRD terminal marker, `==> s <suite>.<name> skipped 0.0s` — a suite abandoned after a fatal Error takes its remaining tests with it (§3's silent-omission shape). Needs its own pattern:
-    * widening FailLine's lazy `(.+?)` would swallow "skipped" into the name. Matched BEFORE the other two.
+  /** MUnit's THIRD terminal marker, `==> s <suite>.<name> skipped 0.0s` — a suite abandoned after a fatal Error takes its remaining tests with it silently. Needs its own pattern: widening FailLine's
+    * lazy `(.+?)` would swallow "skipped" into the name. Matched BEFORE the other two.
     */
   private val SkipLine  = raw"^==> s (\S+) skipped\s+[0-9]+(?:\.[0-9]+)?s\s*$$".r
   private val FrameLine = raw"^\s+at ([^(\s]+)\(([^:)]+)(?::(\d+))?\)\s*$$".r
@@ -134,7 +134,7 @@ object Correlate:
 
   val ExpectedHeader = "#suite\ttest\treason\t[frame=<ported class>]"
 
-  /** the anchor column's TAG — tagged rather than positional because `reason` absorbs every trailing field, and `k=v` is the grammar a porter note already writes decisions in (§4.575).
+  /** the anchor column's TAG — tagged rather than positional because `reason` absorbs every trailing field, and `k=v` is the grammar a porter note already writes decisions in.
     */
   private val FrameTag = "frame="
 
@@ -154,8 +154,8 @@ object Correlate:
             case _ => scala.None
       }
 
-  /** One `Substitutions.dropTypes` entry, IN BOTH NAMESPACES: a port's policy is written UPSTREAM and its package rename runs LAST (§4.56), so recording only one namespace left this rule dead on
-    * every renaming port. Both names are written by the run that knows the map.
+  /** One `Substitutions.dropTypes` entry, IN BOTH NAMESPACES: a port's policy is written UPSTREAM and its package rename runs LAST, so recording only one namespace left this rule dead on every
+    * renaming port. Both names are written by the run that knows the map.
     * @param upstream
     *   the FQN as the manifest declares it.
     * @param emitted
@@ -195,7 +195,7 @@ object Correlate:
     */
   private def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
 
-  /** Does the runtime class `cls` name `fqn` itself, or something NESTED inside it? Cut only at a separator, never a bare prefix (§4.56).
+  /** Does the runtime class `cls` name `fqn` itself, or something NESTED inside it? Cut only at a separator, never a bare prefix.
     */
   private[tir] def covers(fqn: String, cls: String): Boolean =
     fqn.nonEmpty && cls.startsWith(fqn) &&
@@ -222,7 +222,7 @@ object Correlate:
   // the join
   // ===========================================================================
 
-  /** which of DESIGN.md §6.3's lanes a diagnostic fell into. */
+  /** which of the correlation lanes a diagnostic fell into. */
   enum Lane:
     /** at a region the engine marked approximate — expected, carries a remediation. Empty until Stage 2 mints markers; the lane exists so that adding them is a data change.
       */
@@ -336,7 +336,7 @@ object Correlate:
     }
 
   // ---------------------------------------------------------------------------
-  // pass/fail diff — §5.3's classification, applied to behaviour
+  // pass/fail diff — the same classification, applied to behaviour
   // ---------------------------------------------------------------------------
 
   final case class TestDiff(

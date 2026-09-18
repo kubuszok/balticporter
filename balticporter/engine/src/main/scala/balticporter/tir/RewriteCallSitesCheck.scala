@@ -3,7 +3,7 @@ package balticporter.tir
 /** Reports retyping phases with no accounting lane or with a named lane that did not record.
   *
   * Reads `Pipeline.runTraced` observations (which phases moved owned declarations) and each phase's `Rewrite.accountedBy`. Does NOT count seams (those are the four boundary checks' job). One row per
-  * phase; §1(a) unparameterised. // ENGINE-LIMITS K5.6
+  * phase; unparameterised.
   */
 object RewriteCallSitesCheck:
 
@@ -18,7 +18,7 @@ object RewriteCallSitesCheck:
     case UnwiredAccounting
 
   object Issue:
-    /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
+    /** whether the fix is engine, configuration, or library-specific — the thing a bare typer error cannot say. */
     def classification(i: Issue): String = i match
       case Unaccounted =>
         "engine (true of every Java program): this phase RETYPES declarations and no check counts the seams that creates. " +
@@ -70,7 +70,7 @@ object RewriteCallSitesCheck:
         )
     }
 
-  /** Grouped summary with §1 classification. The SCALE line is recomputed every run. */
+  /** Grouped summary with the fix-kind classification. The SCALE line is recomputed every run. */
   def summary(fs: List[Finding], log: RewriteLog, program: Program): String =
     val moves  = log.all.map(_.retyped.size).sum
     val usages = log.all.map(p => p.retyped.toList.map(s => program.usagesOf(s).size).sum).sum

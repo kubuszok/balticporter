@@ -2,8 +2,8 @@ package balticporter.emit
 
 import balticporter.tir.*
 
-/** Maps Java's four access levels to Scala qualifiers. DESIGN.md §8.7. Cross-package overrides use the nearest common ancestor package as qualifier, computed parents-first over already-rendered
-  * forms. Records residue as [[Decision.Kind.WidenedVisibility]] when a declaration ships wider than Java's.
+/** Maps Java's four access levels to Scala qualifiers. Cross-package overrides use the nearest common ancestor package as qualifier, computed parents-first over already-rendered forms. Records
+  * residue as [[Decision.Kind.WidenedVisibility]] when a declaration ships wider than Java's.
   */
 object Visibility:
 
@@ -134,7 +134,7 @@ object Visibility:
         val segs  = own.split('.').toList
         val depth = pkg.split('.').length
         !enclosingTypeNames(id).contains(tail) &&
-        // cut only at a SEPARATOR (§4.56): `demo.a` must not cover `demo.abc`.
+        // cut only at a SEPARATOR: `demo.a` must not cover `demo.abc`.
         (own == pkg || own.startsWith(pkg + ".")) &&
         segs.zipWithIndex.forall((s, i) => s != tail || i == depth - 1)
       }
@@ -265,7 +265,7 @@ object Visibility:
             val pv = visOf(pm)
             val pq = qualifierPkgOf(pm, pv)
             // parent public — widened by this plan or by a declared package move that already
-            // cleared its flags (K47): the child has nothing narrower to keep. A parent public in
+            // cleared its flags: the child has nothing narrower to keep. A parent public in
             // the java never reaches here (java forbids the narrower override).
             if pv == Vis.Public then ""
             else if pq.isEmpty then acc

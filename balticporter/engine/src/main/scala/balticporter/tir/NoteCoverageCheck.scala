@@ -3,7 +3,7 @@ package balticporter.tir
 /** Verifies that every rendered `Decision` produced a `PorterNote`, and vice versa.
   *
   * Scope: decisions in [[PorterNote.Rendered]] whose subject this run emitted (excludes `NotInTree` kinds, unmatched keys, and non-rendered kinds). Joins on `SymId`, not name (renaming passes change
-  * names before rendering). // CLAUDE.md §4.575
+  * names before rendering).
   */
 object NoteCoverageCheck:
 

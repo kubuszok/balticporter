@@ -15,8 +15,8 @@ import scala.jdk.CollectionConverters.*
   */
 object DebugEmit:
 
-  /** Resolve `--phases` names through woven phases first, then the SPI registry. A factory requiring policy throws `ConfigError`; woven §1(a) phases are resolved by own name. Returns `Left(message)`
-    * for testability.
+  /** Resolve `--phases` names through woven phases first, then the SPI registry. A factory requiring policy throws `ConfigError`; woven unparameterised phases are resolved by own name. Returns
+    * `Left(message)` for testability.
     */
   def phasesFor(names: List[String], registry: TransformRegistry = TransformRegistry.discover()): Either[String, List[Phase]] =
     val empty = HoconView.root(com.typesafe.config.ConfigFactory.empty)

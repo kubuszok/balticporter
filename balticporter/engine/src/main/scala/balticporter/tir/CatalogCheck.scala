@@ -13,7 +13,7 @@ object CatalogCheck:
   val Undischarged = "catalog(undischarged)"
   val Uncited      = "catalog(uncited)"
 
-  /** §1(a) classification — every catalog hole is an engine gap. */
+  /** classification: every catalog hole is an engine gap. */
   val Classification: String =
     "[engine (true of every Java program)] the difference catalog is the universal layer; a row it attaches and an arm " +
       "does not consult is an engine gap, never a port's to configure"

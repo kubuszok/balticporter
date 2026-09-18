@@ -17,7 +17,7 @@ object IdiomCheck:
     case IdiomVerdict.Refused(_, _) => Refused
     case IdiomVerdict.Residue(_)    => Residue
 
-  /** Per-lane §1 classification. */
+  /** Per-lane classification: universal, parameterised, or library-specific. */
   def classification(l: String): String = l match
     case Converted =>
       "engine (true of every Java program), and NOT A DEFECT: one row per site an idiom transformer changed. The faithful " +

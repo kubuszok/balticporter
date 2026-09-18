@@ -4,7 +4,7 @@ import balticporter.catalog.{ CatalogLog, JS, Obligations, Rendering, Typing }
 import balticporter.core.{ EngineInfo, Provenance, Substituted }
 import balticporter.tir.*
 
-/** Term/expression rendering, try/match/block statement rendering, and final type/constant rendering split out of TirEmitter (context diet S1). */
+/** Term/expression rendering, try/match/block statement rendering, and final type/constant rendering split out of TirEmitter to keep it within its file-size limit. */
 private[emit] trait TirEmitterExprs:
   self: TirEmitter =>
 
@@ -27,13 +27,13 @@ private[emit] trait TirEmitterExprs:
     else escPath(s.fullName).replace('$', '.')
 
   /** Is the given symbol an anonymous class? Decided from the symbol's `<anon>` NAME (the frontend creates anonymous class symbols with `name = "<anon>"`), never from the `$NNN` suffix in its
-    * `fullName` — §4.56: decide from the symbol's anonymous flag, not from a string pattern.
+    * `fullName`: decide from the symbol's anonymous flag, not from a string pattern.
     */
   private[emit] def isAnonOwner(id: SymId): Boolean =
     id != SymId.None && program.symbolOf(id).exists(_.name == "<anon>")
 
   /** a static member lives in the companion `object`; even inside its own class it must be named `Owner.member`, since a Scala class doesn't see its companion's members unqualified. An ANONYMOUS
-    * CLASS has no nameable path (its FQN's numeric suffix becomes a syntax error after package rename), so its members render bare, decided from the `<anon>` name (§4.56).
+    * CLASS has no nameable path (its FQN's numeric suffix becomes a syntax error after package rename), so its members render bare, decided from the `<anon>` name.
     */
   private[emit] def staticRef(s: SymId): String =
     val sm = sym(s)
@@ -57,8 +57,8 @@ private[emit] trait TirEmitterExprs:
       classStack.exists(c => staticOwnersOf(c).contains(esc(sm.name)))
     }
 
-  /** THE TERM RENDERING DISPATCH — the other half of §2.3(c)'s emitter surface. Not disjoint from [[stat]]: a Term reached as a statement is handed straight here, so every consult happens in the
-    * inner scope, joined by NODE IDENTITY rather than kind or origin.
+  /** THE TERM RENDERING DISPATCH — the other half of the emitter's statement-level surface. Not disjoint from [[stat]]: a Term reached as a statement is handed straight here, so every consult happens
+    * in the inner scope, joined by NODE IDENTITY rather than kind or origin.
     */
   private[emit] def term(t: Term, i: Int): String =
     Rendering.of(TirKinds.of(t), t.origin, t)(termArm(t, i))
@@ -81,7 +81,7 @@ private[emit] trait TirEmitterExprs:
         case Tree.Select(recv, m, _, _) => staticThroughInstance(recv, m)
         case _                          => false)(()))
       // JS-C22/C23 — java resolves an overload in THREE PHASES and scala in ONE; the decision here
-      // is to render the call AS JAVA WROTE IT rather than model a resolver (ENGINE-LIMITS T17).
+      // is to render the call AS JAVA WROTE IT rather than model a resolver.
       // Two rows for JLS 15.12.2's two clauses: the phases, and the most-specific tie-break.
       locally {
         // the ENCLOSING type is java's candidate set (OverloadRiskCheck.rootOf), needed so the
@@ -97,7 +97,7 @@ private[emit] trait TirEmitterExprs:
       applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _)    => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _, compoundOp) =>
-      // F7 (CLAUDE.md §4.4, JLS 15.26.2): a COMPOUND ASSIGNMENT evaluates the lvalue ONCE; the
+      // JLS 15.26.2: a COMPOUND ASSIGNMENT evaluates the lvalue ONCE; the
       // direct rendering evaluates it TWICE. Non-trivial lvalue subexpressions get bound to a
       // temporary; simple lvalues (ident/this/literal) keep the direct form.
       compoundOp match
@@ -120,7 +120,7 @@ private[emit] trait TirEmitterExprs:
       // JS-S21 — a java lambda BODY is a method body, so `return` is legal and means "leave the
       // lambda" (JLS 15.27.2); scala's lambda is an expression and rejects `return` outright. A
       // NESTED `def` restores java's meaning exactly (a `def`'s return cannot be captured by an
-      // enclosing loop's `boundary`, unlike a `break`/`continue` would need to be — §4.4).
+      // enclosing loop's `boundary`, unlike a `break`/`continue` would need to be).
       Obligations.consult(JS.S(21), body.origin)(Option.when(returnsIn(body))(()))
       if !returnsIn(body) then head + term(body, i)
       else
@@ -129,12 +129,12 @@ private[emit] trait TirEmitterExprs:
             lambdaSeq += 1
             val n = s"body$$$lambdaSeq"
             head + s"{ def $n(): $rt = ${term(body, i)}; $n() }"
-          // REFUSED rather than guessed (ENGINE-LIMITS I9): the def needs the SAM method's result
+          // REFUSED rather than guessed: the def needs the SAM method's result
           // type, and a source-written lambda carries no method to read it off. Counted by
           // OmissionCheck.unnameableLambdaReturn.
           case None => head + term(body, i)
     case Tree.If(c, th, el, _, _) => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
-    // A cast ON A POLY EXPRESSION is an ASCRIPTION (`ENGINE-LIMITS.md` K17 face 1): javac's cast
+    // A cast ON A POLY EXPRESSION is an ASCRIPTION: javac's cast
     // there supplies the expected type without being a runtime cast; `asInstanceOf` on a literal
     // elaborates to `Function0` first and throws. `operand` parenthesises the lambda. A
     // METHOD-VALUE ASCRIPTION (`(recv.m: (A, B) => R)`) pins which overload scala binds
@@ -159,7 +159,7 @@ private[emit] trait TirEmitterExprs:
     case r @ Tree.Repeated(es, _, _) =>
       Obligations.consult(JS.G(39), r.origin)(Some(()))
       es.map(term(_, i)).mkString(", ")
-    // `xs*` — CLAUDE.md §6's spread, never `: _*`. operand because `*` binds tighter than the
+    // `xs*` — the vararg spread, never `: _*`. operand because `*` binds tighter than the
     // expression it spreads. JS-G40 — java forwards the array whole through an external T...
     // slot, where a bare array would conform as ONE element.
     case s @ Tree.Spread(e, _, _) =>
@@ -193,7 +193,7 @@ private[emit] trait TirEmitterExprs:
       // JS-S15 — java's enhanced-for evaluates the ITERABLE once; satisfied by construction (the
       // generator interpolates term(it, …) exactly once).
       Obligations.consult(JS.S(15), it.origin)(Some(()))
-      // TWO independent reasons to re-bind into one alias (K7 + F16): the DECLARED TYPE may differ
+      // TWO independent reasons to re-bind into one alias: the DECLARED TYPE may differ
       // from the iterable's element type, and the binding may be REASSIGNED, which scala's
       // generator val does not permit.
       val mutable = reassignsBinding(body, b.symbol)
@@ -203,7 +203,8 @@ private[emit] trait TirEmitterExprs:
       Obligations.consult(JS.S(16), b.origin)(Option.when(mutable || widenedBinding(b, it).isDefined)(()))
       // JS-G04 — a captured WILDCARD on iteration has no nameable type (java relates the element
       // and its collection as ONE capture; scala captures per use) — the same repair as JS-S16, at
-      // the shape with no scala name at all (ENGINE-LIMITS K7).
+      // the shape with no scala name at all: the loop binds a fresh name and re-binds the declared
+      // variable with a cast.
       Obligations.consult(JS.G(4), b.origin)(
         Option.when(it.tpe match
           case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
@@ -212,8 +213,8 @@ private[emit] trait TirEmitterExprs:
       // JS-S26 — a return inside an enhanced-for body becomes a NON-LOCAL RETURN under .foreach
       // desugaring; the lowering avoids it by emitting a while loop instead.
       Obligations.consult(JS.S(26), body.origin)(Option.when(returnsIn(body))(()))
-      // K9 — a JDK Iterable the pipeline LEFT in the java namespace has no scala foreach; emit
-      // java's own desugaring (JLS 14.14.2) instead. Decided from the POST-PIPELINE type (§4.56):
+      // a JDK Iterable the pipeline LEFT in the java namespace has no scala foreach; emit
+      // java's own desugaring (JLS 14.14.2) instead. Decided from the POST-PIPELINE type:
       // a retyped type or runtime shim already has foreach, so only an external java.*/javax.*
       // type needs the protocol.
       val keptJdk   = isKeptJdkIterable(it.tpe)
@@ -236,7 +237,7 @@ private[emit] trait TirEmitterExprs:
         case (_, _, _, true) =>
           // a return inside a for-each body: lower to a while loop to avoid the non-local return
           // .foreach desugaring would produce.
-          // PARENS: decided from the CALLEE SYMBOL's declaration, not receiver ownership (§4.56) —
+          // PARENS: decided from the CALLEE SYMBOL's declaration, not receiver ownership —
           // program.owns was wrong in both directions for the runtime shims and for a converted
           // iterator.
           val iterHeadSym   = headSymOf(it.tpe).getOrElse(SymId.None)
@@ -332,7 +333,7 @@ private[emit] trait TirEmitterExprs:
         // `Type::method` is TWO java forms sharing one syntax: STATIC is `Type.method`; INSTANCE
         // is UNBOUND (receiver becomes the first parameter). At arity ZERO the qualified name is
         // not a function at all — scala 3 refuses to eta-expand a nullary method — so a nilary
-        // static reference takes the lambda form (`ENGINE-LIMITS.md` G32); every other arity keeps the name.
+        // static reference takes the lambda form; every other arity keeps the name.
         case Left(tt) if isStaticRef && referent == Referent.Static(0) =>
           samAscribed(s"(() => ${tpe(tt.tpe)}.${local(s)}())", mrT, tt.tpe)
         // a static method reference at NON-ZERO arity: bare name where the target SAM type carries
@@ -367,7 +368,7 @@ private[emit] trait TirEmitterExprs:
           val ps    = (s"$self$recvT" :: extra).mkString(", ")
           samAscribed(s"(($ps) => $self.${local(s)}($as))", mrT, tt.tpe)
         case Right(e) => s"${term(e, i)}.${local(s)}"
-    // Java's break leaves the loop; scala.util.boundary/break is the faithful shape (§4.4). A
+    // Java's break leaves the loop; scala.util.boundary/break is the faithful shape. A
     // LABELLED break reaches it through Tree.Labeled or the loop's own label field.
     case Tree.Break(scala.None, _, _) if breakTarget.isDefined =>
       breakTarget.filter(_.nonEmpty) match
@@ -380,7 +381,7 @@ private[emit] trait TirEmitterExprs:
       else if throwBreaks(n) then s"throw $n" // throw/catch sentinel (Scala.js safe)
       else s"scala.util.boundary.break(())(using $n)"
     // an unlabelled break with no boundary belongs to a SWITCH terminator, already stripped by the
-    // frontend — one reaching here is unrecognised. Say WHICH (§4.45).
+    // frontend — one reaching here is unrecognised. Say WHICH.
     case b @ Tree.Break(scala.None, _, _) =>
       unrenderable(
         "break",
@@ -446,8 +447,8 @@ private[emit] trait TirEmitterExprs:
         c.origin,
         s"/* continue $l: label not in scope */ ()"
       )
-    // `name: stmt` — java's label on a NON-loop statement; the boundary goes around the STATEMENT
-    // (§4.4), always named since a labelled jump crosses nested loops and switches by definition.
+    // `name: stmt` — java's label on a NON-loop statement; the boundary goes around the STATEMENT,
+    // always named since a labelled jump crosses nested loops and switches by definition.
     case Tree.Labeled(name, s, _, _) =>
       // JS-S02 — java's label sits on ANY statement (JLS 14.7); scala has no labelled statement,
       // so the image is a NAMED boundary. Fires only where something really breaks to the label.
@@ -465,7 +466,7 @@ private[emit] trait TirEmitterExprs:
     case Tree.Assert(c, m, _, _) => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
     // java's POST-increment yields the value BEFORE the update; the temporary is what makes it exact.
     case Tree.IncDec(tgt, op, post, _, _) =>
-      // F7 (CLAUDE.md §4.4, JLS 15.14.2/15.15.1): same lvalue-once rule as compound assignment.
+      // JLS 15.14.2/15.15.1: same lvalue-once rule as compound assignment.
       if hasNonTrivialSubexpr(tgt) then
         val (bindings, lv) = bindLvalue(tgt, i)
         val prefix         = bindings.mkString("; ")
@@ -487,7 +488,7 @@ private[emit] trait TirEmitterExprs:
     // Ready-made Scala, with any HOLES rendered as terms. The closed form (`holes = Nil`) is
     // `raw` verbatim and no scan runs over it — see `Tree.Opaque`.
     case o: Tree.Opaque => o.spliced(h => spliceOperand(h, i))
-    // THE MARKER (`DESIGN.md` §6.2/§6.4). A RESOLVED one renders as its inner and nothing else: a
+    // THE MARKER. A RESOLVED one renders as its inner and nothing else: a
     // phase answered it, and a record of work done is not a residue. An OPEN one never ships.
     case m: Tree.Unportable => unportable(m, i)
 
@@ -527,7 +528,7 @@ private[emit] trait TirEmitterExprs:
             "scala.compiletime.error(\"" + escape(msg) + "\")"
 
   /** every OPEN marker this emitter RENDERED — the input to the best-effort banner, and the emitter's own half of the marker inventory. A value this emitter owns, exactly like the source map and for
-    * the same reason (§5.1).
+    * the same reason: an artifact write is gated on the artifact layer, never a flag.
     */
   def renderedMarkers: List[Tree.Unportable] = recordedMarkers.toList
   private[emit] val recordedMarkers = collection.mutable.ListBuffer.empty[Tree.Unportable]
@@ -536,8 +537,7 @@ private[emit] trait TirEmitterExprs:
     * interface, making an overload set AMBIGUOUS where java's was not — the resolved target is re-stated as an ascription, strictly guarded so this can only narrow, never mis-type.
     */
 
-  /** Does the TARGET SAM type carry `@FunctionalInterface`? REFUTER polarity (§4.56): an unreadable annotation set is treated as UNANNOTATED, the safe direction being the explicit lambda nobody warns
-    * about.
+  /** Does the TARGET SAM type carry `@FunctionalInterface`? REFUTER polarity: an unreadable annotation set is treated as UNANNOTATED, the safe direction being the explicit lambda nobody warns about.
     */
   private[emit] def targetHasFunctionalInterface(target: TypeRepr): Boolean =
     headSymOf(target)
@@ -580,7 +580,7 @@ private[emit] trait TirEmitterExprs:
     case Tree.Select(q, _, _, _)                        => effectFree(q)
     case _                                              => false
 
-  // -- F7 lvalue binding (CLAUDE.md §4.4, JLS 15.26.2 / 15.14.2 / 15.15.1) ---------------------
+  // -- lvalue binding (JLS 15.26.2 / 15.14.2 / 15.15.1) ---------------------
 
   /** Does this lvalue contain a subexpression whose re-evaluation could have an effect? `effectFree` conservatively returns `false` for every `ArrayAccess`, but `arr(0)` with both effect-free needs
     * no binding. Looks ONE LEVEL inside an assignable form for a non-trivial constituent — the question the compound-assignment and increment arms need.
@@ -645,7 +645,7 @@ private[emit] trait TirEmitterExprs:
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
     // JAVA PERMITS A STATIC MEMBER CALLED THROUGH AN INSTANCE (`family.one(…)`, `one` static);
     // scala's static emits into the companion, unreachable from an instance. Java evaluates and
-    // DISCARDS the receiver, so an effectful receiver is evaluated first in a block (§4.4) and an
+    // DISCARDS the receiver, so an effectful receiver is evaluated first in a block and an
     // effect-free one is simply dropped.
     case Tree.Select(recv, m, _, _) if staticThroughInstance(recv, m) =>
       val call = s"${typeValue(sym(m).owner)}.${local(m)}(${args.map(term(_, i)).mkString(", ")})"
@@ -655,16 +655,16 @@ private[emit] trait TirEmitterExprs:
     // `X.values()` on an enum this emitter renders as a scala 3 enum: the desugaring's values is
     // PARENLESS, so the parens come off here. Asked of the ENUM'S OWN DECLARATION (EnumShape), not
     // the callee symbol — the frontend interns an enum's synthesised values under an anonymous
-    // owner (§4.59), but the QUALIFIER's class symbol is exact.
+    // owner, but the QUALIFIER's class symbol is exact.
     case Tree.Select(qual, m, _, _) if args.isEmpty && sym(m).name == "values" && scalaEnumQualifier(qual) =>
       term(fun, i)
-    // T22 — a.name() on an ANNOTATION THIS PROGRAM DECLARES: java's element is both the write-name
+    // an `@interface`'s elements become constructor parameters: java's element is both the write-name
     // and the read-accessor, but the emitted class keeps java's name at the constructor parameter
     // only, so the read is a field selection and the parens come off. Asked of the callee's OWNER
-    // and PROGRAM OWNERSHIP (§4.56), never the name — an external annotation stays a method call.
+    // and PROGRAM OWNERSHIP, never the name — an external annotation stays a method call.
     case Tree.Select(_, m, _, _) if args.isEmpty && emittedAnnotationElement(m) =>
       term(fun, i)
-    // P11 — EXTERNAL PARENLESS: a member listed in `externalParenless` is called WITHOUT `()`.
+    // EXTERNAL PARENLESS: a member listed in `externalParenless` is called WITHOUT `()`.
     // Legal on the JVM too (Scala 3 auto-applies a Java nullary method), and required on JS/Native
     // where the platform shim declares the member parenless.
     case Tree.Select(_, m, _, _) if args.isEmpty && isExternalParenless(m) =>
@@ -690,7 +690,7 @@ private[emit] trait TirEmitterExprs:
       case _                       => SymId.None
     program.definitionOf(s).collect { case cd: Tree.ClassDef => cd }.exists(balticporter.tir.EnumShape.isScalaEnum(program, _))
 
-  /** is this callee an ELEMENT of an `@interface` THIS PROGRAM DECLARES — a constructor parameter `classDef1`'s annotation arm emitted? Three structural conjuncts, none a name (§4.56): owner is
+  /** is this callee an ELEMENT of an `@interface` THIS PROGRAM DECLARES — a constructor parameter `classDef1`'s annotation arm emitted? Three structural conjuncts, none a name: owner is
     * program-OWNED, owner's flag says java wrote @interface, and callee takes no parameters (JLS 9.6 admits only elements, constants and member types).
     */
   private[emit] def emittedAnnotationElement(m: SymId): Boolean =
@@ -705,8 +705,8 @@ private[emit] trait TirEmitterExprs:
   private[emit] val numericRank = Map("scala.Byte" -> 1, "scala.Short" -> 2, "scala.Char" -> 2, "scala.Int" -> 3, "scala.Long" -> 4, "scala.Float" -> 5, "scala.Double" -> 6)
 
   /** Java resolves an overload by EXACT match; scala widens numerics first and finds no most-specific alternative. Ascribing the method's function type names the alternative java chose. Fires only
-    * where a same-name/arity sibling is WEAKLY WIDER everywhere and strictly wider at one position (175 sites measured, 1 ambiguous). RESULT goes through [[ParentSubst]] (G12); an unreachable
-    * substitution DECLINES the ascription (T17's stated refusal).
+    * where a same-name/arity sibling is WEAKLY WIDER everywhere and strictly wider at one position (175 sites measured, 1 ambiguous). RESULT goes through [[ParentSubst]], since a callee's own type
+    * variables mean nothing at the call site; an unreachable substitution DECLINES the ascription.
     */
   private[emit] def numericOverloadAscription(recv: Term, m: SymId): Option[String] =
     def numericParams(d: Tree.DefDef): Option[List[TypeRepr]] =
@@ -752,8 +752,8 @@ private[emit] trait TirEmitterExprs:
       }
       .getOrElse(Map.empty)
 
-  /** does this type mention a type PARAMETER no enclosing declaration here binds? Structural (§4.56): a parameter's symbol is OWNED by the declaration that wrote it, so the question is whether that
-    * owner is one of the classes this emitter is currently inside.
+  /** does this type mention a type PARAMETER no enclosing declaration here binds? Structural: a parameter's symbol is OWNED by the declaration that wrote it, so the question is whether that owner is
+    * one of the classes this emitter is currently inside.
     */
   private[emit] def namesForeignTypeParam(t: TypeRepr): Boolean =
     def foreign(s: SymId): Boolean =
@@ -784,8 +784,8 @@ private[emit] trait TirEmitterExprs:
       if members.isEmpty then " {}" else s" {\n${joinStats(members)}\n${ind(i)}}"
 
   /** parenthesize a term when it is an operand, where bare juxtaposition would misparse: an operator application (precedence) and any control-flow expression (`if`/`match`, which scala reads as "end
-    * of statement" otherwise). A RECEIVER IS AN OPERAND TOO — `(c ? a : b).toString()` is ordinary java, and unparenthesised the method call binds to one branch only (§4.4). Covers Select's
-    * qualifier, InstanceOf's, ArrayLength's and ArrayAccess's.
+    * of statement" otherwise). A RECEIVER IS AN OPERAND TOO — `(c ? a : b).toString()` is ordinary java, and unparenthesised the method call binds to one branch only. Covers Select's qualifier,
+    * InstanceOf's, ArrayLength's and ArrayAccess's.
     */
   private[emit] def operand(t: Term, i: Int): String = t match
     case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
@@ -844,10 +844,11 @@ private[emit] trait TirEmitterExprs:
   private[emit] def tryStr(t: Tree.Try, i: Int)(using Obligations): String =
     val (res, body, catches, fin) = (t.resources, t.body, t.catches, t.finalizer)
     // JS-S13 — try-with-resources closes on ANY completion, in reverse order, BEFORE this try's
-    // own catch (ENGINE-LIMITS F5).
+    // own catch (it was once dropped entirely with no compile error, leaving resources never
+    // opened or released).
     Obligations.consult(JS.S(13), t.origin)(Option.when(res.nonEmpty)(()))
     // JS-S12 — a finally completing abruptly DISCARDS the try's own abrupt completion. Row stays
-    // Partial: no corpus fixture has a finally that is itself the source (§2.3(a)).
+    // Partial: no corpus fixture has a finally that is itself the source.
     Obligations.consult(JS.S(12), t.origin)(Option.when(fin.isDefined)(()))
     val guard =
       if catches.exists(c => Jumps.catchesBreak(c.param.tpt.tpe)(using program)) && crossesCatch(body) then
@@ -962,7 +963,7 @@ private[emit] trait TirEmitterExprs:
     // be left early. Fires where an arm really needs the boundary.
     Obligations.consult(JS.S(6), m.origin)(Option.when(cases.exists(c => caseNeedsBoundary(c.body)))(()))
     // JS-S08 — java throws NPE on a null reference selector IMPLICITLY (JLS 14.11.2); read off
-    // selectorCanBeNull, the emitter's own decision (§4.56).
+    // selectorCanBeNull, the emitter's own decision.
     Obligations.consult(JS.S(8), m.origin)(Option.when(selectorCanBeNull(scr, cases))(()))
     val cs = cases
       .map { c =>
@@ -1046,10 +1047,10 @@ private[emit] trait TirEmitterExprs:
     // Every $ in a full name is that question; a marker is excluded (it is the other row's).
     Obligations.consult(JS.C(29), catalog.currentOrigin)(Option.when(!marker && full.contains('$'))(()))
     // JS-G12 — the emitter's half: an unresolved type variable is a MARKER, so ? is emitted
-    // (ENGINE-LIMITS G2 — one occurrence took out the statement around it).
+    // (one occurrence took out the statement around it).
     Obligations.consult(JS.G(12), catalog.currentOrigin)(Option.when(marker)(()))
 
-  /** JS-G01's EMITTER half — the bound GRAMMAR, stated once and called from BOTH TypeBounds arms (the bare-wildcard fast path would otherwise be a hole at every plain `?`, ENGINE-LIMITS F8).
+  /** JS-G01's EMITTER half — the bound GRAMMAR, stated once and called from BOTH TypeBounds arms (the bare-wildcard fast path would otherwise be a hole at every plain `?`).
     */
   private[emit] def boundsConsults(lo: TypeRepr, hi: TypeRepr)(using Obligations): Unit =
     def written(b: TypeRepr) = b != TypeRepr.NoType && !isUnresolvedTypeVar(b)
@@ -1069,7 +1070,7 @@ private[emit] trait TirEmitterExprs:
     case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) =>
       boundsConsults(TypeRepr.NoType, TypeRepr.NoType); "?"
     // a BOUND that is an unresolved type variable says nothing, and saying it is worse than
-    // silence, so it is dropped, leaving a bare ? (G2).
+    // silence, so it is dropped, leaving a bare ?.
     case TypeRepr.TypeBounds(lo, hi) =>
       boundsConsults(lo, hi)
       val l = if lo == TypeRepr.NoType || isUnresolvedTypeVar(lo) then "" else s" >: ${tpe(lo)}"

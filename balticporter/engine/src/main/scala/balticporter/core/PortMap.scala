@@ -10,7 +10,7 @@ import scala.jdk.CollectionConverters.*
   */
 object PortMap:
 
-  /** Schema version. A NEWER schema is refused; an OLDER one degrades per question to `Unknown`. 2: `sources=`/`files=`; 3: `shape` column + `policy=`; 4: `jdk=`. // ENGINE-LIMITS M5.10
+  /** Schema version. A NEWER schema is refused; an OLDER one degrades per question to `Unknown`. 2: `sources=`/`files=`; 3: `shape` column + `policy=`; 4: `jdk=`.
     */
   val Schema = 4
 
@@ -40,7 +40,7 @@ object PortMap:
     * @param body
     *   member has a hand-supplied body (`MethodBodyTransform`)
     * @param shape
-    *   porter-note `k=v` grammar describing what was emitted (DESIGN.md §8.3); names inside are EMITTED names, while `upstream` stays the join key
+    *   porter-note `k=v` grammar describing what was emitted; names inside are EMITTED names, while `upstream` stays the join key
     */
   final case class Entry(
     kind:        String, // "type" | "member"
@@ -99,7 +99,7 @@ object PortMap:
       members.map(_.javaPath).filter(p => p.nonEmpty && !p.startsWith("<")).distinct.sorted
 
     /** Each `javaPath` also as a package-relative path (where the two differ), so a consumer whose resolution roots differ from the publisher's source root can still resolve files. Derived from the
-      * `upstream` column's package. // ENGINE-LIMITS D11
+      * `upstream` column's package, since the java package declaration rather than the file's directory path is right for a multi-module source root.
       */
     def packageRelative: scala.collection.Map[String, String] =
       members.iterator.flatMap { e =>
@@ -154,7 +154,7 @@ object PortMap:
       case _                                                            => emitted
 
   /** The upstream FQN, derived from the java ORIGIN path rather than the emitted name. `unrename` inverts the rename table; the path is ground truth where `unrename` is ambiguous. The declared
-    * package (a suffix of the path-derived one) truncates leading directory segments. // CLAUDE.md §4.57
+    * package (a suffix of the path-derived one) truncates leading directory segments.
     */
   private def upstreamOf(emitted: String, javaPath: String, renames: scala.collection.Map[String, String]): String =
     if javaPath.isEmpty || javaPath.startsWith("<") then unrename(emitted, renames)
@@ -171,7 +171,7 @@ object PortMap:
       val simple   = head.substring(head.lastIndexOf('.') + 1)
       val fromPath = (if pkg.isEmpty then simple else s"$pkg.$simple") + tail
       val declared = unrename(emitted, renames)
-      // `declared` inverts both package and type renames (D16). `fromPath` is the fallback.
+      // `declared` inverts both package and type renames. `fromPath` is the fallback.
       // `qualifiedHead` guard: bare member keys have no package to truncate.
       val qualifiedHead = declared.indexWhere(c => c == '$' || c == '#') match
         case -1 => declared.contains('.')
@@ -190,7 +190,7 @@ object PortMap:
     dropMethods:  Set[String],
     injectedFqns: Set[String],
     bodyKeys:     Set[String],
-    /** Package renames AND per-type renames, composed via `PackageRenameTransform.upstreamTable`. // ENGINE-LIMITS D16
+    /** Package renames AND per-type renames, composed via `PackageRenameTransform.upstreamTable`.
       */
     renames:        scala.collection.Map[String, String],
     sourceRoot:     Option[Path] = scala.None,
@@ -223,7 +223,7 @@ object PortMap:
     }
 
     // Substituted when an injection stands at the name; Dropped when nothing does.
-    // `dropTypes` is upstream namespace, `injectedFqns` is emitted -- translate via the rename rule. // CLAUDE.md §4.56
+    // `dropTypes` is upstream namespace, `injectedFqns` is emitted -- translate via the rename rule.
     def emittedAt(fqn: String): String =
       balticporter.transform.PackageRenameTransform.renamed(fqn, renames.toMap)
     val droppedEntries = dropTypes.toList.sorted.map { fqn =>
@@ -281,7 +281,7 @@ object PortMap:
 
     val droppedMembers = dropMethods.toList.sorted.map(k => Entry("member", k, "", Disposition.Dropped))
 
-    // Engine-refused members, in both namespaces (§4.56).
+    // Engine-refused members, in both namespaces.
     val refusedEntries = refusedMembers.toList.sortBy(_._1).map { (emitted, shape) =>
       val cut  = emitted.indexWhere(c => c == '$' || c == '#')
       val unit = if cut < 0 then emitted else emitted.substring(0, cut)
@@ -301,7 +301,7 @@ object PortMap:
     head + Header + "\n" + m.entries.map(_.tsv).mkString("\n") + "\n"
 
   // -------------------------------------------------------------------------
-  // R1 — is the map still true of the base? (staleness)
+  // is the map still true of the base? (staleness)
   // -------------------------------------------------------------------------
 
   /** Fingerprint of the base's Java. File list is derived from [[Map0.javaPaths]]. An unresolvable path contributes `?`, reported as `Unverified`.
@@ -315,7 +315,7 @@ object PortMap:
     }
     TirPrinter.sha256(lines.mkString("\n")).take(16)
 
-  /** Digest of the sorted `SurfacePolicy` fingerprints. `""` means "published before schema 3", never "no surface policy". // ENGINE-LIMITS D4
+  /** Digest of the sorted `SurfacePolicy` fingerprints. `""` means "published before schema 3", never "no surface policy".
     */
   def policyDigest(fingerprints: List[String]): String =
     TirPrinter.sha256(fingerprints.sorted.mkString("\n")).take(16)
@@ -331,7 +331,7 @@ object PortMap:
     /** Not proven either way. The map IS used; the gap is reported. */
     case Unverified(reason: String)
 
-    /** Published by a JVM with a different JDK specification. Distinct from [[Stale]]: nothing changed, but the frontend read different class files. // ENGINE-LIMITS M5.10
+    /** Published by a JVM with a different JDK specification. Distinct from [[Stale]]: nothing changed, but the frontend read different class files.
       */
     case JdkMismatch(published: String, running: String)
 

@@ -2,7 +2,7 @@ package balticporter.tir
 
 /** Try-with-resources whose resources the emitter did not lower (JLS 14.20.3).
   *
-  * Walks the tree independently of the emitter; disagrees when a `try` with resources reached the output without lowering. Findings are §1(a) engine gaps. Currently reports 0 on all ports (no corpus
+  * Walks the tree independently of the emitter; disagrees when a `try` with resources reached the output without lowering. Findings are engine gaps. Currently reports 0 on all ports (no corpus
   * library uses try-with-resources).
   */
 object TryResourceCheck:

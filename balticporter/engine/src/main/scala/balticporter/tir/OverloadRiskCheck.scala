@@ -3,8 +3,8 @@ package balticporter.tir
 import balticporter.catalog.FixKind
 
 /** Every emitted CALL whose candidate set spans one of JAVA'S OWN RESOLUTION PHASES — catalog rows `JS-C22`/`JS-C23`, counted rather than resolved. Java resolves in THREE PHASES and an earlier one
-  * WINS; scala resolves in ONE, so a call can silently bind a different member with no error either side. Predicting it needs modelling scala's resolution (`ENGINE-LIMITS.md` T17), so it is COUNTED,
-  * from JLS 15.12.2's own phase boundaries — never "this call is overloaded".
+  * WINS; scala resolves in ONE, so a call can silently bind a different member with no error either side. Predicting it needs modelling scala's resolution, so it is COUNTED, from JLS 15.12.2's own
+  * phase boundaries — never "this call is overloaded".
   */
 object OverloadRiskCheck extends RemedySource:
 
@@ -49,7 +49,7 @@ object OverloadRiskCheck extends RemedySource:
           "because the fix — if one is ever affordable — is a different rule."
 
   // -------------------------------------------------------------------------------------------
-  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these calls
+  // THE MENU — what a port may ASK FOR at one of these calls
   // -------------------------------------------------------------------------------------------
 
   /** the three kinds one remedy answers. All three are asked of the SAME candidate set at the SAME call — JLS 15.12.2's three phase boundaries — so one act answers whichever of them fired, and
@@ -59,7 +59,7 @@ object OverloadRiskCheck extends RemedySource:
 
   /** PIN THE ALTERNATIVE JAVAC BOUND — the ascription, the only mechanisable face of this lane. Which member JAVAC bound is READ, not predicted (`Tree.Apply.method` IS javac's answer), and written as
     * a METHOD-VALUE ASCRIPTION scala picks an overload at by EXPECTED TYPE. REFUSES wherever the name cannot be written. EMISSION-AFFECTING: two modules ascribing one shared call differently would
-    * emit two ports that each compile alone (§1.5).
+    * emit two ports that each compile alone.
     */
   val AscribeJavacChoice: Remedy = Remedy(
     id = "ascribe-javac-choice",
@@ -86,9 +86,9 @@ object OverloadRiskCheck extends RemedySource:
     alsoKinds = AllKinds.filterNot(_ == Issue.VarargPhaseSpan.toString)
   )
 
-  /** WHAT IS NOT ON THE MENU: auto-ascribe at every spanning site (RULED OUT, T17 — that needs scala's resolution modelled well enough to contradict javac); ascribe the ARGUMENT rather than the
-    * method (REFUSED — the expected type must sit on the METHOD to pin the choice); a per-callee table (REFUSED — the phase is a fact about the ARGUMENTS at one site, not the member, §8.16); emit
-    * both and let scalac pick (nothing to emit — both typecheck).
+  /** WHAT IS NOT ON THE MENU: auto-ascribe at every spanning site (RULED OUT — that needs scala's resolution modelled well enough to contradict javac); ascribe the ARGUMENT rather than the method
+    * (REFUSED — the expected type must sit on the METHOD to pin the choice); a per-callee table (REFUSED — the phase is a fact about the ARGUMENTS at one site, not the member); emit both and let
+    * scalac pick (nothing to emit — both typecheck).
     */
   def remedies: List[Remedy] = List(AscribeJavacChoice, AcceptRisk)
 
@@ -115,7 +115,7 @@ object OverloadRiskCheck extends RemedySource:
   // -------------------------------------------------------------------------------------------
 
   /** every same-named method a program-declared type and its program-declared ancestors DECLARE. Built once per program and shared by the check and the emitter's own consult, so the count and the
-    * obligation cannot disagree about which calls the rows are about. Not a memo on the check object: a table keyed on nothing a second program would share is the process-global §5.1 forbids.
+    * obligation cannot disagree about which calls the rows are about. Not a memo on the check object: a table keyed on nothing a second program would share is a forbidden process-global.
     */
   final class Overloads(program: Program):
     private val classes: Map[SymId, Tree.ClassDef] =
@@ -171,8 +171,8 @@ object OverloadRiskCheck extends RemedySource:
   // THE PREDICATE, STATED ONCE — read by this check and by the emitter's JS-C22/JS-C23 consults
   // -------------------------------------------------------------------------------------------
 
-  /** java's eight primitives AS THE TIR SPELLS THEM. `scala.Int`, not `int`: java primitives are mapped to scala's at the frontend (`DESIGN.md` §2.1.3), so a phase/emitter never sees the java
-    * spelling. `TirEmitter.numericRank` reads the same table the same way — reading it wrong here would report nothing while looking correct (§4.56).
+  /** java's eight primitives AS THE TIR SPELLS THEM. `scala.Int`, not `int`: java primitives are mapped to scala's at the frontend, so a phase/emitter never sees the java spelling.
+    * `TirEmitter.numericRank` reads the same table the same way — reading it wrong here would report nothing while looking correct.
     */
   private val primitives = Set("scala.Byte", "scala.Short", "scala.Char", "scala.Int", "scala.Long", "scala.Float", "scala.Double", "scala.Boolean")
 
@@ -222,7 +222,7 @@ object OverloadRiskCheck extends RemedySource:
 
   /** WHAT THIS CALL RISKS, or nothing. `None` where the question does not arise (external callee, or fewer than two applicable program-declared candidates); `Some(n, fs)` with `n` the applicable
     * candidate count, from the same computation that produced the findings. `enclosing` is the class the call is written IN, needed by [[rootOf]]. `declaration` is the MEMBER it is written in,
-    * carried on every row rather than re-derived (§4.56).
+    * carried on every row rather than re-derived.
     */
   def analyse(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None, declaration: SymId = SymId.None)(using p: Program): Option[(Int, List[Finding])] =
     if !p.owns(a.method) then scala.None
@@ -309,7 +309,7 @@ object OverloadRiskCheck extends RemedySource:
     case p2: Product => p2.productIterator.foreach(callsIn(_, enclosing, decl, f))
     case _ => ()
 
-  /** Over the units the run EMITS — the same D2 filter every other per-site report carries.
+  /** Over the units the run EMITS — the same ownership filter every other per-site report carries.
     * @param resolutions
     *   what the port SELECTED. Matched at the SITE and not the declaration: a selection broadcasts across a member, but `ascribe-javac-choice` REFUSES per call, so a member with two calls may have
     *   one answered and one not. Empty is the pre-menu default.
@@ -340,8 +340,8 @@ object OverloadRiskCheck extends RemedySource:
   // -------------------------------------------------------------------------------------------
 
   /** CAN JAVAC'S ALTERNATIVE BE WRITTEN HERE? — the whole of [[AscribeJavacChoice]]'s guard; `Some`/`None` is act vs counted refusal. The answer is a `MethodType`, minted as a node so every later
-    * rename/retype reaches it exactly as any other type (§4.56, never printed as text). Each `no(...)` arm is a shape where the ascription would be WRONG; every refusal is COUNTED, one row per
-    * declined SITE naming its guard (§3's refusal-enumeration rule).
+    * rename/retype reaches it exactly as any other type, never printed as text. Each `no(...)` arm is a shape where the ascription would be WRONG; every refusal is COUNTED, one row per declined SITE
+    * naming its guard.
     */
   def ascription(a: Tree.Apply)(using p: Program): Either[Decline, TypeRepr.MethodType] =
     def no(guard:       String, why: String) = Left(Decline(guard, why))
@@ -434,8 +434,8 @@ object OverloadRiskCheck extends RemedySource:
   final case class Decline(guard: String, why: String)
 
   /** THE MENU, CARRIED OUT — a phase, since `ascribe-javac-choice` REWRITES A NODE and only a phase may. One decision point: decides, records, mints the node the emitter renders (never a second
-    * emitter-side derivation, §4.56). The `Apply` SURVIVES — wrapping the call in an Opaque would drain the lane as a side effect rather than a recorded move. Per DECLARATION, walked with
-    * `StandardTraversal.mapTerm` (§3).
+    * emitter-side derivation). The `Apply` SURVIVES — wrapping the call in an Opaque would drain the lane as a side effect rather than a recorded move. Per DECLARATION, walked with
+    * `StandardTraversal.mapTerm`.
     */
   final class Apply extends Phase, PolicyBound:
     def name: String = "overload-risk/remedy"
@@ -464,7 +464,7 @@ object OverloadRiskCheck extends RemedySource:
       if !Decision.isKeyable(p, d.symbol) then d
       else d.rhs.flatMap(rewritten(d.symbol, _)).fold(d)(b => d.copy(rhs = Some(b)))
 
-    /** A FIELD initialiser holds calls too and is a nameable declaration; a LOCAL val is not (its owner is the enclosing member). Decided from OWNERSHIP (§4.56), never body position.
+    /** A FIELD initialiser holds calls too and is a nameable declaration; a LOCAL val is not (its owner is the enclosing member). Decided from OWNERSHIP, never body position.
       */
     override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =
       if !Decision.isKeyable(p, v.symbol) then v
@@ -520,7 +520,7 @@ object OverloadRiskCheck extends RemedySource:
     private def record(r: Resolution, subject: String, decl: SymId, f: Finding, what: String): Unit =
       plan.applied(r, subject, decl, f.origin, s"$what at line ${f.origin.line} (${f.issue}); candidates: ${f.alternatives.mkString(", ")}")
 
-  /** grouped one-line summary, worst family first, each with its §1 classification — and the DENOMINATOR first, since an over-approximation whose rate a reader cannot see gets ignored.
+  /** grouped one-line summary, worst family first, each with its fix-kind classification — and the DENOMINATOR first, since an over-approximation whose rate a reader cannot see gets ignored.
     */
   def summary(r: Report): String =
     // "and NOT ANSWERED": findings is what remains after the drain, so the third number would

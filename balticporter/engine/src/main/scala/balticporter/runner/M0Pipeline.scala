@@ -6,8 +6,7 @@ import balticporter.emit.ScalaPrinter
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** M0 pipeline: translate a fixed file list, enforce the comment invariant, verify determinism by double-translation, write the output tree, and gate the result through scalac (via scala-cli). The M0
-  * round-trip gate, DESIGN.md §3.11.
+/** M0 pipeline: translate a fixed file list, enforce the comment invariant, verify determinism by double-translation, write the output tree, and gate the result through scalac (via scala-cli).
   */
 object M0Pipeline:
 

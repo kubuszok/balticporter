@@ -36,7 +36,7 @@ object HeapPollutionCheck extends RemedySource:
           "Nothing in the emitted file mentions it and no other count can see it."
 
   // -------------------------------------------------------------------------------------------
-  // THE MENU (DESIGN.md §8.16)
+  // THE MENU
   // -------------------------------------------------------------------------------------------
 
   /** Acknowledge that the vararg use at this member is safe. NOT emission-affecting. Answers `Unacknowledged` only; `Acknowledged` rows are java's own assertion, kept apart.
@@ -70,7 +70,7 @@ object HeapPollutionCheck extends RemedySource:
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** Shared predicate for this check and the emitter's JS-G41 consult. Returns `None` for declarations with no unchecked vararg. // ENGINE-LIMITS F8
+  /** Shared predicate for this check and the emitter's JS-G41 consult. Returns `None` for declarations with no unchecked vararg.
     */
   def uncheckedVararg(d: Tree.DefDef)(using p: Program): Option[Finding] =
     val owner = p.symbolOf(d.symbol).map(_.fullName).getOrElse("?")
@@ -122,7 +122,7 @@ object HeapPollutionCheck extends RemedySource:
     case TypeRepr.TypeBounds(_, hi)   => if hi == TypeRepr.NoType then "?" else s"? <: ${render(hi)}"
     case other                        => headFqn(other).getOrElse(other.toString)
 
-  /** Check over the units the run emits (D2). `resolutions` drains rows a remedy answered. */
+  /** Check over the units the run emits (ownership filter). `resolutions` drains rows a remedy answered. */
   def check(program: Program, units: List[Tree.ClassDef], resolutions: ResolutionPlan = ResolutionPlan.empty): List[Finding] =
     given Program = program
     val out       = collection.mutable.ListBuffer.empty[Finding]
@@ -134,7 +134,7 @@ object HeapPollutionCheck extends RemedySource:
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.param))
 
-  /** Pipeline phase that records remedy decisions before emission. No-op with an empty plan. Scoped to this run's own declarations (D2).
+  /** Pipeline phase that records remedy decisions before emission. No-op with an empty plan. Scoped to this run's own declarations (ownership filter).
     */
   final class Apply extends Phase, PolicyBound:
     def name: String = "heap-pollution/remedy"

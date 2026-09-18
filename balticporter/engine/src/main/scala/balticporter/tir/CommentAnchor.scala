@@ -10,7 +10,7 @@ object CommentAnchor:
     */
   final case class Member(line: Int, emitted: Boolean)
 
-  /** The key both consumers must use (realpath, not raw -- symlinks in worktrees). // CLAUDE.md §5.4 */
+  /** The key both consumers must use (realpath, not raw -- symlinks in worktrees). */
   def key(javaPath: String): String =
     if javaPath.isEmpty then javaPath
     else

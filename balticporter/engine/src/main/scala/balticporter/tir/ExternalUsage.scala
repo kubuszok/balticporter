@@ -5,7 +5,7 @@ import java.nio.file.{ Files, Path }
 /** Every external member this program references, with usages.
   *
   * Shared by `PortabilityCheck` (rule matching) and [[JdkSurfaceCheck]] (classification). [[all]] preserves `program.referenced` order (promoted baselines depend on it). "External" is
-  * `!program.owns(id)` (structural, not by name). // CLAUDE.md §4.56
+  * `!program.owns(id)` (structural, not by name).
   */
 object ExternalUsage:
 
@@ -40,7 +40,7 @@ object ExternalUsage:
       }
     }
 
-  /** External symbols only, filtered by `isExcluded` (D2 ownership filter). */
+  /** External symbols only, filtered by `isExcluded` (ownership filter). */
   def external(program: Program, isExcluded: SymId => Boolean = _ => false): List[Row] =
     all(program).filterNot(r => program.owns(r.symbol)).flatMap { r =>
       val kept = r.usages.filterNot(u => PortabilityCheck.owningType(program, u.enclosing).exists(isExcluded))

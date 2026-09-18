@@ -2,7 +2,7 @@ package balticporter.tir
 
 /** Jumps (`break`/`continue`) that cross a Break-compatible `catch` without a re-throw guard.
   *
-  * Walks the tree independently of the emitter; disagrees exactly when the emitter missed a crossing. Findings are §1(a) engine gaps. // CLAUDE.md §4.4
+  * Walks the tree independently of the emitter; disagrees exactly when the emitter missed a crossing. Findings are engine gaps.
   */
 object BreakCatchCheck:
 

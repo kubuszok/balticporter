@@ -4,8 +4,8 @@ import balticporter.catalog.Platform
 import balticporter.tir.{ ConfigError, ConfigView, Descriptor, OpaqueSpec, Phase, Reason, Remedy, RuleScope, TransformFactory }
 import balticporter.transform.*
 
-/** ServiceLoader-discovered [[TransformFactory]] registrations for the engine's own §1(a) and §1(b) transforms. Each is a `final class` (ServiceLoader needs a public no-arg constructor). A §1(c) rule
-  * ships in the consumer's repository. Predicates are expressed as data (FQN sets) rather than code. See [[TransformRegistry.Reserved]] for `package-rename`.
+/** ServiceLoader-discovered [[TransformFactory]] registrations for the engine's own universal and parameterised transforms. Each is a `final class` (ServiceLoader needs a public no-arg constructor).
+  * A library-specific rule ships in the consumer's repository. Predicates are expressed as data (FQN sets) rather than code. See [[TransformRegistry.Reserved]] for `package-rename`.
   */
 object BuiltinFactories:
 
@@ -53,7 +53,7 @@ final class PanamaFfiFactory extends TransformFactory:
 // (b) — policy as data
 
 /** `.conf` shape for `CollectionsTransform`: `scope`/`retarget`/`retargetRewrites` (key `"member/arity"` or `"member/(descriptor)"`, values Rename/BoolDispatch/Construct/… variants),
-  * `reifiedCarriers` (super-type tokens whose args stay in java's namespace, `ENGINE-LIMITS.md` K20), `reflectiveSinks` (types reading runtime representations at `Object` slots, K21).
+  * `reifiedCarriers` (super-type tokens whose args stay in java's namespace), `reflectiveSinks` (types reading runtime representations at `Object` slots).
   */
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
@@ -138,7 +138,7 @@ final class CollectionsFactory extends TransformFactory:
 
 /** `{ transform = "public-field-accessors", scope { only = ["com.foo.Model"] } }`
   *
-  * Adds `getX`/`setX` beside public fields for the scoped declarations. // ENGINE-LIMITS K21 face 2
+  * Adds `getX`/`setX` beside public fields for the scoped declarations, so a bean reader that expects accessors can still reach a field a port makes public.
   */
 final class PublicFieldAccessorFactory extends TransformFactory:
   def name = "public-field-accessors"
@@ -396,7 +396,7 @@ final class NullabilityFactory extends TransformFactory:
     )
 
 /** `.conf` shape for `nullary-arity`: `scope` (default `Only([])`, the no-op — it MINTS an arity), `force` (exact FQNs whose `()` goes despite a side-effecting body), `derive` (parenless where the
-  * reference port is; `PROGRESS.md` §13.31 step 1).
+  * reference port is).
   */
 final class NullaryArityFactory extends TransformFactory:
   def name = "nullary-arity"
@@ -423,7 +423,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
             "which is the silent no-op this engine refuses"
         )
       )
-    // No `context` block = extension (dependent's per-declaration keys only). // ENGINE-LIMITS CT8
+    // No `context` block = extension (dependent's per-declaration keys only).
     val (exts, full) = hs.partition(_.child("context").isEmpty)
     val rg           = config.stringMap("requiredGivens").getOrElse(Map.empty)
     new GlobalsToImplicitsTransform(full.map(holder), exts.map(extension), rg)
@@ -519,7 +519,7 @@ final class RegistryFactory extends TransformFactory:
         case _                     => throw ConfigError(p.path, "a placement declares `object` or `member`")
       val miss = e.child("miss") match
         // `jvmReflect` REFLECTS and answers this on a reflective failure; the bare form THROWS
-        // for every unregistered key (`ENGINE-LIMITS.md` P10).
+        // for every unregistered key.
         case Some(t) =>
           t.child("jvmReflect") match
             case Some(j)    => RegistryTransform.Miss.JvmReflect(RegistryTransform.Miss.OnFailure.Throw(j.requireString("throw"), j.string("message").getOrElse("")))
@@ -536,7 +536,7 @@ final class RegistryFactory extends TransformFactory:
       RegistryTransform.Registry(
         callee = e.requireString("callee"),
         placement = placement,
-        // this phase MINTS, so its no-op — and its default — is `Only(Set.empty)` (§1(b)).
+        // this phase MINTS, so its no-op — and its default — is `Only(Set.empty)`.
         scope = TransformFactory.scopeOf(e, default = RuleScope.Only(Set.empty)),
         seeds = e.strings("seeds").getOrElse(Nil),
         handles = e.strings("handles").getOrElse(Nil).toSet,
@@ -547,7 +547,7 @@ final class RegistryFactory extends TransformFactory:
     new RegistryTransform(entries, config.strings("facadeMembers").getOrElse(Nil).toSet)
 
 /** `{ transform = "type-class-array", witness = "lowlevel.MkArray", members { create = "create", … }, subjects { "a.B" = [0, 1] }, dropBound = [ "a.B" ], scope { only = [ … ] } }` — empty `subjects`
-  * is the no-op (CLAUDE.md §1(b)).
+  * is the no-op.
   */
 final class ElementWitnessFactory extends TransformFactory:
   def name = "type-class-array"

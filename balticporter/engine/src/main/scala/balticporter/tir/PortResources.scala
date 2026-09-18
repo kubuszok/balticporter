@@ -8,8 +8,8 @@ import scala.jdk.CollectionConverters.*
 
 /** Classpath resources copied verbatim into the port's build product.
   *
-  * Declared per-library via `ResourceTree` (DESIGN.md §8.22). The run copies each declared file, reports undeclared files that emitted code names, and flags empty trees. A declared file that is not
-  * there is FATAL (the caller's check).
+  * Declared per-library via `ResourceTree`. The run copies each declared file, reports undeclared files that emitted code names, and flags empty trees. A declared file that is not there is FATAL (the
+  * caller's check).
   */
 object PortResources:
 

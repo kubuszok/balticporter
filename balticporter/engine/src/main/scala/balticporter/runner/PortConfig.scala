@@ -85,7 +85,7 @@ object PortConfig:
       resolutionRoots = input.strings("resolutionRoots").getOrElse(Nil).map(resolvePath(dir, _)),
       // Relative to whichever resolution root contains them, not to the config directory.
       resolutionExcludes = input.strings("resolutionExcludes").getOrElse(Nil),
-      // FQN prefixes in upstream namespace. Absent = none. // ENGINE-LIMITS T16
+      // FQN prefixes in upstream namespace. Absent = none.
       preservedAnnotations = AnnotationPolicy(input.strings("preservedAnnotations").getOrElse(Nil))
     )
 
@@ -156,7 +156,7 @@ object PortConfig:
       dropTypes = m.strings("dropTypes").getOrElse(Nil).toSet,
       dropMethods = m.strings("dropMethods").getOrElse(Nil).toSet,
       packageRenames = m.stringMap("packageRenames").getOrElse(Map.empty),
-      // Per-type rename; placed by PortRun, not a surface entry. // CLAUDE.md §4.56
+      // Per-type rename; placed by PortRun, not a surface entry.
       typeRenames = m.stringMap("typeRenames").getOrElse(Map.empty),
       subPackages = m.stringMap("subPackages").getOrElse(Map.empty),
       flattenNestedTypes = m.strings("flattenNestedTypes").getOrElse(Nil).toSet,
@@ -165,9 +165,9 @@ object PortConfig:
       // Per-location remedy selection; validated at load against known remedies.
       resolutions = readResolutions(m, surface, registry),
       inject = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
-      // SPI descriptors copied with both namespaces renamed. Not inherited; missing = fatal. // ENGINE-LIMITS P5
+      // SPI descriptors copied with both namespaces renamed. Not inherited; missing = fatal.
       serviceProviders = m.strings("serviceProviders").getOrElse(Nil).map(resolvePath(dir, _)),
-      // Classpath resources copied verbatim. Not inherited; missing = fatal. // DESIGN.md §8.22
+      // Classpath resources copied verbatim. Not inherited; missing = fatal.
       resources = m.children("resources").getOrElse(Nil).map(resourceEntry(dir)),
       baseReports = if seen.isEmpty then reports else Nil,
       // Omitted = all three platforms. Not inherited.
@@ -184,7 +184,7 @@ object PortConfig:
             roots = p.strings("roots").getOrElse(Nil).map(resolvePath(dir, _)),
             packageMapping = p.stringMap("packageMapping").getOrElse(Map.empty),
             // Header substrings making a hand-port file a party; absent = the default spellings,
-            // explicit `[]` = every file is a party (§1b's no-op).
+            // explicit `[]` = every file is a party (the no-op value).
             upstreamMarkers = p.strings("upstreamMarkers").getOrElse(ParityRef.DefaultUpstreamMarkers)
           )
         )
@@ -193,7 +193,7 @@ object PortConfig:
       case scala.None     => own
       case Some(basePath) =>
         val baseFile = resolvePath(dir, basePath)
-        // Cycle test uses realpath (§5.4); resolution stays lexical.
+        // Cycle test uses realpath; resolution stays lexical.
         if seen.exists(s => RealPath.of(s) == RealPath.of(baseFile)) then
           throw ConfigError(
             view.at("base"),

@@ -2,7 +2,7 @@ package balticporter.tir
 
 import java.nio.file.{ Files, Path }
 
-/** Renders the §4.6 flag resolution: layers, effective merge, and what a port's last run recorded.
+/** Renders the debug-flag resolution: layers, effective merge, and what a port's last run recorded.
   *
   * Uses [[DebugFlags.resolution]] (the same fold [[DebugFlags.get]] reads). The system-property layer shown is THIS process's, not the forked migration's. `--port` shows what the last run actually
   * saw. `just debug-flags [PORT]`.

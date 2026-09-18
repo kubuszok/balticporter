@@ -46,11 +46,11 @@ object SbtGen:
   ):
     def allDeps: List[Dep] = deps ++ runtime.dependency.map(Dep.apply).toList
 
-  /** Where a port's generated Scala goes: `src_managed/{main,test}/scala`, never `src/`. // CLAUDE.md §5.5 */
+  /** Where a port's generated Scala goes: `src_managed/{main,test}/scala`, never `src/`. */
   def managedDir(root: Path, config: String): Path =
     managedRoot(root).resolve(config).resolve("scala")
 
-  /** The build-product root. Notices (CLAUDE.md §4.57) go here beside the source sets. */
+  /** The build-product root. Attribution notices go here beside the source sets. */
   def managedRoot(root: Path): Path = root.resolve("src_managed")
   def managedMain(root: Path): Path = managedDir(root, "main")
   def managedTest(root: Path): Path = managedDir(root, "test")

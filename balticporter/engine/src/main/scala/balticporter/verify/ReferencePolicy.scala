@@ -5,8 +5,8 @@ import balticporter.tir.Tree
 import ApiParityCheck.SurfaceDecl
 
 /** Derives SPELLING policy from a reference port's parsed surface (`ApiParityCheck.parseSurface`): a java member is matched to the reference declaration at the same nesting path, name and explicit
-  * arity, and the reference's spelling at each slot becomes a [[DerivedPolicy.Row]] — an opaque slot, a nullable member, a parenless accessor. Signatures only: a row can never describe behaviour.
-  * `PROGRESS.md` §13.31 step 1; the mechanism is §1(b), the tree its parameter.
+  * arity, and the reference's spelling at each slot becomes a [[DerivedPolicy.Row]] — an opaque slot, a nullable member, a parenless accessor. Signatures only: a row can never describe behaviour. The
+  * mechanism is parameterised; the reference tree is its parameter.
   */
 object ReferencePolicy:
 
@@ -21,7 +21,7 @@ object ReferencePolicy:
   final case class Result(policy: DerivedPolicy, findings: List[CheckReport.Finding])
 
   /** @param emitted
-    *   the units this run emits (a base's units are never derived over, K51)
+    *   the units this run emits (a base's units are never derived over)
     * @param typeRenames
     *   upstream dotted FQN -> emitted simple name (`PortManifest.effectiveTypeRenames`)
     * @param flattenNestedTypes

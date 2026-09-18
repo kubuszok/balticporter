@@ -2,7 +2,7 @@ package balticporter.tir
 
 import balticporter.catalog.FixKind
 
-/** Classifies every `java.*` member the emitted code calls by disposition: `Shimmed`, `Mapped`, `Mappable`, `Refused`, `Kept`, `Unhandled`, `KeptIterable` (K9), or `StaleRefusal`. `Unhandled` = phase
+/** Classifies every `java.*` member the emitted code calls by disposition: `Shimmed`, `Mapped`, `Mappable`, `Refused`, `Kept`, `Unhandled`, `KeptIterable`, or `StaleRefusal`. `Unhandled` = phase
   * retyped the owner but has no entry for the member. `Kept` = untouched JDK code (counted, not reported as a finding). Reads from post-pipeline surface; a fully rewritten call is simply absent.
   */
 object JdkSurfaceCheck extends RemedySource:
@@ -10,7 +10,7 @@ object JdkSurfaceCheck extends RemedySource:
   /** the check's name in `findings.tsv`. */
   val Name = "jdk-surface"
 
-  /** Namespace selection for this report. Cut at separator per §4.56. */
+  /** Namespace selection for this report. Cut at the structural separator. */
   val JdkNamespaces: List[String] = List("java", "javax")
 
   private def inJdk(fqn: String): Boolean =
@@ -25,8 +25,8 @@ object JdkSurfaceCheck extends RemedySource:
     case Kept
     case Unhandled(target: String)
 
-    /** ENGINE-LIMITS K9, derived: an enhanced-for over an iterable the port KEPT. The subject is a TYPE and a SITE rather than a member — `for (x <- xs)` emits `foreach`, which a kept
-      * `java.util.List` does not have.
+    /** Derived: an enhanced-for over an iterable the port KEPT. The subject is a TYPE and a SITE rather than a member — `for (x <- xs)` emits `foreach`, which a kept `java.util.List` does not have,
+      * so it is emitted as Java's own `iterator()`/`hasNext()`/`next()` loop instead.
       */
     case KeptIterable(tpe: String)
 
@@ -48,7 +48,7 @@ object JdkSurfaceCheck extends RemedySource:
       case KeptIterable(_) => "kept-iterable"
       case StaleRefusal(_) => "stale-refusal"
 
-    /** which of §1's three kinds the fix is — the thing a bare typer error cannot say (§4.45). */
+    /** whether the fix is engine, configuration, or library-specific — the thing a bare typer error cannot say. */
     def classification: String = this match
       case Unhandled(target) =>
         s"port policy: a phase retyped this member's owner to `$target` and its tables have no " +
@@ -92,13 +92,13 @@ object JdkSurfaceCheck extends RemedySource:
 
   /** The engine's own refusals — each one previously living in a doc comment or a `case _ => None` arm, where nothing could read it and no run could report it.
     *
-    * Per-library refusals belong beside them and are not built yet: they are a fact about the SHARED SURFACE, so their home is the manifest (§1.5's inherited column), not a conf key.
+    * Per-library refusals belong beside them and are not built yet: they are a fact about the SHARED SURFACE, so their home is the manifest's inherited surface, not a conf key.
     */
   val Refusals: List[Refusal] = List(
     // `Collections#unmodifiableList`/`Set`/`Map` and `Collectors#toSet`/`toMap` stood here and are
-    // GONE, removed by the STALE-REFUSAL guard: all five are now rewritten (`ENGINE-LIMITS.md` K6).
-    // Their citation was a claim about the STDLIB that stopped being true once the runtime
-    // supplied the view — a refusal outliving its reason sends its reader to a wall not there (§4.45).
+    // GONE, removed by the STALE-REFUSAL guard: all five are now rewritten as part of a whole
+    // `java.util.stream` call chain. Their citation was a claim about the STDLIB that stopped being
+    // true once the runtime supplied the view — a refusal outliving its reason sends its reader to a wall not there.
     Refusal(
       "java.util.Map$Entry#setValue",
       "a `java.util.Map.Entry` becomes a `Tuple2`, which has no write-through to the map. A " +
@@ -111,7 +111,7 @@ object JdkSurfaceCheck extends RemedySource:
       "CollectionsTransform.rewrite, the `entrySet` arm"
     ),
     // `java.util.List#listIterator`/`spliterator` and `Set#spliterator` stood here and are GONE
-    // (STALE-REFUSAL guard, `ENGINE-LIMITS.md` K23) — the refusal was about the WRAPPER's reported
+    // (STALE-REFUSAL guard) — the refusal was about the WRAPPER's reported
     // characteristics, not the receiver; java declares `spliterator()` a default method per owner.
     // `Collection` STAYS: a `JavaCollection` shim receiver is skipped by `rewrite`'s blanket guard,
     // so this is keyed at `Collection` alone, or a `List` receiver falls through to an unhandled wall.
@@ -129,8 +129,8 @@ object JdkSurfaceCheck extends RemedySource:
   val Constructor = "<init>"
 
   /** What a retyping phase DID, as data the check reads — never re-derived here. `ran` is the difference between a demand and an offer: with the phase in the pipeline an unhandled member on a retyped
-    * owner is a hole the phase MADE (a finding); absent, it's untouched JDK code the port chose to keep. The empty value makes the check a report of `Kept` rows plus K9 — §1(b)'s discipline applied
-    * to a check.
+    * owner is a hole the phase MADE (a finding); absent, it's untouched JDK code the port chose to keep. The empty value makes the check a report of `Kept` rows plus `KeptIterable` — the same
+    * empty-parameter-is-a-no-op discipline applied to a check.
     */
   final case class Mapping(
     phase: String,
@@ -143,12 +143,12 @@ object JdkSurfaceCheck extends RemedySource:
     instance: Map[String, Set[String]],
     /** shim FQN → the members it declares */
     shimMembers: Map[String, Set[String]],
-    /** the FQN of the iterable shim, whose `foreach` extension is what makes an enhanced-for work — K9's "covered by the shipped iterable shim" half
+    /** the FQN of the iterable shim, whose `foreach` extension is what makes an enhanced-for work — the "covered by the shipped iterable shim" half of the `KeptIterable` disposition
       */
     iterableShim: Option[String],
-    /** does the phase rewrite `new` on every type it retypes? A CONSTRUCTOR is not a member call: retyping the type IS the rewrite for `new`, and arity correspondence is the phase's own business
-      * (`ENGINE-LIMITS.md` K11). Without this the check reports every `new HashMap()` as a hole (18 such rows measured). `false` leaves a constructor classified like any other member, so a phase that
-      * retypes without touching `new` is reported.
+    /** does the phase rewrite `new` on every type it retypes? A CONSTRUCTOR is not a member call: retyping the type IS the rewrite for `new`, and arity correspondence is the phase's own business.
+      * Without this the check reports every `new HashMap()` as a hole (18 such rows measured). `false` leaves a constructor classified like any other member, so a phase that retypes without touching
+      * `new` is reported.
       */
     constructors: Boolean = false
   ):
@@ -166,7 +166,7 @@ object JdkSurfaceCheck extends RemedySource:
     Mapping("", ran = false, Map.empty, Set.empty, Map.empty, Map.empty, scala.None)
 
   // -------------------------------------------------------------------------------------------
-  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these rows
+  // THE MENU — what a port may ASK FOR at one of these rows
   // -------------------------------------------------------------------------------------------
 
   /** THE EMITTED CALL IS RIGHT AS IT STANDS — the port read this JDK member and states so. An `Unhandled` row claims the phase has no entry, NOT that the emission is broken (coverage may be by
@@ -190,7 +190,7 @@ object JdkSurfaceCheck extends RemedySource:
 
   def remedies: List[Remedy] = List(AcceptJdkMember)
 
-  /** DRAIN what this port selected — `CLAUDE.md` §5's move, through the one function every lane uses. Returns the rows that were NOT drained.
+  /** DRAIN what this port selected, through the one function every lane uses. Returns the rows that were NOT drained.
     */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
     plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.disposition.label, f.at, f.subject, f.origin, f.detail))
@@ -198,8 +198,8 @@ object JdkSurfaceCheck extends RemedySource:
   /** one classified row.
     *
     * @param at
-    *   the symbol a per-location selection keys on — the EXTERNAL MEMBER for a member row (that is what the subject column names), and `SymId.None` for a K9 row, which is a fact about a SITE and
-    *   offers this menu nothing.
+    *   the symbol a per-location selection keys on — the EXTERNAL MEMBER for a member row (that is what the subject column names), and `SymId.None` for a `KeptIterable` row, which is a fact about a
+    *   SITE and offers this menu nothing.
     */
   final case class Finding(subject: String, disposition: Disposition, sites: Int, origin: Origin, at: SymId = SymId.None):
     def detail: String = disposition match
@@ -210,17 +210,17 @@ object JdkSurfaceCheck extends RemedySource:
     def render: String = s"${disposition.label} $detail  (${origin.javaPath}:${origin.line})"
 
     /** the SUBJECT column is the MEMBER, not the enclosing declaration: a `jdk-surface` row is a fact about the surface (one member, however many call sites), and keying it on whichever method
-      * happened to call it first would re-key the finding every time an unrelated caller moved. K9's rows are per SITE and carry the type as their subject for the same reason.
+      * happened to call it first would re-key the finding every time an unrelated caller moved. `KeptIterable`'s rows are per SITE and carry the type as their subject for the same reason.
       */
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, disposition.label, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   type Row = ExternalUsage.Row
 
-  /** Classify every external JDK member `rows` holds, plus K9's ForEach demand over `units`.
+  /** Classify every external JDK member `rows` holds, plus the `KeptIterable` ForEach demand over `units`.
     *
     * @param rows
-    *   the EMITTED lane of [[ExternalUsage]] — this module's own dependencies (D2)
+    *   the EMITTED lane of [[ExternalUsage]] — this module's own dependencies (ownership filter)
     * @param units
     *   the units this run emits, for the ForEach walk
     * @param m
@@ -265,9 +265,9 @@ object JdkSurfaceCheck extends RemedySource:
               else Disposition.Kept
             else Disposition.Kept
 
-  /** ENGINE-LIMITS K9 as a DERIVED demand: an enhanced-for whose receiver the pipeline LEFT in the JDK namespace. Reads the POST-PIPELINE type, not a `typeMap` lookup — a scoped-out or phase-less
-    * port both keep a real `java.util.List` that a table would call mapped either way (§4.56's rule at its strongest). `retypedTo` guards only against a phase whose target is itself `java.*` (empty
-    * today). Per SITE, not per member. An OWNED receiver or ARRAY is out of scope.
+  /** `KeptIterable` as a DERIVED demand: an enhanced-for whose receiver the pipeline LEFT in the JDK namespace. Reads the POST-PIPELINE type, not a `typeMap` lookup — a scoped-out or phase-less port
+    * both keep a real `java.util.List` that a table would call mapped either way. `retypedTo` guards only against a phase whose target is itself `java.*` (empty today). Per SITE, not per member. An
+    * OWNED receiver or ARRAY is out of scope.
     */
   private def keptIterables(program: Program, units: List[Tree.ClassDef], m: Mapping): List[Finding] =
     given Program = program
@@ -276,7 +276,7 @@ object JdkSurfaceCheck extends RemedySource:
     val ph        = new Phase:
       def name: String = "jdk-surface/kept-iterable"
       // the catch-all term hook, because `StandardTraversal` has no `ForEach`-specific one — and
-      // going through the STANDARD traversal is the point (§3): an anonymous class's body is a node
+      // going through the STANDARD traversal is the point: an anonymous class's body is a node
       // there and a hand-rolled walk would stop one node short of it.
       override def transformTerm(t: Term)(using Program): Term =
         t match
@@ -305,7 +305,7 @@ object JdkSurfaceCheck extends RemedySource:
     if counts.isEmpty then "  no external java.* members referenced from emitted code"
     else "  " + counts.mkString(", ")
 
-  /** the §1 classification lines a run prints under the headline, one per finding KIND present. */
+  /** the classification lines a run prints under the headline, one per finding KIND present. */
   def classifications(fs: List[Finding]): List[String] =
     fs.map(_.disposition)
       .map {

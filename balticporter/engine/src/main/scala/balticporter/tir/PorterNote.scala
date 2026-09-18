@@ -65,7 +65,7 @@ object PorterNote:
   /** Grammar primitives shared with the port map's `shape` column via [[KeyValues]]. */
   export KeyValues.{ safe, value }
 
-  /** The `k=v` pairs: §1 classification first, then detail sorted. Concatenated, not deduplicated. */
+  /** The `k=v` pairs: the reason classification first, then detail sorted. Concatenated, not deduplicated. */
   def pairs(d: Decision): List[(String, String)] =
     val cls = ("reason" -> d.reason.className) :: (d.reason match
       case Reason.Universal(r)     => List("rule" -> r)

@@ -2,7 +2,7 @@ package balticporter.core
 
 import balticporter.core.BExpr.*
 
-/** Pure BUnit -> BUnit pass. `id@version` joins the action-cache fingerprint. // DESIGN.md §2.4
+/** Pure BUnit -> BUnit pass. `id@version` joins the action-cache fingerprint.
   */
 trait BirPass:
   /** stable id, e.g. "vocab/apply" or "ssg/package-rename". */

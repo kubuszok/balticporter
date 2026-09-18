@@ -89,7 +89,7 @@ object RuntimeArtifact:
     // `JavaListIterator` brings nothing concrete; its key is needed for derivation completeness.
     s"$Package.JavaListIterator" -> Set.empty,
     s"$Package.JavaIterable" -> Set.empty,
-    // `Wrapping` is a marker trait; abstract, so empty set. Needs its key for derivation. // ENGINE-LIMITS K19
+    // `Wrapping` is a marker trait; abstract, so empty set. Needs its key for derivation.
     s"$Package.Wrapping" -> Set.empty,
     // Every concrete member of `JavaCollection` (all of `AbstractCollection` except `iterator()`/`size()`).
     s"$Package.JavaCollection" -> Set(

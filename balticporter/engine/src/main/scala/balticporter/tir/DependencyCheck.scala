@@ -3,12 +3,12 @@ package balticporter.tir
 import balticporter.catalog.{ ApiRow, ArtifactDep, DiffId, Platform }
 
 /** Which third-party ARTIFACTS the port's declared backends need, and which its build does not name — a BUILD-GRAPH question, not a symbol-reference one. A finding is *a usage FIRED* ∧ *no dependency
-  * covers it* ∧ *no declared alternative*; [[unneeded]] is the opposite (on `policy`). Coverage compares ORIGINAL and EMITTED programs (a redirect can remove the JDK usage a coordinate answers,
-  * `ENGINE-LIMITS.md` P8). [[Provides]] unfetchable = `Unverifiable` (§4.6).
+  * covers it* ∧ *no declared alternative*; [[unneeded]] is the opposite (on `policy`). Coverage compares ORIGINAL and EMITTED programs (a redirect can remove the JDK usage a coordinate answers).
+  * [[Provides]] unfetchable = `Unverifiable`.
   */
 object DependencyCheck:
 
-  /** the RESIDUE lane: requirements that survived BOTH filters — this module's own emitted code (D2), and no declared dependency covering them. The number a reader acts on.
+  /** the RESIDUE lane: requirements that survived BOTH filters — this module's own emitted code (ownership filter), and no declared dependency covering them. The number a reader acts on.
     */
   val Name = "dependency-coverage"
 
@@ -17,8 +17,8 @@ object DependencyCheck:
     */
   val All = "dependency-coverage(all)"
 
-  /** the THIRD artifact of the family, counting DECLARATIONS rather than usage sites: `policy = 0` is a bar a port can hold by DECLARING NOTHING, invisible to the usage-enumerating lanes above
-    * (`ENGINE-LIMITS.md` P8). One row per declared coordinate, naming its [[Cell]]; the `policy` residue is the subtraction.
+  /** the THIRD artifact of the family, counting DECLARATIONS rather than usage sites: `policy = 0` is a bar a port can hold by DECLARING NOTHING, invisible to the usage-enumerating lanes above. One
+    * row per declared coordinate, naming its [[Cell]]; the `policy` residue is the subtraction.
     */
   val Declared = "dependency-coverage(declared)"
 
@@ -74,8 +74,8 @@ object DependencyCheck:
     reqs.filterNot(r => r.deps.values.forall(d => have((d.org, d.name))))
 
   /** what an artifact says it provides, read from the jar and nothing else. THREE-valued: [[Unverifiable]] is a jar this run could not read (no network, dropped snapshot, no `cs`) — not a coordinate
-    * that provides nothing, since collapsing it either way fabricates an answer (§4.6). [[Known]] holds CLASS names as `Symbol.fullName` spells them, every enclosing prefix of a nested entry
-    * included, so a match is equality and never `startsWith` (§4.56).
+    * that provides nothing, since collapsing it either way fabricates an answer. [[Known]] holds CLASS names as `Symbol.fullName` spells them, every enclosing prefix of a nested entry included, so a
+    * match is equality and never `startsWith`.
     */
   enum Provides:
     case Known(classes: Set[String])
@@ -129,7 +129,7 @@ object DependencyCheck:
         )
 
     /** [[Introduced]] with the ORIGINAL column UNKNOWN: the emitted column answered `Yes` from the CATALOG half (no jar needed) while the original column's jar could not be read, so its own sentence
-      * would assert what the run does not know (§4.6). KEEP is unchanged either way.
+      * would assert what the run does not know. KEEP is unchanged either way.
       */
     case IntroducedOriginalUnknown
         extends Cell(
@@ -154,7 +154,7 @@ object DependencyCheck:
     def render: String = s"$dep — ${cell.label} (original: ${original.why}; emitted: ${emitted.why})"
 
   /** every dotted name a phase SPLICED into this program as literal text — the third evidence, and the one no symbol table holds. A `Tree.Opaque` is ready-made Scala the engine deliberately does not
-    * parse, so a symbol-keyed check reads past it. Walked with `StandardTraversal` over the PROGRAM (§1 — `Rewrite.accountedBy`). Returns the MAXIMAL dotted run, uncut — [[namesClass]] cuts.
+    * parse, so a symbol-keyed check reads past it. Walked with `StandardTraversal` over the PROGRAM. Returns the MAXIMAL dotted run, uncut — [[namesClass]] cuts.
     */
   def splicedNames(program: Program): Set[String] =
     given Program = program
@@ -183,8 +183,8 @@ object DependencyCheck:
     flush()
     out.result()
 
-  /** does `name` — or any prefix of it cut at a `.` — name a class this artifact declares? Equality at every cut, never `startsWith` (§4.56): `classes` already holds each enclosing prefix, and a
-    * spliced name routinely reaches PAST the class into a member.
+  /** does `name` — or any prefix of it cut at a `.` — name a class this artifact declares? Equality at every cut, never `startsWith`: `classes` already holds each enclosing prefix, and a spliced name
+    * routinely reaches PAST the class into a member.
     */
   private[tir] def namesClass(name: String, classes: Set[String]): Boolean =
     var i   = name.length
@@ -195,8 +195,8 @@ object DependencyCheck:
     hit
 
   /** does THIS program use THIS artifact — the derivation both columns of the coverage table read. The union of THREE evidences, catalog half first: a `Depend` row, a reference to a class the
-    * artifact declares, or a name a phase SPLICED in as literal text. `external` is this module's own external usage rows (D2, the same list `jdk-surface` reads); `spliced` is [[splicedNames]],
-    * `Set.empty` for the pre-pipeline program.
+    * artifact declares, or a name a phase SPLICED in as literal text. `external` is this module's own external usage rows (ownership filter, the same list `jdk-surface` reads); `spliced` is
+    * [[splicedNames]], `Set.empty` for the pre-pipeline program.
     */
   def uses(dep: ArtifactDep, reqs: List[Requirement], external: List[ExternalUsage.Row], provides: ArtifactDep => Provides, spliced: Set[String] = Set.empty): Answer =
     val byCatalog = reqs.filter(_.deps.values.exists(d => (d.org, d.name) == (dep.org, dep.name)))
@@ -277,7 +277,7 @@ object DependencyCheck:
         s"  [original: ${d.original.why}; emitted: ${d.emitted.why}]")
     }
 
-  /** violations in code this run actually EMITS — the same D2 filter every other check carries: an artifact a base's declaration needs is the BASE's to add.
+  /** violations in code this run actually EMITS — the same ownership filter every other check carries: an artifact a base's declaration needs is the BASE's to add.
     */
   def inEmittedCode(program: Program, reqs: List[Requirement], isExcluded: SymId => Boolean): List[Requirement] =
     reqs.filterNot(r => PortabilityCheck.owningType(program, r.enclosing).exists(isExcluded))
@@ -315,9 +315,9 @@ object DependencyCheck:
       )
     }
 
-  /** the same rows as an ARTIFACT a BUILD can read (`run-latest/dependencies.tsv`) — one value, one spelling, so a measure lane derives its classpath from the run (CLAUDE.md §1.5). `coordinate` is
-    * the EXPLICIT jvm form, never a `::` shorthand that can differ per checkout. `onClasspath` is DERIVED here since only the run has the evidence — Unknown takes the INCLUDING arm (an unneeded jar
-    * costs a resolution, a missing one a wall of errors).
+  /** the same rows as an ARTIFACT a BUILD can read (`run-latest/dependencies.tsv`) — one value, one spelling, so a measure lane derives its classpath from the run. `coordinate` is the EXPLICIT jvm
+    * form, never a `::` shorthand that can differ per checkout. `onClasspath` is DERIVED here since only the run has the evidence — Unknown takes the INCLUDING arm (an unneeded jar costs a
+    * resolution, a missing one a wall of errors).
     */
   val DeclaredHeader = "#org\tname\trev\tcross\tresolver\tcoordinate\tonClasspath\tcell\twhy"
 

@@ -3,8 +3,8 @@ package balticporter.tir
 import balticporter.catalog.{ ApiRow, ApiRows, DiffId, FixKind, Platform }
 
 /** Which JDK APIs the port still depends on that a cross-platform target cannot provide. sge targets JS/Native/JVM, so a port can compile and test green on the JVM and still be JVM-only. The TIR
-  * pre-flight replaces `--js` linking: every external symbol reference is enumerated. §1(b), parameterised on the TARGET SET — a rule carries the platforms it refuses FOR, matched against `ApiRows`
-  * (never claiming a platform its cited row says `Keep`).
+  * pre-flight replaces `--js` linking: every external symbol reference is enumerated. Parameterised on the TARGET SET — a rule carries the platforms it refuses FOR, matched against `ApiRows` (never
+  * claiming a platform its cited row says `Keep`).
   */
 object PortabilityCheck extends RemedySource:
 
@@ -23,8 +23,8 @@ object PortabilityCheck extends RemedySource:
     */
 
   /** `accept-jvm-only` — *this location is JVM-only and I know it; stop reporting it.* Changes NO tree, moves a row into `remediation(resolved)`. CONSISTENCY: accepting a JVM-only API while `targets`
-    * includes Scala.js/Native is REPORTED as a contradiction and never applied — the apply arm is unreachable by construction (`ENGINE-LIMITS.md` P6). Honest answers: narrow `targets`, or a
-    * `verdictOverrides` entry.
+    * includes Scala.js/Native is REPORTED as a contradiction and never applied — the apply arm is unreachable by construction, since no portability rule asks about the JVM. Honest answers: narrow
+    * `targets`, or a `verdictOverrides` entry.
     */
   val AcceptJvmOnly: Remedy = Remedy(
     id = "accept-jvm-only",
@@ -194,7 +194,7 @@ object PortabilityCheck extends RemedySource:
       on = Rule.JsOnly,
       at = p(28)
     ),
-    // The one COLLECTION on this list whose answer is a REFUSAL, not a mapping (ENGINE-LIMITS M6).
+    // The one COLLECTION on this list whose answer is a REFUSAL, not a mapping.
     // HAND-WRITTEN, does NOT derive from ApiRows: a Refuse row produces no question by itself.
     Rule(
       "java.util.WeakHashMap",
@@ -205,8 +205,8 @@ object PortabilityCheck extends RemedySource:
       at = l(37)
     ),
     // ServiceLoader is JVM-only twice over: reflective instantiation, and it reads a
-    // META-INF/services FILE this engine does not emit. BOTH DEPENDENCY RULES now (DESIGN.md
-    // §8.19's Depend verdict) since the API exists off the JVM via a cross-platform wrapper.
+    // META-INF/services FILE this engine does not emit. BOTH ARE NOW DEPENDENCY RULES
+    // since the API exists off the JVM via a cross-platform wrapper.
     Rule(
       "java.util.ServiceLoader",
       "the class does not exist in the Scala.js javalib at all, so " +
@@ -386,7 +386,7 @@ object PortabilityCheck extends RemedySource:
     )
   )
 
-  /** THE §1(b) PARAMETER APPLIED: the UNPORTABILITY rules any of `targets` asks about. An empty target set is the no-op but NOT the default a port gets (`PortManifest.targets` defaults to all three,
+  /** THE TARGET PARAMETER APPLIED: the UNPORTABILITY rules any of `targets` asks about. An empty target set is the no-op but NOT the default a port gets (`PortManifest.targets` defaults to all three,
     * so no baseline moves by acquiring the parameter). Complement is [[dependencyRulesFor]]; the two PARTITION [[all]].
     */
   def rulesFor(targets: Set[Platform], overrides: Overrides = Map.empty): List[Rule] =
@@ -426,7 +426,7 @@ object PortabilityCheck extends RemedySource:
   def check(program: Program, rules: List[Rule] = all): List[Violation] =
     checkAll(program, rules)
 
-  /** Does `rule` name `fullName`? THE ONE MATCHER, cutting at a separator — a bare `startsWith` is §4.56's hazard (`java.lang.Thread` covered `java.lang.ThreadLocal`, which Scala.js implements).
+  /** Does `rule` name `fullName`? THE ONE MATCHER, cutting at a separator — a bare `startsWith` is the hazard (`java.lang.Thread` covered `java.lang.ThreadLocal`, which Scala.js implements).
     */
   def names(rule: Rule, fullName: String): Boolean =
     val prefix = if rule.api.nonEmpty && RuleScope.isBoundary(rule.api.last) then rule.api.init else rule.api
@@ -489,8 +489,8 @@ object PortabilityCheck extends RemedySource:
     def report: CheckReport.Finding =
       CheckReport.Finding("portability(injected)", api, file, file, count, why)
 
-  /** grouped one-line summary, most-referenced first, followed by the remediation block when the caller computed one (§4.45 — [[Remediator]] states the mechanism and, where verifiable, the literal
-    * manifest line). `fixes` is a PARAMETER, computed and passed together by `PortRun`, so there is no hidden state to go stale.
+  /** grouped one-line summary, most-referenced first, followed by the remediation block when the caller computed one ([[Remediator]] states the mechanism and, where verifiable, the literal manifest
+    * line). `fixes` is a PARAMETER, computed and passed together by `PortRun`, so there is no hidden state to go stale.
     */
   def summary(violations: List[Violation], fixes: List[Remediator.Suggestion] = Nil): String =
     if violations.isEmpty then "  none"

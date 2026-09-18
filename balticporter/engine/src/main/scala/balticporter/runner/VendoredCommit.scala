@@ -2,9 +2,8 @@ package balticporter.runner
 
 import java.nio.file.Path
 
-/** The truthful `Provenance.upstreamCommit` for a VENDORED source tree (CLAUDE.md §4.57). The honest pin is the LAST COMMIT THAT TOUCHED THE TREE (never `HEAD`, which churns on every unrelated
-  * commit) plus the repo's `origin` URL when it has one. A dirty tree is stated (`+dirty`); where git answers nothing, `commit unknown` rather than inventing an anchor. Paths are realpathed before
-  * relativising (§5.4).
+/** The truthful `Provenance.upstreamCommit` for a VENDORED source tree. The honest pin is the LAST COMMIT THAT TOUCHED THE TREE (never `HEAD`, which churns on every unrelated commit) plus the repo's
+  * `origin` URL when it has one. A dirty tree is stated (`+dirty`); where git answers nothing, `commit unknown` rather than inventing an anchor. Paths are realpathed before relativising.
   */
 object VendoredCommit:
 

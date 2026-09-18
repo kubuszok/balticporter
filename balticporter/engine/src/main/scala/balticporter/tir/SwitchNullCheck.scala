@@ -2,8 +2,7 @@ package balticporter.tir
 
 /** Reference-typed `switch` selectors where `null` falls out instead of throwing NPE.
   *
-  * Walks the tree independently of the emitter; disagrees when the emitter missed a guard. A switch whose java writes `case null ->` (SE21) is excluded. Findings are §1(a) engine gaps. // CLAUDE.md
-  * §4.4
+  * Walks the tree independently of the emitter; disagrees when the emitter missed a guard. A switch whose java writes `case null ->` (SE21) is excluded. Findings are engine gaps.
   */
 object SwitchNullCheck:
 

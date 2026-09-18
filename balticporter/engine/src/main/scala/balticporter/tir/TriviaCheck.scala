@@ -4,8 +4,8 @@ import balticporter.core.CommentScanner
 
 /** Compares source-text comments against emitted text to find dropped comments.
   *
-  * Re-lexes Java independently via `CommentScanner` (not the TIR). Comparison uses normalised body text, grouped by Java file. A finding is a §1(a) engine gap; a dropped member's Javadoc is
-  * classified as deliberate rather than lost. // CLAUDE.md §4.58
+  * Re-lexes Java independently via `CommentScanner` (not the TIR). Comparison uses normalised body text, grouped by Java file. A finding is an engine gap; a dropped member's Javadoc is classified as
+  * deliberate rather than lost.
   */
 object TriviaCheck:
 

@@ -47,8 +47,7 @@ object Jumps:
     case p: Product => p.productIterator.exists(jumpsTo(_, label, brk))
     case _ => false
 
-  /** The label a loop carries, if any (loops store their label in the node, not in `Tree.Labeled`). // ENGINE-LIMITS F1
-    */
+  /** The label a loop carries, if any (loops store their label in the node, not in `Tree.Labeled`). */
   def loopLabel(t: Term): Option[String] = t match
     case w: Tree.While   => w.label
     case d: Tree.DoWhile => d.label

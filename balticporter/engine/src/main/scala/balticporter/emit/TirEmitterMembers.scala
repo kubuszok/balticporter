@@ -4,7 +4,9 @@ import balticporter.catalog.{ CatalogLog, JS, Obligations, Rendering, Typing }
 import balticporter.core.{ EngineInfo, Provenance, Substituted }
 import balticporter.tir.*
 
-/** Type-parameter/parent alignment, statement dispatch, member visibility/sealing, def/val/param rendering and control-flow boundary handling split out of TirEmitter (context diet S1). */
+/** Type-parameter/parent alignment, statement dispatch, member visibility/sealing, def/val/param rendering and control-flow boundary handling split out of TirEmitter to keep it within its file-size
+  * limit.
+  */
 private[emit] trait TirEmitterMembers:
   self: TirEmitter =>
 
@@ -81,7 +83,7 @@ private[emit] trait TirEmitterMembers:
     case TypeRepr.OrType(l, r)        => mentionsSym(l, s) || mentionsSym(r, s)
     case _                            => false
 
-  /** ONE substitution function for the whole engine — [[ParentSubst.subst]], §4.56. */
+  /** ONE substitution function for the whole engine — [[ParentSubst.subst]]. */
   private[emit] def substTp(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = ParentSubst.subst(t, m)
 
   /** Render a type with every WILDCARD argument eliminated — illegal in an `extends` clause and as a cast target. A wildcard becomes its own written bound, else the type parameter's declared upper
@@ -148,13 +150,13 @@ private[emit] trait TirEmitterMembers:
     case v: Tree.ValDef => stat(v.copy(leading = Nil), 0)
     case other => stat(other, 0)
 
-  /** THE STATEMENT RENDERING DISPATCH — §2.3(c)'s emitter surface, one of two. The obligation wrapper is here, at the dispatch, so no arm can escape it (ENGINE-LIMITS F8).
+  /** THE STATEMENT RENDERING DISPATCH — the emitter's statement-level surface, one of two. The obligation wrapper is here, at the dispatch, so no arm can escape it.
     */
   private[emit] def stat(s: Statement, i: Int): String =
     Rendering.of(TirKinds.of(s), s.origin, s)(statArm(s, i))
 
-  /** JS-C47 / C48 / C49 / C50 — java's four access levels, consulted once here (where the three rendering arms converge) rather than once per declaration kind (ENGINE-LIMITS F8). JS-C47/C50 fire
-    * together: java's package-private default vs scala's public one.
+  /** JS-C47 / C48 / C49 / C50 — java's four access levels, consulted once here (where the three rendering arms converge) rather than once per declaration kind. JS-C47/C50 fire together: java's
+    * package-private default vs scala's public one.
     */
   private[emit] def declVisibility(s: Symbol, at: Origin)(using Obligations): Unit =
     // read off visPlan (the DECIDED level), never the raw java flags — Visibility.decide may widen.
@@ -185,7 +187,8 @@ private[emit] trait TirEmitterMembers:
     parentsBySym.toList.flatMap((c, ps) => ps.map(p => p -> c)).groupMap(_._1)(_._2)
 
   /** JS-C44 — java's `sealed`/`permits` (naming subclasses anywhere) against scala's file-scoped `sealed` (containing them). `sealed` is emitted only where the program-declared subtype set ACCOUNTS
-    * FOR every permitted type ([[balticporter.tir.Symbol.permits]]), never from parsed survivors alone. Otherwise the type ships OPEN, recorded as a residue (`ENGINE-LIMITS.md` M6).
+    * FOR every permitted type ([[balticporter.tir.Symbol.permits]]), never from parsed survivors alone. Otherwise the type ships OPEN, recorded as a residue, since the untranslated open form is also
+    * valid Scala and the compiler will not flag it.
     */
   private[emit] def sealOf(cd: Tree.ClassDef, s: Symbol, i: Int): (String, String) =
     if !s.flags.isSealed then ("", "")
@@ -194,7 +197,7 @@ private[emit] trait TirEmitterMembers:
       val subs      = subtypesBySym.getOrElse(cd.symbol, Nil)
       val elsewhere = subs.filterNot(x => topLevelOf(x) == mine)
       // types java named that this program does not declare as a subtype at all. Compared as
-      // interned ids, never names — the permits list and the emitted FQN are two namespaces (§4.56).
+      // interned ids, never names — the permits list and the emitted FQN are two namespaces.
       val unaccounted = s.permits.filterNot(subs.contains)
       if subs.nonEmpty && elsewhere.isEmpty && unaccounted.isEmpty then ("sealed ", "")
       else
@@ -494,7 +497,7 @@ private[emit] trait TirEmitterMembers:
   private[emit] var tparamSubst: Map[SymId, TypeRepr] = Map.empty
 
   /** Disambiguate a member that arrives CONCRETE from both the superclass and a mixin. Java has single inheritance, never ambiguous there; scala linearises and refuses. Forward to the SUPERCLASS
-    * (parents-list head) — the member java would have run. A `final` superclass member takes NO forwarder: minting one would override a `final` member, which scala forbids (`ENGINE-LIMITS.md` K28).
+    * (parents-list head) — the member java would have run. A `final` superclass member takes NO forwarder: minting one would override a `final` member, which scala forbids.
     */
   private[emit] def diamondOverrides(cd: Tree.ClassDef, i: Int): List[String] =
     def headOf(t: TypeRepr): Option[SymId] = headSymOf(t)
@@ -505,7 +508,7 @@ private[emit] trait TirEmitterMembers:
         headOf(t).flatMap(x => program.definitionOf(x)).collect { case c: Tree.ClassDef => c }
 
       /** What an EXTERNAL parent makes concrete: a support type this run injected (`externalConcrete`) or an interface whose JLS 9.4.3 `default` methods the frontend read off the class file
-        * (`Program.internedDefaults`, `ENGINE-LIMITS.md` K39). Both are MEASURED sets — an external parent absent from both contributes nothing.
+        * (`Program.internedDefaults`). Both are MEASURED sets — an external parent absent from both contributes nothing.
         */
       def externalOf(t: TypeRepr): Set[(String, List[Int])] =
         headOf(t).map(x => sym(x).fullName).toSet[String].flatMap(fqn => externalConcrete.getOrElse(fqn, Set.empty) ++ program.internedDefaults.getOrElse(fqn, Set.empty))
@@ -530,7 +533,7 @@ private[emit] trait TirEmitterMembers:
       // `DefDef` this class does not declare, so its type parameters belong to an ancestor —
       // emitted raw, `class Impl extends Base[Leaf] with Leaf` produced `Array[T]` naming a type
       // not in scope. [[ParentSubst]] makes it exact, the same derivation `CtorFunnel` and the
-      // constructor replay run (§4.56).
+      // constructor replay run.
       val psub = ParentSubst.of(cd)(using program)
       supName.toList.flatMap { sn =>
         sup.toList.filter((k, d) => mixins(k) && !ownKeys(k) && !sym(d.symbol).flags.isFinal).sortBy((k, _) => k._1).map { (_, d) =>
@@ -552,7 +555,7 @@ private[emit] trait TirEmitterMembers:
       }
 
   /** JS-S25 — java REJECTS unreachable code, Scala allows it, composed with `break`. A body ending in java's `while(true){ … return … }` never falls through, but Scala types `while(true)` as `Unit`,
-    * so a non-Unit method needs a tail java did not have. One function since the dispatch consults it and `defDef` renders from it (two derivations is the F8 shape).
+    * so a non-Unit method needs a tail java did not have. One function since the dispatch consults it and `defDef` renders from it — a rule needed at two sites must be one shared function.
     */
   private[emit] def needsUnreachableTail(d: Tree.DefDef): Boolean =
     sym(d.symbol).name != "<init>" && !isUnitType(d.returnTpt.tpe) && d.rhs.exists(endsInInfiniteLoop)
@@ -589,10 +592,10 @@ private[emit] trait TirEmitterMembers:
           .getOrElse("")
     }
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
-    // trivia first, porter note last, member next (§4.575) — the note must not displace the licence.
+    // trivia first, porter note last, member next — the note must not displace the licence.
     val ctorNowarn = if isCtor && orNullCtors(d.symbol) then nowarnDeprecated(i) else ""
     // a JNI `native` method no FFI phase rewrote keeps java's own spelling: `@native`, bodiless
-    // (the ladder's L0; `PanamaFfiTransform` clears the flag where it rewrites, ENGINE-LIMITS P-Panama).
+    // (`PanamaFfiTransform` clears the flag where it rewrites).
     val nativeAnn = if !isCtor && s.flags.isNative && d.rhs.isEmpty then s"${ind(i)}@scala.native\n" else ""
     s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn$nativeAnn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
@@ -604,7 +607,7 @@ private[emit] trait TirEmitterMembers:
         case Some(Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) if sym(m).name == "<init>" => stats.tail
         case _                                                                                => stats
 
-  /** Every statement `ctorBody` renders for a secondary — delegation arguments, replayed parent statements, own residual body — the one list the `@nowarn` decision reads (CLAUDE.md §4.4).
+  /** Every statement `ctorBody` renders for a secondary — delegation arguments, replayed parent statements, own residual body — the one list the `@nowarn` decision reads.
     */
   private[emit] def ctorRendered(cd: Tree.ClassDef, cdef: Tree.DefDef): List[Statement] =
     val stats            = CtorFunnel.stmtsOf(cdef)
@@ -630,8 +633,8 @@ private[emit] trait TirEmitterMembers:
   private[emit] var contTarget:  Option[String] = scala.None
   private[emit] var labelSeq = 0
 
-  /** names the `def` that carries a lambda body containing `return`. SCOPED TO ONE DECLARATION by [[inDeclaration]], never to the program, or the name would renumber under an unrelated edit
-    * (ENGINE-LIMITS M10).
+  /** names the `def` that carries a lambda body containing `return`. SCOPED TO ONE DECLARATION by [[inDeclaration]], never to the program, or the name would renumber under an unrelated edit and
+    * rename many members.
     */
   private[emit] var lambdaSeq = 0
 
@@ -691,8 +694,8 @@ private[emit] trait TirEmitterMembers:
   private[emit] def widenedBinding(b: Tree.ValDef, it: Term): Option[String] =
     elementTpe(it.tpe).filter(_ != b.tpt.tpe).map(_ => tpe(b.tpt.tpe))
 
-  /** is the enhanced-for BINDING written to inside the loop body? Java's binding is an ordinary local and may be assigned; scala's generator binds a `val`. Scanned with `StandardTraversal` (§3),
-    * counting `IncDec` beside `Assign`; over-approximating costs only an unneeded `var`.
+  /** is the enhanced-for BINDING written to inside the loop body? Java's binding is an ordinary local and may be assigned; scala's generator binds a `val`. Scanned with `StandardTraversal`, counting
+    * `IncDec` beside `Assign`; over-approximating costs only an unneeded `var`.
     */
   private[emit] def reassignsBinding(body: Tree, binding: SymId): Boolean =
     given Program = program
@@ -713,12 +716,12 @@ private[emit] trait TirEmitterMembers:
     case TypeRepr.AppliedType(_, List(el)) => Some(el)
     case _                                 => scala.None
 
-  /** ENGINE-LIMITS K9: is the iterable's POST-PIPELINE type a JDK `Iterable` the pipeline left in the java namespace? Such a type has no scala `foreach`, so `for (x <- xs)` does not compile. Decided
-    * from the NODE (§4.56): external (not program-owned) AND in `java.*`/`javax.*`. A retyped type is no longer in that namespace by the time the emitter runs, and arrays are excluded by construction
-    * (`headSymOf` returns `None` for them).
+  /** Is the iterable's POST-PIPELINE type a JDK `Iterable` the pipeline left in the java namespace? Such a type has no scala `foreach`, so `for (x <- xs)` does not compile. Decided from the NODE:
+    * external (not program-owned) AND in `java.*`/`javax.*`. A retyped type is no longer in that namespace by the time the emitter runs, and arrays are excluded by construction (`headSymOf` returns
+    * `None` for them).
     */
-  /** Does an enhanced-for over this type need java's own iterator protocol (K9)? Yes for a JDK iterable the pipeline KEPT, and for a PROGRAM type that reaches `java.lang.Iterable` through parents
-    * this program declares while neither it nor any of them declares a `foreach` (the ladder's L0: libGDX's own collections, 225 sites). A retyped or runtime type has `foreach`.
+  /** Does an enhanced-for over this type need java's own iterator protocol? Yes for a JDK iterable the pipeline KEPT, and for a PROGRAM type that reaches `java.lang.Iterable` through parents this
+    * program declares while neither it nor any of them declares a `foreach` (libGDX's own collections, 225 sites). A retyped or runtime type has `foreach`.
     */
   private[emit] def isKeptJdkIterable(iterableTpe: TypeRepr): Boolean =
     headSymOf(iterableTpe).flatMap(program.symbolOf).exists { s =>
@@ -794,8 +797,8 @@ private[emit] trait TirEmitterMembers:
       else s"scala.util.boundary { ($bName: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
 
   /** does this loop body contain a construct the emitter renders with a `boundary` of ITS OWN? `boundary.break(())` with no `using` resolves the innermost `Label`, so an interposed boundary silently
-    * retargets an un-annotated jump — a [[Tree.Labeled]] actually broken to, or a switch case's mid-case `break`. Deliberately OVER-approximates (§4.4); stops at a nested loop, lambda, `def` or
-    * anonymous class.
+    * retargets an un-annotated jump — a [[Tree.Labeled]] actually broken to, or a switch case's mid-case `break`. Deliberately OVER-approximates; stops at a nested loop, lambda, `def` or anonymous
+    * class.
     */
   private[emit] def interposes(t: Any): Boolean = t match
     case l: Tree.Labeled => labelNeedsBoundary(l) || interposes(l.stmt)
@@ -829,13 +832,13 @@ private[emit] trait TirEmitterMembers:
 
   // The three predicates below say which construct a java jump BELONGS to. They live in
   // `balticporter.tir.Jumps` because the `break-catch` check has to ask the same questions of the
-  // same trees (§4.4's jump-in-a-broad-catch row): two copies would be two answers, and the one
+  // same trees: two copies would be two answers, and the one
   // that is wrong is the one nothing measures.
   private[emit] def jumpsTo(t:     Any, label: String, brk: Boolean): Boolean = Jumps.jumpsTo(t, label, brk)
   private[emit] def continuesIn(t: Any):                              Boolean = Jumps.continuesIn(t)
 
   /** does this subtree `return` from the construct that OWNS it? Stops at a nested `Lambda`, `DefDef` or anonymous-class body, for `breaksOut`'s reason. Product reflection rather than a case per node
-    * — a hand-rolled walk stopping short is how two of this project's silent defects survived (CLAUDE.md §3).
+    * — a hand-rolled walk stopping short is how two of this project's silent defects survived.
     */
   private[emit] def returnsIn(t: Any): Boolean = t match
     case _: Tree.Return => true
@@ -845,8 +848,9 @@ private[emit] trait TirEmitterMembers:
     case p: Product => p.productIterator.exists(returnsIn)
     case _ => false
 
-  /** the result type to give the `def` that carries a lambda body containing `return`. TWO SOURCES, tried in order (`ENGINE-LIMITS.md` I9): the node's own `resultTpt` (a converted SAM method's fact),
-    * then the body (every `return` VALUELESS is a `void` lambda). `None` means DO NOT REWRITE, never "use `Any`" — a guessed type compiles and means something else (M6).
+  /** the result type to give the `def` that carries a lambda body containing `return`. TWO SOURCES, tried in order: the node's own `resultTpt` (a converted SAM method's fact), then the body (every
+    * `return` VALUELESS is a `void` lambda). `None` means DO NOT REWRITE, never "use `Any`" — a guessed type compiles and means something else, and an untranslatable construct is refused and counted
+    * rather than approximated.
     */
   private[emit] def lambdaResultType(lam: Tree.Lambda): Option[String] =
     lam.resultTpt.map(t => tpe(t.tpe)).orElse {
@@ -889,7 +893,7 @@ private[emit] trait TirEmitterMembers:
   private[emit] def ctorBody(cdef: Tree.DefDef, i: Int): String =
     val stats  = CtorFunnel.stmtsOf(cdef)
     val replay = currentClass.flatMap(plans.replayFor(_, cdef)).getOrElse(Nil)
-    // C3 item 4: post-bodies now in the primary's class body, not per-secondary.
+    // post-bodies now in the primary's class body, not per-secondary.
     val inlined: List[Statement] = Nil
     // the head is read THROUGH its comments, re-emitted above the delegation that replaces it.
     val headTrivia = stats.headOption.collect { case t: Term => Tree.triviaOn(t) }.getOrElse(Nil)
@@ -916,10 +920,10 @@ private[emit] trait TirEmitterMembers:
               case _: Tree.Super => superDelegation(args, i + 1)
               case _ => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
           case _ => "this()"
-    // §4.58 — a CONSUMED `this.f = e` does not disappear from the file, so its comment rides THIS
+    // a CONSUMED `this.f = e` does not disappear from the file, so its comment rides THIS
     // secondary's delegation, the one place a reader will find it.
     val eatenTrivia = after.take(eaten).collect { case t: Term => Tree.triviaOn(t) }.flatten
-    // A10 / ENGINE-LIMITS C7 — PREFIX STRIP: where this constructor ESCAPES the promotion and its
+    // PREFIX STRIP: where this constructor ESCAPES the promotion and its
     // own body BEGINS with the promoted body, the class body already ran those statements, so
     // re-emitting them duplicates. `Plans.residualBody` is the same function `promotionEscapes`
     // subtracts, so the emitter and the omission count cannot disagree.
@@ -936,21 +940,21 @@ private[emit] trait TirEmitterMembers:
     * `CtorFunnel.Plans.superCall`; this only renders it, so `OmissionCheck` can count a `Dropped` super call independently of what this method lowers it to.
     */
 
-  /** the DISAMBIGUATOR's argument, when the class's primary takes one. ASCRIBED, never a bare `null` — an unascribed `this(null)` against an overload `C(String)` is `E051 Ambiguous overload`
-    * (`ENGINE-LIMITS.md` C8); `(null: C.Funnel)` has exactly one candidate.
+  /** the DISAMBIGUATOR's argument, when the class's primary takes one. ASCRIBED, never a bare `null` — an unascribed `this(null)` against an overload `C(String)` is `E051 Ambiguous overload`;
+    * `(null: C.Funnel)` has exactly one candidate.
     */
   private[emit] def markerArg(cd: Tree.ClassDef, name: String): String =
     s"(null: ${typeValue(cd.symbol)}.${esc(name)})"
 
   /** the same ascription at a slot argument: a synthesised primary's delegation is an argument list JAVA NEVER WROTE, so a root not assigning a hoisted field contributes that field's own (often
-    * `null`) java initialiser — ambiguous the same way [[markerArg]] is. Declines on a delegation JAVA WROTE (§4.56) and at an ABSTRACT type slot (`Null` does not conform).
+    * `null`) java initialiser — ambiguous the same way [[markerArg]] is. Declines on a delegation JAVA WROTE and at an ABSTRACT type slot (`Null` does not conform).
     */
   private[emit] def slotArg(a: Term, slot: Option[TypeRepr], i: Int): String = (a, slot) match
-    // an OPAQUE slot over a primitive has no `null`: the cast erases to the primitive's zero (K51).
+    // an OPAQUE slot over a primitive has no `null`: the cast erases to the primitive's zero.
     case (Tree.Literal(Constant.NullC, _, _), Some(t)) if opaqueSlot(t)    => s"null.asInstanceOf[${tpe(t)}]"
     case (Tree.Literal(Constant.NullC, _, _), Some(t)) if !abstractSlot(t) => s"(null: ${tpe(t)})"
-    // C3: an `if` with a block body in a synthesised delegation misparsed by Scala 3's
-    // `this(...)` grammar -- parenthesise to delimit the expression. // ENGINE-LIMITS C3
+    // an `if` with a block body in a synthesised delegation misparsed by Scala 3's
+    // `this(...)` grammar -- parenthesise to delimit the expression.
     case (_: Tree.If, _) => s"(${term(a, i)})"
     case _               => term(a, i)
 
@@ -971,7 +975,7 @@ private[emit] trait TirEmitterMembers:
       // a DISAMBIGUATED primary takes one more parameter than the slots, so the delegation writes
       // one more argument. `null` is the only value of a marker type and it inhabits nothing else,
       // which is precisely why the extra parameter removes the primary from every other
-      // constructor's candidate set (`ENGINE-LIMITS.md` C8).
+      // constructor's candidate set.
       case CtorFunnel.SuperCall.Positional(as) =>
         val extra = currentClass.flatMap(cc => plans(cc).marker.map(markerArg(cc, _))).toList
         s"this(${(as.map(term(_, i)) ++ extra).mkString(", ")})"
@@ -997,8 +1001,8 @@ private[emit] trait TirEmitterMembers:
     else s"(${ps.map(param).mkString(", ")})"
 
   /** A `using` parameter with NO NAME renders ANONYMOUSLY — `(using T)` — not cosmetic: a named context parameter named after an emitted root package SHADOWS it and breaks every fully-qualified
-    * reference in scope (this backend emits nothing else, §6). Nothing reads the name (`using` resolution and `summon` never do); an empty name cannot capture a real one since the frontend gives
-    * every parameter java's own name.
+    * reference in scope (this backend emits fully-qualified names, no imports). Nothing reads the name (`using` resolution and `summon` never do); an empty name cannot capture a real one since the
+    * frontend gives every parameter java's own name.
     */
   private[emit] def givenParam(v: Tree.ValDef): String =
     if sym(v.symbol).name.isEmpty then tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe)) else param(v)
@@ -1011,9 +1015,9 @@ private[emit] trait TirEmitterMembers:
     // reference (java writes such a qualifier RAW, so an annotated type would be an unusable
     // capture); a lambda parameter is the only ValDef a phase mints without one. An INJECTED
     // parent's parameter type wins over the TIR-derived one, since the injected file may declare a
-    // DIFFERENT signature than java's (K35 CLOSED).
+    // DIFFERENT signature than java's.
     val t = injectedOverrideTypes.getOrElse(v.symbol, overrideAlign.getOrElse(v.symbol, v.tpt.tpe))
-    // a DEFAULT a phase minted rides as verbatim source (a captured value's `= null`, DESIGN.md §8.4)
+    // a DEFAULT a phase minted rides as verbatim source (a captured value's `= null`)
     val df = v.rhs match
       case Some(o: Tree.Opaque) => s" = ${o.raw}"
       case _                    => ""
@@ -1045,7 +1049,8 @@ private[emit] trait TirEmitterMembers:
     )
     declVisibility(vs, v.origin)
     // trivia, then porter note, then annotations, then the val (see defDef). annots renders
-    // @nowarn — without it a phase-attached annotation is silently dropped (ENGINE-LIMITS T26.1).
+    // @nowarn — without it a phase-attached annotation is silently dropped: unused locals and
+    // private members are errors under the reference build's warning flags.
     val note = declNotes(v.symbol, i)
     val an   = annots(sym(v.symbol), i)
     inDeclaration {
@@ -1056,7 +1061,7 @@ private[emit] trait TirEmitterMembers:
   private[emit] def valDef0(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)
     if s.flags.isGiven then
-      // An EMPTY NAME renders an ANONYMOUS given (ENGINE-LIMITS CT3): a minted name could shadow
+      // An EMPTY NAME renders an ANONYMOUS given: a minted name could shadow
       // an emitted root package, since this backend emits only fully-qualified references.
       val kw = if s.flags.isPrivate then "private given" else "given"
       val nm = if s.name.isEmpty then "" else s"${esc(s.name)}: "
@@ -1074,14 +1079,14 @@ private[emit] trait TirEmitterMembers:
     v.rhs match
       case Some(r) if isJavaConstant(v, s) && !isAnonOwner(s.owner) =>
         // a java CONSTANT VARIABLE (JLS 4.12.4) is INLINED by javac, so reading it triggers no
-        // class initialiser — a typed `val` would (§4.4's Vector3/Matrix4 cycle). `inline val`
+        // class initialiser — a typed `val` would (the Vector3/Matrix4 cycle). `inline val`
         // WITHOUT the type ascription, which would defeat the constant type. An ANONYMOUS CLASS
         // has no companion, so it stays an ordinary `val` in the anonymous body there.
         s"${ind(i)}${mods(s).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
         // a non-final java local or PRIVATE field never ASSIGNED anywhere in the program (the
-        // write set is BeanCollapse.writtenSymbols, §4.55) emits val instead of var. NON-PRIVATE
-        // fields stay var even when unwritten HERE — a dependent port may write them (§1.5).
+        // write set is BeanCollapse.writtenSymbols) emits val instead of var. NON-PRIVATE
+        // fields stay var even when unwritten HERE — a dependent port may write them.
         val isField = program.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef])
         val kw      =
           if s.flags.isMutable && (isWritten(v) || (isField && !s.flags.isPrivate))
@@ -1125,7 +1130,7 @@ private[emit] trait TirEmitterMembers:
     case _ => term(r, 0)
 
   /** a java CONSTANT VARIABLE: `static final`, primitive or `String`, literal initialiser. Delegates to `ClassInitTriggerCheck.constantVariable` — the same predicate the class-init census uses, so
-    * the two can never disagree about which fields are step-9 content (K22).
+    * the two can never disagree about which fields are step-9 content.
     */
   private[emit] def isJavaConstant(v: Tree.ValDef, s: Symbol): Boolean =
     balticporter.tir.ClassInitTriggerCheck.constantVariable(v, s)(using program)

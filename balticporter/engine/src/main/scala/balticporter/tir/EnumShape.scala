@@ -7,8 +7,7 @@ package balticporter.tir
   */
 object EnumShape:
 
-  /** Members `java.lang.Enum` declares final, plus `values`/`valueOf` from the companion. Screened against all member names (deliberate over-approximation by bare name). // ENGINE-LIMITS T11/T13
-    */
+  /** Members `java.lang.Enum` declares final, plus `values`/`valueOf` from the companion. Screened against all member names (deliberate over-approximation by bare name). */
   val Reserved: Set[String] =
     Set(
       "name",
@@ -33,7 +32,7 @@ object EnumShape:
       if cd.enumCases.isEmpty then Some("the enum declares no constants and a scala 3 `enum` must declare at least one case")
       else
         val bodied = cd.enumCases.filter(_.body.nonEmpty).map(ec => nameOf(ec.symbol))
-        // scala 3 enum case has no template body // ENGINE-LIMITS T8
+        // scala 3 enum case has no template body
         if bodied.nonEmpty then Some(s"constant(s) ${bodied.mkString(", ")} carry a class body, which a scala 3 enum case cannot")
         else
           val params  = CtorFunnel.enumPrimaryCtor(program, cd).toList.flatMap(CtorFunnel.valueParams(program, _)).map(v => nameOf(v.symbol))

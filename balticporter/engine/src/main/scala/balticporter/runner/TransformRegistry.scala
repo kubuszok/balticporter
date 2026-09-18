@@ -7,7 +7,7 @@ import scala.jdk.CollectionConverters.*
 
 /** The [[TransformFactory]] instances visible on one classpath, and the only place a config file's `transform = "…"` is turned into a [[Phase]]. The engine's own transforms register through the SAME
   * `META-INF/services/balticporter.tir.TransformFactory` mechanism a consumer's rule does — no built-in table beside the service loader. `package-rename` is NOT constructible: it must run after every
-  * other phase (§4.56), so `PortRun` takes it as MANIFEST DATA instead.
+  * other phase, so `PortRun` takes it as MANIFEST DATA instead.
   */
 final class TransformRegistry(val factories: List[TransformFactory]):
 

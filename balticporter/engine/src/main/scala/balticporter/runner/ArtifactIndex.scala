@@ -10,7 +10,7 @@ import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
 
 /** Resolves an [[ArtifactDep]] via `cs fetch --intransitive` and enumerates the JVM jar's class entries to answer [[DependencyCheck.Provides]]. Returns `Unverifiable` on failure. Coordinate is built
-  * explicitly (`name_3`, not `cs`'s default). Cache is fingerprinted by the exact invocation; stale sidecars trigger a refetch. // ENGINE-LIMITS P8
+  * explicitly (`name_3`, not `cs`'s default). Cache is fingerprinted by the exact invocation; stale sidecars trigger a refetch.
   */
 object ArtifactIndex:
 
@@ -70,7 +70,7 @@ object ArtifactIndex:
         resolve(cmd) match
           case Left(why)   => DependencyCheck.Provides.Unverifiable(why)
           case Right(jars) =>
-            // A jar that resolved but cannot be read is Unverifiable, not empty. // CLAUDE.md §4.6
+            // A jar that resolved but cannot be read is Unverifiable, not empty.
             try
               val classes = classesIn(jars)
               cacheDir.foreach(dir => writeCache(dir, d, classes, key))

@@ -32,7 +32,7 @@ object InjectedSurface:
     typeParams: Map[String, List[String]] = Map.empty,
     /** Declaration kind per injected type, so a dependent's port map gets `Published`. */
     typeForms: Map[String, TypeForm] = Map.empty,
-    /** upstream FQN -> emitted FQN of a dropped+injected type: the emitter asks by the SYMBOL's (java) name, the file declares the emitted one (`PROGRESS.md` §13.31 step 3).
+    /** upstream FQN -> emitted FQN of a dropped+injected type: the emitter asks by the SYMBOL's (java) name, the file declares the emitted one.
       */
     aliases: Map[String, String] = Map.empty
   ):

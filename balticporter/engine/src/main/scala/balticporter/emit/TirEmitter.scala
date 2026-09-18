@@ -19,12 +19,12 @@ final class TirEmitter(
   private[emit] val notes:            DecisionLog = new DecisionLog,
   /** Diagnostic mode: render counted refusals as `compiletime.error` instead of residue comments. */
   private[emit] val preview: Boolean = false,
-  /** Best-effort emission (DESIGN.md §6.4): open markers render as inner term in comment fences instead of `compiletime.error`. Byte-identical to normal mode at zero open markers.
+  /** Best-effort emission: open markers render as inner term in comment fences instead of `compiletime.error`. Byte-identical to normal mode at zero open markers.
     */
   private[emit] val bestEffort: Boolean = false,
-  /** View over types this run does not emit (DESIGN.md §8.3). `None` = whole program is surface. */
+  /** View over types this run does not emit. `None` = whole program is surface. */
   private[emit] val surfaceView: Option[Surface] = scala.None,
-  /** Upstream Java source text by `Origin.javaPath`, for comment-recovery (DESIGN.md §8.8). Injected so in-memory fixtures can supply text. Default reads the file.
+  /** Upstream Java source text by `Origin.javaPath`, for comment-recovery. Injected so in-memory fixtures can supply text. Default reads the file.
     */
   private[emit] val javaSource: String => Option[String] = TirEmitter.readJavaSource,
   /** Catalog obligation log. Default `discarding` is correct for secondary emitters (determinism twin, preview, best-effort) to avoid double-counting.
@@ -46,7 +46,7 @@ final class TirEmitter(
   private[emit] val own = collection.mutable.ListBuffer.empty[Decision]
 
   // Normalize away Java member-name clashes before rendering. Capture-rename runs LAST
-  // so it reads effective names from the three passes above. // CLAUDE.md §4.55
+  // so it reads effective names from the three passes above.
   private[emit] val prepared =
     TirEmitter.resolveCapturedLocalClashes(
       TirEmitter.funnelParamRenames(
@@ -74,7 +74,7 @@ final class TirEmitter(
   private[emit] def isWritten(v: Tree.ValDef): Boolean =
     writtenSyms.contains(v.symbol)
 
-  /** Whole-program visibility plan mapping SymIds to access levels. // DESIGN.md §8.7 */
+  /** Whole-program visibility plan mapping SymIds to access levels. */
   private[emit] val visPlan: Map[SymId, Visibility.Vis] = Visibility.plan(program, own)
 
   private[emit] def hasDeprecatedNowarn(s: Symbol): Boolean = s.annotations.exists(_.args.exists(_._2 match {
@@ -83,7 +83,7 @@ final class TirEmitter(
   private[emit] def nowarnDeprecated(i: Int): String = s"${ind(i)}@scala.annotation.nowarn(\"msg=deprecated\")\n"
 
   /** Constructors whose RENDERED statements call `.orNull`, and classes whose PROMOTED body or super arguments do — decided here, before emission, from the same lists `ctorBody` and the class arm
-    * render (`ctorRendered`), so the decision carries a porter note. CLAUDE.md §4.4.
+    * render (`ctorRendered`), so the decision carries a porter note.
     */
   private[emit] val (orNullCtors, orNullClasses): (Set[SymId], Set[SymId]) = {
     given Program = program
@@ -123,8 +123,8 @@ final class TirEmitter(
     (ctors.result(), classes.result())
   }
 
-  /** The decisions THIS emitter made — the three §4.55 renaming passes, the replay widening, the replay `@nowarn` suppression. A value, not a recording: the orchestrator records once, from the
-    * emitter it keeps, and a determinism twin's identical copy is never read — recording from the constructor would double every row on any run building two emitters (the default).
+  /** The decisions THIS emitter made — the three renaming passes, the replay widening, the replay `@nowarn` suppression. A value, not a recording: the orchestrator records once, from the emitter it
+    * keeps, and a determinism twin's identical copy is never read — recording from the constructor would double every row on any run building two emitters (the default).
     */
   val ownDecisions: List[Decision] = own.toList
 
@@ -144,8 +144,8 @@ final class TirEmitter(
   private[emit] var currentTopLevelSym: SymId = SymId.None
   private[emit] var currentOwnerSym:    SymId = SymId.None
 
-  /** last segment of the package this unit is being EMITTED into — the qualifier a Java package-private or `protected` declaration renders with (DESIGN §8.7). Read from the unit being written, never
-    * from an upstream FQN plus a rename map (the rename runs LAST, §4.56). Empty in the default package, already turned into a recorded widening by [[Visibility]].
+  /** last segment of the package this unit is being EMITTED into — the qualifier a Java package-private or `protected` declaration renders with. Read from the unit being written, never from an
+    * upstream FQN plus a rename map (the rename runs LAST). Empty in the default package, already turned into a recorded widening by [[Visibility]].
     */
   private[emit] var currentPkgTail: String = ""
 
@@ -202,7 +202,7 @@ final class TirEmitter(
   private[emit] val recordedMap    = collection.mutable.LinkedHashMap.empty[String, List[SrcMap.Entry]]
   private[emit] val recordedMisses = collection.mutable.ListBuffer.empty[String]
 
-  // Base-surface contract (DESIGN.md §8.3): recorded at emission, never re-derived.
+  // Base-surface contract: recorded at emission, never re-derived.
   // Covers nested types too, not only units.
 
   private[emit] val recordedTypeShapes   = collection.mutable.LinkedHashMap.empty[String, Surface.TypeShape]
@@ -212,10 +212,10 @@ final class TirEmitter(
   def emittedShapes: TirEmitter.Shapes =
     TirEmitter.Shapes(recordedTypeShapes.toMap, recordedMemberShapes.toMap)
 
-  /** Surface contract gaps: unanswerable questions plus D6 cross-module `object` collisions. */
+  /** Surface contract gaps: unanswerable questions plus the cross-module `object`-collapse collisions. */
   def surfaceGaps: List[Surface.Gap] = collapsedBaseTypesNamed
 
-  /** Members renamed by this emitter's §4.55 passes, by symbol to original Java name. Only emitter renames, not phase renames. // ENGINE-LIMITS K28.1
+  /** Members renamed by this emitter's renaming passes, by symbol to original Java name. Only emitter renames, not phase renames.
     */
   private[emit] lazy val renamedMembers: Map[SymId, String] =
     own.iterator.collect {
@@ -242,7 +242,7 @@ final class TirEmitter(
         Some(
           Descriptor(
             plan.synthetic.map((_, t) => descriptorParam(t)) ++
-              // Marker slot is spelled by simple name only. // DESIGN.md §8.1 F4
+              // Marker slot is spelled by simple name only.
               plan.marker.map(_ => Param.Unresolved).toList
           )
         )
@@ -280,8 +280,8 @@ final class TirEmitter(
         .filterNot(d => !paramful && CtorFunnel.delegationOnlyNilary(program, d).isDefined)
         .map(d => Descriptor(CtorFunnel.valueParams(program, d).map(v => descriptorParam(v.tpt.tpe))))
 
-  /** One type in the descriptor grammar. THE derivation, shared with `CtorFunnel`'s local plan so a published slot and a dependent's re-derivation of it cannot be spelled differently (ENGINE-LIMITS
-    * D15).
+  /** One type in the descriptor grammar. THE derivation, shared with `CtorFunnel`'s local plan so a published slot and a dependent's re-derivation of it cannot be spelled differently — a parameter's
+    * descriptor spelling is derived from the type's full name by this one function, because a Java-interned and an engine-minted value class can share a full name.
     */
   private[emit] def descriptorParam(t: TypeRepr): Param = Descriptor.paramOfType(program, t)
 
@@ -309,7 +309,6 @@ final class TirEmitter(
   def notesPrinted: List[PorterNote.Printed] = recordedNotes.values.toList.flatten
 
   // Context clause: track when a `(using T)` clause cannot be rendered (trait, enum, nilary).
-  // // ENGINE-LIMITS CT5
   private[emit] val clauseLost = collection.mutable.LinkedHashMap.empty[SymId, TirEmitter.ClauseLoss]
 
   /** Types whose constructors carry a context clause the emitted header does not render. */
@@ -342,7 +341,7 @@ final class TirEmitter(
 
   private[emit] var currentUnitName: String = ""
 
-  // Preview mode: `compiletime.error` instead of residue comments. // ENGINE-LIMITS M6
+  // Preview mode: `compiletime.error` instead of residue comments.
   // Per-unit, cleared on re-emission for idempotence.
   private[emit] val recordedEmission =
     collection.mutable.LinkedHashMap.empty[String, collection.mutable.ListBuffer[Decision]]
@@ -376,8 +375,7 @@ final class TirEmitter(
 
 object TirEmitter:
 
-  /** the binder of the re-throw arm that keeps a translated jump out of a java handler (§4.4). `$`-suffixed like this emitter's other minted names, spelled ONCE so the spec and the emitter cannot
-    * drift.
+  /** the binder of the re-throw arm that keeps a translated jump out of a java handler. `$`-suffixed like this emitter's other minted names, spelled ONCE so the spec and the emitter cannot drift.
     */
   val BreakGuard = "brkThru$"
 
@@ -472,8 +470,8 @@ object TirEmitter:
   def esc(name: String): String = if keywords(name) then s"`$name`" else name
 
   /** THE SAME RULE, APPLIED TO EVERY SEGMENT OF A QUALIFIED NAME. `esc` answers for an IDENTIFIER; a `Symbol.fullName` is a PATH, and a java package segment java was free to name
-    * `type`/`object`/`val`/`package` emits an unparseable reference reaching the output verbatim. Cut only at §4.56's three separators (`.`, `$`, `#`), carried across verbatim, so this is safe on an
-    * external FQN the port does not own.
+    * `type`/`object`/`val`/`package` emits an unparseable reference reaching the output verbatim. Cut only at the structural three separators (`.`, `$`, `#`), carried across verbatim, so this is safe
+    * on an external FQN the port does not own.
     */
   def escPath(path: String): String =
     if path.isEmpty then path
@@ -489,8 +487,8 @@ object TirEmitter:
         i += 1
       b.result()
 
-  /** A class whose constructors carry a CONTEXT CLAUSE the emitted header does not (ENGINE-LIMITS CT5). A value the emitter records and the run reports; the emitter names no check or phase, since the
-    * fact is about EMISSION.
+  /** A class whose constructors carry a CONTEXT CLAUSE the emitted header does not. A value the emitter records and the run reports; the emitter names no check or phase, since the fact is about
+    * EMISSION.
     * @param form
     *   what WAS emitted for this type: class, trait, object, enum.
     */
@@ -520,7 +518,7 @@ object TirEmitter:
   def packageTailOf(fullName: String): String =
     if !fullName.contains('.') then "" else tailSegment(fullName.substring(0, fullName.lastIndexOf('.')))
 
-  /** THE BASE-SURFACE CONTRACT, as one emitter recorded it (DESIGN.md §8.3).
+  /** THE BASE-SURFACE CONTRACT, as one emitter recorded it.
     * @param types
     *   emitted FQN → what was emitted at that name
     * @param members
@@ -538,7 +536,7 @@ object TirEmitter:
   object Shapes:
     val empty: Shapes = Shapes(Map.empty, Map.empty)
 
-  /** RECORD one of this file's decisions. Every decider here is [[Reason.Universal]] — a §4.55/ §4.56 fact about the two languages, never anybody's policy, so none takes a parameter.
+  /** RECORD one of this file's decisions. Every decider here is [[Reason.Universal]] — a fact about the two languages, never anybody's policy, so none takes a parameter.
     */
   private[emit] def note(
     out:    collection.mutable.Buffer[Decision],
@@ -551,14 +549,14 @@ object TirEmitter:
     val fqn = p.symbolOf(s).map(_.fullName).filter(_.nonEmpty).getOrElse("?")
     out += Decision(kind, s, fqn, detail, Reason.Universal(rule), Decision.originOf(p, s))
 
-  /** the §4.55 rule string every member rename carries. ONE string for all three passes, with the pass distinguished by `detail("clash")`: an agent's first question is "why is this name not the Java
-    * one", and the answer is one rule with three causes, not three rules.
+  /** the rule string every member rename carries. ONE string for all three passes, with the pass distinguished by `detail("clash")`: an agent's first question is "why is this name not the Java one",
+    * and the answer is one rule with three causes, not three rules.
     */
   private[emit] val MemberRenameRule = "member-rename"
 
   /** Drop `private` from the given members. Java lets a parent constructor write its own private fields; REPLAYED one level down (`CtorFunnel.replayFor`) they execute in the subclass, where `private`
-    * no longer reaches — widening only removes access errors, never behaviour. `forDependents` is the same widening for a subclass THIS RUN CANNOT SEE (`ENGINE-LIMITS.md` C15), kept separate so the
-    * note doesn't misattribute an empty class.
+    * no longer reaches — widening only removes access errors, never behaviour. `forDependents` is the same widening for a subclass THIS RUN CANNOT SEE, kept separate so the note doesn't misattribute
+    * an empty class.
     */
   def widen(p: Program, members: Set[SymId], out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty, forDependents: Set[SymId] = Set.empty): Program =
     val all = members ++ forDependents
@@ -566,7 +564,7 @@ object TirEmitter:
     else
       val src = p
       // ALL THREE of java's non-public levels, not isPrivate alone — clearing one flag is silently
-      // a no-op for the other two (ENGINE-LIMITS C15's second face).
+      // a no-op for the other two.
       def level(f: Flags): String =
         if f.isPrivate then "private" else if f.isProtected then "protected" else "package-private"
       def widened(f: Flags): Flags =
@@ -585,7 +583,7 @@ object TirEmitter:
             src,
             s.id,
             Map(
-              // the same cause= pair every §8.7 residue carries, so this is one grep over decisions.tsv.
+              // the same cause= pair every visibility-widening residue carries, so this is one grep over decisions.tsv.
               "cause" -> "ctor-replay-widening",
               "from" -> level(s.flags),
               "to" -> "public",
@@ -615,7 +613,7 @@ object TirEmitter:
   def funnelParamRenames(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty, surface: Surface = null): Program =
     val renames = collection.mutable.Map[SymId, String]()
     // THE RUN'S OWN VIEW, not a TrivialSurface — a dependent's fixpoint spans its base, so the
-    // plan must read the base's actually-emitted promoted parameters (ENGINE-LIMITS D4).
+    // plan must read the base's actually-emitted promoted parameters.
     val plans = CtorFunnel.Plans(p, Option(surface))
     def nm(id: SymId):                 String      = p.symbolOf(id).map(_.name).getOrElse("")
     def parentSyms(cd: Tree.ClassDef): List[SymId] =
@@ -653,8 +651,8 @@ object TirEmitter:
       scanned += cd.symbol
       parentSyms(cd).flatMap(declOf.get).foreach(scan) // parents first, so `eff` is settled
       // AN ENUM PROMOTES ITS CONSTRUCTOR PARAMETERS TOO, by a different route: `enumDef` renders
-      // each as a var field without consulting `CtorFunnel` (`ENGINE-LIMITS.md` T11's remaining
-      // half). NARROW, unlike the plan-based arm below: an enum parameter is EMITTED SURFACE (a
+      // each as a var field without consulting `CtorFunnel` — the same collision the promoted
+      // enum constructor parameter can have with a declared accessor. NARROW, unlike the plan-based arm below: an enum parameter is EMITTED SURFACE (a
       // public var), so only a real collision renames one. Two names are NOT collidees: the
       // parameter's own name, and a body field it SUPERSEDES (`enumDef` drops that `ValDef`).
       val enumParams =
@@ -728,14 +726,14 @@ object TirEmitter:
             )
         }
     // driven over EVERY declared class, method-local ones included (`JS-C30`); the `scanned` memo
-    // and the parents-first recursion above are what keep §4.55's ordering, not the walk order.
+    // and the parents-first recursion above are what keep the renaming order, not the walk order.
     p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(scan))
     if renames.isEmpty then p
     else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
   /** Rename any field that SHADOWS an inherited member. Java fields shadow rather than override, resolving by the STATIC receiver type; scala has no such thing, so the field gets a fresh name —
     * exact, since every TIR reference already points at the symbol java chose. A field shadowing an inherited METHOD gets the same treatment. Narrowed to `isKnown(fqn) && mayDeclare(fqn, sig)`, since
-    * UNKNOWN-is-YES would over-rename (`ENGINE-LIMITS.md` K28.2).
+    * UNKNOWN-is-YES would over-rename — checked only against external parents whose member list is known.
     */
   def resolveFieldShadowing(
     p:       Program,
@@ -773,8 +771,8 @@ object TirEmitter:
         .flatMap(pcd => instanceMembers(pcd) ++ inherited(pcd, seen + cd.symbol))
         .toSet
 
-    /** the same question asked of ancestors this program did NOT parse — OverrideGraph is where that walk lives (§4.56), so it is not re-derived here. LAZY: java.lang.Object's own members are
-      * answered without building it.
+    /** the same question asked of ancestors this program did NOT parse — OverrideGraph is where that walk lives, so it is not re-derived here. LAZY: java.lang.Object's own members are answered
+      * without building it.
       */
     lazy val graph = OverrideGraph.build(p)
 
@@ -786,7 +784,7 @@ object TirEmitter:
       ExternalSurface.javaLangObjectDeclares(sig) ||
       graph.externalAncestorsOf(cd.symbol).exists(fqn => ExternalSurface.default.isKnown(fqn) && ExternalSurface.default.mayDeclare(fqn, sig))
 
-    /** the inherited DECLARATIONS behind those names — a name alone cannot answer [[implementsInherited]] (§4.56).
+    /** the inherited DECLARATIONS behind those names — a name alone cannot answer [[implementsInherited]].
       */
     def inheritedSyms(cd: Tree.ClassDef, seen: Set[SymId] = Set.empty): List[SymId] =
       cd.parents
@@ -818,7 +816,7 @@ object TirEmitter:
 
       /** A scala `val`/`var` and a scala PARAMETERLESS `def` of the same name, one inherited from the other's type, are an IMPLEMENTATION pair, not a shadowing one — java cannot produce a
         * parameterless method, so `paramss == Nil` is always a property conversion's accessor. `exists`, not `forall`: the same name can reach a class from TWO directions, and `forall` would silently
-        * stop implementing the member (`ENGINE-LIMITS.md` K5.7's trade).
+        * stop implementing the member.
         */
       lazy val inheritedDecls = inheritedSyms(cd)
       def implementsInherited(v: Tree.ValDef): Boolean =
@@ -862,7 +860,7 @@ object TirEmitter:
         case _ => ()
       }
     // driven over EVERY declared class, method-local ones included (JS-C30); `scanned` and the
-    // parents-first recursion above keep §4.55's ordering, not the walk order.
+    // parents-first recursion above keep the renaming order, not the walk order.
     p.units.foreach(u => StandardTraversal.allClassDefs(u)(using p).foreach(scan))
     // JS-C04 — a subclass field SHADOWS a superclass field: two storage cells in java, ONE member
     // in scala. Cited per renamed declaration only, never for a class with nothing to rename.
@@ -889,8 +887,8 @@ object TirEmitter:
     case Kept
 
   /** A field this run does NOT emit: does the BASE's published name settle it? A dependent's `Program` CONTAINS its base with EXTRA descendants the base's own run never saw, so an independent rename
-    * could produce a module that cannot compile against what it resolves against (§1.5). The base's answer is FOLLOWED, not merely respected. `Kept` settles only the base's HALF of the clash — the
-    * caller still moves the half it owns.
+    * could produce a module that cannot compile against what it resolves against. The base's answer is FOLLOWED, not merely respected. `Kept` settles only the base's HALF of the clash — the caller
+    * still moves the half it owns.
     */
   private[emit] def baseName(p: Program, view: Surface, field: SymId, clash: String): BaseName =
     if view.owns(field) then BaseName.Derive
@@ -914,8 +912,8 @@ object TirEmitter:
           )
           BaseName.Derive
 
-  /** THE OTHER HALF OF A §4.55 FIELD RENAME: the member also ships WIDER than java wrote it. Both clash passes strip private/protected unconditionally so a renamed field stays reachable, but the
-    * rename was recorded and the widening was not. One row per member that ACTUALLY LOST a modifier; `clash` matches the `RenamedMember` row beside it, so both questions are one grep.
+  /** THE OTHER HALF OF A FIELD RENAME: the member also ships WIDER than java wrote it. Both clash passes strip private/protected unconditionally so a renamed field stays reachable, but the rename was
+    * recorded and the widening was not. One row per member that ACTUALLY LOST a modifier; `clash` matches the `RenamedMember` row beside it, so both questions are one grep.
     */
   private[emit] def recordClashWidening(p: Program, out: collection.mutable.Buffer[Decision], renamed: Iterable[SymId], clash: String): Unit =
     renamed.toList.sortBy(_.raw).foreach { id =>
@@ -940,9 +938,10 @@ object TirEmitter:
       }
     }
 
-  /** Rename an enclosing method's LOCAL or PARAMETER that a nested class's member shadows — the fourth face of §4.55, running the other way (the CAPTURE moves). Scala resolves innermost-first, so the
-    * member wins and the local becomes unnameable. TWO RULES: UNNAMEABLE (body references it, class declares/inherits the name) and AMBIGUOUS (scala 3's `E049`, java has none — `ENGINE-LIMITS.md`
-    * C16). Same remedy both ways — move the outer declaration.
+  /** Rename an enclosing method's LOCAL or PARAMETER that a nested class's member shadows — running the other way from the other renaming passes (the CAPTURE moves). Scala resolves innermost-first,
+    * so the member wins and the local becomes unnameable. TWO RULES: UNNAMEABLE (body references it, class declares/inherits the name) and AMBIGUOUS (scala 3's `E049`, java has none — scala reports
+    * an ambiguous reference when a captured local clashes with an inherited method as well as an inherited field, so the guard reads both off the enclosing scope). Same remedy both ways — move the
+    * outer declaration.
     */
   def resolveCapturedLocalClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     given Program = p
@@ -963,7 +962,8 @@ object TirEmitter:
     val enclosedBy = collection.mutable.Map[SymId, Set[SymId]]()
 
     /** Discover the enclosing method scope for anonymous classes inside a term that is NEITHER a DefDef rhs NOR a Lambda body — e.g. TestFrameworkTransform's inlined `test("…")({ block })`, whose
-      * locals keep the ORIGINAL method symbol as owner though no transformDefDef fires for it. Walks the term, maps any anonymous classes found to the unknown owner (C16.1).
+      * locals keep the ORIGINAL method symbol as owner though no transformDefDef fires for it. Walks the term, maps any anonymous classes found to the unknown owner (the check must also see anonymous
+      * classes nested inside converted test bodies).
       */
     def discoverScope(t: Term)(using p0: Program): Unit =
       val localOwners = collection.mutable.Set[SymId]()
@@ -1022,8 +1022,8 @@ object TirEmitter:
               case _ =>
         }
 
-    /** the parameters and locals each method owns — the enclosing SCOPE a nested body sits in. Ownership is the structural fact (§4.56): the frontend interns a field under the CLASS and a local or
-      * parameter under the enclosing EXECUTABLE, so this partition is a symbol lookup and never a name or an origin test.
+    /** the parameters and locals each method owns — the enclosing SCOPE a nested body sits in. Ownership is the structural fact: the frontend interns a field under the CLASS and a local or parameter
+      * under the enclosing EXECUTABLE, so this partition is a symbol lookup and never a name or an origin test.
       */
     val scopeOf: Map[SymId, List[Symbol]] =
       p.symbols.all.filter(s => methods(s.owner)).groupBy(_.owner).view.mapValues(_.toList).toMap
@@ -1187,7 +1187,7 @@ object TirEmitter:
       /** rename the FIELD — the ordinary answer, and the only one this pass had. */
       def moveField(v: Tree.ValDef): Unit =
         // TO A NAME THAT IS FREE, the idiom both sibling passes use — held against both the method
-        // names that decided the clash and the sibling fields' EFFECTIVE names (§4.55).
+        // names that decided the clash and the sibling fields' EFFECTIVE names.
         val taken = clashNames(v) ++ cd.body.collect { case w: Tree.ValDef if w.symbol != v.symbol => eff(w.symbol) }
         var fresh = nm(v.symbol) + "$field"
         while taken(fresh) do fresh += "$"
@@ -1211,7 +1211,7 @@ object TirEmitter:
 
       /** the answer when the FIELD IS THE BASE'S AND THE BASE KEPT JAVA'S NAME: move the half of the clash this module owns. The clashing methods are necessarily this run's own declarations (`Kept`
         * means the base's own run saw no such descendant). The rename must still be SOUND: a method implementing/overriding something this module does not own cannot move, and that closure is refused
-        * and RECORDED (DESIGN.md §8.3).
+        * and RECORDED.
         */
       def moveOwnMethods(v: Tree.ValDef): Unit =
         val n        = nm(v.symbol)
@@ -1237,7 +1237,7 @@ object TirEmitter:
                 )
               case scala.None =>
                 // FREE against everything the component can see, read through effective names so
-                // two renames in one hierarchy cannot land on each other (§4.55).
+                // two renames in one hierarchy cannot land on each other.
                 val visible = c.members.map(graph.ownerOf).filter(_ != SymId.None).toList.distinct.flatMap(graph.relativesOf).distinct.flatMap(graph.membersOf).distinct.filterNot(c.members.contains)
                 var fresh   = n + "$method"
                 var fuel    = 64

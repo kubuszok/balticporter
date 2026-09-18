@@ -1,7 +1,7 @@
 package balticporter.tir
 
 /** Turns a portability finding into a manifest-line suggestion, computed from the program. Three templates (drop, static-forwarder, class-table) each verify a precondition against the program before
-  * firing; anything unmatched is reported as an observation with no fix. // CLAUDE.md §4.45
+  * firing; anything unmatched is reported as an observation with no fix.
   */
 object Remediator:
 

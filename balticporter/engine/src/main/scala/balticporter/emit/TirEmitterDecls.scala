@@ -4,7 +4,7 @@ import balticporter.catalog.{ CatalogLog, JS, Obligations, Rendering, Typing }
 import balticporter.core.{ EngineInfo, Provenance, Substituted }
 import balticporter.tir.*
 
-/** Class/enum declaration and constructor/class-initialiser ordering emission split out of TirEmitter (context diet S1). */
+/** Class/enum declaration and constructor/class-initialiser ordering emission split out of TirEmitter to keep it within its file-size limit. */
 private[emit] trait TirEmitterDecls:
   self: TirEmitter =>
 
@@ -75,7 +75,7 @@ private[emit] trait TirEmitterDecls:
 
   private[emit] lazy val overrideAlign: Map[SymId, TypeRepr] = rawParentAlignment
 
-  /** Override alignment against injected parents' wildcard bounds. // ENGINE-LIMITS K35 (closed) */
+  /** Override alignment against injected parents' wildcard bounds. */
   private[emit] lazy val injectedOverrideTypes: Map[SymId, TypeRepr] =
     if injectedSurface.isEmpty then Map.empty
     else
@@ -256,15 +256,15 @@ private[emit] trait TirEmitterDecls:
     // A SYNTHESISED primary (CtorFunnel.Plan.synthetic) has no java constructor behind it, so its
     // parameters come from the plan's own (name, type) pairs. `protected`, not `private` (scala's
     // `private` is CLASS-private, unreachable from a subclass) and not per-class-derived (a
-    // whole-program question, `ENGINE-LIMITS.md` D4) — bare `protected`, matching the reference
-    // ports. A DISAMBIGUATED synthesis adds a marker-typed parameter to change ARITY (`ENGINE-LIMITS.md` C8).
+    // whole-program question) — bare `protected`, matching the reference
+    // ports. A DISAMBIGUATED synthesis adds a marker-typed parameter to change ARITY.
     val markerParam = plan.marker.map(n => s"ctor$$: ${typeValue(cd.symbol)}.${esc(n)}").toList
     // …and the CONTEXT CLAUSE a phase put on this class's constructors (`CtorFunnel.Plan.givens`),
     // rendered as its own GROUP — flattened into value parameters, `using` is lost and every
-    // `summon` in the body goes unresolved (`ENGINE-LIMITS.md` CT4). Empty for a port threading
+    // `summon` in the body goes unresolved. Empty for a port threading
     // nothing, so no emitted byte moves.
     val givenClause = plan.givens.map(paramClause).mkString
-    // A PROMOTED java constructor is still a java DECLARATION, so §8.7's mapping governs it as it
+    // A PROMOTED java constructor is still a java DECLARATION, so the visibility mapping governs it as it
     // governs the `def this` secondaries. The SYNTHESISED primary is the exception: not a java
     // declaration, so bare `protected` is the answer — wide enough for a subclass in another
     // package to extend it, narrow enough that nothing else legitimately calls it.
@@ -273,7 +273,7 @@ private[emit] trait TirEmitterDecls:
     // is an ordinary LOCAL and may be reassigned (`x = x*2` promotes to `E052 Reassignment to val`
     // otherwise) — a record's compact constructor makes this ordinary (JLS 8.10.4). `private var`,
     // never a bare `var`: java's parameter is not a member, so no name reaches the emitted surface.
-    // Decided by SYMBOL over the LOWERED body (§4.56) — every write here is a `Tree.Assign`.
+    // Decided by SYMBOL over the LOWERED body — every write here is a `Tree.Assign`.
     val mutatedParams: Set[SymId] =
       if pparams.isEmpty then Set.empty
       else
@@ -309,7 +309,7 @@ private[emit] trait TirEmitterDecls:
     val paramfulPrimary = plan.isSynthesised || pparams.nonEmpty
     // …and did the header just built KEEP the class's context clause? Asked of the rendered text
     // and not of `plan.givens`, because a clause the plan holds and the rendering flattens into a
-    // value parameter is exactly the shape CT4 measured. A `trait` reaches this with no clause on
+    // value parameter is exactly the shape a context clause's rendering measured. A `trait` reaches this with no clause on
     // purpose — `CtorFunnel.classGivens` refuses one, since scala's trait parameters are a
     // different feature and the port's `promoteToClass` is the answer — and is counted here.
     checkClause(cd, rendered = prim.contains("(using "), form = kw)
@@ -352,19 +352,19 @@ private[emit] trait TirEmitterDecls:
       // the VISIBILITY only — an `object` takes no `abstract`, and `final object` is redundant.
       // THE COLLAPSE, recorded where it is TAKEN. A consumer that names this type in a type
       // position is naming a value, and nothing else in any artifact says so: `members.tsv` records
-      // its kind as `class` (`ENGINE-LIMITS.md` D6's cross-module face). Recorded here rather than
+      // its kind as `class` (the cross-module face of the all-static collapse rule). Recorded here rather than
       // re-derived because the four whole-program reads above exist only in this branch.
       recordTypeShape(cd, "object", plan, companion = false, statics = Nil)
       // an `object` has no constructor at all, so a context clause on this class's constructors has
-      // nowhere to go here — counted rather than silently dropped (CT5).
+      // nowhere to go here — counted rather than silently dropped.
       checkClause(cd, rendered = false, form = "object")
       return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance0) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
-    // T22 — an `@interface`'s ELEMENTS (JLS 9.6.1) become the emitted class's CONSTRUCTOR
+    // an `@interface`'s ELEMENTS (JLS 9.6.1) become the emitted class's CONSTRUCTOR
     // PARAMETERS, so they are taken out of the body BEFORE `memberStat` runs — rendered as members
     // they land in a `body` the annotation arm below discards, leaving planned-and-never-written
-    // slots (`!! UNLOCATABLE`, and a relocated javadoc — §4.58's recovery lane, not two defects).
+    // slots (`!! UNLOCATABLE`, and a relocated javadoc — the trivia recovery lane, not two defects).
     val (annotElems, instance) =
       if !s.flags.isAnnotation then (Nil, instance0)
       else
@@ -374,17 +374,17 @@ private[emit] trait TirEmitterDecls:
         }
     val self  = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
     val body1 = joinStats(classBodyStats(orderBody(instance, cd.symbol, paramfulPrimary), plan, i + 1).filter(_.nonEmpty))
-    // K22 — the CLASS-INITIALISATION trigger, ahead of every other statement since that is where
+    // the CLASS-INITIALISATION trigger, ahead of every other statement since that is where
     // java ran it (`statics` carries both `static { }` blocks and static field initialisers). Only
     // where there is a CONSTRUCTOR to hang it on: a `trait` body statement runs at every
     // implementor's init (more than java does), and an interface may not declare one (JLS 9.1.1) —
-    // and never where forcing would RE-ENTER an in-progress initialisation (`ENGINE-LIMITS.md` K22 face 2).
+    // and never where forcing would RE-ENTER an in-progress initialisation.
     val force =
       if hasClinit(statics) && kw == "class" && !s.flags.isAnnotation &&
         !reentrantBearers.contains(cd.symbol)
       then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
       else ""
-    // C3 item 4 — parent secondary's post-body, guarded. // ENGINE-LIMITS C3
+    // parent secondary's post-body, guarded.
     val postBody    = currentClass.map(plans.primaryPostBodyFor(_)).getOrElse(Nil)
     val postBodyStr =
       if postBody.isEmpty || plan.postBodySlots.isEmpty then ""
@@ -402,20 +402,20 @@ private[emit] trait TirEmitterDecls:
     val body                              = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open                              = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs                               = if kw == "class" && s.flags.isAbstract then "abstract " else ""
-    // §8.7 renders every nested type QUALIFIED (`private[TopLevel]`/`private[pkg]`), so the
+    // the visibility mapping renders every nested type QUALIFIED (`private[TopLevel]`/`private[pkg]`), so the
     // class-header erasure this rule once needed is gone. A `@interface` emitted as a trait cannot
     // be applied as an annotation (161 corpus errors) — the equivalent is `extends StaticAnnotation`.
     // A PROMOTED constructor's Javadoc joins the CLASS's own (`CtorFunnel` removed its `def`) —
     // dropping it cost 138 Javadoc losses on libGDX core (`TriviaCheck`, the largest category).
     val ctorLead = plan.primary.toList.flatMap(_.leading)
-    // …and its NOTES go the same way (§4.575): a PROMOTED constructor has no `def` for an
+    // …and its NOTES go the same way: a PROMOTED constructor has no `def` for an
     // `AtDeclaration` note to sit above, so a decision subjected at it produced NO NOTE at all
-    // (measured 1 on libGDX base, `ENGINE-LIMITS.md` I9). The class is where scala documents a
+    // (measured 1 on libGDX base). The class is where scala documents a
     // primary constructor, matching the javadoc above.
     val ctorNote = plan.primary.toList.map(c => declNotes(c.symbol, i)).mkString
-    // JS-C44 — note placed after cnote per §4.575 order.
+    // JS-C44 — note placed after cnote in the porter-note ordering.
     val (seal, sealNote) = sealOf(cd, s, i)
-    // T22 — `@interface` elements become the class's parameter list (a `val`, keeping java's
+    // `@interface` elements become the class's parameter list (a `val`, keeping java's
     // element name); a read becomes the field selection `applyStr0` renders parenless. No JVM
     // retention: `getAnnotation` still cannot recover one reflectively.
     val annotElemParams = annotElems.collect { case d: Tree.DefDef =>
@@ -470,7 +470,7 @@ private[emit] trait TirEmitterDecls:
     }
     // the disambiguator's marker type, minted in THIS class's companion — one line, and the reason
     // it is here rather than in `runtime/` is that emitted code then carries no dependency on the
-    // engine's runtime artifact for a purely local encoding (`DESIGN.md` §8.2). A class that needs
+    // engine's runtime artifact for a purely local encoding. A class that needs
     // one may have no companion at all, so the companion is emitted for it.
     val markerDecl = plan.marker.toList.map(n => s"${ind(i + 1)}protected final class ${esc(n)}")
     // …and the record's EXTRACTOR, which is the one member of JS-C43's synthesis with no home in
@@ -484,10 +484,10 @@ private[emit] trait TirEmitterDecls:
     recordTypeShape(cd, form = if s.flags.isAnnotation then "annotation" else kw, plan = plan, companion = hasCompanion, statics = ownStaticNames)
     if !hasCompanion then cls
     else
-      // K22's SECOND trigger — JLS 12.4.1 item 7: initialising a class initialises its SUPERCLASS
+      // the SECOND class-initialisation trigger — JLS 12.4.1 item 7: initialising a class initialises its SUPERCLASS
       // first, which a bare `S.member` read cannot reach in Scala (touches only `object S`).
       // Forced FIRST in the companion body (java ran the ancestor's initialiser first). Asks
-      // `hasCompanion` rather than re-deriving "does anything read a static of this type" (§4.56).
+      // `hasCompanion` rather than re-deriving "does anything read a static of this type".
       val superForce =
         nearestClinitAncestor(cd.symbol).filterNot(reentrantBearers.contains).map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1)).toList.filter(_.nonEmpty)
       val sb = (superForce ++ parentExports ++ markerDecl ++
@@ -519,7 +519,7 @@ private[emit] trait TirEmitterDecls:
     if balticporter.tir.EnumShape.isScalaEnum(program, cd) then scalaEnumDef(cd, i) else sealedEnumDef(cd, i)
 
   /** The parts BOTH enum shapes are made of, derived ONCE. The two arms differ only in the header and in what `java.lang.Enum` supplies — never in the primary constructor, its promoted params,
-    * superseded fields or surviving statements. Two derivations would drift (§4.56).
+    * superseded fields or surviving statements. Two derivations would drift.
     */
   final private[emit] case class EnumParts(ctorParams: List[Tree.ValDef], paramNames: Set[String], instance: List[Statement], ctorStats: List[Statement], statics: List[Statement], eprimary: String)
 
@@ -527,7 +527,7 @@ private[emit] trait TirEmitterDecls:
     val (statics, instance0) = cd.body.partition(isStatic)
     // A Java enum constructor's PARAMS become the primary constructor's params (as `var` fields).
     // JAVA's parameters, never `paramss.flatten` — a context clause is ANONYMOUS and cannot become
-    // a named field, so it is dropped and COUNTED (`ENGINE-LIMITS.md` CT5). THE ROOT, never
+    // a named field, so it is dropped and COUNTED. THE ROOT, never
     // `ctors.head`: taking the head's params silently gave a delegating overload an EMPTY primary
     // (`CtorFunnel.enumPrimaryCtor`, `OmissionCheck.overloadedEnumCtors` counts refusals).
     val primaryCtor = CtorFunnel.enumPrimaryCtor(program, cd)
@@ -538,7 +538,7 @@ private[emit] trait TirEmitterDecls:
     // TYPE: java's two variable scopes let a constructor parameter name a field it is not and then
     // COMPUTE that field from it, and a name test drops the field and emits the parameter's type in
     // its place. `funnelParamRenames` reads the same function, so the field that survives here is
-    // exactly the one the parameter was renamed out of the way of (§4.56).
+    // exactly the one the parameter was renamed out of the way of.
     val superseded = CtorFunnel.enumSupersededFields(program, cd)
     val instance   = instance0.filterNot {
       case d: Tree.DefDef => sym(d.symbol).name == "<init>"
@@ -618,7 +618,7 @@ private[emit] trait TirEmitterDecls:
     val parts   = enumParts(cd)
     import parts.{ ctorParams, paramNames, instance, ctorStats, statics, eprimary }
     // Java's final Enum.name() — a case object's toString IS its declared name, so name() returns
-    // it. A promoted ctor parameter counts as a declared `name` too (CLAUDE.md §4.55).
+    // it. A promoted ctor parameter counts as a declared `name` too.
     val hasName = paramNames("name") ||
       instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
     val nameM = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
@@ -636,7 +636,7 @@ private[emit] trait TirEmitterDecls:
       orderBody(instance, cd.symbol).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
       ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM ++ ordinalM
     val cbody = members.mkString("\n")
-    // §8.7 governs the enum TYPE; its constructor is left public — java's implicit `private`
+    // the visibility mapping governs the enum TYPE; its constructor is left public — java's implicit `private`
     // (JLS 8.9.2) has no declaration left to carry it, since the params ARE the primary.
     val cls   = s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.zipWithIndex.map { (ec, idx) =>
@@ -672,8 +672,8 @@ private[emit] trait TirEmitterDecls:
     s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
 
   /** `enum X(…) extends java.lang.Enum[X] with …` — the shape used where a caller depends on the `java.lang.Enum` supertype itself (a bound, `EnumSet`/`EnumMap`, `Comparable`, `isEnum`).
-    * `name()`/`ordinal()` are FINAL there and `values`/`valueOf` come from the `enum` desugaring, so `EnumShape.Reserved` refuses an enum whose own declaration needs one of those names (CLAUDE.md
-    * §4.55, ENGINE-LIMITS T11). `values` renders parenless here; `applyStr0` matches.
+    * `name()`/`ordinal()` are FINAL there and `values`/`valueOf` come from the `enum` desugaring, so `EnumShape.Reserved` refuses an enum whose own declaration needs one of those names — a promoted
+    * enum constructor parameter becoming a member can collide with `Enum.name()` or a declared accessor just as a body field can. `values` renders parenless here; `applyStr0` matches.
     */
   private[emit] def scalaEnumDef(cd: Tree.ClassDef, i: Int): String =
     val s    = sym(cd.symbol)
@@ -728,7 +728,7 @@ private[emit] trait TirEmitterDecls:
       case None    => body
       case Some(c) => body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => plan.primaryBody; case s => List(s) }
 
-  /** the local `def` a PROMOTED constructor body carrying a `return` is wrapped in. Named per class, not per program, so it cannot renumber under an unrelated edit (ENGINE-LIMITS M10).
+  /** the local `def` a PROMOTED constructor body carrying a `return` is wrapped in. Named per class, not per program, so it cannot renumber under an unrelated edit and rename many members.
     */
   private[emit] val CtorBodyName = "ctorBody$"
 
@@ -767,14 +767,14 @@ private[emit] trait TirEmitterDecls:
   private[emit] def hasClinit(members: List[Statement]): Boolean =
     balticporter.tir.ClassInitTriggerCheck.stepNine(members)(using program)
 
-  // K22 — a java class initialiser (JLS 12.4.2 step 9) runs at class init; a scala companion
+  // a java class initialiser (JLS 12.4.2 step 9) runs at class init; a scala companion
   // initialises only when something touches the OBJECT. Reproduced only at java's own trigger
   // list (JLS 12.4.1): INSTANTIATION (forced ahead of every field initialiser), STATIC ACCESS
   // (needs nothing), SUBCLASS INITIALISATION (item 7, force the nearest bearing ancestor).
-  // REFLECTION cannot be reproduced and is stated, not counted (`ENGINE-LIMITS.md` K22).
+  // REFLECTION cannot be reproduced and is stated, not counted.
 
-  /** The note and statement that force `target`'s companion, recorded as one [[Decision]] about `cd` so the note is DERIVED (§4.575) and `NoteCoverageCheck` sees the pair. `target` is `cd` itself for
-    * the instantiation trigger, an ANCESTOR for the subclass one (JLS 12.4.1 item 7).
+  /** The note and statement that force `target`'s companion, recorded as one [[Decision]] about `cd` so the note is DERIVED and `NoteCoverageCheck` sees the pair. `target` is `cd` itself for the
+    * instantiation trigger, an ANCESTOR for the subclass one (JLS 12.4.1 item 7).
     * @param trigger
     *   which of JLS 12.4.1's actions this statement stands for.
     */
@@ -810,7 +810,7 @@ private[emit] trait TirEmitterDecls:
     acc.toMap
 
   /** …and the ones whose force would be RE-ENTRANT, which the repair declines and `class-init-trigger` counts. The check's own function, so the refusal and the count cannot disagree about which types
-    * it names (`ENGINE-LIMITS.md` K22 face 2).
+    * it names.
     */
   private[emit] lazy val reentrantBearers: Map[SymId, SymId] =
     balticporter.tir.ClassInitTriggerCheck.reentrantBearers(program, clinitBearers)
@@ -843,13 +843,13 @@ private[emit] trait TirEmitterDecls:
     case d: Tree.ClassDef => sym(d.symbol).flags.isStatic
     case d: Definition    => sym(d.symbol).flags.isStatic
     // a spliced member has no symbol and therefore no flags: its home is carried on the node
-    // (`AddMembersTransform` static specs, `CLAUDE.md` §1(b)).
+    // (`AddMembersTransform` static specs).
     case o: Tree.Opaque => o.companionMember.isDefined
     case _ => false
 
   /** Scala secondaries must delegate to a PRECEDING constructor, so order fields first, then constructors in DELEGATION-TOPOLOGICAL order (`this(...)` edges, not arity), then everything else. `owner`
-    * decides WHICH `ValDef`s hoist (`ENGINE-LIMITS.md` C12): java's STEP-4 members hoist ahead of the body (field initialisers AND instance init blocks, textual order); a PROMOTED CONSTRUCTOR LOCAL
-    * stays in place. Told apart by OWNERSHIP (§4.56), never by name.
+    * decides WHICH `ValDef`s hoist: java's STEP-4 members hoist ahead of the body (field initialisers AND instance init blocks, textual order); a PROMOTED CONSTRUCTOR LOCAL stays in place. Told apart
+    * by OWNERSHIP, never by name.
     */
   private[emit] def orderBody(body: List[Statement], owner: SymId, paramfulPrimary: Boolean = false): List[Statement] =
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
@@ -881,7 +881,7 @@ private[emit] trait TirEmitterDecls:
         visited += d.symbol
         ordered += d
     ctorList.foreach(visit)
-    // C12: a FIELD of `owner` — not merely a `ValDef`. See the doc above for why the difference is
+    // a FIELD of `owner` — not merely a `ValDef`. See the doc above for why the difference is
     // ownership and for what hoisting the other kind costs.
     def isField(s: Statement) = s match { case v: Tree.ValDef => sym(v.symbol).owner == owner; case _ => false }
     // …and the OTHER kind of step-4 member: an instance (or static) INITIALISER BLOCK. JLS 12.5

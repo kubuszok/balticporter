@@ -113,9 +113,9 @@ object Determinism:
   def fromArgs(args: Seq[String]): Determinism =
     if args.contains(FullFlag) then Full else if args.contains(OffFlag) then Off else Emission
 
-/** Entry point for a porting program: orchestrates frontend, phases, emitter, and ALL checks. Policy stays in the consumer; mechanics are mandatory (rename LAST §4.56, all checks, `src_managed/`
-  * paths §5.5, determinism, provenance §4.57). @param frontend what to parse vs resolve against @param phases pipeline, must NOT contain `PackageRenameTransform` @param subs drop/inject manifest @param
-  * packageRenames appended last @param manifest module policy value.
+/** Entry point for a porting program: orchestrates frontend, phases, emitter, and ALL checks. Policy stays in the consumer; mechanics are mandatory (rename LAST, all checks, `src_managed/` paths,
+  * determinism, provenance). @param frontend what to parse vs resolve against @param phases pipeline, must NOT contain `PackageRenameTransform` @param subs drop/inject manifest @param packageRenames
+  * appended last @param manifest module policy value.
   */
 final case class PortRun(
   label:          String,
@@ -138,10 +138,10 @@ final case class PortRun(
   cache:              Option[Path] = scala.None,
   lenient:            Boolean = true,
   manifest:           Option[PortManifest] = scala.None,
-  /** When true, unrenderable constructs become `compiletime.error` instead of residue comments. Errors are classified by `Correlate.Lane.Declared`. // ENGINE-LIMITS E9
+  /** When true, unrenderable constructs become `compiletime.error` instead of residue comments, so the port deliberately does not compile. Errors are classified by `Correlate.Lane.Declared`.
     */
   preview: Boolean = false,
-  /** Best-effort emission (DESIGN.md §6.4). When on, open markers render as approximations in a separate directory with a sentinel; at zero open markers the mode is a no-op.
+  /** Best-effort emission. When on, open markers render as approximations in a separate directory with a sentinel; at zero open markers the mode is a no-op.
     */
   bestEffort: Boolean = false,
   /** Printed as the last line. */
@@ -202,10 +202,10 @@ final case class PortRun(
   /** Whether this run moves any name at all, derived from `renamePhase`. */
   private[runner] def renamesAnything: Boolean = renamePhase.isDefined
 
-  /** Where this source set's emitted Scala goes. // CLAUDE.md §5.5 */
+  /** Where this source set's emitted Scala goes. */
   def outDir: Path = SbtGen.managedDir(portRoot, sourceSet.configName)
 
-  /** Where best-effort output goes -- separate from [[outDir]]. // DESIGN.md §6.4 */
+  /** Where best-effort output goes -- separate from [[outDir]]. */
   def bestEffortDir: Path =
     outDir.getParent.resolve(outDir.getFileName.toString + "-besteffort")
 
@@ -227,11 +227,11 @@ final case class PortRun(
 
     anchorReportPaths()
 
-    // WHICH JAVA TREE this run measured — `counts.tsv`'s one non-check row (CLAUDE.md §5).
+    // WHICH JAVA TREE this run measured — `counts.tsv`'s one non-check row.
     provenance.foreach(p => CheckReport.recordUpstream(p.upstreamName, p.upstreamCommit))
 
     // ---- Surface gate: unresolvable phase divergence stops the run before the pipeline ----
-    // ENGINE-LIMITS CT9
+    // a phase's policy is part of its fingerprint, and a refused merge must stop the run here
     val surfaceStop = ManifestAgreement.surfaceGate(manifest, basePorts)
     if surfaceStop.nonEmpty then
       surfaceStop.foreach(f => System.err.println(s"[$label] FATAL — ${f.render}"))
@@ -341,7 +341,7 @@ final case class PortRun(
         println(ElementWitnessCheck.summary(fs))
     }
 
-    // ---- registry refusals (one lane per KIND — §4.45; only when the phase carries a spec) ----
+    // ---- registry refusals (one lane per KIND; only when the phase carries a spec) ----
     locally {
       val regs = effectivePhases.collect {
         case r: RegistryTransform if r.entries.nonEmpty || r.facadeMembers.nonEmpty => r
@@ -371,7 +371,7 @@ final case class PortRun(
     }
 
     // ---- context seam (only when the phase ran) ----
-    // Collected here, recorded after emission (the fifth kind is only visible post-emit). // CT5
+    // Collected here, recorded after emission (the fifth kind is only visible post-emit).
     val contextPhases = effectivePhases.collect { case g: GlobalsToImplicitsTransform => g }
     // Drain resolutions here (before emission) so decisions reach the log before bytes are written.
     val contextSeams = ContextSeamCheck.resolved(translated.binder.resolutions, contextPhases.flatMap(_.seams(program, checkedUnits)))
@@ -397,7 +397,8 @@ final case class PortRun(
       agreement.take(40).foreach(f => println("  " + f.render))
 
     // ---- synthesised units: fatal if a base already publishes the FQN ----
-    // ENGINE-LIMITS O5
+    // a unit a phase mints has no source origin, so without an explicit owner every module in the
+    // pipeline would emit it; only the module that owns its declarations writes it
     val synthesised = translated.emitOrder.filter(u => PortRun.isSynthesised(u.origin))
     val claimed     = PortRun.claimedSynthetic(program, synthesised, basePorts.flatMap(b => b.map.map(b.name -> _)))
     say(
@@ -419,7 +420,7 @@ final case class PortRun(
       )
 
     // ---- base-surface contract ----
-    // Fatal gaps: an Unknown whose answer shaped emitted text fails the run. // DESIGN.md §8.3
+    // Fatal gaps: an Unknown whose answer shaped emitted text fails the run.
     // Collapse divergence: does the derived verdict agree with the base's published shape?
     effectivePhases.collect { case b: balticporter.transform.BeanPropertyTransform => b }.foreach { b =>
       val a = PortRun.collapseDivergence(translated.idioms, basePorts.flatMap(p => p.map.map(p.name -> _)), b.pairsTable, b.targetOf)
@@ -462,7 +463,8 @@ final case class PortRun(
       }
 
     // Two portability numbers: all-program and shipped-code-only.
-    // Dropped IDs use the frontend's tag, not the key FQN. // ENGINE-LIMITS P7
+    // Dropped IDs use the frontend's tag, not the key FQN, because comparing upstream drop keys
+    // with emitted names never matches on a renaming port.
     val droppedIds = program.symbols.all.collect {
       case s if Substituted.tags(s) || policySubs.dropsType(s.fullName) => s.id
     }.toSet
@@ -502,7 +504,7 @@ final case class PortRun(
     // the remediations are computed HERE, where the `Program` is in scope, and handed to `summary`
     // as an argument. They used to travel through a `private var` in `PortabilityCheck` keyed to
     // the exact violation list, because `summary` has no `Program` and there was no orchestrator to
-    // hold the pair (CLAUDE.md §1(a) — a stopgap, documented as one).
+    // hold the pair (a stopgap, documented as one).
     val fixes = Remediator.suggest(program, portability)
     locally {
       given Program = program
@@ -526,14 +528,14 @@ final case class PortRun(
     // catalog's platform answers are `Depend` (API exists off the JVM, artifact nobody added), and
     // reporting that as unportability tells the reader to remove a call one dependency line makes
     // correct. Three conjuncts: usage FIRED, no declared ALTERNATIVE, no dependency COVERS it.
-    // Held to this module's own units by `notShipped` (D2).
+    // Held to this module's own units by `notShipped` (ownership filter).
     val declaredDeps = manifest.map(_.dependencies).getOrElse(Nil)
     val allRequired  = DependencyCheck.requirements(program, targets, verdictOverrides)
     val ownRequired  = DependencyCheck.inEmittedCode(program, allRequired, notShipped)
     val needed       = DependencyCheck.uncovered(ownRequired, declaredDeps)
     // …and the SAME PAIR read backwards: coverage SUBTRACTS, so an unneeded artifact leaves every
-    // number on this lane where it was — it goes to `policy` instead. ASKED OF TWO PROGRAMS
-    // (`ENGINE-LIMITS.md` P8): a `Verdict.Depend` is answered by declaring the artifact AND
+    // number on this lane where it was — it goes to `policy` instead. ASKED OF TWO PROGRAMS:
+    // a `Verdict.Depend` is answered by declaring the artifact AND
     // REDIRECTING INTO IT, so the emitted reference is what the artifact's class list answers.
     // LAZY: most ports declare no dependency at all.
     lazy val beforeRequired = DependencyCheck.inEmittedCode(translated.parsed, DependencyCheck.requirements(translated.parsed, targets, verdictOverrides), notShipped)
@@ -544,7 +546,7 @@ final case class PortRun(
     // Scala interns no symbol for what it wrote, so a `Depend` answered by a `call-site-substitution`
     // alone reads `No` on both halves and lands in `Stale` — told to remove the coordinate its own
     // emitted code cannot compile without. Derived from the EMITTED program (never asked of the
-    // phases, §1) and fed to the emitted column only: the pre-pipeline tree has no spliced text.
+    // phases) and fed to the emitted column only: the pre-pipeline tree has no spliced text.
     lazy val splicedEmitted = DependencyCheck.splicedNames(program)
     val declaredCells       = DependencyCheck.declarations(
       declaredDeps,
@@ -560,17 +562,17 @@ final case class PortRun(
       given Program = program
       // TWO numbers, for `portability(all|emitted)`'s reason: the residue alone cannot distinguish
       // a dependent whose requirements all belong to its base — an honest 0 — from a walk that
-      // found nothing at all, and D2's ownership filter is exactly what makes that the normal case
+      // found nothing at all, and the ownership filter is exactly what makes that the normal case
       // on every dependent port in this corpus.
       CheckReport.record(DependencyCheck.All, DependencyCheck.report(allRequired, declaredDeps, DependencyCheck.All))
       CheckReport.record(DependencyCheck.Name, DependencyCheck.report(needed, declaredDeps))
       // …and the THIRD, which counts DECLARATIONS: `policy = 0` here is a bar a port holds by
       // declaring nothing, and an artifact a phase redirected into has no row on either lane above.
       CheckReport.record(DependencyCheck.Declared, DependencyCheck.reportDeclared(declaredCells))
-      // …and the same rows as an artifact a BUILD can read. One value, one spelling (§1.5): a
+      // …and the same rows as an artifact a BUILD can read. One value, one spelling: a
       // coordinate this manifest declares was ALSO written by hand into the measure lane's flags,
       // with nothing comparing the two — `scripts/_lib.sh` now derives the lane's flags from this
-      // file. GATED ON THE ARTIFACT LAYER (§5.1): with reporting off, one unconditional write was
+      // file. GATED ON THE ARTIFACT LAYER: with reporting off, one unconditional write was
       // enough to publish a forked test suite's run directory into the checkout.
       if CheckReport.enabled && declaredCells.nonEmpty then
         Files.createDirectories(CheckReport.runDir)
@@ -592,7 +594,7 @@ final case class PortRun(
       say(s"DECLARED ARTIFACTS: ${declaredCells.count(_.cell.keep)} of ${declaredCells.size} still needed")
       declaredCells.foreach(d => println(s"  ${d.render}"))
 
-    // ---- JDK surface, classified (DESIGN.md §8.9) ----
+    // ---- JDK surface, classified ----
     val jdkMapping    = CollectionsTransform.jdkMapping(ran = effectivePhases.exists(_.isInstanceOf[CollectionsTransform]))
     val jdkClassified = JdkSurfaceCheck.classify(externalEmitted, jdkMapping)
     // Drain selections; `classify` is the denominator, not drained.
@@ -606,11 +608,11 @@ final case class PortRun(
     JdkSurfaceCheck.classifications(jdkFindings).foreach(c => say("  " + c))
     jdkFindings.take(20).foreach(f => println("  " + f.render))
     if jdkFindings.sizeIs > 20 then println(s"  … ${jdkFindings.size - 20} more (see findings.tsv)")
-    // Three idiom lanes, unconditional, scoped to this module's own declarations. // D2
+    // Three idiom lanes, unconditional, scoped to this module's own declarations (ownership filter).
     // …by PATH, so a unit with NO java path must not join the set: the moment a phase MINTS one
     // (`registry`, `primitive-to-opaque`), `<synthetic>` becomes an OWNED path and every
     // origin-less candidate in the whole program — a BASE's included — passes this filter
-    // (measured: 2 `idiom(refused)` rows for a base type on a dependent, P10). CLAUDE.md §4.56
+    // (measured: 2 `idiom(refused)` rows for a base type on a dependent).
     val ownPaths  = checkedUnits.map(_.origin.javaPath).filter(p => p.nonEmpty && p != Origin.synthetic.javaPath).map(p => PortRun.real(java.nio.file.Paths.get(p)).toString).toSet
     val ownIdioms = new IdiomLog
     ownIdioms.recordAll(
@@ -639,7 +641,7 @@ final case class PortRun(
     // ---- determinism (must run after decisions, since notes are emitted text) ----
     verifyDeterminism(translated, injectedSources, plan)
 
-    // ---- emission gate (DESIGN.md §6.4) ----
+    // ---- emission gate ----
     // Open markers refuse the run; best-effort is the escape hatch.
     val openMarkers = MarkerCheck.openMarkers(program, checkedUnits)
     val emitDir     = if bestEffort && openMarkers.nonEmpty then bestEffortDir else outDir
@@ -698,7 +700,7 @@ final case class PortRun(
         PortRun.declaredSymbols(u, emittedSubjects)(using program)
         written += 1
     }
-    // ---- upstream notice files (CLAUDE.md §4.57; not gated on artifact layer) ----
+    // ---- upstream notice files (not gated on artifact layer) ----
     val notices = provenance.map(_.notices).getOrElse(Nil)
     notices.foreach { src =>
       // Fatal: a declared notice that is missing silently looks like one that shipped.
@@ -713,7 +715,7 @@ final case class PortRun(
     }
     if notices.nonEmpty then say(s"notice(s) shipped beside the emitted code: ${notices.map(_.getFileName).mkString(", ")}")
 
-    // ---- service descriptors (ENGINE-LIMITS P5; not gated on artifact layer) ----
+    // ---- service descriptors (not gated on artifact layer) ----
     val declaredServices = manifest.map(_.serviceProviders).getOrElse(Nil)
     declaredServices.foreach { src =>
       // Fatal: missing descriptor silently means zero providers.
@@ -740,7 +742,7 @@ final case class PortRun(
       )
       println(balticporter.tir.ServiceProviders.summary(descriptors))
 
-    // ---- classpath resources, copied verbatim at upstream paths (DESIGN.md §8.22) ----
+    // ---- classpath resources, copied verbatim at upstream paths ----
     val declaredTrees = manifest.map(_.resources).getOrElse(Nil)
     val plannedRes    = balticporter.tir.PortResources.plan(declaredTrees)
     plannedRes.foreach { r =>
@@ -878,22 +880,22 @@ final case class PortRun(
       dropMethods = policySubs.dropMethods,
       injectedFqns = injectedFqns,
       bodyKeys = bodyKeys,
-      // Full rename table (package + per-type), not just packageRenames. // D16
+      // Full rename table (package + per-type), not just packageRenames.
       renames = renamePhase.map(_.upstreamTable).getOrElse(renames),
       // Fingerprints the Java sources so a dependent can detect stale maps.
       sourceRoot = Some(frontend.sourceRoot),
       // Schema 3: emitted + injected type shapes. Emitter's recording wins on overlap.
       typeShapes = injectedTypeShapes ++ shapes.renderedTypes,
       memberShapes = shapes.renderedMembers,
-      // Policy fingerprint: without it, manifest changes leave the map stale. // D4
+      // Policy fingerprint: without it, manifest changes leave the map stale.
       policy = surfacePolicyFingerprint,
       // Members this run refused (engine refusals, not already-dropped policy drops).
       refusedMembers = refusedMembers(program, translated),
       memberOriginals = memberOriginals,
-      // Schema 4: JDK fingerprint. // ENGINE-LIMITS M5.10
+      // Schema 4: JDK fingerprint.
       jdk = balticporter.core.JvmInfo.specification
     )
-    // Written only when the artifact layer is on. // CLAUDE.md §5.1
+    // Written only when the artifact layer is on.
     val mapPath = Option.when(CheckReport.enabled)(PortMap.write(CheckReport.runDir, portMap))
     say(
       s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s)" +
@@ -904,7 +906,7 @@ final case class PortRun(
     translated.decisions.recordAll(translated.emitter.emissionDecisions)
     writeDecisions(translated.decisions, foreignDecisions)
 
-    // ---- note coverage check (E8) ----
+    // ---- note coverage check ----
     val noteFindings = NoteCoverageCheck.check(
       decisions = translated.decisions.all,
       printed = translated.emitter.notesPrinted,
@@ -977,21 +979,21 @@ final case class PortRun(
     heapPollution.map(_.issue).distinct.foreach(i => say(HeapPollutionCheck.Issue.classification(i)))
     println(HeapPollutionCheck.summary(heapPollution))
 
-    // ---- overload risk (T17): calls where java and scala resolution CAN differ ----
+    // ---- overload risk: calls where java and scala resolution CAN differ ----
     val overloadRisk = OverloadRiskCheck.check(program, checkedUnits, translated.emitter.overloads, translated.binder.resolutions)
     CheckReport.record(OverloadRiskCheck.Name, overloadRisk.findings.map(_.report))
     say(s"OVERLOAD RISK (calls whose candidate set spans a java resolution phase): ${overloadRisk.findings.size}")
     overloadRisk.findings.map(_.issue).distinct.foreach(i => say(OverloadRiskCheck.Issue.classification(i)))
     println(OverloadRiskCheck.summary(overloadRisk))
 
-    // ---- class-init trigger check (§4.4, K22) ----
+    // ---- class-init trigger check ----
     val classInits = ClassInitTriggerCheck.check(program, checkedUnits, translated.emitter.forcedClassInits, translated.emitter.emittedShapes.types.get)
     CheckReport.record(ClassInitTriggerCheck.Name, classInits.map(_.report))
     say(s"CLASS-INIT TRIGGER (`static { }` blocks nothing initialises): ${classInits.size}")
     classInits.map(_.issue).distinct.foreach(i => say(ClassInitTriggerCheck.Issue.classification(i)))
     println(ClassInitTriggerCheck.summary(classInits))
 
-    // ---- markers check (§6.2) ----
+    // ---- markers check ----
     val markerInventory = MarkerCheck.inventory(program, checkedUnits)
     val markers         = MarkerCheck.check(translated.parsed, program, checkedUnits)
     val resolved        = markerInventory.count(!_.marker.state.isOpen)
@@ -1001,7 +1003,7 @@ final case class PortRun(
     println(MarkerCheck.summary(markers, resolved))
     writeMarkers(program, markerInventory)
 
-    // ---- catalog coverage (DESIGN.md §2.8): four lanes + uncited ----
+    // ---- catalog coverage: four lanes + uncited ----
     val catalogLog      = translated.catalog
     val catConsulted    = CatalogCheck.consulted(catalogLog)
     val catUnreached    = CatalogCheck.unreached(catalogLog)
@@ -1023,7 +1025,7 @@ final case class PortRun(
       catUndischarged.take(10).foreach(f => say("  " + f.render))
     writeCatalog(catalogLog, translated.cacheHits)
 
-    // ---- context boundary, recorded: phase seams + emitter's lost clauses (CT5) ----
+    // ---- context boundary, recorded: phase seams + emitter's lost clauses ----
     // Lost clauses filtered to what was actually written (not the determinism twin's rendering).
     val clauseLosses = translated.emitter.contextClauseLosses.filter(l => emittedSubjects(l.subject))
     // The holder key a reader edits; absent when no phase declares one.
@@ -1092,7 +1094,9 @@ final case class PortRun(
         PolicyReport(PolicyReport.fromResolutions(translated.binder.resolutions.troubles).findings.filter(f => ownResolutionKeys(f.key)))
     // Dependency declarations (not inherited, so no own-keys filter needed).
     val dependencyFindings = PolicyReport.fromDependencies(unneededDeps)
-    // Surface phases: key findings from own phases, run findings from effective pipeline. // D13
+    // Surface phases: key findings from own phases, run findings from effective pipeline — a
+    // refusal a merged phase files while running is reported even when every policy key on that
+    // phase came from the base, or a compile error would sit beside a zero policy count.
     val runPhases: List[Phase] = manifest.map(_.effectiveSurface).getOrElse(phases)
     def sourcesIn(ps: List[Phase]) = ps.collect { case p: PolicySource => p }
     val keyFindings = PolicyReport
@@ -1175,7 +1179,7 @@ final case class PortRun(
       rename = renameReport,
       manifest = agreement
     )
-    // Full report with §1 classifications.
+    // Full report with fix-kind classifications.
     say("report:")
     println(report.render)
     say(s"wrote $written ${sourceSet.noun} ($dropped dropped, $injected injected) -> $emitDir")
@@ -1306,7 +1310,7 @@ final case class PortRun(
   private var translatedDecisions: List[Decision] = Nil
 
   // refusedMembers — see doc below
-  /** Members an engine rule refused to emit, published in the port map for dependents. Currently: C11's nilary constructor. Keyed by emitted member FQN.
+  /** Members an engine rule refused to emit, published in the port map for dependents. Currently: the dropped nilary constructor. Keyed by emitted member FQN.
     */
   private def refusedMembers(program: Program, translated: PortRun.Translated): Map[String, String] =
     val plans = CtorFunnel.Plans(program, Some(translated.surface))
@@ -1327,14 +1331,14 @@ final case class PortRun(
   private def emittedUnits(program: Program, units: List[Tree.ClassDef]): List[Tree.ClassDef] =
     units.filterNot(isDropped(program, _))
 
-  /** Every class this run emits, nested included. Single D2 ownership domain. */
+  /** Every class this run emits, nested included. Single ownership domain. */
   private def emittedClasses(program: Program, translated: PortRun.Translated): List[Tree.ClassDef] =
-    // `allClassDefs` — see `emittedFqns` above; D2's ownership range must not stop at the body.
+    // `allClassDefs` — see `emittedFqns` above; the ownership range must not stop at the body.
     emittedUnits(program, translated.emitOrder).flatMap(u => StandardTraversal.allClassDefs(u)(using program))
 
   private def recordDroppedSuperArgs(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
-    // Uses the run's own Surface, not TrivialSurface. // D5
+    // Uses the run's own Surface, not TrivialSurface.
     val plans = CtorFunnel.Plans(program, Some(translated.surface))
     emittedClasses(program, translated).foreach { cd =>
       CtorFunnel.ctorsOf(program, cd.body).foreach { d =>
@@ -1360,7 +1364,7 @@ final case class PortRun(
       }
     }
 
-  /** Record dropped nilary constructors as decisions (C11). Subject is the owning type. */
+  /** Record dropped nilary constructors as decisions. Subject is the owning type. */
   private def recordDroppedNilaryCtors(program: Program, translated: PortRun.Translated): Unit =
     val plans = CtorFunnel.Plans(program, Some(translated.surface))
     emittedClasses(program, translated).foreach { cd =>
@@ -1469,7 +1473,7 @@ final case class PortRun(
       )
     }
 
-    // Vendored runtime (§1(a)) and supportSources (§1(b)).
+    // Vendored runtime (universal) and supportSources (per-port policy).
     plan.sources.toList.sorted.foreach { (fqn, _) =>
       log.record(
         Decision(
@@ -1509,7 +1513,7 @@ final case class PortRun(
       )
     }
 
-  /** Record constructor funnel decisions. One row per class where the funnel acted. `escapes` counts construction paths where java would not run the promoted body. // C7
+  /** Record constructor funnel decisions. One row per class where the funnel acted. `escapes` counts construction paths where java would not run the promoted body.
     */
   private def recordCtorFunnel(program: Program, translated: PortRun.Translated): Unit =
     given Program = program
@@ -1548,7 +1552,7 @@ final case class PortRun(
               "slots" -> (if p.synthetic.isEmpty then "-" else p.synthetic.map(_._1).mkString(",")),
               // Refused candidate slots with reasons.
               "notSlot" -> (if p.notSlot.isEmpty then "-" else p.notSlot.map((f, w) => s"$f=$w").mkString(",")),
-              // Whether the primary needed a disambiguator (C8/C9).
+              // Whether the primary needed a disambiguator.
               "disambiguator" -> (if p.marker.isDefined then "marker" else "none"),
               "constructors" -> ctors.size.toString,
               "superArgs" -> p.superArgs.size.toString,
@@ -1570,7 +1574,7 @@ final case class PortRun(
         )
     }
 
-  /** Filter decisions to this module's own declarations (D2). Returns withheld count. Ownership decided structurally via owner chain, not origin path.
+  /** Filter decisions to this module's own declarations (ownership filter). Returns withheld count. Ownership decided structurally via owner chain, not origin path.
     */
   private def retainOwnDecisions(program: Program, translated: PortRun.Translated): Int =
     if translated.foreign.isEmpty then 0
@@ -1641,17 +1645,17 @@ final case class PortRun(
        else Set.empty) ++
       // API parity lanes (conditional on manifest.parity).
       (if manifest.exists(_.parity.exists(_.compare)) then ApiParityCheck.AllLanes else Set.empty) ++
-      // reference-derived policy lanes (conditional on a deriving phase; PROGRESS.md §13.31 step 1).
+      // reference-derived policy lanes (conditional on a deriving phase).
       (if derivationRuns then ReferencePolicy.Lanes.toSet else Set.empty) ++
       // Opaque boundary (conditional on pipeline).
       (if effectivePhases.exists(_.isInstanceOf[PrimitiveToOpaqueTransform]) then Set(OpaqueBoundaryCheck.Name) else Set.empty) ++
-      // Element witness (conditional on a NON-EMPTY subject map — §1(b)'s no-op rule: an empty
+      // Element witness (conditional on a NON-EMPTY subject map — an empty
       // instance moves nothing and must not require a lane on every port that merely carries one).
       (if effectivePhases.exists { case w: ElementWitnessTransform => !w.isNoOp; case _ => false }
        then Set(ElementWitnessCheck.Name)
        else Set.empty) ++
       // Registry lanes (conditional on a NON-EMPTY spec: an empty instance is a no-op and must not
-      // move a baseline on every port that merely carries one — §1(b)'s fingerprint no-op rule).
+      // move a baseline on every port that merely carries one — the fingerprint no-op rule).
       (if effectivePhases.exists {
            case r: RegistryTransform => r.entries.nonEmpty || r.facadeMembers.nonEmpty
            case _ => false
@@ -1669,7 +1673,7 @@ final case class PortRun(
             "vanish from findings.tsv while stdout still showed them]"
         )
 
-  /** Phases that actually run: idiom phases, declared surface, then rename LAST. // §4.56 */
+  /** Phases that actually run: idiom phases, declared surface, then rename LAST. */
   private def effectivePhases: List[Phase] =
     idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ PortRun.derivedPhases ++ injectedFollowPhase ++ renamePhase
 
@@ -1681,7 +1685,7 @@ final case class PortRun(
   private lazy val droppedEmittedNames: Map[String, String] =
     policySubs.dropTypes.toList.map(fqn => fqn -> emittedName(fqn)).toMap
 
-  /** calls into a dropped+injected type follow the injected file's spelling (§13.31 step 3). */
+  /** calls into a dropped+injected type follow the injected file's spelling. */
   private lazy val injectedFollowPhase: List[Phase] =
     val roots = ownSubs.inject ++ injectedRowRoots
     if roots.isEmpty || droppedEmittedNames.isEmpty then Nil
@@ -1701,7 +1705,7 @@ final case class PortRun(
     */
   private def idiomPhases(declared: List[Phase]): List[Phase] =
     val first = PortRun.wovenIdiomPhases
-    // K21 face 2: hand public-field-accessors' scope to bean-properties.
+    // hand public-field-accessors' scope to bean-properties (the bean reader face of the same rule).
     val exposed = declared.collectFirst { case p: balticporter.transform.PublicFieldAccessorTransform =>
       p.scope
     }
@@ -1711,7 +1715,7 @@ final case class PortRun(
     }
     first ++ spliced
 
-  /** Retarget target FQNs the frontend should intern from the classpath (K18). */
+  /** Retarget target FQNs the frontend should intern from the classpath. */
   private def collectInternTypes(): Set[String] =
     effectivePhases
       .collect { case c: CollectionsTransform =>
@@ -1751,7 +1755,7 @@ final case class PortRun(
       val mine = Set(label) ++ manifest.map(_.name)
       // Port's own search path (manifest, not operator).
       val found = PortMap.discover(PortMap.reportRoot, exclude = mine, configured = manifest.map(_.baseReports).getOrElse(Nil)).map(p => p.module -> p).toMap
-      // Resolution roots via RealPath. // §5.4
+      // Resolution roots via RealPath.
       val roots = (frontend.resolutionRoots ++ List(frontend.sourceRoot)).map(balticporter.core.RealPath.of).distinct
       chain.map { b =>
         found.get(b.name) match
@@ -1760,7 +1764,7 @@ final case class PortRun(
             pub.map match
               case Left(err) => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(err))
               case Right(m0) =>
-                // JDK fingerprint. // ENGINE-LIMITS M5.10
+                // JDK fingerprint.
                 PortMap.freshness(m0, balticporter.core.EngineInfo.fingerprint, roots, basePolicyFingerprint(b), balticporter.core.JvmInfo.specification) match
                   case PortMap.Freshness.Fresh                           => ManifestAgreement.BasePort(b, Some(m0), pub.source)
                   case PortMap.Freshness.Stale(r)                        => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(r))
@@ -1827,7 +1831,7 @@ final case class PortRun(
     val plan                 = RuntimePlan.of(effectivePhases, runtimeMode)
     // externalConcrete derived from phases, never passed in.
     val (mine, theirs) = partitionUnits(program)
-    // §8.3's view, built before the emitter (funnel's fixpoint must not span the base).
+    // the published-surface view, built before the emitter (funnel's fixpoint must not span the base).
     val surface = new balticporter.core.PublishedSurface(program, mine, basePorts.flatMap(b => b.map.map(b.name -> _)))
     // Emitter reads decisions, catalog, injected surface, and external parenless members.
     val injSurface   = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject ++ injectedRowRoots).withAliases(droppedEmittedNames)
@@ -1869,9 +1873,9 @@ final case class PortRun(
   // partitionUnits and runScope below
   /** Build `RunScope` from the unit partition and the manifest's contributed subjects. */
   private def runScope(parsed: Program): RunScope =
-    // Types the base substituted (detection phases skip these owners). // D14
+    // Types the base substituted (detection phases skip these owners).
     val substituted = effectivePhases.collect { case p: PortMapTransform => p.substitutedOwnerTypes }.flatten.toSet
-    // Base's upstream member descriptors for opaque-phase coercion. // O8
+    // Base's upstream member descriptors for opaque-phase coercion.
     val memberUp = {
       val mine = manifest.map(_.name).toSet
       PortMap.discover(PortMap.reportRoot, exclude = mine, configured = manifest.map(_.baseReports).getOrElse(Nil)).flatMap(p => p.map.toOption.toList.flatMap(_.members.map(_.upstream))).toSet
@@ -1890,7 +1894,7 @@ final case class PortRun(
       referenceSources
     )
 
-  // ---- reference-derived spelling policy (PROGRESS.md §13.31 step 1) ----------------------------
+  // ---- reference-derived spelling policy ----------------------------
   /** the opaque targets of the deriving specs; empty when no phase derives. */
   private def derivingOpaqueTargets: Set[String] =
     effectivePhases.collect { case p: PrimitiveToOpaqueTransform if p.spec.derive => p.spec.typeFqn }.toSet
@@ -1930,13 +1934,13 @@ final case class PortRun(
   /** the last derivation, for the report (`derived(*)` lanes, `derived-policy.tsv`). */
   private var lastDerived: Option[ReferencePolicy.Result] = scala.None
 
-  /** a DEPENDENT inherits the base's deriving phases without a reference of its own: the base's derived spellings reach it through the base's PUBLISHED map (§1.5), and its own units have no twin to
-    * read — nothing to derive, nothing fatal, no lane.
+  /** a DEPENDENT inherits the base's deriving phases without a reference of its own: the base's derived spellings reach it through the base's PUBLISHED map, and its own units have no twin to read —
+    * nothing to derive, nothing fatal, no lane.
     */
   private def derivationRuns: Boolean =
     anyPhaseDerives && !manifest.exists(m => m.parity.isEmpty && m.bases.nonEmpty)
 
-  /** the rows the bases PUBLISHED: a dependent's call into a base-retyped member is coerced off them (O8 read as a value), its own units having no reference twin to derive from.
+  /** the rows the bases PUBLISHED: a dependent's call into a base-retyped member is coerced off the base's published map, its own units having no reference twin to derive from.
     */
   private lazy val inheritedDerived: DerivedPolicy =
     val baseNames = manifest.map(_.bases.map(_.name).toSet).getOrElse(Set.empty)
@@ -1973,7 +1977,7 @@ final case class PortRun(
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)
     else
-      // Input list, realpathed once. // §5.4
+      // Input list, realpathed once.
       val mine = frontend.files.map(f => PortRun.real(frontend.sourceRoot.resolve(f))).toSet
       program.units.partition { u =>
         // Synthesised units are always converted (refusing on missing origin is a silent omission).
@@ -2002,7 +2006,7 @@ object PortRun:
       }
     }
 
-  /** Symlink-resolved path, falling back to normalisation. // §5.4 */
+  /** Symlink-resolved path, falling back to normalisation. */
   def real(p: Path): String = balticporter.core.RealPath.str(p)
 
   /** A `.scala` under an inject or platform root that is not inside a dot-directory: a scala-cli `.scala-build/` left beside a replacement file shipped its `snippet.scala` as a type of the port.
@@ -2011,7 +2015,7 @@ object PortRun:
     p.toString.endsWith(".scala") && !root.relativize(p).iterator().asScala.exists(_.toString.startsWith("."))
 
   // =========================================================================================
-  // a SYNTHESISED unit, and the one module allowed to write it (ENGINE-LIMITS.md §13 O5)
+  // a SYNTHESISED unit, and the one module allowed to write it
   // =========================================================================================
 
   /** Whether a phase minted this unit (vs the frontend parsing it from a Java file). */
@@ -2153,7 +2157,7 @@ object PortRun:
       )
     }
 
-  /** The §1(a) idiom phases every run carries. Fresh instances per call. */
+  /** The universal idiom phases every run carries. Fresh instances per call. */
   def wovenIdiomPhases: List[Phase] =
     List(new balticporter.transform.SamLambdaTransform, new balticporter.transform.ReturnThisCensus)
 
@@ -2185,7 +2189,7 @@ object PortRun:
   def remedyPhases: List[Phase] =
     List(new HeapPollutionCheck.Apply, new OverloadRiskCheck.Apply)
 
-  /** §1(a) universal phases derived unconditionally. No-op when trigger is absent. Fresh per call. */
+  /** Universal phases derived unconditionally. No-op when trigger is absent. Fresh per call. */
   def derivedPhases: List[Phase] =
     List(new UnusedSymbolTransform, new SuppressionPhase)
 
@@ -2260,7 +2264,7 @@ object PortRun:
     val decisions: DecisionLog = new DecisionLog,
     /** Policy key resolutions, taken before the pipeline ran. Per-translation. */
     val binder: PolicyBinder = new PolicyBinder(new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty), MemberIndex.empty),
-    /** §8.3's published surface view. Per-translation. */
+    /** The published surface view. Per-translation. */
     val surface: Surface = new TrivialSurface(new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty)),
     /** Frontend output before phases. `MarkerCheck` compares minted vs survived markers. */
     val parsed: Program = new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty),
@@ -2299,7 +2303,7 @@ object PortRun:
     private def nameOf(u: Tree.ClassDef): String =
       program.symbolOf(u.symbol).map(_.fullName).getOrElse("")
 
-/** What a run found, classified per CLAUDE.md §1 (a/b/c). */
+/** What a run found, classified as engine, configuration, or library-specific. */
 final case class PortReport(
   label:               String,
   signature:           List[RewriteTrace.Mismatch],
@@ -2329,7 +2333,7 @@ final case class PortReport(
 
 object PortReport:
 
-  /** Which of CLAUDE.md §1's three kinds a finding is. */
+  /** Which of the three kinds a finding is: engine, configuration, or library-specific. */
   enum Kind(val classification: String):
     case Signature
         extends Kind(

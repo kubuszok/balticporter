@@ -7,9 +7,9 @@ import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 import scala.meta.*
 
-/** Compare the emitted port's public surface against a hand-written reference port. // CLAUDE.md §1(b)
+/** Compare the emitted port's public surface against a hand-written reference port.
   *
-  * Parses both sides with scalameta, classifies each divergence into a family, reports per-family lanes. Empty/absent `PortManifest.parity` makes the check a no-op. Each family carries a §1
+  * Parses both sides with scalameta, classifies each divergence into a family, reports per-family lanes. Empty/absent `PortManifest.parity` makes the check a no-op. Each family carries a
   * classification so an agent knows whether the fix is engine, manifest, or library-specific.
   */
 object ApiParityCheck:
@@ -135,7 +135,7 @@ object ApiParityCheck:
     override def toString: String = s"$path: $kind $name/$arity"
 
   /** A type parameter's NAME is not API: the parameters in scope canonicalise to `$0…` BY POSITION (the owner's first, then the declaration's own) before any type is rendered, so an alpha-renaming is
-    * no divergence (`CLAUDE.md` §3.5). BOUNDS and ARITY are still compared; `<: java.lang.Object`, `<: Any` and no bound are one absent bound.
+    * no divergence. BOUNDS and ARITY are still compared; `<: java.lang.Object`, `<: Any` and no bound are one absent bound.
     */
   private def substFor(outer: List[String], own: List[String]): Map[String, String] =
     (outer ++ own).zipWithIndex.collect { case (n, i) if n.nonEmpty => n -> s"$$$i" }.toMap
@@ -231,7 +231,7 @@ object ApiParityCheck:
   def parseSurface(roots: List[Path]): Either[String, List[SurfaceDecl]] =
     parseSurface(roots, Nil).map(_._1)
 
-  /** Parse the roots, splitting PARTIES (header names an upstream source) from originals. Empty `markers` makes every file a party — the no-op (`CLAUDE.md` §1b).
+  /** Parse the roots, splitting PARTIES (header names an upstream source) from originals. Empty `markers` makes every file a party — the no-op.
     */
   def parseSurface(
     roots:   List[Path],
@@ -610,7 +610,7 @@ object ApiParityCheck:
   private val IntegralLiterals = Set("Byte", "Short", "Int")
 
   /** The result type to compare: a declaration's own ascription, or — for an unascribed `inline val` — the type its constant initialiser gives it. Restores the comparison the empty `resultType`
-    * skipped (`CLAUDE.md` §3.5): an emitted `inline val K = 57` really does diverge from a hand port's `final val K: Key = 57`, and the row was hidden.
+    * skipped: an emitted `inline val K = 57` really does diverge from a hand port's `final val K: Key = 57`, and the row was hidden.
     */
   private def effectiveResultType(d: SurfaceDecl): String =
     if d.resultType.nonEmpty then d.resultType
@@ -928,7 +928,7 @@ object ApiParityCheck:
     pre ++ mods
 
   /** The modifier difference the engine made BY A CATALOG RULE, or `None`. Read off the emitted SHAPE plus the run's own port map — no `Decision` is recorded per declaration for either rendering;
-    * when one is, read that instead (`CLAUDE.md` §3.5).
+    * when one is, read that instead.
     */
   private def catalogRule(
     e:          SurfaceDecl,
@@ -938,8 +938,8 @@ object ApiParityCheck:
   ): Option[String] =
     inlineConstantRule(e, r, modDiff).orElse(finalFieldRule(e, r, modDiff, javaFields))
 
-  /** The engine renders a java CONSTANT VARIABLE `inline val <n> = <literal>` so that reading it triggers no class initialiser (`CLAUDE.md` §4.4, catalog `JS-C08`, JLS 4.12.4/13.1). That one
-    * rendering both ADDS `inline` and DROPS java's `final` (`TirEmitterMembers.valDef0`), so a hand port's `final` is the same difference and not a second one.
+  /** The engine renders a java CONSTANT VARIABLE `inline val <n> = <literal>` so that reading it triggers no class initialiser (catalog `JS-C08`, JLS 4.12.4/13.1). That one rendering both ADDS
+    * `inline` and DROPS java's `final` (`TirEmitterMembers.valDef0`), so a hand port's `final` is the same difference and not a second one.
     */
   private def inlineConstantRule(
     e:       SurfaceDecl,
@@ -956,8 +956,8 @@ object ApiParityCheck:
         s"inlined, JLS 4.12.4/13.1), reference $refSpelling"
     )
 
-  /** A java FIELD is HIDDEN, never overridden (JLS 8.3), so `mods` carries java's `final` onto the emitted val to restate that static binding (`CLAUDE.md` §4.4, catalog `JS-C53`); the hand port
-    * dropped it. "Came from a java FIELD" is the PORT MAP's answer, not the emitted shape — a `val` with no member row (an injected file's) is left alone, which the shape could not tell apart.
+  /** A java FIELD is HIDDEN, never overridden (JLS 8.3), so `mods` carries java's `final` onto the emitted val to restate that static binding (catalog `JS-C53`); the hand port dropped it. "Came from
+    * a java FIELD" is the PORT MAP's answer, not the emitted shape — a `val` with no member row (an injected file's) is left alone, which the shape could not tell apart.
     */
   private def finalFieldRule(
     e:          SurfaceDecl,

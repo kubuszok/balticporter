@@ -299,7 +299,7 @@ object ManifestAgreement:
         )
 
   final case class Finding(kind: Kind, base: String, subject: String, detail: String):
-    /** one grep-able line ENDING in the §1 classification, because that is what the reader acts on. */
+    /** one grep-able line ENDING in the fix-kind classification, because that is what the reader acts on. */
     def render: String = s"$kind: $subject — $detail (base: $base)  [${kind.classification}]"
 
   /** The whole check: static + map health + dynamic. */
@@ -327,13 +327,13 @@ object ManifestAgreement:
           else Nil
         noBase ++ statik(m, fired, ports) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
 
-  /** Fatal findings that must stop a run BEFORE any phase runs: surface pairs the fold could not compose. Same derivation as [[statik]] via [[surfacePairs]]. // ENGINE-LIMITS CT9
+  /** Fatal findings that must stop a run BEFORE any phase runs: surface pairs the fold could not compose. Same derivation as [[statik]] via [[surfacePairs]].
     */
   def surfaceGate(manifest: Option[PortManifest], ports: List[BasePort] = Nil): List[Finding] =
     manifest.toList.flatMap(m => surfacePairs(m, ports)).filter(_.kind.fatal)
 
   // -------------------------------------------------------------------------
-  // the maps themselves — R1, reported before anything is read OFF one
+  // the maps themselves — staleness reported before anything is read OFF one
   // -------------------------------------------------------------------------
 
   /** Report the health of each base's published map (stale, unverified, missing, JDK mismatch). */
@@ -378,7 +378,7 @@ object ManifestAgreement:
       val missingMethods = (bDropMethods -- myMethods).toList.sorted.map(k => Finding(Kind.MissingDrop, b.name, k, "declared `dropMethods` in the base, absent here"))
 
       // Extra drops: use the base's published map to check whether something stands at that FQN.
-      // Fall back to the `governs` claim only when no map is available. // ENGINE-LIMITS D10
+      // Fall back to the `governs` claim only when no map is available.
       val bMap = ports.find(_.name == b.name).flatMap(_.map).map(_.types.map(_.upstream).toSet)
       def baseHas(fqn: String): Boolean = bMap.forall(_.contains(fqn))
       val extraTypes = (mine -- bDropTypes)
@@ -464,7 +464,7 @@ object ManifestAgreement:
           )
         else Nil
 
-      // Targets: narrowing is harmless, widening is fatal. // ENGINE-LIMITS D2
+      // Targets: narrowing is harmless, widening is fatal.
       val widened   = (m.targets -- b.targets).toList.map(_.toString).sorted
       val targetGap =
         if widened.isEmpty then Nil
@@ -503,7 +503,7 @@ object ManifestAgreement:
         Finding(Kind.SurfaceDivergence, m.name, n, here.headOption.map(r => s"$fps — ${r.why}").getOrElse(fps))
     }
 
-    // Intrusion screen: does anything STAND at the subject in the base's output? // ENGINE-LIMITS CT9
+    // Intrusion screen: does anything STAND at the subject in the base's output?
     // One finding per phase; divergent phases already reported are skipped.
     val divergentPhases = divergent.map(_.subject).toSet
     val intrusions      =
@@ -552,7 +552,7 @@ object ManifestAgreement:
       }
 
     // Resolution intrusion screen: this module's own keys only, asked of what the base EMITS.
-    // A key the base also answers is not an intrusion (already a ResolutionDivergence). // ENGINE-LIMITS D10
+    // A key the base also answers is not an intrusion (already a ResolutionDivergence).
     val resolutionIntrusions = for
       (key, id) <- m.resolutions.toList.sortBy(_._1)
       subject = MergeablePolicy.subjectOf(key)
@@ -615,7 +615,7 @@ object ManifestAgreement:
         usable.foldLeft(Map.empty[String, (String, PortMap.Entry)]) { (acc, p) =>
           acc ++ p.map.get.byUpstream("type").iterator.map((k, e) => k -> (p.name, e))
         }
-      // Second index by EMITTED name, for types whose upstreamFqn carries a post-type-rename name. // ENGINE-LIMITS D16
+      // Second index by EMITTED name, for types whose upstreamFqn carries a post-type-rename name.
       val emittedByBaseName: Map[String, (String, PortMap.Entry)] =
         usable.foldLeft(Map.empty[String, (String, PortMap.Entry)]) { (acc, p) =>
           acc ++ p.map.get.types.filter(_.emitted.nonEmpty).iterator.map(e => e.emitted -> (p.name, e))

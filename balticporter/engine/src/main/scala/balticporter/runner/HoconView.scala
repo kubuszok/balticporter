@@ -101,7 +101,7 @@ object HoconView:
   def root(config: Config): HoconView = new HoconView("", config.root)
 
   /** Parse a file, resolving substitutions against SYSTEM PROPERTIES only — never `ConfigFactory.load`, which would pull in `reference.conf` from every jar on the classpath. A port must be
-    * reproducible from its own file (CLAUDE.md §5).
+    * reproducible from its own file.
     */
   def parse(file: java.nio.file.Path): Config =
     if !java.nio.file.Files.isRegularFile(file) then throw ConfigError(file.toString, "no such port configuration file")

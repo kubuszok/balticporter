@@ -4,11 +4,11 @@ import balticporter.catalog.{ CatalogLog, JS, Obligations, Rendering, Typing }
 import balticporter.core.{ EngineInfo, Provenance, Substituted }
 import balticporter.tir.*
 
-/** Source map / trivia recovery / porter-note bookkeeping / statics & naming helpers split out of TirEmitter (context diet S1). */
+/** Source map / trivia recovery / porter-note bookkeeping / statics & naming helpers split out of TirEmitter to keep it within its file-size limit. */
 private[emit] trait TirEmitterNotes:
   self: TirEmitter =>
 
-  // Source map: member -> emitted line range -> Java Origin. // DESIGN.md §6.3
+  // Source map: member -> emitted line range -> Java Origin.
   // Positions recovered by searching finished text for remembered slot strings (pre-order).
 
   final private[emit] class Slot(val member: String, val kind: String, val origin: Origin, val indent: Int):
@@ -25,7 +25,7 @@ private[emit] trait TirEmitterNotes:
     slot.text = t
     t
 
-  /** Record member's contract row (DESIGN.md §8.3), keyed by source-map key. */
+  /** Record member's contract row, keyed by source-map key. */
   private[emit] def recordMemberShape(key: String, st: Statement): Unit =
     val symId = st match
       case d: Definition => Some(d.symbol)
@@ -39,7 +39,7 @@ private[emit] trait TirEmitterNotes:
         // Static members land in the companion.
         placement = if m.flags.isStatic then "companion" else "class",
         // Whether this member is a collapsed bean pair and into which shape; a `def` emitted with NO
-        // parameter clause is `parenless` whatever phase dropped it — read off the DECLARATION (K51 x).
+        // parameter clause is `parenless` whatever phase dropped it — read off the DECLARATION.
         form = collapsedForms.getOrElse(id,
                                         st match
                                           case d: Tree.DefDef if d.paramss.isEmpty && !isInitBlock(d) => "parenless"
@@ -86,7 +86,7 @@ private[emit] trait TirEmitterNotes:
     case TypeRepr.AppliedType(tc, as) if as.nonEmpty => shortTpe(tc) + as.map(shortTpe).mkString("<", ",", ">")
     case _                                           => headSymOf(t).map(x => sym(x).name).getOrElse("?")
 
-  // Recovery backstop (DESIGN.md §8.8): unplaced Java comments are put back after the
+  // Recovery backstop: unplaced Java comments are put back after the
   // enclosing member slot, with java coordinates. Dropped members' comments are not recovered.
 
   /** All declarations (emitted and dropped) per java file, computed once. */
@@ -133,7 +133,7 @@ private[emit] trait TirEmitterNotes:
                   case balticporter.core.TriviaKind.Block   => TriviaKind.Block
                   case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
                 val where = provenance.map(p => sourcePathOf(Origin(path, line, 0), p)).getOrElse(path)
-                // …rendered through `triviaText`, so §4.58's rules hold for a recovered comment
+                // …rendered through `triviaText`, so the same rules hold for a recovered comment
                 // exactly as for a placed one: a block comment Scala would NEST on goes out
                 // line-by-line as `//`, and the indent is re-derived rather than reproduced.
                 put += at -> (ind(lvl) + TriviaMark.render(where, line) + "\n" + triviaText(Trivia(kind, a.text), lvl))
@@ -204,7 +204,7 @@ private[emit] trait TirEmitterNotes:
         val at = text.indexOf(s.text, cursor)
         // A member that cannot be found in the finished text is a hole in the map, and a map with
         // silent holes attributes an error to the wrong member. Counted and printed (SrcMap.write),
-        // never swallowed — CLAUDE.md §3: the check arrives with the translation.
+        // never swallowed — the check arrives with the translation.
         if at < 0 then recordedMisses += s"$unit#${s.member}"
         else
           cursor = at + 1
@@ -238,7 +238,7 @@ private[emit] trait TirEmitterNotes:
           | */
           |""".stripMargin
 
-  /** Repo-relative source path for headers. Compares via `toRealPath` (CLAUDE.md §5.4). Falls back to raw path with warning when unconfigured.
+  /** Repo-relative source path for headers. Compares via `toRealPath`. Falls back to raw path with warning when unconfigured.
     */
   private[emit] def sourcePathOf(o: Origin, p: Provenance): String =
     val raw = o.javaPath
@@ -246,7 +246,7 @@ private[emit] trait TirEmitterNotes:
     else
       val root   = p.sourceRoot.stripSuffix("/")
       val marker = p.sourcePathPrefix.stripSuffix("/")
-      // §5.4: realpath both operands via `RealPath`.
+      // realpath both operands via `RealPath`.
       def realOrNormal(s: String): java.nio.file.Path = balticporter.core.RealPath.of(java.nio.file.Path.of(s))
       val rel =
         if root.nonEmpty then
@@ -266,7 +266,7 @@ private[emit] trait TirEmitterNotes:
           s"$raw  (path as recorded — set Provenance.sourceRoot to relativise it)"
         case scala.None => raw // already relative: reproducible as it stands
 
-  /** Every class at any depth, via `StandardTraversal.allClassDefs`. // ENGINE-LIMITS F8 */
+  /** Every class at any depth, via `StandardTraversal.allClassDefs`. */
   private[emit] lazy val allDeclaredClasses: List[Tree.ClassDef] =
     program.units.flatMap(u => StandardTraversal.allClassDefs(u)(using program))
 
@@ -339,7 +339,7 @@ private[emit] trait TirEmitterNotes:
     }
     out.toSet
 
-  /** Cross-module D6: base types this module names in type position that the base collapsed to `object`. */
+  /** Cross-module: base types this module names in type position that the base collapsed to `object`. */
   private[emit] lazy val collapsedBaseTypesNamed: List[Surface.Gap] =
     typeNamedElsewhere.toList
       .filterNot(surface.owns)
@@ -378,7 +378,7 @@ private[emit] trait TirEmitterNotes:
       case _                           => None
     cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case term: Term => headSym(term.tpe) }
 
-  /** Statics for a type: reads base's published `statics=` for non-owned types. // DESIGN.md §8.3 */
+  /** Statics for a type: reads base's published `statics=` for non-owned types. */
   private[emit] def basePublishedStatics(s: SymId): Option[Set[String]] =
     if surface.owns(s) then scala.None
     else
@@ -418,7 +418,7 @@ private[emit] trait TirEmitterNotes:
       m(cd.symbol) = basePublishedStatics(cd.symbol).getOrElse(
         cd.body.collect {
           case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name)
-          // a SPLICED companion member has no symbol; its name rides on the node (§1(b))
+          // a SPLICED companion member has no symbol; its name rides on the node
           case o: Tree.Opaque if o.companionMember.isDefined => esc(o.companionMember.get)
         }.toSet
       )
@@ -475,7 +475,7 @@ private[emit] trait TirEmitterNotes:
     case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     case _                                                   => Nil
 
-  /** Members indexed by (owner, name) for callee-based arity resolution. // CLAUDE.md §4.56 */
+  /** Members indexed by (owner, name) for callee-based arity resolution. */
   private[emit] lazy val membersByOwnerName: Map[(SymId, String), List[SymId]] =
     val buf = collection.mutable.Map.empty[(SymId, String), List[SymId]]
     program.symbols.all.foreach { s =>
@@ -528,7 +528,7 @@ private[emit] trait TirEmitterNotes:
         }
         if fromSubtype then true
         else
-          // Fallback 2: runtime shim types use java arity. // CLAUDE.md §4.5
+          // Fallback 2: runtime shim types use java arity.
           val runtimePrefix = balticporter.core.RuntimeArtifact.Package + ".Java"
           program.symbolOf(typeSym).exists(_.fullName.startsWith(runtimePrefix))
     }
@@ -544,7 +544,7 @@ private[emit] trait TirEmitterNotes:
   /** backtick an identifier that collides with a Scala keyword. */
   private[emit] def esc(name: String): String = TirEmitter.esc(name)
 
-  /** backtick every keyword SEGMENT of a qualified name (§4.56 separators). */
+  /** backtick every keyword SEGMENT of a qualified name (cut at the structural separators). */
   private[emit] def escPath(path: String): String = TirEmitter.escPath(path)
 
   /** Whether this type is an unresolved type variable (marker name, must not reach output). */
@@ -558,7 +558,7 @@ private[emit] trait TirEmitterNotes:
   private[emit] def typeSym(id: SymId): String =
     val s = sym(id)
     // an UNRESOLVED type variable is a marker and not a name — never print it (see
-    // [[isUnresolvedTypeVar]]). `?` is what G2 settles an un-nameable type argument renders as, and
+    // [[isUnresolvedTypeVar]]). `?` is what an un-nameable type argument renders as, and
     // in the one position where `?` is not a type either, it is a CONTAINED error rather than a
     // lexical one that takes the enclosing statement with it.
     if Symbol.isUnresolvedTypeVar(s.fullName) then "?"
@@ -605,8 +605,8 @@ private[emit] trait TirEmitterNotes:
       escPath(sym(id).fullName).replace('$', sep)
 
   /** THE `[?, …]` A PROJECTION'S PREFIX NEEDS when the enclosing class is GENERIC. `Outer#Inner` is not a legal projection where `Outer` takes type parameters (scalac needs a TYPE, not an unapplied
-    * constructor) — java writes exactly this for an inner class referred to RAW. `?` per parameter is the hand port's own rendering of every raw generic (§3.5); filling from the enclosing scope would
-    * invent an instantiation java did not write. Empty for a non-generic owner.
+    * constructor) — java writes exactly this for an inner class referred to RAW. `?` per parameter is the hand port's own rendering of every raw generic; filling from the enclosing scope would invent
+    * an instantiation java did not write. Empty for a non-generic owner.
     */
   private[emit] def outerFill(owner: SymId): String =
     program.definitionOf(owner).collect { case c: Tree.ClassDef => c.tparams.size }.filter(_ > 0).map(n => List.fill(n)("?").mkString("[", ", ", "]")).getOrElse("")

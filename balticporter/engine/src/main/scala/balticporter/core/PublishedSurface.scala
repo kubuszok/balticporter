@@ -3,7 +3,7 @@ package balticporter.core
 import balticporter.tir.{ Program, Surface, SymId, Tree }
 
 /** [[Surface]] over this run's own units plus the contracts its bases published. Ownership is decided by a fuel-bounded climb rooted on `ownedUnits`; exhausting fuel counts as NOT owned, yielding
-  * [[Surface.Answer.Unknown]]. Lookups use EMITTED names on both sides. // DESIGN.md §8.3
+  * [[Surface.Answer.Unknown]]. Lookups use EMITTED names on both sides.
   */
 final class PublishedSurface(
   program:        Program,

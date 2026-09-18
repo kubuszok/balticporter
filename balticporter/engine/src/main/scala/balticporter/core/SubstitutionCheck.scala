@@ -17,7 +17,7 @@ object SubstitutionCheck:
 
   /** @param references how many emitted files still name the FQN (0 for [[Kind.Emitted]]). */
   final case class Finding(kind: Kind, fqn: String, references: Int):
-    /** Render with the CLAUDE.md §1 classification at the end. */
+    /** Render with the engine/policy classification at the end. */
     def render: String = kind match
       case Kind.Emitted =>
         s"$fqn is declared dropped but the engine EMITTED it" +

@@ -3,7 +3,7 @@ package balticporter.core
 import java.nio.file.{ Files, Path, StandardCopyOption }
 import java.security.MessageDigest
 
-/** Content digests + the persistent action cache (DESIGN.md §3.12). One file per action key under `<dir>/aa/<key>`. Advisory: deletion must reproduce identical output.
+/** Content digests + the persistent action cache. One file per action key under `<dir>/aa/<key>`. Advisory: deletion must reproduce identical output.
   */
 object Digest:
   def bytes(data: Array[Byte]): String =

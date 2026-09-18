@@ -1,7 +1,7 @@
 package balticporter.tir
 
 /** Casts where the operand is a wrapper of a DIFFERENT primitive than the target — java's unboxing conversion (JLS 5.1.8) rendered as a scala type assertion that throws. The frontend handles this
-  * shape (`SpoonTir.castOf`); this check catches the residue where a later phase retyped the operand, sharing its predicate with the emitter's consult. `ENGINE-LIMITS.md` K17, catalog JS-E06.
+  * shape (`SpoonTir.castOf`); this check catches the residue where a later phase retyped the operand, sharing its predicate with the emitter's consult. Catalog JS-E06.
   */
 object CastConversionCheck:
 
@@ -56,7 +56,7 @@ object CastConversionCheck:
     case TypeRepr.AppliedType(tc, _) => fqn(tc)
     case _                           => scala.None
 
-  /** Over the units the run emits (D2 ownership filter). */
+  /** Over the units the run emits (ownership filter). */
   def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     given Program = program
     val out       = collection.mutable.ListBuffer.empty[Finding]

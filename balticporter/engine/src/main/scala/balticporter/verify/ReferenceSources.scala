@@ -6,8 +6,8 @@ import scala.meta.*
 import balticporter.tir.{ RunScope, Symbol }
 
 /** The reference port's declarations by PATH and NAME, each with its verbatim source — what `AddMembersTransform.fromReference` splices. Paths follow `ApiParityCheck` (`/Outer/Inner`, `/Outer$` for a
-  * companion), so a java type is found through `ReferencePolicy.classPaths` (DESIGN.md §8.30). An import of the reference file is carried only where the member's text mentions the imported name;
-  * wildcards are never carried.
+  * companion), so a java type is found through `ReferencePolicy.classPaths`. An import of the reference file is carried only where the member's text mentions the imported name; wildcards are never
+  * carried.
   */
 final class ReferenceSources(roots: List[Path], typeRenames: Map[String, String], flattenNestedTypes: Set[String]) extends RunScope.ReferenceSourceLookup:
   import ReferenceSources.*

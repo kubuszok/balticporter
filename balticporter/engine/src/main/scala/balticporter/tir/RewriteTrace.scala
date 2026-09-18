@@ -68,8 +68,8 @@ object RewriteTrace:
         ownerD.exists(d => program.symbolOf(d.symbol).exists(_.flags.isEnum))
       // …and a member SPLICED AS VERBATIM TEXT has no `Definition` BY CONSTRUCTION (`add-members`,
       // `registry`): its declaration sits in the owner's body as a `Tree.Opaque`, where
-      // `definitionOf` cannot reach it, so "no declaration left" would be a false claim
-      // (`ENGINE-LIMITS.md` P10). The text is the only reading available.
+      // `definitionOf` cannot reach it, so "no declaration left" would be a false claim.
+      // The text is the only reading available.
       val asText = ownerD.collect { case cd: Tree.ClassDef => cd }.exists(cd => sym.exists(x => declaresAsText(cd, x.name)))
       if known || enumSynthetic || asText || !ownerD.exists(_.isInstanceOf[Tree.ClassDef]) then Nil
       else
@@ -80,7 +80,7 @@ object RewriteTrace:
     }
 
   /** Does this class body DECLARE `name` as spliced TEXT? A member the engine minted verbatim has no `Definition`, so the text itself is the only evidence there is: a `def`/`val`/`var` at that name
-    * in one of the body's `Tree.Opaque` statements (`ENGINE-LIMITS.md` P10).
+    * in one of the body's `Tree.Opaque` statements.
     */
   private[tir] def declaresAsText(cd: Tree.ClassDef, name: String): Boolean =
     cd.body.exists {

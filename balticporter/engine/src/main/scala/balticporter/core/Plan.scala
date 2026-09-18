@@ -2,7 +2,7 @@ package balticporter.core
 
 import java.nio.file.Path
 
-/** Provenance stamped into every generated file's header, plus upstream NOTICE files the port ships beside its output. Attribution is a licence obligation. // CLAUDE.md §4.57
+/** Provenance stamped into every generated file's header, plus upstream NOTICE files the port ships beside its output. Attribution is a licence obligation.
   */
 final case class Provenance(
   upstreamName:    String,
@@ -13,12 +13,12 @@ final case class Provenance(
   /** Absolute root the Java sources were parsed from. The emitter relativises each unit's origin against this; left empty it falls back to locating `sourcePathPrefix` inside the path.
     */
   sourceRoot: String = "",
-  /** Upstream files (LICENSE, NOTICE) copied beside emitted code. Empty = no-op (§1(b) default). A missing declared file is FATAL. // CLAUDE.md §4.57
+  /** Upstream files (LICENSE, NOTICE) copied beside emitted code. Empty = no-op by default. A missing declared file is FATAL.
     */
   notices: List[Path] = Nil
 )
 
-/** M0 subset of a port configuration (DESIGN.md §3.3): one module, explicit file list. */
+/** M0 subset of a port configuration: one module, explicit file list. */
 final case class UnitPlan(
   sourceRoot: Path,
   files:      List[String],

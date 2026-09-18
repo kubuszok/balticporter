@@ -2,7 +2,7 @@ package balticporter.tir
 
 /** Counts java class initialisers (JLS 12.4.2 step 9) that reach a companion `object` but have no trigger reproducing java's initialisation. The census uses [[stepNine]] (static field initialisers +
   * `static {}` blocks, excluding compile-time constants). The emitter supplies which types it forced and what form it chose (object/class/enum/trait). Limit: counts missing triggers, not ORDERING vs
-  * java. // ENGINE-LIMITS K22
+  * java.
   */
 object ClassInitTriggerCheck:
 
@@ -90,7 +90,7 @@ object ClassInitTriggerCheck:
   def check(program: Program, units: List[Tree.ClassDef], forced: Set[(SymId, String)], shapeOf: String => Option[Surface.TypeShape]): List[Finding] =
     given Program = program
     val formOf: String => Option[String] = f => shapeOf(f).map(_.form)
-    // census over whole program (including base units); subjects restricted to this run's units (D2)
+    // census over whole program (including base units); subjects restricted to this run's units (ownership filter)
     val declared = program.units.flatMap(nested)
     val all      = units.flatMap(nested)
     val mine     = all.map(_.symbol).toSet
@@ -146,7 +146,7 @@ object ClassInitTriggerCheck:
     declared.map((s, cd) => s -> parentSyms(cd).filter(p => declared.get(p).forall(initialisedWithImplementor)))
 
   /** Bearers whose force would be re-entrant, each mapped to the bearer it cycles through. Self-edges excluded (scala survives those). Only mutual cycles are re-entrant. Graph edges: `new C` or
-    * static read of C in step-9 members. // ENGINE-LIMITS K22
+    * static read of C in step-9 members.
     */
   def reentrantBearers(program: Program, bearers: Map[SymId, Tree.ClassDef]): Map[SymId, SymId] =
     given Program = program
@@ -204,7 +204,7 @@ object ClassInitTriggerCheck:
   private def declaresClinit(cd: Tree.ClassDef)(using Program): Boolean = stepNine(cd.body)
 
   /** Does this member list contain JLS 12.4.2 step-9 content? Shared predicate for this census and `TirEmitter`. Matches `<clinit>` DefDefs and static ValDefs with non-constant initialisers. Excludes
-    * constant variables (javac inlines them; no trigger). // ENGINE-LIMITS K22
+    * constant variables (javac inlines them; no trigger).
     */
   def stepNine(members: List[Statement])(using program: Program): Boolean =
     members.exists {

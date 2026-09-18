@@ -3,7 +3,7 @@ package balticporter.core
 import balticporter.tir.Phase
 
 /** Reading a manifest's DECLARATIVE half (drops, renames, governs) as data, in the schema [[PortMap]] publishes. The `surface` (phases) is code and cannot be expressed as data. [[fromPortMap]]
-  * recovers a dependent's declarative half from what a base published; `PortConfig` (DESIGN.md §5.7) reads what an author wrote.
+  * recovers a dependent's declarative half from what a base published; `PortConfig` reads what an author wrote.
   */
 object PortManifestConfig:
 

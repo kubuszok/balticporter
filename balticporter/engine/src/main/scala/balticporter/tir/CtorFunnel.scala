@@ -2,7 +2,6 @@ package balticporter.tir
 
 /** Nominates which Java constructor becomes Scala's PRIMARY, lifts its `super(args)` into the `extends` clause, and routes every other constructor through `this(...)`. Shared between the emitter and
   * [[OmissionCheck]] so the check cannot drift. Seven shapes: unique root, no-arg root, widest pass-through, synthesised primary, synthetic-shaped root, promoted nilary, padded throwable synthesis.
-  * `ENGINE-LIMITS.md` C3, C7.
   */
 object CtorFunnel:
 
@@ -18,7 +17,7 @@ object CtorFunnel:
       */
     synthetic: List[(String, TypeRepr)] = Nil,
     /** Per-class marker type name disambiguating the synthesised primary when the slot list would collide or be shadowed by a real constructor. Minted in the class's companion as `protected` (not
-      * `private`). // ENGINE-LIMITS C8, C9
+      * `private`).
       */
     marker: Option[String] = scala.None,
     /** How many of [[synthetic]]'s slots are parent-constructor formals (the rest are field slots). */
@@ -32,13 +31,11 @@ object CtorFunnel:
     consumed: Map[SymId, Int] = Map.empty,
     /** Refused field-slot candidates with reason, for porter notes. */
     notSlot: List[(String, String)] = Nil,
-    /** Trailing context clauses (`using T`) a phase added to this class's constructors. Kept separate from [[primaryParams]] so "is this constructor nilary" asks java's list. Always trailing. //
-      * ENGINE-LIMITS CT4
+    /** Trailing context clauses (`using T`) a phase added to this class's constructors. Kept separate from [[primaryParams]] so "is this constructor nilary" asks java's list. Always trailing.
       */
     givens: List[List[Tree.ValDef]] = Nil,
     /** Post-body parameter slots from `resolvedThroughParent`: parameters the parent secondary's post-delegation body uses, carried as synthesised class parameters so the primary's body can replay
-      * the post-body without double evaluation. Positioned after super slots and before field slots. Each is `(name, nullable type)` — null for roots that did not go through that parent secondary. //
-      * ENGINE-LIMITS C3 item 4
+      * the post-body without double evaluation. Positioned after super slots and before field slots. Each is `(name, nullable type)` — null for roots that did not go through that parent secondary.
       */
     postBodySlots: List[(String, TypeRepr)] = Nil,
     /** Parent secondary's post-delegation body, guarded by a null check on the post-body parameter. Rendered in the synthesised primary's class body (not in each secondary). Already retyped through
@@ -49,7 +46,7 @@ object CtorFunnel:
       */
     collapse: Boolean = false,
     /** Per-java-ctor delegation to the synthesised primary. Keyed by java ctor symbol; the terms reference that ctor's own param symbols. A child's `resolvedThroughParent` resolves through this when
-      * the parent has 2+ java roots. Empty for non-synthesised plans. // ENGINE-LIMITS C3
+      * the parent has 2+ java roots. Empty for non-synthesised plans.
       */
     rootArgs: Map[SymId, List[Term]] = Map.empty
   ):
@@ -57,7 +54,7 @@ object CtorFunnel:
     def primaryParams: List[Tree.ValDef] =
       primary.map(_.paramss.dropRight(givens.size).flatten).getOrElse(Nil)
 
-    /** True for a synthesised primary (marker-only plans included). // ENGINE-LIMITS C7 */
+    /** True for a synthesised primary (marker-only plans included). */
     def isSynthesised: Boolean = synthetic.nonEmpty || marker.isDefined
 
   object Plan:
@@ -69,7 +66,7 @@ object CtorFunnel:
     */
   final case class FieldSlot(
     field: SymId,
-    /** Engine-minted parameter name. // ENGINE-LIMITS C2 */
+    /** Engine-minted parameter name. */
     name:    String,
     tpe:     TypeRepr,
     mutable: Boolean,
@@ -114,7 +111,7 @@ object CtorFunnel:
   /** Whole-program funnel decisions. Withholds paramful promotions where a subclass reaches the class argument-free, iterating to a fixpoint. The fixpoint runs over OWNED classes only; non-owned
     * classes are reconciled against the base's published contract.
     * @param surfaceView
-    *   what this run may conclude about classes it does not emit. // ENGINE-LIMITS D4
+    *   what this run may conclude about classes it does not emit.
     */
   final class Plans(program: Program, surfaceView: Option[Surface] = scala.None):
     // `Option` because a default argument cannot refer to another parameter of the same list.
@@ -142,7 +139,7 @@ object CtorFunnel:
           eff <- effects(m, as, 0)
         yield promoted(program, nil, Nil, eff.stats ++ stmtsOf(nil).tail)
 
-    /** Paramful including synthesised primaries (slots live in `Plan.synthetic`). // ENGINE-LIMITS C1 */
+    /** Paramful including synthesised primaries (slots live in `Plan.synthetic`). */
     private def paramfulPrimary(p: Plan): Boolean = p.primaryParams.nonEmpty || p.isSynthesised
 
     /** True when a nilary secondary exists so `extends C` with no args is reachable. */
@@ -184,7 +181,7 @@ object CtorFunnel:
       classes.sortBy(cd => depth.getOrElse(cd.symbol, 0))
 
     private val plans: Map[SymId, Plan] =
-      // C3: compute parents-first so a child can resolve through a parent's synthesised plan.
+      // compute parents-first so a child can resolve through a parent's synthesised plan.
       var acc = Map.empty[SymId, Plan]
       topoClasses.foreach { cd =>
         acc = acc.updated(cd.symbol, plan0(program, cd, parentPlanOf = acc.get))
@@ -195,26 +192,26 @@ object CtorFunnel:
         if p.primary.isEmpty && !p.isSynthesised then nilaryPlan(cd).foreach(q => acc = acc.updated(cd.symbol, q))
       }
       // Withholding fixpoint: only ever REMOVES promotions, so it terminates.
-      // A withheld synthesis falls back to the plan WITHOUT synthesis. // ENGINE-LIMITS C1
+      // A withheld synthesis falls back to the plan WITHOUT synthesis.
       var changed = true
       while changed do
         changed = false
-        // owned classes only: a dependent must not demote what the base emitted. // ENGINE-LIMITS D4
+        // owned classes only: a dependent must not demote what the base emitted.
         // a synthesised child passes its slots to the parent root: it demands no nilary parent
         val needNilary = ownedClasses.filter(cd => acc.get(cd.symbol).forall(p => p.superArgs.isEmpty && !p.isSynthesised)).flatMap(parentSyms).toSet
         acc.foreach { (s, p) =>
           if surface.owns(s) && paramfulPrimary(p) && needNilary(s) && !reachableArgumentFree(s, p) then
             // Fallback order: plan without synthesis, then nilaryPlan, then Plan.none.
-            // First attempt is currently inert (C1) but kept for correct ordering.
+            // First attempt is currently inert but kept for correct ordering.
             val cd0     = classes.find(_.symbol == s)
             val demoted = cd0.map(plan0(program, _, synthesis = false)).filter(q => q.primary.isDefined && !paramfulPrimary(q)).orElse(cd0.flatMap(nilaryPlan)).getOrElse(Plan.none)
             acc = acc.updated(s, demoted)
             changed = true
         }
-      // A1: val/var decided last. Narrowed to `final` or `private` fields. // ENGINE-LIMITS D4
+      // val/var decided last. Narrowed to `final` or `private` fields.
       hosting(reconciled(acc))
 
-    /** Add context clauses to plans with no primary. Runs over ALL classes (including non-owned) as a single post-pass. No-op when no phase threads constructors. // ENGINE-LIMITS CT5
+    /** Add context clauses to plans with no primary. Runs over ALL classes (including non-owned) as a single post-pass. No-op when no phase threads constructors.
       */
     private def hosting(acc: Map[SymId, Plan]): Map[SymId, Plan] =
       classes.foldLeft(acc) { (m, cd) =>
@@ -245,11 +242,11 @@ object CtorFunnel:
               val there = shape.primary.map(_.render)
               if there.isEmpty || there.contains(here) then ()
               else
-                // D15: follow the base's published plan, try seeded demotion first
+                // follow the base's published plan, try seeded demotion first
                 seededDemotion(cd, there.get) match
                   case Some(p)    => out = out.updated(cd.symbol, p)
                   case scala.None =>
-                    // D15: non-owned class, descriptor disagreement expected (D12/O8). Non-fatal.
+                    // non-owned class, descriptor disagreement expected. Non-fatal.
                     surface.gap(
                       Surface.Gap(
                         fqn,
@@ -369,7 +366,7 @@ object CtorFunnel:
 
     // ---- what the promotion COSTS: the promoted body on paths java never ran it ----
 
-    /** Constructors on whose path the promoted body runs but java's did not. Counted by [[OmissionCheck.promotedBodyOnEveryPath]]. // ENGINE-LIMITS C6, C7
+    /** Constructors on whose path the promoted body runs but java's did not. Counted by [[OmissionCheck.promotedBodyOnEveryPath]].
       */
     def promotionEscapes(cd: Tree.ClassDef): List[Tree.DefDef] =
       val p = plans.getOrElse(cd.symbol, Plan.none)
@@ -379,7 +376,7 @@ object CtorFunnel:
     def paramfulPrimaryOf(cd: Tree.ClassDef): Boolean = paramfulPrimary(apply(cd))
 
     /** The nilary constructor dropped because it clashes with the implicit primary. `None` when paramful or when the nilary ctor IS the promoted primary. Counted by
-      * `OmissionCheck.droppedNilaryCtors`. // ENGINE-LIMITS CT4, CT5
+      * `OmissionCheck.droppedNilaryCtors`.
       */
     def droppedNilaryCtor(cd: Tree.ClassDef): Option[Tree.DefDef] =
       val p = plans.getOrElse(cd.symbol, Plan.none)
@@ -415,7 +412,7 @@ object CtorFunnel:
       decided.getOrElse(cd.symbol, Plan.none).primaryPostBody
 
     /** Names the guard that refused parent-delegation resolution, or `None` if not refused. Used by `OmissionCheck` to produce a finding naming the refusal guard. Remaining refusals: `super.m()` or
-      * `return` in the post-body, or a loop in the delegation head around a doubled non-simple argument. // ENGINE-LIMITS C3
+      * `return` in the post-body, or a loop in the delegation head around a doubled non-simple argument.
       */
     def inlineDelegationRefused(cd: Tree.ClassDef, d: Tree.DefDef): Option[String] =
       val p = decided.getOrElse(cd.symbol, Plan.none)
@@ -503,13 +500,12 @@ object CtorFunnel:
       args.isEmpty || plan.primary.map(_.symbol).contains(d.symbol) || replayFor(cd, d).isDefined ||
       plan.delegations.contains(d.symbol) || superCall(cd, args) != SuperCall.Dropped
 
-    /** Private members a replay reaches, to be widened. // ENGINE-LIMITS C15 */
+    /** Private members a replay reaches, to be widened. */
     def widenedMembers: Set[SymId] = widened.toSet
 
     private val widened = collection.mutable.Set[SymId]()
 
-    /** Widenings for subclasses this run cannot see. Narrowed to owned, extensible, non-private, paramful constructors whose replay is usable, touching unreachable mutable fields. // ENGINE-LIMITS
-      * C15, D5
+    /** Widenings for subclasses this run cannot see. Narrowed to owned, extensible, non-private, paramful constructors whose replay is usable, touching unreachable mutable fields.
       */
     def externalReplayWidenings: Set[SymId] = externalReplay
 
@@ -524,7 +520,7 @@ object CtorFunnel:
             if paramful && callable then
               val (conceivable, touched) = replayReach(d.symbol, 0, Set.empty)
               if conceivable then
-                // only widen members this run OWNS (chain may climb into ancestor classes) // ENGINE-LIMITS D5
+                // only widen members this run OWNS (chain may climb into ancestor classes)
                 out ++= touched.collect {
                   case (s, viaPrefix) if isField(s) && !immutableSlotFields(s) && program.symbolOf(s).exists(sy => surface.owns(sy.owner) && unreachableFromASubclass(sy, viaPrefix)) => s
                 }
@@ -537,7 +533,7 @@ object CtorFunnel:
     private def unreachableFromASubclass(sy: Symbol, viaPrefix: Boolean): Boolean =
       sy.flags.isPrivate || sy.flags.isPackagePrivate || (sy.flags.isProtected && viaPrefix)
 
-    /** Only fields may be widened; methods participate in override contracts. // ENGINE-LIMITS C15 */
+    /** Only fields may be widened; methods participate in override contracts. */
     private def isField(s: SymId): Boolean =
       program.definitionOf(s).exists(_.isInstanceOf[Tree.ValDef])
 
@@ -678,7 +674,7 @@ object CtorFunnel:
       case _                                => assignedField(st).toSet
 
     /** True when `stats` overwrites every field the prologue may have written. Prologue read through [[mayAssign]] (over-estimate), replay through [[mustAssign]] (under-estimate). Compares targets
-      * only, not RHS. // ENGINE-LIMITS C6
+      * only, not RHS.
       */
     private def supersedes(stats: List[Statement], prologue: List[Statement]): Boolean =
       if prologue.isEmpty then true
@@ -817,12 +813,12 @@ object CtorFunnel:
         }
 
     /** Can this replay reach a private member across a module boundary? Asks the Surface: owned members are widened locally; published non-private members are reachable; otherwise refused and
-      * reported as a non-fatal gap. // ENGINE-LIMITS D5
+      * reported as a non-fatal gap.
       */
     private def reachablePrivate(cd: Tree.ClassDef, s: SymId, sy: Symbol): Boolean =
       if surface.owns(sy.owner) then classOfSym(sy.owner).isDefined
       else
-        // only report gaps for classes this run emits (D2)
+        // only report gaps for classes this run emits (ownership filter)
         def report(g: Surface.Gap): Unit = if surface.owns(cd.symbol) then surface.gap(g)
         val who = s"${sy.fullName} (replayed into ${program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")})"
         surface.memberShape(s) match
@@ -868,7 +864,7 @@ object CtorFunnel:
     case _                                              => false
 
   /** Simplify `if (nullExpr != null)` to the else branch when the condition is always false. Avoids a Scala 3 parser issue with `null.asInstanceOf[T] != null` in `this(...)` arguments where the true
-    * branch contains a block. // ENGINE-LIMITS C3
+    * branch contains a block.
     */
   private def simplifyNullIf(t: Term)(using Program): Term =
     def isNull(t: Term): Boolean = t match
@@ -892,7 +888,7 @@ object CtorFunnel:
     case Tree.Commented(_, e)               => isNull(e)
     case _                                  => false
 
-  /** True when `t` contains an `Opaque` node whose text is in `names`. // ENGINE-LIMITS C3 */
+  /** True when `t` contains an `Opaque` node whose text is in `names`. */
   private def containsOpaque(t: Any, names: Set[String]): Boolean = t match
     case Tree.Opaque(txt, _, _, _, _) => names.exists(n => txt.contains(n))
     case xs: Iterable[?] => xs.exists(containsOpaque(_, names))
@@ -924,7 +920,7 @@ object CtorFunnel:
       .getOrElse(Nil)
 
   /** Constructor type parameters (JLS 8.8.4) of `targets` → use-site wildcards at their upper bound (`T extends Texture` → `? <: Texture`), bounds first substituted through `classSubst`; a child
-    * primary cannot declare method-level type parameters. G25, card 4e.
+    * primary cannot declare method-level type parameters, so the parent's type parameters are substituted through one shared substitution.
     */
   private def ctorTypeParamSubst(program: Program, targets: List[SymId], classSubst: Map[SymId, TypeRepr]): Map[SymId, TypeRepr] =
     targets.flatMap { target =>
@@ -960,7 +956,7 @@ object CtorFunnel:
         case _ => scala.None
 
   /** Pad each root's super args to the JDK throwable's widest `(String, Throwable)` overload. Returns `(widest ctor symbol, padded args per root)`. `None` if any root is outside the four overloads or
-    * the widest was never called. // ENGINE-LIMITS C3
+    * the widest was never called.
     */
   private def throwablePadding(program: Program, roots: List[Tree.DefDef]): Option[(SymId, Map[SymId, List[Term]])] =
     val classified = roots.map { r =>
@@ -1110,7 +1106,7 @@ object CtorFunnel:
       // empty list is vacuously all-delegation: `Some(Nil)` = scala's implicit primary
       if delegations.forall(_.isDefined) then Some(delegations.flatten.flatten) else scala.None
 
-  // ---- java's parameters vs the pipeline's (using clauses) // ENGINE-LIMITS CT4 ----
+  // ---- java's parameters vs the pipeline's (using clauses) ----
 
   /** the TRAILING `using` clauses of a constructor — what a phase added, never what java wrote. */
   def givenClauses(program: Program, d: Tree.DefDef): List[List[Tree.ValDef]] =
@@ -1120,7 +1116,7 @@ object CtorFunnel:
   def valueParams(program: Program, d: Tree.DefDef): List[Tree.ValDef] =
     d.paramss.dropRight(givenClauses(program, d).size).flatten
 
-  /** The class's uniform context clause, or `Nil` if none, disagreeing, or trait/module/enum. // ENGINE-LIMITS CT5
+  /** The class's uniform context clause, or `Nil` if none, disagreeing, or trait/module/enum.
     */
   def classGivens(program: Program, cd: Tree.ClassDef): List[List[Tree.ValDef]] =
     if program.symbolOf(cd.symbol).exists(x => x.flags.isModule || x.flags.isTrait || x.flags.isEnum)
@@ -1169,7 +1165,7 @@ object CtorFunnel:
       then Some(rest.drop(primaryBody.size))
       else scala.None
 
-  /** the paths this promotion would still duplicate — escaping roots minus the ones the prefix strip repairs. Empty means the promotion costs nothing C7 counts.
+  /** the paths this promotion would still duplicate — escaping roots minus the ones the prefix strip repairs. Empty means the promotion costs nothing the omission check counts.
     */
   def escapesOf(program: Program, cd: Tree.ClassDef, primary: Option[Tree.DefDef], primaryBody: List[Statement]): List[Tree.DefDef] =
     escapingRootsOf(program, cd, primary, primaryBody).filter(d => residualBodyOf(program, cd, primary, primaryBody, d).isEmpty)
@@ -1222,7 +1218,7 @@ object CtorFunnel:
     * @param synthesis
     *   `false` to get the plan without a synthesised primary (fallback).
     * @param parentPlanOf
-    *   lookup for the parent's already-computed plan. // ENGINE-LIMITS C3
+    *   lookup for the parent's already-computed plan.
     */
   def plan0(program: Program, cd: Tree.ClassDef, synthesis: Boolean = true, parentPlanOf: SymId => Option[Plan] = _ => scala.None): Plan =
     val s = program.symbolOf(cd.symbol)
@@ -1238,7 +1234,7 @@ object CtorFunnel:
       val chosen = roots match
         case one :: Nil if one.tparams.isEmpty => Some(one)
         case several if throwableParent        =>
-          // JDK throwable only: padding is exact for this family, 0->55 elsewhere // ENGINE-LIMITS C3
+          // JDK throwable only: padding is exact for this family, 0->55 elsewhere
           val widest = several.filter(c => c.tparams.isEmpty && passesThrough(c)).sortBy(c => -superArgsOf(program, c).size).headOption
           widest.filter(w => several.exists(o => (o ne w) && superArgsOf(program, o).nonEmpty)).orElse(several.find(c => valueParams(program, c).isEmpty && c.tparams.isEmpty))
         case several => several.find(c => valueParams(program, c).isEmpty && c.tparams.isEmpty)
@@ -1253,7 +1249,7 @@ object CtorFunnel:
               case None    => Plan.none
               case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
           }
-        // throwable parent with no nomination: try padded synthesis // ENGINE-LIMITS C3
+        // throwable parent with no nomination: try padded synthesis
         case None if throwableParent && synthesis =>
           syntheticPrimary(program, cd, roots, throwablePad = true, parentPlanOf = parentPlanOf).getOrElse(Plan.none)
         case None    => Plan.none
@@ -1263,7 +1259,7 @@ object CtorFunnel:
     * @param throwablePad
     *   allow padding for JDK throwable parents with diverging roots.
     * @param parentPlanOf
-    *   lookup for the parent's already-computed plan. // ENGINE-LIMITS C3
+    *   lookup for the parent's already-computed plan.
     */
   private def syntheticPrimary(program: Program, cd: Tree.ClassDef, roots: List[Tree.DefDef], throwablePad: Boolean = false, parentPlanOf: SymId => Option[Plan] = _ => scala.None): Option[Plan] =
     val calls   = roots.map(r => superTarget(program, r) -> superArgsOf(program, r))
@@ -1296,14 +1292,14 @@ object CtorFunnel:
         val ps = valueParams(program, c).map(_.symbol)
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       // formals from parent's signature, substituted through this class's instantiation.
-      // G25: class type params first, then constructor type params as wildcards (card 4e).
-      // C3: when resolved through the parent's plan, use the parent plan's slot types directly.
+      // class type params first, then constructor type params as wildcards (card 4e).
+      // when resolved through the parent's plan, use the parent plan's slot types directly.
       val classSubst = ParentSubst.of(cd)(using program)
       val ctorSubst  = ctorTypeParamSubst(program, targets, classSubst)
       val formals    = resolvedResult.flatMap(_.resolvedFormals).getOrElse(formalsOf(program, target).map(t => ParentSubst.subst(ParentSubst.subst(t, classSubst), ctorSubst)))
       // collision test: a root whose params exactly match the formals
       val collides = roots.exists(valueParams(program, _).map(_.tpt.tpe) == formals)
-      // also check APPLICABILITY: a narrower real ctor can shadow the synthesis // ENGINE-LIMITS C8
+      // also check APPLICABILITY: a narrower real ctor can shadow the synthesis
       val ctors = ctorsOf(program, cd.body)
       def ancestorOf(anc: SymId, s: SymId, fuel: Int): Boolean =
         s != SymId.None && fuel > 0 && (anc == s ||
@@ -1326,8 +1322,8 @@ object CtorFunnel:
       // field slots change the signature, so derive them before collision/shadowing checks
       val (fs, values, consumedRuns, refusedFields) = fieldSlotsOf(program, cd, roots)
       val sup                                       = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
-      // C3 item 4: post-body slots for the parent secondary's post-delegation body.
-      // G25 + card 4e: apply both class and constructor type param substitutions.
+      // post-body slots for the parent secondary's post-delegation body.
+      // apply both class and constructor type param substitutions (card 4e).
       val pbSubst               = classSubst ++ ctorSubst
       val (pbSlots, pbPostBody) = resolvedResult match
         case Some(rr) if rr.postBodyParams.nonEmpty =>
@@ -1360,7 +1356,7 @@ object CtorFunnel:
             def name = "ctor-postbody-subst"
             override def transformIdent(t: Tree.Ident)(using Program): Term = paramSubst.getOrElse(t.sym, t)
           val substBody   = rr.rawPostBody.map(s => StandardTraversal.mapStat(substPh, s))
-          val retypedBody = if pbSubst.isEmpty then substBody // G25
+          val retypedBody = if pbSubst.isEmpty then substBody
           else
             val retypePh = new Phase:
               def name = "ctor-postbody-retype"
@@ -1381,7 +1377,7 @@ object CtorFunnel:
           (List(("via$pb", boolType)), retypedBody)
         case _ => (Nil, Nil)
       // delegation-head slots: a doubled non-simple argument bound once; the extends clause reads
-      // `if (dhSlot != null) <expr> else supSlot` (C3)
+      // `if (dhSlot != null) <expr> else supSlot`
       val dhSuperExprs = resolvedResult.map(_.delegHeadSuperExprs).getOrElse(Map.empty)
       val dhSlotList   = resolvedResult.map(_.delegHeadSlots).getOrElse(Nil)
       val dhSlots: List[(String, TypeRepr)] = dhSlotList.map { (pv, _) =>
@@ -1419,7 +1415,7 @@ object CtorFunnel:
           }
         r.symbol -> (sv ++ dhVals ++ pbVals ++ values.getOrElse(r.symbol, Nil))
       }.toMap
-      // C3: per-java-ctor delegation for child resolution. Roots are directly from delegations;
+      // per-java-ctor delegation for child resolution. Roots are directly from delegations;
       // non-roots follow their this(...) chain and compose substitutions.
       val ra = buildRootArgs(program, cd, roots, delegations)
       def synthesise(mark: Option[String]): Option[Plan] =
@@ -1460,7 +1456,7 @@ object CtorFunnel:
             rootArgs = ra
           )
         )
-      // is any real constructor applicable to the delegation args? // ENGINE-LIMITS C8
+      // is any real constructor applicable to the delegation args?
       val shadowed = delegations.values.exists { args =>
         ctors.exists { c =>
           val ps = valueParams(program, c)
@@ -1488,13 +1484,13 @@ object CtorFunnel:
       else if allSlots.isEmpty then scala.None
       else synthesise(scala.None)
 
-  /** Per-java-ctor delegation mapping for child resolution. Roots have entries from `delegations`; non-root ctors follow `this(...)` chains and compose substitutions. // ENGINE-LIMITS C3
+  /** Per-java-ctor delegation mapping for child resolution. Roots have entries from `delegations`; non-root ctors follow `this(...)` chains and compose substitutions.
     */
   private def buildRootArgs(program: Program, cd: Tree.ClassDef, roots: List[Tree.DefDef], delegations: Map[SymId, List[Term]]): Map[SymId, List[Term]] =
     val rootSet  = roots.map(_.symbol).toSet
     val ctors    = ctorsOf(program, cd.body)
     val rootPart = delegations
-    // non-root ctors: follow this(...) chain, substituting along the way. // ENGINE-LIMITS C3
+    // non-root ctors: follow this(...) chain, substituting along the way.
     val nonRoots = ctors.filter(c => !rootSet(c.symbol))
     def derive(c: Tree.DefDef, depth: Int): Option[List[Term]] =
       if depth > 6 then scala.None
@@ -1705,11 +1701,11 @@ object CtorFunnel:
     boolGuard: Boolean = false,
     /** Roots that went through a secondary with a post-body (card 4e: boolean guard). */
     rootsWithPostBody: Set[SymId] = Set.empty,
-    /** Parent's synthesised primary's slot types, when resolved through a parent plan rather than a unique java root. Overrides `formalsOf` in the caller. // ENGINE-LIMITS C3
+    /** Parent's synthesised primary's slot types, when resolved through a parent plan rather than a unique java root. Overrides `formalsOf` in the caller.
       */
     resolvedFormals: Option[List[TypeRepr]] = scala.None,
     /** Delegation-head slots: parent params used >1x whose caller arg is non-simple, bound to synthesised slots to avoid double evaluation. `(paramDef, firstCallerArg)` — the paramDef's type is the
-      * slot type; the super arg at that formal's position is an expression referencing the slot. // ENGINE-LIMITS C3
+      * slot type; the super arg at that formal's position is an expression referencing the slot.
       */
     delegHeadSlots: List[(Tree.ValDef, Term)] = Nil,
     /** Per-root values for delegation-head slots, in the same order as [[delegHeadSlots]]. Roots that did not go through the doubled parameter have JVM default values.
@@ -1722,7 +1718,7 @@ object CtorFunnel:
   )
 
   /** Resolve diverging roots through the parent's delegation chain, so they converge on the parent's unique root. Returns the parent root, per-root effective args, and post-body info for synthesised
-    * parameter creation. // ENGINE-LIMITS C3 item 4, C3 item 4c
+    * parameter creation.
     */
   private def resolvedThroughParent(
     program:      Program,
@@ -1736,7 +1732,7 @@ object CtorFunnel:
     val parentCd    = program.definitionOf(parentSym).collect { case c: Tree.ClassDef => c }.getOrElse(return scala.None)
     val parentCtors = ctorsOf(program, parentCd.body)
     val parentRoots = parentCtors.filterNot(delegatesToThis(program, _))
-    // multiple parent roots with a synthesised parent plan: resolve through the plan. // C3
+    // multiple parent roots with a synthesised parent plan: resolve through the plan.
     if parentRoots.sizeIs != 1 then return resolvedThroughParentPlan(program, cd, roots, calls, parentSym, parentCd, parentPlanOf)
     val parentRoot    = parentRoots.head
     val parentRootSym = parentRoot.symbol
@@ -1754,7 +1750,7 @@ object CtorFunnel:
     if resolved.exists(_.isEmpty) then scala.None
     else
       val flat = resolved.flatten
-      // C3: simplify `if (null != null) A else B` to `B` in effective args — the substitution
+      // simplify `if (null != null) A else B` to `B` in effective args — the substitution
       // of a null callerArg into a null-check produces a tautologically false condition whose
       // rendering (`null.asInstanceOf[T] != null`) triggers a Scala 3 parser issue in `this(...)`.
       val argsMap = flat.map((sym, r) => sym -> r.effectiveArgs.map(a => simplifyNullIf(a)(using program))).toMap
@@ -1795,7 +1791,7 @@ object CtorFunnel:
         }.toMap
         // card 4e: track which roots went through a secondary that has a post-body.
         val withPb = flat.collect { case (sym, r) if r.postBody.nonEmpty => sym }.toSet
-        // C3: delegation-head slots — parameters used >1x in the delegation head with
+        // delegation-head slots — parameters used >1x in the delegation head with
         // non-simple caller args, bound to synthesised slots.
         val allDhSlots    = flat.flatMap(_._2.delegHeadSlots)
         val seenDh        = collection.mutable.Set[SymId]()
@@ -1845,7 +1841,7 @@ object CtorFunnel:
         )
 
   /** Resolve through the parent's SYNTHESISED PLAN when the parent has 2+ java roots but an already-computed synthesised primary. Substitutes the child's `super(args)` into the parent plan's per-ctor
-    * delegation mapping. // ENGINE-LIMITS C3
+    * delegation mapping.
     */
   private def resolvedThroughParentPlan(
     program:      Program,
@@ -1860,7 +1856,7 @@ object CtorFunnel:
     if !pp.isSynthesised || pp.rootArgs.isEmpty then return scala.None
     val superSlotCount = pp.superSlots
     // resolve each child root through the parent plan's rootArgs mapping (super-slot portion only;
-    // the parent's post-body and field slots are internal to the parent class). // C3
+    // the parent's post-body and field slots are internal to the parent class).
     val resolved = roots.zip(calls).map { case (childRoot, (target, superArgs)) =>
       pp.rootArgs.get(target).flatMap { parentDelegArgs =>
         val superDelegArgs = parentDelegArgs.take(superSlotCount)
@@ -1895,10 +1891,10 @@ object CtorFunnel:
         // no post-body: the parent plan already handles its own post-body internally
         Some(ResolvedResult(SymId.None, argsMap, Map.empty, Nil, Nil, resolvedFormals = Some(parentFormals)))
 
-  /** Effective args reaching the parent root, un-substituted post-body, and post-body param dependencies for synthesised parameter creation. // ENGINE-LIMITS C3
+  /** Effective args reaching the parent root, un-substituted post-body, and post-body param dependencies for synthesised parameter creation.
     */
   /** @param delegHeadSlots
-    *   parameters used >1x in the delegation head whose caller arg is non-simple -- bound to synthesised slots to avoid double evaluation. // ENGINE-LIMITS C3
+    *   parameters used >1x in the delegation head whose caller arg is non-simple -- bound to synthesised slots to avoid double evaluation.
     */
   final case class InlineResult(
     effectiveArgs:  List[Term],
@@ -1908,7 +1904,7 @@ object CtorFunnel:
   )
 
   /** Follow `currentCtor`'s delegation chain to `targetRoot`. Post-body params are carried through synthesised parameters (not inlined), so non-simple args are allowed there. Refuses on `super.m()`,
-    * `return` in the post-body, or unsafe delegation substitution. // ENGINE-LIMITS C3
+    * `return` in the post-body, or unsafe delegation substitution.
     */
   private def inlineDelegation(
     program:     Program,
@@ -1939,7 +1935,7 @@ object CtorFunnel:
                 t
             postBody.foreach(StandardTraversal.mapStat(ph, _))
             used.toSet
-        // C3: count uses in the delegation head only, not the post-body.
+        // count uses in the delegation head only, not the post-body.
         val headArgs = headStmt(d) match
           case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) => as
           case _                                                                                => Nil
@@ -1968,7 +1964,7 @@ object CtorFunnel:
           found
         }
         def ok(p: Tree.ValDef, a: Term) = simple(a) || (delegLoopFree && delegCounts.getOrElse(p.symbol, 0) <= 1)
-        // C3: parameters used >1x with a non-simple caller arg are bound to delegation-head
+        // parameters used >1x with a non-simple caller arg are bound to delegation-head
         // slots instead of being refused. The slot is an Opaque reference (simple, so safe to
         // duplicate in the delegation head), and the caller arg is carried separately. Loops in
         // the delegation head still refuse (the slot binding does not help a loop body).
