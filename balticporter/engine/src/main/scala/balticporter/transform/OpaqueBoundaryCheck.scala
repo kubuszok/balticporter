@@ -10,7 +10,7 @@ object OpaqueBoundaryCheck:
   /** the check's name in `findings.tsv`. */
   val Name = "opaque-boundary"
 
-  /** what kind of boundary this is, which decides who fixes it (CLAUDE.md §1). */
+  /** what kind of boundary this is, which decides who fixes it. */
   enum Issue:
     /** a call to an EXTERNAL method whose formal `coerceArgs` cannot read; the SCOPE FENCE is the configured defence.
       */
@@ -23,7 +23,7 @@ object OpaqueBoundaryCheck:
     case BoxedPrimitive
 
   object Issue:
-    /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
+    /** which of the three kinds — engine, port policy, or library-specific — the fix is. */
     def classification(i: Issue): String = i match
       case ExternalCallee =>
         "port policy: the SCOPE FENCE is the answer: the phase cannot read this external callee's " +
@@ -42,13 +42,13 @@ object OpaqueBoundaryCheck:
           "boxed-primitive coercion (wave 2.6) handles the commonest shape; this residue is what " +
           "it could not reach."
 
-  /** one boundary site. `unit` is the top-level symbol for D2 ownership filtering. */
+  /** one boundary site. `unit` is the top-level symbol for ownership filtering. */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):
     def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** grouped one-line summary, worst family first, each with its §1 classification. */
+  /** grouped one-line summary, worst family first, each with its classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

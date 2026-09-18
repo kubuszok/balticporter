@@ -3,7 +3,7 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Decides whether a java anonymous class implementing a single-abstract-method interface can become a scala lambda ascribed to that interface. `decide` is the single source of truth (no separate
-  * census, CLAUDE.md §4.6). Every behavioural delta is made impossible by a [[Guard]] or by the ascribed-lambda SHAPE, or counted on the conversion's own `Decision`. `DESIGN.md` §8.15.
+  * census). Every behavioural delta is made impossible by a [[Guard]] or by the ascribed-lambda SHAPE, or counted on the conversion's own `Decision`.
   */
 object SamLambda:
 
@@ -81,8 +81,8 @@ object SamLambda:
               else Verdict.Convert(d, iface, javaClassNameOf(anon))
             case _ => refuse(Guard.BodyNotSingle)
 
-  /** does the body name the ANON INSTANCE — the §4.4 meaning change (`this`/`super` bound to the anon, or a bare reference resolving to an inherited member). A qualified outer `this` is fine under a
-    * lambda and not refused. Bare-reference form exists because the frontend drops `this.` receivers and resolves them lexically, so `this.toString()` arrives as a plain `Ident` — matched here by
+  /** does the body name the ANON INSTANCE — a lambda would change what `this`/`super` bind to (the anon, or a bare reference resolving to an inherited member). A qualified outer `this` is fine under
+    * a lambda and not refused. Bare-reference form exists because the frontend drops `this.` receivers and resolves them lexically, so `this.toString()` arrives as a plain `Ident` — matched here by
     * owner rather than node shape.
     */
   private def selfReferences(d: Tree.DefDef, anonSym: SymId, ancestry: Set[SymId])(using p: Program): Boolean =
@@ -127,7 +127,7 @@ object SamLambda:
         }
     out.toSet
 
-  /** does this `Ident` name a TYPE rather than a member? A type reference is emitted fully-qualified (§6) so it cannot re-resolve wrongly, and must not be refused as a capture.
+  /** does this `Ident` name a TYPE rather than a member? A type reference is emitted fully-qualified so it cannot re-resolve wrongly, and must not be refused as a capture.
     */
   private def namesAType(s: SymId)(using p: Program): Boolean =
     p.definitionOf(s).exists(_.isInstanceOf[Tree.ClassDef]) ||
@@ -180,7 +180,7 @@ object SamLambda:
     case TypeRepr.AppliedType(tc, _) => typeName(tc)
     case other                       => other.toString
 
-/** Converts an anonymous class implementing a single-abstract-method interface into a lambda, ASCRIBED to that interface. §1 kind (a): unparameterised — which types are SAM is structural. The
+/** Converts an anonymous class implementing a single-abstract-method interface into a lambda, ASCRIBED to that interface. Universal and unparameterised — which types are SAM is structural. The
   * ascription keeps every call's candidate set unchanged (no `JS-C22`/`JS-C23` risk); rewrites no call site, moves no declaration, mints no unit. Runs before every retyping phase.
   */
 final class SamLambdaTransform extends Phase, IdiomPhase:
@@ -196,7 +196,7 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
     program.rebuilt(program.units.map(u => StandardTraversal.mapClassDef(new Converter(this), u)))
 
   /** The rewriting traversal and the attribution of what it did. The traversal is bottom-up, so the enclosing definition's hook fires after every conversion in its body and claims them — a nested
-    * `def` takes its own, the enclosing member takes the rest. One `Decision` per declaration with a `count`, never one per site. // CLAUDE.md §5.1
+    * `def` takes its own, the enclosing member takes the rest. One `Decision` per declaration with a `count`, never one per site.
     */
   final private class Converter(owner: SamLambdaTransform) extends Phase:
     def name: String = "sam-anon->lambda/convert"
@@ -217,7 +217,6 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
             // `Typed` over a lambda renders as an ascription, not `asInstanceOf`.
             // resultTpt = the SAM method's own declared return type, needed by the emitter to
             // restore `return`-leaves-the-lambda (`JS-S21`) — distinct from the ascription type.
-            // ENGINE-LIMITS I9
             Tree.Typed(Tree.Lambda(d.paramss.flatten, d.rhs.get, nw.tpe, nw.origin, resultTpt = Some(d.returnTpt)), nw.tpt, nw.tpe, nw.origin)
           case SamLambda.Verdict.Refuse(g, iface) =>
             file(g, iface, nw); t
@@ -236,7 +235,7 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
       claim(t.symbol, t.origin); t
 
     /** is this definition a MEMBER of a type, as opposed to a local/parameter? A conversion inside `Runnable a = new Runnable(){…};` must not be claimed by the local `a` — it has no row in
-      * `members.tsv` to join on — so it bubbles up to the enclosing member instead. // CLAUDE.md §4.55
+      * `members.tsv` to join on — so it bubbles up to the enclosing member instead.
       */
     private def isMember(sym: SymId)(using p: Program): Boolean =
       p.symbolOf(sym).map(_.owner).flatMap(p.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])

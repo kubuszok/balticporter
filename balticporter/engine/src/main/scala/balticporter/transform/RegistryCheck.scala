@@ -2,8 +2,8 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** What `RegistryTransform` could NOT turn into a registry lookup, one lane per kind — the §3 refusal enumeration for reflective instantiation (`ENGINE-LIMITS.md` P10). Each kind is a different
-  * instruction to its reader, so each is its own lane (CLAUDE.md §4.45); an empty spec records nothing at all.
+/** What `RegistryTransform` could NOT turn into a registry lookup, one lane per kind — the refusal enumeration for reflective instantiation. Each kind is a different instruction to its reader, so
+  * each is its own lane; an empty spec records nothing at all.
   */
 object RegistryCheck:
 
@@ -53,7 +53,7 @@ object RegistryCheck:
       case OutOfScope  => "out-of-scope"
       case JvmOnlyMiss => "jvm-only-miss"
 
-    /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
+    /** which of the three kinds — engine, port policy, or library-specific — the fix is. */
     def classification(i: Issue): String = i match
       case NonClassArg =>
         "port policy: a `Class`-keyed registry has nothing to key on here. Either the call " +
@@ -83,7 +83,7 @@ object RegistryCheck:
           "backend without runtime reflection. Off the JVM every unseeded type resolves to the " +
           "miss value — `seeds`, or a registration in the consumer's bootstrap, is what closes it."
 
-  /** one refused or counted site. `unit` is the top-level symbol for D2 ownership filtering. */
+  /** one refused or counted site. `unit` is the top-level symbol for ownership filtering. */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId = SymId.None):
     def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
@@ -97,7 +97,7 @@ object RegistryCheck:
   def record(findings: List[Finding]): Unit =
     Issue.values.foreach(i => CheckReport.record(lane(Issue.slug(i)), findings.filter(_.issue == i).map(_.report)))
 
-  /** grouped one-line summary, worst family first, each with its §1 classification. */
+  /** grouped one-line summary, worst family first, each with its classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

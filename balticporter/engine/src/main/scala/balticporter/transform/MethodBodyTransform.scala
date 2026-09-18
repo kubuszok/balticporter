@@ -4,8 +4,8 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** Replaces a named method's or field's body with ready-made Scala, keeping the rest of the class mechanically translated — the seam `dropTypes`/`inject`/`dropMethods` cannot express. Runs as a phase
-  * so the replacement lands in the TIR before checks read it. Refuses constructors (`CtorFunnel`'s job). CLAUDE.md §1(b): empty `bodies` = no-op. `bodies` keys `owner#name[(P1,P2)]` → Scala source
-  * spliced verbatim at term position, not type-checked by the engine.
+  * so the replacement lands in the TIR before checks read it. Refuses constructors (`CtorFunnel`'s job). Empty `bodies` = no-op. `bodies` keys `owner#name[(P1,P2)]` → Scala source spliced verbatim at
+  * term position, not type-checked by the engine.
   */
 final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name: String = "method-body-substitution"
@@ -85,7 +85,7 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty) ext
       }
     )
 
-  /** Member keys whose body was actually replaced, in a stable order. CLAUDE.md §3 */
+  /** Member keys whose body was actually replaced, in a stable order. */
   def substituted: List[String] = applied.sorted
 
   override def run(program: Program): Program =
@@ -156,7 +156,7 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty) ext
         case c: Tree.ClassDef => rewrite(c)
         case other => other
       }
-      // walk enum constant bodies too — a constant's body is a separate field. ENGINE-LIMITS T23
+      // walk enum constant bodies too — a constant's body is a separate field.
       val cases = cd.enumCases.map { ec =>
         ec.copy(body = ec.body.map {
           case d: Tree.DefDef => rewriteDef(d, owner)

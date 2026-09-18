@@ -72,7 +72,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
 
   // ---- FFI codegen ----
 
-  /** The handle field's name for every native at once, keyed on a fact about the METHOD, never on the frontend's mint counter (`ENGINE-LIMITS.md` M10 — moved 122 digests once). A lone native:
+  /** The handle field's name for every native at once, keyed on a fact about the METHOD, never on the frontend's mint counter, or one unrelated change renames every handle. A lone native:
     * `freeMemory$handle`. An overload set: `copyJni$0$handle`, ordered by erased signature, tiebroken by declaration position. [[invoke]] reads the name back off the minted symbol.
     */
   private[balticporter] def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =

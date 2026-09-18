@@ -4,9 +4,9 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.NoType
 
-/** Re-points REFLECTIVE INSTANTIATION at a `Class`-keyed registry the port supplies — the mechanism three ports hand-wrote (`ENGINE-LIMITS.md` P10). `callee(classValue)` becomes
-  * `<registry>.create(classValue)`, and the table/`register`/`create` are MINTED at the declared placement. §1(b): mechanism universal, every name, scope and miss per-library; an empty spec is a
-  * no-op. Every shape it cannot key is refused and counted ([[RegistryCheck]]).
+/** Re-points REFLECTIVE INSTANTIATION at a `Class`-keyed registry the port supplies — the mechanism three ports hand-wrote. `callee(classValue)` becomes `<registry>.create(classValue)`, and the
+  * table/`register`/`create` are MINTED at the declared placement. Mechanism universal, every name, scope and miss per-library; an empty spec is a no-op. Every shape it cannot key is refused and
+  * counted ([[RegistryCheck]]).
   */
 final class RegistryTransform(
   val entries: List[RegistryTransform.Registry] = Nil,
@@ -26,7 +26,7 @@ final class RegistryTransform(
   /** the residue lanes; the reflective miss arm this phase EMITS is `portability(emitted)`'s. */
   def accountedBy: Set[String] = RegistryCheck.AllLanes + PortabilityCheck.EmittedLane
 
-  // ---- bound state (CLAUDE.md §4.56: a phase decides from BOUND symbols, never a raw string) ----
+  // ---- bound state (a phase decides from BOUND symbols, never a raw string) ----
 
   private var records:       List[PolicyBinder.Record] = Nil
   private var shapeFindings: List[PolicyFinding]       = Nil
@@ -87,8 +87,8 @@ final class RegistryTransform(
 
   // ---- surface ---------------------------------------------------------------------------------
 
-  /** The minted members and the miss arm are emitted SIGNATURES and emitted BEHAVIOUR, so the spec is shared surface (§1.5). Sorted; an EMPTY spec contributes NO segment (§1(b)'s fingerprint no-op
-    * rule), so the key's arrival is flat on every port that does not use it.
+  /** The minted members and the miss arm are emitted SIGNATURES and emitted BEHAVIOUR, so the spec is shared surface. Sorted; an EMPTY spec contributes NO segment (the fingerprint no-op rule), so the
+    * key's arrival is flat on every port that does not use it.
     */
   def surfaceFingerprint: String =
     if entries.isEmpty && facadeMembers.isEmpty then ""
@@ -137,7 +137,7 @@ final class RegistryTransform(
   /** every site this run refused or counted — read by `PortRun` after the pipeline. */
   def findings: List[RegistryCheck.Finding] = found.toList
 
-  // ---- run state (a value THIS run owns — §5.1) -------------------------------------------------
+  // ---- run state (a value THIS run owns) -------------------------------------------------
 
   /** callee symbol → what it rewrites to. */
   private var mapping: Map[SymId, Rewritten] = Map.empty
@@ -146,7 +146,7 @@ final class RegistryTransform(
     */
   private var admitted: Set[Origin] = Set.empty
 
-  /** …the subset in units THIS module EMITS: the only sites it may report about (D2). */
+  /** …the subset in units THIS module EMITS: the only sites it may report about. */
   private var owned: Set[Origin] = Set.empty
 
   /** minted `create` symbol → entry index; how a `Tree.Try` recognises an already-rewritten call. */
@@ -190,7 +190,7 @@ final class RegistryTransform(
 
     // CLASSIFY every call site FIRST, once: a refusal is recorded here and nowhere else, and
     // minting is conditional on this run EMITTING a rewritable site (a minted unit belongs to ONE
-    // module — `ENGINE-LIMITS.md` O5).
+    // module).
     val sites: List[Site] =
       for
         (i, callees) <- boundCallees.toList.sortBy(_._1)
@@ -201,11 +201,11 @@ final class RegistryTransform(
         }
       yield Site(i, entries(i), a, u.symbol)
 
-    // D2 splits the two questions. The REWRITE runs at every admissible site in scope, a base
+    // The REWRITE runs at every admissible site in scope, a base
     // unit's included: a dependent's `Program` contains its base's units, and a model in which the
     // base still calls the retired member reports the base's dropped type as this module's residue.
     // MINTING and every FINDING are fenced to units THIS module emits — a minted unit belongs to
-    // ONE module (O5), and a module does not report on a declaration another module emits.
+    // ONE module, and a module does not report on a declaration another module emits.
     val (mine, theirs) = sites.partition(s => runScope.emits(s.unit))
     val here           = mine.filter(s => admits(program, s, record = true))
     val rewritable     = here ++ theirs.filter(s => admits(program, s, record = false))
@@ -214,9 +214,9 @@ final class RegistryTransform(
     if rewritable.isEmpty then return program
 
     // One row per declared non-JVM target, for each entry this module MINTS: `JvmReflect` compiles
-    // there and answers the miss value for every type no seed and no consumer registered (P10).
+    // there and answers the miss value for every type no seed and no consumer registered.
     // Fenced on `here` for `out-of-scope`'s reason — a module does not report on a declaration
-    // another module emits (D2).
+    // another module emits.
     val offJvm = runScope.platform.targets.filterNot(_ == balticporter.catalog.Platform.Jvm).toList.map(_.toString).sorted
     here.map(s => s.entryIx -> s.entry).distinct.filter((_, e) => e.miss.isInstanceOf[Miss.JvmReflect]).sortBy(_._1).foreach { (i, e) =>
       offJvm.foreach(t =>
@@ -258,10 +258,9 @@ final class RegistryTransform(
         boundCallees(i).foreach(c => mapping += c -> Rewritten(ownerSym, createSym, i))
         val body = memberSources(e, sp, isObject, boundSeeds.getOrElse(i, Nil))
         // `Origin.synthetic`, never a call site's java path: the trivia harvest is keyed by java
-        // FILE, so a minted unit claiming `Engine.java` reports every comment in that file as
-        // recovered-by-the-backstop (measured: `trivia(recovered)` 0 -> 17). The licence header
-        // then reads `<unknown>` — the same answer `primitive-to-opaque`'s minted companion gives
-        // (§4.57, `ENGINE-LIMITS.md` P10).
+        // FILE, so a minted unit claiming `Engine.java` would report every comment in that file as
+        // recovered-by-the-backstop. The licence header
+        // then reads `<unknown>` — the same answer `primitive-to-opaque`'s minted companion gives.
         if !mintsUnitHere(i) then () // the base emits the registry; this module only calls it
         else if isObject then minted = minted :+ Tree.ClassDef(ownerSym, Nil, scala.None, body, Origin.synthetic)
         else appendTo += ownerSym -> body
@@ -273,7 +272,7 @@ final class RegistryTransform(
     here.map(s => s.entryIx -> s.entry).distinct.foreach { (i, e) =>
       val to = MemberKey(Placement.owner(e.placement), Placement.spelling(e.placement).create).render
       boundCallees(i).toList.sortBy(_.raw).foreach { callee =>
-        // …at declarations THIS module emits: a decision is scoped to its own module (D2).
+        // …at declarations THIS module emits: a decision is scoped to its own module.
         Decision.declarationsUsing(program, callee).filter((encl, _) => runScope.emitsSymbol(program, encl)).foreach { (encl, origin) =>
           record(
             Decision(
@@ -306,7 +305,7 @@ final class RegistryTransform(
 
   // ---- admission -------------------------------------------------------------------------------
 
-  /** Can the registry key this call? A refusal is recorded exactly once per site, and only where `record` says this module owns the site (D2).
+  /** Can the registry key this call? A refusal is recorded exactly once per site, and only where `record` says this module owns the site.
     */
   private def admits(program: Program, s: Site, record: Boolean): Boolean =
     val e       = s.entry
@@ -377,7 +376,7 @@ final class RegistryTransform(
             declared.nonEmpty && tr.catches.forall(c => caughtTypes(c.param.tpt.tpe).forall(declared))
           if dead then tr.body
           else
-            // …reported only where THIS module emits the site (D2); the try is left alone either way.
+            // …reported only where THIS module emits the site; the try is left alone either way.
             if owned(at) then
               found += RegistryCheck.Finding(
                 RegistryCheck.Issue.GuardedCall,
@@ -437,8 +436,8 @@ final class RegistryTransform(
       )
     }
 
-  /** The registry's three members as verbatim Scala (fully qualified, no imports — CLAUDE.md §6), plus one `locally` per seed. A plain `mutable.HashMap` and never a concurrent one:
-    * `balticporter/runtime` ships no threading, so a concurrent table is not portable (P10).
+  /** The registry's three members as verbatim Scala (fully qualified, no imports), plus one `locally` per seed. A plain `mutable.HashMap` and never a concurrent one: `balticporter/runtime` ships no
+    * threading, so a concurrent table is not portable.
     */
   private def memberSources(e: Registry, sp: Spelling, isObject: Boolean, seeds: List[SymId]): List[Statement] =
     val o      = Origin.synthetic
@@ -483,8 +482,8 @@ object RegistryTransform:
 
   val Name = "registry"
 
-  /** One library's reflective-instantiation fact (P10): `callee` = bound `owner#member` keyed by its `Class` argument; `placement` = where the minted members live; `scope` (`Only(Set.empty)` is the
-    * no-op — this phase MINTS); `seeds` = upstream FQNs with a visible nilary ctor; `handles` = the exception FQNs java's `catch` names; `miss` = an unregistered key's answer; `bound` = `T`'s bound.
+  /** One library's reflective-instantiation fact: `callee` = bound `owner#member` keyed by its `Class` argument; `placement` = where the minted members live; `scope` (`Only(Set.empty)` is the no-op —
+    * this phase MINTS); `seeds` = upstream FQNs with a visible nilary ctor; `handles` = the exception FQNs java's `catch` names; `miss` = an unregistered key's answer; `bound` = `T`'s bound.
     */
   final case class Registry(
     callee:    String,
@@ -499,8 +498,8 @@ object RegistryTransform:
   /** The registry's three member names — all emitted surface. */
   final case class Spelling(table: String, register: String, create: String)
 
-  /** WHERE the registry lives. `Member` puts it on a type the port already emits (a framework-instantiated owner takes it with NO constructor parameter, CT7); `Object` mints a top-level `object`,
-    * written only by the module that emits the call sites (O5).
+  /** WHERE the registry lives. `Member` puts it on a type the port already emits (a framework-instantiated owner takes it with NO constructor parameter); `Object` mints a top-level `object`, written
+    * only by the module that emits the call sites.
     */
   enum Placement:
     case Member(owner: String, spelling: Spelling)
@@ -521,7 +520,7 @@ object RegistryTransform:
       s"${owner(p)}:${s.table}/${s.register}/${s.create}"
 
   /** What an unregistered key answers. Three outcomes and not one: a port that must not throw, a port whose contract has its own exception, and the JVM's own reflective answer, which carries what
-    * java's OWN contract says when the reflection itself fails (P10's measured conflict).
+    * java's OWN contract says when the reflection itself fails.
     */
   enum Miss:
     case Null
@@ -531,14 +530,14 @@ object RegistryTransform:
   object Miss:
 
     /** What a [[Miss.JvmReflect]] arm answers when REFLECTION fails — the type has no visible nilary constructor, or its constructor threw. `Null` is what a java `catch` returning null meant; `Throw`
-      * restates java's own wrapping exception at that site (P10 STOP (a)).
+      * restates java's own wrapping exception at that site.
       */
     enum OnFailure:
       case Null
       case Throw(fqn: String, message: String)
 
     /** The SURFACE rendering. `JvmReflect` with the default `Null` failure renders as the string it rendered before `onFailure` existed, so the parameter's arrival is flat on every port that does not
-      * use it (§1(b)'s fingerprint no-op rule).
+      * use it (the fingerprint no-op rule).
       */
     def render(m: Miss): String = m match
       case JvmReflect(OnFailure.Null) => "JvmReflect"

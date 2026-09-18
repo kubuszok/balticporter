@@ -12,9 +12,9 @@ object NullabilityBoundaryCheck extends RemedySource:
   /** The check's name in `findings.tsv`. */
   val Name = "nullability-boundary"
 
-  /** The menu (`Remedy`, DESIGN.md §8.16). Two entries — everything else a port could restate already has a spelling (`NullabilityTransform(scope)`/`target`/`annotations`, or a build flag).
-    * `ScopedOut` records that the port read a held-back site and accepts the residue there, as opposed to deleting the scope entry; `AbstractTypeParameter` records accepting the use-site errors, the
-    * one of its three ways out no manifest key or build flag already states.
+  /** The menu (`Remedy`). Two entries — everything else a port could restate already has a spelling (`NullabilityTransform(scope)`/`target`/`annotations`, or a build flag). `ScopedOut` records that
+    * the port read a held-back site and accepts the residue there, as opposed to deleting the scope entry; `AbstractTypeParameter` records accepting the use-site errors, the one of its three ways out
+    * no manifest key or build flag already states.
     */
   def remedies: List[Remedy] = List(
     Remedy(
@@ -38,11 +38,11 @@ object NullabilityBoundaryCheck extends RemedySource:
     )
   )
 
-  /** Drains what this port selected (CLAUDE.md §5). */
+  /** Drains what this port selected. */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
     plan.drain(remedies, findings)(f => ResolutionPlan.Residue(f.issue.toString, f.at, f.subject, f.origin, f.detail))
 
-  /** What kind of boundary this is, which decides who fixes it (CLAUDE.md §1). */
+  /** What kind of boundary this is, which decides who fixes it. */
   enum Issue:
     /** `@Null Object... rest` — a Scala vararg has no nullable form (`T*` cannot be `T* | Null`). */
     case VarargParameter
@@ -86,7 +86,7 @@ object NullabilityBoundaryCheck extends RemedySource:
     case UnwritableFormal
 
   object Issue:
-    /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
+    /** which of the three kinds — engine, port policy, or library-specific — the fix is: the thing a bare typer error cannot say. */
     def classification(i: Issue): String = i match
       case VarargParameter =>
         "engine (true of every Java program), REFUSED on purpose: a Scala vararg has no nullable form — `T*` cannot be written " +
@@ -172,15 +172,15 @@ object NullabilityBoundaryCheck extends RemedySource:
           "deleting the scope entry (and paying `AbstractTypeParameter`'s errors), or by staging " +
           "to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole exit disappears."
 
-  /** One boundary site. `unit` is the top-level symbol it belongs to (ownership, D2); `at` is the declaration for selection (`remedies`) and is deliberately a different symbol — they coincide only
-    * for a top-level type. Defaults to `SymId.None` rather than `unit`, so an unset finding is unselectable rather than selectable at the wrong granularity.
+  /** One boundary site. `unit` is the top-level symbol it belongs to (ownership); `at` is the declaration for selection (`remedies`) and is deliberately a different symbol — they coincide only for a
+    * top-level type. Defaults to `SymId.None` rather than `unit`, so an unset finding is unselectable rather than selectable at the wrong granularity.
     */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId, at: SymId = SymId.None):
     def render: String              = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
     def report: CheckReport.Finding =
       CheckReport.Finding(Name, issue.toString, subject, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** Grouped one-line summary, worst family first, each with its §1 classification. */
+  /** Grouped one-line summary, worst family first, each with its classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

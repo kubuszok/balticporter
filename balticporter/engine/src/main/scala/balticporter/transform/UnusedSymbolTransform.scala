@@ -4,7 +4,7 @@ import balticporter.tir.*
 
 /** A LATE phase removing or suppressing unused local defs and private members — java allows them, Scala's `-Wunused` does not. Per unused def, first applicable action wins: DELETE (side-effect-free),
   * DISCARD (keep effectful init, drop binding), SUPPRESS (`@nowarn`), REFUSE (API surface, or a private name referenced inside a `MethodBodyTransform` substitution body, invisible to the TIR walk —
-  * treated conservatively as referenced). CLAUDE.md §1(a).
+  * treated conservatively as referenced).
   */
 final class UnusedSymbolTransform extends Phase:
 
@@ -83,7 +83,7 @@ final class UnusedSymbolTransform extends Phase:
     val refused    = collection.mutable.ListBuffer[(String, String, Origin)]() // (fqn, guard, origin)
 
     /** @param anon
-      *   an anonymous class exists to CARRY state for the framework it is handed to, which reads its fields reflectively (K21): never deleted, only suppressed
+      *   an anonymous class exists to CARRY state for the framework it is handed to, which reads its fields reflectively: never deleted, only suppressed
       */
     def classifyPrivateMember(v: Tree.ValDef, anon: Boolean = false): Unit =
       program.symbolOf(v.symbol).foreach { s =>

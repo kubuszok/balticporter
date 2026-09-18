@@ -4,7 +4,7 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyReport, PolicyS
 import balticporter.tir.*
 
 /** Ships a listed member PUBLIC where java declared it narrower — the hand port's own widening (`FileHandle(File, FileType)` is protected in java, public in the reference). A SIGNATURE fact on the
-  * symbol, read by the emitter's visibility plan and every dependent (DESIGN.md §8.30).
+  * symbol, read by the emitter's visibility plan and every dependent.
   * @param widen
   *   member keys (`C#m`, `C#<init>(desc)`) @param derive the reference's `Public` rows.
   */

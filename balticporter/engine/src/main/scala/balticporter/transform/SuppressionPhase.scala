@@ -4,7 +4,6 @@ import balticporter.tir.*
 
 /** A LATE phase (after every retyping phase) that annotates members to suppress two scalac warnings a `-Werror` build cannot avoid: `@nowarn("msg=deprecated")` on a body calling `.orNull`, and
   * `@nowarn("msg=Unreachable case")` on a `match` translating a java enum's `default:` where scalac proves exhaustiveness java has no such rule for. `runsBefore` `package-rename` (FQN is scala-side).
-  * CLAUDE.md §1(a)
   */
 final class SuppressionPhase extends Phase:
 
@@ -181,7 +180,7 @@ object SuppressionPhase:
       case _                       => return false
     if enumCaseCount == 0 then return false
 
-    // exclude `case null =>` (§4.4's NPE guard), which the emitter adds and which is not java's own arm
+    // exclude `case null =>` (the emitter's own NPE guard), which is not java's own arm
     val explicitLabels = m.cases.filterNot(_.isDefault).flatMap(_.labels).count {
       case Tree.Literal(Constant.NullC, _, _) => false
       case _                                  => true

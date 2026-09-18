@@ -10,7 +10,7 @@ import balticporter.tir.*
 final class MutableParamsTransform extends Phase, SurfacePolicy, MergeablePolicy:
   def name = "reassigned-params->var"
 
-  /** No parameter: contributes no `policy=` segment (CLAUDE.md §1(b)); two instances in a base chain merge into one at the base's position (CLAUDE.md §1.5, ENGINE-LIMITS.md K43).
+  /** No parameter: contributes no `policy=` segment; two instances in a base chain merge into one at the base's position.
     */
   def surfaceFingerprint:       String                                 = ""
   def subjects:                 Set[String]                            = Set.empty
@@ -45,7 +45,7 @@ final class MutableParamsTransform extends Phase, SurfacePolicy, MergeablePolicy
         if !catchArgOf.contains(p) && reassignedIn(c.body, Set(p)).nonEmpty then program.symbolOf(p).foreach { s => catchArgOf(p) = mint(s); nowVar += p }
       }
     // StandardTraversal reaches every `DefDef`, including an anonymous class's methods, and every
-    // `Try` wherever a term can appear — a field initialiser's as much as a method body's (§3).
+    // `Try` wherever a term can appear — a field initialiser's as much as a method body's.
     locally {
       given Program = program
       val scan      = new Phase:
@@ -170,7 +170,7 @@ final class MutableParamsTransform extends Phase, SurfacePolicy, MergeablePolicy
         argOf.get(t.sym).map(a => t.copy(sym = a)).getOrElse(t)
     StandardTraversal.mapTerm(toSlot, deleg)
 
-  /** Parameters (from `params`) that are the target of an assignment anywhere in `t`. Uses [[StandardTraversal.scanTerm]] — total over `Term`, so no node kind can be missed (§3). Descending into a
+  /** Parameters (from `params`) that are the target of an assignment anywhere in `t`. Uses [[StandardTraversal.scanTerm]] — total over `Term`, so no node kind can be missed. Descending into a
     * `Tree.Lambda` body or a `Tree.New`'s anonymous-class body cannot false-positive: javac refuses reassigning an enclosing method's parameter from either.
     */
   private def reassignedIn(t: Term, params: Set[SymId])(using Program): Set[SymId] =

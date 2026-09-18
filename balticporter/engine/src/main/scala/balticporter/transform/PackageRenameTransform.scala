@@ -3,13 +3,13 @@ package balticporter.transform
 import balticporter.core.{ PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy }
 import balticporter.tir.*
 
-/** Moves the port out of the upstream namespace: rewrites the package prefix of every symbol the program itself declares. §1(b): mechanism (longest-prefix-wins, owned symbols only) is universal; the
-  * maps (`renames`/`typeRenames`/`subPackages`/`flattenNestedTypes`, all UPSTREAM namespace) are per-port policy. Renames SYMBOLS, not text, cut only at `.`/`$`/`#`. Runs LAST (`runsAfter` can't say
+/** Moves the port out of the upstream namespace: rewrites the package prefix of every symbol the program itself declares. Mechanism (longest-prefix-wins, owned symbols only) is universal; the maps
+  * (`renames`/`typeRenames`/`subPackages`/`flattenNestedTypes`, all UPSTREAM namespace) are per-port policy. Renames SYMBOLS, not text, cut only at `.`/`$`/`#`. Runs LAST (`runsAfter` can't say
   * "after everything"); `check` verifies afterward.
   */
 final class PackageRenameTransform(
   renames: Map[String, String] = Map.empty,
-  /** upstream TYPE FQN → its name in the port: a dotted FQN, or a bare simple name to rename it in place. Inherited by dependents (CLAUDE.md §1.5).
+  /** upstream TYPE FQN → its name in the port: a dotted FQN, or a bare simple name to rename it in place. Inherited by dependents.
     */
   typeRenames: Map[String, String] = Map.empty,
   /** upstream TYPE FQN → a sub-package to nest it under, in place (`internal`, `impl.detail`). */
@@ -20,7 +20,7 @@ final class PackageRenameTransform(
     */
   allowPackageSplit: Set[String] = Set.empty,
   /** the port's `Substitutions.dropTypes`, UPSTREAM namespace: one of the two ways a port SUPPLIES the declaration at a name and so owns it ([[run]]). NOT this phase's own policy and NOT part of
-    * [[surfaceFingerprint]]: the manifest already publishes both, and two spellings of one key is what `ManifestAgreement` exists to prevent (CLAUDE.md §1.5).
+    * [[surfaceFingerprint]]: the manifest already publishes both, and two spellings of one key is what `ManifestAgreement` exists to prevent.
     */
   drops: Set[String] = Set.empty,
   /** …and the other way: `PortManifest.injectedFqns`, EMITTED namespace — ready-made Scala the port ships at a name upstream no longer declares.
@@ -38,7 +38,7 @@ final class PackageRenameTransform(
   private val perTypeDeclared: Boolean =
     typeRenames.nonEmpty || subPackages.nonEmpty || flattenNestedTypes.nonEmpty
 
-  // ---- bound state (§8.1: a phase decides from BOUND symbols, never from a raw string) ----
+  // ---- bound state (a phase decides from BOUND symbols, never from a raw string) ----
 
   /** the accepted table: upstream prefix → emitted name. Per-type targets are already composed through `renames`, so this is one longest-prefix map for rewrite, check and [[emittedName]].
     */
@@ -50,7 +50,7 @@ final class PackageRenameTransform(
   /** accepted `flattenNestedTypes` keys, by the SymId of the nested type to promote. */
   private var promote: Map[SymId, String] = Map.empty
 
-  /** declarations whose access boundary a declared move widens — recorded by [[run]] so D3's qualifier derivation reads it rather than re-deriving. DESIGN.md §8.7
+  /** declarations whose access boundary a declared move widens — recorded by [[run]] so the qualifier derivation reads it rather than re-deriving.
     */
   private var widenings:     List[Widening]            = Nil
   private var records:       List[PolicyBinder.Record] = Nil
@@ -69,7 +69,7 @@ final class PackageRenameTransform(
     */
   def policyReport: PolicyReport = PolicyReport.fromBindings(records) ++ PolicyReport(extraFindings)
 
-  /** the accepted table, for layers that must name a type in both namespaces (§4.56). */
+  /** the accepted table, for layers that must name a type in both namespaces. */
   def upstreamTable: Map[String, String] = accepted
 
   /** what `fqn` is emitted as under this instance's accepted policy. */
@@ -79,7 +79,7 @@ final class PackageRenameTransform(
   def recordedWidenings: List[Widening] = widenings
 
   // -------------------------------------------------------------------------
-  // BINDING — every per-type key becomes a SYMBOL before any phase runs (§8.1)
+  // BINDING — every per-type key becomes a SYMBOL before any phase runs
   // -------------------------------------------------------------------------
 
   /** Resolves every per-type key, refuses what cannot be carried out, and decides which boundary moves this port has declared. Done here rather than in `run` so this phase's position cannot change
@@ -162,13 +162,13 @@ final class PackageRenameTransform(
         case scala.None => Some(mv)
     }
 
-    // stage 4: the access boundary the move crosses. DESIGN.md §8.7's package-split
+    // stage 4: the access boundary the move crosses.
     val kept: List[Move] = free.flatMap { mv =>
       val b = boundaryOf(program, mv)
       // A DECLARED package move also publishes the type's package-private members outright: their
       // readers may sit in a dependent this program never sees (a base never resolves against its
-      // dependent, K43), and java's package contract is void once the type has left the package.
-      // One widening per member, reader "(declared)"; the emitter renders them public (§8.7).
+      // dependent), and java's package contract is void once the type has left the package.
+      // One widening per member, reader "(declared)"; the emitter renders them public.
       val declared: List[Widening] =
         if !allowPackageSplit(mv.key) || packageOf(mv.emitted) == packageOf(renamed(mv.key, renames)) then Nil
         else
@@ -193,7 +193,7 @@ final class PackageRenameTransform(
     }
 
     // a declared entry naming a type this program OWNS and no rename moves: the declaration itself
-    // publishes it (a package-private java type the reference port ships public, K51 xviii).
+    // publishes it (a package-private java type the reference port ships public).
     val stayed = (allowPackageSplit -- widenings.map(_.key).toSet).toList.sorted.flatMap { k =>
       program.symbols.all.find(s => s.fullName == k && program.owns(s.id) && s.flags.isPackagePrivate).map(k -> _)
     }
@@ -249,7 +249,7 @@ final class PackageRenameTransform(
         }
 
   // -------------------------------------------------------------------------
-  // THE BOUNDARY RULE — DESIGN.md §8.7, and why M6 could not ship without it
+  // THE BOUNDARY RULE — a per-type rename must not silently break Java's own access boundaries
   // -------------------------------------------------------------------------
 
   /** Which declarations a move puts on the wrong side of an access boundary Java gave them. A per-type rename (or flatten) can split two types that shared a package or top-level enclosure (JLS 6.6.1)
@@ -330,9 +330,8 @@ final class PackageRenameTransform(
       val table = hoisted.symbols.all.foldLeft(hoisted.symbols) { (t, s) =>
         // owned, or an UNOWNED symbol under a renamed prefix that this port really owns the name
         // of: the frontend RESOLVED no declaration for it (a phase minted it, or nothing declares
-        // it), or the port SUPPLIES one — a drop or an injection (ENGINE-LIMITS: 8 errors without
-        // that arm). A RESOLVED external the port does not replace keeps its class-file FQN, which
-        // no phase may move (CLAUDE.md §4.56).
+        // it), or the port SUPPLIES one — a drop or an injection. A RESOLVED external the port
+        // does not replace keeps its class-file FQN, which no phase may move.
         if !(owned(s.id) || (PackageRenameTransform.longestMatch(s.fullName, portOwnedPrefixes).isDefined &&
             movableExternal(hoisted, s)))
         then t
@@ -347,11 +346,11 @@ final class PackageRenameTransform(
       }
       recordMoves(hoisted, table)
       // a recorded widening is a SIGNATURE fact: the symbol ships public, so the emitter's visibility
-      // plan (§8.7) and every dependent's view read it off the symbol, never off a decision row that
+      // plan and every dependent's view read it off the symbol, never off a decision row that
       // a module's ownership filter may withhold (the two emissions disagreed on one `export`).
       val widened = widenings.map(_.subject).toSet
       val shipped = widened.foldLeft(table) { (t, id) =>
-        // ALL THREE non-public levels (ENGINE-LIMITS C15's second face): a promoted nested type reads
+        // ALL THREE non-public levels: a promoted nested type reads
         // the enclosure's PRIVATE statics too (`BitmapFont.PAGE_SIZE` from `BitmapFontData`)
         t.get(id).fold(t)(s => t.updated(s.copy(flags = s.flags.copy(isPrivate = false, isPackagePrivate = false, isProtected = false))))
       }
@@ -360,7 +359,7 @@ final class PackageRenameTransform(
 
   /** May a symbol the program does NOT declare, sitting under one of this port's own prefixes, move with the rename? Only where the frontend recorded NO resolution for its TYPE — a name a PHASE
     * minted, or one nothing on the classpath declares — or where the PORT SUPPLIES the declaration at that name (it dropped the type, or ships injected Scala at the renamed FQN). A RESOLVED external
-    * the port does not replace keeps its class-file FQN. CLAUDE.md §4.56
+    * the port does not replace keeps its class-file FQN.
     */
   private def movableExternal(program: Program, s: Symbol): Boolean =
     val root = PackageRenameTransform.typeRootOf(program, s)
@@ -370,7 +369,7 @@ final class PackageRenameTransform(
       injected(PackageRenameTransform.typeHeadOf(renamed(root.fullName, accepted))))
 
   /** Promotes every accepted `flattenNestedTypes` entry to a top-level unit: the `ClassDef` leaves its enclosing body, the symbol's owner becomes `SymId.None`, and the file header is carried across —
-    * a promoted type becomes its own derived-work file. CLAUDE.md §4.58
+    * a promoted type becomes its own derived-work file.
     */
   private def hoist(program: Program): Program =
     val ids = promote.keySet
@@ -400,7 +399,7 @@ final class PackageRenameTransform(
         now <- table.get(cd.symbol) if now.fullName != was.fullName
         from <- PackageRenameTransform.longestMatch(was.fullName, accepted.keySet)
       do
-        // one row per declaration the policy entry NAMES, never per declaration it merely moved. §4.575
+        // one row per declaration the policy entry NAMES, never per declaration it merely moved.
         val isType = acceptedTypes.contains(from) && was.fullName == from
         if isType || units(cd.symbol) then
           record(
@@ -416,7 +415,7 @@ final class PackageRenameTransform(
           )
     }
     // and the boundary the port declared it was moving — one row per affected declaration, which
-    // §8.7's qualifier derivation reads instead of re-deriving from an upstream FQN.
+    // the qualifier derivation reads instead of re-deriving from an upstream FQN.
     widenings.foreach { w =>
       record(
         Decision(
@@ -455,14 +454,14 @@ object PackageRenameTransform:
     case EnclosureSplit extends Cause("enclosure-split")
     override def toString: String = slug
 
-  /** one declaration a declared move puts across a boundary Java gave it — the row §8.7's qualifier derivation reads.
+  /** one declaration a declared move puts across a boundary Java gave it — the row the qualifier derivation reads.
     */
   final case class Widening(
     /** the `typeRenames`/`subPackages`/`flattenNestedTypes` key that moved the boundary. */
     key:     String,
     cause:   Cause,
     subject: SymId,
-    /** the restricted declaration, by its UPSTREAM name — policy's namespace (§4.56). */
+    /** the restricted declaration, by its UPSTREAM name — policy's namespace. */
     subjectFqn: String,
     /** the declaration on the OTHER side, which is what makes this a crossing rather than a move. */
     readerFqn: String,
@@ -514,7 +513,7 @@ object PackageRenameTransform:
     program.units.flatMap(u => StandardTraversal.allClassDefs(u)(using program))
 
   /** the TYPE a symbol belongs to — climbing owners to the outermost, `s` itself for a type. A MEMBER carries no resolution of its own: the class file its owner came from is what fixes the name, so a
-    * whole subtree answers with one bit (CLAUDE.md §4.56).
+    * whole subtree answers with one bit.
     */
   private[transform] def typeRootOf(program: Program, s: Symbol, fuel: Int = 64): Symbol =
     if fuel <= 0 || s.owner == SymId.None then s
@@ -526,7 +525,7 @@ object PackageRenameTransform:
       s != SymId.None && fuel > 0 && (s == root || program.symbolOf(s).exists(x => rooted(x.owner, fuel - 1)))
     program.symbols.all.collect { case s if rooted(s.id, 64) => s.id }.toSet
 
-  /** the name `fqn` ends up with under `renames` — exposed for code that must translate an upstream name to its emitted one without holding a `Program`. CLAUDE.md §4.56
+  /** the name `fqn` ends up with under `renames` — exposed for code that must translate an upstream name to its emitted one without holding a `Program`.
     */
   def renamed(fqn: String, renames: Map[String, String]): String =
     longestMatch(fqn, renames.keySet) match
@@ -536,8 +535,8 @@ object PackageRenameTransform:
   /** symbols the program declares, as opposed to externals the frontend interned on reference. */
   def ownedSymbols(program: Program): Set[SymId] = program.owned
 
-  /** What a rename map does to a program. An unmatched prefix is always §1(b): the phase is configured with a namespace the program does not contain. Run before the phase to see what will move; run
-    * after with the same map and every prefix must come back unmatched.
+  /** What a rename map does to a program. An unmatched prefix means the phase is configured with a namespace the program does not contain. Run before the phase to see what will move; run after with
+    * the same map and every prefix must come back unmatched.
     */
   final case class Report(matched: Map[String, Int], unmatched: List[String]):
     def render: String =

@@ -4,8 +4,8 @@ import balticporter.core.{ MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRe
 import balticporter.tir.*
 
 /** Re-points every reference to one type at another, differently-named type, whole-or-none — fills the gap a dependent has no other way to close (can't `inject` a base's dropped FQN twice). The
-  * target compiler is the gate on shape, never this phase. `memberRenames` renames the whole override component first, against the PRE-redirect graph. `scopes` is per-entry (§1.5). CLAUDE.md §1(b);
-  * safe unordered unlike `PackageRenameTransform` since the original symbol stays resolvable.
+  * target compiler is the gate on shape, never this phase. `memberRenames` renames the whole override component first, against the PRE-redirect graph. `scopes` is per-entry, so a dependent's own
+  * retyping cannot disagree with the base's published surface; safe unordered unlike `PackageRenameTransform` since the original symbol stays resolvable.
   */
 final class TypeRedirectTransform(
   val redirects:     Map[String, String] = Map.empty,
@@ -24,12 +24,12 @@ final class TypeRedirectTransform(
   def name:                  String    = "type-redirect"
 
   /** Counted by `base-surface`, not a lane of its own: the redirect is total within scope (no position-blind residue for a boundary check to count), and its seam is between MODULES — a dependent
-    * re-pointing a type its base dropped produces signatures the base's published map does not expect (ENGINE-LIMITS: one fatal gap on the first port that hit it).
+    * re-pointing a type its base dropped produces signatures the base's published map does not expect.
     */
   def accountedBy: Set[String] = Set(balticporter.runner.PortRun.BaseSurface)
 
-  /** What the run resolved each declared SOURCE type to (§8.1), bound `Ownership.Either` rather than `Owned`: this phase's whole subject is a type the module does not and cannot declare (the base
-    * dropped it), so `Owned` reported ten good redirects as never-matched on the one port that uses it (`policy 0 -> 10`).
+  /** What the run resolved each declared SOURCE type to, bound `Ownership.Either` rather than `Owned`: this phase's whole subject is a type the module does not and cannot declare (the base dropped
+    * it), so `Owned` would report a good redirect as never-matched on any port that uses one.
     */
   private var bound:   Map[String, Binding[SymId]] = Map.empty
   private var records: List[PolicyBinder.Record]   = Nil
@@ -102,8 +102,8 @@ final class TypeRedirectTransform(
     }
     .mkString(",")
 
-  /** Every type this instance's policy is keyed on — a redirect source, and the owner of a member rename. Used by `mergedWith`'s contract (DESIGN.md §8.13): independent-FQN keys union, a key both
-    * hold with the same value agrees, different values refuse; `external` unions freely (not policy — a fact about a platform's known members, not in `surfaceFingerprint` either).
+  /** Every type this instance's policy is keyed on — a redirect source, and the owner of a member rename. Used by `mergedWith`'s contract: independent-FQN keys union, a key both hold with the same
+    * value agrees, different values refuse; `external` unions freely (not policy — a fact about a platform's known members, not in `surfaceFingerprint` either).
     */
   def subjects: Set[String] =
     (redirects.keySet ++ memberRenames.keySet).map(MergeablePolicy.subjectOf)
@@ -248,7 +248,7 @@ final class TypeRedirectTransform(
     // members move with the type. A never-parsed type reaches statics through an explicit
     // `Select(Ident(type), member)`; a PARSED type is re-qualified from the member symbol's OWNER
     // — so a TWIN (same name/signature, owner = target) is minted instead of re-pointing the
-    // original's owner, which would detach it from its unit (§4.56) and break "base's own" (D2).
+    // original's owner, which would detach it from its unit and break "base's own".
     memberTwins = mapping.flatMap { (fromType, toType) =>
       // read both names from `table`, never `program` — a minted target is only in the former
       val fromFqn = table.get(fromType).map(_.fullName).getOrElse("")
@@ -310,7 +310,7 @@ final class TypeRedirectTransform(
     if mapping.isEmpty then program.rebuilt(symbols = table)
     else
       given Program = program.rebuilt(symbols = table)
-      // standard traversal (§3), so every type occurrence is reached; scoped at both the tree and
+      // standard traversal, so every type occurrence is reached; scoped at both the tree and
       // the symbol `info` or the two read differently. One pass per distinct scope — the `mapping`
       // hooks read is narrowed outside the hook, since a hook cannot see which declaration it is
       // under; unrestricted entries collapse to the single pre-scope pass.
@@ -349,7 +349,7 @@ final class TypeRedirectTransform(
   private def renameMembers(program: Program): Program =
     if boundRenames.isEmpty then program
     else
-      // no `baseUnits`: a dependent's Program contains its base and does not emit it (D2), so
+      // no `baseUnits`: a dependent's Program contains its base and does not emit it, so
       // renaming here defines nothing twice and lets the dependent's own overrides come out under
       // the base's already-emitted name; `SurfacePolicy` catches a base/dependent disagreement.
       val graph           = OverrideGraph.build(program, external)
@@ -405,7 +405,7 @@ final class TypeRedirectTransform(
       )
 
   /** One counted refusal: a `PolicyReport` row plus a `ScopedOut` decision. `About.ThisRun`, not `TheKey` — the base owns every key here (a merged phase), but the refusal evidence is the dependent's
-    * own program (ENGINE-LIMITS D13).
+    * own program.
     */
   private def refuseRename(r: TypeRedirectTransform.Rename, why: String): Unit =
     runFindings = runFindings :+ PolicyFinding(
@@ -461,5 +461,5 @@ object TypeRedirectTransform:
     *   the override CLOSURE of each actually moves.
     */
   final case class Rename(source: String, target: String, entry: String, newName: String, hits: List[SymId]):
-    /** The string an agent edits — the `Reason.Configured` key and refusal-report id (§4.575). */
+    /** The string an agent edits — the `Reason.Configured` key and refusal-report id. */
     def key: String = s"$entry -> $newName"

@@ -5,8 +5,8 @@ import balticporter.tir.*
 
 /** Makes a listed java `static final` SCRATCH field thread-confined: the companion's `val f: T = e` becomes `private val f$tl = new ThreadLocal[T] { override def initialValue(): T = e }` beside
   * `def f: T = f$tl.get()`, so every `Owner.f` reference still compiles and each thread reads its own instance. `initialValue`, never `withInitial`: the Scala.js javalib has no such factory (the
-  * reference port's own note). CLAUDE.md §1(b): `fields` keys `owner#name`; empty = no-op. Refused and COUNTED (`policyReport`, one row naming the guard): a field that is not static, not final,
-  * written after initialisation anywhere in the program, or whose initialiser is not a fresh allocation — each would change what java's single shared instance meant.
+  * reference port's own note). `fields` keys `owner#name`; empty = no-op. Refused and COUNTED (`policyReport`, one row naming the guard): a field that is not static, not final, written after
+  * initialisation anywhere in the program, or whose initialiser is not a fresh allocation — each would change what java's single shared instance meant.
   */
 final class ThreadConfinedStaticsTransform(val fields: Set[String] = Set.empty) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   import ThreadConfinedStaticsTransform.*

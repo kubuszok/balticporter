@@ -5,17 +5,17 @@ import balticporter.tir.*
 
 /** Moves a library's nullability annotations out of an annotation the compiler ignores and into the type — `T | Null`, `W[T]`, or `Option[T]` — stripping it and coercing at every slot seam. Runs
   * after collections, before package rename (annotation FQNs are upstream). Every refusal (vararg, primitive, annotated args, override boundary) is left untouched and counted by
-  * [[NullabilityBoundaryCheck]]. `ENGINE-LIMITS.md` K2, K13.
+  * [[NullabilityBoundaryCheck]].
   */
 final class NullabilityTransform(
   val annotations: Set[String] = Set.empty,
   val target:      NullabilityTransform.Target = NullabilityTransform.Target.Union,
   val scope:       RuleScope = RuleScope.Everywhere(),
   /** Members whose return (or field) type is nullable even though java carries no nullability annotation, matched by exact FQN (`Class#member`, or `Class#member(desc)` if overloaded) against
-    * `Symbol.fullName` at bind time — same mechanism and counts as annotation selection. Empty is the no-op. `ENGINE-LIMITS.md` O4, K13.6
+    * `Symbol.fullName` at bind time — same mechanism and counts as annotation selection. Empty is the no-op.
     */
   val nullableMembers: Set[String] = Set.empty,
-  /** also take the members the REFERENCE port returns wrapped (`RunScope.derived`, `PROGRESS.md` §13.31 step 1); off is the no-op.
+  /** also take the members the REFERENCE port returns wrapped (`RunScope.derived`); off is the no-op.
     */
   val deriveMembers: Boolean = false
 ) extends Phase,
@@ -45,10 +45,10 @@ final class NullabilityTransform(
   override def runsBefore: Set[String] = Set("package-rename")
 
   // -------------------------------------------------------------------------
-  // policy, bound once by the RUN before any phase runs (§8.1)
+  // policy, bound once by the RUN before any phase runs
   // -------------------------------------------------------------------------
 
-  /** annotation SYMBOL → the declared FQN that named it, which is the key a decision quotes and the string an agent edits (§4.575). Empty when nothing bound, which is the no-op.
+  /** annotation SYMBOL → the declared FQN that named it, which is the key a decision quotes and the string an agent edits. Empty when nothing bound, which is the no-op.
     */
   private var boundAnnots: Map[SymId, String]        = Map.empty
   private var records:     List[PolicyBinder.Record] = Nil
@@ -85,8 +85,8 @@ final class NullabilityTransform(
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings ++ deadMemberFindings)
 
-  /** Surface fingerprint over the shared-surface facts (annotations, target, scope, nullableMembers). `target`/`nullableMembers` segments are omitted at default/empty (§1(b) no-op at the
-    * fingerprint).
+  /** Surface fingerprint over the shared-surface facts (annotations, target, scope, nullableMembers). `target`/`nullableMembers` segments are omitted at default/empty, so an unconfigured key never
+    * moves the fingerprint.
     */
   def surfaceFingerprint: String =
     val targetSeg = target match { case Target.Union => ""; case t => s"|${t.tag}" }
@@ -95,17 +95,17 @@ final class NullabilityTransform(
     s"${annotations.toList.sorted.mkString(",")}$targetSeg|${scope.fingerprint}$memberSeg$derSeg"
 
   /** Every shared-surface subject this instance's policy is keyed on — annotation FQNs, nullableMembers and scope entries — through [[MergeablePolicy.subjectOf]]. A dependent re-scoping a
-    * base-emitted type is a `SurfaceIntrusion` (§1.5).
+    * base-emitted type is a `SurfaceIntrusion`.
     */
   def subjects: Set[String] = (annotations ++ nullableMembers ++ scope.entries).map(MergeablePolicy.subjectOf)
 
-  /** Merges two instances' policy (`DESIGN.md` §8.13): `annotations`/`nullableMembers` union; `target` must agree or refuse (two shapes for one member is a choice, not a composition); `scope` unions
-    * entries in both directions (`Everywhere` shrinks, `Only` grows as entries accumulate), so a base `Everywhere` merged with a dependent `Only` refuses — no entry set preserves both. `added` is the
-    * subject side `SurfaceFold` screens against `governs`.
+  /** Merges two instances' policy: `annotations`/`nullableMembers` union; `target` must agree or refuse (two shapes for one member is a choice, not a composition); `scope` unions entries in both
+    * directions (`Everywhere` shrinks, `Only` grows as entries accumulate), so a base `Everywhere` merged with a dependent `Only` refuses — no entry set preserves both. `added` is the subject side
+    * `SurfaceFold` screens against `governs`.
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: NullabilityTransform =>
-      // dependent at default (Union) inherits the base's target; non-default must agree (§1.5).
+      // dependent at default (Union) inherits the base's target; non-default must agree.
       val mergedTarget = (target, o.target) match
         case (a, Target.Union) => Right(a) // dependent inherits
         case (Target.Union, b) => Right(b) // base at default, dependent chooses
@@ -153,7 +153,7 @@ final class NullabilityTransform(
     */
   private var derivedTargetNames: Map[SymId, String] = Map.empty
 
-  /** symbols whose type is now `W[...]` — wrapper mode's own record of what it moved, which is the only thing it is allowed to conclude anything from (§4.56).
+  /** symbols whose type is now `W[...]` — wrapper mode's own record of what it moved, which is the only thing it is allowed to conclude anything from.
     */
   private var wrapped: Map[SymId, TypeRepr] = Map.empty
 
@@ -187,8 +187,8 @@ final class NullabilityTransform(
 
   /** Every seam and refusal this run produced, restricted to the units the run EMITS.
     *
-    * A dependent port's `Program` holds its base's units too, and a refusal inside one of those is the BASE's finding, reported by a repository that cannot act on it (`ENGINE-LIMITS.md` D2). A base
-    * port passes `program.units` and this is the identity.
+    * A dependent port's `Program` holds its base's units too, and a refusal inside one of those is the BASE's finding, reported by a repository that cannot act on it. A base port passes
+    * `program.units` and this is the identity.
     */
   def boundary(units: List[Tree.ClassDef]): List[Finding] =
     val emitted = units.map(_.symbol).toSet
@@ -198,8 +198,8 @@ final class NullabilityTransform(
   // the run
   // -------------------------------------------------------------------------
 
-  /** Owned AND emitted: a declaration under a DROPPED type (`Substituted`, an injection stands at its name) is a signature this phase cannot see the replacement of — read literally, like a class file
-    * (CLAUDE.md §4.56, K15). 65 errors at the injected `Json`'s seams otherwise.
+  /** Owned AND emitted: a declaration under a DROPPED type (`Substituted`, an injection stands at its name) is a signature this phase cannot see the replacement of — read literally, like a class
+    * file.
     */
   private def retypable(p: Program, id: SymId, fuel: Int = 16): Boolean =
     p.owns(id) && {
@@ -209,11 +209,11 @@ final class NullabilityTransform(
     }
 
   override def run(program: Program): Program =
-    // reset per-run state: a phase instance is reused across two translations (§5.1).
+    // reset per-run state: a phase instance is reused across two translations.
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
     primSyms = Set.empty; matchedMembers.clear()
-    // §1(b) no-op: nothing bound, nothing to do.
+    // no-op: nothing bound, nothing to do.
     if boundAnnots.isEmpty && effectiveMembers.isEmpty then return program
 
     var table = program.symbols
@@ -322,8 +322,8 @@ final class NullabilityTransform(
 
     // The override edge the annotation travels down (wrapper mode only): java's annotation is a
     // member-level contract an override inherits without repeating, but a wrapper retype changes
-    // the SIGNATURE, so an unannotated override becomes E038/E007, invisible until 0 typer errors
-    // (§3). Propagated down the override graph at the same slot, keyed on the annotated member.
+    // the SIGNATURE, so an unannotated override becomes E038/E007, invisible until 0 typer errors.
+    // Propagated down the override graph at the same slot, keyed on the annotated member.
     def paramIndexOf(s: Symbol): Int =
       program
         .definitionOf(s.owner)
@@ -561,8 +561,8 @@ final class NullabilityTransform(
   // -------------------------------------------------------------------------
 
   /** Would honouring `key` here retype a declaration this run does not emit, on the strength of policy THIS module added? An annotation FQN selects without naming, so `governs` admits it while
-    * retyping a base's own untouched declarations — §1.5's failure, invisible by construction. Only the annotation half needs this — a scope entry reaching a base is already a fatal
-    * `SurfaceIntrusion`. An INHERITED key is not screened (`ENGINE-LIMITS.md` D2).
+    * retyping a base's own untouched declarations, invisible by construction. Only the annotation half needs this — a scope entry reaching a base is already a fatal `SurfaceIntrusion`. An INHERITED
+    * key is not screened.
     */
   private def intrudesOnBase(p: Program, s: Symbol, key: String): Boolean =
     ownSubjects.exists(_.contains(MergeablePolicy.subjectOf(key))) && !runScope.emits(unitOf(p, s.id))
@@ -580,8 +580,8 @@ final class NullabilityTransform(
     */
   private var planned = false
 
-  /** A declared scope entry that named no annotated declaration — the one §1(b) no-op the ordinary never-fired machinery cannot see: `PolicyBinder.bindScope` asks whether the REGION exists, which a
-    * real (unannotated) type answers `yes` to. Only entries whose binding succeeded are reported, or a mistake is reported twice. `ENGINE-LIMITS.md` K13
+  /** A declared scope entry that named no annotated declaration — the one no-op the ordinary never-fired machinery cannot see: `PolicyBinder.bindScope` asks whether the REGION exists, which a real
+    * (unannotated) type answers `yes` to. Only entries whose binding succeeded are reported, or a mistake is reported twice.
     */
   private def deadScopeFindings: List[PolicyFinding] =
     if !planned then Nil
@@ -602,7 +602,7 @@ final class NullabilityTransform(
         )
       }
 
-  /** A `nullableMembers` entry that named no declaration, reported after the plan loop (`planned`) — like [[deadScopeFindings]], a §1(b) no-op nothing else in the run can see.
+  /** A `nullableMembers` entry that named no declaration, reported after the plan loop (`planned`) — like [[deadScopeFindings]], a no-op nothing else in the run can see.
     */
   private def deadMemberFindings: List[PolicyFinding] =
     if !planned || nullableMembers.isEmpty then Nil
@@ -620,8 +620,7 @@ final class NullabilityTransform(
       }
 
   /** The closure a `RuleScope` does not compute — a scoped-out PARENT beside a retyped CHILD (an owned subtype that RE-STATES the annotation on a same-named member gets retyped — half an override
-    * pair). A subtype that merely INHERITS the annotation never reaches this predicate (that gap is [[deadScopeFindings]]'s). Fix is a manifest scope entry, never an engine change. `ENGINE-LIMITS.md`
-    * K13.
+    * pair). A subtype that merely INHERITS the annotation never reaches this predicate (that gap is [[deadScopeFindings]]'s). Fix is a manifest scope entry, never an engine change.
     */
   private def scopedOutParents(p: Program, plan: List[Planned]): Unit =
     if scope.isUnrestricted || plan.isEmpty then return
@@ -665,15 +664,15 @@ final class NullabilityTransform(
       }
     }
 
-  /** every base declaration a key of this module's selected, by key — one `PolicyFinding` per KEY, because that is the string an agent edits (§4.575) and a row per declaration would report one
-    * manifest mistake once per member of the base.
+  /** every base declaration a key of this module's selected, by key — one `PolicyFinding` per KEY, because that is the string an agent edits and a row per declaration would report one manifest
+    * mistake once per member of the base.
     */
   private val intrusions = collection.mutable.LinkedHashMap.empty[String, collection.mutable.ListBuffer[String]]
 
   private def baseIntrusion(p: Program, s: Symbol, key: String): Unit =
     intrusions.getOrElseUpdate(key, collection.mutable.ListBuffer.empty) += describe(p, s)
 
-  /** §1(b), counted and non-fatal: the emission is already correct (the declaration keeps the base's type), but the manifest states a contract for a namespace this module does not own.
+  /** counted and non-fatal: the emission is already correct (the declaration keeps the base's type), but the manifest states a contract for a namespace this module does not own.
     */
   private def baseIntrusionFindings: List[PolicyFinding] =
     intrusions.toList.sortBy(_._1).map { (key, subjects) =>
@@ -713,7 +712,7 @@ final class NullabilityTransform(
   private def scopedOut(p: Program, s: Symbol, entry: String): Unit =
     val at = if s.flags.isParam then declarationOf(p, s) else s.id
     if s.flags.isParam || Decision.isDeclaration(p, s) then
-      // dependent does not report its base's exclusions (D2) — the finding is attributed to the declaration's own unit.
+      // dependent does not report its base's exclusions — the finding is attributed to the declaration's own unit.
       issues += Finding(
         Issue.ScopedOut,
         s.fullName,
@@ -743,7 +742,7 @@ final class NullabilityTransform(
         }
 
   // -------------------------------------------------------------------------
-  // decisions — one row per DECLARATION whose emitted form changed, per policy key (§5.1)
+  // decisions — one row per DECLARATION whose emitted form changed, per policy key
   // -------------------------------------------------------------------------
 
   private def recordDecisions(before: Program, plan: List[Planned], after: SymbolTable)(using Program): Unit =
@@ -772,7 +771,7 @@ final class NullabilityTransform(
         case _ => ()
     }
 
-  /** the DECLARATION a retype is attributed to — a parameter's is its method, whose signature is the thing that moved (§5.1: never one row per parameter).
+  /** the DECLARATION a retype is attributed to — a parameter's is its method, whose signature is the thing that moved (never one row per parameter).
     */
   private def declarationOf(s: Symbol): SymId = if s.flags.isParam then s.owner else s.id
 
@@ -791,7 +790,7 @@ final class NullabilityTransform(
             // sentinel (isEmpty would read false); init to W.empty. Not applied to parameters.
             // …but not a FINAL one: java assigns it in every constructor before any read (definite
             // assignment), and an rhs here turns the emitter's var placeholder into a `final val`
-            // the constructors can no longer assign (`AssetDescriptor.params`, §13.31 step 1).
+            // the constructors can no longer assign (`AssetDescriptor.params`).
             case scala.None if !p.symbolOf(v.symbol).exists(s => s.flags.isParam || (s.flags.isFinal && !s.flags.isMutable)) =>
               out.copy(rhs = Some(wrap(t, Tree.Literal(Constant.NullC, TypeRepr.NoType, v.origin))))
             case _ =>
@@ -819,7 +818,7 @@ final class NullabilityTransform(
     wrapped.get(t.sym).map(w => t.copy(tpe = w)).getOrElse(t)
 
   /** An operator is never unwrapped here: the traversal is bottom-up, so unwrapping the receiver of `x == null` would rewrite it to `x.get == null` one node BEFORE [[nullTest]] could see it, turning
-    * the mandatory rewrite into a run-time NPE. `eq`/`ne` (AnyRef reference identity) are unwrapped with `.orNull` — null is a legal operand in a reference comparison (CLAUDE.md §4.4).
+    * the mandatory rewrite into a run-time NPE. `eq`/`ne` (AnyRef reference identity) are unwrapped with `.orNull` — null is a legal operand in a reference comparison.
     */
   override def transformSelect(t0: Tree.Select)(using p: Program): Term =
     val t = wrapped.get(t0.sym).map(w => t0.copy(tpe = w)).getOrElse(t0)
@@ -856,9 +855,9 @@ final class NullabilityTransform(
           else result
         case _ => result
 
-  /** A lambda body is a slot — the function's result, exactly as `return` is a method's (§1(a)). The slot, in evidence-availability order: the lambda's recorded `resultTpt`; a `FunctionN`'s last
-    * argument; the SAM method of an OWNED interface (retyped, so the body stays wrapped); otherwise the SAM is a class file's — the formal can't say, so the body is unwrapped and counted, as
-    * [[coerceArgs]] treats an external callee's argument.
+  /** A lambda body is a slot — the function's result, exactly as `return` is a method's. The slot, in evidence-availability order: the lambda's recorded `resultTpt`; a `FunctionN`'s last argument;
+    * the SAM method of an OWNED interface (retyped, so the body stays wrapped); otherwise the SAM is a class file's — the formal can't say, so the body is unwrapped and counted, as [[coerceArgs]]
+    * treats an external callee's argument.
     */
   override def transformLambda(t: Tree.Lambda)(using p: Program): Term =
     if !isWrapper then t
@@ -958,7 +957,7 @@ final class NullabilityTransform(
     case other => other
 
   // -------------------------------------------------------------------------
-  // wrapper-mode coercion — attack the SLOT (K2), never the type
+  // wrapper-mode coercion — attack the SLOT, never the type
   // -------------------------------------------------------------------------
 
   private def isWrapper: Boolean = target.isWrapper
@@ -1016,7 +1015,7 @@ final class NullabilityTransform(
     Tree.Select(e, orNullSym, elementOf(e.tpe), e.origin)
 
   /** The slot-nullability rule: `.get` when the target slot is provably non-null (a primitive after unboxing), `.orNull` when the slot accepts null (the java default for every reference type). A
-    * dereference throws on null (java does too); a slot coercion preserves it. `CLAUDE.md` §4.4
+    * dereference throws on null (java does too); a slot coercion preserves it.
     */
   private def slotUnwrap(want: TypeRepr, e: Term): Term =
     if isPrimitiveSlot(want) then unwrap(e) else unwrapOrNull(e)
@@ -1044,8 +1043,8 @@ final class NullabilityTransform(
     else if isWrapperType(want) && !isWrapped(e) then wrap(want, e)
     else if !isWrapperType(want) && isWrapped(e) && want != TypeRepr.NoType then slotUnwrap(want, e)
     else if isWrapperType(want) && isWrapped(e) && !sameSlot(e.tpe, want) then
-      // unless the formal cannot be written here: a callee type variable doesn't resolve at the call site (G12).
-      // W.empty needs no ascription — it conforms at every element type, so skip it (G20).
+      // unless the formal cannot be written here: a callee type variable doesn't resolve at the call site.
+      // W.empty needs no ascription — it conforms at every element type, so skip it.
       if isEmptyOfWrapper(e) then e
       else
         typeVarsIn(want) match
@@ -1066,13 +1065,13 @@ final class NullabilityTransform(
         case x: Tree.If    => x.copy(thenp = coerceTo(want, x.thenp), elsep = coerceTo(want, x.elsep))
         case x: Tree.Match => x.copy(cases = x.cases.map(c => c.copy(body = coerceTo(want, c.body))))
         case x: Tree.Block => x.copy(expr = coerceTo(want, x.expr))
-        // cast keeps its own type (`tpt`, not `want` — ENGINE-LIMITS §0); unwrap decided by the cast's target: primitive -> .get, reference -> .orNull.
+        // cast keeps its own type (`tpt`, not `want`); unwrap decided by the cast's target: primitive -> .get, reference -> .orNull.
         case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
         case _ => e
     else e
 
-  /** The callee's own type variables, replaced by what the RECEIVER instantiated them with — a formal's `T` is not in scope at the call site, so substitute the receiver's actual type arguments
-    * (`CLAUDE.md` §4.56). Empty where nothing can be said (raw/non-generic receiver, arity mismatch, inherited callee); those fall through to [[coerceTo]]'s refusal.
+  /** The callee's own type variables, replaced by what the RECEIVER instantiated them with — a formal's `T` is not in scope at the call site, so substitute the receiver's actual type arguments. Empty
+    * where nothing can be said (raw/non-generic receiver, arity mismatch, inherited callee); those fall through to [[coerceTo]]'s refusal.
     */
   private def receiverSubst(t: Tree.Apply)(using p: Program): Map[SymId, TypeRepr] =
     val recv = t.fun match
@@ -1091,8 +1090,8 @@ final class NullabilityTransform(
       case _ => Map.empty
 
   /** Is the receiver's type head an EXTERNAL type while the method symbol belongs to an OWNED one? `CollectionsTransform.retarget` points the receiver at an external API with its own nullability
-    * model, so coercing against the java formals this phase wrapped is wrong. Excludes ordinary inheritance (both owned) and external-to-external calls (neither owned) — §4.56 read at a phase
-    * interaction: this phase did not retarget the receiver, so it may not reason about it.
+    * model, so coercing against the java formals this phase wrapped is wrong. Excludes ordinary inheritance (both owned) and external-to-external calls (neither owned): this phase did not retarget
+    * the receiver, so it may not reason about it.
     */
   private def isRetargetted(t: Tree.Apply)(using p: Program): Boolean =
     val recvHead = t.fun match
@@ -1201,14 +1200,14 @@ final class NullabilityTransform(
   // -------------------------------------------------------------------------
 
   /** every `return` that belongs to THIS method, rewritten by `f`. The same DELIBERATELY BOUNDED walk `CollectionsTransform.coerceReturns` performs: a `return` inside a lambda, anonymous class or
-    * local class returns from THAT, not this. The default arm does not descend, so a later node kind is a MISSED rewrite — loud, never wrong. A `Commented` wrapper is read THROUGH (§4.58).
+    * local class returns from THAT, not this. The default arm does not descend, so a later node kind is a MISSED rewrite — loud, never wrong. A `Commented` wrapper is read THROUGH.
     */
   private def mapReturns(want: TypeRepr, t: Term, f: (TypeRepr, Term) => Term): Term =
     ReturnSites.map(t)(f(want, _))
 
   /** the type variables a type mentions THAT THIS UNIT CANNOT NAME — [[mentionsTypeParam]]'s question without a `Program`, narrowed to what's actually out of reach. A variable declared by the walked
-    * unit (or nested inside it) IS writable everywhere in it; only ANOTHER unit's variable (the CALLEE's own, `ENGINE-LIMITS.md` G12) is not. Unit-granularity because that is what the walk carries
-    * ([[currentUnit]]) — a bottom-up traversal has no finer stack to ask.
+    * unit (or nested inside it) IS writable everywhere in it; only ANOTHER unit's variable (the CALLEE's own) is not. Unit-granularity because that is what the walk carries ([[currentUnit]]) — a
+    * bottom-up traversal has no finer stack to ask.
     */
   private def typeVarsIn(t: TypeRepr): List[String] = t match
     case TypeRepr.TypeRef(_, s)       => typeVars.get(s).filterNot(_._2 == currentUnit).map(_._1).toList
@@ -1298,20 +1297,20 @@ object NullabilityTransform:
   enum Slot:
     case Return, Field, Param
 
-  /** The shape the contract takes in the emitted type — `T | Null` (union floor, not transparent at an abstract `T`), `W[T]` (a configured wrapper — CLOSES K13, composes at every `T`), or `Option[T]`
-    * (same closure, `scala.Option` semantics/allocation cost). `Named` and `Option` share the five-member contract: `apply`, `empty`, `get`, `orNull`, `isEmpty`. `ENGINE-LIMITS.md` K13
+  /** The shape the contract takes in the emitted type — `T | Null` (union floor, not transparent at an abstract `T`), `W[T]` (a configured wrapper, composes at every `T`), or `Option[T]` (same
+    * composability, `scala.Option` semantics/allocation cost). `Named` and `Option` share the five-member contract: `apply`, `empty`, `get`, `orNull`, `isEmpty`.
     */
   enum Target:
-    /** `T | Null` — the union floor. Free at every concrete reference type, NOT transparent at an abstract `T` (K13).
+    /** `T | Null` — the union floor. Free at every concrete reference type, NOT transparent at an abstract `T`.
       */
     case Union
 
-    /** `W[T]` — a per-library opaque wrapper satisfying the five-member contract. The FQN is the port's to state, never the engine's; sge's `lowlevel.Nullable` is the first policy value. CLOSES K13:
-      * `W[T]` composes at every `T`.
+    /** `W[T]` — a per-library opaque wrapper satisfying the five-member contract. The FQN is the port's to state, never the engine's; sge's `lowlevel.Nullable` is the first policy value. `W[T]`
+      * composes at every `T`, including an abstract one.
       */
     case Named(fqn: String)
 
-    /** `Option[T]` — `scala.Option`, whose allocation cost (I7) is measured separately. CLOSES K13 for the same reason as `Named`.
+    /** `Option[T]` — `scala.Option`, whose allocation cost is measured separately. Composes at every `T` for the same reason as `Named`.
       */
     case OptionTarget
 

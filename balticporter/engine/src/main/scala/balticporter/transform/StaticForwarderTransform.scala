@@ -11,8 +11,8 @@ import balticporter.tir.TypeRepr.NoType
 final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.Forwarder]) extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "static-forwarder-inline"
 
-  /** What the run resolved each declared wrapper and member to (§8.1), bound as the full key `wrapper#member` — what a finding quotes, since a bare `getSimpleName` is not editable without first
-    * working out which forwarder it belongs to (§4.575).
+  /** What the run resolved each declared wrapper and member to, bound as the full key `wrapper#member` — what a finding quotes, since a bare `getSimpleName` is not editable without first working out
+    * which forwarder it belongs to.
     */
   private var boundMembers:  Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
   private var records:       List[PolicyBinder.Record]                    = Nil
@@ -73,8 +73,8 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
     }
     boundTargets = hits.flatMap((f, _, ss) => ss.filterNot(nullary).map(_ -> f)).sortBy(_._1.id.raw)
 
-  /** Inlining a forwarder removes a dependency from the emitted code, so the forwarder list is shared surface (§1.5). Sorted at every level, or two agreeing manifests compare unequal on a `Set`'s
-    * iteration order.
+  /** Inlining a forwarder removes a dependency from the emitted code, so the forwarder list is shared surface. Sorted at every level, or two agreeing manifests compare unequal on a `Set`'s iteration
+    * order.
     */
   def surfaceFingerprint: String =
     forwarders.map(f => s"${f.wrapper}->${f.receiver}${f.members.toList.sorted.mkString("(", ",", ")")}").sorted.mkString(",")

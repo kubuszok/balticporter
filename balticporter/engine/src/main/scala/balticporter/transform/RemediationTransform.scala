@@ -6,7 +6,7 @@ import balticporter.tir.*
 
 /** THE PORTABILITY MENU's other end: a port SELECTS one of `Remediator`'s verified templates at a location (`PortManifest.resolutions`) and this phase performs it, inside the pipeline. Runs LAST in
   * `surface`. Every remedy applies or refuses with a counted, named guard — never silent. `classTables` is the `class-table` destination, keyed `owner#member` of the CALLEE, valued `owner#member` of
-  * the table's lookup; empty is the no-op. CLAUDE.md §1(b),§3,§5; DESIGN.md §8.16,§8.18
+  * the table's lookup; empty is the no-op.
   */
 final class RemediationTransform(
   val classTables: Map[String, String] = Map.empty
@@ -30,7 +30,7 @@ final class RemediationTransform(
   private var binder:       Option[PolicyBinder] = scala.None
   private var unusedTables: List[String]         = Nil
 
-  /** which declarations THIS RUN emits — ENGINE-LIMITS D2 at the resolution ledger. Unguarded, a dependent would re-apply a base's own selections over shared units it does not own.
+  /** which declarations THIS RUN emits, at the resolution ledger. Unguarded, a dependent would re-apply a base's own selections over shared units it does not own.
     */
   private var scope: RunScope = RunScope.whole
 

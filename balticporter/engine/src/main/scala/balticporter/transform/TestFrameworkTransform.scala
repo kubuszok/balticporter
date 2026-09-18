@@ -2,9 +2,9 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** A JUnit suite → a CROSS-PLATFORM Scala suite (MUnit). §1(b): `suite`/`testMember` are constructor parameters, but MUnit's own contract (curried `test(name)(body)`, `.ignore`, `intercept[E]`,
-  * assertions) is named literally, so pointing `suite` elsewhere does not compile. `@Rule`/`@RunWith`/JUnit 5/TestNG/JUnit 3/Hamcrest are unsupported, reported with their §1 classification (an
-  * unrecognised annotation silently registers zero tests).
+/** A JUnit suite → a CROSS-PLATFORM Scala suite (MUnit). `suite`/`testMember` are constructor parameters, but MUnit's own contract (curried `test(name)(body)`, `.ignore`, `intercept[E]`, assertions)
+  * is named literally, so pointing `suite` elsewhere does not compile. `@Rule`/`@RunWith`/JUnit 5/TestNG/JUnit 3/Hamcrest are unsupported, reported with their classification (an unrecognised
+  * annotation silently registers zero tests).
   */
 final class TestFrameworkTransform(
   suite:      String = TestFrameworkTransform.DefaultSuite,
@@ -22,18 +22,18 @@ final class TestFrameworkTransform(
   def name: String = "junit->portable-suite"
 
   /** WHICH DECLARATIONS THIS RUN EMITS — a suite whose java superclass is a BASE module's test class is a chain this run cannot write (`override def bpFreshState` would name a member only the base's
-    * run could put there) and is refused and counted instead. `CLAUDE.md` §1.5. [[RunScope.whole]] is the default, correct for a base or single-module port.
+    * run could put there) and is refused and counted instead. [[RunScope.whole]] is the default, correct for a base or single-module port.
     */
   private var scope: RunScope = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit = scope = binder.run
 
-  /** SurfacePolicy: [[suite]] becomes the converted suite's parent, [[testMember]] every `@Test` call, so two differently-configured modules emit different signatures. `ENGINE-LIMITS.md` CT9.
+  /** SurfacePolicy: [[suite]] becomes the converted suite's parent, [[testMember]] every `@Test` call, so two differently-configured modules emit different signatures.
     */
   def surfaceFingerprint: String = s"suite=$suite,test=$testMember"
 
   /** JUnit's assertion statics live at THREE FQNs (JUnit 3's `Assert`/`TestCase` plus JUnit 4's), all sharing `org.junit.Assert`'s contract — `(expected, actual)` with an optional leading
-    * `String message`. A §1(a) fact about JUnit, not a constructor parameter.
+    * `String message`. A fact about JUnit true of every port, not a constructor parameter.
     */
   private val AssertClasses = Set("org.junit.Assert", "junit.framework.Assert", "junit.framework.TestCase")
 
@@ -47,7 +47,7 @@ final class TestFrameworkTransform(
   private val MunitMembers = Set("assertEquals", "assertNotEquals", "assert", "fail", "assertEqualsFloat", "assertEqualsDouble", "intercept")
 
   /** JUnit's OTHER spelling of `@Test(expected = …)`: `@Rule ExpectedException thrown` arms a matcher at `thrown.expect(…)` and applies it to whatever the test throws from there on. JUnit's own
-    * contract (`ExpectedExceptionStatement.evaluate`), so a §1(a) fact, not policy. [[expectedException]] models it; deltas are enumerated there per CLAUDE.md §3.
+    * contract (`ExpectedExceptionStatement.evaluate`), so a fact true of every JUnit port, not policy. [[expectedException]] models it; deltas are enumerated there.
     */
   private val ExpectedExceptionCls = "org.junit.rules.ExpectedException"
   private val RuleAnn              = "org.junit.Rule"
@@ -135,7 +135,7 @@ final class TestFrameworkTransform(
   private var suitesConverted = 0
   private var testsConverted  = 0
 
-  /** `thrown.expect(…)` sites turned into `intercept`; declined ones are one [[Finding]] each, naming the guard (`CLAUDE.md` §3).
+  /** `thrown.expect(…)` sites turned into `intercept`; declined ones are one [[Finding]] each, naming the guard.
     */
   private var rulesConverted = 0
 
@@ -160,7 +160,7 @@ final class TestFrameworkTransform(
   /** the classes that declare at least one `@Test` — a suite, in this phase's sense. */
   private var testDeclarers: Set[SymId] = Set.empty
 
-  // ---- the per-test RECONSTRUCTION (`ENGINE-LIMITS.md` X4) — see [[planFreshState]] ------------
+  // ---- the per-test RECONSTRUCTION — see [[planFreshState]] ------------
 
   /** class → the `bpFreshState` member IT declares. */
   private var freshSym: Map[SymId, SymId] = Map.empty
@@ -179,11 +179,11 @@ final class TestFrameworkTransform(
   private val madeMutable   = collection.mutable.Set.empty[SymId]
   private var suitesRebuilt = 0
 
-  /** Constructs this phase could not translate, with their CLAUDE.md §1 classification. Empty until [[run]] has executed.
+  /** Constructs this phase could not translate, with their classification. Empty until [[run]] has executed.
     */
   def findings: List[Finding] = found.toList
 
-  /** the program-declared SUPERCLASS of `cd`, if any. A parent this program does not declare, or a TRAIT (java's `implements`), is not a candidate — §4.56.
+  /** the program-declared SUPERCLASS of `cd`, if any. A parent this program does not declare, or a TRAIT (java's `implements`), is not a candidate.
     */
   private def classParentOf(cd: Tree.ClassDef)(using p: Program): Option[Tree.ClassDef] =
     cd.parents.iterator.map { case tt: TypeTree => headSymOf(tt.tpe); case t: Term => headSymOf(t.tpe) }.flatMap(classDefs.get).find(c => !p.symbolOf(c.symbol).exists(_.flags.isTrait))
@@ -242,8 +242,8 @@ final class TestFrameworkTransform(
   // -------------------------------------------------------------------------
 
   /** Per-test RECONSTRUCTION: JUnit builds a fresh instance per `@Test` (JLS 12.5); MUnit has one suite instance. Hoists that sequence into `override def bpFreshState()`, called ahead of `@Before`,
-    * chaining `super.bpFreshState()` after zeroing this class's own fields (`ENGINE-LIMITS.md` X4). Not reproduced (§3): object identity, a non-replayable constructor, a field with no writable
-    * default, a base module's test class — each guarded and counted.
+    * chaining `super.bpFreshState()` after zeroing this class's own fields. Not reproduced: object identity, a non-replayable constructor, a field with no writable default, a base module's test class
+    * — each guarded and counted.
     */
   private def planFreshState(program: Program)(using p: Program): Unit =
     freshSym = Map.empty; freshSuper = Map.empty; freshCall = Map.empty
@@ -323,7 +323,7 @@ final class TestFrameworkTransform(
     } || ctorToReplay(cd).toOption.flatten.exists(d => replayedStatements(d).nonEmpty)
 
   /** a field the ALLOCATION zeroes and step 4 initialises — never a `static` (java shares one across every construction) and never a member ANOTHER PHASE MINTED (`Program.owns` is the structural
-    * test, since a `ValDef` in an emitted body is not evidence java declared it — CLAUDE.md §4.56).
+    * test, since a `ValDef` in an emitted body is not evidence java declared it).
     */
   private def instanceField(v: Tree.ValDef)(using p: Program): Boolean =
     p.owns(v.symbol) && p.symbolOf(v.symbol).exists { s =>
@@ -385,7 +385,7 @@ final class TestFrameworkTransform(
     case _ => false
 
   /** THE VALUE THE ALLOCATION LEAVES, as a term — the same answer `TirEmitter.defaultFor` writes for an uninitialised java field, in the IR rather than in text. `None` where the type states no
-    * writable default (a class type parameter or an opaque type): refused and counted, never guessed (`CLAUDE.md` §4.6).
+    * writable default (a class type parameter or an opaque type): refused and counted, never guessed.
     */
   private def defaultTerm(t: TypeRepr, o: Origin)(using p: Program): Option[Term] =
     def lit(c: Constant) = Some(Tree.Literal(c, t, o))
@@ -455,8 +455,8 @@ final class TestFrameworkTransform(
             v.rhs.foreach { r => inits += assignField(v.symbol, v.tpt.tpe, r, v.origin); madeMutable += v.symbol }
             kept += (if v.rhs.isEmpty then v else v.copy(rhs = scala.None))
           case d: Tree.DefDef if isInitBlock(d) =>
-            // JLS 12.5 step 4 is ONE textual-order sequence, already sorted by the frontend
-            // (§4.55); the member is CONSUMED rather than left for the emitter to inline again.
+            // JLS 12.5 step 4 is ONE textual-order sequence, already sorted by the frontend;
+            // the member is CONSUMED rather than left for the emitter to inline again.
             d.rhs.foreach(inits += _)
           case d: Tree.DefDef if ctor.exists(_.symbol == d.symbol) && replayedStatements(d).nonEmpty =>
             inits ++= replayedStatements(d)
@@ -535,13 +535,13 @@ final class TestFrameworkTransform(
     widenSyms = NumericRank.keys.map(t => t -> mint("to" + t.stripPrefix("scala."), "to" + t.stripPrefix("scala."))).toMap
     toSeqSym = mint("toSeq", "toSeq")
     indicesSym = mint("indices", "indices")
-    // reference identity, NOT `==` — CLAUDE.md §4.4. `scala.<op>#` is the emitter's infix marker.
+    // reference identity, NOT `==`. `scala.<op>#` is the emitter's infix marker.
     eqSym = mint("eq", "scala.<op>#eq")
     neSym = mint("ne", "scala.<op>#ne")
     matchesSym = mint("matches", "matches")
     getMessageSym = mint("getMessage", "getMessage")
     containsSym = mint("contains", "contains")
-    // `Nil` is an Ident (§6, no imports) and so is QUALIFIED; the rest are ordinary selections.
+    // `Nil` is an Ident (fully qualified, no imports) and so is QUALIFIED; the rest are ordinary selections.
     nilSym = mint("Nil", "scala.collection.immutable.Nil")
     appendSym = mint(":+", "scala.<op>#:+")
     forallSym = mint("forall", "forall")
@@ -580,7 +580,7 @@ final class TestFrameworkTransform(
     val units = rewritten.map(convert)
     // `convert` mints more (the lifecycle overrides), so the table is rebuilt AFTER the walk.
     // a java `final` instance field the reconstruction ASSIGNS has to be a `var` (this suite is
-    // constructed once); narrowed to the fields really written (§4.55's promotion-mutability rule).
+    // constructed once); narrowed to the fields really written.
     val symbols0m = madeMutable.foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
       t.get(id) match
         case scala.None => t
@@ -639,8 +639,8 @@ final class TestFrameworkTransform(
   // Survey — what this phase does NOT translate
   // -------------------------------------------------------------------------
 
-  /** Every test-framework construct the phase leaves alone, recorded with its §1 classification — all §1(a). An unrecognised annotation means the class is not converted at all, so it registers ZERO
-    * tests, compiles, and reports success (`CLAUDE.md` §4.45).
+  /** Every test-framework construct the phase leaves alone, recorded with its classification — all engine gaps true of every JUnit program. An unrecognised annotation means the class is not converted
+    * at all, so it registers ZERO tests, compiles, and reports success.
     */
   private def survey(program: Program)(using p: Program): Unit =
     val roots = List("org.junit.", "org.junit.jupiter.", "org.testng.")
@@ -672,13 +672,13 @@ final class TestFrameworkTransform(
         case _ => ()
       }
     // `allClassDefs`, not a `cd.body` recursion — a method-LOCAL class (`JS-C30`) stands in a
-    // member's block and would be missed by the latter (§3).
+    // member's block and would be missed by the latter.
     program.units.foreach(u => StandardTraversal.allClassDefs(u)(using program).foreach(scanParents))
     // Hamcrest: a second assertion vocabulary, reached via `org.junit.Assert.assertThat` or
     // `org.hamcrest.MatcherAssert`.
     program.referenced.foreach { id =>
       program.symbolOf(id).foreach { s =>
-        // `RuleScope.covers`, not `startsWith` — a bare prefix covers `org.hamcrestic` too (§4.56).
+        // `RuleScope.covers`, not `startsWith` — a bare prefix covers `org.hamcrestic` too.
         val isHamcrest   = RuleScope.covers(s.fullName, "org.hamcrest")
         val isAssertThat = s.name == "assertThat"
         if isHamcrest || isAssertThat then
@@ -783,7 +783,7 @@ final class TestFrameworkTransform(
         case ("assertFalse", List(c))   => Right(call("assertEquals", c :: bool(false, o) :: clue, o))
         case ("assertNull", List(x))    => Right(call("assertEquals", x :: nul(o) :: clue, o))
         case ("assertNotNull", List(x)) => Right(call("assertNotEquals", x :: nul(o) :: clue, o))
-        // REFERENCE identity — scala's `==` is java's `equals` (CLAUDE.md §4.4).
+        // REFERENCE identity — scala's `==` is java's `equals`.
         case ("assertSame", List(e, a))                       => Right(call("assert", infix(a, eqSym, e, o) :: clue, o))
         case ("assertNotSame", List(e, a))                    => Right(call("assert", infix(a, neSym, e, o) :: clue, o))
         case ("assertEquals" | "assertNotEquals", List(e, a)) =>
@@ -847,14 +847,14 @@ final class TestFrameworkTransform(
         (widen(x, tx, to, p), widen(y, ty, to, p))
       case _ => (x, y)
 
-  /** JS-E07's CITATION — the catalog's third discharge surface (`DESIGN.md` §2.8). The traversal is bottom-up, so a `DefDef` is reached after every `Apply` in its body and [[promotedHere]] says
-    * whether promotion fired anywhere in this member. Returns the tree UNCHANGED.
+  /** JS-E07's CITATION — the catalog's third discharge surface. The traversal is bottom-up, so a `DefDef` is reached after every `Apply` in its body and [[promotedHere]] says whether promotion fired
+    * anywhere in this member. Returns the tree UNCHANGED.
     */
   override def transformDefDef(t: Tree.DefDef)(using p: Program): Tree.DefDef =
     citeIfPromoted(t.symbol)
     t
 
-  /** …AND A FIELD INITIALISER IS NOT INSIDE A `DefDef` — its promotion must clear here too, or the flag survives to the NEXT `DefDef` and cites the wrong member (`CLAUDE.md` §4.575).
+  /** …AND A FIELD INITIALISER IS NOT INSIDE A `DefDef` — its promotion must clear here too, or the flag survives to the NEXT `DefDef` and cites the wrong member.
     */
   override def transformValDef(t: Tree.ValDef)(using p: Program): Tree.ValDef =
     citeIfPromoted(t.symbol)
@@ -876,7 +876,7 @@ final class TestFrameworkTransform(
 
   /** JAVA'S OTHER WIDENING, re-applied — the REFERENCE half of [[promote]]. Java's `assertEquals(Object, Object)` widens every pair at the call; MUnit's `Compare[A, B]` rejects two invariant
     * `java.util.List`s at different element types. Written as the call's TYPE ARGUMENTS. True exactly when both static types are SAME and not a ROOT. Refuses rather than guesses on `NoType` or a
-    * PRIMITIVE (§4.4).
+    * PRIMITIVE.
     */
   private def widened(x: Term, y: Term)(using p: Program): Boolean =
     val (sx, sy) = (shape(x.tpe), shape(y.tpe))
@@ -1023,7 +1023,7 @@ final class TestFrameworkTransform(
       // [[expectedException]]'s accumulator is a LOCAL of that test's frame — an arming from a
       // helper, initialiser or nested class would model FEWER matchers than java accumulated,
       // passing where java failed. Refuses the whole CLASS rather than the site, counted as a
-      // DIFFERENCE of two standard walks (`CLAUDE.md` §3).
+      // DIFFERENCE of two standard walks.
       val ruleFields =
         if ruleFields0.isEmpty then ruleFields0
         else
@@ -1123,8 +1123,8 @@ final class TestFrameworkTransform(
   // -------------------------------------------------------------------------
 
   /** `thrown.expect(E.class)` → an ARMING of the rule's own accumulator, plus one `try`/`catch` around the whole test — junit's `ExpectedExceptionStatement` contract transcribed exactly, since
-    * `intercept[E] { rest }` cannot express an arming's reach past a loop/block boundary (`ENGINE-LIMITS.md` X5). Refused per §3, one [[Finding]] per site: a stray field reference, or an unreadable
-    * overload. @return the body to emit, the OUTER wrapper, the `Decision` sentence.
+    * `intercept[E] { rest }` cannot express an arming's reach past a loop/block boundary. Refused and counted, one [[Finding]] per site: a stray field reference, or an unreadable overload. @return
+    * the body to emit, the OUTER wrapper, the `Decision` sentence.
     */
   private def expectedException(d: Tree.DefDef, body: Term, rules: Set[SymId])(using p: Program): (Term, Term => Term, String) =
     val refs =
@@ -1136,7 +1136,7 @@ final class TestFrameworkTransform(
         found += Finding(s"$ExpectedExceptionCls($guard)", d.origin, Fix.EngineRule, why, d.symbol)
         (body, identity, "")
       // `StandardTraversal`, not a scan of the body's own statements — reaching a site in a loop
-      // body is what this lowering is for (§3).
+      // body is what this lowering is for.
       val calls = StandardTraversal.scanTerm(body, List.empty[(String, Tree.Apply)]) { (acc, t) =>
         ruleCallIn(t, rules).map(acc :+ _).getOrElse(acc)
       }
@@ -1432,8 +1432,8 @@ final class TestFrameworkTransform(
       // JUnit's own nesting: afters(befores(expectException(invoke))) — `@Before` calls go INSIDE
       // the try so a setup that throws still runs teardown, and the expected-exception check goes
       // inside them both. AHEAD of `@Before`: JUnit's `createTest()` instance runs field
-      // initialisers and the constructor body BEFORE setup hooks (probed against junit 4.13,
-      // `ENGINE-LIMITS.md` X4). Absent where no instance state exists, or [[planFreshState]] declined.
+      // initialisers and the constructor body BEFORE setup hooks (probed against junit 4.13).
+      // Absent where no instance state exists, or [[planFreshState]] declined.
       val rebuild  = freshCall.get(owner).toList.map(call(_, d.origin))
       val prologue = rebuild ++ setups.map(call(_, d.origin))
       val setUp    =
@@ -1493,8 +1493,8 @@ object TestFrameworkTransform:
   val BeforeAllMember = "beforeAll"
   val AfterAllMember  = "afterAll"
 
-  /** Which of CLAUDE.md §1's three kinds a gap is. An error an agent cannot classify as (a) an engine bug, (b) a phase to configure or (c) a library rule to write costs it a full investigation
-    * (§4.45), so every finding carries one.
+  /** Which of the three kinds a gap is. An error an agent cannot classify as (a) an engine bug, (b) a phase to configure or (c) a library rule to write costs it a full investigation, so every finding
+    * carries one.
     */
   enum Fix(val label: String):
     case EngineRule extends Fix("a") // a Java/Scala fact — fix the engine, unparameterised
@@ -1512,23 +1512,23 @@ object TestFrameworkTransform:
     case Contains(text: Term)
     case ByMatcher(matcher: Term)
 
-  /** One test-framework construct this phase did not translate. `at` is a `SymId` rather than a path (§4.56 — ownership decided structurally); a `Symbol`'s origin defaults to `Origin.synthetic`, so
-    * reporting from `where` alone would drop every class-level annotation.
+  /** One test-framework construct this phase did not translate. `at` is a `SymId` rather than a path (ownership decided structurally); a `Symbol`'s origin defaults to `Origin.synthetic`, so reporting
+    * from `where` alone would drop every class-level annotation.
     */
   final case class Finding(construct: String, where: Origin, fix: Fix, advice: String, at: SymId = SymId.None):
     def render: String = s"$construct — (${fix.label}) $advice  (${where.javaPath}:${where.line})"
 
-    /** …as a row of the [[Refused]] lane. The KIND is the GUARD this site was declined at — CLAUDE.md §3's refusal-enumeration rule. The OWNER is the caller's, from [[at]]'s owner chain.
+    /** …as a row of the [[Refused]] lane. The KIND is the GUARD this site was declined at, per the refusal-enumeration rule. The OWNER is the caller's, from [[at]]'s owner chain.
       */
     def report(owner: String): CheckReport.Finding =
       CheckReport.Finding(Refused, construct, owner, where.javaPath, where.line, s"(${fix.label}) $advice")
 
-  /** THE REFUSAL POPULATION, as a lane (`CLAUDE.md` §3, §5) — required only of a run carrying the phase. `(refused)`, not a bare name: it is a RESIDUE in the `idiom(refused)` family, and this phase's
-    * failure mode is SILENT (an unrecognised annotation registers zero tests and reports success), so nothing else can see what it declined.
+  /** THE REFUSAL POPULATION, as a lane — required only of a run carrying the phase. `(refused)`, not a bare name: it is a RESIDUE in the `idiom(refused)` family, and this phase's failure mode is
+    * SILENT (an unrecognised annotation registers zero tests and reports success), so nothing else can see what it declined.
     */
   val Refused: String = "test-framework(refused)"
 
-  /** the one-line classification every lane with a §1 answer prints beside its count. */
+  /** the one-line classification every lane with an engine/policy/library answer prints beside its count. */
   val Classification: String =
     "  [engine (true of every Java program): every row is a fact about JUnit/TestNG and scala, identical for every library " +
       "— none of them is fixed by configuring this phase or by a library-specific rule. A refused " +

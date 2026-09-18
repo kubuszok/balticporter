@@ -9,7 +9,7 @@ import balticporter.tir.*
   */
 final class MemberRenameTransform(
   val renames: Map[String, String] = Map.empty,
-  /** also give the members the REFERENCE port gives a `@targetName` that JVM name (`RunScope.derived`, DESIGN.md §8.30); off is the no-op.
+  /** also give the members the REFERENCE port gives a `@targetName` that JVM name (`RunScope.derived`); off is the no-op.
     */
   val derive: Boolean = false
 ) extends Phase,
@@ -28,7 +28,7 @@ final class MemberRenameTransform(
   /** exactly two edges needed; see the class note for why no others are declared. */
   override def runsBefore: Set[String] = Set("type-redirect", "package-rename")
 
-  /** two modules that agree must compare equal (§1.5). */
+  /** two modules that agree must compare equal. */
   def surfaceFingerprint: String =
     val rs = renames.toList.sorted.map((k, v) => s"$k=$v").mkString(",")
     val dr = if derive then "derive=reference" else ""
@@ -36,8 +36,8 @@ final class MemberRenameTransform(
 
   def subjects: Set[String] = renames.keySet.map(MergeablePolicy.subjectOf)
 
-  /** DESIGN.md §8.13. Independent member keys union; one member with two names refuses. Compared by parsed name via [[MemberKey.mayNameSame]], not by map key — `X#close` and `X#close()` may be one
-    * member, and over-refusal is the safe direction here.
+  /** Independent member keys union; one member with two names refuses. Compared by parsed name via [[MemberKey.mayNameSame]], not by map key — `X#close` and `X#close()` may be one member, and
+    * over-refusal is the safe direction here.
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: MemberRenameTransform =>
@@ -129,7 +129,7 @@ final class MemberRenameTransform(
   private var runFindings: List[PolicyFinding] = Nil
 
   /** Declared keys that named nothing, malformed entries, and every refusal this run made. Refusals are `About.ThisRun`, the rest `About.TheKey` — a key inherited from a base is not a string this
-    * module can edit. CLAUDE.md §4.45
+    * module can edit.
     */
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(ownFindings ++ runFindings)

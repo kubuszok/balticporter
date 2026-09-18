@@ -4,16 +4,16 @@ import balticporter.core.{ MergeablePolicy, SurfacePolicy }
 import balticporter.tir.*
 
 /** Drops `()` from a nullary getter-like method — `def x(): R` becomes `def x: R` — and rewrites every call site. Getter-like (conservatively): no assignments/increments, no calls to non-nullary
-  * members; over-refuses, never under-refuses, and EVERY owned nilary value-returning declaration takes one lane row (§3; the operator gap in that scan is `ENGINE-LIMITS.md` K42). Scope default
-  * `Only(Set.empty)` (§1(b) — this ADDS arity). After `bean-properties`.
+  * members; over-refuses, never under-refuses, and EVERY owned nilary value-returning declaration takes one lane row (the scan still misses calls hidden behind an operator). Scope default
+  * `Only(Set.empty)` — this phase ADDS arity, so its no-op is an empty scope rather than an unrestricted one. After `bean-properties`.
   */
 final class NullaryArityTransform(
   scope: RuleScope = RuleScope.Only(Set.empty),
   /** members whose `()` goes although the body has behaviour — the reference port's decision, by exact FQN; the whole override COMPONENT follows it over the body and overload guards (a spelling is
-    * the component's); anchors and call sites still apply (K51 xvii).
+    * the component's); anchors and call sites still apply.
     */
   val force: Set[String] = Set.empty,
-  /** also drop `()` where the REFERENCE port declares the accessor parenless (`RunScope.derived`, `PROGRESS.md` §13.31 step 1).
+  /** also drop `()` where the REFERENCE port declares the accessor parenless (`RunScope.derived`).
     */
   val derive: Boolean = false
 ) extends Phase,
@@ -80,10 +80,10 @@ final class NullaryArityTransform(
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
-  /** Types the base or this module SUBSTITUTED — detection skips these owners (D14, §1.5). */
+  /** Types the base or this module SUBSTITUTED — detection skips these owners. */
   private var substitutedOwners: Set[String] = Set.empty
 
-  /** which units this run emits: a base's declaration keeps its arity, read literally (K51). */
+  /** which units this run emits: a base's declaration keeps its arity, read literally. */
   private var runScope: RunScope = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit =
@@ -106,7 +106,7 @@ final class NullaryArityTransform(
     val graph = OverrideGraph.build(program)
     forcedComp = program.symbols.all.toList.filter(s => program.owned(s.id) && forcedId(s.id, s.fullName)).flatMap(s => graph.closureOf(s.id).members).toSet
 
-    // ---- 1. find candidates — EVERY member of the population takes a lane row (§3) ----
+    // ---- 1. find candidates — EVERY member of the population takes a lane row ----
     // The population is every OWNED method declaration java wrote `m()` with a value result: that
     // is the set whose `()` this phase either drops or must say why it kept. Each branch below
     // ends in `refuse` or in `candidates`, so nothing leaves this loop silently.
@@ -124,7 +124,7 @@ final class NullaryArityTransform(
               "a java `static` is emitted onto the companion, where the arity this phase mints is " +
                 "not the one the call sites it cannot see were written against"
             )
-          // a declaration in a unit this run does not EMIT — the base's; its arity is published (K51)
+          // a declaration in a unit this run does not EMIT — the base's; its arity is published
           else if !runScope.emitsSymbol(program, s.id) then
             refuse(
               program,
@@ -133,7 +133,7 @@ final class NullaryArityTransform(
               "this run emits no declaration for it (a base's unit): its arity is the base's " +
                 "published fact, read literally, and not this module's to move"
             )
-          // owners the base SUBSTITUTED — the injected shim's members were never renamed (D14, §1.5)
+          // owners the base SUBSTITUTED — the injected shim's members were never renamed
           else if substitutedOwners.contains(ownerFqn) then
             refuse(
               program,

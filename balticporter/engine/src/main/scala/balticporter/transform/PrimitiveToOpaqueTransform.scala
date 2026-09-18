@@ -5,14 +5,14 @@ import balticporter.tir.*
 import balticporter.tir.CtorFunnel
 
 /** Retypes a semantically-tagged primitive to an `opaque type` (+companion) everywhere it flows, wrapping construction sites and unwrapping consumption sites. Seed from `spec.hints`/ `extraHints`,
-  * grow via [[FlowPropagation]] (pure-move flows; arithmetic breaks the chain), retype+coerce at every boundary. Everything a port says is in [[OpaqueSpec]] (§1b mechanism, §1c policy). The mint
-  * belongs to the ONE module owning what it was minted for ([[RunScope.emits]]).
+  * grow via [[FlowPropagation]] (pure-move flows; arithmetic breaks the chain), retype+coerce at every boundary. Everything a port says is in [[OpaqueSpec]] (the mechanism is shared, the values are
+  * per library). The mint belongs to the ONE module owning what it was minted for ([[RunScope.emits]]).
   */
 final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
   def name = s"primitive->opaque:${spec.fqn}"
 
-  /** A carrier is a type the NULL MODEL puts into the program (its wrapper is the one carrier whose members this phase reads, K13), so a spec naming one runs after that phase — read earlier, the slot
-    * is still java's boxed scalar and the row seeds nothing (measured: 2 derived rows, 0 declarations moved). No carrier, no edge: the order every other port measured stays.
+  /** A carrier is a type the NULL MODEL puts into the program (its wrapper is the one carrier whose members this phase reads), so a spec naming one runs after that phase — read earlier, the slot is
+    * still java's boxed scalar and the row seeds nothing. No carrier, no edge: the order every other port relies on stays.
     */
   override def runsAfter: Set[String] = if spec.carriers.isEmpty then Set.empty else Set(NullabilityTransform.Name)
 
@@ -22,7 +22,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   def accountedBy: Set[String] = Set(OpaqueBoundaryCheck.Name)
 
   /** This phase retypes under a [[RuleScope]], so two modules configuring it differently emit signatures that cannot compile together. Everything in the spec is rendered, sorted — hints, fence,
-    * definition site, primitive, extraHints, target FQN when `Existing` (empty segment when `Mint`, so §1(b)'s fingerprint no-op rule holds).
+    * definition site, primitive, extraHints, target FQN when `Existing` (empty segment when `Mint`, so the fingerprint no-op rule holds).
     */
   def surfaceFingerprint: String =
     val seeds  = if spec.hints.isEmpty then "" else s";hints=${spec.hints.toList.sorted.mkString(",")}"
@@ -32,14 +32,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       case OpaqueSpec.Target.Mint              => ""
       case OpaqueSpec.Target.Existing(t, w, u) => s";target=$t;wrap=$w;unwrap=$u"
     // a deriving spec's surface is the REFERENCE's: the derived set's digest once bound, the
-    // switch alone before (PROGRESS.md §13.31 step 1)
+    // switch alone before
     val der = if spec.derive then ";derive=reference" else ""
     // an empty carrier set contributes no segment (the fingerprint no-op rule)
     val car = if spec.carriers.isEmpty then "" else s";carriers=${spec.carriers.toList.sorted.mkString(",")}"
     s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt$der$car"
 
   /** every shared-surface subject this instance's policy is keyed on — the leading type FQN of each hint and each scope entry, through [[MergeablePolicy.subjectOf]]. Over-approximate: an omitted
-    * subject is a hole exactly where the §1.5 screen exists.
+    * subject is a hole exactly where the base/dependent surface screen exists.
     */
   def subjects: Set[String] =
     (spec.hints ++ spec.extraHints ++ spec.scope.entries).map(MergeablePolicy.subjectOf)
@@ -105,7 +105,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   /** the unit being walked — a finding at an EXTERNAL callee is attributed to the site's unit. */
   private var currentUnit: SymId = SymId.None
 
-  /** every boundary site this phase opened and could not close, restricted to units this run actually emits. ENGINE-LIMITS D2
+  /** every boundary site this phase opened and could not close, restricted to units this run actually emits.
     */
   def boundary(units: List[Tree.ClassDef]): List[OpaqueBoundaryCheck.Finding] =
     val emitted = units.map(_.symbol).toSet
@@ -116,7 +116,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   private var objSym, opaqueSym, applySym, unwrapSym, wrapArraySym, unwrapArraySym, primSym, boxedPrimSym, arraySym: SymId      = SymId.None
   private var seeds:                                                                                                 Set[SymId] = Set.empty
 
-  /** method fullNames whose base port map upstream descriptor mentions this spec's opaque FQN — a direct read of what the base published, not a re-derivation. CLAUDE.md §4.55
+  /** method fullNames whose base port map upstream descriptor mentions this spec's opaque FQN — a direct read of what the base published, not a re-derivation.
     */
   private var baseRetypedMethods: Set[String] = Set.empty
   private var opaqueRef:          TypeRepr    = TypeRepr.NoType
@@ -138,7 +138,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   /** the parameter of the wrap lambda (`w.map(v => Opaque(v))`) and of the unwrap lambda (`w.map(v => Opaque.unwrap(v))`); one symbol each, every site shares it. */
   private var vCarrierWrap, vCarrierUnwrap: SymId = SymId.None
 
-  /** the null-model contract's members this phase reads through (`NullabilityTransform.Target`, `ENGINE-LIMITS.md` K13): the element READS, whose result is the element itself. */
+  /** the null-model contract's members this phase reads through (`NullabilityTransform.Target`): the element READS, whose result is the element itself. */
   private val ElementReads = Set("get", "orNull")
 
   /** which top-level units this run emits; not derivable from the `Program` a phase is handed (a dependent's contains its base's units). Defaults to the base-port answer.
@@ -207,9 +207,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     // spanning-hints/mint-ownership only apply when MINTING; an Existing target has no unit to collide on.
     if spec.isMint then refuseSpanningHints(program, hints)
     // a symbol in a unit this run does not EMIT is not a seed: its type is what the base
-    // published (O8), and the call into it is the counted seam — never a hub the flow crosses.
+    // published, and the call into it is the counted seam — never a hub the flow crosses.
     // Nor is a CONSTANT VARIABLE (JLS 4.12.4, emitted `inline val`): an opaque is no constant
-    // expression, so `glEnable(GL_DEPTH_TEST)` wraps the read and the constant stays java's (K51 xv).
+    // expression, so `glEnable(GL_DEPTH_TEST)` wraps the read and the constant stays java's.
     def isConstant(id: SymId): Boolean = program.definitionOf(id) match
       case Some(v: Tree.ValDef) => program.symbolOf(id).exists(s => ClassInitTriggerCheck.constantVariable(v, s)(using program))
       case _                    => false
@@ -222,10 +222,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
         (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)
           && runScope.emits(unitOf(program, id)) && !isConstant(id)
       )
-    // a DERIVED slot in a unit this run does not emit is the BASE's published fact (O8 read as a
+    // a DERIVED slot in a unit this run does not emit is the BASE's published fact (read as a
     // value): retyping its symbol here coerces this module's calls into it, and emits nothing
     // …and a CONSTANT the reference spells at the opaque type IS one (`Keys.A: Key`) — the constant
-    // rule (K51 xv) is about a hand hint reaching a constant by propagation; a derived row is the
+    // rule above is about a hand hint reaching a constant by propagation; a derived row is the
     // reference's own word, and the emitter drops `inline` where the initialiser is no literal
     def admissibleDerived(id: SymId): Boolean = program.symbolOf(id).exists(s => (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s))
     val (derivedIds, grownFrom) =
@@ -342,7 +342,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
 
     // a retyped parameter's own method, by POSITION and never by name: a MethodType's parameter
     // list and its DefDef's are parallel by construction, but names are not (an earlier phase may
-    // rewrite a parameter slot without touching the method's info). ENGINE-LIMITS §13 O2
+    // rewrite a parameter slot without touching the method's info).
     val seedParamSlots: Map[SymId, Set[Int]] =
       program.symbols.all.iterator
         .filter(s => seeds(s.id) && s.flags.isParam)
@@ -386,8 +386,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     val symbols   = SymbolTable(retyped ++ minted)
     given Program = program.rebuilt(symbols = symbols)
 
-    // one decision row per declaration whose signature became the opaque type. Reason.LibraryRule
-    // (§1(c)): which primitives are a domain value is one library's knowledge. Parameters and
+    // one decision row per declaration whose signature became the opaque type. Reason.LibraryRule:
+    // which primitives are a domain value is one library's knowledge. Parameters and
     // method-locals are seeds too but deliberately not rows — their method's signature already
     // moved with them.
     program.symbols.all.foreach { s =>
@@ -413,7 +413,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
         }
     }
 
-    // the mint is one module's (ENGINE-LIMITS §13 O5; class doc explains why the test is on the
+    // the mint is one module's (class doc explains why the test is on the
     // hints, not the grown seed set). Everything above this line runs in every inheriting module;
     // only the object write is fenced. For the Existing form there is no unit to mint at all.
     val walked = program.units.map { u => currentUnit = u.symbol; StandardTraversal.mapClassDef(this, u) }
@@ -429,8 +429,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     hints.exists(id => runScope.emits(unitOf(p, id)))
 
   /** Fails the run when the spec's bound hints land in more than one module — `hints` can match a field in both a base and a dependent, making both mint the same FQN. `PortRun.claimedSynthetic`
-    * cannot catch this (admits by default with no published base map), so this phase refuses for itself, naming both sides. §1(c): the fix is `hints` naming declarations of ONE module. Throws, not a
-    * finding — there is no honest program to emit (`ENGINE-LIMITS.md` §13 O5).
+    * cannot catch this (admits by default with no published base map), so this phase refuses for itself, naming both sides. The fix is `hints` naming declarations of ONE module. Throws, not a finding
+    * — there is no honest program to emit.
     */
   private def refuseSpanningHints(p: Program, hints: Set[SymId]): Unit =
     def named(id: SymId): String = p.symbolOf(id).map(_.fullName).getOrElse(id.toString)
@@ -462,8 +462,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       case _                                            => id
 
   /** A hint the mechanism cannot reach, made loud. [[taggablePrim]] tests a symbol's own info, so a domain value INSIDE a container (`int[] locations`) is invisible to seeding — an array element has
-    * no symbol. Reports the one case tellable apart from a typo: a real declaration whose type MENTIONS the primitive somewhere the mechanism cannot seed. `Malformed`, not `NeverMatched`. §1(a): the
-    * spec has no vocabulary for "the element of" (`ENGINE-LIMITS.md` §13 O3).
+    * no symbol. Reports the one case tellable apart from a typo: a real declaration whose type MENTIONS the primitive somewhere the mechanism cannot seed. `Malformed`, not `NeverMatched`: this is an
+    * engine gap true of every Java program, not a policy mistake — the spec has no vocabulary for "the element of".
     */
   private def reportUnreachable(program: Program, named: Iterable[Symbol]): Unit =
     given Program = program
@@ -511,7 +511,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     case TypeRepr.PolyType(_, TypeRepr.MethodType(_, ret, _)) => ret
     case other                                                => other
 
-  /** does this type mention the spec's primitive anywhere? `StandardTraversal.mapType`, not a private recursion, so a new `TypeRepr` shape is reached without enumerating it. CLAUDE.md §3
+  /** does this type mention the spec's primitive anywhere? `StandardTraversal.mapType`, not a private recursion, so a new `TypeRepr` shape is reached without enumerating it.
     */
   private def mentionsPrim(t: TypeRepr)(using Program): Boolean =
     var found = false
@@ -538,7 +538,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
 
   /** Fails the run when this spec's seeds overlap another `PrimitiveToOpaqueTransform`'s. Without this, whichever instance runs second finds those symbols already retyped, declines silently, and
     * emits a port with half a domain type missing — no compile error, no count moved. Propagation is allowed to walk into a sibling's opaque type so the overlap is visible here. Throws, not a finding
-    * — there is no honest program to emit (CLAUDE.md §3).
+    * — there is no honest program to emit.
     */
   private def refuseOverlap(p: Program): Unit =
     val clashes = seeds.toList.flatMap { id =>
@@ -558,7 +558,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   // Retype seed positions in the tree + insert coercions.
   // -------------------------------------------------------------------------
   // a declaration is the boundary on both sides of the if: a seed declaration wraps whatever
-  // arrives, and a declaration that kept the primitive unwraps whatever seed arrives. ENGINE-LIMITS §13 O1
+  // arrives, and a declaration that kept the primitive unwraps whatever seed arrives.
   override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =
     if seeds(v.symbol) then
       val ref = seedTypeRef(v.tpt.tpe)
@@ -574,7 +574,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
   // retype seed REFERENCES so boundary detection reads a consistent `tpe` (the populator left
   // a seed reference's node `tpe` as `Int`; only the declaration was retyped above).
   /** an enum CASE's constructor arguments are a call java never wrote as one (`Point(GL_POINTS)` against `ShapeType(int glType)`): coerce them against the constructor of matching arity, as
-    * [[coerceArgs]] does for an `Apply` — the node's obligation, K51 xvi.
+    * [[coerceArgs]] does for an `Apply` — the node's own obligation to discharge.
     */
   override def transformClassDef(cd: Tree.ClassDef)(using p: Program): Tree.ClassDef =
     val ctors = CtorFunnel.ctorsOf(p, cd.body)
@@ -624,8 +624,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       if carriesOpaque(a.lhs) then a.copy(rhs = wrapFor(a.rhs, lhsDeclType(a.lhs)))
       else a.copy(rhs = unwrapIfOpaque(a.rhs))
     case x: Tree.ArrayAccess => x.copy(index = unwrapIfOpaque(x.index))
-    // a `switch` on a seed: java compares the selector to int CONSTANTS, which stay int (K51 xv),
-    // so the selector is read at the primitive; the emitter's null arm (§4.4) then sees an `Int`
+    // a `switch` on a seed: java compares the selector to int CONSTANTS, which stay int,
+    // so the selector is read at the primitive; the emitter's null arm then sees an `Int`
     // selector and writes none — an opaque over a primitive is never null.
     // …unless the CASE LABELS carry the opaque (the reference spells the constants at it, `Keys.A`):
     // then the comparison is opaque-to-opaque and a plain selector is wrapped instead
@@ -648,10 +648,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
         // the formals that stayed java are primitives, so an opaque argument is unwrapped there.
         if params.length != t.args.length then t.copy(args = t.args.map(unwrapIfOpaque))
         else
-          // a formal that stays java is read literally (CLAUDE.md §1(b)). Propagation may grow the
+          // a formal that stays java is read literally. Propagation may grow the
           // seed set into a base declaration this run does not emit: if the base's port map says
           // it retyped that method (baseRetypedMethods), wrap the argument (direct read of the
-          // base's published answer, §4.55); otherwise unwrap to the primitive.
+          // base's published answer); otherwise unwrap to the primitive.
           val calleeEmitted = runScope.emits(unitOf(p, t.method))
           val calleeFqn     = p.symbolOf(t.method).map(_.fullName).getOrElse("")
           val calleeOwner   = calleeFqn.indexOf('#') match { case -1 => calleeFqn; case i => calleeFqn.take(i) }
@@ -670,7 +670,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
           )
       case _ =>
         // external callee — no definition to read the formal from, so the formal is what java wrote:
-        // the PRIMITIVE (K15, a class-file fact). An opaque argument is UNWRAPPED there, and the
+        // the PRIMITIVE, a class-file fact no phase can move. An opaque argument is UNWRAPPED there, and the
         // seam counted (`Math.min(delta, 1/30f)`: the one error the seconds step left).
         val calleeFqn = p.symbolOf(t.method).map(_.fullName).getOrElse("?")
         val args2     = t.args.map { arg =>
@@ -689,7 +689,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
         if args2 == t.args then t else t.copy(args = args2)
 
   // -------------------------------------------------------------------------
-  // the boundary, read through the declaration. ENGINE-LIMITS §13 O1
+  // the boundary, read through the declaration.
   // -------------------------------------------------------------------------
 
   /** Does the value this term yields belong to the opaque family? Read through the declaration and through compound expressions that CARRY a value (`if`, block, `match`) rather than the node's own

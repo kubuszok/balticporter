@@ -3,9 +3,8 @@ package balticporter.transform
 import balticporter.core.{ RequiresRuntime, RuntimeArtifact, SurfacePolicy }
 import balticporter.tir.*
 
-/** Adds `getX()`/`setX(v)` beside a java `public` instance field, since a Scala `var` emits a PRIVATE JVM field — a reflective bean framework sees nothing (ENGINE-LIMITS K21 face 2: every lookup
-  * silently reads `null`). The getter is typed `java.lang.Object`, bridged through `Reified.toJavaValue` (a MINTED signature); the setter is not bridged. CLAUDE.md §1(b): scoped, `Only(Set.empty)`
-  * no-op; a name clash is refused and counted.
+/** Adds `getX()`/`setX(v)` beside a java `public` instance field, since a Scala `var` emits a PRIVATE JVM field — a reflective bean framework sees nothing: every lookup silently reads `null`. The
+  * getter is typed `java.lang.Object`, bridged through `Reified.toJavaValue` (a MINTED signature); the setter is not bridged. Scoped, `Only(Set.empty)` no-op; a name clash is refused and counted.
   */
 final class PublicFieldAccessorTransform(
   /** Which declarations are read reflectively. `Only(Set.empty)` (default) admits nothing; `Everywhere(Set.empty)` is the whole port. Entries are FQNs cut at a `Symbol.fullName` separator, so an
@@ -146,8 +145,8 @@ final class PublicFieldAccessorTransform(
       case _ => scala.None
     }.toSet
 
-  /** Every member name `cls` inherits from an ancestor this program declares. Bounded to the program on purpose (§4.56) — an ancestor's members outside it are a class file this pass cannot read; K21
-    * states that residue rather than guessing at it.
+  /** Every member name `cls` inherits from an ancestor this program declares. Bounded to the program on purpose — an ancestor's members outside it are a class file this pass cannot read; that residue
+    * is stated rather than guessed at.
     */
   private def inheritedNames(cls: SymId)(using p: Program): Set[String] =
     def headSym(t: TypeRepr): Option[SymId] = t match
@@ -176,7 +175,7 @@ final class PublicFieldAccessorTransform(
     val tpe  = v.tpt.tpe
     val self = Tree.This(cls, TypeRepr.ThisType(cls), o)
     val read = Tree.Select(self, fs.id, tpe, o)
-    // always java.lang.Object — a minted signature bridged unconditionally (§4.56, class doc)
+    // always java.lang.Object — a minted signature bridged unconditionally (see the class doc)
     val getTpe = if objectSym == SymId.None then tpe else TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
     val body   =
       if toJavaValueSym != SymId.None then Tree.Apply(Tree.Ident(toJavaValueSym, TypeRepr.NoType, o), List(read), toJavaValueSym, getTpe, o)
@@ -213,7 +212,7 @@ final class PublicFieldAccessorTransform(
             "is typed `java.lang.Object` through the run-time bridge because its only reader is that " +
             "framework, reading the value and not the signature")
         ),
-        // the key is the manifest entry verbatim (§4.575); unrestricted has no entry, so name the declaration
+        // the key is the manifest entry verbatim; unrestricted has no entry, so name the declaration
         reason = Reason.Configured(
           name,
           scope.entryFor(fs.fullName).getOrElse(if scope.fingerprint.isEmpty then "scope (unrestricted)" else scope.fingerprint)
@@ -223,7 +222,7 @@ final class PublicFieldAccessorTransform(
     )
     getter :: setter
 
-  /** What this run could not expose, and what it was never asked about, for `BeanExposureCheck`; held to the units the run emits by its caller (D2).
+  /** What this run could not expose, and what it was never asked about, for `BeanExposureCheck`; held to the units the run emits by its caller.
     */
   def exposure(units: List[Tree.ClassDef]): List[BeanExposureCheck.Finding] =
     val paths = units.map(_.origin.javaPath).toSet

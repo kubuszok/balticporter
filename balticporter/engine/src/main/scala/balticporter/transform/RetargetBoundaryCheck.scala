@@ -4,7 +4,7 @@ import balticporter.tir.*
 
 /** The RETARGET boundary, in the direction subtyping does not cover — every value the JDK PRODUCES at a retargeted type, counted. A retarget licenses a value flowing INTO a slot; it says nothing
   * about the JDK HANDING one BACK — a direction `CollectionBoundaryCheck` cannot see since `transformType` already moved both sides of the slot. Counts three shapes (producer reference, static
-  * receiver, cast); synthesises no coercion (ENGINE-LIMITS K14).
+  * receiver, cast); synthesises no coercion.
   */
 object RetargetBoundaryCheck:
 
@@ -27,7 +27,7 @@ object RetargetBoundaryCheck:
     case IteratorRemove
 
   object Issue:
-    /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
+    /** which of the three kinds — engine, port policy, or library-specific — the fix is. */
     def classification(i: Issue): String = i match
       case ExternalProducer =>
         "engine gap, or port policy: an external member PRODUCES the java type this port " +
@@ -71,7 +71,7 @@ object RetargetBoundaryCheck:
   def check(program: Program, retargeted: Map[String, String]): List[Finding] =
     check(program, program.units, retargeted)
 
-  /** …restricted to units the run EMITS — a dependent's `Program` holds its base's units too, whose sites are the base's finding (ENGINE-LIMITS D2).
+  /** …restricted to units the run EMITS — a dependent's `Program` holds its base's units too, whose sites are the base's finding.
     */
   def check(program: Program, units: List[Tree.ClassDef], retargeted: Map[String, String]): List[Finding] =
     if retargeted.isEmpty then Nil
@@ -89,12 +89,12 @@ object RetargetBoundaryCheck:
       def isMethod(s: SymId):    Boolean        =
         program.symbolOf(s).exists(_.info.isInstanceOf[TypeRepr.MethodType | TypeRepr.PolyType])
 
-      /** the value at this site is produced OUTSIDE this program — `Program.owns` (§4.56). A base's declaration retyped by this run's phase still agrees with its signature.
+      /** the value at this site is produced OUTSIDE this program — `Program.owns`. A base's declaration retyped by this run's phase still agrees with its signature.
         */
       def external(s: SymId): Boolean = s != SymId.None && !program.owns(s)
 
       /** a CONSTRUCTOR application is never a producer, whatever `owns` says: `new Comparator<T>(){…}` constructs its value at the retyped type, but an anonymous class's `<init>` does not climb to a
-        * unit symbol and reads as external — excluded structurally (CLAUDE.md §3).
+        * unit symbol and reads as external — excluded structurally.
         */
       def constructs(t: Tree.Apply): Boolean =
         t.fun.isInstanceOf[Tree.New] || program.symbolOf(t.method).exists(_.name == "<init>")
@@ -162,7 +162,7 @@ object RetargetBoundaryCheck:
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
     case _                           => scala.None
 
-  /** grouped one-line summary, worst family first, each with its §1 classification. */
+  /** grouped one-line summary, worst family first, each with its classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else
