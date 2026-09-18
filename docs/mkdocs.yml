@@ -52,6 +52,7 @@ theme:
 nav:
   - "Welcome": "index.md"
   - "Getting started": "getting-started.md"
+  - "Java semantics Scala does not share": "java-semantics.md"
 
 markdown_extensions:
   - admonition
