@@ -162,7 +162,11 @@ object LlsEnrich:
     indexed:      Boolean = false,
     capacityCtor: Boolean = false,
     /** see [[ArrayKind.mk]]. */
-    mk: String = ""
+    mk: String = "",
+    /** the storage is `ObjectMap`'s own — reference `keyTable`/`valueTable` with `null` for an empty slot, `OrderedMap` its ordered subclass — so the traversals may loop over it directly; every other
+      * hash family keeps the iterator walk.
+      */
+    objectTable: Boolean = false
   )
 
   private[corpus] def mapMembers(k: MapKind): List[(String, MemberSpec)] =
@@ -191,6 +195,9 @@ object LlsEnrich:
             s"while (i < n) { ${call(s"mkK.get(ks, i).asInstanceOf[$K]", s"mkV.get(vs, i).asInstanceOf[$V]")}; i += 1 } }"
         s"lowlevel.MkArray.withResolved[$K, scala.Unit](${mkOf(K)}) { [BK, MkK <: lowlevel.MkArray[BK]] => (mkK: MkK) => " +
           s"lowlevel.MkArray.withResolved[$V, scala.Unit](${mkOf(V)}) { [BV, MkV <: lowlevel.MkArray[BV]] => (mkV: MkV) => $inner } }"
+      else if !k.objectTable then
+        // `entries()` is the one iterator every emitted hash family implements as a `JavaIterator`
+        s"{ val it = this.entries(); while (it.hasNext()) { val e = it.next(); ${call("e.key", k.unwrap("e.value"))} } }"
       else
         // The arrays are read as `Array[AnyRef]` and each element narrowed: expanded where the key
         // type is known, a local typed `Array[K]` would cast the whole `Object[]` store to `K[]`.
@@ -245,15 +252,28 @@ object LlsEnrich:
   /** @param hasNext
     *   `hasNext()` on the object sets, a `hasNext` FIELD on `IntSet` (the emitter renames the field only where a method of the same name exists).
     */
-  private[corpus] case class SetKind(owner: String, elem: String, self: String, tparams: String = "", hasNext: String = "hasNext()", mk: String = "")
+  private[corpus] case class SetKind(
+    owner:   String,
+    elem:    String,
+    self:    String,
+    tparams: String = "",
+    hasNext: String = "hasNext()",
+    mk:      String = "",
+    /** see [[MapKind.objectTable]]: `ObjectSet`'s own storage, `OrderedSet` its ordered subclass. */
+    objectTable: Boolean = false
+  )
 
   private[corpus] def setMembers(k: SetKind): List[(String, MemberSpec)] =
     val E   = k.elem
     val why = "lls collection API on the emitted set surface"
-    // Over the backing storage, not the iterator (see `mapMembers`): the key table in slot order — the
-    // iterator's own order — and an `OrderedSet` in insertion order through `orderedItems`. `go` is
-    // the loop's continuation test, `body` sees the element as `key`.
+    // Over the backing storage where it is `ObjectSet`'s (see `mapMembers`): the key table in slot
+    // order — the iterator's own order — and an `OrderedSet` in insertion order through
+    // `orderedItems`; any other set family through its iterator. `go` is the loop's continuation
+    // test, `body` sees the element as `key`.
     def scan(go: String, body: String): String =
+      if !k.objectTable then s"{ val it = this.iterator(); while (it.${k.hasNext} && $go) { val key: $E = it.next(); $body } }"
+      else objectScan(go, body)
+    def objectScan(go: String, body: String): String =
       val refs    = ".asInstanceOf[scala.Array[scala.AnyRef]]"
       val ordered =
         s"{ val ord = o.orderedItems; val ks = ord.items$refs; val n: scala.Int = ord.size; var i: scala.Int = 0; " +
@@ -311,7 +331,8 @@ object LlsEnrich:
       wrap = v => s"lowlevel.Nullable($v)",
       unwrap = v => s"$v.orNull",
       getOne = "lowlevel.Nullable[V]",
-      removeOne = "remove"
+      removeOne = "remove",
+      objectTable = true
     ),
     MapKind(
       "ArrayMap",
@@ -329,7 +350,7 @@ object LlsEnrich:
   )
 
   private val sets: List[SetKind] = List(
-    SetKind("ObjectSet", "T", "lowlevel.util.ObjectSet[T]", "[T <: java.lang.Object]")
+    SetKind("ObjectSet", "T", "lowlevel.util.ObjectSet[T]", "[T <: java.lang.Object]", objectTable = true)
   )
 
   /** The two SUBCLASSES get the factories too — and must. A companion factory is a static, so the `export Parent.*` that reproduces java's static inheritance (`JS-C3`) delivers the parent's into the
