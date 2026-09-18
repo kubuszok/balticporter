@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** RENAME A MEMBER — and everything that must move with it (DESIGN.md §8.5). Closes what the four §4.55 passes leave open (all Universal): METHOD renames, override edges, external-anchor refusal,
-  * `Reason.Configured`. A SYMBOL TABLE rewrite — reference propagation is free since java resolved statically. Expands through [[OverrideGraph.closureOf]] first: an unmovable closure REFUSES WHOLE
-  * (counted); requests refuse in GROUPS ([[Request.group]]).
+/** Rename a member — and everything that must move with it. Closes what the emitter's own renaming passes leave open: method renames, override edges, external-anchor refusal, `Reason.Configured`. A
+  * symbol-table rewrite — reference propagation is free since java resolved statically. Expands through [[OverrideGraph.closureOf]] first: an unmovable closure refuses whole (counted); requests
+  * refuse in groups ([[Request.group]]).
   */
 object MemberRenamer:
 
@@ -11,18 +11,18 @@ object MemberRenamer:
     /** the requested name is POLICY; landing somewhere else silently betrays it. */
     case Refuse
 
-    /** §4.55's fresh-name idiom — append `$` until free. Applied PER REQUEST, so a caller whose requests must keep a fixed relation to each other (a `x` / `x_=` pair) must not use it.
+    /** The fresh-name idiom — append `$` until free. Applied per request, so a caller whose requests must keep a fixed relation to each other (a `x` / `x_=` pair) must not use it.
       */
     case SuffixUntilFree
 
-    /** the clash is one the emitter's §4.55 passes will resolve by moving the OTHER member — true exactly when every collider is a non-static FIELD. Anything else refuses.
+    /** the clash is one the emitter's own renaming passes will resolve by moving the other member — true exactly when every collider is a non-static field. Anything else refuses.
       */
     case DeferToEmitter
 
-  /** One rename asked for. @param member any declaration of the component; the closure finds the rest @param reason the caller's §1 classification @param key the declared policy entry
+  /** One rename asked for. @param member any declaration of the component; the closure finds the rest @param reason the caller's classification @param key the declared policy entry
     * @param group
-    *   requests that stand or fall together, defaults to [[key]] @param detachedParents external types the CALLER has already re-parented away from THIS member's hierarchy, by FQN — states what the
-    *   graph cannot derive (§4.56), PER REQUEST since removal is a per-class fact.
+    *   requests that stand or fall together, defaults to [[key]] @param detachedParents external types the caller has already re-parented away from this member's hierarchy, by FQN — states what the
+    *   graph cannot derive, per request since removal is a per-class fact.
     */
   final case class Request(member: SymId, newName: String, reason: Reason, key: String, group: String, detachedParents: Set[String] = Set.empty)
 
@@ -96,10 +96,11 @@ object MemberRenamer:
     }
     sweepGroups()
 
-    // ---- 4. collisions, against EFFECTIVE names, PARENTS-FIRST (§4.55) ----
+    // ---- 4. collisions, against effective names, parents-first ----
     // `eff` reads the PENDING assignment first, so a descendant is held against what its ancestor
-    // will actually be called — reading original names is §4.55's own mistake (moved a collision
-    // up a level instead of resolving it). Parents-first is what keeps `SuffixUntilFree` stable.
+    // will actually be called — reading original names was an earlier mistake (it moved a
+    // collision up a level instead of resolving it). Parents-first is what keeps `SuffixUntilFree`
+    // stable.
     val assign = collection.mutable.Map.empty[SymId, String]
     def nameOf(m: SymId): String = p.symbolOf(m).map(_.name).getOrElse("")
     def eff(m:    SymId): String = assign.getOrElse(m, nameOf(m))
@@ -133,8 +134,8 @@ object MemberRenamer:
     def collisionPass(): Unit =
       assign.clear()
       val live = ordered.filterNot((r, _) => refusals.contains(r))
-      // seed with the requested names FIRST, so `eff` holds every survivor's pending name while any
-      // one of them is being tested (§4.55: effective names, parents-first).
+      // seed with the requested names FIRST, so `eff` holds every survivor's pending name while
+      // any one of them is being tested (effective names, parents-first).
       live.foreach((r, c) => c.members.foreach(m => assign(m) = r.newName))
       live.foreach { (r, c) =>
         val owners  = c.members.map(graph.ownerOf).filter(_ != SymId.None).toList.distinct
@@ -218,21 +219,21 @@ object MemberRenamer:
       val syms = p.symbols.all.map(s => assign.get(s.id).map(n => s.copy(name = n, fullName = renamed(s, n))).getOrElse(s))
       (p.rebuilt(symbols = SymbolTable(syms)), refusals.values.toList)
 
-  /** A member's `fullName` is `owner#name` ([[MemberKey]]), so a rename cuts at the LAST `#` and carries everything before it across verbatim (§4.56). A name that does not end in the member segment
-    * is left alone rather than reconstructed: guessing an owner from a string is the trap that rule is about.
+  /** A member's `fullName` is `owner#name` ([[MemberKey]]), so a rename cuts at the last `#` and carries everything before it across verbatim. A name that does not end in the member segment is left
+    * alone rather than reconstructed: guessing an owner from a string is the trap this avoids.
     */
   private def renamed(s: Symbol, to: String): String =
     val i = s.fullName.lastIndexOf('#')
     if i >= 0 && s.fullName.substring(i + 1) == s.name then s.fullName.substring(0, i + 1) + to
     else s.fullName
 
-  /** is this collider one the emitter's §4.55 passes will move out of the way? Exactly a NON-STATIC FIELD: `resolveMemberClashes`/`resolveFieldShadowing` rename a field clashing with or shadowing a
-    * method; a STATIC field emits into the companion, which neither pass reaches.
+  /** is this collider one the emitter's own renaming passes will move out of the way? Exactly a non-static field: `resolveMemberClashes`/`resolveFieldShadowing` rename a field clashing with or
+    * shadowing a method; a static field emits into the companion, which neither pass reaches.
     */
   private def isMovableField(p: Program, m: SymId): Boolean =
     p.symbolOf(m).exists(s => !PolicyBinder.isExecutable(s.info) && !s.flags.isStatic)
 
-  // ---- SYMBOLIC NAME SUPPORT — `@scala.annotation.targetName` (CLAUDE.md §1(b)) ----
+  // ---- symbolic name support — `@scala.annotation.targetName` ----
 
   /** Is this a SYMBOLIC Scala member name — entirely operator characters, or `unary_`-prefixed? Scala has ALPHANUMERIC and SYMBOLIC identifiers; a symbolic name on the JVM must carry `@targetName`
     * for binary compatibility and `-Werror`-clean output.

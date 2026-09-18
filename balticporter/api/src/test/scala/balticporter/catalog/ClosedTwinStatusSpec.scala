@@ -106,7 +106,8 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     // Rule (i) as written catches the status that went STALE downwards — a row still saying `Open`
     // after the entry closed. The opposite claim is the one that costs something: a row saying
     // `Handled` while the record it points at says the engine does NOT handle it is a registry
-    // asserting coverage the measurement contradicts, and it reads as a guarantee to §4.45's agent.
+    // asserting coverage the measurement contradicts, and it reads as a guarantee to an agent in
+    // a consumer repository.
     val optimistic = engineLimitTwins.collect {
       case (id, t, Status.Handled) if verdicts(t) == "OPEN" =>
         s"$id claims Handled, but twin $t reads OPEN — say which half is missing (`Partial`), or " +

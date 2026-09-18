@@ -1,8 +1,8 @@
 package balticporter.tir
 
 /** A readable, STABLE rendering of the TIR — for comparing two phases' output. Unlike case-class `toString` (opaque INTERNING-ORDER-dependent `SymId` integers, `TypeRepr` graphs inline):
-  * [[Style.debug]] prints `fullName#id`, [[Style.canonical]] the name alone; types print once in surface syntax. Total over `Tree`/`TypeRepr` (a missing case is a compiler warning — CLAUDE.md §3).
-  * `ParamRef` renders binder-relative, never recursing into its binder (non-terminating).
+  * [[Style.debug]] prints `fullName#id`, [[Style.canonical]] the name alone; types print once in surface syntax. Total over `Tree`/`TypeRepr` (a missing case is a compiler warning). `ParamRef`
+  * renders binder-relative, never recursing into its binder (non-terminating).
   */
 object TirPrinter:
 
@@ -32,7 +32,7 @@ object TirPrinter:
     tree(sb, t, 0, style)
     sb.result()
 
-  /** the deterministic form: names, no ids, no origins. The unit of a run-over-run semantic diff (DESIGN.md §2.6).
+  /** the deterministic form: names, no ids, no origins. The unit of a run-over-run semantic diff.
     */
   def canonical(t: Tree)(using Program): String = render(t, Style.canonical)
 
@@ -244,7 +244,7 @@ object TirPrinter:
       sub(sb, indent + 1, "expr", x.expr, style)
       // …and the block's END-OF-BODY comments, under the same rule as every other trivia field:
       // elided by `canonical` (no phase reads a comment) and carried by `digest`, which keys the
-      // action cache on EMITTED TEXT and would otherwise re-serve a file without them (V2).
+      // action cache on EMITTED TEXT and would otherwise re-serve a file without them.
       trivia(sb, indent + 1, "trailing", x.trailing, style)
     case x: Tree.Lambda =>
       line(sb, indent, s"Lambda${ofType(x.tpe, style)}${origin(x.origin, style)}")

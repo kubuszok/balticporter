@@ -1,8 +1,8 @@
 package balticporter.catalog
 
-/** THE DIFFERENCE CATALOG — every Java-vs-Scala semantic difference this engine knows about, as CODE rather than a document. Enables citation and coverage reporting (a markdown table cannot), ships
-  * to §4.45's agent in another repository, and follows `UnportableKind`'s closed-enum discipline (DESIGN.md §6.2). HARD RULE: a [[Difference]] takes no parameter — every row is a literal or enum
-  * case. No row carries a number: measurements live in ENGINE-LIMITS/PROGRESS.
+/** The difference catalog — every Java-vs-Scala semantic difference this engine knows about, as code rather than a document. Enables citation and coverage reporting (a markdown table cannot), ships
+  * to a consumer repository's agent, and follows `UnportableKind`'s closed-enum discipline. A [[Difference]] takes no parameter — every row is a literal or enum case. No row carries a number:
+  * measurements live outside this registry.
   */
 object Catalog
 
@@ -26,9 +26,8 @@ enum Area:
   /** platform capability — systems-facing JDK APIs off the JVM. An [[ApiRow]] */
   case P
 
-/** `JS-E04`. Stable, NEVER reused and NEVER renumbered — which is why [[Differences.retired]] exists: an id absorbed into another row keeps its number out of circulation rather than freeing it.
-  * Rendered with a language prefix (`JS-` for Java, `TS-` for TypeScript, `DT-` for Dart), so a catalog id can never be mistaken for an `ENGINE-LIMITS.md` one (both files have a `G22`, and they are
-  * different facts).
+/** `JS-E04`. Stable, never reused and never renumbered — which is why [[Differences.retired]] exists: an id absorbed into another row keeps its number out of circulation rather than freeing it.
+  * Rendered with a language prefix (`JS-` for Java, `TS-` for TypeScript, `DT-` for Dart), so a catalog id is never confused with an id from a different numbering scheme.
   */
 final case class DiffId(area: Area, n: Int, lang: balticporter.core.Language = balticporter.core.Language.Java):
   override def toString: String = f"${lang.prefix}-$area%s$n%02d"
@@ -77,10 +76,12 @@ enum Status:
 /** the empirical record this row PREDICTS, which is what makes the catalog answerable to reality rather than to itself.
   */
 enum Twin:
-  /** an `ENGINE-LIMITS.md` entry, by its stable id (`F5`, `C12`, `K5.6`) — the id `ClosedTwinStatusSpec` resolves */
+  /** an entry in the project's frozen limits record, by its stable id (`F5`, `C12`, `K5.6`) — the id `ClosedTwinStatusSpec` resolves
+    */
   case EngineLimit(id: String)
 
-  /** `CLAUDE.md` §4.4's table — the rows an agent is expected to know by heart */
+  /** the project rules' table of java-statement semantics differences — rows an agent is expected to know by heart
+    */
   case Rule44
 
   /** the engine's own source states the difference at the site that handles it; `where` is the symbol */
@@ -93,7 +94,8 @@ enum Twin:
   /** no twin, and none is owed — the normal state of a checked non-difference */
   case NoTwin
 
-/** which of `CLAUDE.md` §1's three kinds a FIX for this difference would be. The reader's first question is which repository the fix lives in (§4.45), so it is a field and not prose.
+/** Which of the three kinds (universal, parameterised, library-specific) a fix for this difference would be. The reader's first question is which repository the fix lives in, so it is a field and not
+  * prose.
   */
 enum FixKind:
   /** (a) universal — the engine is wrong or incomplete for every library */
@@ -117,9 +119,9 @@ enum FixKind:
     case LibraryRule   => "§1(c) LIBRARY RULE"
     case NoFix         => "no fix owed"
 
-/** ONE ROW of the language half of the catalog — `JS-{E,S,C,G}`. Every field a literal or enum case (`DifferenceTakesNoParameterSpec`, see [[Catalog]]). @param id stable @param title one line (longer
-  * belongs in DESIGN/ENGINE-LIMITS, cited) @param jls/scala citations, `UNCITED — ` prefix where none was found (counted) @param status re-derived, never copied @param evidence the SYMBOL, never a
-  * line number (they go stale) @param attaches WHERE a decision is owed ([[Attaches]]).
+/** One row of the language half of the catalog — `JS-{E,S,C,G}`. Every field a literal or enum case (`DifferenceTakesNoParameterSpec`, see [[Catalog]]). @param id stable @param title one line (longer
+  * belongs elsewhere, cited) @param jls/scala citations, `UNCITED — ` prefix where none was found (counted) @param status re-derived, never copied @param evidence the symbol, never a line number
+  * (they go stale) @param attaches where a decision is owed ([[Attaches]]).
   */
 final case class Difference(
   id:       DiffId,
@@ -134,9 +136,9 @@ final case class Difference(
   attaches: Attaches
 )
 
-/** an id that was ABSORBED into another row and is therefore out of circulation forever.
+/** an id that was absorbed into another row and is therefore out of circulation forever.
   *
-  * `CLAUDE.md`-shaped reason: "never reused, never renumbered" is a rule nothing can enforce unless the retirements are DATA. A retired id with no record is an id the next agent assigns to a new
-  * difference, and every citation written before that day then resolves to the wrong fact.
+  * "Never reused, never renumbered" is a rule nothing can enforce unless the retirements are data. A retired id with no record is an id the next agent assigns to a new difference, and every citation
+  * written before that day then resolves to the wrong fact.
   */
 final case class Retired(id: DiffId, into: Option[DiffId], why: String)

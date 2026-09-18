@@ -4,10 +4,10 @@ package balticporter.tir
   * selection BROADCASTS to every site of the finding kind inside that member. An ambiguous OVERLOAD set is NOT broadcast — `PolicyBinder.bindMember` refuses a key naming two overloads.
   */
 final case class Resolution(
-  /** the manifest entry verbatim — the string an agent edits (`CLAUDE.md` §4.575). */
+  /** the manifest entry verbatim — the string an agent edits. */
   declaredKey: String,
-  /** the PARSE of [[declaredKey]], where there is one. Absent for a remedy whose [[Remedy.Subject]] is a TYPE, because a type key is not a member key and inventing a `MemberKey(fqn, "")` for it would
-    * be §4.6's fabricated fact — a value the reader cannot tell from a real answer. [[declaredKey]] is what every consumer renders.
+  /** the parse of [[declaredKey]], where there is one. Absent for a remedy whose [[Remedy.Subject]] is a type, because a type key is not a member key and inventing a `MemberKey(fqn, "")` for it would
+    * be a fabricated fact — a value the reader cannot tell from a real answer. [[declaredKey]] is what every consumer renders.
     */
   key: Option[MemberKey],
   /** the declaration the key bound to. `SymId.None` where the member was DROPPED before a symbol was minted: the key fired against the index and there is nothing left to resolve at.
@@ -25,8 +25,8 @@ object Resolution:
   val Check:        String = "remediation"
   val ResolvedKind: String = "resolved"
 
-  /** …and the OTHER half of the same lane. A remedy that verified its precondition and DECLINED is neither a no-op nor `NeverApplied` — it was consulted and answered "no, here is why", which reported
-    * as silence would read as applied. CLAUDE.md §3's refusal-enumeration rule at a menu: one row per declined site NAMING THE GUARD. Rides on `remediation` for `ResolvedKind`'s reason.
+  /** …and the other half of the same lane. A remedy that verified its precondition and declined is neither a no-op nor `NeverApplied` — it was consulted and answered "no, here is why", which reported
+    * as silence would read as applied. The refusal-enumeration rule applied at a menu: one row per declined site naming the guard. Rides on `remediation` for `ResolvedKind`'s reason.
     */
   val RefusedKind: String = "refused"
 
@@ -37,8 +37,8 @@ object Resolution:
   /** …and the knob, precisely enough to find it in a manifest. */
   val Setting: String = "PortManifest.resolutions"
 
-/** A RESOLUTION THAT FIRED — the ledger row, and the two artifacts it becomes. Both produced from ONE value on purpose (CLAUDE.md §5): a `remediation(resolved)` count means nothing unless the drained
-  * lane fell by exactly that number, and a `decisions.tsv` row means nothing unless the porter note says the same. Two derivations would be free to disagree.
+/** A resolution that fired — the ledger row, and the two artifacts it becomes. Both produced from one value on purpose: a `remediation(resolved)` count means nothing unless the drained lane fell by
+  * exactly that number, and a `decisions.tsv` row means nothing unless the porter note says the same. Two derivations would be free to disagree.
   */
 final case class AppliedResolution(
   resolution: Resolution,
@@ -50,8 +50,8 @@ final case class AppliedResolution(
   /** what the remedy DID here, in one phrase. Free text; the machine-readable half is the remedy's own id and lane.
     */
   what: String,
-  /** HOW MANY ROWS THIS ONE APPLICATION TOOK OUT OF [[Remedy.lane]]. Usually 1 — a remedy whose SUBJECT is a type (`Remedy.Subject.OwnedType`) drains every site inside it, so one row here answers for
-    * many there. Carried on the value and stated in the finding's own text, per §5's drain rule (`count(rows)` must not stand in for `sum(drained)`).
+  /** How many rows this one application took out of [[Remedy.lane]]. Usually 1 — a remedy whose subject is a type (`Remedy.Subject.OwnedType`) drains every site inside it, so one row here answers for
+    * many there. Carried on the value and stated in the finding's own text (`count(rows)` must not stand in for `sum(drained)`).
     */
   drained: Int = 1
 ):
@@ -111,9 +111,9 @@ final case class RefusedResolution(
 
   def render: String = s"${remedy.id} at $subjectFqn: DECLINED ($guard) — $why"
 
-/** WHAT THE PORT SELECTED, BOUND — a value ONE TRANSLATION owns, never a process-global table (§5.1: `Determinism.Full` translates twice, and a shared ledger would double every row). A phase reaches
-  * it through the [[PolicyBinder]] it is already handed, never a new parameter. Reports declared-beside-applied ([[troubles]]) since a bound, real key can still have its finding never fire this run —
-  * a THIRD staleness state `PolicyBinder` alone cannot see.
+/** What the port selected, bound — a value one translation owns, never a process-global table (`Determinism.Full` translates twice, and a shared ledger would double every row). A phase reaches it
+  * through the [[PolicyBinder]] it is already handed, never a new parameter. Reports declared-beside-applied ([[troubles]]) since a bound, real key can still have its finding never fire this run — a
+  * third staleness state `PolicyBinder` alone cannot see.
   */
 final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
 
@@ -167,9 +167,9 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
   def applied(r: Resolution, subjectFqn: String, subject: SymId, origin: Origin, what: String, drained: Int = 1): Unit =
     record(AppliedResolution(r, subjectFqn, subject, origin, what, drained))
 
-  /** DRAIN a residue lane — the MOVE CLAUDE.md §5 requires (a row leaves the refusal lane and arrives in `remediation(resolved)`), performed once per traversal rather than per check. Returns findings
-    * NOT drained, in original order; drained ones are in this plan's ledger. Use this for a remedy that only MOVES A ROW (no phase); use [[appliedAt]] for one that CHANGES EMISSION
-    * (`Remedy.emissionAffecting`). Keyed on the CALLER'S OWN remedies, not the lane name.
+  /** Drain a residue lane — a row leaves the refusal lane and arrives in `remediation(resolved)`, performed once per traversal rather than per check. Returns findings not drained, in original order;
+    * drained ones are in this plan's ledger. Use this for a remedy that only moves a row (no phase); use [[appliedAt]] for one that changes emission (`Remedy.emissionAffecting`). Keyed on the
+    * caller's own remedies, not the lane name.
     */
   def drain[F](remedies: List[Remedy], findings: List[F])(residue: F => ResolutionPlan.Residue): List[F] =
     if entries.isEmpty || remedies.isEmpty then findings
@@ -216,8 +216,8 @@ final class ResolutionPlan(val entries: List[ResolutionPlan.Entry]):
     subject != SymId.None &&
       log.exists(a => a.subject == subject && a.origin == origin && a.remedy.answers(lane, kind))
 
-  /** THE DECISION ROWS — one per (declaration, remedy), never one per SITE. A `remediation(resolved)` finding is per-site (the drained lane must fall by exactly that many); a `Decision` is per
-    * DECLARATION (CLAUDE.md §5.1) since it becomes a porter NOTE and one per site would print the same note twice above one `val`. Both artifacts still come from one value and say one thing.
+  /** The decision rows — one per (declaration, remedy), never one per site. A `remediation(resolved)` finding is per-site (the drained lane must fall by exactly that many); a `Decision` is per
+    * declaration since it becomes a porter note and one per site would print the same note twice above one `val`. Both artifacts still come from one value and say one thing.
     */
   def decisions: List[Decision] =
     log.toList.map(_.decision).distinctBy(d => (d.kind, d.subject, d.subjectFqn, d.detail.get("remedy")))
@@ -332,8 +332,8 @@ object ResolutionPlan:
       */
     case ConflictingSelection
 
-  /** THE THIRD CAUSE OF `NeverApplied`, and the only one this value can OBSERVE rather than list. `SourceAbsent` cannot answer for a remedy that IS in the manifest's `surface` and was then skipped
-    * via `balticporter.skipPhases` — assembled inside `Pipeline.run`, after the vocabulary (CLAUDE.md §4.6). Names WHAT is skipped so the reader gets a check, not a hypothesis.
+  /** The third cause of `NeverApplied`, and the only one this value can observe rather than list. `SourceAbsent` cannot answer for a remedy that is in the manifest's `surface` and was then skipped
+    * via `balticporter.skipPhases` — assembled inside `Pipeline.run`, after the vocabulary. Names what is skipped so the reader gets a check, not a hypothesis.
     */
   private[tir] def skipNote: String =
     val skipped = DebugFlags.skipPhases
@@ -347,10 +347,10 @@ object ResolutionPlan:
 
   final case class Trouble(declared: String, id: String, issue: Issue, detail: String)
 
-  /** BIND every declared selection, once, before the pipeline runs — like `PortRun.bindDeclaredPolicy` binds drops, keys upstream since the rename runs LAST (§4.56). `bindMember` (not `bindMembers`):
-    * a key naming two overloads is `Ambiguous` with both listed.
+  /** Bind every declared selection, once, before the pipeline runs — like `PortRun.bindDeclaredPolicy` binds drops, keys upstream since the rename runs last. `bindMember` (not `bindMembers`): a key
+    * naming two overloads is `Ambiguous` with both listed.
     * @param declared
-    *   manifest resolutions @param vocabulary every remedy shipped @param active ids whose declaring source is in THIS run.
+    *   manifest resolutions @param vocabulary every remedy shipped @param active ids whose declaring source is in this run.
     */
   def of(
     declared:   Map[String, String],

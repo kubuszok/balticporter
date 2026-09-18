@@ -2,18 +2,17 @@ package balticporter.tir
 
 import balticporter.catalog.{ DiffId, FixKind }
 
-/** THE MARKER'S TAXONOMY — why a construct has no faithful Scala image, as a CLOSED engine enum (`DESIGN.md` §6.2: a new kind arrives with mint sites and report text, the correct friction). Each kind
-  * carries [[UnportableKind.remedies]] classified by §1's three kinds (§1c ranks LAST unless inherently semantic); every string is a TEMPLATE, never a library name (§1's grep gate). Not a
-  * `Difference` (a FACT true regardless of code) — a FAILURE shape, joined via [[Tree.Unportable.diff]].
+/** The marker's taxonomy — why a construct has no faithful Scala image, as a closed engine enum (a new kind arrives with mint sites and report text, the correct friction). Each kind carries
+  * [[UnportableKind.remedies]] classified by the three kinds (library-specific ranks last unless inherently semantic); every string is a template, never a library name. Not a `Difference` (a fact
+  * true regardless of code) — a failure shape, joined via [[Tree.Unportable.diff]].
   */
 enum UnportableKind(val slug: String, val summary: String):
 
-  /** a raw Java generic whose Scala image would have to fill a type argument the source does not state — and where the fill is not `?` (`ENGINE-LIMITS.md` G2's shipped answer) but a name the program
-    * cannot spell.
+  /** a raw Java generic whose Scala image would have to fill a type argument the source does not state — and where the fill is not `?` but a name the program cannot spell.
     */
   case RawGenericConversion extends UnportableKind("raw-generic-conversion", "a raw generic whose Scala image needs a type argument the Java does not state")
 
-  /** the same shape, where the fill DEPENDS on where the type is used — so no one rendering is right for every scope (`ENGINE-LIMITS.md` G8).
+  /** the same shape, where the fill depends on where the type is used — so no one rendering is right for every scope.
     */
   case ContextDependentRawFill
       extends UnportableKind(
@@ -25,7 +24,7 @@ enum UnportableKind(val slug: String, val summary: String):
     */
   case JdkBoundaryFlow extends UnportableKind("jdk-boundary-flow", "a value crosses a JDK seam in a direction no coercion closes")
 
-  /** a Java constructor graph with no single-primary Scala encoding (`ENGINE-LIMITS.md` C3). */
+  /** a Java constructor graph with no single-primary Scala encoding. */
   case ConstructorTopology extends UnportableKind("constructor-topology", "the constructor graph has no single-primary Scala encoding")
 
   /** an API that exists on the JVM and not on a platform this port targets. The one kind whose FIRST remedy is (b): which platforms a port is for is the port's statement, not the engine's.
@@ -44,8 +43,8 @@ enum UnportableKind(val slug: String, val summary: String):
     */
   case FrontendBlindSpot extends UnportableKind("frontend-blind-spot", "the frontend's own arm could not complete for this node")
 
-  /** NO ARM EXISTS for this Java node kind. `spoonKind` is the parser's own class name (`CtSwitchExpression`, `CtRecord`), joining directly to `SpoonKinds.registry` — without the name a run could
-    * report "N constructs refused" and nothing could say WHICH (§4.45).
+  /** No arm exists for this Java node kind. `spoonKind` is the parser's own class name (`CtSwitchExpression`, `CtRecord`), joining directly to `SpoonKinds.registry` — without the name a run could
+    * report "N constructs refused" and nothing could say which.
     */
   case UnmodelledNodeKind(spoonKind: String) extends UnportableKind("unmodelled-node-kind", "no arm in the frontend lowers this Java node kind")
 
@@ -175,8 +174,8 @@ enum UnportableKind(val slug: String, val summary: String):
         )
       )
 
-/** one ranked remediation, in PROSE, with the §1 classification that says whose it is. A HINT, not a [[Remedy]]: this is advice a human carries out, a `Remedy` is a NAMED alternative the engine
-  * itself performs. They share [[balticporter.catalog.FixKind]] (the same first question — which repository owns the fix) and nothing else.
+/** one ranked remediation, in prose, with the classification that says whose it is. A hint, not a [[Remedy]]: this is advice a human carries out, a `Remedy` is a named alternative the engine itself
+  * performs. They share [[balticporter.catalog.FixKind]] (the same first question — which repository owns the fix) and nothing else.
   */
 final case class RemedyHint(fix: FixKind, what: String):
   /** deliberately NOT [[balticporter.catalog.FixKind.section]]: this rendering reaches emitted marker text, so its exact spelling is a fact about the output rather than about the classification, and
@@ -189,8 +188,8 @@ final case class RemedyHint(fix: FixKind, what: String):
     case FixKind.LibraryRule   => "§1(c) LIBRARY RULE:"
     case FixKind.NoFix         => "—"
 
-/** OPEN, or discharged by a named phase (`DESIGN.md` §6.2: discharge is an explicit act, `Open → Resolved(byPhase, how)`, and a marker never leaves the tree until emission). A phase that DELETES a
-  * marked subtree has erased a finding rather than fixed one; [[MarkerCheck]] tells the two apart only because a discharge leaves a `Resolved` node behind.
+/** Open, or discharged by a named phase (discharge is an explicit act, `Open → Resolved(byPhase, how)`, and a marker never leaves the tree until emission). A phase that deletes a marked subtree has
+  * erased a finding rather than fixed one; [[MarkerCheck]] tells the two apart only because a discharge leaves a `Resolved` node behind.
   */
 enum MarkerState:
   case Open

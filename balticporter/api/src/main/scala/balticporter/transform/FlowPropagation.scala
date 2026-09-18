@@ -2,21 +2,21 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** PURE-MOVE FLOW PROPAGATION — "a scoped rewrite carries its call sites with it", as a value. Grows a [[balticporter.tir.RuleScope]]'s seeds by walking PURE MOVE edges (assignment, bare initialiser,
-  * `return`, argument-to-parameter — read off the TIR's `SymId`s, CLAUDE.md §4.56; ARITHMETIC breaks the chain deliberately). Hand-written, DELIBERATELY BOUNDED (CLAUDE.md §3): a missed edge fails
-  * LOUD at the site, never silently wrong. Lives in `api`, not `engine`.
+/** Pure-move flow propagation — "a scoped rewrite carries its call sites with it", as a value. Grows a [[balticporter.tir.RuleScope]]'s seeds by walking pure-move edges (assignment, bare initialiser,
+  * `return`, argument-to-parameter — read off the TIR's `SymId`s; arithmetic breaks the chain deliberately). Hand-written and deliberately bounded: a missed edge fails loud at the site, never
+  * silently wrong. Lives in `api`, not `engine`.
   */
 object FlowPropagation:
 
-  /** Grow `seeds` to every ELIGIBLE symbol connected by pure-move flows — a UNION-FIND over the flow edges (symmetric, transitive by construction). Restricting to `eligible` BEFORE the union keeps a
-    * chain from leaking through a non-candidate symbol. @param eligible which symbols may join, from the phase's OWN retyping record (§4.56), never a name test. @return eligible seeds plus everything
+  /** Grow `seeds` to every eligible symbol connected by pure-move flows — a union-find over the flow edges (symmetric, transitive by construction). Restricting to `eligible` before the union keeps a
+    * chain from leaking through a non-candidate symbol. @param eligible which symbols may join, from the phase's own retyping record, never a name test. @return eligible seeds plus everything
     * reachable — an ineligible seed contributes nothing.
     */
   def grow(program: Program, seeds: Set[SymId], eligible: SymId => Boolean): Set[SymId] =
     grow(edges(program), seeds, eligible)
 
-  /** …over an edge set the caller ALREADY has. Not an optimisation for its own sake: a scope that must attribute each grown declaration to the POLICY ENTRY that reached it (CLAUDE.md §4.575) grows
-    * once per entry, and re-walking a 600-file program per entry is the difference between a usable knob and an unusable one.
+  /** …over an edge set the caller already has. Not an optimisation for its own sake: a scope that must attribute each grown declaration to the policy entry that reached it grows once per entry, and
+    * re-walking a 600-file program per entry is the difference between a usable knob and an unusable one.
     */
   def grow(edges: List[(SymId, SymId)], seeds: Set[SymId], eligible: SymId => Boolean): Set[SymId] =
     val parent = collection.mutable.Map[SymId, SymId]()
@@ -38,8 +38,8 @@ object FlowPropagation:
   def edges(program: Program): List[(SymId, SymId)] =
     val out = collection.mutable.ListBuffer[(SymId, SymId)]()
 
-    /** the symbol a term REFERS to, when it is a bare reference — a nullary call counts (`x = o.get()` moves whatever `get` returns). An ARRAY ELEMENT READ returns the ARRAY's symbol (a pure move of
-      * what it holds, mirroring O3's array-as-carrier); element WRITE flows through this too when `ArrayAccess` is the LHS of an `Assign`.
+    /** the symbol a term refers to, when it is a bare reference — a nullary call counts (`x = o.get()` moves whatever `get` returns). An array element read returns the array's symbol (a pure move of
+      * what it holds, the same way an opaque type seeded on an array is carried by the array itself); element write flows through this too when `ArrayAccess` is the LHS of an `Assign`.
       */
     def refSym(t: Term): Option[SymId] = t match
       case Tree.Ident(s, _, _)            => Some(s)
@@ -88,9 +88,8 @@ object FlowPropagation:
     program.units.foreach(walkStat(_, SymId.None))
     out.toList ++ overrideEdges(program)
 
-  /** the OVERRIDE edge: a method and what it overrides share one signature (§4.55, whole component or nothing) — its result moves with theirs, its i-th parameter with their i-th.
-    * `Screen.render(delta)` retyped alone left `ScreenAdapter.render(float)` behind (1 error). Its own function: an EXACT seed set (a reference-derived one) is closed under these edges and no other
-    * (`PROGRESS.md` §13.31 step 1).
+  /** the override edge: a method and what it overrides share one signature (whole component or nothing) — its result moves with theirs, its i-th parameter with their i-th. Retyping
+    * `Screen.render(delta)` alone would leave `ScreenAdapter.render(float)` behind. Its own function: an exact seed set is closed under these edges and no other.
     */
   def overrideEdges(program: Program): List[(SymId, SymId)] =
     val out   = collection.mutable.ListBuffer[(SymId, SymId)]()

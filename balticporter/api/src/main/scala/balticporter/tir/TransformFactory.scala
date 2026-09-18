@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** A phase that a CONFIG FILE can name — the third front door to a port (beside a Scala `main` and an embedding library); `PortConfigMain` reads a `.conf` and runs the port. NOT a plugin-loading
-  * mechanism: a §1(c) rule is still CODE the consumer compiles, resolved via `ServiceLoader` — no classname-in-a-string, no predicate in config. Config type is [[ConfigView]], not HOCON `Config`
-  * (`balticporter-api` depends on nothing). `fromConfig` must throw for anything unhonoured; unread keys FAIL the load.
+/** A phase that a config file can name — the third front door to a port (beside a Scala `main` and an embedding library); `PortConfigMain` reads a `.conf` and runs the port. Not a plugin-loading
+  * mechanism: a library-specific rule is still code the consumer compiles, resolved via `ServiceLoader`, never a classname-in-a-string. Config type is [[ConfigView]], not HOCON `Config`. `fromConfig`
+  * must throw for anything unhonoured; unread keys fail the load.
   */
 trait TransformFactory:
 
@@ -25,11 +25,11 @@ object TransformFactory:
     */
   def scopeOf(config: ConfigView, key: String = "scope", default: RuleScope = RuleScope.Everywhere()): RuleScope =
     config.child(key) match
-      // …`default` is the phase's OWN no-op and not always the unrestricted one. A phase that
-      // RETYPES declarations is unrestricted by default and its scope is an opt-OUT; a phase that
-      // ADDS members is the other way round — "everything" would rewrite a port's surface for a
-      // key nobody wrote — so its no-op is `Only(Set.empty)`. §1(b) asks that the DEFAULT be the
-      // no-op, never that every phase spell it the same way.
+      // …`default` is the phase's own no-op and not always the unrestricted one. A phase that
+      // retypes declarations is unrestricted by default and its scope is an opt-out; a phase that
+      // adds members is the other way round — "everything" would rewrite a port's surface for a
+      // key nobody wrote — so its no-op is `Only(Set.empty)`. The default must be the no-op; not
+      // every phase spells it the same way.
       case scala.None => default
       case Some(s)    =>
         (s.strings("except"), s.strings("only")) match
@@ -81,7 +81,7 @@ trait ConfigView:
   /** a list of nested objects. */
   def children(key: String): Option[List[ConfigView]]
 
-  /** `<path>.<key>`, the string an agent edits — quote it in every error (CLAUDE.md §4.575). */
+  /** `<path>.<key>`, the string an agent edits — quote it in every error. */
   final def at(key: String): String = if path.isEmpty then key else s"$path.$key"
 
   final def requireString(key: String): String =

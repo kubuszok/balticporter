@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** What the RUN knows about ITSELF, and a PHASE cannot derive from the `Program` it is handed — does this run EMIT a declaration at all ([[emits]], from the unit's `Origin` against the run's roots,
-  * realpathed — CLAUDE.md §5.4, `ENGINE-LIMITS.md` D2), and which policy keys did MY manifest contribute after a `SurfaceFold` merge ([[contributed]]). Arrives on the `PolicyBinder`.
-  * [[RunScope.whole]] (default) is the pre-existing behaviour: everything is this run's own.
+/** What the run knows about itself, and a phase cannot derive from the `Program` it is handed — does this run emit a declaration at all ([[emits]], from the unit's `Origin` against the run's
+  * realpathed roots), and which policy keys did this manifest contribute after a `SurfaceFold` merge ([[contributed]]). Arrives on the `PolicyBinder`. [[RunScope.whole]] (default) is the pre-existing
+  * behaviour: everything is this run's own.
   */
 trait RunScope:
 
@@ -16,27 +16,27 @@ trait RunScope:
     */
   def contributed(phase: String): Option[Set[String]]
 
-  /** WHICH BACKENDS THIS MODULE IS PORTED FOR, and where it ships its own answer — a fact about the RUN a phase must not restate as its own constructor parameter (measured: a phase defaulting to
-    * all-three disagreed silently with a port's `targets = ["jvm"]`). Belongs on the binder for [[emits]]'s reason. [[RunScope.PlatformPolicy.everyPlatform]] is the pre-parameterised default.
+  /** Which backends this module is ported for, and where it ships its own answer — a fact about the run a phase must not restate as its own constructor parameter, or a phase defaulting to all-three
+    * would disagree silently with a port's `targets = ["jvm"]`. Belongs on the binder for [[emits]]'s reason. [[RunScope.PlatformPolicy.everyPlatform]] is the pre-parameterised default.
     */
   def platform: RunScope.PlatformPolicy = RunScope.PlatformPolicy.everyPlatform
 
-  /** Types the base port SUBSTITUTED — dropped and replaced by a hand-written injection. A dependent's `Program` contains its base (D2), so a detection phase may auto-detect a pair on a type the base
-    * REPLACED, from JAVA members the injected Scala shim never declared. Populated from the base's published port map (`PortMap.Disposition.Substituted`); empty for a base port.
+  /** Types the base port substituted — dropped and replaced by a hand-written injection. A dependent's `Program` contains its base, so a detection phase may auto-detect a pair on a type the base
+    * replaced, from java members the injected Scala shim never declared. Populated from the base's published port map (`PortMap.Disposition.Substituted`); empty for a base port.
     */
   def baseSubstitutedOwners: Set[String] = Set.empty
 
-  /** Types THIS RUN drops and replaces with an injected file. A rewrite dispatcher resolving a call's table off the callee's owner (rather than the receiver's own type) must not fire on one of these
-    * — the injected surface has its own API. Subplan item 2.
+  /** Types this run drops and replaces with an injected file. A rewrite dispatcher resolving a call's table off the callee's owner (rather than the receiver's own type) must not fire on one of these
+    * — the injected surface has its own API.
     */
   def ownSubstitutedOwners: Set[String] = Set.empty
 
-  /** UPSTREAM member descriptors from the base's PUBLISHED PORT MAP — the set a dependent phase reads to decide whether the base RETYPED a parameter (ENGINE-LIMITS O8). Each string is a member row's
-    * `upstream` column; a retyping phase checks it against the callee's own opaque FQN, a direct read rather than a re-derivation (CLAUDE.md §4.55).
+  /** Upstream member descriptors from the base's published port map — the set a dependent phase reads to decide whether the base retyped a parameter. Each string is a member row's `upstream` column;
+    * a retyping phase checks it against the callee's own opaque FQN, a direct read rather than a re-derivation.
     */
   def baseMemberUpstream: Set[String] = Set.empty
 
-  /** spelling policy derived from the manifest's reference port (`PortManifest.parity`); empty when no reference is declared or no phase derives. [[DerivedPolicy]], `PROGRESS.md` §13.31 step 1.
+  /** spelling policy derived from the manifest's reference port (`PortManifest.parity`); empty when no reference is declared or no phase derives. See [[DerivedPolicy]].
     */
   def derived: DerivedPolicy = DerivedPolicy.empty
 
@@ -68,7 +68,7 @@ object RunScope:
   )
 
   object PlatformPolicy:
-    /** every question the portability rules asked before a target set existed — the §1(b) default, and the answer for a run with no manifest, a spec and `DebugEmit`.
+    /** every question the portability rules asked before a target set existed — the default, and the answer for a run with no manifest, a spec and `DebugEmit`.
       */
     val everyPlatform: PlatformPolicy =
       PlatformPolicy(balticporter.catalog.Platform.values.toSet, Map.empty)
@@ -78,7 +78,7 @@ object RunScope:
     */
   final case class ReferenceMember(name: String, kind: String, static: Boolean, source: String, imports: List[String])
 
-  /** the reference tree's declarations, by the java type they stand for — built by the run from the manifest's `parity` roots (DESIGN.md §8.30); absent when no reference is declared.
+  /** the reference tree's declarations, by the java type they stand for — built by the run from the manifest's `parity` roots; absent when no reference is declared.
     */
   trait ReferenceSourceLookup:
     /** the reference's declarations named `names` on the type standing for `owner`; a name the reference does not declare is simply absent.
@@ -91,8 +91,8 @@ object RunScope:
     def contributed(phase: String): Option[Set[String]] = scala.None
 
   /** @param emitted
-    *   the top-level unit symbols this run converts @param own phase name → subjects THIS manifest contributed @param platform the manifest's platform declaration, defaulted to the pre-parameterised
-    *   answer @param substituted upstream FQNs of types the base SUBSTITUTED — detection phases skip these owners so they don't rename what the injected file never did (D14)
+    *   the top-level unit symbols this run converts @param own phase name → subjects this manifest contributed @param platform the manifest's platform declaration, defaulted to the pre-parameterised
+    *   answer @param substituted upstream FQNs of types the base substituted — detection phases skip these owners so they don't rename what the injected file never did
     * @param ownSubstituted
     *   see [[RunScope.ownSubstitutedOwners]]. Empty for a run with no drops.
     */

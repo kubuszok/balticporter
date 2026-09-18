@@ -1,8 +1,7 @@
 package balticporter.tir
 
-/** The one walk to every `return` of a method body and to the body's TAIL value, without crossing into a lambda or a local class (a `return` there is that function's, JLS 14.17). A phase that retypes
-  * a method's result maps both through here — two hand-rolled walkers each missed the loop bodies the other had (`PROGRESS.md` §13.31 step 1). `onTail` is applied only where the expression IS the
-  * method's value: a statement in a block is never one.
+/** Walks every `return` of a method body and the body's tail value, without crossing into a lambda or a local class (a `return` there belongs to that function, JLS 14.17). A phase that retypes a
+  * method's result maps both through here rather than writing its own recursion. `onTail` fires only where the expression is the method's value; a statement in a block never is.
   */
 object ReturnSites:
   def map(t: Term, tail: Boolean = true)(onReturn: Term => Term, onTail: Term => Term = identity): Term =

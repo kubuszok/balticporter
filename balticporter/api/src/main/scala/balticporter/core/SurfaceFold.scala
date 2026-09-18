@@ -2,9 +2,9 @@ package balticporter.core
 
 import balticporter.tir.Phase
 
-/** How one parameterised phase's POLICY composes with a NEARER manifest's instance of the same phase — the merge contract (DESIGN.md §8.13, `ENGINE-LIMITS.md` D9). `extendedBy` concatenates `surface`
-  * phases by identity, so two instances of one NAME never merge without this — fatal `SurfaceDivergence`. The PHASE answers (merge semantics differ per phase); three obligations: preserve both
-  * inputs' own keys or refuse, be PURE/DETERMINISTIC, move `surfaceFingerprint`.
+/** How one parameterised phase's policy composes with a nearer manifest's instance of the same phase — the merge contract. `extendedBy` concatenates `surface` phases by identity, so two instances of
+  * one name never merge without this — fatal `SurfaceDivergence`. The phase answers (merge semantics differ per phase); three obligations: preserve both inputs' own keys or refuse, be
+  * pure/deterministic, move `surfaceFingerprint`.
   */
 trait MergeablePolicy extends SurfacePolicy:
   self: Phase =>
@@ -48,8 +48,8 @@ final case class SurfaceFold(
 
 object SurfaceFold:
 
-  /** Why a same-name pair was not merged. Kept apart because the READER's next action differs: write a merge contract, or reconcile two values. An INTRUSION is not here (`ENGINE-LIMITS.md` CT9 Face
-    * A): it is a statement about a base's OUTPUT, not about two policies failing to compose, and does not leave two instances in the pipeline. See [[Intrusion]].
+  /** Why a same-name pair was not merged. Kept apart because the reader's next action differs: write a merge contract, or reconcile two values. An intrusion is not here: it is a statement about a
+    * base's output, not about two policies failing to compose, and does not leave two instances in the pipeline. See [[Intrusion]].
     */
   enum Cause:
     /** the phase declares no [[MergeablePolicy]] and the two policies are DEMONSTRABLY different — the pre-merge behaviour, unchanged.
@@ -65,15 +65,15 @@ object SurfaceFold:
 
   final case class Refusal(phase: String, cause: Cause, why: String)
 
-  /** What the fold decided about ONE same-name pair. Three answers and not two, because "equal policies" is neither a merge nor a refusal: it is the pre-CT9 by-name dedup, which `Pipeline.order` used
-    * to perform by accident and no longer does.
+  /** What the fold decided about ONE same-name pair. Three answers and not two, because "equal policies" is neither a merge nor a refusal: it is a by-name dedup, which `Pipeline.order` used to
+    * perform by accident and no longer does.
     */
   private enum Outcome:
     /** the phase's own `mergedWith` composed them. */
     case Merged(phase: Phase, added: Set[String])
 
-    /** the two instances are the SAME POLICY, provably. ONE of them runs — the base's, in the base's position — and the later one is dropped, which is exactly what the pre-CT9 pipeline did and what
-      * nothing has done since `Pipeline.order` started ordering INSTANCES.
+    /** the two instances are the SAME POLICY, provably. ONE of them runs — the base's, in the base's position — and the later one is dropped, which is what nothing has done since `Pipeline.order`
+      * started ordering INSTANCES.
       */
     case Deduplicated
 
@@ -122,11 +122,11 @@ object SurfaceFold:
               case a: MergeablePolicy =>
                 a.mergedWith(p) match
                   case Right(MergeablePolicy.Merged(merged, added)) =>
-                    // The merge STANDS whatever the screen says. An intrusion is not a failure to
-                    // compose two policies — it is a statement about what the BASE emits, which only
-                    // the layer holding the base's published map can make, and a confirmed one stops
-                    // the run before any phase runs rather than by leaving a pipeline half-composed
-                    // (`ENGINE-LIMITS.md` CT9 Face A).
+                    // The merge stands whatever the screen says. An intrusion is not a failure to
+                    // compose two policies — it is a statement about what the base emits, which
+                    // only the layer holding the base's published map can make, and a confirmed
+                    // one stops the run before any phase runs rather than by leaving a pipeline
+                    // half-composed.
                     intrusions = intrusions ++ candidates(seen, p.name, added)
                     Outcome.Merged(merged, added)
                   case Left(why) => Outcome.Kept(Refusal(p.name, Cause.Conflict, why))
@@ -145,9 +145,9 @@ object SurfaceFold:
 
     SurfaceFold(phases.toList, absorbed, refusals.distinct.toList, ownKeys, intrusions.distinct.toList)
 
-  /** A same-name pair whose EARLIER instance declares no [[MergeablePolicy]] — the arm that had to change once `Pipeline.order` began ordering INSTANCES (running an equal pair twice is harmless only
-    * if the phase happens to be idempotent). Equal collapses to ONE instance at the base's position; "equal" is only sayable of a [[SurfacePolicy]] (name-only fingerprint compares unequal configs
-    * equal), so a non-`SurfacePolicy` pair REFUSES loudly (`ENGINE-LIMITS.md` CT9 Face B).
+  /** A same-name pair whose earlier instance declares no [[MergeablePolicy]] — the arm that had to change once `Pipeline.order` began ordering instances (running an equal pair twice is harmless only
+    * if the phase happens to be idempotent). Equal collapses to one instance at the base's position; "equal" is only sayable of a [[SurfacePolicy]] (name-only fingerprint compares unequal configs
+    * equal), so a non-`SurfacePolicy` pair refuses loudly.
     */
   private def noContract(earlier: Phase, later: Phase): Outcome = (earlier, later) match
     case (_: SurfacePolicy, _: SurfacePolicy) =>
@@ -175,9 +175,9 @@ object SurfaceFold:
         )
       )
 
-  /** The `governs` screen, MANIFEST HALF: which subjects this module adds could edit a BASE's shared surface? Not a bare prefix (a base's claim holds types it DROPS, and redirecting into a
-    * dependent's replacement is legitimate) — a candidate is a subject the base's OWN policy does not account for. "Nothing stands at that name" is the criterion, not "is dropped"
-    * (`PortManifest.shipsInjectionAt`, §4.56). Screened against the base's published port map.
+  /** The `governs` screen, manifest half: which subjects this module adds could edit a base's shared surface? Not a bare prefix (a base's claim holds types it drops, and redirecting into a
+    * dependent's replacement is legitimate) — a candidate is a subject the base's own policy does not account for. "Nothing stands at that name" is the criterion, not "is dropped"
+    * (`PortManifest.shipsInjectionAt`). Screened against the base's published port map.
     */
   private def candidates(bases: List[PortManifest], phase: String, added: Set[String]): List[Intrusion] =
     def admitted(b: PortManifest, subject: String): Boolean =

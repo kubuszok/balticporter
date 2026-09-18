@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** The map from an ANCESTOR's type PARAMETERS to the arguments a subclass instantiates them with — the one derivation any synthesiser copying a parent signature into a subclass must run (a diamond
-  * forwarder, `CtorFunnel`, a replayed body). The `extends` clause makes it EXACT. TRANSITIVE — composes each level (`T -> X -> Leaf` collapses to `T -> Leaf`); maps only ancestors this program
-  * DECLARES (an external parent's params are a class-file fact, §4.56).
+/** The map from an ancestor's type parameters to the arguments a subclass instantiates them with — the one derivation any synthesiser copying a parent signature into a subclass must run (a diamond
+  * forwarder, `CtorFunnel`, a replayed body). The `extends` clause makes it exact. Transitive — composes each level (`T -> X -> Leaf` collapses to `T -> Leaf`); maps only ancestors this program
+  * declares — an external parent's params are a class-file fact.
   */
 object ParentSubst:
 
@@ -40,8 +40,8 @@ object ParentSubst:
         }
     walk(parents, Map.empty, 0)
 
-  /** rewrite every occurrence of a mapped type parameter in `t`. COMPLETE over [[TypeRepr]] rather than the shapes the first caller happened to need — a partial recursion is §4.56's fast-path guard
-    * at a type walk. BINDERS ARE NOT ENTERED: `PolyType`/`TypeLambda` could capture, and nothing in a java-derived signature needs it.
+  /** rewrite every occurrence of a mapped type parameter in `t`. Complete over [[TypeRepr]] rather than the shapes the first caller happened to need — a partial recursion silently drops any case a
+    * later caller adds. Binders are not entered: `PolyType`/`TypeLambda` could capture, and nothing in a java-derived signature needs it.
     */
   def subst(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr =
     if m.isEmpty then t

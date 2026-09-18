@@ -2,8 +2,8 @@ package balticporter.core
 
 import java.nio.file.Path
 
-/** CLAUDE.md §5.4's rule, as ONE function — realpath both operands, `normalize` only where the path does not exist. A lexical `normalize` keeps a symlink and `Files.walk` follows it, so a
-  * `startsWith` between the two matches nothing, silently — common (a git worktree). Consolidates four separate repair copies (one buggy); `RealPathSpec` pins `.toRealPath(` to this file alone.
+/** Realpaths both operands and falls back to `normalize` only where the path does not exist. A lexical `normalize` keeps a symlink and `Files.walk` follows it, so a `startsWith` between the two would
+  * silently match nothing — common with a git worktree. `RealPathSpec` pins `.toRealPath(` to this file alone.
   */
 object RealPath:
 
@@ -24,8 +24,8 @@ object RealPath:
     */
   def relativize(root: Path, p: Path): Path = of(root).relativize(of(p))
 
-  /** [[of]] for an input whose ABSENCE must be fatal — a declared source root, a config-named file. CLAUDE.md §5.1's missing-input rule: a silently-normalised nothing-in-particular reports success
-    * over no input at all, and the diagnostic must name the path.
+  /** [[of]] for an input whose absence must be fatal — a declared source root, a config-named file. A silently-normalised nothing-in-particular would report success over no input at all, so the
+    * diagnostic must name the path.
     * @throws java.nio.file.NoSuchFileException
     *   when `p` does not exist or cannot be resolved
     */

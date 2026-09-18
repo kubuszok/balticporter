@@ -41,8 +41,8 @@ object Substitutions:
       try walk.iterator().asScala.filter(_.toString.endsWith(".scala")).toList.sorted
       finally walk.close()
 
-  /** what a set of injection roots SUPPLIES: emitted FQN → the root-relative path it came from. FQN is the relative path minus `.scala`, dots for separators. These are EMITTED names (a drop key is
-    * UPSTREAM, so a comparison translates first, §4.56). A non-existent root supplies NOTHING, consistent with the run's own copy loop.
+  /** what a set of injection roots supplies: emitted FQN → the root-relative path it came from. FQN is the relative path minus `.scala`, dots for separators. These are emitted names — a drop key is
+    * upstream, so a comparison translates first. A non-existent root supplies nothing, consistent with the run's own copy loop.
     */
   def injectedSources(roots: List[Path]): List[(String, String)] =
     roots.filter(Files.exists(_)).flatMap { root =>

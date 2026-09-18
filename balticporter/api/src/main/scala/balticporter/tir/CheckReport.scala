@@ -58,9 +58,9 @@ object CheckReport:
   // enablement and location
   // ---------------------------------------------------------------------------
 
-  /** On when the build supplies `balticporter.root`, or a report dir is named, or forced with `balticporter.report=on`. Off in a plain unit-test JVM (no litter). Off WHATEVER the flags say when there
-    * is no port identity to name a directory after (`sun.java.command` under sbt 2 forked tests answers `WorkerMain`, which would publish into the checkout) — §5.1's gate. An explicit `reportDir`
-    * still enables it, since the caller supplied the identity.
+  /** On when the build supplies `balticporter.root`, or a report dir is named, or forced with `balticporter.report=on`. Off in a plain unit-test JVM (no litter). Off whatever the flags say when there
+    * is no port identity to name a directory after (`sun.java.command` under sbt 2 forked tests answers `WorkerMain`, which would publish into the checkout). An explicit `reportDir` still enables it,
+    * since the caller supplied the identity.
     */
   def enabled: Boolean =
     DebugFlags.get("report").map(_ == "off") match
@@ -69,8 +69,8 @@ object CheckReport:
         DebugFlags.get("reportDir").isDefined ||
         ((DebugFlags.bool("report") || sys.props.contains(DebugFlags.Prefix + "root")) && mainClassKey.isDefined)
 
-  /** `balticporter.reportDir`, else `port-report/<main class simple name>` under the root. Derived from the main class deliberately — per-PORT without the engine naming a library (§1), and no
-    * call-site configuration needed. [[NoMainClass]] is the total-but-unwritten fallback ([[enabled]] is false there); `PortMap` still discovers a base's map through this directory's PARENT.
+  /** `balticporter.reportDir`, else `port-report/<main class simple name>` under the root. Derived from the main class deliberately — per-port without the engine naming a library, and no call-site
+    * configuration needed. [[NoMainClass]] is the total-but-unwritten fallback ([[enabled]] is false there); `PortMap` still discovers a base's map through this directory's parent.
     */
   def dir: Path =
     DebugFlags.path("reportDir").getOrElse(DebugFlags.root.resolve(s"port-report/${mainClassKey.getOrElse(NoMainClass)}"))
@@ -78,13 +78,13 @@ object CheckReport:
   /** the placeholder segment for "this JVM has no port identity"; see [[dir]]. */
   private[tir] val NoMainClass = "default"
 
-  /** Mains that belong to the BUILD, not to a port — a report directory named after one would be a directory of unrequested artifacts. A prefix test §4.56 normally forbids, but there is no structure
-    * to read in `sun.java.command`'s bare command line — the honest move is an explicit, short negative rather than an invented structural claim.
+  /** Mains that belong to the build, not to a port — a report directory named after one would be a directory of unrequested artifacts. A prefix test would normally be forbidden here, but there is no
+    * structure to read in `sun.java.command`'s bare command line — the honest move is an explicit, short negative rather than an invented structural claim.
     */
   private val BuildToolMains = List("sbt.", "xsbt.", "org.scalatest.", "munit.", "org.junit.")
 
-  /** the launching main class's simple name, when it is a PORT's own migration program. `None` when launched by the build tool or the command is absent/not a plain class name. Measure lanes are
-    * unaffected: each runs a migration `main`, the identity CLAUDE.md §2.1 keeps stable.
+  /** the launching main class's simple name, when it is a port's own migration program. `None` when launched by the build tool or the command is absent/not a plain class name. Measure lanes are
+    * unaffected: each runs a migration `main`, so the identity stays stable.
     */
   private[tir] def mainClassKey: Option[String] =
     Option(System.getProperty("sun.java.command"))
@@ -105,10 +105,10 @@ object CheckReport:
       val abs = Path.of(p)
       if !abs.isAbsolute then p
       else
-        // Resolve SYMLINKS on both sides first — a symlinked parent (a git worktree, a mounted
+        // Resolve symlinks on both sides first — a symlinked parent (a git worktree, a mounted
         // source tree) otherwise relativises to a `..` stack that depends on the link's location,
-        // deterministic but different from the primary checkout's baseline (§5.4). Through
-        // `RealPath`, not a local helper — the local one fell back to a bare `normalize` and threw.
+        // deterministic but different from the primary checkout's baseline. Through `RealPath`,
+        // not a local helper — the local one fell back to a bare `normalize` and threw.
         balticporter.core.RealPath.relativize(root, abs).toString.replace('\\', '/')
     catch case _: Exception => p
 
@@ -144,8 +144,8 @@ object CheckReport:
 
   def reset(): Unit = synchronized { recorded.clear(); upstream = scala.None }
 
-  /** `counts.tsv`'s one NON-CHECK row: which java tree this run measured (CLAUDE.md §5). A moved vendored submodule otherwise reads as a suite regression with no artifact naming the cause. Never a
-    * check — [[baselineChecks]] skips the key, so the diff can never call it NOT-RUN.
+  /** `counts.tsv`'s one non-check row: which java tree this run measured. A moved vendored submodule otherwise reads as a suite regression with no artifact naming the cause. Never a check —
+    * [[baselineChecks]] skips the key, so the diff can never call it NOT-RUN.
     */
   val UpstreamKey = "upstream"
 
@@ -209,10 +209,10 @@ object CheckReport:
     val sb = new StringBuilder
     sb.append("# Port check report\n\n")
     sb.append(s"path root: `${DebugFlags.path("reportPathRoot").getOrElse(DebugFlags.root)}`\n\n")
-    // What the §4.6 flags actually were IN THIS RUN. The flags are resolved in the migration's own
-    // forked JVM from files the operator may since have edited, so "did my flag reach the run" is
-    // not answerable after the fact from anything else — `just debug-flags PORT` reads this line.
-    // Recorded even when empty: "(none)" is the answer to that question as often as a flag is.
+    // What the debug flags actually were in this run. The flags are resolved in the migration's
+    // own forked JVM from files the operator may since have edited, so "did my flag reach the run"
+    // is not answerable after the fact from anything else — `just debug-flags PORT` reads this
+    // line. Recorded even when empty: "(none)" is the answer to that question as often as a flag is.
     sb.append(s"debug flags: ${DebugFlags.active match { case Nil => "(none)"; case on => on.mkString(" ") }}\n\n")
     // …and the JVM, for the same reason and in the same document: `jvm.txt` is what a guard reads,
     // and this is what an operator reads when a port map's `jdk=` disagrees with a compile.
@@ -258,7 +258,8 @@ object CheckReport:
       }
     )
 
-  /** the commit-subject fragment CLAUDE.md §5 asks for, computed rather than remembered. */
+  /** the commit-subject fragment the measurement discipline asks for, computed rather than remembered.
+    */
   def subject(d: Diff): String =
     d.deltas
       .map { x =>

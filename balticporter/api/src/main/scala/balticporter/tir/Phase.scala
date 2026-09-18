@@ -9,19 +9,19 @@ trait Phase:
   def runsAfter:  Set[String] = Set.empty
   def runsBefore: Set[String] = Set.empty
 
-  // ---- decision provenance (CLAUDE.md §4.45: make it obvious HOW the porter got here) ----
+  // ---- decision provenance (make it obvious HOW the porter got here) ----
 
   /** What this phase DECIDED, for the run currently in progress. Owned by the phase for one `run` and DRAINED by [[Pipeline.runTraced]] the moment it returns, so a phase instance reused across two
-    * translations (`Determinism.Full`) never reports the first run's decisions as the second's. Never a process-global table (§5.1).
+    * translations (`Determinism.Full`) never reports the first run's decisions as the second's. Never a process-global table.
     */
   final val decisions: DecisionLog = new DecisionLog
 
-  /** Record why this phase changed something. Every note carries its §1 classification via [[Reason]], since the reader's first question is which repository the fix lives in. Cheap and unconditional
-    * — a decision is not gated on an artifact directory, so a phase can be tested on its decisions with no filesystem in sight.
+  /** Record why this phase changed something. Every note carries its classification via [[Reason]], since the reader's first question is which repository the fix lives in. Cheap and unconditional — a
+    * decision is not gated on an artifact directory, so a phase can be tested on its decisions with no filesystem in sight.
     */
   final def record(d: Decision): Unit = decisions.record(d)
 
-  // ---- catalog citation (`DESIGN.md` §2.8: the THIRD discharge surface) ----
+  // ---- catalog citation (the third discharge surface) ----
 
   /** What CATALOG ROWS this phase decided, and at which declarations, for the run in progress.
     *
@@ -30,7 +30,7 @@ trait Phase:
   private[tir] val cites = collection.mutable.ListBuffer.empty[(balticporter.catalog.DiffId, String)]
 
   /** CITE a catalog row at a DECLARATION this phase decided about. Weaker than the frontend's obligation (a phase does not walk one node kind), reported apart as `catalog(unreached)`. One row per
-    * DECLARATION, never per expression — [[Decision]]'s own granularity (CLAUDE.md §5.1): a site-level rewrite is already visible in the diff.
+    * DECLARATION, never per expression — [[Decision]]'s own granularity: a site-level rewrite is already visible in the diff.
     */
   final def cite(id: balticporter.catalog.DiffId, decl: String): Unit = cites += (id -> decl)
 
@@ -62,14 +62,14 @@ trait Phase:
     */
   def transformType(t: TypeRepr)(using Program): TypeRepr = t
 
-  /** A type constructor whose type ARGUMENTS this phase must NOT map — the traversal stops at the application and carries the arguments verbatim (`ENGINE-LIMITS.md` K20): a generic argument survives
-    * erasure and a reified carrier (jackson's `TypeReference`, `java.lang.Class`) reads it back, so retyping it breaks construction. A HOOK not a table (retype vs. rename differ); default `false`,
-    * called with the UNMAPPED constructor before descent.
+  /** A type constructor whose type ARGUMENTS this phase must NOT map — the traversal stops at the application and carries the arguments verbatim: a generic argument survives erasure and a reified
+    * carrier (jackson's `TypeReference`, `java.lang.Class`) reads it back, so retyping it breaks construction. A HOOK not a table (retype vs. rename differ); default `false`, called with the UNMAPPED
+    * constructor before descent.
     */
   def preservesTypeArgsOf(tc: TypeRepr)(using Program): Boolean = false
 
 /** A phase whose POLICY is a set of declared KEYS — implemented so the RUN can bind them ONCE, before the pipeline starts. Every key is written in the UPSTREAM namespace and the package rename runs
-  * LAST (§4.56), so binding at the front resolves each key structurally; "did this key fire?" becomes a property of policy and program, not of phase order.
+  * LAST, so binding at the front resolves each key structurally; "did this key fire?" becomes a property of policy and program, not of phase order.
   */
 trait PolicyBound:
   /** Bind every key this phase declares. Called exactly once per translation, by the run. */
@@ -87,7 +87,7 @@ object Pipeline:
 
   /** Order the phases by `runsAfter` / `runsBefore`. Orders INSTANCES, never NAMES — two same-name instances (a declined/refused `MergeablePolicy` merge) both run; an edge to a name binds EACH
     * instance of it. `ready` is a MIN-HEAP on declaration index (not a FIFO queue), so ties stay stable in declaration order globally — the unique topological order lexicographically smallest by
-    * declaration index. `ENGINE-LIMITS.md` CT9 Face B.
+    * declaration index.
     */
   def order(phases: List[Phase]): List[Phase] =
     val instances = phases.toVector
@@ -116,33 +116,33 @@ object Pipeline:
     if out.size != instances.size then throw new IllegalStateException(s"phase ordering has a cycle among: ${(instances.indices.toSet -- out.toSet).map(instances(_).name)}")
     out.toList.map(instances)
 
-  /** Run phases in dependency order, rebuilding the xref after each so every phase sees an index consistent with the previous phase's rewrites. Three questions now cost a flag (CLAUDE.md §4.6):
+  /** Run phases in dependency order, rebuilding the xref after each so every phase sees an index consistent with the previous phase's rewrites. Three questions now cost a flag:
     * `balticporter.skipPhases=<name>` drops a phase (measure the DIFF, not the error count), `dumpTirBefore`/`dumpTirAfter`/`dumpOnly` inspect the tree, `tracePhases` announces each run. A name in
     * `skipPhases` matching no phase is REPORTED, not ignored.
     */
   def run(program: Program, phases: List[Phase]): Program = runTraced(program, phases)._1
 
   /** [[run]], plus the DECISION LOG the phases filled while it ran — a separate entry point so a caller wanting only the rewritten program keeps compiling. The log is a value THIS CALL owns: each
-    * phase's buffer is cleared before it runs and drained after, so two runs in one JVM cannot contaminate each other (§5.1). A SKIPPED phase records nothing, honestly.
+    * phase's buffer is cleared before it runs and drained after, so two runs in one JVM cannot contaminate each other. A SKIPPED phase records nothing, honestly.
     */
   def runTraced(program: Program, phases: List[Phase]): (Program, DecisionLog) =
     runTraced(program, phases, new PolicyBinder(program, program.members))
 
   /** …with a binder the CALLER owns, so it can read the bindings afterwards. Binding happens here, not in each caller — a `PolicyBound` phase run unbound matches nothing and rewrites nothing,
-    * silently, which is the §1(b) failure this seam removes. A caller that has to remember a step is one that will not.
+    * silently, which is the failure this seam removes. A caller that has to remember a step is one that will not.
     */
   def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder): (Program, DecisionLog) =
     runTraced(program, phases, binder, balticporter.catalog.CatalogLog.discarding)
 
-  /** …and with the run's CATALOG LOG, so a phase's `cite` reaches the same log the frontend's consults do. One log per run, three surfaces feeding it (`DESIGN.md` §2.8) — three per-surface artifacts
-    * would answer three narrower questions and never "was this row reached at all".
+  /** …and with the run's CATALOG LOG, so a phase's `cite` reaches the same log the frontend's consults do. One log per run, three surfaces feeding it — three per-surface artifacts would answer three
+    * narrower questions and never "was this row reached at all".
     */
   def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder, catalog: balticporter.catalog.CatalogLog): (Program, DecisionLog) =
     runTraced(program, phases, binder, catalog, RewriteLog.discarding)
 
   /** …and with the run's REWRITE LOG, which records what each phase MOVED. Taken HERE, not by the phases: the pipeline holds the symbol table on both sides of a phase, so "which owned declarations
     * did its `info` rewrite move" is a comparison, not a self-report ([[Rewrite.accountedBy]]). Owned symbols only, present on BOTH sides — a minted symbol has no prior `info`, an external's
-    * signature is a class-file fact no phase may move (§4.56).
+    * signature is a class-file fact no phase may move.
     */
   def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder, catalog: balticporter.catalog.CatalogLog, rewrites: RewriteLog): (Program, DecisionLog) =
     runTraced(program, phases, binder, catalog, rewrites, IdiomLog.discarding)
@@ -189,7 +189,7 @@ object Pipeline:
 
   /** WHICH declarations this phase's rewrite MOVED, derived rather than declared — nothing is recorded where nothing moved, so `rewrite-callsites` needs no maintained phase list. Compares BOTH
     * records of a type (the symbol's `info` and the tree's own `tpt`s), since a phase that rebuilds only the tree is invisible to an `info`-only comparison. A SYMBOL SWAP is invisible to both,
-    * deliberately — it looks like a legitimate DROP (`ENGINE-LIMITS.md` K5.6).
+    * deliberately — it looks like a legitimate DROP.
     */
   private def recordPatch(rewrites: RewriteLog, phase: Phase, before: Program, after: Program): Unit =
     val owned = before.owned & after.owned
@@ -236,7 +236,7 @@ object StandardTraversal:
 
   // -- scans (accumulate-only) --
   // A pass that only needs to LOOK still walks the complete traversal below rather than a
-  // hand-rolled recursion, which stops wherever its author forgot (CLAUDE.md §3). `f` sees every
+  // hand-rolled recursion, which stops wherever its author forgot. `f` sees every
   // TERM bottom-up; a scan needing DEFINITIONS implements `Phase` directly instead.
 
   /** fold over every term of a whole compilation unit. */
@@ -251,8 +251,8 @@ object StandardTraversal:
     mapTerm(ph, t)
     read()
 
-  /** every `Tree.ClassDef` a unit CONTAINS — itself, nested types, enum-constant bodies, and a METHOD-LOCAL class (JLS 14.3, catalog `JS-C30`) that a hand-rolled `cd.body.foreach` recursion misses
-    * (CLAUDE.md §3's one-node-short defect). Uses `transformClassDef`, not a term `scanner`, to stay complete as node kinds are added. Bottom-up, like every other scan here.
+  /** every `Tree.ClassDef` a unit CONTAINS — itself, nested types, enum-constant bodies, and a METHOD-LOCAL class (JLS 14.3, catalog `JS-C30`) that a hand-rolled `cd.body.foreach` recursion misses.
+    * Uses `transformClassDef`, not a term `scanner`, to stay complete as node kinds are added. Bottom-up, like every other scan here.
     */
   def allClassDefs(t: Tree.ClassDef)(using Program): List[Tree.ClassDef] =
     val acc = List.newBuilder[Tree.ClassDef]
@@ -263,8 +263,8 @@ object StandardTraversal:
     acc.result()
 
   /** …and every ANONYMOUS class body a unit contains, paired with the `new` that names its parent. `Tree.AnonClass` is not a `Tree.ClassDef` (no `parents` of its own — java writes the supertype at
-    * the `new`), so [[allClassDefs]] cannot reach it. `OverrideGraph.Collector` already treats the pair as one node; this exposes the same derivation for scans (CLAUDE.md §3). The `TypeTree` returned
-    * is the `new`'s own supertype with its arguments.
+    * the `new`), so [[allClassDefs]] cannot reach it. `OverrideGraph.Collector` already treats the pair as one node; this exposes the same derivation for scans. The `TypeTree` returned is the `new`'s
+    * own supertype with its arguments.
     */
   def allAnonClasses(t: Tree.ClassDef)(using Program): List[(Tree.AnonClass, TypeTree)] =
     val acc = List.newBuilder[(Tree.AnonClass, TypeTree)]
@@ -290,7 +290,7 @@ object StandardTraversal:
       case TypeRepr.TermRef(p, s)   => TypeRepr.TermRef(mapType(ph, p), s)
       case TypeRepr.SuperType(a, b) => TypeRepr.SuperType(mapType(ph, a), mapType(ph, b))
       // …the ARGUMENTS are skipped where the phase says this constructor's are reified by someone
-      // else (`Phase.preservesTypeArgsOf`, K20). Asked of the UNMAPPED constructor: the question is
+      // else (`Phase.preservesTypeArgsOf`). Asked of the UNMAPPED constructor: the question is
       // about the carrier the java named, and the head is still mapped either way — a rename must
       // reach `TypeReference` itself even where nothing inside it may move.
       case TypeRepr.AppliedType(tc, as) =>
@@ -314,13 +314,13 @@ object StandardTraversal:
   private def mapTpt(ph: Phase, tt: TypeTree)(using Program): TypeTree = TypeTree(mapType(ph, tt.tpe), tt.origin)
 
   /** Route every TYPE a symbol record carries through `ph.transformType` — its `info` AND its annotations' types (`Symbol.annotations`, rendered from `Annot.tpe`) — or a retyping phase leaves an
-    * annotation naming the old type, silently (`ENGINE-LIMITS.md` M5.8). A symbol the program does not OWN is skipped: its signature is a class-file fact no phase may move (§4.56, [[Program.owned]]).
+    * annotation naming the old type, silently. A symbol the program does not OWN is skipped: its signature is a class-file fact no phase may move ([[Program.owned]]).
     */
   def mapSymbols(ph: Phase, tbl: SymbolTable)(using p: Program): SymbolTable =
     mapSymbols(ph, tbl, _ => true)
 
-  /** …restricted to the symbols a phase is SCOPED to. An overload rather than a second fold, so a `RuleScope`-taking phase (CLAUDE.md §1) can hold back a declaration's `info` exactly as it holds back
-    * its tree. Default predicate is the pre-scope behaviour; every existing caller keeps it.
+  /** …restricted to the symbols a phase is SCOPED to. An overload rather than a second fold, so a `RuleScope`-taking phase can hold back a declaration's `info` exactly as it holds back its tree.
+    * Default predicate is the pre-scope behaviour; every existing caller keeps it.
     */
   def mapSymbols(ph: Phase, tbl: SymbolTable, keep: Symbol => Boolean)(using p: Program): SymbolTable =
     tbl.all.foldLeft(tbl)((t, s) =>
@@ -458,7 +458,7 @@ object StandardTraversal:
       case x: Tree.Synchronized => x.copy(lock = mapTerm(ph, x.lock), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
       case x: Tree.Literal      => x.copy(tpe = mapType(ph, x.tpe))
       // …and INTO its holes. A hole is an ordinary term spliced into ready-made Scala, so every
-      // later phase — the package rename above all, which runs last (§4.56) — must reach it exactly
+      // later phase — the package rename above all, which runs last — must reach it exactly
       // as it reaches any other operand. Skipped here it would be the one term in the program no
       // phase can see, with a green compile and a wrong namespace.
       case x: Tree.Opaque => x.copy(tpe = mapType(ph, x.tpe), holes = x.holes.map(mapTerm(ph, _)))
@@ -468,7 +468,7 @@ object StandardTraversal:
       // unwrapped — including `transformTerm`, which is what keeps a scan's coverage complete —
       // and the wrapper itself is then offered to `transformTerm` too, one node later.
       case x: Tree.Commented => x.copy(stmt = mapTerm(ph, x.stmt))
-      // THE MARKER (`DESIGN.md` §6.2). Recursed into and REBUILT: every phase's hooks must reach
+      // THE MARKER. Recursed into and REBUILT: every phase's hooks must reach
       // INSIDE an approximation since a later whole-program transform might fix it. An unmatching
       // phase leaves it alone (marker-preserved, code-untouched); erasing one needs a deliberate
       // match plus a replacement, which is what lets `MarkerCheck` tell a discharge from a deletion.

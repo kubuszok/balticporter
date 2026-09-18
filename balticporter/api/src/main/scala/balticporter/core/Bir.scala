@@ -1,9 +1,9 @@
 package balticporter.core
 
-// FROZEN — the BIR path. New work goes on the TIR.
-// A resolved-but-untyped java IR with no symbol table, no xref, no phase model
-// (DESIGN.md §2.2). Not deleted: seven corpus programs (liqp, xwiki, flexmark)
-// still translate through it. Fix what those callers need, add nothing here.
+// The BIR path is frozen — new work goes on the TIR.
+// A resolved-but-untyped java IR with no symbol table, no xref, no phase model. Not deleted: seven
+// corpus programs (liqp, xwiki, flexmark) still translate through it. Fix what those callers need,
+// add nothing here.
 
 /** Comment kinds preserved from source. Text is stored verbatim including delimiters. */
 enum TriviaKind:

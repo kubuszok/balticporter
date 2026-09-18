@@ -2,9 +2,9 @@ package balticporter.catalog
 
 import balticporter.tir.Origin
 
-/** THE OBLIGATION SURFACES — the half of the catalog that makes a row answerable to the code. A row declares WHERE the engine owes it a decision, the engine records whether it was taken. The wrapper
-  * detects an ABSENT consult, never a WRONG one. Goes at the DISPATCH, never an arm. FOUR discharge surfaces, ONE log — a row with no surface is [[Attaches.Unmechanised]], COUNTED rather than
-  * silently read as coverage. A value ONE RUN owns, never a process-global table (§5.1).
+/** The obligation surfaces — the half of the catalog that makes a row answerable to the code. A row declares where the engine owes it a decision, the engine records whether it was taken. The wrapper
+  * detects an absent consult, never a wrong one. Goes at the dispatch, never an arm. Four discharge surfaces, one log — a row with no surface is [[Attaches.Unmechanised]], counted rather than
+  * silently read as coverage. A value one run owns, never a process-global table.
   */
 object Lowering:
 
@@ -14,7 +14,7 @@ object Lowering:
   def of[A](kind: String, dispatch: Dispatch, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     scoped(Differences.owedAt(kind, dispatch), kind, dispatch, at, subject)(body)
 
-  /** the scope both dispatch surfaces enter -- ONE implementation, since the delegation seam, the allocation-free fast path and the settle are the same question at either end (`ENGINE-LIMITS.md` F8).
+  /** the scope both dispatch surfaces enter -- one implementation, since the delegation seam, the allocation-free fast path and the settle are the same question at either end.
     */
   private[catalog] def scoped[A](owed: List[DiffId], kind: String, dispatch: Dispatch, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     val outer = log.enterSubject(subject, at)
@@ -106,8 +106,8 @@ enum Attaches:
     */
   case Both(a: Attaches, b: Attaches)
 
-  /** NO obligation surface exists for this row yet, `why` says which. A construct the frontend REFUSES takes THIS, not [[Lowered]] (no arm to owe the consult) or [[NoObligation]] (there IS a gap). A
-    * HYPOTHESIS twice falsified (`ENGINE-LIMITS.md` T17) — ask whether the surface is missing or only the INFORMATION at it, before writing this case.
+  /** No obligation surface exists for this row yet, `why` says which. A construct the frontend refuses takes this, not [[Lowered]] (no arm to owe the consult) or [[NoObligation]] (there is a gap).
+    * Ask whether the surface is missing or only the information at it, before writing this case.
     */
   case Unmechanised(why: String)
 
@@ -116,8 +116,8 @@ enum Attaches:
     */
   case NoObligation(why: String)
 
-/** ONE node's obligations, live for the duration of its lowering. Allocated per node of an ATTACHED kind (see [[Lowering.of]]); not thread-safe, deliberately — one lowering is one call stack, and a
-  * shared counter would be the process-global table §5.1 forbids.
+/** One node's obligations, live for the duration of its lowering. Allocated per node of an attached kind (see [[Lowering.of]]); not thread-safe, deliberately — one lowering is one call stack, and a
+  * shared counter would be a process-global table.
   */
 final class Obligations private[catalog] (log: CatalogLog, owed: List[DiffId], private[catalog] val subject: AnyRef = null):
   private var seen: List[DiffId] = Nil
@@ -147,8 +147,8 @@ object Obligations:
   def consult[A](id: DiffId, at: Origin)(f: => Option[A])(using o: Obligations): Option[A] =
     o.consult(id, at)(f)
 
-/** WHAT ONE RUN CONSULTED — the value `catalog.tsv` and the four `catalog(…)` lanes are computed from. @param fatal testkit / `just debug-emit` enforcement: an undischarged obligation on a row the
-  * registry says WORKS is an error there; a PORT RUN counts instead (`ENGINE-LIMITS.md` M6 is about refusing to approximate, not to report). `Open`/`Absent` rows are never fatal.
+/** What one run consulted — the value `catalog.tsv` and the four `catalog(…)` lanes are computed from. @param fatal testkit / `just debug-emit` enforcement: an undischarged obligation on a row the
+  * registry says works is an error there; a port run counts instead. `Open`/`Absent` rows are never fatal.
   */
 final class CatalogLog(val fatal: Boolean = false):
 
@@ -230,8 +230,8 @@ final class CatalogLog(val fatal: Boolean = false):
         CatalogLog.Hole(id, kind, dispatch, at, sites = 1)
     holes(id) = h
 
-  /** a PHASE decided this row at `decl`. Idempotent per declaration: a phase that rewrites four assertions in one method cites the method once, which is the granularity `Decision` uses and the only
-    * one at which a phase citation means anything (§5.1).
+  /** a phase decided this row at `decl`. Idempotent per declaration: a phase that rewrites four assertions in one method cites the method once, which is the granularity `Decision` uses and the only
+    * one at which a phase citation means anything.
     */
   def cite(id: DiffId, decl: String): Unit =
     citations.getOrElseUpdate(id, collection.mutable.LinkedHashSet.empty) += decl

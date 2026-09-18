@@ -5,14 +5,14 @@ import balticporter.tir.{ MemberKey, Phase, RuleScope }
 
 import java.nio.file.Path
 
-/** The porting policy of ONE module, imported and extended by a dependent (`base.extendedBy(...)`, CLAUDE.md §1.5) — ordinary Scala, not a DSL. MUST agree: [[dropTypes]], [[dropMethods]],
-  * [[packageRenames]], [[surface]], [[resolutions]] (shape of shared surface). MAY differ: build properties, and [[inject]]/[[serviceProviders]] (build artefacts, exactly one module ships each).
-  * [[governs]] is the namespace claim gating the intrusion screen — empty disables it.
+/** The porting policy of one module, imported and extended by a dependent (`base.extendedBy(...)`) — ordinary Scala, not a DSL. Must agree: [[dropTypes]], [[dropMethods]], [[packageRenames]],
+  * [[surface]], [[resolutions]] (shape of shared surface). May differ: build properties, and [[inject]]/[[serviceProviders]] (build artefacts, exactly one module ships each). [[governs]] is the
+  * namespace claim gating the intrusion screen — empty disables it.
   */
 
-/** One upstream resource root and the files under it this module ships — copied VERBATIM at the upstream path the emitted code already names (CLAUDE.md §4.56). Complement of
-  * [[PortManifest.serviceProviders]] (SPI descriptors are rewritten; everything else is bytes). A declaration, not a scan (`DESIGN.md` §8.17). Empty is the no-op; a declared missing file is FATAL. @param
-  * root the upstream root @param files classpath paths under it, `/`-separated.
+/** One upstream resource root and the files under it this module ships — copied verbatim at the upstream path the emitted code already names. Complement of [[PortManifest.serviceProviders]] (SPI
+  * descriptors are rewritten; everything else is bytes). A declaration, not a scan. Empty is the no-op; a declared missing file is fatal. @param root the upstream root @param files classpath paths
+  * under it, `/`-separated.
   */
 final case class ResourceTree(root: Path, files: List[String])
 
@@ -41,30 +41,30 @@ final case class PortManifest(
   allowPackageSplit: Set[String] = Set.empty,
   /** the phases that shape EMITTED SIGNATURES. Inherited, and placed before a dependent's own. */
   surface: List[Phase] = Nil,
-  /** PER-LOCATION REMEDY SELECTION — `owner#member` → the id of a remedy a phase or check OFFERED there ([[balticporter.tir.Remedy]]), for a decision one word long rather than a §1(c) rule. Key is
-    * `MemberKey` in the upstream namespace; value a globally-unique remedy id. MUST-agree surface — [[effectiveResolutions]] unions bases-first; the same key with two values, or a dependent key
-    * naming a base-emitted declaration, is a fatal finding.
+  /** Per-location remedy selection — `owner#member` → the id of a remedy a phase or check offered there ([[balticporter.tir.Remedy]]), for a decision one word long rather than a library-specific
+    * rule. Key is `MemberKey` in the upstream namespace; value a globally-unique remedy id. Must-agree surface — [[effectiveResolutions]] unions bases-first; the same key with two values, or a
+    * dependent key naming a base-emitted declaration, is a fatal finding.
     */
   resolutions: Map[String, String] = Map.empty,
   /** ready-made Scala this module ships. NOT inherited — see the class doc. */
   inject: List[Path] = Nil,
-  /** ready-made Scala PER PLATFORM ROW — `jvm`/`js`/`native` (sbt-projectmatrix's names) → roots copied to `src_managed/<row>/scala`, which only that row compiles; `inject` is the shared row. A hand
-    * port's `scalajvm`/`scaladesktop`/`scalajs`/`scalanative` layers land here. NOT inherited (a build artefact, like `inject`). `PROGRESS.md` §13.31 step 3.
+  /** ready-made Scala per platform row — `jvm`/`js`/`native` (sbt-projectmatrix's names) → roots copied to `src_managed/<row>/scala`, which only that row compiles; `inject` is the shared row. A hand
+    * port's `scalajvm`/`scaladesktop`/`scalajs`/`scalanative` layers land here. Not inherited (a build artefact, like `inject`).
     */
   platformDirs: Map[String, List[Path]] = Map.empty,
-  /** UPSTREAM `META-INF/services/<interface FQN>` FILES this module ships — the SPI half of the deliverable no phase can carry. Missing it means `ServiceLoader.load` finds zero providers, silently,
-    * with no compile error or check count (`ENGINE-LIMITS.md` P5). A §1(b) declaration, not a scan: which resources are descriptors is per-library knowledge. NOT inherited — a build artefact, exactly
-    * one module ships each; the DROPS that affect it ARE inherited.
+  /** Upstream `META-INF/services/<interface FQN>` files this module ships — the SPI half of the deliverable no phase can carry. Missing it means `ServiceLoader.load` finds zero providers, silently,
+    * with no compile error or check count. A declaration, not a scan: which resources are descriptors is per-library knowledge. Not inherited — a build artefact, exactly one module ships each; the
+    * drops that affect it are inherited.
     */
   serviceProviders: List[Path] = Nil,
-  /** THE REST of this module's classpath resources — copied verbatim at the upstream paths the emitted code already names (`DESIGN.md` §8.22; see [[ResourceTree]]). Missing one throws at first use in
-    * the CONSUMER's build, with no compile error or check count here. NOT inherited, for [[serviceProviders]]'s reason — a resource lands at one classpath path. Empty is the default and the no-op.
+  /** The rest of this module's classpath resources — copied verbatim at the upstream paths the emitted code already names (see [[ResourceTree]]). Missing one throws at first use in the consumer's
+    * build, with no compile error or check count here. Not inherited, for [[serviceProviders]]'s reason — a resource lands at one classpath path. Empty is the default and the no-op.
     */
   resources: List[ResourceTree] = Nil,
   /** the modules this one is a dependent OF, nearest last. */
   bases: List[PortManifest] = Nil,
-  /** Extra directories to look for a base module's `port-map.tsv` under, nearest first — the run's own report tree is always searched first and cannot be shadowed. NOT inherited: a base's map decides
-    * EMITTED TEXT, so which maps a run discovers is part of that run's identity (CLAUDE.md §4.6). Empty is the ordinary case; §4.45's cross-repository consumer is who this exists for.
+  /** Extra directories to look for a base module's `port-map.tsv` under, nearest first — the run's own report tree is always searched first and cannot be shadowed. Not inherited: a base's map decides
+    * emitted text, so which maps a run discovers is part of that run's identity. Empty is the ordinary case; a cross-repository consumer is who this exists for.
     */
   baseReports: List[Path] = Nil,
   /** WHICH BACKENDS this module is ported FOR — the parameter `PortabilityCheck` runs by. Default is ALL platforms (today's behaviour before this field existed); narrowing is the port's own decision,
@@ -81,15 +81,15 @@ final case class PortManifest(
     * `libraryDependencies` and `dependency-coverage` reports every requirement no entry covers. Empty is the default and the honest state of an unaudited port.
     */
   dependencies: List[balticporter.catalog.ArtifactDep] = Nil,
-  /** EXTERNAL MEMBERS PARENLESS ON SOME PLATFORMS — exact FQNs. The frontend reads JVM class files (always `()`), but a JS/Native platform shim may declare the same member parenless, so the emitted
-    * `x.getFoo()` fails there (`E050`). Listing a member here emits calls to it without parens on every platform — legal on the JVM too. §1(b): mechanism is universal, membership is per-library. NOT
+  /** External members parenless on some platforms — exact FQNs. The frontend reads JVM class files (always `()`), but a JS/Native platform shim may declare the same member parenless, so the emitted
+    * `x.getFoo()` fails there (`E050`). Listing a member here emits calls to it without parens on every platform — legal on the JVM too. Mechanism is universal, membership is per-library. Not
     * inherited (a classpath fact); no `SurfacePolicy` (calls only).
     */
   externalParenless: Set[String] = Set.empty,
-  /** THE REFERENCE HAND PORT for this module — the §1(b) parameter for `ApiParityCheck`.
+  /** The reference hand port for this module — the parameter for `ApiParityCheck`.
     *
-    * NOT inherited. A hand port is a fact about THIS module's destination, not the shared surface. A dependent does not inherit its base's parity reference — the two have different hand-port trees.
-    * Empty / absent = the check is a no-op AND records nothing.
+    * Not inherited. A hand port is a fact about this module's destination, not the shared surface. A dependent does not inherit its base's parity reference — the two have different hand-port trees.
+    * Empty / absent = the check is a no-op and records nothing.
     */
   parity: Option[ParityRef] = None,
   /** Does this manifest INHERIT its [[bases]]' policy ([[extendedBy]], the normal case — drift becomes unrepresentable), or merely declare that it must AGREE with them ([[mirroring]])? The latter is
@@ -204,8 +204,8 @@ final case class PortManifest(
   lazy val substitutions: Substitutions =
     Substitutions(effectiveDropTypes, effectiveDropMethods, inject)
 
-  /** What THIS module's own drops did — never an inherited key, since a §1(b) finding names a key to fix and an inherited one lives in the base's manifest. The inherited half is checked separately
-    * and more precisely, as [[ManifestAgreement.Kind.InheritedKeyNeverFired]].
+  /** What this module's own drops did — never an inherited key, since a finding names a key to fix and an inherited one lives in the base's manifest. The inherited half is checked separately and more
+    * precisely, as [[ManifestAgreement.Kind.InheritedKeyNeverFired]].
     */
   def ownKeys: Set[String] = ownDrops.keys
 
@@ -237,8 +237,8 @@ final case class PortManifest(
   def withoutSurface: PortManifest =
     copy(surface = Nil, bases = bases.map(_.withoutSurface))
 
-  /** `fqn` after this manifest's effective renames, longest prefix first — cut only at a separator (CLAUDE.md §4.56). Per-type entries apply first, package renames to their result. What this cannot
-    * do — and `PackageRenameTransform` can — is REFUSE an entry: refusal needs a `Program`, which a manifest holds none of. This is the policy DECLARED; the phase is what ran.
+  /** `fqn` after this manifest's effective renames, longest prefix first — cut only at a separator. Per-type entries apply first, package renames to their result. What this cannot do — and
+    * `PackageRenameTransform` can — is refuse an entry: refusal needs a `Program`, which a manifest holds none of. This is the policy declared; the phase is what ran.
     */
   def renamed(fqn: String): String =
     val moves = effectiveTypeMoves
@@ -260,8 +260,8 @@ final case class PortManifest(
       p.name -> surfaceFold.ownKeys.getOrElse(p.name, p.subjects)
     }.toMap
 
-  /** Does this manifest state any SHARED-SURFACE policy at all? An empty manifest is the documented way to say "this resolution root is not a ported module" (CLAUDE.md §1.5), and every obligation a
-    * base carries is owed only where there is policy to protect.
+  /** Does this manifest state any shared-surface policy at all? An empty manifest is the documented way to say "this resolution root is not a ported module", and every obligation a base carries is
+    * owed only where there is policy to protect.
     */
   def declaresPolicy: Boolean =
     dropTypes.nonEmpty || dropMethods.nonEmpty || packageRenames.nonEmpty || surface.nonEmpty ||
@@ -272,13 +272,13 @@ final case class PortManifest(
 
   /** the EMITTED FQNs this module's own [[inject]] roots supply — one derivation, in [[Substitutions.injectedSources]], which the run's copy loop and `PortMap` read too.
     *
-    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own injections only, exactly as [[inject]] is declared per module (§1.5).
+    * `lazy`, because it walks the filesystem and the fold asks it once per screened subject. Own injections only, exactly as [[inject]] is declared per module.
     */
   lazy val injectedFqns: Set[String] =
     Substitutions.injectedSources(inject ++ platformDirs.values.flatten.toList).map(_._1).toSet
 
-  /** does this module — or anything in its policy chain — SHIP ready-made Scala at `fqn`? `fqn` is upstream; asked through [[renamed]] since an injection root is in the port's own namespace and
-    * comparing them directly is the CLAUDE.md §4.56 failure. Chain included: exactly one module in the base layer ships each replacement.
+  /** does this module — or anything in its policy chain — ship ready-made Scala at `fqn`? `fqn` is upstream; asked through [[renamed]] since an injection root is in the port's own namespace and
+    * comparing them directly would silently miss. Chain included: exactly one module in the base layer ships each replacement.
     */
   def shipsInjectionAt(fqn: String): Boolean =
     val at = renamed(fqn)
@@ -286,8 +286,8 @@ final case class PortManifest(
 
 object PortManifest:
 
-  /** `.` separates packages/top-level type, `$` precedes a nested type, `#` a member — the same three boundaries `PackageRenameTransform` cuts at (CLAUDE.md §4.56). Forwards to
-    * [[balticporter.tir.RuleScope]], the one implementation, so a rule this easy to get wrong has exactly one body.
+  /** `.` separates packages/top-level type, `$` precedes a nested type, `#` a member — the same three boundaries `PackageRenameTransform` cuts at. Forwards to [[balticporter.tir.RuleScope]], the one
+    * implementation, so a rule this easy to get wrong has exactly one body.
     */
   def isBoundary(c: Char): Boolean = RuleScope.isBoundary(c)
 

@@ -2,7 +2,7 @@ package balticporter.core
 
 import java.nio.file.Path
 
-/** A construct the current engine version cannot translate faithfully. Always fatal: there is no best-effort emission (anti-omission stance, DESIGN.md §3.4).
+/** A construct the current engine version cannot translate faithfully. Always fatal: there is no best-effort emission.
   */
 final case class Unsupported(sourcePath: String, position: String, what: String) extends RuntimeException(s"$sourcePath:$position — unsupported construct: $what")
 
@@ -16,24 +16,23 @@ final case class FrontendConfig(
   /** additional source roots that participate in RESOLUTION but are not converted (typically the whole vendored tree — source-over-jar avoids version skew).
     */
   resolutionRoots: List[Path] = Nil,
-  /** paths under a resolution root that must NOT BE PARSED — relative to the root, matched at a path SEPARATOR (§4.56), never a substring. Empty is the default and the no-op. Answers GWT super-source
-    * trees that REDECLARE classes (Spoon otherwise refuses the whole model). Cannot be worked around by pointing the root lower — breaks base-map joins (measured: 25 findings vs 0). §1(b): mechanism
-    * universal, paths per-library.
+  /** paths under a resolution root that must not be parsed — relative to the root, matched at a path separator, never a substring. Empty is the default and the no-op. Answers super-source trees that
+    * redeclare classes (Spoon otherwise refuses the whole model); cannot be worked around by pointing the root lower, which breaks base-map joins. Mechanism is universal, the paths are per-library.
     */
   resolutionExcludes: List[String] = Nil,
-  /** WHICH ARGUMENT-BEARING ANNOTATION FAMILIES THIS PORT CLAIMS ON A TYPE — FQN prefixes, §1(b), EMPTY is the default/no-op. A MARKER annotation needs nothing translated and is always carried; one
-    * WITH ARGUMENTS needs its values translated, so this decides only whether a family is WANTED — per-library (`ENGINE-LIMITS.md` T16). TYPE-level only: method/ parameter annotations already
-    * translate; see [[AnnotationPolicy]] for the matching rule.
+  /** which argument-bearing annotation families this port claims on a type — FQN prefixes, empty is the default/no-op. A marker annotation needs nothing translated and is always carried; one with
+    * arguments needs its values translated, so this decides only whether a family is wanted, per library. Type-level only: method/parameter annotations already translate; see [[AnnotationPolicy]] for
+    * the matching rule.
     */
   preservedAnnotations: AnnotationPolicy = AnnotationPolicy.none,
-  /** Extra type FQNs to intern from the classpath — `isFinal` and parents read from the class file so a downstream phase (e.g. `CollectionsTransform.mint`) inherits them. §1(b): mechanism universal,
-    * FQNs per-library; empty default is the no-op (K18).
+  /** Extra type FQNs to intern from the classpath — `isFinal` and parents read from the class file so a downstream phase (e.g. `CollectionsTransform.mint`) inherits them. Mechanism is universal, the
+    * FQNs are per-library; empty default is the no-op.
     */
   internTypes: Set[String] = Set.empty
 )
 
-/** WHICH annotation families a port claims, and the one question anything asks of it. A VALUE rather than a `List[String]`: the match cuts only at a `Symbol.fullName` separator (CLAUDE.md §4.56), so
-  * `com.foo` covers `com.foo.Bar`/`com.foo.Bar$Baz` but not `com.foobar.Bar`, written once so two spellings (trailing dot or not) never quietly differ. `none` is the default no-op.
+/** Which annotation families a port claims, and the one question anything asks of it. A value rather than a `List[String]`: the match cuts only at a `Symbol.fullName` separator, so `com.foo` covers
+  * `com.foo.Bar`/`com.foo.Bar$Baz` but not `com.foobar.Bar`, written once so two spellings (trailing dot or not) never quietly differ. `none` is the default no-op.
   */
 final case class AnnotationPolicy(prefixes: List[String] = Nil):
   def isEmpty: Boolean = prefixes.isEmpty
@@ -48,7 +47,7 @@ final case class AnnotationPolicy(prefixes: List[String] = Nil):
   def render: String = prefixes.sorted.mkString(",")
 
 object AnnotationPolicy:
-  /** the empty parameter §1(b) requires: no family claimed, every argument-bearing annotation on a TYPE reported through `omissions` exactly as it was before the policy existed.
+  /** the empty, no-op parameter: no family claimed, every argument-bearing annotation on a type reported through `omissions` exactly as it was before the policy existed.
     */
   val none: AnnotationPolicy = AnnotationPolicy()
 
@@ -63,7 +62,7 @@ enum Language(val prefix: String):
   case Dart extends Language("DT")
   case JavaScript extends Language("JX")
 
-/** TIR-level frontend SPI — a second frontend can exist without touching the Java/Spoon path. DESIGN.md §3.2: the stable frontend boundary is a `Program`, not a parsed model. Registered through
+/** TIR-level frontend SPI — a second frontend can exist without touching the Java/Spoon path. The stable frontend boundary is a `Program`, not a parsed model. Registered through
   * `META-INF/services/balticporter.core.TirFrontend` and discovered by [[FrontendRegistry]]; `.conf` names the frontend with `input.frontend = "<name>"`.
   */
 trait TirFrontend:

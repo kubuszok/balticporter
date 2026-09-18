@@ -31,7 +31,7 @@ object Differences:
     Both(Rendered("While"), Both(Rendered("For"), Both(Rendered("ForEach"), Rendered("DoWhile"))))
 
   /** the three DECLARATION kinds an emitted member is one of, as one attachment. The four VISIBILITY rows (JS-C47..50) are one decision (`Visibility.decide` + `TirEmitter.declVisibility`), so all
-    * three carry it (`ENGINE-LIMITS.md` F8).
+    * three carry it.
     */
   private val everyDeclaration: Attaches =
     Both(Rendered("ClassDef"), Both(Rendered("DefDef"), Rendered("ValDef")))
@@ -45,7 +45,7 @@ object Differences:
     Both(Lowered("CtFieldRead", Dispatch.Expression), Lowered("CtFieldWrite", Dispatch.Expression))
 
   /** every dispatch at which a value flows into a DECLARED TYPE — java's assignment conversion (JLS 5.2), through `SpoonTir.coerce`, but a slot is not one node kind: seven distinct kinds reach it
-    * (e.g. a field initialiser). Convergence point: `SpoonTir.slotConsults`, stated ONCE (`ENGINE-LIMITS.md` F8).
+    * (e.g. a field initialiser). Convergence point: `SpoonTir.slotConsults`, stated once.
     */
 
   /** the CALL dispatches, as one attachment — an invocation and a `new` resolve ONE method-invocation conversion (JLS 15.12.4.2), reaching `SpoonTir.coerceArgs`. `CtNewClass` is named separately
@@ -275,8 +275,8 @@ object Differences:
       Lowered("CtAssignment", Dispatch.Expression)
     ),
     // JS-E02/E03/E04 cover the VALUE and NARROWING; this row covers how many times the LVALUE is
-    // evaluated (F7, CLOSED) — the emitter binds each non-trivial lvalue subexpression to a
-    // temporary so it evaluates once. Simple lvalues keep the direct form.
+    // evaluated — the emitter binds each non-trivial lvalue subexpression to a temporary so it
+    // evaluates once. Simple lvalues keep the direct form.
     Difference(
       eId(17),
       "a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target",
@@ -761,9 +761,9 @@ object Differences:
       "TirEmitter.staticThroughInstance with effectFree — emits `{ recv; Owner.m(args) }` where the receiver can have effects",
       Rendered("Apply")
     ),
-    // Read `NonDiff` until K22 measured it wrong: scala's object-access trigger does NOT fire for
-    // every JLS 12.4.1 case — `new T` and a subclass's own initialisation touch no member, so a
-    // class initialiser lands in the companion and never runs.
+    // Scala's object-access trigger does NOT fire for every JLS 12.4.1 case — `new T` and a
+    // subclass's own initialisation touch no member, so a class initialiser lands in the
+    // companion and never runs.
     Difference(
       cId(7),
       "JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger",
@@ -809,9 +809,9 @@ object Differences:
       "SpoonTir.classDef's merged position-key sort over fields and init blocks; TirEmitter.orderBody's isStep4, which covers `<clinit>`",
       Rendered("ClassDef")
     ),
-    // Read `NonDiff("shared JVM mechanism")` until K22 face 2 measured it wrong: a scala COMPANION
-    // is not the shared mechanism java's class is — the JVM lets a re-entrant thread read a
-    // half-initialised class's statics, but a module in a MUTUAL cycle has no `MODULE$` yet.
+    // A scala COMPANION is not the shared mechanism java's class is — the JVM lets a re-entrant
+    // thread read a half-initialised class's statics, but a module in a MUTUAL cycle has no
+    // `MODULE$` yet.
     Difference(
       cId(10),
       "circular class initialisation delivers DEFAULT values on the same thread",
@@ -1042,11 +1042,11 @@ object Differences:
       "TirEmitter.tpe's TypeRef arm, through typeSym's cascade — nestedPath for a static nested type, a projection for an inner one, with namedInner opting out at `extends`/`new`",
       RenderedType("TypeRef")
     ),
-    // `Tree.ClassDef` is a `Statement` and always was (T9's exit note); the gap was every
-    // whole-program recursion walking `cd.body` alone, which cannot reach a class standing in a
-    // member's BLOCK. Two things a local class asks a nested one does not: java's qualified name
-    // carries a BINARY disambiguator, and the owner is an EXECUTABLE (naming by simple name, not
-    // a method projection).
+    // `Tree.ClassDef` is a `Statement`; the gap was every whole-program recursion walking
+    // `cd.body` alone, which cannot reach a class standing in a member's BLOCK. Two things a
+    // local class asks a nested one does not: java's qualified name carries a BINARY
+    // disambiguator, and the owner is an EXECUTABLE (naming by simple name, not a method
+    // projection).
     Difference(
       cId(30),
       "method-LOCAL named classes",
@@ -1208,8 +1208,8 @@ object Differences:
       // would demand a consult at every type in every program.
       Cited("collections")
     ),
-    // LOWERED as a plain final class with javac's four members written out (§4.4's record row),
-    // not a `case class`. `Partial`, not `Handled`: scalac emits no JVM `Record` attribute; a
+    // LOWERED as a plain final class with javac's four members written out, not a `case class`.
+    // `Partial`, not `Handled`: scalac emits no JVM `Record` attribute; a
     // record pattern is a matching PROCESS and `unapply` a FUNCTION (accessors run past the first
     // failure); an accessor's exception arrives raw, not wrapped in `MatchException`.
     Difference(
@@ -1652,9 +1652,9 @@ object Differences:
     ),
     // The SE16 half is REFUSED rather than absent, and the two words are not interchangeable: an
     // arm exists, it has read the pattern, and what it does is mint a marker with the reason on it.
-    // The reason is `ENGINE-LIMITS.md` T18 — java's binding is FLOW-scoped (JLS 6.3.1), so no
-    // lexical `val` placement is faithful and a hoisted `var` diverges under capture — and the one
-    // shape with an exact image is named there rather than half-built here.
+    // Java's binding is FLOW-scoped (JLS 6.3.1), so no lexical `val` placement is faithful and a
+    // hoisted `var` diverges under capture — and the one shape with an exact image is named there
+    // rather than half-built here.
     Difference(
       gId(21),
       "`instanceof` is restricted to REIFIABLE types, and SE16 added a pattern binding",
@@ -1683,10 +1683,8 @@ object Differences:
       "SpoonTir.erasedRecvResult; ErasedReceiverResultSpec",
       Lowered("CtInvocation", Dispatch.Expression)
     ),
-    // Both were misattributions found by re-reading the entry: `ENGINE-LIMITS.md` G23 is the
-    // wildcard-bound entry and says nothing about unboxing. Unboxing `null` throws NPE in both
-    // languages the same way (scala via `Predef.Integer2int`) — a CROSS-TYPE unbox is JS-E06/K17's
-    // fact, not this one.
+    // Unboxing `null` throws NPE in both languages the same way (scala via `Predef.Integer2int`)
+    // — a CROSS-TYPE unbox is JS-E06's fact, not this one.
     Difference(
       gId(24),
       "unboxing `null` throws NPE",
@@ -1749,8 +1747,8 @@ object Differences:
       "JLS 15.2",
       "UNCITED — no Scala 3 reference page located; the SAM-conversion behaviour is probed, not cited",
       // MIXED, and both directions are measured: casting a method reference to a callee's own
-      // variable is a compile error (`ENGINE-LIMITS.md` G12), while casting a LAMBDA into a
-      // functional interface compiles perfectly and throws at run time (K17 face 1, 27 tests).
+      // variable is a compile error, while casting a LAMBDA into a functional interface compiles
+      // perfectly and throws at run time.
       Mixed,
       Handled,
       el("K17"),
@@ -1926,7 +1924,7 @@ object Differences:
       // `Partial`, not `Handled` — java's question is answered over BOTH representations wherever
       // a live view exists; where the target is a CONCRETE retyped type there is no view, so the
       // port ships java's question asked of the wrong classes, counted not translated.
-      // `ENGINE-LIMITS.md` K18, rule (i) exempts a partial row that states which half is missing.
+      // A partial row that states which half is missing is exempt from the closed-twin rule.
       Silent,
       Partial(
         "a reified occurrence whose target is a CONCRETE retyped type — a hash map, a " +
@@ -2025,7 +2023,7 @@ object Differences:
   def renderedTypeKinds: Set[String] = owedRenderType.keySet
 
   /** rows whose discharge surface EXISTS — the only rows an "unreached" claim may be made about. A `Both` row counts as mechanised when EVERY leaf is. Stated as the COMPLEMENT of the two honest
-    * negatives rather than a list of surfaces, so a surface added tomorrow is included by construction (`just catalog-coverage`'s own filter once named only what existed, CLAUDE.md §4.56).
+    * negatives rather than a list of surfaces, so a surface added tomorrow is included by construction.
     */
   def mechanised: List[Difference] = all.filter(d =>
     leaves(d.attaches).forall {
@@ -2034,8 +2032,8 @@ object Differences:
     }
   )
 
-  /** rows whose discharge surface is NOT built, which is the number that says "we are not measuring these". Reported in its own lane rather than folded into a total (§3.6's rule about a number that
-    * hides the half that matters, applied to coverage).
+  /** rows whose discharge surface is NOT built, which is the number that says "we are not measuring these". Reported in its own lane rather than folded into a total that would hide the half that
+    * matters.
     */
   def unmechanised: List[Difference] =
     all.filter(d => leaves(d.attaches).exists(_.isInstanceOf[Attaches.Unmechanised]))

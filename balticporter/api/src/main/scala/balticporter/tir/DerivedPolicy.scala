@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** Spelling policy READ OFF A REFERENCE PORT's tree rather than hand-listed: which primitive slots are an opaque type, which members are nullable, which nullary accessors are parenless. A value (§1b)
-  * a phase consumes only when its own `derive` switch is on; empty is the no-op. Rows are keyed by the UPSTREAM symbol `fullName` and carry the reference's own spelling for the report
-  * (`derived-policy.tsv`). `PROGRESS.md` §13.31 step 1.
+/** Spelling policy read off a reference port's tree rather than hand-listed: which primitive slots are an opaque type, which members are nullable, which nullary accessors are parenless. A value a
+  * phase consumes only when its own `derive` switch is on; empty is the no-op. Rows are keyed by the upstream symbol `fullName` and carry the reference's own spelling for the report
+  * (`derived-policy.tsv`).
   */
 final case class DerivedPolicy(
   rows: List[DerivedPolicy.Row],
@@ -129,7 +129,7 @@ object DerivedPolicy:
     val asField = if s.descriptor.isEmpty && !s.flags.isParam then Set(s.fullName + ":field") else Set.empty
     Set(s.fullName) ++ own ++ asParam ++ asField
 
-  /** the rows a BASE published (`derived-policy.tsv` in its report): a dependent reads its base's derived spellings as facts, never re-derives them (§1.5). Absent file = empty.
+  /** the rows a base published (`derived-policy.tsv` in its report): a dependent reads its base's derived spellings as facts, never re-derives them. Absent file = empty.
     */
   def read(path: java.nio.file.Path): DerivedPolicy =
     if !java.nio.file.Files.isRegularFile(path) then empty

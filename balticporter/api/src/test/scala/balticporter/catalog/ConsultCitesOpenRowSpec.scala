@@ -69,8 +69,8 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
   test("THE LIVE REGISTRY: no arm in this engine consults an Open or Absent row") {
     // The stub could not ask this and it is the whole point of the rule. Every id the frontend's
     // arms cite is a literal in the source, so the set is fixed at compile time — and the rows the
-    // engine deliberately leaves UNCONSULTED (JS-E17, `Open`, whose fix binds temporaries at 161
-    // sites — `ENGINE-LIMITS.
+    // engine deliberately leaves unconsulted (JS-E17, `Open`, whose fix binds temporaries at 161
+    // call sites) are exactly the ones a real consult must not cite.
     val open = Differences.all.filter(d => d.status.isOpen || d.status.isInstanceOf[Status.Absent])
     assert(open.nonEmpty, "the registry has no Open or Absent row — this test would be vacuous")
     // …and it is `Open` rows alone that keep it non-vacuous now: the `Absent` set is empty since

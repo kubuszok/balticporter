@@ -2,7 +2,8 @@ package balticporter.tir
 
 import java.nio.file.{ Files, Path }
 
-/** The FLAG RESOLUTION of CLAUDE.md §4.6, proven rather than described. */
+/** The debug-flag precedence order (run.properties < debug.properties < system properties), proven rather than described.
+  */
 class DebugFlagsSpec extends munit.FunSuite:
 
   private def tempRoot(): Path =

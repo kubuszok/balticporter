@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** CONSTRUCTION PROVENANCE for a node kind, behind a flag — "which code produced this?" (CLAUDE.md §4.6's kill switch, generalized). No field added to every node (identity/equality untouched) —
-  * instead PRINTED at construction, from the live stack, only for kinds named in `balticporter.traceNode`. Usage: `TirTrace.mint(Tree.Typed(...))`. STATUS: mechanism exists, call sites are NOT wired
-  * — wiring is a one-line change left to whoever debugs a construction site.
+/** Construction provenance for a node kind, behind a flag — "which code produced this?" No field is added to every node (identity/equality untouched); instead the construction site is printed from
+  * the live stack, only for kinds named in `balticporter.traceNode`. Usage: `TirTrace.mint(Tree.Typed(...))`. Call sites are not wired in yet — wiring one is a one-line change for whoever debugs a
+  * construction site.
   */
 object TirTrace:
 

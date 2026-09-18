@@ -1,7 +1,7 @@
 package balticporter.tir
 
 /** Typed IR (TIR) — the re-compiler's working representation. Shaped like `scala.quoted.Quotes#reflect` but exposes `Origin`, `SymTag` and a whole-program `XrefIndex`; every node carries a fully
-  * structured `TypeRepr`, resolved from Spoon. DESIGN.md §2.
+  * structured `TypeRepr`, resolved from Spoon.
   */
 
 /** Provenance to the original source. Our addition over Quotes' positions. */
@@ -36,7 +36,7 @@ object SymId:
   extension (s: SymId) def raw: Int   = s
 
 /** What a java METHOD REFERENCE's referenced executable declares — see [[Tree.MethodRef.referent]]. JLS 15.13.1: a `static` method is a qualified name; an instance method is unbound, receiver becomes
-  * the SAM's first parameter. Both carry ARITY — scala does not eta-expand a nullary method from a bare name. `ENGINE-LIMITS.md` G32.
+  * the SAM's first parameter. Both carry ARITY — scala does not eta-expand a nullary method from a bare name.
   */
 enum Referent:
   case Static(arity: Int)
@@ -72,16 +72,15 @@ final case class Flags(
   isPrivate:       Boolean = false,
   isProtected:     Boolean = false,
   /** Java's fourth access level — package-private (no modifier written). The JLS-effective level, not modifier presence: an interface member implicitly `public`, an enum constructor implicitly
-    * `private`, are not this. Exactly one of `isPrivate`/`isProtected`/ `isPackagePrivate` is set, or all three clear means public. DESIGN.md §8.7.
+    * `private`, are not this. Exactly one of `isPrivate`/`isProtected`/ `isPackagePrivate` is set, or all three clear means public.
     */
   isPackagePrivate: Boolean = false,
   isStatic:         Boolean = false, // JavaStatic
   isNative:         Boolean = false, // Java `native` (JNI) — a Panama-FFI rewrite target
   isCovariant:      Boolean = false,
   isContravariant:  Boolean = false,
-  /** the FRONTEND resolved a declaration for this type — in the source set, on the frontend classpath, or from the class file. AFFIRMATIVE evidence, never a refutation (CLAUDE.md §4.56): a symbol
-    * nothing set this on may be one a PHASE minted, and that is not a class-file name. Set by `SpoonTirBuilder.typeSym`; read by `PackageRenameTransform`, where only a resolved external keeps its own
-    * FQN.
+  /** the FRONTEND resolved a declaration for this type — in the source set, on the frontend classpath, or from the class file. AFFIRMATIVE evidence, never a refutation: a symbol nothing set this on
+    * may be one a PHASE minted, and that is not a class-file name. Set by `SpoonTirBuilder.typeSym`; read by `PackageRenameTransform`, where only a resolved external keeps its own FQN.
     */
   isResolved: Boolean = false
 )
@@ -98,7 +97,7 @@ enum TriviaKind:
   case Line, Block, Javadoc
 
 /** One comment, verbatim — delimiters included, sliced out of the original source buffer rather than re-printed from a parsed model, so exact wording (licence text, `@param` alignment, `<pre>`
-  * blocks) survives. CLAUDE.md §4.57. Deliberately NOT shared with the frozen `balticporter.core.Trivia` (BIR path).
+  * blocks) survives. Deliberately NOT shared with the frozen `balticporter.core.Trivia` (BIR path).
   */
 final case class Trivia(kind: TriviaKind, text: String)
 
@@ -118,7 +117,7 @@ final case class Symbol(
   flags:    Flags,
   owner:    SymId, // SymId.None at the root
   info:     TypeRepr,
-  // no `privateWithin`: a `private[p]` qualifier is derived from the emitter's current package, not carried as a symbol (DESIGN.md §8.7).
+  // no `privateWithin`: a `private[p]` qualifier is derived from the emitter's current package, not carried as a symbol.
   origin: Origin = Origin.synthetic,
   tags:   Set[SymTag] = Set.empty,
   /** the declaration's Java annotations, in source order. See [[Annot]] — losing these is a silent correctness defect, not a formatting one.
@@ -131,8 +130,8 @@ final case class Symbol(
     * (a real gap), OR every formal is unnameable ([[Descriptor.total]]). Never folded into [[fullName]] or printed by `TirPrinter.canonical` — see [[MemberKey]].
     */
   descriptor: Option[Descriptor] = None,
-  /** Java's `permits` clause (JLS 8.1.1.2) — subtype `SymId`s, interned rather than named so a permitted type the parse never saw resolves to an external stub instead of a rename-sensitive string
-    * (CLAUDE.md §4.56). Empty for a non-sealed type or an inferred clause. Not a [[Flags]] (a class-header clause, not a modifier), though it travels with `Flags.isSealed`.
+  /** Java's `permits` clause (JLS 8.1.1.2) — subtype `SymId`s, interned rather than named so a permitted type the parse never saw resolves to an external stub instead of a rename-sensitive string.
+    * Empty for a non-sealed type or an inferred clause. Not a [[Flags]] (a class-header clause, not a modifier), though it travels with `Flags.isSealed`.
     */
   permits: List[SymId] = Nil,
   /** Java's record components (JLS 8.10.1), in declaration order — required because `equals`/ `hashCode`/`toString`/deconstruction all read them positionally, so this cannot be a `Set` (sorted by
@@ -151,7 +150,7 @@ final case class RecordComponent(name: String, field: SymId, accessor: SymId)
 object Symbol:
 
   /** The `fullName` prefix a frontend mints for a type variable it could not resolve a binder for (e.g. a diamond's inferred argument). `?` is unambiguous since no java identifier can start with it.
-    * Read through [[isUnresolvedTypeVar]] by both frontend and emitter — such a symbol must never reach emitted output. `ENGINE-LIMITS.md` G2.
+    * Read through [[isUnresolvedTypeVar]] by both frontend and emitter — such a symbol must never reach emitted output.
     */
   val UnresolvedTypeVarPrefix = "?"
 
@@ -340,14 +339,14 @@ object Tree:
 
   /** @param trailing
     *   comments after the block's last statement — the one position a frontend that folds comments onto the FOLLOWING statement cannot carry otherwise (e.g. an empty override body whose only content
-    *   is `// Do nothing by default.`). Placed exactly at end-of-block, never hoisted to a surviving node. `ENGINE-LIMITS.md` V1.
+    *   is `// Do nothing by default.`). Placed exactly at end-of-block, never hoisted to a surviving node.
     */
   final case class Block(stats: List[Statement], expr: Term, tpe: TypeRepr, origin: Origin, trailing: List[Trivia] = Nil) extends Term
 
   /** Anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified).
     * @param resultTpt
     *   the SAM method's OWN result type (never the interface's `tpe`) — needed since java lambda bodies allow `return` (leaves the lambda), restored via a nested `def` needing a result type. `None`:
-    *   falls back to void-lambda detection, refuses the rest, counted (`ENGINE-LIMITS.md` M6).
+    *   falls back to void-lambda detection, refuses the rest, counted.
     */
   final case class Lambda(params: List[ValDef], body: Term, tpe: TypeRepr, origin: Origin, resultTpt: Option[TypeTree] = None) extends Term
   final case class If(cond: Term, thenp: Term, elsep: Term, tpe: TypeRepr, origin: Origin) extends Term
@@ -357,7 +356,7 @@ object Tree:
   final case class Repeated(elems: List[Term], tpe: TypeRepr, origin: Origin) extends Term
 
   /** `expr*` — an array passed through a repeated (`T...`) parameter as one argument. The mirror of [[Repeated]]: a class-file callee reads `T...` as varargs, so a bare array would conform as ONE
-    * element; the spread is the faithful form (`ENGINE-LIMITS.md` K6.5). `tpe` is the array's own type — `*` is a fact about position, not about the type.
+    * element; the spread is the faithful form. `tpe` is the array's own type — `*` is a fact about position, not about the type.
     */
   final case class Spread(expr: Term, tpe: TypeRepr, origin: Origin) extends Term
 
@@ -434,7 +433,7 @@ object Tree:
   final case class CaseDef(labels: List[Term], guard: Option[Term], body: Term, isDefault: Boolean)
 
   /** A method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`). [[referent]] is what the PARSER read off the executable, kept off the symbol because an external member's `Flags`/`info`
-    * are absent or `NoType` wherever a slot cannot be named scope-free — reading those as "not static"/"no arguments" would be fabricated (CLAUDE.md §4.6).
+    * are absent or `NoType` wherever a slot cannot be named scope-free — reading those as "not static"/"no arguments" would be fabricated.
     */
   final case class MethodRef(qualifier: Either[TypeTree, Term], method: SymId, tpe: TypeRepr, origin: Origin, referent: Referent) extends Term
 
@@ -454,8 +453,8 @@ object Tree:
     */
   final case class TypePattern(bind: SymId, tpt: TypeTree, tpe: TypeRepr, origin: Origin) extends Term
 
-  /** `case Point(int x, int y) ->` — java's record pattern (JLS 14.30.1). Deconstructs through the record's accessors via `JS-C43`'s generated `unapply`, exact even when overridden
-    * (`ENGINE-LIMITS.md` T19, T20). `patterns` are component patterns in order, per JLS 14.30.2. `tpt` is the record's type, used to name the extractor via the companion.
+  /** `case Point(int x, int y) ->` — java's record pattern (JLS 14.30.1). Deconstructs through the record's accessors via `JS-C43`'s generated `unapply`, exact even when overridden. `patterns` are
+    * component patterns in order, per JLS 14.30.2. `tpt` is the record's type, used to name the extractor via the companion.
     */
   final case class RecordPattern(tpt: TypeTree, patterns: List[Term], tpe: TypeRepr, origin: Origin) extends Term
 
@@ -481,8 +480,8 @@ object Tree:
   /** `synchronized (lock) body`. `tpe` is Unit. */
   final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin) extends Term
 
-  /** A construct with no faithful Scala image, recorded IN the tree per-site rather than failing the whole unit (`DESIGN.md` §6.2). `Open` is never shipped in deliverable mode; best-effort renders
-    * [[inner]] in comment fences, untouched by any phase that does not discharge it.
+  /** A construct with no faithful Scala image, recorded IN the tree per-site rather than failing the whole unit. `Open` is never shipped in deliverable mode; best-effort renders [[inner]] in comment
+    * fences, untouched by any phase that does not discharge it.
     * @param inner
     *   the approximation @param kind the taxonomy ([[UnportableKind]]) @param diff the optional catalog row this instances @param what one line in the mint site's own words
     */
@@ -500,8 +499,8 @@ object Tree:
 
   object Unportable:
 
-    /** MINT one. Refuses a synthetic origin — §6.2's rule that *a marker must point at real Java*, and the precondition [[Unportable.markerKey]] depends on. A mint site with no position has to keep
-      * whatever loud answer it had; that is a worse outcome for one node and a truthful one, where a marker nothing can locate is neither.
+    /** MINT one. Refuses a synthetic origin — a marker must point at real Java, and the precondition [[Unportable.markerKey]] depends on it. A mint site with no position has to keep whatever loud
+      * answer it had; that is a worse outcome for one node and a truthful one, where a marker nothing can locate is neither.
       */
     def open(inner: Term, kind: UnportableKind, diff: Option[balticporter.catalog.DiffId], what: String, tpe: TypeRepr, origin: Origin): Unportable =
       require(
@@ -510,14 +509,14 @@ object Tree:
       )
       Unportable(inner, kind, MarkerState.Open, diff, what, tpe, origin)
 
-    /** the fence a BEST-EFFORT emission wraps an open marker in. Comment-shaped and deterministic: a comment cannot change program shape, which is the whole reason the fence is admissible (§6.4), and
+    /** the fence a BEST-EFFORT emission wraps an open marker in. Comment-shaped and deterministic: a comment cannot change program shape, which is the whole reason the fence is admissible, and
       * determinism is what lets `diff -r` of two run directories mean anything.
       */
     def fence(m: Unportable): (String, String) =
       (s"/* balticporter:unportable ${m.kind.label}${m.diff.fold("")(d => s" $d")} — ${safe(m.what)} */", "/* balticporter:end-unportable */")
 
-    /** a fence may never OPEN or CLOSE a comment: Scala block comments NEST (§4.58), so a block opener in the mint site's own words would swallow the rest of the file. This very scaladoc failed to
-      * compile the first time it was written, which is the shortest available argument that the rule is not theoretical.
+    /** a fence may never OPEN or CLOSE a comment: Scala block comments NEST, so a block opener in the mint site's own words would swallow the rest of the file. This very scaladoc failed to compile
+      * the first time it was written, which is the shortest available argument that the rule is not theoretical.
       */
     def safe(s: String): String = s.replace("/*", "/ *").replace("*/", "* /")
 
@@ -530,7 +529,7 @@ object Tree:
     origin: Origin,
     holes:  List[Term] = Nil,
     /** `Some(name)`: spliced into the COMPANION rather than the class body, under this name. A spliced member has no symbol, so its home AND its name — which the inherited-statics export must exclude
-      * — ride on the node (`CLAUDE.md` §1(b)).
+      * — ride on the node.
       */
     companionMember: Option[String] = None
   ) extends Term:
@@ -575,7 +574,7 @@ object Tree:
       Opaque(parts.head + parts.tail.zipWithIndex.map((p, i) => hole(i) + p).mkString, tpe, origin, holes)
 
   /** A statement with the comments written above it — exists purely to carry [[Trivia]] for a STATEMENT. Transparent by design: `tpe`/`origin` delegate, [[StandardTraversal]] rebuilds the wrapper.
-    * NOT transparent to a pattern match on statement shape — match through [[Uncommented]] instead, or a comment above e.g. `super(…)` silently drops it (CLAUDE.md §4.4).
+    * NOT transparent to a pattern match on statement shape — match through [[Uncommented]] instead, or a comment above e.g. `super(…)` silently drops it.
     */
   final case class Commented(leading: List[Trivia], stmt: Term) extends Term:
     def tpe:    TypeRepr = stmt.tpe
@@ -674,12 +673,12 @@ final class Program(
     * silently drop this at every boundary. [[rebuilt]] is the way a phase returns a program.
     */
   val members: MemberIndex,
-  /** Classpath types interned by the frontend for ancestry resolution (K18). NOT emitted — excluded from [[units]]. Carried through [[rebuilt]] and included in every xref rebuild so `definitionOf`
-    * and `OverrideGraph` see them. Empty default is the no-op.
+  /** Classpath types interned by the frontend for ancestry resolution. NOT emitted — excluded from [[units]]. Carried through [[rebuilt]] and included in every xref rebuild so `definitionOf` and
+    * `OverrideGraph` see them. Empty default is the no-op.
     */
   val internedDefs: List[Tree.ClassDef] = Nil,
   /** JLS 9.4.3 `default` methods of EXTERNAL interface parents, read off the class file by the frontend: parent FQN -> `(name, param counts per clause)`. The emitter's diamond forwarder ASKS this
-    * instead of guessing which external parents are concrete (`ENGINE-LIMITS.md` K39). Empty default is the no-op.
+    * instead of guessing which external parents are concrete. Empty default is the no-op.
     */
   val internedDefaults: Map[String, Set[(String, List[Int])]] = Map.empty
 ):
@@ -699,8 +698,8 @@ final class Program(
     members: MemberIndex = this.members
   ): Program = new Program(units, symbols, xref, members, internedDefs, internedDefaults)
 
-  /** Symbols this program declares, vs. externals interned lazily on first reference — CLAUDE.md §4.56's "decide ownership structurally, never by name". Owned iff climbing the `owner` chain reaches a
-    * [[units]] symbol. Used before any prefix rename and by any `RuleScope`-taking rule. Fuel-bounded: a corrupt owner cycle counts as not-owned rather than hanging.
+  /** Symbols this program declares, vs. externals interned lazily on first reference — ownership decided structurally, never by name. Owned iff climbing the `owner` chain reaches a [[units]] symbol.
+    * Used before any prefix rename and by any `RuleScope`-taking rule. Fuel-bounded: a corrupt owner cycle counts as not-owned rather than hanging.
     */
   lazy val owned: Set[SymId] =
     val roots = units.map(_.symbol).toSet

@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** ONE place a POLICY KEY becomes a SYMBOL — and the only place a phase is allowed to learn what a key names. Replaces eighteen engine sites that each built or matched a member key with their own
-  * string test. TWO STAGES: `dropMethods` names a member the frontend removed BEFORE minting its symbol, so [[MemberIndex]] (what the frontend SAW) is stage one, the symbol table stage two. Every
-  * refusal is a DIFFERENT instruction (CLAUDE.md §4.45) — collapsing any two would mislead.
+/** One place a policy key becomes a symbol — and the only place a phase is allowed to learn what a key names. Replaces eighteen engine sites that each built or matched a member key with their own
+  * string test. Two stages: `dropMethods` names a member the frontend removed before minting its symbol, so [[MemberIndex]] (what the frontend saw) is stage one, the symbol table stage two. Every
+  * refusal is a different instruction — collapsing any two would mislead.
   */
 
 /** @param run
@@ -68,8 +68,8 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
   def bindMembers(phase: String, setting: String, entry: String, need: Ownership = Ownership.Owned): Binding[List[PolicyBinder.Hit]] =
     record(phase, setting, entry, resolve(entry, need).map(_._2))
 
-  /** bind a member key to EXACTLY ONE overload. A key naming two is `Ambiguous`, and the finding LISTS the candidates rendered with their descriptors — because the message is the string an agent
-    * edits (§4.575).
+  /** bind a member key to exactly one overload. A key naming two is `Ambiguous`, and the finding lists the candidates rendered with their descriptors — because the message is the string an agent
+    * edits.
     */
   def bindMember(phase: String, setting: String, entry: String, need: Ownership = Ownership.Owned): Binding[PolicyBinder.Hit] =
     record(
@@ -94,9 +94,9 @@ final class PolicyBinder(val program: Program, index: MemberIndex, val run: RunS
         h.key.render + h.sym.flatMap(program.symbolOf).map(s => s"  [${s.fullName}]").getOrElse("")
       }.sorted
 
-  /** bind a key to the symbol a CALL SITE names — exactly one overload, like [[bindMember]], but a call site always names a real `SymId` even for a DROPPED member (`SpoonTir.methodSym` interns from
+  /** bind a key to the symbol a call site names — exactly one overload, like [[bindMember]], but a call site always names a real `SymId` even for a dropped member (`SpoonTir.methodSym` interns from
     * the reference). On a dropped-only match this falls through to the symbol table instead of returning empty, suppressing `SyntheticTarget` on that path only; the returned [[Hit]] still carries
-    * `dropped = true` (`ENGINE-LIMITS.md` D7: a dependent calling a base's dropped member).
+    * `dropped = true` — a dependent calling a base's dropped member.
     */
   def bindCallee(phase: String, setting: String, entry: String, need: Ownership = Ownership.Either): Binding[PolicyBinder.Hit] =
     record(

@@ -2,10 +2,10 @@ package balticporter.tir
 
 import balticporter.catalog.FixKind
 
-/** THE MENU — one named thing the engine can DO at one location, offered by the phase or check that can do it, for a difference with no single right answer. The phase/check declares alternatives; a
-  * port SELECTS one ([[PortManifest.resolutions]]); the engine applies and counts both halves ([[Resolution]]). @field id GLOBALLY UNIQUE @field lane/kind the residue drained
+/** The menu — one named thing the engine can do at one location, offered by the phase or check that can do it, for a difference with no single right answer. The phase/check declares alternatives; a
+  * port selects one ([[PortManifest.resolutions]]); the engine applies and counts both halves ([[Resolution]]). @field id globally unique @field lane/kind the residue drained
   * @field
-  *   emissionAffecting puts it in §1.5's MUST-agree column @field fix owning repository (`FixKind`).
+  *   emissionAffecting puts it in the shared-surface must-agree column @field fix owning repository (`FixKind`).
   */
 final case class Remedy(
   /** the globally-unique, kebab-case slug a manifest writes. Published API — see [[Remedy.badId]] for the grammar and why anything outside it is refused rather than normalised.
@@ -19,14 +19,14 @@ final case class Remedy(
   /** does applying it change EMITTED TEXT? See the class doc — this is what decides whether a selection is shared surface.
     */
   emissionAffecting: Boolean,
-  /** which of §1's three kinds the REMEDY is — where its code lives. */
+  /** which of the three kinds the remedy is — where its code lives. */
   fix: FixKind,
   /** one sentence: what the port gets if it picks this. Rendered in the menu and in the porter note beside the code, so it is written for a reader who is holding neither.
     */
   what: String,
-  /** the OTHER kinds in [[lane]] this same remedy also answers. Empty by default (one-kind remedy). A lane may split ONE SITE into several rows (`overload-risk` files up to three at one call, JLS
-    * 15.12.2's three phase boundaries), and one act answers all of them — without this a member holding two kinds could answer only one, leaving undrainable residue (`DESIGN.md` §8.16). Does NOT
-    * widen across lanes, keeping the accounting one number.
+  /** the other kinds in [[lane]] this same remedy also answers. Empty by default (one-kind remedy). A lane may split one site into several rows (`overload-risk` files up to three at one call, JLS
+    * 15.12.2's three phase boundaries), and one act answers all of them — without this a member holding two kinds could answer only one, leaving undrainable residue. Does not widen across lanes,
+    * keeping the accounting one number.
     */
   alsoKinds: List[String] = Nil,
   /** WHAT KIND OF THING THE SELECTION KEY NAMES — see [[Remedy.Subject]]. Defaulted to `OwnedMember`, which is what every remedy whose residue sits at a declaration this run emits wants, and which is
@@ -39,10 +39,9 @@ final case class Remedy(
     if alsoKinds.isEmpty then s"$lane($kind)"
     else s"$lane(${(kind :: alsoKinds).mkString("|")})"
 
-  /** IS THIS THE ROW IN FRONT OF ME? — the one question [[ResolutionPlan.selected]] asks.
+  /** Is this the row in front of me? — the one question [[ResolutionPlan.selected]] asks.
     *
-    * A method rather than two equality tests at the caller, so [[alsoKinds]] cannot become a field one consulting site reads and another silently does not (`CLAUDE.md` §4.56's fast-path guard, one
-    * type over).
+    * A method rather than two equality tests at the caller, so [[alsoKinds]] cannot become a field one consulting site reads and another silently does not.
     */
   def answers(l: String, k: String): Boolean =
     l == lane && (kind == Remedy.AnyKind || k == kind || alsoKinds.contains(k))
@@ -68,9 +67,9 @@ object Remedy:
     */
   val AnyKind: String = "*"
 
-  /** WHAT A SELECTION KEY FOR THIS REMEDY NAMES. `DESIGN.md` §8.16's original answer — a `MemberKey` naming a declaration the run owns — fails at a residue sitting at a TYPE (no member to name, e.g.
-    * `ENGINE-LIMITS.md` CT7) or at a member this program does NOT declare (an egress row, deduplicated BY CALLEE). So the SUBJECT KIND is the remedy's own to declare, and the plan binds each key
-    * accordingly (`ResolutionPlan.of`) — no `ExternalType` yet: nothing produces it.
+  /** What a selection key for this remedy names. Naming a declaration the run owns as a `MemberKey` fails at a residue sitting at a type (no member to name) or at a member this program does not
+    * declare (an egress row, deduplicated by callee). So the subject kind is the remedy's own to declare, and the plan binds each key accordingly (`ResolutionPlan.of`) — no `ExternalType` yet:
+    * nothing produces it.
     */
   enum Subject(val ownership: Ownership, val isType: Boolean):
     /** `owner#member`, naming a declaration this run emits — the default and the common case. */

@@ -29,10 +29,10 @@ object Xref:
       case TypeRepr.TermRef(prefix, sym) => rec(sym, kind, site); walkType(prefix, UsageKind.TypeRefPos, site)
       case TypeRepr.ThisType(cls)        => rec(cls, kind, site)
       case TypeRepr.SuperType(a, b)      => walkType(a, kind, site); walkType(b, kind, site)
-      // KNOWN UNDER-LABELLING, deliberate: this arm REPLACES the kind it was called with, so a
-      // symbol reached through an application labels `Tycon`/`TypeArg` whatever position the caller
-      // was describing (`ENGINE-LIMITS.md` CT6). `UsageKind` is a shared index across three checks,
-      // so re-labelling is its own thirteen-port cycle; a consumer needing position asks `u.site`.
+      // Known under-labelling, deliberate: this arm replaces the kind it was called with, so a
+      // symbol reached through an application labels `Tycon`/`TypeArg` whatever position the
+      // caller was describing. `UsageKind` is a shared index across three checks, so re-labelling
+      // would be a wide, multi-port change; a consumer needing position asks `u.site`.
       case TypeRepr.AppliedType(tycon, args) =>
         walkType(tycon, UsageKind.Tycon, site); args.foreach(walkType(_, UsageKind.TypeArg, site))
       case TypeRepr.AndType(l, r)               => walkType(l, UsageKind.Mixin, site); walkType(r, UsageKind.Mixin, site)

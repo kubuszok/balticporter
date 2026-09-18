@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** WHAT THE FRONTEND SAW — every executable it walked, INCLUDING the ones it was about to drop. A `dropMethods` key names a member that by the time any phase runs has no `SymId` — the frontend
-  * filters it BEFORE minting one — so policy that REMOVES something can only be bound where the thing still exists (CLAUDE.md §4.56), making [[PolicyBinder]] two-stage. NOT every member the ENGINE
-  * minted afterward — that distinguishes `NeverMatched` from `SyntheticTarget`.
+/** What the frontend saw — every executable it walked, including the ones it was about to drop. A `dropMethods` key names a member that by the time any phase runs has no `SymId` — the frontend
+  * filters it before minting one — so policy that removes something can only be bound where the thing still exists, making [[PolicyBinder]] two-stage. Not every member the engine minted afterward —
+  * that distinguishes `NeverMatched` from `SyntheticTarget`.
   */
 final class MemberIndex(
   /** a LIST per key, not one entry. Two members can share one identity in this grammar — a class with two `static { }` blocks has two `<clinit>()`s — and a map would silently keep one of them, which

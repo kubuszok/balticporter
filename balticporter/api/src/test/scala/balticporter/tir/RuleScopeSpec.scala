@@ -1,6 +1,7 @@
 package balticporter.tir
 
-/** [[RuleScope]] — and above all its SEPARATOR CUT, which is CLAUDE.md §4.56's trap. */
+/** [[RuleScope]] — and above all its separator cut, the trap where a prefix match silently covers too much.
+  */
 class RuleScopeSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
@@ -91,8 +92,8 @@ class RuleScopeSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   /** a four-level table, with the two names the frontend actually produces for the kinds a name-only test cannot place (both established by running `FlowPropagationSpec` against `SpoonTir`, not by
-    * reading it): a PARAMETER was `?#p` before wave 2.8's frontend fix (it is `Class#method#p` now — this fixture keeps the old spelling on purpose, because the scope rule must not READ it), and a
-    * method-LOCAL is its bare simple name.
+    * reading it): a parameter was `?#p` before an earlier frontend fix (it is `Class#method#p` now — this fixture keeps the old spelling on purpose, because the scope rule must not read it), and a
+    * method-local is its bare simple name.
     */
   private def program: Program =
     val cls   = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
@@ -185,7 +186,7 @@ class RuleScopeSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // disjointness — whether two scoped instances of ONE rule can compose (P10)
+  // disjointness — whether two scoped instances of ONE rule can compose
   // -------------------------------------------------------------------------
 
   test("two Everywhere scopes always OVERLAP — each is the whole program bar a finite set") {
@@ -198,7 +199,7 @@ class RuleScopeSpec extends munit.FunSuite:
     assert(!RuleScope.disjoint(RuleScope.Everywhere(), only))
     assert(RuleScope.disjoint(RuleScope.Everywhere(Set("com.foo.ext")), only))
     assert(RuleScope.disjoint(RuleScope.Everywhere(Set("com.foo")), only))
-    // §4.56: the cut lands on a separator, so a merely-shared prefix excludes nothing.
+    // the cut lands on a separator, so a merely-shared prefix excludes nothing.
     assert(!RuleScope.disjoint(RuleScope.Everywhere(Set("com.foo.extra")), only))
     assert(RuleScope.disjoint(only, RuleScope.Everywhere(Set("com.foo.ext"))))
   }

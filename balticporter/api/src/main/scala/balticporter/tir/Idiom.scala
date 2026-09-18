@@ -1,14 +1,14 @@
 package balticporter.tir
 
-/** THE IDIOM LAYER'S OWN RECORD — what an idiom phase CONSIDERED, and what it did about it. An idiom transform has no DIFFERENCE-based mandate (the faithful translation already exists and behaves
-  * identically — `DESIGN.md` §8.15), so its safety argument is a REFUSAL ENUMERATION, not a suite result (CLAUDE.md §5): every delta is guarded, shaped away, or COUNTED with its DENOMINATOR — a
-  * candidate for every site CONSIDERED. Three lanes, one log; never process-global.
+/** The idiom layer's own record — what an idiom phase considered, and what it did about it. An idiom transform has no difference-based mandate (the faithful translation already exists and behaves
+  * identically), so its safety argument is a refusal enumeration, not a suite result: every delta is guarded, shaped away, or counted with its denominator — a candidate for every site considered.
+  * Three lanes, one log; never process-global.
   */
 final case class IdiomCandidate(
   kind:    IdiomKind,
   verdict: IdiomVerdict,
-  /** the DECLARATION the site sits in, fully qualified — `owner#member`. Not the site's own expression, because a reader joining this against `decisions.tsv` or `members.tsv` has a declaration in
-    * hand and never an expression (`CLAUDE.md` §5.1).
+  /** the declaration the site sits in, fully qualified — `owner#member`. Not the site's own expression, because a reader joining this against `decisions.tsv` or `members.tsv` has a declaration in
+    * hand and never an expression.
     */
   subject: String,
   /** what the candidate WAS, in one phrase — the interface a SAM anon named, the property a pair would collapse to. Free text; the machine-readable half is [[verdict]].
@@ -21,11 +21,11 @@ final case class IdiomCandidate(
 /** WHICH transformer a candidate belongs to. Closed on purpose, exactly as [[Decision.Kind]] is: an open string would make the lanes ungroupable and let two phases describe one act two ways.
   */
 enum IdiomKind:
-  /** a java anonymous class implementing a single-abstract-method interface → a scala lambda, ASCRIBED to that interface (`DESIGN.md` §8.15).
+  /** a java anonymous class implementing a single-abstract-method interface → a scala lambda, ascribed to that interface.
     */
   case SamLambda
 
-  /** a configured bean pair whose backing field could become a `var`/`val` (`DESIGN.md` §8.5's deferred half).
+  /** a configured bean pair whose backing field could become a `var`/`val`.
     */
   case BeanCollapse
 
@@ -48,8 +48,8 @@ enum IdiomVerdict:
   /** the transformer changed this site. */
   case Converted
 
-  /** the transformer DECLINED this site, naming the guard that declined it. `guard` is the enumeration member from the transformer's own delta enumeration (CLAUDE.md §4.45); `why` is the sentence
-    * saying whether the refusal is permanent.
+  /** the transformer declined this site, naming the guard that declined it. `guard` is the enumeration member from the transformer's own delta enumeration; `why` is the sentence saying whether the
+    * refusal is permanent.
     */
   case Refused(guard: String, why: String)
 
@@ -85,7 +85,7 @@ final class IdiomLog:
   def clear(): Unit                 = entries.clear()
 
 object IdiomLog:
-  /** for a caller that does not want the record — a testkit fixture, a §1(c) rule's own harness. A shared instance would accumulate across callers, so this is a factory and not a value.
+  /** for a caller that does not want the record — a testkit fixture, a library-specific rule's own harness. A shared instance would accumulate across callers, so this is a factory and not a value.
     */
   def discarding: IdiomLog = new IdiomLog
 
@@ -98,14 +98,14 @@ trait IdiomPhase extends Phase:
 
   final def consider(c: IdiomCandidate): Unit = candidates.record(c)
 
-  /** WHICH kinds this phase files — declared, so a run can print a ZERO that means something: without it the report cannot tell "ran and found nothing" from "not in the pipeline", and a census
-    * population going to zero is exactly what a conversion regression looks like (CLAUDE.md §3). Declared by the phase for `Rewrite.accountedBy`'s reason: an empty log says nothing.
+  /** Which kinds this phase files — declared, so a run can print a zero that means something: without it the report cannot tell "ran and found nothing" from "not in the pipeline", and a census
+    * population going to zero is exactly what a conversion regression looks like. Declared by the phase for `Rewrite.accountedBy`'s reason: an empty log says nothing.
     */
   def idiomKinds: Set[IdiomKind]
 
-/** JAVA'S SINGLE-ABSTRACT-METHOD QUESTION, answered where the CLASS FILE is — never where the phase is. A frontend value, not a phase computation: the TIR interns external members lazily, so deriving
-  * the answer from what happened to be parsed would be §4.56's wrongful-seal failure. Travels on the node ([[Tree.AnonClass.sam]]). [[Answer.Unreadable]] is FIRST-CLASS, never `false` (CLAUDE.md
-  * §4.6) — an incomplete classpath must be COUNTED, not read as "no SAM sites".
+/** Java's single-abstract-method question, answered where the class file is — never where the phase is. A frontend value, not a phase computation: the TIR interns external members lazily, so deriving
+  * the answer from what happened to be parsed would silently seal the wrong verdict. Travels on the node ([[Tree.AnonClass.sam]]). [[Answer.Unreadable]] is first-class, never `false` — an incomplete
+  * classpath must be counted, not read as "no SAM sites".
   */
 object Sam:
 

@@ -1,12 +1,12 @@
 package balticporter.tir
 
-/** What a run may CONCLUDE about a type it did not emit — replaces bare `Program` access for every non-owned question (`DESIGN.md` §8.3). A dependent's `Program` CONTAINS its base, so recomputing an
-  * answer over it is not the base's answer (`ENGINE-LIMITS.md` D2/D4/D5/D6); this is a construction-time restriction — ask, get one of three [[Answer]]s, and an [[Answer.Unknown]] shaping emitted
-  * text fails the run. `Program.owned` is the WRONG predicate.
+/** What a run may conclude about a type it did not emit — replaces bare `Program` access for every non-owned question. A dependent's `Program` contains its base, so recomputing an answer over it is
+  * not the base's answer; this is a construction-time restriction — ask, get one of three [[Answer]]s, and an [[Answer.Unknown]] shaping emitted text fails the run. `Program.owned` is the wrong
+  * predicate.
   */
 trait Surface:
 
-  /** Does THIS run emit the declaration of `s`? The one structural climb (§4.56): the owner chain reaches a unit this run CONVERTS. Fuel-bounded; exhaustion is `false`.
+  /** Does this run emit the declaration of `s`? The one structural climb: the owner chain reaches a unit this run converts. Fuel-bounded; exhaustion is `false`.
     */
   def owns(s: SymId): Boolean
 
@@ -34,18 +34,18 @@ object Surface:
 
   /** An unanswered question, with what the run did about it.
     * @param fatal
-    *   the answer SHAPED EMITTED TEXT — `PortRun` fails on any of these, since a local fallback is exactly how `ENGINE-LIMITS.md` D4 produced 3 compile errors with every check clean.
+    *   the answer shaped emitted text — `PortRun` fails on any of these, since a local fallback can silently disagree with the base
     * @param fix
-    *   which of §1's three kinds the fix is, for an agent in another repository (§4.45).
+    *   which of the three kinds the fix is, for an agent in another repository
     */
   final case class Gap(subject: String, why: String, module: Option[String], fatal: Boolean, fix: String):
     def render: String =
       s"${if fatal then "FATAL" else "gap"}: $subject — $why" +
         module.fold("")(m => s"  [base: $m]") + s"  [$fix]"
 
-  /** Three answers, and the third is the point: a question about a symbol this run does not emit is either answered by the base's published contract, or NOT ANSWERED — never recomputed over a program
-    * the base never had. `Own` CARRIES NOTHING (a departure from §8.3's sketch): an owned type's shape does not exist until the emitter takes the branch that decides it, so carrying a value would be
-    * a second derivation free to disagree with what was written.
+  /** Three answers, and the third is the point: a question about a symbol this run does not emit is either answered by the base's published contract, or not answered — never recomputed over a program
+    * the base never had. `Own` carries nothing: an owned type's shape does not exist until the emitter takes the branch that decides it, so carrying a value would be a second derivation free to
+    * disagree with what was written.
     */
   enum Answer[+A]:
     /** this run emits the declaration: derive locally, and the derivation IS the answer. */
@@ -54,7 +54,7 @@ object Surface:
     /** read from a base's published contract. */
     case Published(a: A, module: String)
 
-    /** not answerable. `module` names the base it should have come from when one is identifiable — a consumer that fails on this has to be able to say which repository must change (§4.45).
+    /** not answerable. `module` names the base it should have come from when one is identifiable — a consumer that fails on this has to be able to say which repository must change.
       */
     case Unknown(why: String, module: Option[String])
 
@@ -70,12 +70,12 @@ object Surface:
         case Unknown(_, m)   => m
         case Own             => scala.None
 
-  /** How a type was EMITTED. Every name in it is an EMITTED name (§4.56): each consumer compares it against emitted text — a reference, a `super[X]`, an `export` selector, a stack frame. The
-    * `upstream` column of the row that carries it is the join key and stays upstream.
+  /** How a type was emitted. Every name in it is an emitted name: each consumer compares it against emitted text — a reference, a `super[X]`, an `export` selector, a stack frame. The `upstream`
+    * column of the row that carries it is the join key and stays upstream.
     */
   final case class TypeShape(
-    /** `class` | `object` | `trait` | `annotation` | `enum-class`. `object` is the collapse an all-static Java class undergoes, and it is the answer a CONSUMER needs: naming a collapsed object in a
-      * type position is `ENGINE-LIMITS.md` D6's cross-module face.
+    /** `class` | `object` | `trait` | `annotation` | `enum-class`. `object` is the collapse an all-static Java class undergoes, and it is the answer a consumer needs when naming a collapsed object in
+      * a type position across a module boundary.
       */
     form: String,
     /** does the emitted type have a companion `object`? `export X.*` against one that has none is an error outright.
@@ -84,9 +84,9 @@ object Surface:
     /** the EMITTED names the companion declares itself — what an `export` exclusion list must be built from, rather than recomputed from the base's Java.
       */
     statics: List[String] = Nil,
-    /** The emitted primary's parameter slots, in §8.1's DESCRIPTOR grammar (`int,String`) — same spelling a manifest key uses. `Some(Descriptor.empty)` is nilary; `None` means no constructor question
-      * (a trait). A collapsed `form=object` still reports the planned primary — `form` is what makes it unreachable. A `?` slot is either an unspellable type or a §8.2 marker, told apart by
-      * `disambiguator`.
+    /** The emitted primary's parameter slots, in descriptor grammar (`int,String`) — same spelling a manifest key uses. `Some(Descriptor.empty)` is nilary; `None` means no constructor question (a
+      * trait). A collapsed `form=object` still reports the planned primary — `form` is what makes it unreachable. A `?` slot is either an unspellable type or a synthesised marker parameter, told
+      * apart by `disambiguator`.
       */
     primary: Option[Descriptor] = scala.None,
     /** WHY that one — `unique-root` | `widest-root` | `no-arg-root` | `promoted-nilary` | `synthesised-primary` | `not-funnelled` | `no-constructor`. It tells a dependent what would change the
@@ -98,7 +98,7 @@ object Surface:
       */
     primaryVis: String = "",
     /** `marker` when the funnel added a final companion-`protected` marker parameter to make the primary declarable beside, and unreachable past, the class's real constructors; `none` otherwise.
-      * NEVER the marker type's FQN: a companion-`protected` type is not a name any consumer may resolve (`DESIGN.md` §8.1 F4).
+      * Never the marker type's FQN: a companion-`protected` type is not a name any consumer may resolve.
       */
     disambiguator: String = "none",
     /** the emitted `def this` signatures, descriptor-spelled. */
@@ -124,7 +124,7 @@ object Surface:
 
   /** How a MEMBER was emitted. */
   final case class MemberShape(
-    /** the emitted SIMPLE name, when it differs from the upstream one — §4.55's renames, which until now existed only in `decisions.tsv` and were published nowhere a consumer looks.
+    /** the emitted simple name, when it differs from the upstream one — a member rename, which until now existed only in `decisions.tsv` and was published nowhere a consumer looks.
       */
     name: String = "",
     /** `public` | `protected` | `private` | `private[p]`. "May a replay reach this?" is a lookup against this and not a widening of the run's own symbol table.
@@ -133,19 +133,19 @@ object Surface:
     /** `class` | `companion`. A Java static lands in the companion; a dependent emitting `Base.m()` needs the BASE's answer, not its own.
       */
     placement: String = "class",
-    /** THE ONE KEY A `Dropped` MEMBER ROW CARRIES: the ENGINE RULE that refused to emit it, in the `Reason` grammar (`ctor-funnel/nilary-dropped(C11)`). Whose decision it was decides which of §1's
-      * kinds the fix is: absent from `dropMethods` is the base's POLICY; an engine refusal is §1(a), worked around via `inject`. Empty for a policy drop (the ordinary case).
+    /** The one key a `Dropped` member row carries: the engine rule that refused to emit it, in the `Reason` grammar (`ctor-funnel/nilary-dropped`). Whose decision it was decides which kind the fix
+      * is: absent from `dropMethods` is the base's policy; an engine refusal is universal, worked around via `inject`. Empty for a policy drop (the ordinary case).
       */
     refusal: String = "",
-    /** `var` | `val` — this member is a java BEAN PAIR the base COLLAPSED into a property, in this shape. Empty for what java declared as-is. Must be PUBLISHED: the collapse verdict is WHOLE-PROGRAM
-      * (`overriddenBelow`/`writtenSymbols` over the run's descendants), so a dependent whose model CONTAINS the base's units can RE-DERIVE `Refuse` at an EQUAL fingerprint (§1.5). Absence of an
-      * accessor row is not evidence (a drop looks the same).
+    /** `var` | `val` — this member is a java bean pair the base collapsed into a property, in this shape. Empty for what java declared as-is. Must be published: the collapse verdict is whole-program
+      * (`overriddenBelow`/`writtenSymbols` over the run's descendants), so a dependent whose model contains the base's units can re-derive `Refuse` at an equal fingerprint. Absence of an accessor row
+      * is not evidence (a drop looks the same).
       */
     form: String = ""
   )
 
-  /** '''NOT carried, and named rather than left to be discovered.''' §8.3's schema listed a `promotedParam` key — but a promoted parameter IS the class's parameter list, so the source map has no row
-    * for it to hang a key on; `primary=` already answers the constructor question. Named here because a key silently absent from a schema reads as an oversight.
+  /** Not carried, and named rather than left to be discovered. An earlier schema sketch listed a `promotedParam` key — but a promoted parameter is the class's parameter list, so the source map has no
+    * row for it to hang a key on; `primary=` already answers the constructor question. Named here because a key silently absent from a schema reads as an oversight.
     */
   private[tir] val NotCarried: List[String] = List("promotedParam")
 
@@ -186,8 +186,8 @@ object Surface:
       ).flatten.sortBy(_._1)
     )
 
-  /** …and back. `None` for a payload with no `form=` — which is what a schema-2 row, and every member row, look like from here. Not an error: a map published by an older engine must degrade PER
-    * QUESTION (`DESIGN.md` §8.3), so the caller turns this into an [[Answer.Unknown]] naming the engine that wrote it, never into a wholesale `Stale`.
+  /** …and back. `None` for a payload with no `form=` — which is what a schema-2 row, and every member row, look like from here. Not an error: a map published by an older engine must degrade per
+    * question, so the caller turns this into an [[Answer.Unknown]] naming the engine that wrote it, never into a wholesale `Stale`.
     */
   def parseType(payload: String): Option[TypeShape] =
     val kv = KeyValues.parse(payload)
@@ -218,9 +218,9 @@ object Surface:
       placement = kv.getOrElse("placement", "class"),
       refusal = kv.getOrElse("refusal", ""),
       // A map published by an engine that did not carry this key answers "" — which reads as "not
-      // collapsed" and would be a FABRICATED FACT if it reached a comparison (§4.6). What keeps it
-      // from doing so is `PortMap.freshness`: a map written by another engine build is `Stale`, so
-      // the base is refused wholesale and the question is `Unknown` rather than wrongly answered.
+      // collapsed" and would be a fabricated fact if it reached a comparison. What keeps it from
+      // doing so is `PortMap.freshness`: a map written by another engine build is `Stale`, so the
+      // base is refused wholesale and the question is `Unknown` rather than wrongly answered.
       form = kv.getOrElse("form", "")
     )
 
@@ -231,9 +231,9 @@ object Surface:
     if rendered.isEmpty then Descriptor.empty
     else Descriptor(rendered.split(',').toList.map(Descriptor.paramOf))
 
-/** The surface of a run that has NO base: every unit in the program is this run's own. The default for every consumer, so a single-module port, a spec, `DebugEmit` all behave exactly as before the
-  * view existed — and a consumer cannot take a different path under test than in a port. Answers `Unknown` for a symbol it does not own (a JDK type), truthfully. Lives in `api` so a §1(c) rule's own
-  * spec does not have to reach into the engine for a `Surface`.
+/** The surface of a run that has no base: every unit in the program is this run's own. The default for every consumer, so a single-module port, a spec, `DebugEmit` all behave exactly as before the
+  * view existed — and a consumer cannot take a different path under test than in a port. Answers `Unknown` for a symbol it does not own (a JDK type), truthfully. Lives in `api` so a library-specific
+  * rule's own spec does not have to reach into the engine for a `Surface`.
   */
 final class TrivialSurface(program: Program) extends Surface:
   private lazy val owned:  Set[SymId]                        = program.owned

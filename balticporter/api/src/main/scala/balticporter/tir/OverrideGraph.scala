@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** MEMBER-LEVEL correspondence across a hierarchy — *the set of declarations that must change together, or none of them* (DESIGN.md §8.5, §8.11). Edges keyed by NAME AND DESCRIPTOR
-  * ([[Symbol.descriptor]]) — `(name, arity)` alone was measured insufficient (`ENGINE-LIMITS.md` D1). [[closureOf]] answers what a component IS; `Closure.isAnchored` whether it may be changed at all,
-  * CONSERVATIVELY. Built with `StandardTraversal` so anon/enum bodies are NODES (§3).
+/** Member-level correspondence across a hierarchy — *the set of declarations that must change together, or none of them*. Edges keyed by name and descriptor ([[Symbol.descriptor]]) — name and arity
+  * alone is insufficient. [[closureOf]] answers what a component is; `Closure.isAnchored` whether it may be changed at all, conservatively. Built with `StandardTraversal` so anon/enum bodies are
+  * nodes.
   */
 final class OverrideGraph private (
   private val program:       Program,
@@ -135,7 +135,7 @@ final class OverrideGraph private (
     program.symbolOf(m).filter(s => PolicyBinder.isExecutable(s.info)).map { s =>
       s.descriptor match
         case Some(d) => Signature(s.name, Some(d), arityOf(s.info), approximate = false)
-        // D2's identity is the source; this is the residue it names — an EXTERNAL member the
+        // The identity is the source; this is the residue it names — an EXTERNAL member the
         // frontend could not resolve, or one the ENGINE minted after the frontend ran. The edge is
         // still taken (refusing it would silently drop half a component) and it is REPORTED.
         case scala.None =>
@@ -170,7 +170,7 @@ final class OverrideGraph private (
 
   /** `sig`, declared in `ancestor`, spelled as the descendant `from` sees it. A descriptor spells a parameter by SIMPLE NAME, so java's one member (JLS 8.4.2) resolved through two type-parameter
     * spellings compares as two strings; this substitutes through the `extends` clause (EXACT, `ParentSubst`'s own claim, resolved by symbol not name). Only ADDS edges — tried second, after the
-    * unsubstituted comparison, since a lost edge SHRINKS a closure (DESIGN.md §8.5).
+    * unsubstituted comparison, since a lost edge SHRINKS a closure.
     */
   private def asSeenFrom(sig: Signature, ancestor: SymId, from: SymId): Signature =
     val byName = tparamSpelling(ancestor, from)
@@ -231,8 +231,7 @@ final class OverrideGraph private (
 
   private val descendantsCache = collection.mutable.Map.empty[SymId, List[SymId]]
 
-  /** the closure members this module does not OWN — a dependent's `Program` contains its base (`ENGINE-LIMITS.md` D2), and renaming a base's declaration from a dependent emits a second, disagreeing
-    * definition of it.
+  /** the closure members this module does not OWN — a dependent's `Program` contains its base, and renaming a base's declaration from a dependent emits a second, disagreeing definition of it.
     */
   private def baseAnchorsIn(ms: Set[SymId]): Set[SymId] =
     if baseUnits.isEmpty then Set.empty else ms.filter(m => baseUnits.contains(unitOf(m)))
@@ -252,7 +251,7 @@ object OverrideGraph:
     */
   final private[tir] case class Node(sym: SymId, parents: List[SymId], members: List[SymId], parentTypes: List[TypeRepr] = Nil)
 
-  /** A member's identity as an EDGE, keyed on name and parameter spelling. `arity` is the D1 fallback used only when one side has no descriptor, so a component is never silently split — and
+  /** A member's identity as an EDGE, keyed on name and parameter spelling. `arity` is the fallback used only when one side has no descriptor, so a component is never silently split — and
     * [[Signature.approximate]] marks it so nothing downstream mistakes it for exact.
     */
   final case class Signature(name: String, descriptor: Option[Descriptor], arity: Int, approximate: Boolean):
@@ -264,8 +263,8 @@ object OverrideGraph:
         case _                  => arity == that.arity)
 
   /** WHAT MUST CHANGE TOGETHER, and what forbids changing it. @param members every declaration this program has for the component, `m` included @param externalAnchors `(type FQN, member name)` for a
-    * parent this program never parsed whose surface could not rule the member out — non-empty means the component cannot move @param baseAnchors members owned by a RESOLUTION ROOT (D2) @param
-    * approximate members whose edge was taken by NAME+ARITY, reported.
+    * parent this program never parsed whose surface could not rule the member out — non-empty means the component cannot move @param baseAnchors members owned by a RESOLUTION ROOT @param approximate
+    * members whose edge was taken by NAME+ARITY, reported.
     */
   final case class Closure(
     members:         Set[SymId],
@@ -309,14 +308,14 @@ object OverrideGraph:
     given Program = p
     val collector = new Collector
     p.units.foreach(u => StandardTraversal.mapClassDef(collector, u))
-    // Interned classpath types participate in ancestry resolution (K18).
+    // Interned classpath types participate in ancestry resolution.
     p.internedDefs.foreach(u => StandardTraversal.mapClassDef(collector, u))
     val nodes    = collector.nodes.map(n => n.sym -> n).toMap
     val children = nodes.values.toList.flatMap(n => n.parents.map(_ -> n.sym)).groupMap(_._1)(_._2).view.mapValues(_.distinct).toMap
     new OverrideGraph(p, nodes, children, external, baseUnits)
 
   /** The walk. A `Phase` driven by [[StandardTraversal]] rather than a private recursion, so an anonymous-class body is a node by construction and a node kind added tomorrow is reached without an
-    * edit here (CLAUDE.md §3). It rewrites nothing — the rebuilt tree is thrown away, which costs one allocation per node and buys the coverage guarantee.
+    * edit here. It rewrites nothing — the rebuilt tree is thrown away, which costs one allocation per node and buys the coverage guarantee.
     */
   final private class Collector extends Phase:
     def name: String = "override-graph/build"
@@ -351,9 +350,9 @@ object OverrideGraph:
     case TypeRepr.AppliedType(tc, _) => headOf(tc)
     case _                           => scala.None
 
-/** WHAT IS KNOWN about the members of types this program did not parse — a VALUE not a predicate, so a refusal is reportable ([[RuleScope]]'s reason). Default knows `java.lang.Object` (§1a — the
-  * frontend filters it from parent lists) plus the CLOSED platform interfaces ([[ExternalSurface.jdkPlatform]]); everything else unparsed is [[mayDeclare]] = true: refuse, count, lift the day the
-  * surface is known. @param known FQN → declared members; absent = unknown, anchors.
+/** WHAT IS KNOWN about the members of types this program did not parse — a VALUE not a predicate, so a refusal is reportable ([[RuleScope]]'s reason). Default knows `java.lang.Object` (the frontend
+  * filters it from parent lists) plus the CLOSED platform interfaces ([[ExternalSurface.jdkPlatform]]); everything else unparsed is [[mayDeclare]] = true: refuse, count, lift the day the surface is
+  * known. @param known FQN → declared members; absent = unknown, anchors.
   */
 final case class ExternalSurface(known: Map[String, Set[ExternalSurface.Member]] = Map.empty):
 
@@ -405,9 +404,8 @@ object ExternalSurface:
   def javaLangObjectDeclares(sig: OverrideGraph.Signature): Boolean =
     javaLangObjectMembers.exists(_.name == sig.name)
 
-  /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is proof — CLOSED (§1a), never a demand-derived surface (`ENGINE-LIMITS.md` K12). Arity-only (over-matches
-    * toward refusal, the safe direction); a version-dependent or large surface (`Comparator`) stays deliberately ABSENT — unknown anchors. `java.lang.Enum` is deliberately absent too: stating it
-    * measured WORSE (`ENGINE-LIMITS.md` CT10, 32→41 errors).
+  /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is proof — closed, never a demand-derived surface. Arity-only (over-matches toward refusal, the safe
+    * direction); a version-dependent or large surface (`Comparator`) stays deliberately ABSENT — unknown anchors. `java.lang.Enum` is deliberately absent too: stating it measured worse.
     */
   val jdkPlatform: Map[String, Set[Member]] = Map(
     "java.io.Serializable" -> Set.empty,
@@ -427,8 +425,8 @@ object ExternalSurface:
       Member("codePoints", 0)
     ),
     "java.util.Iterator" -> Set(Member("hasNext", 0), Member("next", 0), Member("remove", 0), Member("forEachRemaining", 1))
-    // `java.lang.Enum` is NOT here, and the note above says why — it is a refusal with a number
-    // (`ENGINE-LIMITS.md` CT10), not an omission.
+    // `java.lang.Enum` is NOT here, and the note above says why — it is a refusal, not an
+    // omission.
   )
 
   /** the default: `java.lang.Object`, plus the platform interfaces whose surfaces are closed. */

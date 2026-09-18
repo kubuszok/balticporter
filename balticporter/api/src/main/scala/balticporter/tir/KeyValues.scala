@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** The ONE `k=v` payload grammar this engine writes — space-separated pairs, sorted, whitespace values quoted (CLAUDE.md §4.575). Also the port map's `shape` column (`DESIGN.md` §8.3); lives in `api`
-  * so both consumers delegate rather than restating it (§4.56). Unquoted whitespace truncates a value (measured: 594 notes reported unbacked); [[safe]] SPACES delimiter characters apart rather than
-  * rejecting, since a value carrying `/*`/`*/` could swallow the rest of the file.
+/** The one `k=v` payload grammar this engine writes — space-separated pairs, sorted, whitespace values quoted. Also the port map's `shape` column; lives in `api` so both consumers delegate rather
+  * than restating it. Unquoted whitespace would truncate a value; [[safe]] spaces delimiter characters apart rather than rejecting, since a value carrying `/*`/`*/` could swallow the rest of the
+  * file.
   */
 object KeyValues:
 
@@ -15,13 +15,13 @@ object KeyValues:
     val s = safe(v)
     if s.exists(_.isWhitespace) || s.isEmpty then "\"" + s.replace("\"", "'") + "\"" else s
 
-  /** Render a pair list. Order is the CALLER's — a porter note puts the §1 classification first and sorts the rest; a contract row sorts throughout — so this does not impose one.
+  /** Render a pair list. Order is the CALLER's — a porter note puts the classification first and sorts the rest; a contract row sorts throughout — so this does not impose one.
     */
   def render(pairs: List[(String, String)]): String =
     pairs.map((k, v) => s"$k=${value(v)}").mkString(" ")
 
-  /** …and back. Unknown keys are kept: a payload from a NEWER engine degrades to "I do not understand this key", never a parse failure (`DESIGN.md` §8.3). A malformed token (no `=`, an unclosed
-    * quote) is skipped, not thrown — one bad pair must not cost the row.
+  /** …and back. Unknown keys are kept: a payload from a newer engine degrades to "I do not understand this key", never a parse failure. A malformed token (no `=`, an unclosed quote) is skipped, not
+    * thrown — one bad pair must not cost the row.
     */
   def parse(payload: String): Map[String, String] =
     val out = collection.mutable.LinkedHashMap.empty[String, String]

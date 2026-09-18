@@ -1,6 +1,6 @@
 package balticporter.catalog
 
-/** THE GUARD RAIL THAT PROTECTS `CLAUDE.md` §1's TAXONOMY. */
+/** The guard rail that protects the universal/parameterised/library-specific taxonomy. */
 class DifferenceTakesNoParameterSpec extends munit.FunSuite:
 
   /** `scala.None` when the value is a literal or an enum case all the way down; otherwise what it was. Ordered deliberately: a PARAMETERISED enum case is both a `Product` and a `reflect.Enum` and

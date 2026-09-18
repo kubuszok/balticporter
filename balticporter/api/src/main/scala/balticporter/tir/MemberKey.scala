@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** MEMBER IDENTITY — one grammar for "which member", written once and read once. `Symbol.fullName` is `owner#name` with NO parameter list, so overload identity had FIVE independent spellings across
-  * the engine before this (118 `Ambiguous` of 263, measured). A SEPARATE FIELD rather than a fourth `fullName` separator — widening it would move every keyed artifact, and a `.`/`$` descriptor would
-  * give a rename a cut INSIDE a parameter list.
+/** Member identity — one grammar for "which member", written once and read once. `Symbol.fullName` is `owner#name` with no parameter list, so overload identity used to have several independent
+  * spellings across the engine. A separate field rather than a fourth `fullName` separator — widening it would move every keyed artifact, and a `.`/`$` descriptor would give a rename a cut inside a
+  * parameter list.
   */
 final case class MemberKey(owner: String, name: String, descriptor: Option[Descriptor]):
 
@@ -19,9 +19,9 @@ final case class MemberKey(owner: String, name: String, descriptor: Option[Descr
   /** the same member with its parameter list forgotten — what an overload SET is grouped by. */
   def bare: MemberKey = if isBare then this else copy(descriptor = None)
 
-  /** COULD THESE TWO KEYS NAME ONE MEMBER? — asked of DECLARED keys, never `equals` (a "may", before a `Program` exists). `Foo#bar` and `Foo#bar(int)` are two legal spellings of one selection when
-    * `bar` has a single overload; string comparison missed real disagreements in `ManifestAgreement` (measured). Two DISTINCT descriptors stay unrelated (injective within an overload set). Where a
-    * `Program` exists, the BINDER answers exactly instead.
+  /** Could these two keys name one member? — asked of declared keys, never `equals` (a "may", before a `Program` exists). `Foo#bar` and `Foo#bar(int)` are two legal spellings of one selection when
+    * `bar` has a single overload; string comparison missed real disagreements in `ManifestAgreement`. Two distinct descriptors stay unrelated (injective within an overload set). Where a `Program`
+    * exists, the binder answers exactly instead.
     */
   def overlaps(other: MemberKey): Boolean =
     owner == other.owner && name == other.name &&
@@ -123,8 +123,8 @@ object MemberKey:
     */
   def spell(owner: String, member: String): String = owner + "#" + member
 
-  /** [[MemberKey.overlaps]] over two DECLARED strings — what a manifest layer holds. A key outside the grammar (a TYPE key, or a typo) is compared by string, exact for the first and honest for the
-    * second: an unparseable key names nothing, so claiming an overlap would be invented (§4.6).
+  /** [[MemberKey.overlaps]] over two declared strings — what a manifest layer holds. A key outside the grammar (a type key, or a typo) is compared by string, exact for the first and honest for the
+    * second: an unparseable key names nothing, so claiming an overlap would be invented.
     */
   def mayNameSame(a: String, b: String): Boolean =
     (parse(a), parse(b)) match
@@ -167,8 +167,8 @@ enum Param:
     case Arr(of)    => of.render + "[]"
     case Unresolved => "?"
 
-  /** …the SIMPLE spelling: `java.lang.Object` is `Object`. A policy author routinely writes the qualified form (what reports show them via `Symbol.fullName`) — this removes the trap rather than
-    * documenting it. Cut only at the LAST separator (§4.56): `.` between packages/top-level type, `$` before a nested type.
+  /** …the simple spelling: `java.lang.Object` is `Object`. A policy author routinely writes the qualified form (what reports show them via `Symbol.fullName`) — this removes the trap rather than
+    * documenting it. Cut only at the last separator: `.` between packages/top-level type, `$` before a nested type.
     */
   def simple: Param = this match
     case Named(n)   => Named(n.substring(math.max(n.lastIndexOf('.'), n.lastIndexOf('$')) + 1))
@@ -218,8 +218,8 @@ object Descriptor:
   val Primitives: Set[String] =
     Set("int", "long", "short", "byte", "char", "boolean", "float", "double", "void")
 
-  /** Java's primitive at the SCALA value class the frontend interns it under (`boolean` → `scala.Boolean`, the frontend's `primName`). The spelling is read off a type's IDENTITY, never off a
-    * `Symbol.name`: an engine-minted value class carries a scala-spelled name and two symbols may share one `fullName` (CLAUDE.md §4.56, ENGINE-LIMITS D15).
+  /** Java's primitive at the Scala value class the frontend interns it under (`boolean` → `scala.Boolean`, the frontend's `primName`). The spelling is read off a type's identity, never off a
+    * `Symbol.name`: an engine-minted value class carries a scala-spelled name and two symbols may share one `fullName`.
     */
   val ValueClassPrimitives: Map[String, String] = Map(
     "scala.Boolean" -> "boolean",
@@ -259,8 +259,8 @@ object Descriptor:
     else if Primitives(spelling) then Param.Prim(spelling)
     else Param.Named(spelling)
 
-  /** The ENGINE's derivation, from a symbol's `info` — a FALLBACK, not the source: answers for a symbol interned without a declaration, or a member the engine minted. Cannot answer for `equals`:
-    * `info` is already retyped (`equals(Object)` reads `Any`), and inverting that here would duplicate the retyping rule (§4.56). `Symbol.descriptor` is consulted first where it exists.
+  /** The engine's derivation, from a symbol's `info` — a fallback, not the source: answers for a symbol interned without a declaration, or a member the engine minted. Cannot answer for `equals`:
+    * `info` is already retyped (`equals(Object)` reads `Any`), and inverting that here would duplicate the retyping rule. `Symbol.descriptor` is consulted first where it exists.
     */
   def ofInfo(program: Program, info: TypeRepr): Option[Descriptor] =
     def params(t: TypeRepr): Option[List[TypeRepr]] = t match
@@ -269,8 +269,8 @@ object Descriptor:
       case _                             => scala.None
     params(info).flatMap(ps => total(ps.map(paramOfType(program, _))))
 
-  /** ONE parameter position's spelling, from its type. Extracted from [[ofInfo]] rather than copied (§4.56: one derivation). [[OverrideGraph]] reads a PARENT's descriptor through a subclass's
-    * instantiation arguments; a second walk spelling `scala.Array[X]` differently would make the two sides of an override edge incomparable.
+  /** One parameter position's spelling, from its type. Extracted from [[ofInfo]] rather than copied (one derivation). [[OverrideGraph]] reads a parent's descriptor through a subclass's instantiation
+    * arguments; a second walk spelling `scala.Array[X]` differently would make the two sides of an override edge incomparable.
     */
   def paramOfType(program: Program, t: TypeRepr): Param =
     def nameOf(s: SymId): Param =

@@ -1,8 +1,7 @@
 package balticporter.core
 
-/** What a PARAMETERISED phase has to say about the POLICY it was handed — the CLAUDE.md §1(b) half of a rule, since a bag-of-strings policy the engine cannot type-check (a misspelled key, a stale
-  * FQN) is a silent no-op otherwise (§3's omission shape, one level up). Every finding is CLASSIFIED (fix is always the manifest, never the engine) and COLLECTED, not printed — each phase exposes
-  * [[PolicySource.policyReport]] and the orchestrator decides what to do with it.
+/** What a parameterised phase has to say about the policy it was handed, since a bag-of-strings policy the engine cannot type-check (a misspelled key, a stale FQN) is otherwise a silent no-op. Every
+  * finding is classified (fix is always the manifest, never the engine) and collected, not printed — each phase exposes [[PolicySource.policyReport]] and the orchestrator decides what to do with it.
   */
 final case class PolicyFinding(
   /** the phase's `name`, or the type of the policy value for a non-phase seam. */
@@ -17,8 +16,8 @@ final case class PolicyFinding(
     */
   about: PolicyFinding.About = PolicyFinding.About.TheKey
 ):
-  /** One grep-able line that ENDS in the §1 classification, since no engine change is ever the right response to any of these. Differs by [[about]]: a finding about the KEY points at the manifest
-    * entry quoted from it; one about THIS RUN may be a BASE's inherited key, correct there, while what produced the finding is this module's own declarations.
+  /** One grep-able line that ends in the classification, since no engine change is ever the right response to any of these. Differs by [[about]]: a finding about the key points at the manifest entry
+    * quoted from it; one about this run may be a base's inherited key, correct there, while what produced the finding is this module's own declarations.
     */
   def render: String =
     s"""$phase — $setting: "$key" ${issue.label}: $detail""" + (about match
@@ -30,9 +29,9 @@ final case class PolicyFinding(
 
 object PolicyFinding:
 
-  /** WHICH QUESTION a finding answers, deciding whether a module that did not DECLARE the key may still be told about it. Independent of [[PolicyIssue]] (what the engine could PROVE): the same
-    * `Unverifiable` can be about the key's shape OR about a refusal this run's own declarations caused — the latter must not be dropped by an inherited-key filter (measured on `sge-visui`, `policy`
-    * reading 0 with 8 errors). Structural: binding-derived is about the key, running-phase about the run.
+  /** Which question a finding answers, deciding whether a module that did not declare the key may still be told about it. Independent of [[PolicyIssue]] (what the engine could prove): the same
+    * `Unverifiable` can be about the key's shape or about a refusal this run's own declarations caused — the latter must not be dropped by an inherited-key filter. Structural: binding-derived is
+    * about the key, running-phase about the run.
     */
   enum About:
     /** the declared entry is at fault — a typo, a stale name, a malformed shape. Filterable to the module that declared it, and the default.
@@ -44,7 +43,7 @@ object PolicyFinding:
       */
     case ThisRun
 
-/** Why a declared key is a finding. All three are §1(b); they differ in what the engine could prove.
+/** Why a declared key is a finding. They differ in what the engine could prove.
   */
 enum PolicyIssue(val label: String):
   /** the key matched NOTHING in the program — a typo, or policy left behind by an upstream rename. The rule silently did not run.
@@ -58,9 +57,8 @@ enum PolicyIssue(val label: String):
   /** the key or its value is not in the shape the phase documents, so it could never match. */
   case Malformed extends PolicyIssue("malformed")
 
-  /** the key BOUND to a declaration this run owns, and the thing it selected never happened — a FOURTH case distinct from [[PolicyReport.issueOf]]'s three: a `ResolutionPlan` entry can bind
-    * perfectly, name a live remedy, and still do nothing because the finding it resolves did not occur this run. Reported as `NeverMatched`/`Unverifiable` would mislead. The source-side half of
-    * CLAUDE.md §5.5's declared-beside-applied split.
+  /** the key bound to a declaration this run owns, and the thing it selected never happened — a fourth case distinct from [[PolicyReport.issueOf]]'s three: a `ResolutionPlan` entry can bind
+    * perfectly, name a live remedy, and still do nothing because the finding it resolves did not occur this run. Reported as `NeverMatched`/`Unverifiable` would mislead.
     */
   case NeverApplied extends PolicyIssue("bound, and never applied")
 
@@ -122,8 +120,8 @@ object PolicyReport:
     * manifest field, not a phase — `dependencies` has none. Key is the coordinate spelled as `dependency-coverage` findings print it.
     */
 
-  /** …and the DETAIL is the CHECK's sentence, not this function's — the reader is in one of two removable cells (`DependencyCheck.Cell`) each wanting different investigation, so this function does
-    * not get an opinion about it (`ENGINE-LIMITS.md` P8).
+  /** …and the detail is the check's sentence, not this function's — the reader is in one of two removable cells (`DependencyCheck.Cell`) each wanting different investigation, so this function does
+    * not get an opinion about it.
     */
   def fromDependencies(unneeded: Iterable[(balticporter.catalog.ArtifactDep, String)]): PolicyReport =
     PolicyReport(
@@ -149,8 +147,8 @@ object PolicyReport:
       case NotBound.Malformed(_)       => PolicyIssue.Malformed
       case NotBound.SyntheticTarget(_) => PolicyIssue.Malformed
 
-/** Implemented by every §1(b) seam — a phase taking a policy parameter, or a policy VALUE like [[Substitutions]] consulted rather than run. Report a no-op policy, never a no-op run. Reading is cheap,
-  * side-effect free, reflects the LAST run; empty policy in, empty report out (§1b).
+/** Implemented by every parameterised seam — a phase taking a policy parameter, or a policy value like [[Substitutions]] consulted rather than run. Report a no-op policy, never a no-op run. Reading
+  * is cheap, side-effect free, reflects the last run; empty policy in, empty report out.
   */
 trait PolicySource:
   def policyReport: PolicyReport

@@ -1,8 +1,8 @@
 package balticporter.tir
 
-/** WHERE a generic rewriting rule applies — the CLAUDE.md §1(b) half of every retyping phase. `Everywhere(except)`/`Only(include)`, default `Everywhere(Set.empty)` (no-op). Matched by FULLY-QUALIFIED
-  * NAME cut at a SEPARATOR (`.`/`$`/`#`, §4.56), through OWNERS not name alone (a local/parameter's own `fullName` is unusable), and only against symbols the program OWNS (an external match fires
-  * silently). NOT a predicate — [[neverFired]] needs DECLARED entries.
+/** Where a generic rewriting rule applies — the parameterised half of every retyping phase. `Everywhere(except)`/`Only(include)`, default `Everywhere(Set.empty)` (no-op). Matched by fully-qualified
+  * name cut at a separator (`.`/`$`/`#`), through owners not name alone (a local/parameter's own `fullName` is unusable), and only against symbols the program owns (an external match fires silently).
+  * Not a predicate — [[neverFired]] needs declared entries.
   */
 enum RuleScope:
 
@@ -28,10 +28,10 @@ enum RuleScope:
     case Everywhere(except) => except.isEmpty
     case Only(_)            => false
 
-  /** the DECLARED ENTRY that names `fullName`, longest first — or `None` if no entry does.
+  /** the declared entry that names `fullName`, longest first — or `None` if no entry does.
     *
     * Longest wins so that a port can write a package and then carve one type out of it in the other direction; the entry returned is the one a `PolicyFinding` and a `Reason.Configured` key must
-    * quote, because it is the string an agent edits (CLAUDE.md §4.575).
+    * quote, because it is the string an agent edits.
     */
   def entryFor(fullName: String): Option[String] = RuleScope.longestPrefix(fullName, entries)
 
@@ -57,7 +57,7 @@ enum RuleScope:
     case Everywhere(_) => entryFor(program, sym).isEmpty
     case Only(_)       => entryFor(program, sym).isDefined
 
-  /** Declared entries that named nothing in this run — the §1(b) silent-no-op report. `fired` is what the phase OBSERVED matching — a key naming nothing is a typo or leftover upstream-rename policy,
+  /** Declared entries that named nothing in this run — a silent-no-op report. `fired` is what the phase observed matching — a key naming nothing is a typo or leftover upstream-rename policy,
     * invisible to every count otherwise. The phase builds `PolicyFinding`s, not this value: `core` depends on `tir`, not vice versa.
     */
   def neverFired(fired: Set[String]): Set[String] = entries -- fired
@@ -74,13 +74,13 @@ object RuleScope:
   /** the whole program, nothing excluded — the default for every phase that takes a scope. */
   val everywhere: RuleScope = Everywhere(Set.empty)
 
-  /** the three separators `Symbol.fullName` uses: `.` between packages and the top-level type, `$` before a nested type, `#` before a member (CLAUDE.md §4.56).
+  /** the three separators `Symbol.fullName` uses: `.` between packages and the top-level type, `$` before a nested type, `#` before a member.
     */
   def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
 
-  /** Does this symbol's OWN `fullName` place it, or is the owner chain the only evidence there is? STRUCTURAL (§4.56): under a METHOD owner a name places the symbol only when it is the owner's own
-    * `fullName` plus `#name` — a PARAMETER as the frontend names it (`Class#m#p`, the spelling a hint uses, so a scope can fence ONE parameter). A method-LOCAL's SIMPLE NAME (`items` matches every
-    * local so called) and a nameless `?#p` identify nothing and are never consulted.
+  /** Does this symbol's own `fullName` place it, or is the owner chain the only evidence there is? Structural: under a method owner a name places the symbol only when it is the owner's own `fullName`
+    * plus `#name` — a parameter as the frontend names it (`Class#m#p`, the spelling a hint uses, so a scope can fence one parameter). A method-local's simple name (`items` matches every local so
+    * called) and a nameless `?#p` identify nothing and are never consulted.
     */
   def placedByOwnName(program: Program, sym: Symbol): Boolean =
     program.symbolOf(sym.owner) match
@@ -88,8 +88,8 @@ object RuleScope:
         sym.fullName == o.fullName + "#" + sym.name
       case _ => true
 
-  /** does `prefix` — a package, a type or a member FQN — NAME `fullName`? The whole §4.56 trap in one line: a bare `startsWith` makes `com.foo` cover `com.foobar`, silently, with a green compile —
-    * the cut must land on a separator or end-of-string. An EMPTY prefix names nothing rather than everything (a stray comma must not swallow the whole port).
+  /** does `prefix` — a package, a type or a member FQN — name `fullName`? A bare `startsWith` would make `com.foo` cover `com.foobar`, silently, with a green compile — the cut must land on a
+    * separator or end-of-string. An empty prefix names nothing rather than everything (a stray comma must not swallow the whole port).
     */
   def covers(fullName: String, prefix: String): Boolean =
     prefix.nonEmpty && fullName.startsWith(prefix) &&
@@ -100,8 +100,8 @@ object RuleScope:
   def longestPrefix(fullName: String, prefixes: Set[String]): Option[String] =
     prefixes.filter(covers(fullName, _)).maxByOption(_.length)
 
-  /** Can NO fully-qualified name be inside both scopes? Two `Everywhere`s always overlap, since each covers the whole program bar a finite set; an `Only` avoids an `Everywhere` exactly when every
-    * entry it names is excluded there. Cut at a separator, as everything here is (§4.56).
+  /** Can no fully-qualified name be inside both scopes? Two `Everywhere`s always overlap, since each covers the whole program bar a finite set; an `Only` avoids an `Everywhere` exactly when every
+    * entry it names is excluded there. Cut at a separator, as everything here is.
     */
   def disjoint(a: RuleScope, b: RuleScope): Boolean = (a, b) match
     case (Everywhere(_), Everywhere(_))      => false

@@ -105,7 +105,7 @@ class MemberKeySpec extends munit.FunSuite:
     assert(clue(why("com.foo.Bar#baz(int,)")).contains("empty parameter"))
     assert(clue(why("com.foo.Bar#baz(int,,String)")).contains("empty parameter"))
     // A key with two `#`s now splits at the LAST one — `com.foo.Bar#b#z` is owner `com.foo.Bar#b`,
-    // member `z`. This is how an enum constant's body member is named (T23).
+    // member `z`. This is how an enum constant's body member is named.
     assertEquals(clue(MemberKey.parse("com.foo.Bar#b#z")), Right(MemberKey("com.foo.Bar#b", "z", scala.None)))
     assert(clue(why("com.foo.Bar#baz(?)")).contains("unreadable"))
   }
@@ -153,7 +153,7 @@ class MemberKeySpec extends munit.FunSuite:
     assertEquals(Param.Named("Entry").simple, Param.Named("Entry"))
     assertEquals(Param.Arr(Param.Named("java.lang.String")).simple, Param.Arr(Param.Named("String")))
     assertEquals(Param.Prim("int").simple, Param.Prim("int"))
-    // a prefix is not a separator: `com.foobar.X` cuts at its own last one (§4.56)
+    // a prefix is not a separator: `com.foobar.X` cuts at its own last one
     assertEquals(Param.Named("com.foobar.X").simple, Param.Named("X"))
   }
 
@@ -170,8 +170,8 @@ class MemberKeySpec extends munit.FunSuite:
   // D-c: the spelling is a function of the TYPE, not of a `Symbol.name`
   // -------------------------------------------------------------------------
 
-  /** A program holding both spellings of one value class: the frontend interns java's `boolean` under the scala fullName with java's own simple name, while a phase that MINTS the same type names it
-    * `Boolean`. Two symbols, one `fullName` — `ENGINE-LIMITS.md` D15.
+  /** A program holding both spellings of one value class: the frontend interns java's `boolean` under the scala fullName with java's own simple name, while a phase that mints the same type names it
+    * `Boolean`. Two symbols, one `fullName`.
     */
   private def twoBooleans: (Program, SymId, SymId, SymId) =
     val fromJava = Symbol(SymId(1), "boolean", "scala.Boolean", Flags(), SymId.None, TypeRepr.NoType)

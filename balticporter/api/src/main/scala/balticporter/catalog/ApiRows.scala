@@ -136,11 +136,11 @@ object ApiRows:
   // `scala-crypto` for 2.12 and 2.13, JVM and sjs1, and for no Scala 3 at all. The cross kind is
   // right and the ADVICE is not usable as it stands — recorded here and in the two rows that name
   // it rather than silently corrected, because inventing a replacement artifact is the one thing a
-  // survey row may not do (CLAUDE.md §4.6: an answer the caller cannot tell from a real one).
+  // survey row may not do: an invented answer, the caller cannot tell from a real one.
   private val CrossCrypto = ArtifactDep("com.dedipresta", "scala-crypto", "1.0.0", CrossKind.Platform)
-  // …and the sixth is the first coordinate this engine's own maintainer publishes (DESIGN.md
-  // §8.19): a cross-platform stand-in for a JDK family that EXISTS on all three backends with
-  // DIFFERENT mechanics. `%%%`, and the first to need a RESOLVER (Central Portal SNAPSHOT only).
+  // …and the sixth is the first coordinate this engine's own maintainer publishes: a
+  // cross-platform stand-in for a JDK family that EXISTS on all three backends with DIFFERENT
+  // mechanics. `%%%`, and the first to need a RESOLVER (Central Portal SNAPSHOT only).
   // THE REVISION IS PROVISIONAL until multiarch-scala's next release; the check matches on
   // organisation and NAME, never revision, so a port pinning either is covered.
   private val MultiArchSpi = ArtifactDep(
@@ -942,9 +942,9 @@ object ApiRows:
       JsNative,
       "covers Class.forName, Method.invoke, the Field accessors and Constructor.newInstance; the Native link failure was measured directly and fixed by per-platform substitution"
     ),
-    // THE AVAILABILITY HALVES STILL DISAGREE and the VERDICTS no longer do (DESIGN.md §8.19): JS
-    // has no class to reference, Native's `load` is a LINK-TIME INTRINSIC accepting only a literal
-    // `classOf`, so no `Class`-taking API can delegate to it and generic lookup cannot reach it.
+    // THE AVAILABILITY HALVES STILL DISAGREE and the VERDICTS no longer do: JS has no class to
+    // reference, Native's `load` is a LINK-TIME INTRINSIC accepting only a literal `classOf`, so
+    // no `Class`-taking API can delegate to it and generic lookup cannot reach it.
     row(
       p(25),
       "java.util.ServiceLoader",

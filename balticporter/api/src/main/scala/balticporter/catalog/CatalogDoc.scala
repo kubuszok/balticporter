@@ -1,7 +1,7 @@
 package balticporter.catalog
 
-/** Renders the registry as markdown — `just catalog`. THE OUTPUT IS A BUILD PRODUCT: committed it would be a seventh document nobody loads (§3.6) that disagrees with the code it came from, so it goes
-  * to `.balticporter/` (gitignored, CLAUDE.md §5.5). Writes to stdout, letting the caller redirect — a renderer that owns a path has a second opinion about where the answer lives.
+/** Renders the registry as markdown — `just catalog`. The output is a build product: committed it would be a document nobody loads that disagrees with the code it came from, so it goes to
+  * `.balticporter/` (gitignored). Writes to stdout, letting the caller redirect — a renderer that owns a path has a second opinion about where the answer lives.
   */
 object CatalogDoc:
 

@@ -1,14 +1,14 @@
 package balticporter.tir
 
-/** ONE opaque type a port wants — MINTED by the phase, or TARGETING an existing/injected type — as a value (§4.45). MINT (default): synthesises `<fqn>.T` with `apply`/`unwrap`. EXISTING
-  * (`ENGINE-LIMITS.md` O6): retargets to a type `Substitutions` already ships, via a companion `apply`/unwrap contract. `hints`/`extraHints` are exact FQN seeds (§1c, renderable — O4); `scope` FENCES
-  * propagation — an `extraHints` entry outside it is reported, never silent.
+/** One opaque type a port wants — minted by the phase, or targeting an existing/injected type — as a value. Mint (default): synthesises `<fqn>.T` with `apply`/`unwrap`. Existing: retargets to a type
+  * `Substitutions` already ships, via a companion `apply`/unwrap contract. `hints`/`extraHints` are exact FQN seeds; `scope` fences propagation — an `extraHints` entry outside it is reported, never
+  * silent.
   */
 final case class OpaqueSpec(
   /** the generated `object`'s fully-qualified name (Mint) or the java class being replaced (Existing). Used as the phase name key and fingerprint identifier in both forms.
     */
   fqn: String,
-  /** the port's own seed set — exact FQNs matched against `Symbol.fullName`. §1(c). */
+  /** the port's own seed set — exact FQNs matched against `Symbol.fullName`. */
   hints: Set[String] = Set.empty,
   /** what the opaque type is a view OF. */
   underlying: OpaqueSpec.Primitive = OpaqueSpec.Primitive.Int,
@@ -16,16 +16,16 @@ final case class OpaqueSpec(
   extraHints: Set[String] = Set.empty,
   /** where seeding and propagation may reach. `Everywhere()` fences nothing. */
   scope: RuleScope = RuleScope.Everywhere(),
-  /** whether the phase MINTS a new opaque type or TARGETS an existing/injected one. `Mint` (default) synthesises the companion; `Existing(typeFqn, wrapName, unwrapName)` retypes against a type that
-    * already exists (`ENGINE-LIMITS.md` O6 CLOSED).
+  /** whether the phase mints a new opaque type or targets an existing/injected one. `Mint` (default) synthesises the companion; `Existing(typeFqn, wrapName, unwrapName)` retypes against a type that
+    * already exists.
     */
   target: OpaqueSpec.Target = OpaqueSpec.Target.Mint,
-  /** also seed from the run's [[DerivedPolicy]] — the slots the REFERENCE port spells at this spec's target type (`RunScope.derived`, `PROGRESS.md` §13.31 step 1). Off is the no-op.
+  /** also seed from the run's [[DerivedPolicy]] — the slots the reference port spells at this spec's target type (`RunScope.derived`). Off is the no-op.
     */
   derive: Boolean = false,
-  /** FQNs of ONE-type-parameter wrappers (a nullability carrier, `lowlevel.Nullable`) whose element may be the primitive or its boxed form: a symbol typed `Carrier[Prim]`/`Carrier[Boxed]` is taggable
-    * and retypes to `Carrier[Opaque]`, coerced through the carrier's `map`. ONE level only (`ENGINE-LIMITS.md` O3); the phase then runs after the null model, which is what puts the carrier in the
-    * program; empty is the no-op (no edge either).
+  /** FQNs of one-type-parameter wrappers (a nullability carrier, `lowlevel.Nullable`) whose element may be the primitive or its boxed form: a symbol typed `Carrier[Prim]`/`Carrier[Boxed]` is taggable
+    * and retypes to `Carrier[Opaque]`, coerced through the carrier's `map`. One level only; the phase then runs after the null model, which is what puts the carrier in the program; empty is the no-op
+    * (no edge either).
     */
   carriers: Set[String] = Set.empty
 ):
@@ -77,12 +77,12 @@ final case class OpaqueSpec(
 
 object OpaqueSpec:
 
-  /** Whether the phase MINTS the opaque type or TARGETS an existing/injected one. Mint (default): synthesises `object <fqn> { opaque type T = Prim; def apply; … }`. Existing (`ENGINE-LIMITS.md` O6):
-    * the type already exists (injected, java replaced via `Substitutions`); the phase retypes and coerces through its declared wrap/unwrap methods, minting no companion.
+  /** Whether the phase mints the opaque type or targets an existing/injected one. Mint (default): synthesises `object <fqn> { opaque type T = Prim; def apply; … }`. Existing: the type already exists
+    * (injected, java replaced via `Substitutions`); the phase retypes and coerces through its declared wrap/unwrap methods, minting no companion.
     */
   sealed trait Target
   object Target:
-    /** The phase mints the companion with `opaque type T`, `apply`, `unwrap`, and optional array coercions. This is the default and the only form that existed before O6.
+    /** The phase mints the companion with `opaque type T`, `apply`, `unwrap`, and optional array coercions. This is the default form.
       */
     case object Mint extends Target
 
@@ -124,8 +124,7 @@ object OpaqueSpec:
     case Boolean extends Primitive("scala.Boolean", "java.lang.Boolean")
 
   object Primitive:
-    /** `"scala.Int"` / `"Int"` → [[Primitive.Int]]. Anything else THROWS, naming what is available — a silently-ignored primitive would leave the phase inert with nothing said, which is the §1(b)
-      * silent-no-op failure one layer down.
+    /** `"scala.Int"` / `"Int"` → [[Primitive.Int]]. Anything else throws, naming what is available — a silently-ignored primitive would leave the phase inert with nothing said.
       */
     def fromScalaName(name: String): Primitive =
       val n = name.stripPrefix("scala.")

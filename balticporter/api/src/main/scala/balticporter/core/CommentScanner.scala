@@ -1,7 +1,7 @@
 package balticporter.core
 
 /** Lexes every comment out of a Java source file (skipping string/char literals), independent of Spoon's attachment heuristics — for the comment-preservation invariant. Lives in `core` since both the
-  * BIR and TIR paths need the same answer. Carries each comment's OFFSET: the file-leading harvest needs positional truth (a parser loses one of two leading blocks, `ENGINE-LIMITS.md` V3), and
+  * BIR and TIR paths need the same answer. Carries each comment's offset: the file-leading harvest needs positional truth (a parser attaches only one of several consecutive leading blocks), and
   * `TriviaCheck` needs a real position rather than `indexOf`'s first-occurrence match.
   */
 object CommentScanner:

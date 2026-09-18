@@ -1,7 +1,8 @@
 package balticporter.tir
 
-/** The DEPRECATED uses a declaration OWNS, for its `@nowarn("msg=deprecated")`: a call or selection of a member carrying `@Deprecated`/`@deprecated` (interned by the frontend for class-file members),
-  * lls's `orNull`, and a `val`/`def` statement's initialiser. An anonymous class's uses belong to its own members — a duplicate annotation is itself a warning under `-Wunused:nowarn`. CLAUDE.md §4.4.
+/** The deprecated uses a declaration owns, counted for its `@nowarn("msg=deprecated")`: a call or selection of a member carrying `@Deprecated`/`@deprecated` (interned by the frontend for class-file
+  * members), an `orNull` selection, and a `val`/`def` statement's initialiser. An anonymous class's uses belong to its own members — a duplicate annotation is itself a warning under
+  * `-Wunused:nowarn`.
   */
 object DeprecatedUseScan:
   private val deprecatedAnnots = Set("java.lang.Deprecated", "scala.deprecated")
