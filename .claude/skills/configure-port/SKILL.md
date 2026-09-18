@@ -124,7 +124,7 @@ Do not try to redirect this; the layout is the contract.
 build setting, never a copy: `Compile / unmanagedSourceDirectories += <checkout>/src/main/scala`
 with `unmanagedSources / excludeFilter` naming the files this port EMITS, and its suite as
 `Test / unmanagedSourceDirectories`. Copying makes `git status` unable to tell a decision from an
-artefact (§5.5), and the two halves would define the same type twice (`port-lls`, `PROGRESS.md` §13.28).
+artefact (§5.5), and the two halves would define the same type twice — measured on `port-lls`.
 
 **Name the port for its DESTINATION, not for the upstream library** (`CLAUDE.md` §2.1): the
 directory, the top-level `label` and `manifest.name` all take the id of the module the emitted
@@ -307,7 +307,10 @@ EXCLUDES the base's files from its own globs and makes the shared tree its own r
 loss). Shrinking the base out of the overlap works only with the right instrument: the helpers its sources
 still reference resolve from the upstream JAR on the frontend classpath (class-file externals) and
 are answered by the base's own policy — never by making the whole tree a resolution root, which
-asks a base contract for every type in it. `ENGINE-LIMITS.md` K43 has both measured runs.
+asks a base contract for every type in it. A base's source set is fixed first, against which types
+the reference port declares where: a base may not emit types its dependent owns, drops or reshapes,
+and an inherited whole-program scope also decides the dependent's own steps — both directions have
+been measured on real runs.
 
 ### 6.1 How MANY confs? — count DESTINATIONS, never upstream modules
 

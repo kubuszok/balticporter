@@ -25,8 +25,10 @@ Measured so far (JS 1.22.0, Native 0.5.11/0.5.12):
 - `java.net.URL`: absent on BOTH (Native ships `URI`, `URLEncoder`/`URLDecoder`,
   `MalformedURLException`). Catalog `JS-P35`; rule `java.net.URL` (both), `Class#getResource`
   (both), `Class#getResourceAsStream` (JS only — Native declares it and answers null).
-- `ThreadLocal`: class on both; `withInitial` on Native only. Spell
-  `new ThreadLocal[T] { override def initialValue(): T = e }` (K52).
+- `ThreadLocal`: class on both; `withInitial` on Native only. A Java `static final` scratch instance
+  is shared by all threads, so confine it to a `ThreadLocal` subclass overriding `initialValue`
+  rather than `withInitial`, which Scala.js lacks: spell
+  `new ThreadLocal[T] { override def initialValue(): T = e }`.
 - `java.lang.invoke` (MethodHandle): JVM only. Reflection (`Class#getMethod`…): JVM only.
 
 ## 2. Where a fact goes
@@ -46,7 +48,10 @@ Measured so far (JS 1.22.0, Native 0.5.11/0.5.12):
 
 `git -C ../sge show origin/master:<path>` — master's migration notes name the platform decision
 (`ThreadLocal … NOT the withInitial static factory (ISS-832 JS-link regression)`). Read it before
-inventing a spelling; the port emits master's spelling, the engine records why (K52, K54).
+inventing a spelling; the port emits master's spelling, and the engine records why: the `ThreadLocal`
+confinement above, and a member rename attached to a redirect of an external type (such as
+`Comparable.compareTo` to `Ordered.compare`) must bind even though the run owns no declaration of
+that type, honouring the redirect's scope.
 
 ## 4. Verify on every row before pushing
 

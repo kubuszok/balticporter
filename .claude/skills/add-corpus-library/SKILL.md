@@ -76,7 +76,8 @@ in the same words. Four things that bite:
 **When to write Scala instead.** A conf holds names and sets; it cannot hold a predicate or a rule.
 If the port needs `OpaqueSpec.hints`, a custom `Symbol => Boolean`, or a §1(c) rule, you have two
 options and both are fine: write the `PortRun(...)` by hand, or ship a `TransformFactory` (§2.1) and
-keep the conf. Do NOT invent a way to say it in strings — see DESIGN.md §5.7.
+keep the conf. Do NOT invent a way to say it in strings — a predicate written as a string would be
+code the engine interprets, which is precisely what the escape hatch above exists to avoid.
 
 ### 2.01 …or the Scala program, when the port needs one
 
@@ -283,11 +284,12 @@ The shape, in order — every element of it exists because leaving it out hid so
 A dependent port compiles the base's emitted Scala and its own on ONE `scala-cli` invocation.
 Compiling the dependent alone measures nothing.
 
-**The moment the first wall of errors appears, read `ENGINE-LIMITS.md` — before designing any fix.**
-It is the measured record of what has already been tried: raw types and wildcards, constructors,
-`this` and anonymous classes, the JDK/Scala collection boundary, portability, test porting, and the
-ways the measurement itself misleads. Every entry carries its number and its direction (`13 → 28`,
-`+277`, `inert`) and says which of `CLAUDE.md` §1's three kinds a fix would be. Reading it at the end
+**The moment the first wall of errors appears, read the path-scoped rule files under `.claude/rules/`
+that cover the area you are stuck in — before designing any fix.** They are the measured record of
+what has already been tried: raw types and wildcards, constructors, `this` and anonymous classes, the
+JDK/Scala collection boundary, portability, test porting, and the ways the measurement itself
+misleads. Each rule line carries its measured numbers (`13 → 28`, `+277`, `inert`) and says which of
+`CLAUDE.md` §1's three kinds a fix would be. Reading it at the end
 is reading it too late — most of these cost a session each to re-derive. Read `CLAUDE.md` §3.5 in the
 same breath and check the reference port for the construct.
 
@@ -317,13 +319,13 @@ work.
 **Run the engine's own suite with `sbt -batch "testOnly *"` — never `sbt test`, never `testFull`.**
 Bare `sbt test` maps to `testQuick` in this build and silently reports "No tests to run", so a green
 `sbt test` has never been a gate here. And `testFull` over an unchanged tree is a cache REPLAY, not a
-run: it keys on BYTECODE, so it proves nothing about flakiness and nothing about your change
-(`ENGINE-LIMITS.md` M5.7).
+run: sbt 2 caches test results, so it keys on BYTECODE and replays the previous outcome without
+executing anything, proving nothing about flakiness and nothing about your change.
 
-## 6. Write it down — in `PROGRESS.md`, as a new section
+## 6. Write it down — in the right home, not a new file
 
-**Do not create a per-library status file.** Add a section for the library to `PROGRESS.md`, beside
-the ones already there, and add its row to §Corpus inventory:
+**Do not create a per-library status file.** Record, beside the corpus inventory that already
+tracks every other library:
 
 - measured state (errors, omissions, portability, trivia, break residue, decisions, tests) in the
   same table shape the other sections use, with the command to reproduce it
@@ -333,15 +335,17 @@ the ones already there, and add its row to §Corpus inventory:
   generalised
 
 Then split it: any dead end that is a fact about **Java, Scala 3, Spoon, dotty or the engine** goes
-into `ENGINE-LIMITS.md` — with its number, its worked example and its (a)/(b)/(c) kind — because the
-next library will be ported in a repository that never sees your measurements (`CLAUDE.md` §3.6,
-§4.45). Leave a one-line pointer where you lifted it; the measurement stays. If your library
-confirmed, contradicted or generalised an existing entry, **say so in that entry** — a limit that
+into the fitting `.claude/rules/<area>.md` file, as one rule line with its measured numbers and its
+(a)/(b)/(c) kind — because the
+next library will be ported in a repository that never sees your own measurements (`CLAUDE.md` §3.6,
+§4.45). If your library
+confirmed, contradicted or generalised an existing rule line, **say so on that line** — a limit that
 survives a second library is stronger evidence than the one that first recorded it.
 
 Research and scratch files stay under gitignored `.balticporter/` and are **never committed**
-(`CLAUDE.md` §3.7). Incorporate what they found into `DESIGN.md` (a decision) or `PROGRESS.md`
-(state) before calling the work done, then delete them. And maintain the remaining-work list by
+(`CLAUDE.md` §3.7). Incorporate what they found into the fitting home (a rule file for a measured
+limit, a skill for a procedure, the state notes for a port) before calling the work done, then delete
+them. And maintain the remaining-work list by
 DELETION — a done item is removed, not moved to a "done" section.
 
 ## 7. Hand off to the Auditor

@@ -40,7 +40,9 @@ name, a type's kind or its package is the same fact, so `SurfacePolicy` is owed 
 parameters a reader could point at in the emitted signatures. `TestFrameworkTransform` owed it for
 two (`suite`, `testMember`). Nothing reports the omission: `PortManifest.fingerprint` falls back to
 the phase NAME, under which two configurations compare EQUAL, so `SurfaceMissing` cannot see the
-difference and a same-name pair can be neither compared nor composed (`ENGINE-LIMITS.md` CT9).
+difference and a same-name pair can be neither compared nor composed. A phase's policy must be
+part of its fingerprint, and a refused policy merge must stop the run, or two differently
+configured instances look equal by name and only one silently runs.
 
 ## The fingerprint no-op rule
 
@@ -58,9 +60,11 @@ contributes — so the arrival is flat BY CONSTRUCTION and the corpus run confir
   the reference node's type, so a check reading node types reports ZERO on exactly the seam the scope
   made.
 - The same seam exists at every EXTERNAL CALLEE, scope or no scope — a class file's signature no
-  phase can move — and it is not JDK-only: a third party's parser returning a `java.util.List` is the
-  same shape. Measured at 15 errors against 0 findings on one third-party package (K15). Where the
-  phase can wrap at the seam it must; where the FORMAL is unknowable it counts, and says which.
+  phase can move, so every value crossing to or from it is bridged toward what the class file
+  declares, and each crossing is counted — and it is not JDK-only: a third party's parser returning a
+  `java.util.List` is the same shape. Measured at 15 errors against 0 findings on one third-party
+  package. Where the phase can wrap at the seam it must; where the FORMAL is unknowable it counts,
+  and says which.
 - The REWRITE reads the receiver the same way, through the same function. Keyed on the node type it
   fires against the JDK type the declaration kept (`b.raw ++= mine` on a `java.util.List`).
 - A formal that stays JAVA is read LITERALLY, never through the phase's own remap: read through
@@ -80,20 +84,24 @@ DERIVES what it moved by comparing each owned symbol's `info` across the phase. 
 what it retyped, because that is the one number it could be wrong about. `rewrite-callsites` reports
 a phase that moved declarations and names no lane, and a phase naming a lane that did not RECORD this
 run. It counts PHASES, not usages — the generic `usagesOf(s) \ callSites` form is not the boundary
-counts (K5.10; its first run named two retyping phases that had never answered).
+counts; its first run named two retyping phases that had never answered.
 
 ## Obligations the engine's own translation created
 
 - **A drop key is a statement about the LIBRARY's surface.** Where the member is one an emitted
   PARENT declares, dropping it breaks an obligation — the class needs to be abstract, and nothing
-  reports that before 0 typer errors (§3). When the residue exists BECAUSE a phase emitted a parent,
+  reports that before 0 typer errors (§3). An obligation the engine's own translation creates belongs
+  to the phase, never to a port's drop key: when the residue exists BECAUSE a phase emitted a parent,
   chose a name or retyped a field, the answer is the phase's; where no translation exists, emit the
   JAVA CONTRACT'S OWN refusal (`UnsupportedOperationException` at an optional operation), louder than
-  java and never quieter. One `Not Found` traded for one `needs to be abstract` (K5.7).
+  java and never quieter. One `Not Found` traded for one `needs to be abstract`.
 - **A MODIFIER is part of what a re-parenting moved.** `override` was justified by JAVA's resolved
   hierarchy; after a re-parenting scalac reads `overrides nothing` at a perfect translation — 73 of
-  one port's 131 `RefChecks` rows (K28). The phase that moved the parent owes the modifier; state
-  the target's overridable surface as a TABLE, admissible because both errors are loud.
+  one port's 131 `RefChecks` rows. When a class is re-parented onto a Scala collection, the new
+  parent's members sit beside Java's own and fail override checks that only run after typer errors
+  reach zero; the phase that moved the parent owes the modifier and resolves these clashes itself,
+  never through port policy; state the target's overridable surface as a TABLE, admissible because
+  both errors are loud.
 - **The guard for *does the port emit the far side itself* is the LOOSER key** — name and arity,
   not the parameter spelling (java permutes type-parameter names across an override): 77 strips
   against 71 errors closed, read against each other.
@@ -106,7 +114,7 @@ counts (K5.10; its first run named two retyping phases that had never answered).
 - **A refusal SUBSTITUTED FOR A BODY is licensed by the defect the phase caused, never by the member
   it sits on.** Match by SIGNATURE (a class implementing `Map.Entry` may declare `setValue(int, int)`
   beside it), and check the TRANSLATED body still references something the mapping removed; record
-  what the substitution BROKE on the decision (K5.7's correction).
+  what the substitution BROKE on the decision.
 - **A SYNTHESIS asks the same question.** A record's derived `equals` is skipped when the class
   "already has it" by (name, arity) — exact for arity-0, wrong for `equals(String)`; the fallback is
   REFERENCE equality at a green compile. Ask what the derived member would COLLIDE with in the SCOPE
@@ -116,7 +124,7 @@ counts (K5.10; its first run named two retyping phases that had never answered).
 
 A test suite, a `ServiceLoader` implementation, a bean: the closure sees no `new`, concludes nothing
 must be fixed, and a parameter added to one compiles perfectly and cannot be constructed at run time
-— 0 scalac errors, a whole suite silently gone (CT7). A constructor-changing phase owes a third
+— 0 scalac errors, a whole suite silently gone. A constructor-changing phase owes a third
 answer beside attach and refuse: *this declaration takes the value without taking a parameter*, and
 where that value comes from is a port's to say (a hand-written file may carry a `given`).
 
@@ -127,7 +135,7 @@ where that value comes from is a port's to say (a hand-written file may carry a 
 - **An escape hatch that takes an EXPRESSION owes the program a way to write one.** Ask *is there no
   value, or no NAME?* Where the value exists in a constructor parameter, the fix is one member — let
   the threaded type KEEP what it was given under a port-chosen name — scoped `Only(Set.empty)`
-  (PROGRESS §10.8.11; the hand port had written that member by hand).
+  (the hand port had written that member by hand).
 - **Asked a SECOND TIME the answer differs, because WHERE THE CLAUSE ATTACHED decides what a name
   means.** An all-`static` lifecycle class takes its clause on METHODS; the answer is a HOLDER the
   method assigns and an accessor that THROWS when nothing has captured one yet. Two keys, not one
@@ -136,25 +144,34 @@ where that value comes from is a port's to say (a hand-written file may carry a 
 
 ## Refusal enumeration (§3)
 
-- An idiom transformer has no DIFFERENCE mandate (`DESIGN.md` §8.15): the faithful translation
-  exists, so a green suite is what it produces either way. Enumerate the behavioural deltas; each is
+- An idiom transformer is not asked to explain a behavioural difference from java: the faithful
+  translation exists, so a green suite is what it produces either way. Enumerate the behavioural deltas; each is
   (i) guarded, (ii) impossible by the emitted SHAPE, or (iii) COUNTED — one lane row per declined
   site NAMING THE GUARD. `refused = 0` is a bar met by converting nothing.
 - The wave's `members.tsv` blast is CLASSIFIED: every moved digest attributed to a recorded
   `Decision`, a rewritten call site or a changed note; the residue is EMPTY. The SAM wiring came
-  back with two members explained by nothing — an emitted NAME keyed on a program-global counter (M10).
-- **"Refuse loudly" is a claim about the emitted text.** A bare `return` under a function literal is
-  scala's NON-LOCAL RETURN — three in libGDX core at 0 errors (M6). Count the refusal when written.
+  back with two members explained by nothing — an emitted NAME keyed on a program-global counter;
+  emitted identifiers must not depend on the symbol mint counter, or one unrelated change renames
+  many members, so a disambiguator is keyed on what Java itself overloads on and the per-member
+  digest comparison stays meaningful.
+- **"Refuse loudly" is a claim about the emitted text.** Where the untranslated form is also valid
+  Scala the compiler will not flag it, so the refusal must be counted when written, not just left
+  approximated: a bare `return` under a function literal is
+  scala's NON-LOCAL RETURN — three in libGDX core at 0 errors. Count the refusal when written.
 - **A repair at the USE cannot discharge the DECLARATION's obligation.** An F-bounded result pinned
   at the call left the OVERRIDE EDGE (JLS 8.4.2 erasure override) unmeasured for six waves; stating
-  the type at the declaration closed 8 of 42 `RefChecks` rows and `overload-risk` fell 6 (G8.7 → G8.10).
+  the type at the declaration closed 8 of 42 `RefChecks` rows and `overload-risk` fell 6. Where a
+  call's result is one of the method's own unconstrained F-bounded type variables, ascribe the
+  receiver its static type rather than a type argument (an ascription need not satisfy the bound);
+  and because Java lets an implementor drop an F-bounded type parameter that appears only in the
+  result while Scala has no such rule, erase that parameter at the declaration.
 - **A new arm for an existing node kind inherits that node's obligations.** `catalog(undischarged)`
   `5 -> 7` the first time an emitter arm was added for a phase-minted `Tree.Typed`; discharge
   not-fired — `None` is a FACT there, not a default.
 - **A refusal predicate reads a SHAPE, and every shape it does not recognise is counted as a WALL.**
   `CtorFunnel.supersedes` recognised `this.f = <e>` and nothing else, refused a parent constructor
   whose body is one `Tree.If`, and every renderer was built with no options — 42 CommonMark examples
-  wrong at 0 errors (C3's correction). Read a refusal lane as a POPULATION: sample the sites. A
+  wrong at 0 errors. Read a refusal lane as a POPULATION: sample the sites. A
   predicate asked in TWO DIRECTIONS needs TWO functions — MAY-assign (branch UNION) on the prologue
   side, MUST-assign (INTERSECTION) on the replay side.
 
@@ -175,29 +192,46 @@ given` every time). Where the mechanism's prose has a word for a population its 
 lane is one kind short. A split is flat by construction (rows and count unchanged, `findings.tsv`
 sees the kind); the screen is *would a reader act differently*.
 
-## Rule lines moved out of the archive (2026-09-16; ids kept)
+## More measured rules
 
-- **K52** a `static final` scratch instance is one object per class: `ThreadConfinedStaticsTransform(fields)`
+- A `T | Null` union is not accepted where an abstract type parameter `T` is expected, so a nullable
+  value at a type-parameter slot must use a named wrapper type instead of the union target.
+- An opaque type that replaces a Java class is retyped against an already injected opaque type
+  instead of minting a new one; nested classes and classes with constructors or fields are not
+  supported by this mechanism.
+- An opaque coercion must look through composite terms such as `if` branches to find the retyped
+  reference underneath; the node kinds treated as carriers are enumerated explicitly, and a missed
+  one is a compile error, not a silent skip.
+- A dependent module may add context-threading policy for its own types (`globals-to-implicits`),
+  while the shared part of that policy is inherited from the base and may not be restated.
+- A class for which no primary constructor is promoted or synthesised still needs a primary that
+  hosts only the `using` context clause, otherwise its body has no context in scope.
+- A constructor can carry a `using` clause: the constructor plan must keep given parameters apart
+  from value parameters, so the clause is neither flattened into them nor mistaken for one.
+- A rule needed at two dispatch sites must be one shared function: a narrowing coercion (Java's
+  narrowing cast on a compound assignment, `b += 3` on a `byte`) applied to the statement form only
+  and left the expression form with the same defect silently unfixed.
+- A `static final` scratch instance is one object per class: `ThreadConfinedStaticsTransform(fields)`
   emits `new ThreadLocal[T] { override def initialValue(): T = e }` as trees — never text, never
   `withInitial` (absent from the Scala.js javalib). Four counted guards: not static, not final, assigned
   after init, initialiser not a fresh allocation.
-- **K53** a derived seed is exact, so a java STATIC whose reference twin is `extension (a: T) def m`
+- A derived seed is exact, so a java STATIC whose reference twin is `extension (a: T) def m`
   derives its slot from `SurfaceDecl.receiver` as parameter 0 (`slotTypes`); never for an instance method.
-- **K54** a member rename on an EXTERNAL redirected type: hits are the owned overrides whose closure is
+- A member rename on an EXTERNAL redirected type: hits are the owned overrides whose closure is
   anchored on `(source, member)`, within the redirect's scope, each request `detachedParents = Set(source)`.
   A second unknown parent's surface is PORT policy (`TypeRedirectTransform(external = default ++ …)`),
   never a new closed platform row. Walk such a policy on a spec before regenerating a consumer.
-- **K55** under a named/Option null target a boxed element is the primitive (`Nullable[Int]`); union keeps
+- Under a named/Option null target a boxed element is the primitive (`Nullable[Int]`); union keeps
   the box. A wrapper over the box and over the primitive are one slot (`sameSlot`) — no ascription
   between them. A field's derived rows are keyed `fullName:field`; a qualified-private reference member
   is a derivation input, not a compared surface; a package-private java FIELD the reference ships public
   derives a `Public` row.
 - The bean fold's `setterOnly` guard reads an INHERITED getter as in scope (`graph.ancestorsOf`).
-- **K56** a mechanism that DEFERS a class initialiser (`DeferredInit`'s `$set`/`$value` holder) stands in
+- A mechanism that DEFERS a class initialiser (`DeferredInit`'s `$set`/`$value` holder) stands in
   for JLS 12.4.2's class-init LOCK as well as its trigger: the value is assigned under the companion's
   monitor, double-checked, the flag written LAST. Only a parallel suite sees the race (sge textra 1 NPE
   -> 0 at 0 compile errors); a green serial run is no evidence.
-- **K57** a holder member mapped to a PATH through another service (`gl30 -> graphics.getGL30()`) is an
+- A holder member mapped to a PATH through another service (`gl30 -> graphics.getGL30()`) is an
   ALIAS: java's write refreshing it from that same path (`Holder.gl30 = graphics.getGL30()`) is a
   self-assignment under the mapping and is ELIDED (a `SubstitutedCall` decision on the enclosing
   declaration), never the setter's call — a hand-written setter read the absent value as a command and the
@@ -205,7 +239,7 @@ sees the kind); the screen is *would a reader act differently*.
   the setter's call. The path's `seg()` hop is a minted symbol: compare it by resolving it on the
   receiver's type, and find the elided line through the holder static's usages.
 
-- **K58** a platform limit is answered at the smallest site the REFERENCE answered it, measured first.
+- A platform limit is answered at the smallest site the REFERENCE answered it, measured first.
   Do NOT retry: shadowing a whole class on one row with upstream's per-platform emulation (libGDX's GWT
   `VertexArray`/`IndexArray` over buffer objects) — the emulation needs the context the java class does
   not take, and shared suites pin the java semantics on every row (sge JS test-compile 0 -> 27 errors).
@@ -214,19 +248,19 @@ sees the kind); the screen is *would a reader act differently*.
   platform-row directories, its classpath RESOURCES (on Scala.js an embedded-resources object of their
   own), and a masking `finally` hides the first exception — read the FIRST error, not the last.
 
-## The §1(b) phase table (moved from CLAUDE.md 2026-09-16 — loads with the transform files)
+## The §1(b) phase table (loads with the transform files)
 
 | phase(params) — mechanism | policy |
 |---|---|
 | `ClassTableTransform(redirects, scope)` — re-point a reflective name lookup at an explicit table | which method → which table, `RuleScope`; disjoint scopes compose, overlapping refuse |
 | `StaticForwarderTransform(List[Forwarder])` — a wrapper's statics are members of argument 1 | which wrapper, receiver, members |
 | `Substitutions` — do not emit these types/methods; inject this Scala instead | which ones, replacement sources |
-| `CollectionsTransform(scope, families, familyScopes, retarget, retargetRewrites, retargetRewritesByDesc, retargetTypeArgs, retargetCoercions, reifiedCarriers, reflectiveSinks, retargetIndexedFields)` — retype collections, API-map call sites; JDK table is a §1(a) constant | which declarations, which extra families (per-entry `RuleScope`, D12), which library types retarget (java FQN → scala FQN that extends the source), per-member rewrites (`Rename`, `BoolDispatch`, `Construct`, `ForEach`, `Collect`, `Chain`, `FieldWrite`, `DropWrite`, `IndexedField`, `Template`), type-arg maps, coercion templates, reified carriers (K20), reflective sinks (K21), indexed field rewrites keyed by (source, field) to avoid key collision with method rewrites. `MergeablePolicy`: independent keys union, same source/different target refuses |
-| `PrimitiveToOpaqueTransform(OpaqueSpec)` — seed, propagate along pure-move flows, retype (scalar, `Array[Prim]` and `Carrier[Prim]`, one container deep), coerce at the boundary | which primitive, name, mint site, seed FQNs as an exact `Set[String]` (O4), scope, `carriers` (one-type-parameter wrappers such as the null model's, coerced through their `map`; a spec naming one runs AFTER `nullability`, which is what puts the carrier in the program; empty = none and no edge; a carrier inside a carrier is refused and counted, O3). A formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP (`RunScope.baseMemberUpstream`), never re-derived (O8); a symbol in a unit this run does not emit is never a SEED (K51) `OpaqueSpec.derive`: also seed where the REFERENCE port (`PortManifest.parity`) spells the slot at the target type — spelling read off signatures, never behaviour (§13.31 step 1) |
+| `CollectionsTransform(scope, families, familyScopes, retarget, retargetRewrites, retargetRewritesByDesc, retargetTypeArgs, retargetCoercions, reifiedCarriers, reflectiveSinks, retargetIndexedFields)` — retype collections, API-map call sites; JDK table is a §1(a) constant | which declarations, which extra families (per-entry `RuleScope`, scoped on the entry because retyping inside a base's own declarations changes what a dependent's run derives), which library types retarget (java FQN → scala FQN that extends the source), per-member rewrites (`Rename`, `BoolDispatch`, `Construct`, `ForEach`, `Collect`, `Chain`, `FieldWrite`, `DropWrite`, `IndexedField`, `Template`), type-arg maps, coercion templates, reified carriers (a type argument a third party reads back at run time, e.g. `Class<T>`, `TypeReference<…>`, `TypeToken<…>` — not retyped, bridged at the use), reflective sinks (a retyped collection or a java-public field a third party reads back reflectively), indexed field rewrites keyed by (source, field) to avoid key collision with method rewrites. `MergeablePolicy`: independent keys union, same source/different target refuses |
+| `PrimitiveToOpaqueTransform(OpaqueSpec)` — seed, propagate along pure-move flows, retype (scalar, `Array[Prim]` and `Carrier[Prim]`, one container deep), coerce at the boundary | which primitive, name, mint site, seed FQNs as an exact `Set[String]` (data, not a predicate function, so two specs seeding the same type from different declarations produce different policy fingerprints), scope, `carriers` (one-type-parameter wrappers such as the null model's, coerced through their `map`; a spec naming one runs AFTER `nullability`, which is what puts the carrier in the program; empty = none and no edge; a carrier inside a carrier is refused and counted — only one container depth is supported). A formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP (`RunScope.baseMemberUpstream`), never re-derived — opaque propagation must follow array element reads, and a dependent must read the base's published map to know which base members were retyped before unwrapping opaque arguments; a symbol in a unit this run does not emit is never a SEED, must not treat a `using` clause as a formal, and must cast padded slots and unwrap funnelled constructor arguments on a dependent module. `OpaqueSpec.derive`: also seed where the REFERENCE port (`PortManifest.parity`) spells the slot at the target type — spelling read off signatures, never behaviour |
 | `PortabilityCheck(targets)` — match a rule against every external symbol, report each site | WHICH BACKENDS (`PortManifest.targets`); the rule list is derived from them |
 | `ApiParityCheck(ParityRef)` — parse both sides with scalameta, classify divergences by family | WHICH hand-port tree(s) (`PortManifest.parity`); `upstreamMarkers` decides which files are parties; empty = no-op `ParityRef.compare = false` keeps the tree as the DERIVATION source only (`RunScope.derived`, `derived-policy.tsv`, `derived(*)` lanes) |
 | `MemberRenameTransform(renames, derive)` — rename over the whole override component or refuse | which members, what name (symbolic emits `@targetName`); `derive` reads the reference's `TargetName`, underscore `FieldName` and parametrised-getter `Rename` rows |
-| `NullabilityTransform(annotations, target, scope, nullableMembers)` — move nullability into the type, strip annotation, coerce at seams, rewrite `== null` | which annotations, target shape (`Union`/`Named`/`OptionTarget`), `RuleScope`, `nullableMembers` exact FQNs (K13.6); `MergeablePolicy` union `deriveMembers`: also the members the reference returns wrapped |
+| `NullabilityTransform(annotations, target, scope, nullableMembers)` — move nullability into the type, strip annotation, coerce at seams, rewrite `== null` | which annotations, target shape (`Union`/`Named`/`OptionTarget`), `RuleScope`, `nullableMembers` exact FQNs (members that return null with no Java nullability annotation, listed by exact name and then treated as if annotated; empty = no-op); `MergeablePolicy` union `deriveMembers`: also the members the reference returns wrapped |
 | `BeanPropertyTransform(pairs, targets, scope)` — accessor pair → scala property over the override component, derive java-convention pairs in scope | explicit pairs, derivation scope; `Only(Set.empty)` = no-op; configured key wins; `derive`: a pair the reference keeps under its java accessor name is left alone (`KeepName` rows), one it spells as a `var`/`val` folds as if configured, fluent setter included (`Property` rows) |
 | `NullaryArityTransform(scope)` — drop `()` from getter-like nullary methods, whole-or-none per component | `RuleScope`; `Only(Set.empty)` default (it MINTS an arity) `force` exact FQNs, the whole override component following; `derive`: parenless where the reference is (its component follows), `def x()` kept where the reference keeps the parens (`KeepParens`) |
 | `ClassToTraitTransform(specs)` — abstract class → trait, ctor params → abstract vals, direct subclasses gain `override val` | `Map[fqn, List[ParamMapping]]`; `SurfacePolicy`; differing mappings refuse |
@@ -234,5 +268,5 @@ sees the kind); the screen is *would a reader act differently*.
 | `VisibilityTransform(widen, derive)` — ship a listed member PUBLIC where java declared it narrower (a signature fact on the symbol) | which members; `derive`: the reference's `Public` rows (a protected java constructor the hand port made public) |
 | `ThreadConfinedStaticsTransform(fields)` — a java `static final` SCRATCH field (one instance every thread shares) becomes a companion `def` over a `ThreadLocal` holder initialised from the java initialiser; every `Owner.f` keeps its spelling | which fields (`owner#name`); `Set.empty` = no-op; refused and COUNTED by guard: not static, not final, assigned after initialisation anywhere, initialiser not a fresh allocation. `MergeablePolicy`: independent keys union |
 | `AddMembersTransform(members, fromReference)` — splice hand-written members, or members read VERBATIM from the reference port by NAME (its imports they mention ahead), at the end of a class body, or of its COMPANION (`MemberSpec.static` — a spliced member has no symbol, so its home rides on the node) | which owners, which members, which home; `Only(Set.empty)` default; same owner+name+home refuses |
-| `RegistryTransform(entries, facadeMembers)` — reflective instantiation becomes a `Class`-keyed registry: rewrite the call, MINT the table/`register`/`create` at the placement, elide the handler the rewrite made dead | which callee, `RuleScope`, `Placement.Member`/`Object` (the three names, `T`'s bound), `seeds`, `handles`, `miss` (`Null`/`Throw`/`JvmReflect(onFailure)`, the non-JVM cost COUNTED); `Only(Set.empty)` default (it MINTS); independent callees union, one placement slot twice refuses (P10) |
-| `ElementWitnessTransform(witness, members, subjectTypes, dropBound, boxedWitness, scope)` — an array whose element is a TYPE PARAMETER is allocated/copied/cleared through a type-class WITNESS, java's implicit `Object` bound dropped and CLOSED under application, raw constructions completed, `eq`/`ne` operands ascribed | which type class, its member names, which declarations at which type-parameter indexes, whose bound goes, the boxed witness a declaration that cannot be threaded takes instead (CT7); `Only(Set.empty)` default (it MINTS a clause); independent subjects union, one subject at two index lists refuses (K41) |
+| `RegistryTransform(entries, facadeMembers)` — reflective instantiation becomes a `Class`-keyed registry: rewrite the call, MINT the table/`register`/`create` at the placement, elide the handler the rewrite made dead | which callee, `RuleScope`, `Placement.Member`/`Object` (the three names, `T`'s bound), `seeds`, `handles`, `miss` (`Null`/`Throw`/`JvmReflect(onFailure)`, the non-JVM cost COUNTED); `Only(Set.empty)` default (it MINTS); independent callees union, one placement slot twice refuses. This recurring shape ships as a phase that mints a registry into each port, never as a shared runtime support type |
+| `ElementWitnessTransform(witness, members, subjectTypes, dropBound, boxedWitness, scope)` — an array whose element is a TYPE PARAMETER is allocated/copied/cleared through a type-class WITNESS, java's implicit `Object` bound dropped and CLOSED under application, raw constructions completed, `eq`/`ne` operands ascribed | which type class, its member names, which declarations at which type-parameter indexes, whose bound goes, the boxed witness a declaration that cannot take a `using` constructor clause takes instead (a class a framework instantiates reflectively — a test suite, a service provider — keeps a no-argument constructor and holds the context as a private given member); `Only(Set.empty)` default (it MINTS a clause); independent subjects union, one subject at two index lists refuses — an open-addressed hash table reads `null` at an element slot to mean an empty slot, so its element type must keep the `Object` bound, and dropping it for primitive elements compiles but breaks probing |

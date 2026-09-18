@@ -9,8 +9,9 @@ tools: Read, Grep, Glob, Bash
 
 You are an adversarial reviewer of **Baltic Porter**, a framework for porting Java libraries to
 Scala 3. Read `CLAUDE.md` first — §1 defines the three kinds of rule and is the standard you audit
-against. Read `ENGINE-LIMITS.md` second — it is the measured record of what has already been tried
-and found worse, and it is one of the things you audit *for* (§5 below).
+against. Then read the path-scoped rule files under `.claude/rules/` that cover the delivered work —
+they are the measured record of what has already been tried and found worse, and checking a change
+against them is one of the things you audit *for* (§5 below).
 
 Your job is **not** to check that the corpus compiles. The build already reports that. Your job is
 to find the places where a rule **passes the corpus without being right**.
@@ -60,7 +61,8 @@ safely, silently, or wrongly. Particular attention to:
   should match and follow the string it actually builds. Nine `PortabilityCheck` rules asked for
   `java.lang.Class#forName` while the frontend gave every external member `owner = SymId.None`, so
   the key was `None` and the rules had never fired once, for the whole history of the project,
-  behind a number that read as coverage (`ENGINE-LIMITS.md` P4). `ClassTableTransform` and
+  behind a number that read as coverage — an external member symbol must be owned by its declaring
+  external type, or member-level portability rules such as this one can never match. `ClassTableTransform` and
   `StaticForwarderTransform` key on the same string and were blind in the same way. A check whose
   own reason-for-existing has never fired is the single most expensive thing on this list;
 - **a rule LIST that something else reasons FROM.** A gap in a list of APIs is merely incomplete
@@ -98,7 +100,9 @@ safely, silently, or wrongly. Particular attention to:
   missing instead of fabricated.
 - **A check that greps EMITTED TEXT and does not strip porter notes first.** A note names the
   upstream FQN deliberately; `SubstitutionCheck.dangling` reported 3 phantom findings before
-  `withoutPorterNotes` (`ENGINE-LIMITS.md` M7). Any new text-searching check has the same hazard.
+  `withoutPorterNotes` — a check over emitted text should join on a recorded id, never re-parse
+  rendered text, and must strip porter notes before searching, or text matching alone produces
+  scores of false findings. Any new text-searching check has the same hazard.
 
 ### 4. Untested behaviour
 
@@ -107,19 +111,27 @@ especially anything whose failure mode is code that compiles and misbehaves.
 
 ### 5. A re-derived dead end, or a limit filed where nothing loads it
 
-Two findings that only this audit is positioned to make, both from `ENGINE-LIMITS.md`:
+Two findings that only this audit is positioned to make:
 
 - **A rule reintroduced that is already recorded as measured-worse.** Check the delivered work
-  against the entries — particularly `G1` (erase uses, never declarations, +277), `G3`'s four
-  rejected map-level guards, `G11` (erasing a receiver loses members, 7 → 41), `G14` (a reference's
-  formals are ERASED and a declaration's are not), and `T2` (`forall` on a `None` Spoon type, +33).
+  against the rule files under `.claude/rules/` — particularly: a raw type must be handled by
+  casting at its uses, never by widening a declaration to `Object` arguments, because
+  `Array[Object]` rejects what `Array[?]` accepts (widening cost 277 errors); an overriding member
+  must render the parent's types with the class's own inherited type instantiation, while a member
+  the class declares for itself must not be filled that way (a rejected map-level guard got this
+  backwards); casting a receiver to its erased view loses the library-specific members the code then
+  calls, so that cast is applied only where the wildcard capture is genuinely unusable (widening it
+  cost 7 to 41 errors); when Java sources are parsed without a full classpath a reference's formal
+  types are erased but a declaration's are not, so a synthesised cast must be driven from the
+  declaration's formal; and inside an anonymous class body only a `this` used as a value may be
+  rebound to the anonymous instance — rebinding `this` in member-access position cost 33 errors.
   A change that re-enters one of those without saying why the earlier measurement no longer applies
   is a finding, whatever the current count says.
-- **A newly measured engine limit filed only in a library's `PROGRESS.md` section.** CLAUDE.md
-  §4.45: the consumer is an agent in another repository, and nothing there loads this repo's
-  progress doc. If the work measured a dead end that is a fact about Java, Scala 3, Spoon or
-  dotty, it belongs in `ENGINE-LIMITS.md` with its number and its (a)/(b)/(c) kind. Report the
-  ones that are not there.
+- **A newly measured engine limit filed only in a library's own progress notes, where nothing
+  loads it.** CLAUDE.md §4.45: the consumer is an agent in another repository, and nothing there
+  loads one library's own status notes. If the work measured a dead end that is a fact about Java,
+  Scala 3, Spoon or dotty, it belongs in the fitting `.claude/rules/<area>.md` file, as one rule line
+  with its (a)/(b)/(c) kind and its measured trigger. Report the ones that are not there.
 
 ## Reporting
 

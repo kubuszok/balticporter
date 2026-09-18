@@ -12,7 +12,7 @@ input hash, so a regeneration that emits identical text costs the migrator alone
 1. Run the one lane the change is aimed at (`just gdx-l0-measure`, `just lls-measure`, …), with
    `SGE_REF=../sge-master` exported: the Justfile's default reference is `../sge`, which is on the
    generated branch with its hand port deleted, and the derive step then seeds from a gutted tree
-   (L0 `5 -> 499` errors, all opaque-slot mismatches, 2026-09-16 — the engine had not changed).
+   (L0 `5 -> 499` errors, all opaque-slot mismatches, with the engine itself unchanged).
 2. Read, in this order, before touching anything:
    `. scripts/_lib.sh; iteration_summary port-report/<Report> <phase> <phase>`
    - **errors by member** — `run-latest/errors.tsv`, MEMBER column: a family per member, never the
@@ -28,7 +28,7 @@ input hash, so a regeneration that emits identical text costs the migrator alone
    tried on a testkit spec or a `.balticporter/` scratch program that exercises every layer (redirect
    scope, member rename, anchor binding, the anchor's own surface, hit scope) BEFORE any dependent
    port is regenerated. Discovering the layers one per regeneration cost five publish/regenerate
-   round-trips (`Comparable`→`Ordered`, 2026-09-16), about an hour, for a redirect one spec would
+   round-trips (`Comparable`→`Ordered`), about an hour, for a redirect one spec would
    have walked in minutes.
 6. Land only from a green lane: `measure-all`, the suite check, the demos, `baseline-accept` from
    that run, docs in the same commit.

@@ -14,13 +14,14 @@ WHERE something came from (**`debug-port`**).
 
 ## 0. Before you design any fix — read the record
 
-**`ENGINE-LIMITS.md` is the measured record of what has already been tried and found worse.** Read
-it when the first wall of errors appears, not at the end. Every entry carries its number and its
-direction (`13 → 28`, `+277`, `inert`) and says which of `CLAUDE.md` §1's three kinds a fix would be.
-Most of those entries cost a whole session of first-principles reasoning before a measurement settled
-them; re-deriving one is waste. It is grouped by what you are doing when you hit the wall — generics
-and raw types, constructors, `this` and anonymous classes, the JDK collection boundary, portability,
-test porting.
+**The path-scoped rule files under `.claude/rules/` are the measured record of what has already been
+tried and found worse.** Read
+the ones covering the area you're stuck in when the first wall of errors appears, not at the end. Every rule line carries its measured numbers
+(`13 → 28`, `+277`, `inert`) and says which of `CLAUDE.md` §1's three kinds a fix would be.
+Most of those rules cost a whole session of first-principles reasoning before a measurement settled
+them; re-deriving one is waste. They are grouped by what you are doing when you hit the wall — generics
+and raw types, constructors, `this` and anonymous classes, the JDK collection boundary (`collections.md`),
+emission and renaming (`emitter.md`), portability and dependents (`dependents.md`), test porting.
 
 And `CLAUDE.md` §3.5: **consult the reference port.** sge is a hand-written port of libGDX and ssg
 contains hand-ported Java libraries. `grep -rn "<the construct>" ../sge/sge/src/main/scala/` before
@@ -39,7 +40,7 @@ construct that simply vanished from sge tells you nothing except that it is stil
 
 An error an agent cannot classify costs it a full investigation, so the engine classifies where it
 can: `PortabilityCheck`, `RewriteTrace`, `PolicyReport`, every `decisions.tsv` row and every
-`ENGINE-LIMITS.md` entry carry the classification. **Bare typer errors do not**, and they are the
+recorded rule line in `.claude/rules/` carry the classification. **Bare typer errors do not**, and they are the
 bulk of a new library's first wall — which is what `errors.tsv` exists to reduce.
 
 Reach for (c) only after establishing the mechanism genuinely cannot be shared. Most things that look
@@ -100,7 +101,7 @@ Per check, what a non-zero number is telling you:
   Fix this before reading anything else; every other number is measured over a broken tree.
 - **`omissions`** — the TIR carries a construct and EMISSION loses it. **§1(a) ENGINE.** These are
   invisible to a compile; the engine says so in the report. Either fix the emitter or record the
-  limit in `ENGINE-LIMITS.md` with its number.
+  limit as a rule line in the fitting `.claude/rules/<area>.md` file, with its measured numbers.
 - **`portability(all|emitted|injected)`** — a JVM-only JDK API. **§1(b)/(c) PER-LIBRARY:** drop the
   type and inject a replacement, re-point it (`static-forwarder` / `class-table`), or accept it if
   this port targets the JVM only. `injected` non-zero means a replacement YOU shipped is unportable.
@@ -126,7 +127,9 @@ Per check, what a non-zero number is telling you:
 - **`collection-closure` / `collection-boundary` / `collection-retarget`** — a mapped supertype with
   an unmapped subtype; a stranded slot the collections phase's scope created; a value the JDK
   PRODUCES at a type the port RETARGETS, which the boundary check cannot see (the retype moved the
-  node type on both sides of that slot — `ENGINE-LIMITS.md` K14). Recorded only when that phase is
+  node type on both sides of that slot — a collection retarget only guarantees that a retyped value
+  fits a slot still declaring the Java type, so a Java-typed value handed back by the JDK into a
+  retyped slot is counted, never coerced). Recorded only when that phase is
   in the pipeline.
 
 ## 4. Policy that never fired — the silent no-op
@@ -214,7 +217,8 @@ records `expected#derived` against `expected#declared` so the two can never be c
 
 ## 7. Then, and only then, fix something
 
-Answer the (a)/(b)/(c) question for the issue, check `ENGINE-LIMITS.md` for whether it has been tried,
+Answer the (a)/(b)/(c) question for the issue, check the fitting `.claude/rules/<area>.md` file for
+whether it has been tried,
 check the reference port for what a human wrote — and go to **`customize-port`**. Change one thing,
 then measure (**`port-first-attempt`** §9).
 

@@ -98,7 +98,7 @@ What each headline number is:
 | `trivia` | comments in the Java that did not reach the Scala — a LICENCE among them. **§1(a) ENGINE** |
 | `collection-closure` | a mapped supertype with an unmapped subtype |
 | `collection-boundary` | stranded slots the collections phase's own scope created |
-| `collection-retarget` | values the JDK PRODUCES at a type the port retargets — the direction a retarget's subtyping precondition does not license (`ENGINE-LIMITS.md` K14) |
+| `collection-retarget` | values the JDK PRODUCES at a type the port retargets — the direction a retarget's subtyping precondition does not license: a collection retarget only guarantees that a retyped value fits a slot still declaring the Java type, so a Java-typed value the JDK hands back into a retyped slot is counted, never coerced |
 
 Each of those the engine classifies, it classifies IN THE OUTPUT. You do not have to guess:
 
@@ -242,11 +242,11 @@ and then hides a fifth.
   and tell you nothing about either.
 - **State counts as `before->after` in the commit subject.** `run-latest/subject.txt` is the
   fragment.
-- **Record what regressed and why**, with its number, in that library's `PROGRESS.md` section under
-  "Do NOT retry". A measured failure is a result.
+- **Record what regressed and why**, with its number, under that library's "Do NOT retry" list.
+  A measured failure is a result.
 - **Reproduce every number with the lane**, serially. A number produced by a hand-run command with a
   different `balticporter.reportPathRoot` diffs as removed-and-re-added against a baseline whose
   counts are identical.
 
-When the first wall of errors appears, go to **`read-port-issues`** — and read `ENGINE-LIMITS.md`
-BEFORE designing any fix.
+When the first wall of errors appears, go to **`read-port-issues`** — and read the fitting
+`.claude/rules/<area>.md` files for measured limits BEFORE designing any fix.

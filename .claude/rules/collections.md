@@ -14,7 +14,8 @@ obligations (scope, `SurfacePolicy`, counting, `accountedBy`) are `.claude/rules
 ## Policy shape
 
 - `families` adds per-library entries beside the §1(a) JDK table, each getting the same kind-aware
-  call rewrites and boundary counts; `familyScopes` is per-ENTRY `RuleScope` (D12).
+  call rewrites and boundary counts; `familyScopes` is per-ENTRY `RuleScope` — scoping per entry,
+  not per phase, keeps a dependent's own retyping from disagreeing with the base's published surface.
 - `retarget` retypes a library type usable wherever the java source was (the scala target extends
   or implements the java source, so no coercion is needed). `retargetRewrites` keys `(name, arity)`,
   `retargetRewritesByDesc` keys `(name, Descriptor)` for overloads (descriptor wins); ten rewrite
@@ -58,17 +59,19 @@ package test would report every correct slot they reach.
   target is one no view can be, count the refusal; do NOT fire where the representation is known —
   an operand the phase retyped or one whose type the PROGRAM DECLARES (without that exclusion the
   coercion lands on `Queue.iterator()` in every `for` loop). **160 of 183 remaining failures on one
-  library at 0 errors** (K18).
+  library at 0 errors** came from this gap; an upcast of an operand the phase itself retyped must be
+  left alone.
 - A generic type ARGUMENT a third party reads back out of the class file (`TypeReference`,
   `TypeToken`, guice `Key`, `Class<T>`) is a third reified position the port writes nowhere —
-  `Cannot construct instance of scala.collection.mutable.Map`, 10 of 23 failures, every count flat
-  (K20). Do not retype a type argument a reified CARRIER holds; bridge at the USE. The MECHANISM
+  `Cannot construct instance of scala.collection.mutable.Map`, 10 of 23 failures, every count flat.
+  Do not retype a type argument a reified CARRIER holds; bridge at the USE. The MECHANISM
   belongs to the TRAVERSAL (the only place that knows it is descending into an argument) and the
-  BRIDGE is the existing external-callee seam; WHICH carriers is `reifiedCarriers`, a (b) parameter.
+  BRIDGE is the existing external-callee seam; WHICH carriers is `reifiedCarriers`, a (b) parameter,
+  and `java.lang.Class` is the only carrier guaranteed to exist.
 - The same third party reads the OTHER end: a retyped `mutable.Map` handed to a serialiser is
   bean-serialised internals; a java `public` FIELD emitted as a scala `var` is PRIVATE on the JVM, so
   a framework auto-detecting fields sees ZERO properties and answers three of four assertions
-  CORRECTLY from data that is not there (K21, 13 failures at 0 errors). A retyping phase owes an
+  CORRECTLY from data that is not there (13 failures at 0 errors). A retyping phase owes an
   answer where its value LEAVES the program.
 - That answer is RUN-TIME, at TWO seams: the object is asked deep and by view (a one-level `asJava`
   is the refusal already recorded; a copy detaches both directions), and the ACCESSOR the framework
@@ -79,9 +82,9 @@ package test would report every correct slot they reach.
   the PHASE runs: the egress list on every port with collections, the bean list only where a module
   carries the `Only(Set.empty)`-defaulted phase — a module without it publishes nothing and claims
   nothing.
-- **"N failures are gated behind this one" is a HYPOTHESIS.** Both K21 faces sat behind K20's
-  exception; closing K20 flipped 2 of the 10 predicted. Re-census after the fix; quote the family
-  that went to zero, never the suite delta.
+- **"N failures are gated behind this one" is a HYPOTHESIS.** Both reflective-read faces above sat
+  behind the reified-carrier gap; closing that gap flipped only 2 of the 10 predicted. Re-census
+  after the fix; quote the family that went to zero, never the suite delta.
 
 ## The phase may only reason from what it did
 
@@ -90,32 +93,57 @@ package test would report every correct slot they reach.
   does not touch; deleting it broke three sites in libGDX's `Json` inside a dropped type, invisible
   to every count. "Did I move this type?" is a lookup in `typeMap`/`remap`/`kindOf`.
 - The argument bridge opened with `if javaIterableSym == SymId.None then t` while also serving
-  `java.util.Collection`: a library using `Collection` throughout had the whole pass inert. Derive a
-  guard from ALL targets. The shim-receiver refusal tested the HEAD SYMBOL against three shims and was
-  `false` for a library's own `Cursor extends java.util.Iterator`; ask the ANCESTRY, and a TYPE
-  PARAMETER's BOUND is the same question — 16 errors (K2.6).
+  `java.util.Collection`: a library using `Collection` throughout had the whole pass inert. A gate
+  must be derived from ALL of the pass's targets, not just one, or it is silently switched off for
+  every program that only uses the target left out. The shim-receiver refusal tested the HEAD SYMBOL
+  against three shims and was `false` for a library's own `Cursor extends java.util.Iterator`; a
+  shim's call arity is inherited, so the guard must check the receiver's ANCESTRY and a TYPE
+  PARAMETER's BOUND, not just its head type — 16 errors from this gap.
 - A coercion keyed on *the callee's declared result is not `Object`* found nothing because
   `java.util.Iterator#next()` interns with no signature; its predecessor keyed on *the result IS the
   capture* read a node the frontend fills with java's answer. State the REFUTATION (`!x.exists(isObject)`)
   where the artifact can be MISSING; three lines away, an unreadable class file must answer `false`
-  because there the signature IS the evidence (G33).
+  because there the signature IS the evidence — a guard whose evidence can be missing must state
+  what refutes it, not assume it is absent.
 - A residue count cannot tell a refusal from a switched-off fix: a reported boundary whose (source
   kind, target) pair HAS a factory is an engine bug the phase can check at the moment it files the
-  finding — 5 findings misreading themselves for the life of a port (K2.5).
+  finding — 5 findings misreading themselves for the life of a port.
 - `OverrideGraph.overridden` compared descriptors as strings; `go(T)` in `P<T>` and `go(String)` in
   `implements P<String>` had no edge, the retyping went looking for an external ancestor, found
   `java.lang.Enum` and held java's signature — two `E007`s naming `java.lang.Enum#parseOption`. A
   substituted edge may only ADD (unsubstituted first), and the spelling both sides are read in is ONE
   derivation moved out of `Descriptor.ofInfo`.
 
+## More JDK-collection mechanics
+
+- A `java.util.stream` call chain is rewritten as a whole (`stream()` becomes the collection,
+  `collect(toList())` disappears) — mapping each call in the chain separately does not type-check.
+- An enhanced-for over a JDK `Iterable` that the port kept as a Java type has no Scala `foreach`, so
+  it is emitted as Java's own `iterator()`/`hasNext()`/`next()` loop.
+- Java 8 default methods on `List`, `Map` and `Collection` (`sort`, `computeIfAbsent`, `removeIf`, …)
+  need their own rewrites, because a similarly named Scala method differs in mutation, null handling
+  or which elements it keeps.
+- When re-parenting gives a class two collection parents that declare the same member
+  (`mutable.Map` and the `Iterable` shim both declare `iterator`), drop the redundant parent and
+  synthesise the surviving parent's required members as bridges.
+- Retargeted collection calls that compile can still differ at run time (exception class on empty,
+  inclusive versus exclusive range bound, capacity growth, iterator removal), so each one needs a
+  template or shim that restates Java's own rule rather than relying on the Scala equivalent's.
+- Java performs a conversion at lambda-to-functional-interface slots, and at mixed boxed numeric
+  conditionals and boxed casts; emitting these as `asInstanceOf` compiles but throws at run time, so
+  a real conversion must be emitted instead.
+
 ## Reference-port shapes are hypotheses
 
 "ssg kept `java.util` in 32 of its 130 files" read as "scope the collections phase out of the seams"
-cost `27 -> 47` errors, and `27 -> 51` turned off (K16). A hand port keeps a JDK type consistent by
-editing every caller; a mechanical port that exempts some declarations SPLITS a call graph.
+cost `27 -> 47` errors, and `27 -> 51` turned off. A hand port keeps a JDK type consistent by
+editing every caller; a mechanical port that exempts some declarations SPLITS a call graph, and the
+errors just reappear at the callers.
 
 ## Runtime shims (§4.5)
 
 A Java collection interface's counterpart is a standalone trait with Java's arity; interop is by
 extension methods on ONE of a related pair, never by extending `scala.collection.*`. A `Map` is not
-a semantic the target LACKS, so `balticporter/runtime/package.scala` refuses it (P10).
+a semantic the target LACKS, so `balticporter/runtime/package.scala` refuses to ship a support type
+for it — where the target language already has the abstraction, only a base module's own hand-written
+code may bridge it, not a shared runtime type.

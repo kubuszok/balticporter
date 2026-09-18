@@ -20,9 +20,11 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
   it lives in a TERM. (2) Scala 3's AMBIGUITY: a name defined in an enclosing scope AND inherited is
   `E049`; java has no such rule (probed: an inherited field shadows an enclosing local through an
   anonymous body, a local class and a grandparent). The reference already points at the MEMBER, so
-  the guard reads the enclosing SCOPE. Three cells only a probe gives: it fires for an inherited
+  the guard reads the enclosing SCOPE — Scala reports an ambiguous reference when a captured local
+  clashes with an inherited method as well as an inherited field, so the capture-rename guard must
+  read both off the enclosing scope. Three cells only a probe gives: it fires for an inherited
   METHOD too; a member the body DECLARES ITSELF is subtracted; an outer FIELD is QUALIFIED at the
-  reference, not moved (C16).
+  reference, not moved.
 - **A name clash and an implementation pair look identical.** `resolveFieldShadowing` renamed a
   collapsed `var w` to `w$shadow` under the interface's abstract `def w`, leaving the class abstract
   until 0 typer errors. A scala `val`/`var` and a PARAMETERLESS `def` of one name across a subtype
@@ -39,17 +41,20 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
   type variables substituted; the local walk keeps only its SCOPE (filter the published edge) and its
   guard for the arity fallback where a DESCRIPTOR is missing. Nineteen of twenty lanes byte-identical,
   one declaration moved, citation total `27 -> 26` in `findings.tsv` alone.
-- **A promotion may drop something**: an enum's constructor parameter supersedes a same-named field
-  only for the self-assignment `this.f = f`; `HtmlMatch(String open)` beside `final Pattern open` is
-  two members. Decide from the emitted TYPE; a WIDENING is two members; the drop, the rename and the
-  self-assignment elision read ONE derivation (T11).
+- **A promotion may drop something**: a promoted enum constructor parameter becomes a member and can
+  collide with `Enum.name()` or a declared accessor; supersede a same-named body field only when it
+  is the SAME member, not just the same name — self-assignment `this.f = f` only; `HtmlMatch(String
+  open)` beside `final Pattern open` is two members. Decide from the emitted TYPE; a WIDENING is two
+  members; the drop, the rename and the self-assignment elision read ONE derivation.
 - Count what the constructor funnel PROMOTES — parameters and top-level locals — as members.
-- **A promotion moves a NAME, never a POSITION.** A FIELD initialiser is JLS 12.5 step 4, hoisted
+- **A promotion moves a NAME, never a POSITION.** A local variable of a promoted constructor must
+  keep its original position in the class body: hoisting it with the fields reorders Java's
+  initialisation sequence and causes null reads at run time. A FIELD initialiser is JLS 12.5 step 4, hoisted
   above the promoted body; a constructor LOCAL is a step-5 statement emitted where java wrote it.
   Ownership is a symbol lookup (field under the CLASS, local under the EXECUTABLE). 409 of 414 test
-  failures on one constructor at 0 errors (C12). Step 4 is fields AND instance initialiser BLOCKS as
+  failures on one constructor at 0 errors came from getting this wrong. Step 4 is fields AND instance initialiser BLOCKS as
   ONE textual sequence (`{ b = 2; } int b = 5;` leaves 5); a body assembled as
-  `fields ++ … ++ initBlocks` has already lost it — 16 digests over five ports (C12's correction).
+  `fields ++ … ++ initBlocks` has already lost it — 16 digests over five ports.
 - **It moves MUTABILITY**: a java constructor parameter may be reassigned (a record's COMPACT
   constructor exists for it, JLS 8.10.4); emit `private var` for the parameters really ASSIGNED,
   decided by SYMBOL over the lowered body (every write is a `Tree.Assign`).
@@ -57,7 +62,8 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
 ## §4.56 — ownership and structural decisions
 
 - Owned iff climbing owners reaches a `program.units` symbol — stronger than "has a definition",
-  which anonymous-class symbols lack. `StandardTraversal.mapSymbols` skips unowned symbols (K15).
+  which anonymous-class symbols lack. `StandardTraversal.mapSymbols` skips unowned symbols: an
+  unowned symbol's signature is a class-file fact no phase may move.
 - Cut only at `.`, `$`, `#`; `com.foo` must not cover `com.foobar`; carry the rest verbatim or nested
   paths break at EMISSION. A namespace rename runs LAST: every other policy is written upstream.
 - `dropped-types.tsv` holds `upstream` TAB `emitted` (`Correlate.Dropped`): with only the manifest
@@ -69,18 +75,25 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
 - **A phase may only conclude something from what it did.** `CollectionsTransform` deleted a cast
   because the source type had a `java.` prefix — `java.lang.Object` has one.
 - **Fast-path guards** derive from ALL targets and ask the ANCESTRY, a type parameter's BOUND
-  included (K2.6, 16 errors).
-- **A `match` arm below a supertype arm is dead.** `CtWildcardReference` EXTENDS
-  `CtTypeParameterReference`, so thirteen `SpoonTir` matches never reached their wildcard arm (ten
-  answer-changing; census by grep, and a `case r if !r.isInstanceOf[Sub]` greps as neither).
-  Reordering cost `5 -> 8` because "nameable" is TWO questions (writable INSIDE an argument, not as a
+  included — 16 errors came from a guard that only checked the head type.
+- **A `match` arm below a supertype arm is dead.** In Spoon a wildcard reference is a subtype of a
+  type-parameter reference (`CtWildcardReference` EXTENDS
+  `CtTypeParameterReference`), so thirteen `SpoonTir` matches never reached their wildcard arm (ten
+  answer-changing; census by grep, and a `case r if !r.isInstanceOf[Sub]` greps as neither). Their old
+  answers are kept on purpose: reordering cost `5 -> 8` because "nameable" is TWO questions (writable
+  INSIDE an argument, not as a
   cast target). The repair is `SpoonTir.TypeShape` / `TypeShape.of` — one derivation, each site
-  stating the answer it gave the shadowed kind, flat by construction (G21).
+  stating the answer it gave the shadowed kind, flat by construction.
 - **A guard whose confirming artifact can be MISSING states the REFUTATION** (`!x.exists(isObject)`);
-  its neighbour needs the opposite polarity because there the signature IS the evidence (G33).
-- **A node-kind test owes every syntax java has for the fact.** `case n: Tree.New` missed `C::new`
+  its neighbour needs the opposite polarity because there the signature IS the evidence — a guard on
+  evidence that can be missing must state what refutes it, since java's `?` is bounded by `Object`
+  and Scala's by `Any`, so reading an element through a wildcard-typed collection shim needs a cast
+  to `Object`.
+- **A node-kind test owes every syntax java has for the fact.** Instantiation must be detected on the
+  node itself for a generic `new G<...>()`, a field initialiser and a `Type::new` reference, or the
+  context parameter never reaches those sites: `case n: Tree.New` missed `C::new`
   (232 sites); the shared index records that reference at the qualifier's `TypeTree`, so ask the
-  CONSTRUCTOR's usage at the `MethodRef` (CT6 face C).
+  CONSTRUCTOR's usage at the `MethodRef`.
 - **An instrument's filter states the COMPLEMENT** (`catalog-coverage` matched `^(lowering|phase):`
   and missed the third surface's twenty rows). A documented blind spot is re-derived per corpus
   member (the `test("` counter missed 37 calls across 18 files on the next library).
@@ -90,18 +103,27 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
 - **The survivors are not the DECLARATION.** `sealOf` reconstructed `permits` from visible edges, so
   an excluded or refused subtype made the seal read exact and shipped `sealed`; nothing records a
   decision NOT taken. Carry the interned `permits` set; the unaccountable case takes the conservative arm.
-- **The diamond forwarder ASKS which external parent is concrete, never guesses**: an injected
-  support type (`RuntimePlan.concreteMembers`) or an interface whose JLS 9.4.3 `default` methods the
-  frontend read off the class file (`Program.internedDefaults`); an ABSTRACT interface method mints
-  nothing, and minting at every class-plus-interface pair is what K39 forbids.
+- **The diamond forwarder ASKS which external parent is concrete, never guesses**: a class member
+  that implements an external interface's default method is legal Java but a conflicting inheritance
+  in Scala, so the disambiguating `override` forwarder must also see class-file default methods — an
+  injected support type (`RuntimePlan.concreteMembers`) or an interface whose JLS 9.4.3 `default`
+  methods the frontend read off the class file (`Program.internedDefaults`); an ABSTRACT interface
+  method mints nothing, and minting at every class-plus-interface pair is forbidden.
 - **A synthesised member carries the parent's scope.** Diamond forwarders, synthesised primaries and
-  replayed constructor bodies copy a signature in the PARENT's scope; the `extends` clause makes the
-  substitution EXACT (not G8's F-bound). A forwarded member's OWN type parameters come too; one
-  `ParentSubst` complete over `TypeRepr`. 41 of 42 `Not found: type`, 243 -> 201 (G25).
-- **The override QUESTION needs the same substitution**: compose the frame one `extends` edge at a
-  time, a RAW supertype contributes an empty one. 3 errors and 48 moved digests (K28.2). The third
+  replayed constructor bodies copy a signature in the PARENT's scope, so the parent's type parameters
+  are substituted through one shared substitution or they are not found in the subclass; the
+  `extends` clause makes the substitution EXACT (a different case from a partially-nameable
+  F-bounded class, which has no consistent way to fill its raw type arguments because filling one
+  sibling formal breaks another — a genuine Scala expressiveness limit that is refused rather than
+  substituted). A forwarded member's OWN type parameters come too; one
+  `ParentSubst` complete over `TypeRepr`. 41 of 42 `Not found: type`, 243 -> 201.
+- **The override QUESTION needs the same substitution**: whether a member overrides a parent member
+  is asked with the parent's type parameters substituted along each `extends` edge, composing the
+  frame one `extends` edge at a
+  time, a RAW supertype contributes an empty one; a name-and-arity lookup returns all candidates so
+  the caller decides. 3 errors and 48 moved digests came from getting this wrong. The third
   site is `OverrideGraph` (see `.claude/rules/collections.md`).
-- **A refusal predicate reads a SHAPE** (`CtorFunnel.supersedes`, C3's correction): read the lane as
+- **A refusal predicate reads a SHAPE** (`CtorFunnel.supersedes`): read the lane as
   a population; MAY-assign on the prologue side, MUST-assign on the replay side.
 - **An UNOWNED symbol under the port's own prefix is renamed only where the FRONTEND RESOLVED no
   declaration for its TYPE, or the PORT SUPPLIES the name.** The phase moved every symbol under a
@@ -150,8 +172,10 @@ it stripped notes.
   parse path is handed the text. `SpoonTir.columnOf` guards `getColumn`'s NPE on a bufferless unit
   (`isValidPosition` answers TRUE there); a missing column costs decoration.
 - Claimed identity set; coarse harvest after children; the FILE header is decided positionally (no
-  code precedes it) and claims the OFFSET first — of two leading blocks Spoon gives the unit the first
-  and the PACKAGE the second, and the Apache notice fell down that gap (V3). The file header is the
+  code precedes it) and claims the OFFSET first — because the parser attaches only one of several
+  consecutive file-leading comment blocks, so a comment belongs to the file header only when no code
+  precedes it: of two leading blocks Spoon gives the unit the first
+  and the PACKAGE the second, and the Apache notice fell down that gap. The file header is the
   one comment deliberately emitted twice (two top-level types, two derived works).
 - Homes: `leading` on the surviving node, `Tree.Block.trailing`, else
   `/* trivia: recovered from <path>:<line> */` counted apart from placed ones.
@@ -165,9 +189,11 @@ it stripped notes.
 
 Records out of one parser: canonical constructor parameters in FIELD order (transposed `new`),
 compact-constructor assignments absent (accessors answered defaults), a nested record's constructor
-absent and its accessor calling ITSELF. An anonymous class's constructor is materialised with one
+absent and its accessor calling ITSELF. The parser synthesises an anonymous class's constructor, so
+call-site rules such as vararg packing must resolve it against the superclass constructor Java
+actually wrote: an anonymous class's constructor is materialised with one
 untyped parameter and `isVarArgs = false`; JLS 15.9.5.1 says it takes the SUPERCLASS constructor's
-parameters, the erased signature selects it, and the fix is at the SHARED LOOKUP (G29; auto-tupled
+parameters, the erased signature selects it, and the fix is at the SHARED LOOKUP (auto-tupled
 `Tuple2` where java passed an array). `SpoonKinds.Absence.AbsorbedSilently` is a suspicion about a
 KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabricated facts.
 
@@ -192,10 +218,20 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
 - `balticporter.reportPathRoot` set by the lanes falls back silently when run directly and every
   finding diffs as removed-and-re-added at identical counts; derive it from the port's configuration.
 
-## Lessons of 2026-09-05 (one line each; the numbers are in `PROGRESS.md` §13.26)
+## More rules (one line each)
 
+- A raw Java generic type is rendered with wildcard arguments (`[?]`) everywhere it appears, and the
+  wildcard form must stay consistent between a member and its overrides, not just at the declaration.
+- A callee's own type variables mean nothing at the call site: coerce an argument using the call's
+  explicit type arguments or its inherited instantiation, never the callee's own declared variables.
+- Converting an anonymous class to a lambda needs the lambda's result type to be nameable, so a
+  `return` inside it can be emitted as a nested method; without a nameable result type the emitter
+  must refuse visibly rather than silently drop the `return`. A raw-typed single-method target
+  compiles cleanly as a lambda at a wildcard type, so that case needs no extra guard.
 - A `Tree.Block`'s `expr` is a STATEMENT position: every body rebuild keeps it in `stats`, or the
-  last statement vanishes at 0 errors (CT13: `this.effect = effect` under class-to-trait).
+  last statement vanishes at 0 errors. When super-call arguments are stripped from a constructor
+  body the block's final expression must be preserved the same way, otherwise a field assignment
+  vanishes and the field reads null at run time (`this.effect = effect` under class-to-trait).
 - An emitter decision is recorded at CONSTRUCTION, never while rendering: `PortRun` records
   `ownDecisions` before emission so porter notes can be derived (the constructor `@nowarn` set).
 - One scan owns "deprecated use": `DeprecatedUseScan` (class-file `@Deprecated` interned by the
@@ -207,9 +243,10 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   private is "unused"; a compound assignment READS; `@nowarn` on the definition suppresses both.
 - A recorded decision the rewrite never applied hides a misclassification: the moment the
   unused-symbol rewrite reached anonymous bodies, 16 liqp tests failed — an anonymous class's
-  private field is state its consumer reads reflectively (K21), so it is suppressed, never deleted.
+  private field is state a reflective reader (a bean serialiser, a third-party framework) reads back,
+  so it is suppressed, never deleted.
 
-## Jumps (2026-09-16)
+## Jumps
 
 - A NAMED loop boundary (`break L`, or an unlabelled `break` beside a `continue`/an interposed
   boundary) is a `ControlThrowable` SENTINEL thrown and caught at the loop, never a named

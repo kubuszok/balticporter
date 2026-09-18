@@ -55,7 +55,7 @@ key not read fails the run.
 
 | `transform` | keys | notes |
 |---|---|---|
-| `collections` | `scope`, `retarget`, `retargetRewrites`, `retargetTypeArgs`, `retargetCoercions`, `reifiedCarriers`, `reflectiveSinks` | retype JDK collections and API-map their call sites. `retarget` retypes a library type whose scala target is usable wherever the java source was (extends/implements it). `retargetRewrites` maps per-member call-site rewrites (nine variants, see below). `retargetTypeArgs` maps arity-changing retargets. `retargetCoercions` maps boundary coercion templates. `reifiedCarriers` / `reflectiveSinks` name third-party types (K20/K21) |
+| `collections` | `scope`, `retarget`, `retargetRewrites`, `retargetTypeArgs`, `retargetCoercions`, `reifiedCarriers`, `reflectiveSinks` | retype JDK collections and API-map their call sites. `retarget` retypes a library type whose scala target is usable wherever the java source was (extends/implements it). `retargetRewrites` maps per-member call-site rewrites (nine variants, see below). `retargetTypeArgs` maps arity-changing retargets. `retargetCoercions` maps boundary coercion templates. `reifiedCarriers` names a type argument a third party reads back at run time (`Class<T>`, `TypeReference<…>`, `TypeToken<…>`), bridged at its use rather than retyped; `reflectiveSinks` names a retyped collection or a java-public field a third party reads back reflectively |
 | `mutable-params` | — | §1(a), no policy; the entry exists so a conf can put it in the pipeline |
 | `panama-ffi` | — | §1(a), no policy; its `isNative` predicate is `_.flags.isNative`, a fact about Java |
 | `test-framework` | `suite` (default `TestFrameworkTransform.DefaultSuite`), `testMember` (default `"test"`) | JUnit → MUnit is a STRUCTURAL transform, not an annotation rename |
@@ -69,11 +69,11 @@ key not read fails the run.
 | `nullary-arity` | `scope` (default `Only([])`, the no-op), `force = […]`, `derive = true` | drop `()` from getter-like nullary methods over the whole override component; `derive` follows the reference port: a parenless `def` forces its whole override component, a `def x()` keeps its parens |
 | `class-tag-params` | `members = [...]` (`C#m`, `C#m(desc)`), `derive = true` | a `Class<T>` parameter becomes a `ClassTag[T]` context clause; `derive` takes the reference port's `[T: ClassTag]` members; calls passing a `Class` value refuse, counted |
 | `visibility` | `widen = [...]` (`C#m`, `C#<init>(desc)`), `derive = true` | ships the listed members public where java declared them narrower; `derive` takes the reference port's |
-| `nullability` | `annotations = [...]`, `target` (`"union"` default / `"named"` / `"option"`), `wrapper` (required iff `target = "named"`), `scope`, `nullableMembers = [...]`, `derive = true` | move a nullability annotation (or an explicitly named member) into the type. `nullableMembers` is a set of exact member FQNs (`Class#member`) matched at run time against `Symbol.fullName`, treated as if their return/field type carried an annotation: same target shape, same coercions, same boundary count. Empty = no-op; non-empty contributes a fingerprint segment. `MergeablePolicy` union (`ENGINE-LIMITS.md` K13.6) |
-| `globals-to-implicits` | `holders = [ { holder, context { inject \| mint }, members { … }, attach, reader, boundary, sites { … }, selfSupplied { … }, retain { … }, cache { … }, through { <type> = "<member>" }, capture { <type> = "<static>.<method>() as <param>[: <wrapper fqn>] = <default>" }, promoteToClass = […], scope } ]` **required** | globals → CONTEXT (DESIGN.md §8.4). `members` values are dot-PATHS on the context type, not member names (`gl = "graphics.gl20"`); `attach = "method"` puts a trailing `(using T)` on each threaded method and `"class"` puts it on the class's constructors; `boundary` decides what a site with no signature does; `sites` overrides one of them (`"lazy-init"` is the only EAGER→LAZY change and is never a default). Every seam is counted by `context-seam` |
-| `class-to-trait` | `specs { "com.foo.Pool" { params = [ { index = 0, name = "initialCapacity" }, { index = 1, name = "max" } ] } }` | rewrite a nominated abstract class into a trait: constructors removed, mapped parameters become abstract vals, every subclass gains `override val` members. The nominated type is typically DROPPED+INJECTED as a hand-written trait (DESIGN.md §8.27, ENGINE-LIMITS.md CT12). Empty specs = no-op. `SurfacePolicy` + `MergeablePolicy` |
-| `add-members` | `fromReference { "<upstream owner>" = "name, name" }` (verbatim from the manifest's `parity` reference), `members { "com.foo.Engine" = [ { name = "register", arity = 2, source = "def register[T](k: Class[T], f: () => T): Unit = ???", why = "factory registry" } ] }` | append hand-written Scala members to a mechanically-translated class. Each member is verbatim text spliced at the end of the owner's body (DESIGN.md §8.29). Empty map = no-op. ADD-scoped `Only(Set.empty)` default. `SurfacePolicy` + `MergeablePolicy` |
-| `registry` | `entries = [ { callee = "a.Reflect#newInstance", placement { object = "com.foo.Factories" \| member = "com.foo.Engine", table, register, create }, scope { only = [...] }, seeds = [...], handles = [...], miss = "null" \| "jvm-reflect" \| { throw = "a.E", message = "…" }, bound = "com.foo.Component" } ]`, `facadeMembers = [...]` | reflective instantiation → a `Class`-keyed registry (`ENGINE-LIMITS.md` P10). The call rewrites to `<registry>.create(classValue)`; the table, `register` and `create` are MINTED at the placement (`object` = a synthesised top-level unit, written only by the module that emits the call sites, O5; `member` = a type the port already emits, CT7). `handles` names the exception whose `catch` the rewrite made dead — that `try` is elided, every other one is left as java wrote it and counted. `seeds` are UPSTREAM FQNs with a visible nilary constructor, registered at init. `bound` is verbatim Scala (target namespace). Empty `entries` = no-op; ADD-scoped `Only(Set.empty)` default. Seven refusal lanes, `registry(<kind>)` |
+| `nullability` | `annotations = [...]`, `target` (`"union"` default / `"named"` / `"option"`), `wrapper` (required iff `target = "named"`), `scope`, `nullableMembers = [...]`, `derive = true` | move a nullability annotation (or an explicitly named member) into the type. `nullableMembers` is a set of exact member FQNs (`Class#member`) matched at run time against `Symbol.fullName`, treated as if their return/field type carried an annotation: same target shape, same coercions, same boundary count. Empty = no-op; non-empty contributes a fingerprint segment (members that return null with no Java nullability annotation can be listed by exact name and are then treated as if annotated). `MergeablePolicy` union |
+| `globals-to-implicits` | `holders = [ { holder, context { inject \| mint }, members { … }, attach, reader, boundary, sites { … }, selfSupplied { … }, retain { … }, cache { … }, through { <type> = "<member>" }, capture { <type> = "<static>.<method>() as <param>[: <wrapper fqn>] = <default>" }, promoteToClass = […], scope } ]` **required** | globals → CONTEXT. `members` values are dot-PATHS on the context type, not member names (`gl = "graphics.gl20"`); `attach = "method"` puts a trailing `(using T)` on each threaded method and `"class"` puts it on the class's constructors; `boundary` decides what a site with no signature does; `sites` overrides one of them (`"lazy-init"` is the only EAGER→LAZY change and is never a default). Every seam is counted by `context-seam` |
+| `class-to-trait` | `specs { "com.foo.Pool" { params = [ { index = 0, name = "initialCapacity" }, { index = 1, name = "max" } ] } }` | rewrite a nominated abstract class into a trait: constructors removed, mapped parameters become abstract vals, every subclass gains `override val` members. The nominated type is typically DROPPED+INJECTED as a hand-written trait, supplied by hand rather than derived, because a trait's field initialisers run in linearisation order instead of declaration order. Empty specs = no-op. `SurfacePolicy` + `MergeablePolicy` |
+| `add-members` | `fromReference { "<upstream owner>" = "name, name" }` (verbatim from the manifest's `parity` reference), `members { "com.foo.Engine" = [ { name = "register", arity = 2, source = "def register[T](k: Class[T], f: () => T): Unit = ???", why = "factory registry" } ] }` | append hand-written Scala members to a mechanically-translated class. Each member is verbatim text spliced at the end of the owner's body. Empty map = no-op. ADD-scoped `Only(Set.empty)` default. `SurfacePolicy` + `MergeablePolicy` |
+| `registry` | `entries = [ { callee = "a.Reflect#newInstance", placement { object = "com.foo.Factories" \| member = "com.foo.Engine", table, register, create }, scope { only = [...] }, seeds = [...], handles = [...], miss = "null" \| "jvm-reflect" \| { throw = "a.E", message = "…" }, bound = "com.foo.Component" } ]`, `facadeMembers = [...]` | reflective instantiation → a `Class`-keyed registry: this recurring shape is built as a phase that mints a registry into each port, never as a shared runtime support type. The call rewrites to `<registry>.create(classValue)`; the table, `register` and `create` are MINTED at the placement (`object` = a synthesised top-level unit, written only by the module that emits the call sites, since a unit a phase mints has no source origin and only the owning module may write it; `member` = a type the port already emits, following the rule that a class a framework instantiates reflectively keeps a no-argument constructor and holds context privately). `handles` names the exception whose `catch` the rewrite made dead — that `try` is elided, every other one is left as java wrote it and counted. `seeds` are UPSTREAM FQNs with a visible nilary constructor, registered at init. `bound` is verbatim Scala (target namespace). Empty `entries` = no-op; ADD-scoped `Only(Set.empty)` default. Seven refusal lanes, `registry(<kind>)` |
 
 ### The `class-to-trait` + drop+inject recipe
 
@@ -103,7 +103,8 @@ manifest {
 ```
 
 `InjectedSurface` then reads the injected file's member surface with scalameta: overrides adopt
-the injected parameter types and calls follow the injected arity (K35 CLOSED). No additional
+the injected parameter types and calls follow the injected arity and parameter spelling, read from
+the injected source rather than the dropped java declaration. No additional
 configuration needed.
 
 ### The `retarget` and `retargetRewrites` `.conf` spelling
@@ -168,7 +169,7 @@ an arity key at the same member. Translation to the target namespace happens at 
 | `Chain` | `{ chain = ["m1", "m2"], parens = ["m1"], dropArgs = false }` | chain member calls. `parens` lists which need `()`. `dropArgs` drops the original arguments |
 | `FieldWrite` | `{ fieldWrite = "fieldName" }` | field-write image on a retarget target |
 | `IndexedField` | `{ indexedField = "fieldName" }` | indexed field access via source-SymId matching |
-| `Template` | `{ template = "expr with $recv, $0, $T0, $Target" }` | expression template with AST holes. `$recv` = receiver, `$0`..`$N` = args, `$T0`..`$TN` = type args (FQN text), `$Target` = retarget target FQN. Argument holes are bound to temporaries when the argument has side effects (evaluate-once, CLAUDE.md §4.4 F7) |
+| `Template` | `{ template = "expr with $recv, $0, $T0, $Target" }` | expression template with AST holes. `$recv` = receiver, `$0`..`$N` = args, `$T0`..`$TN` = type args (FQN text), `$Target` = retarget target FQN. Argument holes are bound to temporaries when the argument has side effects (evaluate-once, CLAUDE.md §4.4) |
 
 `package-rename` is **not** in this list and is refused by name: it is manifest DATA
 (`manifest.packageRenames`), because it must run after every other phase. See **`configure-port`** §4.
@@ -200,7 +201,7 @@ Remember the asymmetry: a **drop** is inherited by a dependent, an **injection**
 FQNs (`Owner#member`) whose calls are emitted WITHOUT `()`. Closes the cross-platform arity gap where
 a JS/Native platform shim (munit's `Description`) declares a member parenless while the JVM class
 file has `()`. Legal on the JVM too: Scala 3 auto-applies. Empty = no-op. NOT inherited (a classpath
-fact). `ENGINE-LIMITS.md` P11.
+fact).
 
 ## 2. When config is not enough — a §1(c) rule, in YOUR repository
 
@@ -365,9 +366,10 @@ that survives three libraries unchanged is probably universal; one that needs a 
 library is correctly a (b).
 
 **Then write the lesson down in the same commit** (`CLAUDE.md` §3.6): a governing rule to
-`CLAUDE.md`, a MEASURED dead end with its number to `ENGINE-LIMITS.md`, a decision to `DESIGN.md`,
-state and residues to `PROGRESS.md`. A rule that names a specific library is per-library policy and
-belongs in that library's manifest instead. Do not add a seventh document, and do not commit the
+`CLAUDE.md`, a MEASURED dead end as one rule line with its numbers to the fitting `.claude/rules/<area>.md`
+file, a design decision or a port's state to wherever that currently lives. A rule that names a
+specific library is per-library policy and
+belongs in that library's manifest instead. Do not add a new document, and do not commit the
 scratch file you worked it out in — `.balticporter/` is gitignored and is where it lives.
 
 Then measure: change one thing, then measure (**`port-first-attempt`**).
