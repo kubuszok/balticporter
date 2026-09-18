@@ -355,6 +355,31 @@ lazy val corpus = project
     // precondition. Nothing else about the build changes: a test that does not read the property is
     // unaffected, and one that does was not running.
     Test / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
+    // the support files a policy injects by path ship in the jar (`BundledCorpus`): every entry of
+    // this directory except the module's own `src`/`target`, plus the INDEX `BundledTree` reads
+    Compile / resourceGenerators += Def.task {
+      import scala.jdk.CollectionConverters.*
+      val base  = baseDirectory.value.toPath
+      val out   = ((Compile / resourceManaged).value / "balticporter-bundled" / "corpus").toPath
+      val skip  = Set("src", "target")
+      val roots = IO.listFiles(baseDirectory.value).toList.filterNot(f => skip(f.getName) || f.getName.startsWith(".")).sortBy(_.getName)
+      val files = roots.flatMap { r =>
+        val walk = java.nio.file.Files.walk(r.toPath)
+        try walk.iterator().asScala.filter(p => java.nio.file.Files.isRegularFile(p) && p.getFileName.toString != ".DS_Store").toList
+        finally walk.close()
+      }
+      IO.delete(out.toFile)
+      val copied = files.map { f =>
+        val rel = base.relativize(f).toString.replace('\\', '/')
+        val to  = out.resolve(rel)
+        java.nio.file.Files.createDirectories(to.getParent)
+        java.nio.file.Files.copy(f, to)
+        rel -> to.toFile
+      }
+      val index = out.resolve("INDEX").toFile
+      IO.writeLines(index, copied.map(_._1).sorted)
+      (copied.map(_._2) :+ index): Seq[File]
+    }.taskValue,
   )
 
 // ---------------------------------------------------------------------------------------------

@@ -2270,7 +2270,7 @@ object LibgdxLadder:
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames` for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix wins);
     * the `List` rename keeps `scala.List` out; `MutableParamsTransform` is inherited from the base. No drop, inject, resolutions or parity (PROGRESS.md §13.29).
     */
-  def universal(repoRoot: Path, steps: Set[String] = DefaultSteps, reference: Option[Path] = None): PortManifest =
+  def universal(repoRoot: Path, steps: Set[String] = DefaultSteps, reference: Option[Path] = None, upstreamResources: Option[Path] = None): PortManifest =
     val unknown = steps -- Steps.keySet
     require(unknown.isEmpty, s"unknown ladder steps: ${unknown.mkString(",")}; known: ${Steps.keySet.toList.sorted.mkString(",")}")
     LlsPolicy
@@ -2312,7 +2312,7 @@ object LibgdxLadder:
           subPackages = Map("com.badlogic.gdx.Files$FileType" -> "files"),
           resources = List(
             ResourceTree(
-              root = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,
+              root = upstreamResources.getOrElse(repoRoot.resolve("../sge/original-src/libgdx/gdx/res")).normalize,
               files = List(
                 "com/badlogic/gdx/utils/lsans-15.fnt",
                 "com/badlogic/gdx/utils/lsans-15.png",
