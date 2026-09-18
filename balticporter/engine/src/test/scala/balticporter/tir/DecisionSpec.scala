@@ -30,13 +30,13 @@ class DecisionSpec extends munit.FunSuite:
   // the classification is a TYPE, not a sentence
   // -------------------------------------------------------------------------
 
-  test("every reason names which of §1's three kinds a reader must act in") {
+  test("every reason names which of the three kinds a reader must act in") {
     assertEquals(Reason.Universal("java-arrays-are-covariant").className, "universal")
     assertEquals(Reason.Configured("substitutions", "com.demo.Widget").className, "configured")
     assertEquals(Reason.LibraryRule("gl-handle-opaque").className, "library-rule")
-    assert(clue(Reason.Universal("x").section).startsWith("§1(a)"))
-    assert(clue(Reason.Configured("p", "k").section).startsWith("§1(b)"))
-    assert(clue(Reason.LibraryRule("x").section).startsWith("§1(c)"))
+    assert(clue(Reason.Universal("x").section).startsWith("engine"))
+    assert(clue(Reason.Configured("p", "k").section).startsWith("port policy"))
+    assert(clue(Reason.LibraryRule("x").section).startsWith("library-specific rule"))
     // the phase and the key survive the one column they share — that pair IS the edit an agent
     // has to make, so losing either would make the record unactionable.
     assertEquals(

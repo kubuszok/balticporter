@@ -23,7 +23,7 @@ object DependencyCheck:
   val Declared = "dependency-coverage(declared)"
 
   val Classification: String =
-    "[§1(b) PER-LIBRARY, in the port's manifest] the API exists off the JVM, in an artifact this " +
+    "[port policy, in the port's manifest] the API exists off the JVM, in an artifact this " +
       "build does not name. Add it to `PortManifest.dependencies`, or record the port's own answer " +
       "with a `verdictOverrides` entry — a shim, a vendored subset, or an accepted refusal. This is " +
       "NOT a call to remove."
@@ -107,7 +107,7 @@ object DependencyCheck:
           true,
           "no ORIGINAL usage names this artifact and the EMITTED code references it directly: a surface " +
             "phase of this port — a `type-redirect` or a `call-site-substitution` — rewrote into it, " +
-            "which is how a `Verdict.Depend` is answered (DESIGN.md §8.19). KEEP the entry: removing it " +
+            "which is how a `Verdict.Depend` is answered — by declaring the artifact, never a rewrite. KEEP the entry: removing it " +
             "emits a build that cannot resolve the code the redirect wrote"
         )
     case Stale
@@ -146,7 +146,7 @@ object DependencyCheck:
           true,
           "this run could not read the artifact's own class list, so whether the emitted code references " +
             "it is UNKNOWN — not `no`. No instruction is given, because the two honest ones contradict " +
-            "each other and guessing between them is a fabricated fact (CLAUDE.md §4.6)"
+            "each other and guessing between them is a fabricated fact"
         )
 
   /** one declared coordinate, its cell, and the evidence for each half of it. */

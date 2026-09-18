@@ -15,7 +15,7 @@ object CollectionClosureCheck:
     * built and only the POLICY (which types) is short.
     */
   val Classification: String =
-    "§1(b): add the type to CollectionsTransform.typeMap with a target that preserves the JDK " +
+    "port policy: add the type to CollectionsTransform.typeMap with a target that preserves the JDK " +
       "subtype relation, or record in the port's policy why the library never mixes the two."
 
   /** one referenced JDK collection type the mapping does not cover, at one usage site.

@@ -137,7 +137,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
     val post = PackageRenameTransform.check(renamed, policy)
     assertEquals(post.matched, Map.empty[String, Int])
     assertEquals(post.unmatched, List("com.example"))
-    assert(post.render.contains("§1b"))
+    assert(post.render.contains("port policy"))
   }
 
   test("ownership is structural: every owned symbol roots at a unit, no external does") {

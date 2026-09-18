@@ -130,10 +130,10 @@ class OverloadRiskSpec extends PortSuite:
     assert(OverloadRiskCheck.summary(r).contains("applicable candidate"))
   }
 
-  test("every issue carries a §1 classification and names its catalog row (§4.45)") {
+  test("every issue carries a classification and names its catalog row") {
     Issue.values.foreach { i =>
       val c = OverloadRiskCheck.Issue.classification(i)
-      assert(c.contains("§1("), s"$i does not say which of §1's three kinds the fix is")
+      assert(c.contains("engine"), s"$i does not say whose fix it is")
       assert(c.contains("JS-C2"), s"$i does not name the catalog row it counts")
     }
   }

@@ -686,7 +686,7 @@ final class NullabilityTransform(
         s"REFUSED on ${shown.size} declaration(s) this run does NOT emit — they belong to a module " +
           "this one only resolves against, and this manifest is the one that added the annotation, " +
           "so retyping them would re-shape the SHARED surface from the dependent's side and the two " +
-          "ports could not compile together (CLAUDE.md §1.5). They keep the type the base's own run " +
+          "ports could not compile together. They keep the type the base's own run " +
           s"gave them. Declare the annotation in the BASE's manifest if the contract is really the " +
           s"shared library's: ${shown.take(3).mkString(", ")}" +
           (if shown.sizeIs > 3 then s", … (${shown.size} in all)" else "")

@@ -86,7 +86,7 @@ class EmissionGateSpec extends munit.FunSuite:
     assert(e.getMessage.contains("1 open unportability marker(s)"), e.getMessage)
     // the message carries the §1 classification of the fix, because an error an agent cannot
     // classify costs it a full investigation (§4.45).
-    assert(e.getMessage.contains("§1(a) ENGINE:"), e.getMessage)
+    assert(e.getMessage.contains("engine (true of every Java program):"), e.getMessage)
     assert(e.getMessage.contains("constructor-topology"), e.getMessage)
     // NOTHING on disk. Not a partial tree, not an older one — the gate runs before the wipe.
     assertEquals(scalaFiles(port.outDir), Nil)

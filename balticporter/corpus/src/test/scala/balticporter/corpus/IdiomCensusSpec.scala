@@ -541,12 +541,12 @@ class IdiomCensusSpec extends PortSuite:
   }
 
   test(
-    "every lane carries a §1 CLASSIFICATION — an error an agent cannot classify costs a full\n" +
-      "     investigation (§4.45)"
+    "every lane carries a CLASSIFICATION — an error an agent cannot classify costs a full\n" +
+      "     investigation"
   ) {
     IdiomCheck.Lanes.foreach { l =>
       val c = IdiomCheck.classification(l)
-      assert(clue(c).startsWith("§1(a) ENGINE"), s"$l does not classify itself")
+      assert(clue(c).startsWith("engine (true of every Java program)"), s"$l does not classify itself")
       assert(!c.startsWith("unknown"))
     }
   }

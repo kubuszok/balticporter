@@ -21,7 +21,9 @@ object ClassInitTriggerCheck:
   object Issue:
     def classification(i: Issue): String = i match
       case ReentrantRefused =>
-        "§1(a) ENGINE, and a REFUSAL rather than a defect — `ENGINE-LIMITS.md` K22's second face. " +
+        "engine (true of every Java program), and a REFUSAL rather than a defect — the other face of the " +
+          "class-initialisation-trigger limit (a Java static initialiser runs when the class is first " +
+          "instantiated or a subclass initialises, but a Scala companion object initialises only when touched). " +
           "This type's class initialiser constructs (or reads a static of) a type whose own class " +
           "initialiser comes back to this one, so java runs both with a CYCLE in the graph and " +
           "survives it: the JVM lets a thread already initialising `T` re-enter `T` and read " +
@@ -33,15 +35,15 @@ object ClassInitTriggerCheck:
           "to configure: the fix, if one exists, is a different lowering for a companion whose " +
           "initialisation is cyclic."
       case Unforced =>
-        "§1(a) ENGINE: reproducing java's class-initialisation triggers is a universal " +
-          "java-vs-scala fact, never per-library policy. `TirEmitter.forceCompanion` puts a " +
+        "engine (true of every Java program): reproducing java's class-initialisation triggers is a universal " +
+          "java-vs-scala fact, never port policy. `TirEmitter.forceCompanion` puts a " +
           "`val _ = <type>` at the head of the class body for every type whose companion carries " +
           "JLS 12.4.2 step-9 content — a `static { }` block or a static field initialiser that is " +
           "not a compile-time constant. A finding here means that content reached the output " +
           "through a rendering that has no class body to put the trigger in — fix the emitter, " +
           "not the port."
       case SubclassInitUnforced =>
-        "§1(a) ENGINE: JLS 12.4.1 initialises a class when one of its SUBCLASSES is initialised, " +
+        "engine (true of every Java program): JLS 12.4.1 initialises a class when one of its SUBCLASSES is initialised, " +
           "and a subclass with statics of its own is initialised by a bare `S.member` read that " +
           "touches no instance. `TirEmitter.forceCompanion` answers it from the subclass's own " +
           "companion body — fix the emitter, not the port."

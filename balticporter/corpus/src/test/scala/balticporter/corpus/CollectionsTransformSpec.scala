@@ -1325,7 +1325,7 @@ class CollectionsTransformSpec extends PortSuite:
     assertEquals(ph.boundary(p.after).count(_.issue == CollectionBoundaryCheck.Issue.ExternalCallee), 0)
   }
 
-  test("\u2026and a class file with NO readable signature is still COUNTED, with its \u00a71 kind") {
+  test("\u2026and a class file with NO readable signature is still COUNTED, with its classification") {
     // The half that must never quietly become zero. Where the callee's declaration cannot be
     // reconstructed there is no formal at any slot, so nothing can decide whether the argument
     // fits and a cannot-verify count is the honest answer (M6) \u2014 a check that reads 0 because it
@@ -1345,7 +1345,7 @@ class CollectionsTransformSpec extends PortSuite:
     assert(clue(fs).nonEmpty, "an argument at a signature-less external callee must be counted")
     assert(clue(fs.head.slot).contains("no signature"))
     assert(
-      clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ExternalCallee)).contains("\u00a71(a)")
+      clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ExternalCallee)).contains("engine")
     )
   }
 
@@ -1549,7 +1549,7 @@ class CollectionsTransformSpec extends PortSuite:
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
     assertEquals(clue(fs).map(_.slot).sorted, List("member (implements) setValue", "parent (implements)"))
     assert(
-      clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("§1(a)")
+      clue(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.InexpressibleParent)).contains("engine")
     )
   }
 

@@ -24,7 +24,7 @@ class ParentSubstForwarderSpec extends munit.FunSuite:
       |  public T[] split(char c) { return null; }
       |}
       |/** the F-bound closed at a concrete type — the `BasedSequence extends IRichSequence<BasedSequence>`
-      |  * shape, invented here so nothing in the engine names a ported library (§1). */
+      |  * shape, invented here so nothing in the engine names a ported library. */
       |public interface Leaf extends Seq<Leaf> { }
       |/** superclass CONCRETE, mixin CONCRETE (inherited default): the diamond. */
       |public abstract class LeafBase extends SeqBase<Leaf> implements Leaf { }

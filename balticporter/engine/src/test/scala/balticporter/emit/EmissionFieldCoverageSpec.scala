@@ -224,7 +224,7 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
   private val tpeIsMetadata =
     Metadata(
       "the term's TYPE, carried for phases to read; the emitter renders the term's SHAPE " +
-        "and lets scalac re-infer, which is `CLAUDE.md` §6's fully-qualified-no-imports rule seen " +
+        "and lets scalac re-infer, which is the fully-qualified-no-imports rule seen " +
         "from the other side"
     )
 
@@ -1178,8 +1178,7 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     assertEquals(
       silent.result().sorted,
       Nil,
-      "these fields were perturbed and the emitted text did not move — which is `ENGINE-LIMITS.md` " +
-        "F5's shape exactly: the frontend populates the field, every phase carries it, and the " +
+      "these fields were perturbed and the emitted text did not move — the frontend populates the field, every phase carries it, and the " +
         "emitter never renders it. Either fix the emitter or say why the field is not emitted"
     )
   }

@@ -145,7 +145,7 @@ class VisibilitySpec extends PortSuite:
     assertEquals(causes(p), List("protected-static"))
   }
 
-  test("a §4.55 field RENAME widens too, and the widening RECORDS — the clash pass is the decider") {
+  test("a renaming-pass field RENAME widens too, and the widening RECORDS — the clash pass is the decider") {
     // Both clash passes strip `private`/`protected` from every field they rename, unconditionally,
     // and they must: a renamed field has to stay reachable from wherever java read it, which
     // scala's own access rules do not grant at the new name.

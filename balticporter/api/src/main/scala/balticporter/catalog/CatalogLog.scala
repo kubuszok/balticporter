@@ -225,7 +225,7 @@ final class CatalogLog(val fatal: Boolean = false):
           throw new AssertionError(
             s"$id attaches to $kind at $dispatch and the lowering returned without consulting it " +
               s"(${at.javaPath}:${at.line}) — either the arm owes the consult, or the row's " +
-              "`attaches` is wrong. [§1(a) engine]"
+              "`attaches` is wrong. This is an engine bug, true of every Java program."
           )
         CatalogLog.Hole(id, kind, dispatch, at, sites = 1)
     holes(id) = h

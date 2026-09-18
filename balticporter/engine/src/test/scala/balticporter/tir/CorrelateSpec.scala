@@ -92,7 +92,7 @@ class CorrelateSpec extends munit.FunSuite:
     assertEquals(os.find(_.name == "fine").map(_.suite), Some("p.OtherTest"))
   }
 
-  test("a failure that threw INSIDE the library anchors on the library member — the §4.4 case") {
+  test("a failure that threw INSIDE the library anchors on the library member") {
     val t = Correlate.locateTests(Correlate.parseTests(testLog), idx).find(_.outcome.name == "wraps").get
     assertEquals(t.anchor, "main-frame")
     assertEquals(t.entry.map(_.member), Some("p.Buf#add(int)"))

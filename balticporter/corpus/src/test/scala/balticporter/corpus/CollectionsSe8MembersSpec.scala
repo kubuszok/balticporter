@@ -122,18 +122,18 @@ class CollectionsSe8MembersSpec extends PortSuite:
     val refused = balticporter.tir.JdkSurfaceCheck.Refusals.map(_.api).toSet
     assert(
       !clue(refused).contains("java.util.List#listIterator"),
-      "the `listIterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)"
+      "the `listIterator` refusal is STALE — the phase answers for it"
     )
     assert(
       !clue(refused).contains("java.util.List#spliterator"),
-      "the `List#spliterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)"
+      "the `List#spliterator` refusal is STALE — the phase answers for it"
     )
     assert(
       !clue(refused).contains("java.util.Set#spliterator"),
-      "the `Set#spliterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)"
+      "the `Set#spliterator` refusal is STALE — the phase answers for it"
     )
     assert(clue(refused).contains("java.util.Collection#spliterator"))
     val why = balticporter.tir.JdkSurfaceCheck.Refusals.filter(_.api.endsWith("#spliterator"))
-    assert(why.forall(_.cite.contains("K23")))
+    assert(why.forall(_.cite.contains("Java 8 default methods")))
     assert(why.forall(_.why.contains("PARALLEL-DECOMPOSITION")))
   }

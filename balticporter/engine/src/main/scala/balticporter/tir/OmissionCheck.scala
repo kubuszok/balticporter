@@ -198,9 +198,10 @@ object OmissionCheck extends RemedySource:
                     fqn,
                     s"${valuedReturns(lam.body).size} value-returning `return`(s) in a lambda body; " +
                       "the nested `def` that restores java's meaning (JS-S21) needs the SAM " +
-                      "METHOD's result type and nothing in the program states it [§1(a) engine: a " +
-                      "builder that holds the method fills `Tree.Lambda.resultTpt`; " +
-                      "ENGINE-LIMITS M6/I9]",
+                      "METHOD's result type and nothing in the program states it [engine bug: a " +
+                      "builder that holds the method fills `Tree.Lambda.resultTpt`; an untranslatable " +
+                      "construct is refused and counted rather than approximated, and converting an " +
+                      "anonymous class to a lambda needs the lambda's result type to be nameable]",
                     lam.origin,
                     at
                   )

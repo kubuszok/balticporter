@@ -355,7 +355,7 @@ private[emit] trait TirEmitterNotes:
                   "type, so the two modules cannot compile together",
                 Some(module),
                 fatal = false,
-                fix = s"§1(b) PER-LIBRARY, IN THE BASE: nothing in this module can repair it — $module is " +
+                fix = s"port policy, IN THE BASE: nothing in this module can repair it — $module is " +
                   "already emitted. Either that module keeps the type a `class` (its statics move to a " +
                   "companion, so every `X.member` call site is unchanged), or this module stops naming it " +
                   "as a type"
@@ -394,7 +394,7 @@ private[emit] trait TirEmitterNotes:
                 "static the base renamed or dropped",
               module,
               fatal = false,
-              fix = "§1(b) PER-LIBRARY: declare the module that emits this type as a base " +
+              fix = "port policy: declare the module that emits this type as a base " +
                 "(`base = \"…\"`) and re-run it with this engine so its port map carries `statics=`"
             )
           )

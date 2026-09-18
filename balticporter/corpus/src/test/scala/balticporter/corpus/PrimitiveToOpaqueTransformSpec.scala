@@ -50,7 +50,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   // decision provenance
   // -------------------------------------------------------------------------
 
-  test("every retyped DECLARATION leaves a §1(c) row — nothing else says which int was tagged") {
+  test("every retyped DECLARATION leaves a library-rule row — nothing else says which int was tagged") {
     // `Pipeline.run` drains each phase's buffer into a log it discards, so the trace variant is
     // the one a spec can read (a phase instance reused across two translations must not report the
     // first run's decisions as the second's).
@@ -63,7 +63,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     // not to a manifest key or to the engine.
     assert(clue(ds).nonEmpty)
     assert(ds.forall(_.reason == balticporter.tir.Reason.LibraryRule("primitive->opaque:Layer")))
-    assertEquals(ds.head.reason.section, "§1(c) LIBRARY RULE")
+    assertEquals(ds.head.reason.section, "library-specific rule")
 
     val by = ds.map(d => d.subjectFqn.substring(d.subjectFqn.lastIndexOf('#') + 1)).toSet
     // the HINT and a member propagation discovered from it
@@ -392,7 +392,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   // SurfacePolicy — two modules configuring this differently must NOT compare equal
   // -------------------------------------------------------------------------
 
-  test("the fingerprint separates two differently-configured instances (§1.5)") {
+  test("the fingerprint separates two differently-configured instances") {
     import balticporter.core.PortManifest.fingerprint
     def ph(s: OpaqueSpec) = new PrimitiveToOpaqueTransform(s)
     val base              = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"))
@@ -442,7 +442,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("demo.Meter#reading"))
     assert(e.getMessage.contains("Layer"))
     assert(e.getMessage.contains("Reading"))
-    assert(e.getMessage.contains("§1(c)"), "the reader's first question is which repository the fix is in")
+    assert(e.getMessage.contains("library-specific rule"), "the reader's first question is which repository the fix is in")
   }
 
   // -------------------------------------------------------------------------
@@ -460,7 +460,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       scope = scope
     )
 
-  test("O6: Existing form retypes declarations to the target's FQN, not to a minted `.T`") {
+  test("Existing form retypes declarations to the target's FQN, not to a minted `.T`") {
     val ph      = new PrimitiveToOpaqueTransform(existingSpec())
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
     // the type is `mylib.Layer`, NOT `mylib.Layer.T` and NOT `demo.Sprite.T`
@@ -472,14 +472,14 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(emitted.contains("def setLayer("))
   }
 
-  test("O6: Existing form does NOT mint a companion — no `opaque type T` in the output") {
+  test("Existing form does NOT mint a companion — no `opaque type T` in the output") {
     val ph      = new PrimitiveToOpaqueTransform(existingSpec())
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
     assert(!clue(emitted).contains("opaque type"), "no unit minted — the definition is the injected file")
     assert(!emitted.contains("object Layer"), "the companion is NOT synthesised")
   }
 
-  test("O6: Existing form uses the specified wrap/unwrap names in coercions") {
+  test("Existing form uses the specified wrap/unwrap names in coercions") {
     val ph      = new PrimitiveToOpaqueTransform(existingSpec())
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
     // wrap uses the spec's wrapName ("apply") — rendered as `mylib.Layer(0)`
@@ -490,7 +490,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(!emitted.contains("mylib.Layer.unwrap("))
   }
 
-  test("O6: Existing form propagation works the same way — getter/setter/local discovered") {
+  test("Existing form propagation works the same way — getter/setter/local discovered") {
     val ph      = new PrimitiveToOpaqueTransform(existingSpec())
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
     assert(clue(emitted).contains("var layer: mylib.Layer"))
@@ -499,7 +499,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(emitted.contains("val l: mylib.Layer"))
   }
 
-  test("O6: Existing form coerces compound expressions the same way as Mint") {
+  test("Existing form coerces compound expressions the same way as Mint") {
     val ph = new PrimitiveToOpaqueTransform(
       OpaqueSpec(
         fqn = "demo.Tex",
@@ -511,7 +511,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(clue(emitted).contains("mylib.Handle.value("), "unwrap through compound expression")
   }
 
-  test("O6: Existing form's fingerprint renders the target, not just the mint FQN") {
+  test("Existing form's fingerprint renders the target, not just the mint FQN") {
     import balticporter.core.PortManifest.fingerprint
     def ph(s: OpaqueSpec) = new PrimitiveToOpaqueTransform(s)
     val mint              = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"))
@@ -549,7 +549,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assertEquals(clue(fingerprint(ph(existing))), fingerprint(ph(existingSame)))
   }
 
-  test("O6: Existing form allows nested FQNs that the Mint form refuses") {
+  test("Existing form allows nested FQNs that the Mint form refuses") {
     // The Mint form refuses `$` and `#` because it mints a TOP-LEVEL unit. The Existing form has no
     // such constraint — the target is whatever the injected file declares.
     val nested = OpaqueSpec(
@@ -562,13 +562,13 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(clue(emitted).contains("sge.Input.Key"), "nested FQN is rendered correctly")
   }
 
-  test("O6: Existing target validation refuses empty fields") {
+  test("Existing target validation refuses empty fields") {
     intercept[IllegalArgumentException](OpaqueSpec.Target.Existing(typeFqn = "", wrapName = "apply", unwrapName = "toInt"))
     intercept[IllegalArgumentException](OpaqueSpec.Target.Existing(typeFqn = "sge.Align", wrapName = "", unwrapName = "toInt"))
     intercept[IllegalArgumentException](OpaqueSpec.Target.Existing(typeFqn = "sge.Align", wrapName = "apply", unwrapName = ""))
   }
 
-  test("O6: decision provenance records §1(c) for Existing form too") {
+  test("decision provenance records a library-rule reason for Existing form too") {
     val ph  = new PrimitiveToOpaqueTransform(existingSpec())
     val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
     val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
@@ -724,7 +724,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   // O9: duplicate primitive symbol after CollectionsTransform.retargetFixedTypeSyms
   // -------------------------------------------------------------------------
 
-  test("O9: seeding works when the program has a DUPLICATE scala.Int symbol (retarget FixedType)") {
+  test("seeding works when the program has a DUPLICATE scala.Int symbol (retarget FixedType)") {
     // CollectionsTransform.retargetFixedTypeSyms mints a second `scala.Int` symbol through `byScala`
     // when a FixedType("scala.Int") arg is resolved.  The opaque transform's `find` on
     // `"scala.Int"` was non-deterministic: it might bind `primSym` to the MINTED one (high SymId)
@@ -823,7 +823,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     )
   }
 
-  test("carriers: a carrier INSIDE a carrier is refused and counted — closed for ONE depth, as arrays are (O3)") {
+  test("carriers: a carrier INSIDE a carrier is refused and counted — closed for ONE depth, as arrays are") {
     val p0      = Pipeline.run(SpoonTir.fromSource(carried, "Demo.java"), List(nullability))
     val nulls   = p0.symbols.all.find(_.fullName == "demo.Nullable").get
     val integer = p0.symbols.all.find(_.fullName == "java.lang.Integer").get
@@ -837,7 +837,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     val refused = ph.policyReport.findings.filter(_.key == "demo.Cell#align")
     assertEquals(refused.size, 1)
     assert(clue(refused.head.detail).contains("TWO carriers deep"))
-    assert(refused.head.detail.contains("O3"))
+    assert(refused.head.detail.contains("one-container-depth"))
   }
 
   test(

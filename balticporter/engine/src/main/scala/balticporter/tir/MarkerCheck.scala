@@ -17,7 +17,7 @@ object MarkerCheck:
       CheckReport.Finding(Name, kind, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
   val Classification: String =
-    "§1(a) ENGINE: a marker records a construct with no faithful Scala. An OPEN one blocks the " +
+    "engine (true of every Java program): a marker records a construct with no faithful Scala. An OPEN one blocks the " +
       "deliverable emission by design — close it in the engine, or drop the declaration that uses " +
       "it and inject a replacement. An ERASED one is a defect in the phase named beside it: it " +
       "deleted a marked subtree instead of discharging it, which removes the finding rather than " +

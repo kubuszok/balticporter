@@ -66,7 +66,7 @@ class MemberRenamerSpec extends munit.FunSuite:
     assert(ds.forall(_.detail("to") == "looping_="))
   }
 
-  test("`fullName` follows the rename, cut at the `#` separator (§4.56)") {
+  test("`fullName` follows the rename, cut at the `#` separator") {
     val (p, out, _, _) = run(musicSrc, pr => List(MemberRenamer.Request(sym(pr, "Music#setLooping"), "looping_=", cfg("k"), "k")))
     assertEquals(out.symbolOf(sym(p, "Music#setLooping")).get.fullName, "Music#looping_=")
     assertEquals(out.symbolOf(sym(p, "NoopMusic#setLooping")).get.fullName, "NoopMusic#looping_=")
@@ -168,7 +168,7 @@ class MemberRenamerSpec extends munit.FunSuite:
     assertEquals(refusals.size, 1)
   }
 
-  test("`SuffixUntilFree` is §4.55's idiom — append `$` until the name is free") {
+  test("`SuffixUntilFree` is the renaming pass's idiom — append `$` until the name is free") {
     val (p, out, refusals, _) = run(
       """class Thing { public int width() { return 1; } public int getWidth() { return 2; } }""",
       pr => List(MemberRenamer.Request(sym(pr, "Thing#getWidth"), "width", cfg("k"), "k")),

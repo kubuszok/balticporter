@@ -1185,7 +1185,7 @@ private[spoon] trait SpoonTirBodyStmts:
             c,
             s"a pattern case label — ${SpoonKinds.nameOf(other.getClass)} " +
               "(JLS 14.11.1). No source this parser accepts builds one, so this refusal is a " +
-              "claim about a node that has never been handed over (ENGINE-LIMITS T19)",
+              "claim about a node that has never been handed over",
             selT,
             about = other
           )

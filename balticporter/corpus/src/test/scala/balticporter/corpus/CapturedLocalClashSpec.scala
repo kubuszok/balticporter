@@ -56,7 +56,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
     assert(!out.contains("(filter == null)"))
   }
 
-  test("the rename carries a porter note on the ENCLOSING METHOD (§4.575)") {
+  test("the rename carries a porter note on the ENCLOSING METHOD") {
     val out = emitWithNotes(captured)
     // subject is the DECLARATION whose emitted form changed (§5.1) — a parameter has no `def` of
     // its own to sit above

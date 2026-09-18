@@ -526,7 +526,9 @@ class PortConfigSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("base chain"))
   }
 
-  test("…and through a SYMLINK too — §5.4, where the failure is a CRASH and not a wrong number") {
+  test(
+    "…and through a SYMLINK too — comparing paths through toRealPath, where the failure is a CRASH and not a wrong number"
+  ) {
     // `resolvePath` is lexical BY DESIGN (the class doc: a conf-relative path resolves to the same
     // place either way), which is right for RESOLUTION and wrong for COMPARISON. Spelled through a
     // link — a git worktree reaching a sibling checkout is the normal case — the two names of one

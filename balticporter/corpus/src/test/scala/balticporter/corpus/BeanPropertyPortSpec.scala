@@ -86,7 +86,7 @@ class BeanPropertyPortSpec extends PortSuite:
     assert(clue(out).contains("this.opacity = this.opacity * 0.5f"))
   }
 
-  test("the PORTER NOTE is beside the code, and the UPSTREAM COMMENT still comes first (§4.575)") {
+  test("the PORTER NOTE is beside the code, and the UPSTREAM COMMENT still comes first") {
     val (_, _, _, out) = ported()
     assert(clue(out).contains("/* porter: renamed-member"))
     assert(out.contains("phase=bean-properties"))

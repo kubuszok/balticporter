@@ -66,7 +66,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(clue(r.out).contains("def w()"), "the arity must survive the no-op")
   }
 
-  test("surfaceFingerprint OMITS the segment at the default — §1(b) at the fingerprint") {
+  test("surfaceFingerprint OMITS the segment at the default — port policy's no-op rule at the fingerprint") {
     assertEquals(new NullaryArityTransform().surfaceFingerprint, "")
     assertEquals(new NullaryArityTransform(RuleScope.Only(Set.empty)).surfaceFingerprint, "")
   }
@@ -241,7 +241,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assertEquals(converted(r).map(_.subject), Nil)
   }
 
-  test("the refusal names the guard AND says why — §4.45's classification obligation") {
+  test("the refusal names the guard AND says why — every finding's classification obligation") {
     val r = ran(
       """
       class Counter { private int n; public int next() { n = n + 1; return n; } }

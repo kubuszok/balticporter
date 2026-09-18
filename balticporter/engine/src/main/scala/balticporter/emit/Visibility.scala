@@ -26,7 +26,7 @@ object Visibility:
   /** Does this level need the emitter's own package tail as a qualifier? */
   def needsOwnPackage(v: Vis): Boolean = v == Vis.PackagePrivate || v == Vis.ProtectedPkg
 
-  private val Rule = "visibility(§8.7)"
+  private val Rule = "visibility"
 
   /** Why a declaration ships wider than Java wrote it. */
   private enum Cause(val slug: String, val why: String):

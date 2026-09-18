@@ -395,7 +395,7 @@ private[emit] trait TirEmitterExprs:
       unrenderable(
         "break",
         s"labelled `break $l` whose label is not in scope at this point",
-        s"the labelled statement `$l` needs a NAMED boundary (§4.4); check `Tree.Labeled` reached it",
+        s"the labelled statement `$l` needs a NAMED boundary; check `Tree.Labeled` reached it",
         b.origin,
         s"/* break $l: label not in scope */ ()"
       )
@@ -434,7 +434,7 @@ private[emit] trait TirEmitterExprs:
       unrenderable(
         "continue",
         "no enclosing loop",
-        "the loop BODY needs a `boundary` (§4.4); check which construct swallowed it",
+        "the loop BODY needs a `boundary`; check which construct swallowed it",
         c.origin,
         "/* continue: no enclosing loop */ ()"
       )
@@ -442,7 +442,7 @@ private[emit] trait TirEmitterExprs:
       unrenderable(
         "continue",
         s"labelled `continue $l` whose label is not in scope at this point",
-        s"the labelled loop `$l` needs a NAMED boundary around its body (§4.4)",
+        s"the labelled loop `$l` needs a NAMED boundary around its body",
         c.origin,
         s"/* continue $l: label not in scope */ ()"
       )
@@ -858,7 +858,7 @@ private[emit] trait TirEmitterExprs:
             s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.control.ControlThrowable => throw ${TirEmitter.BreakGuard}\n"
           else ""
         s"${ind(i + 1)}case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard}" +
-          s" // §4.4: a java jump is not catchable\n" + sentinel
+          s" // a java jump is not catchable\n" + sentinel
       else ""
     // JS-S11 — a translated CATCH swallows a translated JUMP; read off the guard just decided so
     // the consult cannot drift from the decision.
@@ -913,7 +913,7 @@ private[emit] trait TirEmitterExprs:
         b ++= s"${ind(i + 1)}var $p: java.lang.Throwable = null\n"
         b ++= s"${ind(i + 1)}try $inner\n"
         // the JUMP arm, AHEAD of the recorder — see the doc above.
-        b ++= s"${ind(i + 1)}catch { case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard} // §4.4: a java jump carries no exception to suppress into\n"
+        b ++= s"${ind(i + 1)}catch { case ${TirEmitter.BreakGuard}: scala.util.boundary.Break[?] => throw ${TirEmitter.BreakGuard} // a java jump carries no exception to suppress into\n"
         b ++= s"${ind(i + 2)}case ${TirEmitter.BreakGuard}: scala.util.control.ControlThrowable => throw ${TirEmitter.BreakGuard}\n"
         b ++= s"${ind(i + 2)}case $thr: java.lang.Throwable => { $p = $thr; throw $thr } }\n"
         b ++= s"${ind(i + 1)}finally if $name != null then {\n"
@@ -994,7 +994,7 @@ private[emit] trait TirEmitterExprs:
       else
         nullGuardedSwitches += m.id
         s"${ind(i + 1)}case null => throw new java.lang.NullPointerException(" +
-          "\"switch selector was null\") // §4.4: java's switch NPEs on a null reference selector\n"
+          "\"switch selector was null\") // java's switch NPEs on a null reference selector\n"
     s"$sel match {\n$npe$cs\n${ind(i)}}"
 
   /** does java's implicit null check apply to this switch, and has nothing already written one? Both needed: the selector's type is a REFERENCE type (a primitive cannot be null; decided from the

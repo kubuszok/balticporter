@@ -20,18 +20,18 @@ object IdiomCheck:
   /** Per-lane §1 classification. */
   def classification(l: String): String = l match
     case Converted =>
-      "§1(a) ENGINE, and NOT A DEFECT: one row per site an idiom transformer changed. The faithful " +
+      "engine (true of every Java program), and NOT A DEFECT: one row per site an idiom transformer changed. The faithful " +
         "translation was already correct, so this lane is not a fix list — it is the NUMERATOR the " +
         "refusal lane beside it is the complement of, and it is here so that a wave's emitted-text " +
         "blast can be predicted from a run rather than discovered from a diff."
     case Refused =>
-      "§1(a) ENGINE: one row per site an idiom transformer CONSIDERED and declined, naming the " +
+      "engine (true of every Java program): one row per site an idiom transformer CONSIDERED and declined, naming the " +
         "guard. Read `guard=` first — an idiom transform's safety argument is this enumeration, so " +
         "a guard that appears here permanently is a delta the port carries deliberately, while one " +
         "whose condition the phase itself could pass is an engine bug. Nothing here is a port's to " +
         "configure: an idiom transformer is unparameterised by construction."
     case Residue =>
-      "§1(a) ENGINE: a usage of a declaration an idiom transformer MOVED that the transformer did " +
+      "engine (true of every Java program): a usage of a declaration an idiom transformer MOVED that the transformer did " +
         "not rewrite. This is the `Rewrite.accountedBy` lane for the idiom layer — `rewrite-callsites` " +
         "polices that each such phase names it, and this counts what it named. A non-zero count is a " +
         "slot whose two sides disagree and is a defect, not a review list."

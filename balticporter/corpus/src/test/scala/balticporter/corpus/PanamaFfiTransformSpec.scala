@@ -40,7 +40,7 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
     )
   }
 
-  test("every native method leaves a §1(a) row naming the handle that replaced it") {
+  test("every native method leaves an engine row naming the handle that replaced it") {
     // `Pipeline.runTraced`, not `run`: the latter drains each phase's buffer into a log it discards.
     val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(new PanamaFfiTransform()))._2
     val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature)

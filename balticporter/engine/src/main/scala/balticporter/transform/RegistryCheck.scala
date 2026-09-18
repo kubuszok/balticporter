@@ -56,30 +56,30 @@ object RegistryCheck:
     /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
     def classification(i: Issue): String = i match
       case NonClassArg =>
-        "§1(b) PER-LIBRARY: a `Class`-keyed registry has nothing to key on here. Either the call " +
+        "port policy: a `Class`-keyed registry has nothing to key on here. Either the call " +
           "reaches the callee through a value the port can make a `Class` at the call site, or " +
           "this callee is not a registry site at all and the entry's `scope` should exclude it."
       case ByName =>
-        "§1(b) PER-LIBRARY: the class is named by a string, so the answer is a NAME table " +
+        "port policy: the class is named by a string, so the answer is a NAME table " +
           "(`ClassTableTransform`), not an instantiation registry — the two mechanisms are keyed " +
           "differently on purpose."
       case SelfClone =>
-        "§1(c) LIBRARY RULE: java clones an arbitrary subtype through its own runtime class. A " +
+        "library-specific rule: java clones an arbitrary subtype through its own runtime class. A " +
           "registry answers only for keys somebody registered, so the faithful port is the " +
           "library's own clone contract (a `cloneTask`-style abstract member), not this mechanism."
       case Facade =>
-        "§1(b) PER-LIBRARY: this member belongs to a facade the port injected to THROW on every " +
+        "port policy: this member belongs to a facade the port injected to THROW on every " +
           "reflective path. It compiles and fails at run time; the count is what keeps that " +
           "visible until the library's own serialisation story is ported."
       case GuardedCall =>
-        "§1(a) ENGINE / §1(b): the retired callee's exception handler is still here. Declare the " +
+        "engine or port policy: the retired callee's exception handler is still here. Declare the " +
           "exception on the entry's `handles` when java's `catch` exists only for this callee's " +
           "failure; where the handler does more than the entry's `miss`, the port owes a body."
       case OutOfScope =>
-        "§1(b) PER-LIBRARY: the entry's `scope` does not name this call site, so the reflective " +
+        "port policy: the entry's `scope` does not name this call site, so the reflective " +
           "callee survives here. Widen the scope, or declare a second entry with its own placement."
       case JvmOnlyMiss =>
-        "§1(b) PER-LIBRARY: `Miss.JvmReflect` is the JVM's answer and this module is ported for a " +
+        "port policy: `Miss.JvmReflect` is the JVM's answer and this module is ported for a " +
           "backend without runtime reflection. Off the JVM every unseeded type resolves to the " +
           "miss value — `seeds`, or a registration in the consumer's bootstrap, is what closes it."
 

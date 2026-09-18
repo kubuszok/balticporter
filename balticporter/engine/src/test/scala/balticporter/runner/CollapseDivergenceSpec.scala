@@ -37,8 +37,8 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     assert(gaps.head.why.contains("NO collapse"), "…and what THIS run derived")
     assert(gaps.head.why.contains("no count moves"), "…and why nothing else reports it")
     assertEquals(gaps.head.module, Some("base-mod"))
-    assert(clue(gaps.head.fix).contains("§1(b)"),
-           "§4.45: a finding an agent cannot classify is a\n" +
+    assert(clue(gaps.head.fix).contains("port policy"),
+           "a finding an agent cannot classify is a\n" +
              "      full investigation"
     )
   }
@@ -57,10 +57,10 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Refused("NotRequested", "the port did not ask")), List(plain), pairs, asVar), Nil)
   }
 
-  test("a pair over a type the base does NOT emit is not asked about — §1.5's rule read here") {
+  test("a pair over a type the base does NOT emit is not asked about — a dependent inherits the shared surface, read here") {
     // "Ask that question of what the base EMITS, never of its `governs` CLAIM." A dependent's own
     // declarations routinely live inside the base's namespace, and a rule that screened by the claim
-    // would report every pair such a module writes about its OWN members (`ENGINE-LIMITS.md` D10).
+    // would report every pair such a module writes about its OWN members.
     val elsewhere = base("base-mod", List("p.Other"), List("p.Other#x" -> "var"))
     assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Refused("OverriddenBelow", "mine")), List(elsewhere), pairs, asVar), Nil)
   }
@@ -82,8 +82,8 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted), List(collapsed), Map.empty, asVar), Nil)
   }
 
-  test("the VERDICT comes from the phase's own log, never from a second derivation (§4.6)") {
-    // K2.5's measured shape: a residue count that re-derived its own question could not tell a
+  test("the VERDICT comes from the phase's own log, never from a second derivation") {
+    // a measured shape: a residue count that re-derived its own question could not tell a
     // refusal from a switched-off fix. Here the same rule keeps a fatal finding honest — every
     // answer this function gives about THIS run is a row the phase filed.
     val gaps = gapsOf(log("p.Base#w" -> IdiomVerdict.Refused("AnchoredClosure", "an unparsed parent")), List(collapsed), pairs, asVar)
@@ -100,7 +100,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     assert(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted), List(collapsed), pairs, asVal).head.why.contains("a collapsed `val`"))
   }
 
-  test("the DENOMINATOR is published beside the gaps — §3, read at this check") {
+  test("the DENOMINATOR is published beside the gaps, read at this check") {
     // A dependent reporting `base-surface 0` because sixty verdicts AGREED and one reporting 0
     // because the comparison never ran are indistinguishable from the outside, and the second is
     // every way this silently stops working: a base map that was not discovered, a pairs table the

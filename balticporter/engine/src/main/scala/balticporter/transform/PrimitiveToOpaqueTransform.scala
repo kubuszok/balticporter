@@ -439,12 +439,13 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
       def show(ids: List[SymId]) =
         ids.map(id => s"      ${named(id)}   (in ${named(unitOf(p, id))})").sorted.take(10).mkString("\n")
       throw new IllegalStateException(
-        s"[balticporter] §1(c) LIBRARY RULE: `${spec.fqn}`'s hints bind declarations in MORE THAN " +
+        s"[balticporter] library-specific rule: `${spec.fqn}`'s hints bind declarations in MORE THAN " +
           "ONE module, so no module can be said to own the minted type.\n" +
           s"    this module emits ${here.size} of them:\n${show(here)}\n" +
           s"    and does NOT emit ${elsewhere.size}:\n${show(elsewhere)}\n" +
           s"  The minted `${spec.fqn}` is a TOP-LEVEL unit and belongs to the module that owns the " +
-          "declarations it was minted FOR (`ENGINE-LIMITS.md` §13 O5). With hints on both sides of " +
+          "declarations it was minted FOR — a unit a phase mints has no source origin, so without an " +
+          "explicit owner every module in the pipeline would emit it. With hints on both sides of " +
           "that line, every module in the chain mints its own copy of one FQN — and an opaque type " +
           "cannot be duplicated even harmlessly, since opacity is per-DEFINITION.\n" +
           "  Fix in the PORT: narrow `hints`/`extraHints` to declarations of ONE module — an exact " +
@@ -481,7 +482,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
           PolicyIssue.Malformed,
           s"this declaration's value type is `${TirPrinter.tpe(value, TirPrinter.Style.canonical)}`: the domain value " +
             "sits TWO carriers deep, and this mechanism coerces through exactly ONE (`w.map(v => Opaque(v))`, " +
-            "the same one-container-depth closure arrays have). [§1(b) ENGINE, `ENGINE-LIMITS.md` §13 O3: " +
+            "the same one-container-depth closure arrays have) — an opaque domain type can be seeded one " +
+            "container deep, and deeper nesting has no coercion and is refused and counted. [port policy: " +
             "the exits are to drop this hint or to widen the mechanism]"
         )
       else if !taggablePrim(s.info) && foreignOpaque(program, s.info).isEmpty && mentionsPrim(value) then
@@ -495,7 +497,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
             "container. This mechanism seeds a symbol whose OWN type is the primitive and grows the " +
             "set along flows between SYMBOLS, and a container's element has no symbol of its own, so " +
             "neither a hint nor a pure-move edge can reach it. The hint is therefore NOT a typo and " +
-            "NOT something a respelling fixes. [§1(a) ENGINE, `ENGINE-LIMITS.md` §13 O3: an " +
+            "NOT something a respelling fixes. [engine (true of every Java program): an " +
             "`OpaqueSpec` has no vocabulary for \"the element of\". Until it does, the exits are to " +
             "drop this hint or to widen the mechanism]"
         )
@@ -545,7 +547,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase, Rewr
     if clashes.nonEmpty then
       val lines = clashes.map((sym, other) => s"  $sym is already `$other`, and `${spec.fqn}` claims it too")
       throw new IllegalStateException(
-        s"[balticporter] §1(c) LIBRARY RULE: two opaque-type specs claim the same declaration(s). " +
+        s"[balticporter] library-specific rule: two opaque-type specs claim the same declaration(s). " +
           s"One symbol cannot be two opaque types, and the instance that ran second would otherwise " +
           s"decline them in silence.\n${lines.mkString("\n")}\n" +
           s"  Fix in the PORT: narrow one spec's `hints`/`extraHints`, or fence it with a " +

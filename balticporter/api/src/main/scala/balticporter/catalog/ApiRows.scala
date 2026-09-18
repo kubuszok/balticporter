@@ -957,7 +957,7 @@ object ApiRows:
        Depend(MultiArchSpi)
       ),
       JsNative,
-      "the two platforms need DIFFERENT verdicts about what EXISTS and the same one about what to do — one artifact answers both, and a Native-only port still learns that its gap is narrower; and the artifact answers the TYPES only, because off the JVM there is no classpath scan and the wrapper's registration is an object body a ported library never forces, which is COUNTED as `service-providers(off-jvm-unwired)` rather than closed (ENGINE-LIMITS.md P9)"
+      "the two platforms need DIFFERENT verdicts about what EXISTS and the same one about what to do — one artifact answers both, and a Native-only port still learns that its gap is narrower; and the artifact answers the TYPES only, because off the JVM there is no classpath scan and the wrapper's registration is an object body a ported library never forces — the descriptor ships, but Scala.js and Native resolve providers by registration nothing triggers, so `load` returns empty there, which is COUNTED as `service-providers(off-jvm-unwired)` rather than closed"
     ),
     row(
       p(26),

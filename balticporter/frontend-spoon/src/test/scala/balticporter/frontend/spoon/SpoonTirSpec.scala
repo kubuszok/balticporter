@@ -209,7 +209,7 @@ class SpoonTirSpec extends munit.FunSuite:
     assertEquals(typeAnns(p, "demo.Plain"), (List("demo.Marker"), Nil))
   }
 
-  test("the policy cuts at a SEPARATOR, never on a bare prefix (§4.56)") {
+  test("the policy cuts at a SEPARATOR, never on a bare prefix") {
     val p = AnnotationPolicy(List("com.foo"))
     assert(p.claims("com.foo.Bar"))
     assert(p.claims("com.foo.Bar$Baz"))

@@ -115,7 +115,7 @@ class ServiceProvidersSpec extends munit.FunSuite:
     assertEquals(unwired.head.owner, "p.Spi")
     assert(clue(unwired.head.detail).contains("Js"))
     assert(clue(unwired.head.detail).contains("Native"))
-    assert(clue(unwired.head.detail).contains("P9"))
+    assert(clue(unwired.head.detail).contains("UNWIRED"))
     // …and the positives are untouched, so the lane still carries its denominator beside the residue.
     assertEquals(fs.count(_.kind == ServiceProviders.Kind.Shipped.slug), 2)
   }
@@ -161,7 +161,7 @@ class ServiceProvidersSpec extends munit.FunSuite:
     assertEquals(d.providers.flatMap(_.upstream), List("p.impl.Alpha", s"$bom" + "p.impl.Beta"))
   }
 
-  tmp.test("an entry the format does not admit is carried verbatim, never guessed at (§4.6)") { dir =>
+  tmp.test("an entry the format does not admit is carried verbatim, never guessed at") { dir =>
     // two tokens on one line is not a binary class name; a "best effort" rewrite of it would be a
     // fabricated fact, so it is neither rewritten nor counted as a provider.
     val f       = descriptor(dir, "p.Spi", "p.impl.Alpha p.impl.Beta\n")

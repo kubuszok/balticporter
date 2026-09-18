@@ -116,7 +116,7 @@ class SwitchNullSpec extends PortSuite:
 
   // ---- the CHECK lane ------------------------------------------------------------------------
 
-  test("un-repaired, the check REPORTS the fall-out — owner, origin and a §1 classification") {
+  test("un-repaired, the check REPORTS the fall-out — owner, origin and a classification") {
     val p  = port(onString)
     val fs = SwitchNullCheck.check(p.after, p.after.units, (_: Tree.Match) => false)
     assertEquals(clue(fs).size, 1)
@@ -124,7 +124,7 @@ class SwitchNullSpec extends PortSuite:
     assertEquals(fs.head.selector, "java.lang.String")
     assertEquals(fs.head.owner, "demo.C#f")
     assert(fs.head.origin.line > 0, fs.head.render)
-    assert(clue(Issue.classification(Issue.NullFallsOut)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.NullFallsOut)).contains("engine"))
     assert(clue(SwitchNullCheck.summary(fs)).contains("NullFallsOut"))
     assertEquals(fs.head.report.check, SwitchNullCheck.Name)
     assert(!fs.head.report.path.startsWith("/"), fs.head.report.path)

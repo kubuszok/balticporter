@@ -473,26 +473,26 @@ object PortMapTransform:
     if r.isEmpty then ""
     else
       s" — and NOT by policy: the base's ENGINE could not render it (`$r`), so no manifest key " +
-        "here or there brings it back. §1(a) IN THE BASE: the fix is a hand-written replacement in " +
-        "that module (§1.5's `inject`); in this one, stop calling it"
+        "here or there brings it back. engine (true of every Java program), IN THE BASE: the fix is a hand-written replacement in " +
+        "that module (the dependent module's `inject`); in this one, stop calling it"
 
   /** Which of §1's three kinds each issue's fix is (CLAUDE.md §4.45). */
   def classification(issue: Issue): String = issue match
     case Issue.DroppedMember =>
-      "§1(b) PER-LIBRARY: the base module does not emit this member. Give this " +
+      "port policy: the base module does not emit this member. Give this " +
         "module a replacement — `MethodBodyTransform` for a body, `StaticForwarderTransform` to re-point " +
         "it, or `dropMethods` if the member is itself only a forwarder to the dropped one."
     case Issue.DroppedType =>
-      "§1(b) PER-LIBRARY: the base module emits nothing at this name and injects " +
+      "port policy: the base module emits nothing at this name and injects " +
         "no replacement. Rewrite the references away in this module, or ship a replacement here — the " +
         "base deliberately does not have one."
     case Issue.SubstitutedBody =>
-      "§1(b) PER-LIBRARY, INFORMATIONAL: the behaviour behind this signature " +
+      "port policy, INFORMATIONAL: the behaviour behind this signature " +
         "is not upstream's. Nothing is broken; check that this module's use of it still holds."
     case Issue.Ambiguous =>
-      "§1(a) ENGINE or (b): the base's overloads disagree and arity cannot separate " +
+      "engine or port policy: the base's overloads disagree and arity cannot separate " +
         "them. If the call is genuinely to the dropped overload, say so with a precise `dropMethods` key " +
-        "here; if this is an engine gap in overload identity, it belongs in ENGINE-LIMITS.md."
+        "here; if this is an engine gap in overload identity, report it to the Baltic Porter project."
 
   /** Every place a member symbol is used, ONE ENTRY PER SITE, with the `Apply` that gives the site its arity where there is one. The xref records `a.m(x)` twice (`Call` on `Apply`, `TermRef` on
     * `Select`); collapsing to (file, line, enclosing definition) and keeping the `Apply` gives one finding per place an author has to edit, including two calls on one line.

@@ -21,16 +21,16 @@ object BeanExposureCheck:
   object Issue:
     def classification(i: Issue): String = i match
       case NameTaken =>
-        "§1(b) PER-LIBRARY: this class is inside `PublicFieldAccessorTransform(scope)` and one of " +
+        "port policy: this class is inside `PublicFieldAccessorTransform(scope)` and one of " +
           "the bean names the field would need is already declared by the java — a `public` field " +
           "beside its own hand-written accessor, which is an ordinary shape. Emitting the second " +
           "one is a duplicate-definition error, and emitting an `isX` beside a `getX` makes a bean " +
           "reader report a conflicting property, so the field is left unexposed and counted here. " +
           "It is not a defect to fix in the engine: the java already publishes that property " +
           "through the accessor it declares, so a framework reading beans sees it. What it does " +
-          "NOT see is the FIELD, which is K21's stated limit and is not expressible in Scala."
+          "NOT see is the FIELD — a Java public field must stay visible to bean readers, and this is not expressible in Scala."
       case NameUnreachable =>
-        "§1(a) ENGINE, and a REFUSAL. A bean reader derives the PROPERTY name it registers by " +
+        "engine (true of every Java program), and a REFUSAL. A bean reader derives the PROPERTY name it registers by " +
           "running `java.beans.Introspector.decapitalize` over the accessor's suffix, and for a " +
           "`lowerUpper` field name (`eMail`, `eTag`, `xAxis`) that is not the field's name: " +
           "`eMail` capitalises to `getEMail`, whose suffix decapitalises to `EMail` — two leading " +
@@ -41,7 +41,7 @@ object BeanExposureCheck:
           "to configure: no capitalisation of a `lowerUpper` java field round-trips through " +
           "`decapitalize`, and the property is only reachable if the LIBRARY renames the field."
       case Unexposed =>
-        "§1(b) PER-LIBRARY, and a REVIEW LIST rather than a defect. This type has fields java " +
+        "port policy, and a REVIEW LIST rather than a defect. This type has fields java " +
           "declared `public` — part of its class file's surface — and the emitted scala publishes " +
           "them as private fields with scala accessors, so `getFields` answers `[]` and a bean " +
           "reader finds no `getX`. Nothing is broken unless something REFLECTS over this type: no " +

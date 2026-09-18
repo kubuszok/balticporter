@@ -51,7 +51,7 @@ class TypeShapeSpec extends munit.FunSuite:
     // and this file's whole argument would need re-reading.
     assert(
       classOf[CtTypeParameterReference].isAssignableFrom(classOf[CtWildcardReference]),
-      "CtWildcardReference no longer extends CtTypeParameterReference — re-read ENGINE-LIMITS.md G21"
+      "CtWildcardReference no longer extends CtTypeParameterReference — a match arm below a supertype arm is dead, so this ordering must be re-checked against the new Spoon hierarchy"
     )
     // …and the converse is what makes the order matter rather than being a free choice.
     assert(!classOf[CtWildcardReference].isAssignableFrom(classOf[CtTypeParameterReference]))

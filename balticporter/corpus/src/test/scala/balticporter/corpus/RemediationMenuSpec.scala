@@ -130,7 +130,7 @@ class RemediationMenuSpec extends munit.FunSuite:
     assert(a.finding.detail.contains("draining 0 row(s)"), a.finding.detail)
   }
 
-  test("a table row no selection reaches is DEAD POLICY and is reported — the §1(b) silent no-op") {
+  test("a table row no selection reaches is DEAD POLICY and is reported — the silent no-op port policy refuses") {
     val out = PortFixture.portResolving(
       Lookup,
       Map("com.demo.Names#forName" -> "class-table"),
@@ -290,7 +290,7 @@ class RemediationMenuSpec extends munit.FunSuite:
   // the plumbing the menu needed, and the no-op
   // -------------------------------------------------------------------------------------------
 
-  test("with NO selection the phase returns its input — §1(b)'s empty parameter is a no-op") {
+  test("with NO selection the phase returns its input — a configurable phase's empty parameter is a no-op") {
     val out = PortFixture.port(Chokepoint, new RemediationTransform())
     assertEquals(unitNames(out.after), unitNames(out.before))
     assertEquals(out.binder.resolutions.all, Nil)

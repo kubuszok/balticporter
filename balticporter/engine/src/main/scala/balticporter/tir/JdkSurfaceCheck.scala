@@ -51,19 +51,20 @@ object JdkSurfaceCheck extends RemedySource:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say (§4.45). */
     def classification: String = this match
       case Unhandled(target) =>
-        s"§1(b) CONFIGURE: a phase retyped this member's owner to `$target` and its tables have no " +
+        s"port policy: a phase retyped this member's owner to `$target` and its tables have no " +
           "entry for the member. Add the mapping (the retyping phase's static/instance tables and " +
           "the runtime helper beside them), or record a CITED refusal — a member that survives " +
           "only because Scala happens to spell it the same way is coverage nothing recorded."
       case KeptIterable(t) =>
-        s"§1(b) UNBUILT, ENGINE-LIMITS K9: `$t` is iterated with an enhanced-for and is neither " +
+        s"port policy, UNBUILT: `$t` is iterated with an enhanced-for that has no Scala `foreach`, so it needs " +
+          "to be emitted as Java's own `iterator()`/`hasNext()`/`next()` loop, but it is neither " +
           "retyped by a phase nor the shipped iterable shim, so the emitted `for (x <- xs)` asks " +
-          "for a `foreach` it does not have. The fix K9 specifies is a phase with an EMPTY default " +
+          "for a `foreach` it does not have. The fix is a phase with an EMPTY default " +
           "that rewrites a declared set of kept iterables to the iterator protocol — not a " +
           "universal emitter change (it would move every foreach digest in every port) and not a " +
-          "test on the type's NAME (§4.56 forbids it, and it fails in both directions here)."
+          "test on the type's NAME (a rename must decide ownership structurally, and it fails in both directions here)."
       case StaleRefusal(api) =>
-        s"§1(a) ENGINE: `$api` is recorded as refused AND handled by a phase table. One of the two " +
+        s"engine (true of every Java program): `$api` is recorded as refused AND handled by a phase table. One of the two " +
           "is out of date, and a refusal that names a case the code handles is worse than no " +
           "refusal — it is the reason not to look."
       case _ => ""
@@ -85,7 +86,8 @@ object JdkSurfaceCheck extends RemedySource:
       "because it is the reason this stayed refused when its sibling did not: `buf.asJava` yields " +
       "a `java.util.List` whose `spliterator()` is `AbstractCollection`'s DEFAULT, reporting " +
       "NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java had reports both. A consumer that " +
-      "reads `characteristics()` would get a different answer silently, which is CLAUDE.md §4.4's " +
+      "reads `characteristics()` would get a different answer silently, which is exactly the kind of Java " +
+      "statement semantics Scala does not share — it compiles cleanly and means something else — " +
       "defect class bought for a member nothing calls"
 
   /** The engine's own refusals — each one previously living in a doc comment or a `case _ => None` arm, where nothing could read it and no run could report it.
@@ -116,7 +118,7 @@ object JdkSurfaceCheck extends RemedySource:
     Refusal(
       "java.util.Collection#spliterator",
       SpliteratorWhy,
-      "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite skips a shim receiver before any arm"
+      "Java 8 default methods on List/Map/Collection need their own rewrites since similarly named Scala methods differ in mutation, null handling or which elements they keep; CollectionsTransform.rewrite skips a shim receiver before any arm"
     )
   )
 

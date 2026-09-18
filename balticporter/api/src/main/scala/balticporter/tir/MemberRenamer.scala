@@ -172,7 +172,7 @@ object MemberRenamer:
                 r,
                 s"`${r.newName}` is already taken in the component's classes by " +
                   s"${names.mkString(", ")}" +
-                  (if mode == OnCollision.DeferToEmitter then " — and at least one of them is not a member the emitter's §4.55 passes will move"
+                  (if mode == OnCollision.DeferToEmitter then " — and at least one of them is not a member the emitter's own renaming passes will move"
                    else "")
               )
       }

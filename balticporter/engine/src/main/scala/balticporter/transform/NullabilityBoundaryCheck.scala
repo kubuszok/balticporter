@@ -89,21 +89,21 @@ object NullabilityBoundaryCheck extends RemedySource:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
     def classification(i: Issue): String = i match
       case VarargParameter =>
-        "§1(a) REFUSED on purpose: a Scala vararg has no nullable form — `T*` cannot be written " +
+        "engine (true of every Java program), REFUSED on purpose: a Scala vararg has no nullable form — `T*` cannot be written " +
           "`T* | Null` and a wrapper around the repeated parameter would change its arity. The " +
           "upstream annotation is left in place; there is no engine change that makes this " +
           "expressible, and guessing one would silently change a signature."
       case PrimitiveType =>
-        "§1(b) the ANNOTATION is wrong, not the port: a primitive cannot be null, so the entry " +
+        "port policy: the ANNOTATION is wrong, not the port: a primitive cannot be null, so the entry " +
           "names a site its own library cannot mean. Left untouched; fix it upstream, or narrow " +
           "the `nullability` scope so this declaration is not considered."
       case AnnotationArguments =>
-        "§1(a) REFUSED on purpose: this annotation carries element values at this site, and " +
+        "engine (true of every Java program), REFUSED on purpose: this annotation carries element values at this site, and " +
           "consuming it into the type would drop them — `@A` where the upstream wrote `@A(x)` is a " +
           "different annotation. A nullability marker normally has none; if this one does, it is " +
           "not a plain nullability marker and should not be listed in `annotations`."
       case NotAValuePosition =>
-        "§1(a) not an error and deliberately not retyped: the annotation sits on a TYPE or a " +
+        "engine (true of every Java program), not an error and deliberately not retyped: the annotation sits on a TYPE or a " +
           "method LOCAL, neither of which has a signature occurrence to move — a local's type is " +
           "an implementation detail no consumer can see. READ THE ORIGIN BEFORE ACTING: the " +
           "commonest source is a PARAMETER an earlier phase demoted, because Java lets a method " +
@@ -112,37 +112,37 @@ object NullabilityBoundaryCheck extends RemedySource:
           "the slot. The slot carries the annotation too and IS retyped; this row is its local " +
           "half, and the emitted signature is already correct."
       case OverrideCrossing =>
-        "§1(b)/§1(a): WRAPPER mode changes the member's signature, so both ends of an override " +
+        "port policy or engine: WRAPPER mode changes the member's signature, so both ends of an override " +
           "pair have to move together and this phase can only see one of them today. Use `union` " +
           "mode (a union return may be narrowed or widened across an override, measured), or " +
           "scope the wrapper to declarations that do not participate in an override."
       case UncoercibleSeam =>
-        "§1(a) engine gap: a wrapped value reaches a call whose callee is an EXTERNAL symbol the " +
+        "engine gap: a wrapped value reaches a call whose callee is an EXTERNAL symbol the " +
           "frontend interned without a signature, so there is no formal to coerce against and " +
           "nothing honest to insert. Unwrap at the source declaration, or scope the wrapper away " +
           "from the declarations that feed this call."
       case AbstractTypeParameter =>
-        "§1(b) COUNTED, not refused, and the one place the union floor is NOT free: `Null` is a " +
+        "port policy, COUNTED, not refused, and the one place the union floor is NOT free: `Null` is a " +
           "subtype of every CONCRETE reference type, so `String | Null` simplifies at every use — " +
           "but it is NOT a subtype of an ABSTRACT `T`, which is the very reason a `return null` at " +
           "a `T` return needs a cast in the first place. So `T | Null` does not conform to `T`, and " +
           "every use of this declaration in a plain `T` slot is a compile error. The cost lands on " +
           "the USES and is invisible here, which is why it is a number. FOUR ways out, all policy: " +
-          "switch to a `named` or `option` target (a wrapper `W[T]` composes at every `T` — K13 " +
-          "CLOSED); scope this port's generic types out of `nullability`; accept the errors; or " +
+          "switch to a `named` or `option` target (a wrapper `W[T]` composes at every `T`, which closes " +
+          "this case); scope this port's generic types out of `nullability`; accept the errors; or " +
           "stage to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole class disappears."
       case ScopedOutParent =>
-        "§1(b) A SCOPE EXIT THAT DID NOT CLOSE: an ANCESTOR of this declaration is held back by one " +
+        "port policy: A SCOPE EXIT THAT DID NOT CLOSE: an ANCESTOR of this declaration is held back by one " +
           "of this port's own `nullability` scope entries, and it declares a member of the same " +
           "name carrying the same annotation — so the parent keeps its upstream type while THIS " +
           "override moves, which is half an override pair and the one shape a union floor may not " +
           "emit. Add this type to the scope beside its ancestor. A `RuleScope` is a set of FQNs and " +
           "nothing computes this closure, so before this was reported the COMPILER was the only " +
-          "thing that could find a missing entry (`ENGINE-LIMITS.md` K13: 35 errors -> 6 -> 0, the " +
+          "thing that could find a missing entry (35 errors -> 6 -> 0, the " +
           "six being exactly this shape). A subtype that merely INHERITS an annotated member is not " +
           "reported and needs no entry — adding one is dead policy, which `policy` now reports."
       case OverloadErasureClash =>
-        "§1(a) REFUSED on purpose, and the refusal is the whole answer: java kept these overloads " +
+        "engine (true of every Java program), REFUSED on purpose, and the refusal is the whole answer: java kept these overloads " +
           "apart BY ERASURE — `f(Font)` beside `f(BitmapFont)` — and a wrapper erases every one of " +
           "them to the same descriptor, because erasure drops type arguments and an opaque wrapper " +
           "drops to `Object`. Retyped, the two declarations are `E120 Conflicting definitions … " +
@@ -153,16 +153,16 @@ object NullabilityBoundaryCheck extends RemedySource:
           "does — and the alternatives are a port's: rename one overload, or scope the wrapper away " +
           "from this type."
       case UnwritableFormal =>
-        "§1(a) REFUSED on purpose: the formal this argument would be ascribed to names a type " +
+        "engine (true of every Java program), REFUSED on purpose: the formal this argument would be ascribed to names a type " +
           "VARIABLE of the CALLEE, and a callee's own type variables do not resolve at the call " +
-          "site (`ENGINE-LIMITS.md` G12). Where the RECEIVER instantiates them the phase " +
+          "site — they are coerced using the explicit type arguments or the inherited instantiation instead. Where the RECEIVER instantiates them the phase " +
           "substitutes and no ascription is needed at all; where it does not — an inherited " +
           "callee, a raw receiver, a static member, which sees NONE of its class's type " +
-          "parameters (G20) — there is no expression to write, and emitting the formal verbatim is " +
+          "parameters — there is no expression to write, and emitting the formal verbatim is " +
           "`E006 Not found: type T` at a line the source never wrote. The argument is left as it " +
           "stands, which is at worst an ascription too few and never a name that does not exist."
       case ScopedOut =>
-        "§1(b) HELD BACK ON PURPOSE, and counted for the reason every other lane here is: this " +
+        "port policy, HELD BACK ON PURPOSE, and counted for the reason every other lane here is: this " +
           "declaration carries a configured nullability annotation and the port's `nullability` " +
           "scope excludes it, so it keeps its upstream type AND its upstream marker while the " +
           "declarations around it moved. That is a residue, not a defect — but a residue nobody " +

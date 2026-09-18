@@ -371,8 +371,13 @@ class ManifestSpec extends munit.FunSuite:
     )
   }
 
-  test("every finding renders its §1 classification — an agent must not have to investigate to act") {
-    Kind.values.foreach(k => assert(clue(k.classification).contains("§1"), k.toString))
+  test("every finding renders a classification saying whose fix it is — an agent must not have to investigate to act") {
+    Kind.values.foreach(k =>
+      assert(
+        clue(k.classification).contains("engine") || k.classification.contains("port policy") || k.classification.contains("library-specific rule"),
+        k.toString
+      )
+    )
   }
 
   test("a fingerprint is stable across two equal policies and separates two different ones") {

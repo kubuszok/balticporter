@@ -82,7 +82,7 @@ class SamLambdaTransformSpec extends PortSuite:
 
   test(
     "a VALUE-returning `return` inside the converted body gets the SAM METHOD's result type\n" +
-      "     — `ENGINE-LIMITS.md` I9, and the shape that took wave 1 from 0 to 4 typer errors"
+      "     — needed for the nested `def` the emitter restores java's meaning with, and the shape that took wave 1 from 0 to 4 typer errors"
   ) {
     // java's lambda body is a METHOD body, so `return` is legal in it; scala's lambda is an
     // expression and rejects `return` outright. The emitter restores java's meaning with a nested
@@ -216,7 +216,7 @@ class SamLambdaTransformSpec extends PortSuite:
 
   test(
     "the porter NOTE's PLACEMENT is `AtDeclaration` — a kind in the wrong set is a note that\n" +
-      "     never appears (§4.575)"
+      "     never appears"
   ) {
     // Asserted structurally rather than on emitted text, because the placement sets are the
     // machinery and the text is the consequence. `NoteCoverageCheck` gates both directions on every

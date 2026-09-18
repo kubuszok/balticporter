@@ -10,7 +10,7 @@ class RealPathSpec extends munit.FunSuite:
   // the rule
   // -------------------------------------------------------------------------------------------
 
-  test("a symlinked spelling and the real one are ONE path — the whole point of §5.4") {
+  test("a symlinked spelling and the real one are ONE path — the whole point of comparing paths through toRealPath") {
     // The `…/mylib/mylib/` layout `ProvenanceHeaderSpec` uses, for the same reason: the root's own
     // parent contains a directory of the same name, so a lexical comparison that happens to work
     // for one segment still fails here.
@@ -26,7 +26,7 @@ class RealPathSpec extends munit.FunSuite:
 
     // the lexical answer, which is the defect: the two spellings are unrelated
     assert(!file.normalize.startsWith(link.normalize))
-    // …and the §5.4 answer
+    // …and the toRealPath answer
     assert(RealPath.startsWith(file, link))
     assertEquals(RealPath.of(link), RealPath.of(root))
     assertEquals(RealPath.relativize(link, file).toString.replace('\\', '/'), "com/example/Widget.java")
@@ -47,7 +47,7 @@ class RealPathSpec extends munit.FunSuite:
     RealPath.relativize(root, rel) // must not throw
   }
 
-  test("ofExisting is FATAL on an absent input, and the message names the path (§5.1)") {
+  test("ofExisting is FATAL on an absent input, and the message names the path") {
     val missing = Path.of("/definitely/not/here/Missing.java")
     val e       = intercept[java.nio.file.NoSuchFileException](RealPath.ofExisting(missing, "declared source file"))
     assert(clue(e.getFile).contains("Missing.java"))
@@ -87,7 +87,7 @@ class RealPathSpec extends munit.FunSuite:
       s"""${offenders.size} file(s) call `.toRealPath(` outside `balticporter.core.RealPath`:
          |${offenders.map("  " + _).mkString("\n")}
          |
-         |§1(a) ENGINE. §5.4's rule has ONE implementation. Four private copies of it existed before
+         |Engine bug — comparing paths through toRealPath has ONE implementation. Four private copies of it existed before
          |this spec, three with different exception policies and one with a fallback bug that made
          |the check report emit the absolute path it promises never to emit. Use `RealPath.of` /
          |`RealPath.startsWith` / `RealPath.relativize`, or `RealPath.ofExisting` where an absent

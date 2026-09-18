@@ -105,7 +105,7 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
     assert(out.contains("package sge.ui.demo"))
   }
 
-  test("a SYMLINKED spelling of sourceRoot renders the same header as the real one (CLAUDE.md §5.4)") {
+  test("a SYMLINKED spelling of sourceRoot renders the same header as the real one — comparing paths through toRealPath") {
     // The third part of the engine bitten by the same symlink: a git worktree reaches the sibling
     // source checkout through `.claude/worktrees/<x>/../sge`, so the CONFIGURED root arrives as a
     // symlinked spelling while the parser recorded the real path.

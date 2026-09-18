@@ -26,7 +26,7 @@ object CastConversionCheck:
   object Issue:
     def classification(i: Issue): String = i match
       case UnboxAsserted =>
-        "§1(a) ENGINE: java's unboxing conversion (JLS 5.1.8 + 5.1.2) rendered as a scala type " +
+        "engine (true of every Java program): java's unboxing conversion (JLS 5.1.8 + 5.1.2) rendered as a scala type " +
           "ASSERTION, which throws ClassCastException where java produced a value. The frontend " +
           "emits the explicit `xxxValue()` for this shape (`SpoonTir.castOf`), so a finding here " +
           "means a PHASE retyped the operand after the frontend decided — fix the phase's own " +

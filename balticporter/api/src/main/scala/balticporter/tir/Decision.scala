@@ -263,9 +263,9 @@ enum Reason:
 
   /** which of the three kinds a reader must act in — the whole point of the classification. */
   def section: String = this match
-    case Universal(_)     => "§1(a) ENGINE"
-    case Configured(_, _) => "§1(b) PER-LIBRARY POLICY"
-    case LibraryRule(_)   => "§1(c) LIBRARY RULE"
+    case Universal(_)     => "engine (true of every Java program)"
+    case Configured(_, _) => "port policy"
+    case LibraryRule(_)   => "library-specific rule"
 
   def render: String = s"$section: $detail"
 

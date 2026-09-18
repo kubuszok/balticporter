@@ -219,7 +219,7 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     assert(o3.contains("var log: java.util.List[java.lang.String] = f$log"))
   }
 
-  test("§4.58 — a CONSUMED assignment's comment rides the delegation that replaced it") {
+  test("trivia — a CONSUMED assignment's comment rides the delegation that replaced it") {
     // Every field slot has N roots contributing by construction, so the comment attaches to THIS
     // secondary's delegation. The funnel is the one place a statement disappears without a diff
     // showing where it went.

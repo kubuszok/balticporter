@@ -16,8 +16,8 @@ object SwitchNullCheck:
   object Issue:
     def classification(i: Issue): String = i match
       case NullFallsOut =>
-        "§1(a) ENGINE: java's implicit null check on a reference-typed switch selector is a " +
-          "universal java-vs-scala fact, never per-library policy. `TirEmitter.matchStr` emits " +
+        "engine (true of every Java program): java's implicit null check on a reference-typed switch selector is a " +
+          "universal java-vs-scala fact, never port policy. `TirEmitter.matchStr` emits " +
           "`case null => throw new java.lang.NullPointerException(…)` ahead of the java arms for " +
           "every selector whose type is not a scala value class. A finding here means a switch " +
           "reached the output through a path that does not guard: fix the emitter, not the port."

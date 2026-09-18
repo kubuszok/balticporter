@@ -60,7 +60,7 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     assert(!out.contains("Ctx: demo.Ctx = new"), out)
   }
 
-  test("every threaded DECLARATION leaves a §1(b) row, and no call site does") {
+  test("every threaded DECLARATION leaves a port-policy row, and no call site does") {
     val ds = log.of(Decision.Kind.RetypedSignature)
     assert(clue(ds).nonEmpty)
     assert(ds.forall(_.reason == Reason.Configured("globals->implicits", "demo.Config")))
@@ -172,7 +172,7 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  test("CT11: static field constructing a threaded type becomes a holder with throwing accessor") {
+  test("static field constructing a threaded type becomes a holder with throwing accessor") {
     val h = ContextHolder(
       holder = "demo.Config",
       context = ContextType.Minted("demo.Ctx"),
@@ -191,7 +191,7 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     assert(ds.head.detail.get("from").exists(_.contains("static field")))
   }
 
-  test("CT11: static field with NO threaded method on the class is a counted unsuppliable-use") {
+  test("static field with NO threaded method on the class is a counted unsuppliable-use") {
     val h = ContextHolder(
       holder = "demo.Config",
       context = ContextType.Minted("demo.Ctx"),

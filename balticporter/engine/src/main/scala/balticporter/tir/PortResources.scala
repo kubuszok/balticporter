@@ -85,7 +85,7 @@ object PortResources:
         CheckReport.relativise(t.root.toString),
         "this tree declares no file, so the run ships nothing from it — which is indistinguishable " +
           "from the resource being absent, the failure this key exists to remove " +
-          "[§1(b): name the files this module ships, or remove the entry]"
+          "[port policy: name the files this module ships, or remove the entry]"
       )
     }
 
@@ -96,10 +96,10 @@ object PortResources:
         CheckReport.relativise(r.source.toString),
         s"the emitted code names `${r.path}` and this port does not ship it, although the file is " +
           s"under a resource root this manifest already declares. A classpath lookup is a STRING " +
-          "LITERAL no rename may move (§4.56), so the path is correct and the COPY is what is " +
+          "LITERAL no rename may move, so the path is correct and the COPY is what is " +
           "missing: absent, the lookup fails at first use with no compile error, no check count and " +
           "no member digest to say so " +
-          "[§1(b): add it to that tree's `files`, or state why this port ships without it]"
+          "[port policy: add it to that tree's `files`, or state why this port ships without it]"
       )
     }
 
@@ -119,7 +119,7 @@ object PortResources:
           s"shipped verbatim as `${r.path}`, and no emitted literal names it — legitimate for a " +
             "resource another resource names (an atlas names its image, a skin its fonts) or one " +
             "this port's consumer reads, and identical to a stale entry, so the engine states it " +
-            "and the port decides [§1(b): confirm against this module's `resources`]"
+            "and the port decides [port policy: confirm against this module's `resources`]"
         )
     }
 

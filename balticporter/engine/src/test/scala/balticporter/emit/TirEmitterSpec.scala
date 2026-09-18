@@ -345,7 +345,7 @@ class TirEmitterSpec extends munit.FunSuite:
     )
     new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
 
-  test("K9: a for-each over a KEPT java.util.List emits a while-loop over iterator()/hasNext()/next()") {
+  test("a for-each over a KEPT java.util.List emits a while-loop over iterator()/hasNext()/next()") {
     val text = k9ForEach("java.util.List")
     assert(clue(text).contains(".iterator()"), clue(text))
     assert(text.contains(".hasNext()"), clue(text))
@@ -353,21 +353,21 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!text.contains("for ("), clue(text))
   }
 
-  test("K9: a for-each over a KEPT java.util.Set emits the same while-loop form") {
+  test("a for-each over a KEPT java.util.Set emits the same while-loop form") {
     val text = k9ForEach("java.util.Set")
     assert(clue(text).contains(".iterator()"), clue(text))
     assert(text.contains(".hasNext()"), clue(text))
     assert(!text.contains("for ("), clue(text))
   }
 
-  test("K9: a break inside a kept-JDK for-each emits a boundary around the while-loop") {
+  test("a break inside a kept-JDK for-each emits a boundary around the while-loop") {
     val text = k9ForEach("java.util.List", withBreak = true)
     assert(clue(text).contains("scala.util.boundary"), clue(text))
     assert(text.contains(".iterator()"), clue(text))
     assert(text.contains(".hasNext()"), clue(text))
   }
 
-  test("K9: a side-effecting iterable expression is evaluated ONCE — bound to the iterator variable") {
+  test("a side-effecting iterable expression is evaluated ONCE — bound to the iterator variable") {
     val text = k9ForEach("java.util.List", sideEffectIterable = true)
     // the iterable expression `getList()` appears exactly once, inside the iterator binding
     val count = "getList\\(\\)".r.findAllIn(text).size
@@ -375,7 +375,7 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(text.contains(".iterator()"), clue(text))
   }
 
-  test("K9: a reassigned binding in a kept-JDK for-each becomes a `var`") {
+  test("a reassigned binding in a kept-JDK for-each becomes a `var`") {
     val text = k9ForEach("java.util.List", assignBinding = true)
     assert(clue(text).contains("var r:"), clue(text))
     assert(text.contains(".next()"), clue(text))

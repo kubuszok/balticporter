@@ -187,10 +187,10 @@ class CollectionsSinkSpec extends PortSuite:
     assertEquals(rows.map(_.reason.className).distinct, List("configured"))
     assert(
       rows.forall(_.reason.detail.contains(Sink)),
-      "the key is the manifest entry VERBATIM — the string an agent edits (§4.575)"
+      "the key is the manifest entry VERBATIM — the string an agent edits"
     )
     assert(
       rows.exists(_.subjectFqn.endsWith("known")) && rows.exists(_.subjectFqn.endsWith("opaque")),
-      "one row per DECLARATION the bridge reached, never one per site (§5.1)"
+      "one row per DECLARATION the bridge reached, never one per site"
     )
   }

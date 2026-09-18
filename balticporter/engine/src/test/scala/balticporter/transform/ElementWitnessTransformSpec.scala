@@ -228,10 +228,13 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     assert(clue(fs).forall(f => f.detail.contains("`Class` argument")))
   }
 
-  test("every refusal kind carries a §1 classification a reader can act on") {
+  test("every refusal kind carries a classification a reader can act on") {
     ElementWitnessCheck.Issue.values.foreach { i =>
       val c = ElementWitnessCheck.Issue.classification(i)
-      assert(clue(c).contains("§1"), s"$i has no classification")
+      assert(
+        clue(c).contains("engine") || c.contains("port policy") || c.contains("library-specific rule"),
+        s"$i has no classification"
+      )
     }
   }
 

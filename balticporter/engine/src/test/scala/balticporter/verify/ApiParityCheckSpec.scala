@@ -1025,7 +1025,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assertEquals(divs.map(d => (d.family, d.detail)), Nil)
   }
 
-  test("`rule` is a family of its own — never `unclassified`, and it has a §1 classification") {
+  test("`rule` is a family of its own — never `unclassified`, and it has a classification") {
     assert(ApiParityCheck.Families.contains("rule"))
     assert(ApiParityCheck.Classification.contains("rule"))
     assert(ApiParityCheck.AllLanes.contains("api-parity(rule)"))

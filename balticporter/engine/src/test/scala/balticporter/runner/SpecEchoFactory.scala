@@ -23,5 +23,5 @@ object SpecEchoFactory:
     kind = "spec-echo-kind",
     emissionAffecting = true,
     fix = FixKind.LibraryRule,
-    what = "a §1(c) rule's own menu entry, declared by the factory that would build it"
+    what = "a library-specific rule's own menu entry, declared by the factory that would build it"
   )

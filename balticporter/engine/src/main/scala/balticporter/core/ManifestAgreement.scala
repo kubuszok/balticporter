@@ -43,7 +43,7 @@ object ManifestAgreement:
     case MissingDrop
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: the base module does not translate this type mechanically, so no class " +
+          "port policy: the base module does not translate this type mechanically, so no class " +
             "exists at that name in its output. Add the key to this module's manifest, or inherit it " +
             "with `base.extendedBy(...)`."
         )
@@ -52,7 +52,7 @@ object ManifestAgreement:
     case ExtraDrop
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this module drops something the base module EMITS, so the two ports " +
+          "port policy: this module drops something the base module EMITS, so the two ports " +
             "disagree about what the shared surface contains. Remove the key here, or add it to the base."
         )
 
@@ -60,7 +60,7 @@ object ManifestAgreement:
     case RenameDivergence
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: the shared namespace is renamed differently in the two modules, so this " +
+          "port policy: the shared namespace is renamed differently in the two modules, so this " +
             "module's references name a package the base never emits. Inherit the base's rename map."
         )
 
@@ -70,7 +70,7 @@ object ManifestAgreement:
     case TypeRenameDivergence
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: a type of the shared surface is moved differently in the two modules — " +
+          "port policy: a type of the shared surface is moved differently in the two modules — " +
             "renamed, sub-packaged or flattened here and not there, or to a different destination — so " +
             "this module names a class the base never emits. Inherit the base's per-type rename maps " +
             "with `base.extendedBy(...)` rather than restating them."
@@ -80,7 +80,7 @@ object ManifestAgreement:
     case RenameOverride
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this module renames a prefix inside the base's declared namespace that " +
+          "port policy: this module renames a prefix inside the base's declared namespace that " +
             "the base does not rename. Either the base should rename it too, or this module's " +
             "`governs` claim is wrong."
         )
@@ -89,7 +89,7 @@ object ManifestAgreement:
     case SurfaceMissing
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: a phase that shapes emitted signatures ran in the base module and not " +
+          "port policy: a phase that shapes emitted signatures ran in the base module and not " +
             "here, so this module re-derives the shared surface's signatures differently from the " +
             "module it compiles against. Add the phase to this manifest's `surface`, or inherit it."
         )
@@ -99,13 +99,14 @@ object ManifestAgreement:
     case SurfaceDivergence
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: one phase appears twice in the effective pipeline and the two instances " +
-            "could not be MERGED — either the phase declares no `MergeablePolicy` (that is §1(a), " +
-            "engine: give it one) or its own merge refused the pair, which is the drift CLAUDE.md §1 " +
-            "warns about (§1(b): reconcile the two values, or share one instance). A phase that " +
+          "port policy: one phase appears twice in the effective pipeline and the two instances " +
+            "could not be MERGED — either the phase declares no `MergeablePolicy` (that is " +
+            "an engine gap: give it one) or its own merge refused the pair, which is the drift the " +
+            "universal-vs-library-specific rule " +
+            "warns about (port policy: reconcile the two values, or share one instance). A phase that " +
             "implements no `SurfacePolicy` either is reported HOWEVER it is configured — its " +
             "fingerprint is its NAME, so the engine cannot tell two policies from one, and both " +
-            "instances would run over one program (§1(a), engine: implement `SurfacePolicy`)."
+            "instances would run over one program (engine gap: implement `SurfacePolicy`)."
         )
 
     /** one location, two remedy SELECTIONS, in one policy chain.
@@ -116,7 +117,7 @@ object ManifestAgreement:
     case ResolutionDivergence
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: two manifests in this chain select DIFFERENT remedies at the same " +
+          "port policy: two manifests in this chain select DIFFERENT remedies at the same " +
             "location. A remedy decides emitted text at a declaration both modules compile against, so " +
             "the union that makes the effective policy well defined (nearest wins) is exactly what " +
             "would let a dependent silently re-answer its base — and the two ports would then each " +
@@ -132,7 +133,7 @@ object ManifestAgreement:
     case MissingResolution
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: the base module SELECTS a remedy at this location and this module selects " +
+          "port policy: the base module SELECTS a remedy at this location and this module selects " +
             "none, so the same declaration is emitted two ways and the two ports cannot compile " +
             "together. This is only reachable for a module that restates its policy in full " +
             "(`PortManifest.mirroring`): add the entry here, or inherit the base's policy with " +
@@ -143,7 +144,7 @@ object ManifestAgreement:
     case ResolutionIntrusion
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this module selects a remedy at a declaration inside a base's declared " +
+          "port policy: this module selects a remedy at a declaration inside a base's declared " +
             "namespace that the base EMITS and says nothing about, so the remedy would re-shape the " +
             "SHARED surface from the dependent's side. `SurfaceIntrusion`'s rule, read at a member key: " +
             "move the entry to the base's manifest, or (if the declaration is genuinely not part of the " +
@@ -155,7 +156,7 @@ object ManifestAgreement:
     case SurfaceIntrusion
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this module adds policy for a type INSIDE a base's declared namespace " +
+          "port policy: this module adds policy for a type INSIDE a base's declared namespace " +
             "that the base emits mechanically, so the merged pipeline would re-shape the SHARED " +
             "surface from the dependent's side and the two ports could not compile together. Move the " +
             "entry to the base's manifest, or (if the type is genuinely not part of the shared " +
@@ -168,7 +169,7 @@ object ManifestAgreement:
     case BaseNamespaceUnclaimed
         extends Kind(
           false,
-          "§1(b) PER-LIBRARY, in the BASE's manifest: this base states shared-surface policy and " +
+          "port policy, in the BASE's manifest: this base states shared-surface policy and " +
             "claims NO namespace (`governs` is empty), so `PortManifest.claims` is false for every FQN " +
             "and the `governs` INTRUSION SCREEN is disabled for it — every subject a dependent's phase " +
             "adds inside the base's packages is admitted unscreened, silently, because a screen with " +
@@ -181,10 +182,11 @@ object ManifestAgreement:
     case TargetWidening
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this module declares a `targets` platform its base does not, so it is " +
+          "port policy: this module declares a `targets` platform its base does not, so it is " +
             "about to be built for a backend the emitted Scala it compiles against was never checked " +
             "for — and may not be portable to. The base's own findings are the ones that would have " +
-            "said so, and D2's ownership filter is exactly what stops this module reporting them, so " +
+            "said so, and the ownership filter that keeps every report scoped to the module owning the " +
+            "declaration is exactly what stops this module reporting them, so " +
             "the unbuildable half is the half nothing looks at. NARROWING is free (a dependent may " +
             "target fewer platforms than its base and simply asks fewer questions); widening is not. " +
             "Either drop the platform here, or — if the base genuinely IS portable and only never said " +
@@ -195,7 +197,7 @@ object ManifestAgreement:
     case TagMissing
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: the base module substitutes this type, and this run translated it as an " +
+          "port policy: the base module substitutes this type, and this run translated it as an " +
             "ordinary reference. Every phase keyed on `Substituted` silently skipped it here."
         )
 
@@ -203,7 +205,7 @@ object ManifestAgreement:
     case TagUnexpected
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this run substitutes a type the base module emits mechanically. The " +
+          "port policy: this run substitutes a type the base module emits mechanically. The " +
             "replacement this module expects at that name is not the class the base wrote."
         )
 
@@ -211,9 +213,9 @@ object ManifestAgreement:
     case SurfaceNameDivergence
         extends Kind(
           true,
-          "§1(a)/(b): a shared type's emitted name is not the one the effective rename map gives it — " +
-            "either the map disagrees with the base (b, fix the manifest) or the rename failed to " +
-            "reach an owned symbol (a, engine)."
+          "engine or port policy: a shared type's emitted name is not the one the effective rename map gives it — " +
+            "either the map disagrees with the base (port policy: fix the manifest) or the rename failed to " +
+            "reach an owned symbol (engine)."
         )
 
     /** an inherited key that matched nothing in THIS run. Not fatal: a narrower dependent module legitimately never touches part of the shared surface.
@@ -221,7 +223,7 @@ object ManifestAgreement:
     case InheritedKeyNeverFired
         extends Kind(
           false,
-          "§1(b) PER-LIBRARY, in the BASE's manifest: an inherited key matched nothing here. Harmless " +
+          "port policy, in the BASE's manifest: an inherited key matched nothing here. Harmless " +
             "if this module simply does not reach that part of the shared surface; a typo in the base " +
             "otherwise — and then the base is not doing what it says either."
         )
@@ -230,7 +232,7 @@ object ManifestAgreement:
     case BaseSurfaceAbsent
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: the base module's published port map has no entry for this type — it " +
+          "port policy: the base module's published port map has no entry for this type — it " +
             "neither emitted it nor recorded it as dropped — so this module is about to compile " +
             "against a class nobody writes. Either the base's file list omits it (fix the base's " +
             "`FrontendConfig.files`), or this run resolves against a source tree the base does not " +
@@ -243,7 +245,7 @@ object ManifestAgreement:
     case BaseMapStale
         extends Kind(
           false,
-          "§1(b) PER-LIBRARY, OPERATIONAL: the base's published port map does not describe the base as " +
+          "port policy, OPERATIONAL: the base's published port map does not describe the base as " +
             "it is now, so it was REFUSED and this run fell back to re-deriving the base's decisions " +
             "from its manifest — which cannot see the base's emitted output, its nested-type drops, or " +
             "the configuration of any phase that does not implement `SurfacePolicy`. Re-run the base " +
@@ -257,20 +259,21 @@ object ManifestAgreement:
     case BaseMapJdk
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY, OPERATIONAL: the base's port map was published by a JVM implementing a " +
+          "port policy, OPERATIONAL: the base's port map was published by a JVM implementing a " +
             "DIFFERENT JDK specification than this run's, so the Scala this module is about to compile " +
             "against was emitted from class files this run cannot read. Nothing else can see it — the " +
             "engine, source and policy fingerprints all match, because the engine, the java and the " +
             "policy really are unchanged. Re-run the base port ON THIS JDK, or run this port on the " +
-            "base's (`ENGINE-LIMITS.md` M5.10; a lane's own `jdk_guard` is the same question asked of " +
-            "the COMPILER instead of the base)."
+            "base's (the JDK version is an input to every measurement — the frontend and the compiler " +
+            "must run on the same recorded JDK, or a correct override reports as overriding nothing; a " +
+            "lane's own `jdk_guard` is the same question asked of the COMPILER instead of the base)."
         )
 
     /** freshness could not be established either way. The map WAS used. */
     case BaseMapUnverified
         extends Kind(
           false,
-          "§1(b) PER-LIBRARY, OPERATIONAL: the base's published map was used but its freshness could " +
+          "port policy, OPERATIONAL: the base's published map was used but its freshness could " +
             "not be checked, so it may describe an older run. Not an error — absence of proof is not " +
             "proof — but the agreement below is only as current as that map."
         )
@@ -279,7 +282,7 @@ object ManifestAgreement:
     case BaseMapMissing
         extends Kind(
           false,
-          "§1(b) PER-LIBRARY, OPERATIONAL: this base declares shared-surface policy but has published " +
+          "port policy, OPERATIONAL: this base declares shared-surface policy but has published " +
             "no readable port map, so the agreement below is RE-DERIVED from its manifest — the weaker " +
             "of the two checks (see this object's scaladoc for the three holes that leaves). Run the " +
             "base port once; every run publishes its map."
@@ -289,7 +292,7 @@ object ManifestAgreement:
     case NoBaseDeclared
         extends Kind(
           true,
-          "§1(b) PER-LIBRARY: this run resolves against sources it does not convert — it is a " +
+          "port policy: this run resolves against sources it does not convert — it is a " +
             "DEPENDENT port — but names no base manifest, so nothing verifies that it agrees with the " +
             "module that emits them. Declare the base with `base.extendedBy(...)`. If the resolution " +
             "root is NOT a ported module, say so with an empty `PortManifest(name = \"…\")` as the base."

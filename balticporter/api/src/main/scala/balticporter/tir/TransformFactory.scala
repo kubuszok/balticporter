@@ -38,7 +38,7 @@ object TransformFactory:
               s.path,
               "a scope declares `except` OR `only`, never both — " +
                 "`Everywhere(except)` and `Only(include)` point in opposite directions and there is " +
-                "no value that is both (CLAUDE.md §1(b), DESIGN.md §2.1.1)"
+                "no value that is both"
             )
           case (Some(e), scala.None)    => RuleScope.Everywhere(e.toSet)
           case (scala.None, Some(o))    => RuleScope.Only(o.toSet)

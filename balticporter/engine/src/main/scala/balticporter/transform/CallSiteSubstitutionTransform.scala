@@ -67,8 +67,8 @@ final class CallSiteSubstitutionTransform(val calls: Map[String, String] = Map.e
       Some(
         "the callee bound through an ERASURE-APPROXIMATE identity: it names an external member whose " +
           "declaration the frontend could not resolve, so it carries no parameter spelling and this " +
-          "bare key matched by owner and name alone — the same string for every overload " +
-          "(DESIGN.md §8.1). Write the precise `owner#name(P1,P2)` form; if the spelling is still " +
+          "bare key matched by owner and name alone — the same string for every overload. " +
+          "Write the precise `owner#name(P1,P2)` form; if the spelling is still " +
           "absent the member is outside this run's reach and its calls cannot be substituted safely"
       )
 

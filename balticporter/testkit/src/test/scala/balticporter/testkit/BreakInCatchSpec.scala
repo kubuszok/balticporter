@@ -256,7 +256,11 @@ class BreakInCatchSpec extends PortSuite:
         catch case _: java.lang.Exception => () // java could never catch the jump; scala just did
       "none"
     }
-    assertEquals(r, "none", "the naive shape is supposed to lose the break — if this passed, re-read §4.4")
+    assertEquals(
+      r,
+      "none",
+      "the naive shape is supposed to lose the break — a boundary.Break extends RuntimeException, so a broad catch swallows it silently"
+    )
     assertEquals(attempts, 3, "…and the loop ran to the end")
   }
 

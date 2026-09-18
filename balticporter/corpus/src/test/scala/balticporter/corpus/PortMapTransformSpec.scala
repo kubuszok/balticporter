@@ -174,7 +174,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     renames = Map.empty,
     refusedMembers = Map(
       "p.Font#<init>()" ->
-        balticporter.tir.Surface.render(balticporter.tir.Surface.MemberShape(refusal = "ctor-funnel/nilary-dropped(C11)"))
+        balticporter.tir.Surface.render(balticporter.tir.Surface.MemberShape(refusal = "ctor-funnel/nilary-dropped"))
     )
   )
 
@@ -185,7 +185,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     val row = refusedMap.members.find(_.upstream == "p.Font#<init>()").getOrElse(fail(s"no refused row in ${refusedMap.members.map(_.upstream)}"))
     assertEquals(row.disposition, PortMap.Disposition.Dropped)
     assertEquals(row.emitted, "p.Font#<init>()")
-    assertEquals(row.memberShape.refusal, "ctor-funnel/nilary-dropped(C11)")
+    assertEquals(row.memberShape.refusal, "ctor-funnel/nilary-dropped")
 
     val (phase, _) = run(model(refusedBase, refusedCaller), List(refusedMap))
     val dropped    = phase.findings.filter(_.issue == PortMapTransform.Issue.DroppedMember)
@@ -194,8 +194,8 @@ class PortMapTransformSpec extends munit.FunSuite:
     // …and the message says which of §1's three kinds the fix is, which is the reader's FIRST
     // question and the one a bare `Dropped` cannot answer: a policy drop can be asked back, an
     // engine refusal cannot (§4.45).
-    assert(clue(dropped.head.detail).contains("ctor-funnel/nilary-dropped(C11)"), dropped.head.detail)
-    assert(dropped.head.detail.contains("§1(a) IN THE BASE"), dropped.head.detail)
+    assert(clue(dropped.head.detail).contains("ctor-funnel/nilary-dropped"), dropped.head.detail)
+    assert(dropped.head.detail.contains("engine (true of every Java program), IN THE BASE"), dropped.head.detail)
 
     // the PARAMFUL constructor beside it is untouched. Both are `p.Font#<init>` to a TIR symbol, so
     // without arity separating them the base's refusal would be reported against the call the port
@@ -236,7 +236,7 @@ class PortMapTransformSpec extends munit.FunSuite:
     val (phase, _) = run(model(refusedBase, refusedCaller), List(policy))
     val dropped    = phase.findings.filter(_.issue == PortMapTransform.Issue.DroppedMember)
     assertEquals(clue(dropped).map(_.symbol), List("p.Font#<init>()"))
-    assert(!dropped.head.detail.contains("§1(a) IN THE BASE"), dropped.head.detail)
+    assert(!dropped.head.detail.contains("engine (true of every Java program), IN THE BASE"), dropped.head.detail)
   }
 
   test("the same program with NO map produces nothing — the phase is a total no-op unconfigured") {

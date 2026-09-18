@@ -175,7 +175,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assertEquals(clue(clinit).size, 1, ss.map(_.render).mkString("\n"))
     assertEquals(clinit.head.kind, ContextSeamCheck.Kind.ResidualGlobalRead)
     assert(clinit.head.detail.contains("class initialiser"), clinit.head.render)
-    assert(ContextSeamCheck.Kind.classification(clinit.head.kind).contains("§1(b)"))
+    assert(ContextSeamCheck.Kind.classification(clinit.head.kind).contains("port policy"))
   }
 
   // -------------------------------------------------------------------------
@@ -213,7 +213,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // classification costs it the investigation plus a wrong fix. The two sentences must not be
     // interchangeable.
     val c = ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.UnsuppliableUse)
-    assert(clue(c).contains("§1(b)"), c)
+    assert(clue(c).contains("port policy"), c)
     assert(c.contains("DOES NOT COMPILE"), c)
     assert(c.contains("`sites`"), c)
     assert(c.contains("selfSupplied"), c)
@@ -362,7 +362,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     )
   }
 
-  test("an empty `retain` is a structural no-op — the default, and CLAUDE.md §1's rule for an ADD") {
+  test("an empty `retain` is a structural no-op — the default for a phase that ADDS declarations") {
     // A phase that MINTS members has no pre-scope behaviour to preserve and its unrestricted form is
     // not a safe default: it would put a new NAME on every threaded class in every port to serve the
     // one declaration that is handed a threaded object.
@@ -462,7 +462,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     )
   }
 
-  test("an empty `cache` is a structural no-op — the default, and CLAUDE.md §1's rule for an ADD") {
+  test("an empty `cache` is a structural no-op — the default for a phase that ADDS declarations") {
     val (_, _, _, with0) = portedFrom(cacheSrc, cacheHolder)
     assert(!clue(code(with0)).contains("demoCtx"), code(with0))
   }

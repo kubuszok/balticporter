@@ -100,8 +100,8 @@ private[spoon] trait SpoonTirBodyExprs:
               b,
               s"an `instanceof` PATTERN binding — ${SpoonKinds.nameOf(p.getClass)} " +
                 "(JLS 15.20.2). Java's binding is FLOW-SCOPED (JLS 6.3.1), so no lexical `val` " +
-                "placement is faithful and a hoisted `var` diverges under capture; see " +
-                "ENGINE-LIMITS T18 for the three placements measured",
+                "placement is faithful and a hoisted `var` diverges under capture — measured across " +
+                "the three placements tried",
               ty(b),
               about = p
             )

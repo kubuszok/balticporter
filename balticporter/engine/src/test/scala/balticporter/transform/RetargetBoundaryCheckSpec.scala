@@ -12,9 +12,8 @@ class RetargetBoundaryCheckSpec extends munit.FunSuite:
     for v <- RetargetBoundaryCheck.Issue.values do assert(clue(RetargetBoundaryCheck.Issue.classification(v)).nonEmpty, s"Issue.$v has no classification")
   }
 
-  test("IteratorRemove classification mentions ENGINE-LIMITS") {
+  test("IteratorRemove classification names the exception it throws") {
     val c = RetargetBoundaryCheck.Issue.classification(RetargetBoundaryCheck.Issue.IteratorRemove)
-    assert(clue(c).contains("ENGINE-LIMITS"), "IteratorRemove classification should cite ENGINE-LIMITS")
     assert(c.contains("UnsupportedOperationException"), "IteratorRemove should name the exception")
   }
 

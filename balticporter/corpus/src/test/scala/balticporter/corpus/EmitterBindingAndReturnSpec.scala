@@ -188,7 +188,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
   // F9 arity: iterator/hasNext parens decided from the CALLEE SYMBOL, never `program.owns`
   // -------------------------------------------------------------------------------------------
 
-  test("F9: a program-declared iterable keeps java arity — iterator()/hasNext() with parens") {
+  test("a program-declared iterable keeps java arity — iterator()/hasNext() with parens") {
     // A class implementing `Iterable<T>` declares `iterator()` with `()`. After the for-each is
     // lowered to a while loop, the emitted `iterator()/hasNext()` must carry parens because the
     // callee SYMBOL declares them. `program.owns` happened to get this right; the callee-symbol
@@ -212,7 +212,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     assertEmits(p, ".next()")
   }
 
-  test("F9: a scala Array uses parenless iterator/hasNext — extension methods have no parens") {
+  test("a scala Array uses parenless iterator/hasNext — extension methods have no parens") {
     // `Token.values()` returns a `Token[]` → `scala.Array[Token]`. The `iterator` comes from
     // `ArrayOps` (an extension method), which is parenless. The existing test above already covers
     // this; this test pins the assertion explicitly at the arity level.
@@ -235,11 +235,11 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     assertEmits(p, ".next()")
   }
 
-  test("F9: a runtime shim receiver (JavaIterable) uses java arity — iterator()/hasNext() with parens") {
+  test("a runtime shim receiver (JavaIterable) uses java arity — iterator()/hasNext() with parens") {
     // After CollectionsTransform, a program-declared class extending `java.lang.Iterable` is
     // re-parented to `JavaIterable`. The shim's `iterator()` and `JavaIterator.hasNext()` are
-    // declared WITH `()` (CLAUDE.md §4.5). The old `program.owns` heuristic returned `false` for
-    // these external types and emitted parenless calls — the defect F9 corrects.
+    // declared WITH `()`. The old `program.owns` heuristic returned `false` for
+    // these external types and emitted parenless calls — the defect this test corrects.
     val p = port(
       """package demo;
         |import java.util.Iterator;

@@ -307,7 +307,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
 
   // ------------------------------------------------------------ PROVENANCE --
 
-  test("EVERY REBUILT CLASS LEAVES A §1(a) ROW — the one edit no emitted text explains") {
+  test("EVERY REBUILT CLASS LEAVES AN ENGINE ROW — the one edit no emitted text explains") {
     val ds = decisions(sharedFieldSrc)
     assertEquals(ds.map(_.subjectFqn), List("demo.SharedFieldTest"))
     assertEquals(ds.head.reason, balticporter.tir.Reason.Universal("test-framework/fresh-instance"))
@@ -347,7 +347,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
       |  @Test public void one() { kept = 1; }
       |}""".stripMargin
 
-  test("P11: a field listed in dropFields is excluded from bpFreshState") {
+  test("a field listed in dropFields is excluded from bpFreshState") {
     val ph    = new TestFrameworkTransform(dropFields = Set("Demo#watcher"))
     val after = Pipeline.run(SpoonTir.fromSource(droppedFieldSrc), List(ph))
     val out   = new TirEmitter(after).emit
@@ -360,7 +360,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     assert(body.exists(_.contains("kept")), "non-dropped field 'kept' must still appear in bpFreshState body")
   }
 
-  test("P11: an empty dropFields set changes nothing") {
+  test("an empty dropFields set changes nothing") {
     val ph    = new TestFrameworkTransform(dropFields = Set.empty)
     val after = Pipeline.run(SpoonTir.fromSource(droppedFieldSrc), List(ph))
     val out   = new TirEmitter(after).emit

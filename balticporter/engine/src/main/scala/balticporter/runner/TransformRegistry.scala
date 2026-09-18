@@ -46,7 +46,7 @@ final class TransformRegistry(val factories: List[TransformFactory]):
               s"unknown transform '$name'; discovered on this classpath: ${names.mkString(", ")}. " +
                 "A transform this engine does not ship is registered by putting the consumer's own " +
                 "`balticporter.tir.TransformFactory` implementation on the classpath with a " +
-                "`META-INF/services/balticporter.tir.TransformFactory` entry (CLAUDE.md §1(c))."
+                "`META-INF/services/balticporter.tir.TransformFactory` entry — a library-specific rule, plugged in rather than shipped."
             )
 
 object TransformRegistry:
@@ -56,7 +56,7 @@ object TransformRegistry:
     "package-rename" ->
       ("`package-rename` is not a surface transform. It has to run AFTER every other phase — all " +
         "of their policy is written in the UPSTREAM namespace, and `runsAfter` cannot say \"after " +
-        "everything\" (CLAUDE.md §4.56) — so it is MANIFEST DATA that `PortRun` appends last and " +
+        "everything\" — so it is MANIFEST DATA that `PortRun` appends last and " +
         "verifies. Write `manifest.packageRenames { \"upstream.prefix\" = \"port.prefix\" }` instead.")
   )
 

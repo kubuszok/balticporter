@@ -8,8 +8,8 @@ import balticporter.corpus.lls.{ LlsMigrate, LlsPolicy }
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Rung L0 of the libGDX ladder (PROGRESS.md §13.29) ON THE LLS BASE: core minus the utilities family, a DEPENDENT of `ported/lls` (CLAUDE.md §1.5), with no policy of its own — its compile count is
-  * the honest measure of Java-as-Scala over the base's decisions, before any of core's own.
+/** Rung L0 of the libGDX ladder ON THE LLS BASE: core minus the utilities family, a DEPENDENT of `ported/lls` (CLAUDE.md §1.5), with no policy of its own — its compile count is the honest measure of
+  * Java-as-Scala over the base's decisions, before any of core's own.
   */
 object LibgdxL0Migrate:
 
@@ -18,7 +18,7 @@ object LibgdxL0Migrate:
     val base     = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
     val steps    = LibgdxLadder.stepsFrom(args)
 
-    // the utilities family is the lls port's (PROGRESS.md §13.29): its files are the BASE's units,
+    // the utilities family is the lls port's: its files are the BASE's units,
     // resolved through `gdx/src` and never emitted twice.
     val files = Files
       .walk(base)
@@ -988,7 +988,7 @@ object LibgdxLadder:
                 0,
                 "opaque type Key = Int\n  object Key {\n    inline def apply(value: Int): Key = value\n    given lowlevel.MkArray.OfInts[Key] = lowlevel.MkArray.ofIntAs[Key]\n    extension (k: Key) { inline def toInt: Int = k }\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Input#Key"),
-                Some("sge's opaque key code (`Input.Key`) over java's int constants (PROGRESS.md §13.31)"),
+                Some("sge's opaque key code (`Input.Key`) over java's int constants"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -996,7 +996,7 @@ object LibgdxLadder:
                 0,
                 "opaque type Button = Int\n  object Button {\n    inline def apply(value: Int): Button = value\n    given lowlevel.MkArray.OfInts[Button] = lowlevel.MkArray.ofIntAs[Button]\n    extension (b: Button) { inline def toInt: Int = b }\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Input#Button"),
-                Some("sge's opaque button code (`Input.Button`) over java's int constants (PROGRESS.md §13.31)"),
+                Some("sge's opaque button code (`Input.Button`) over java's int constants"),
                 true
               )
             )
@@ -1486,7 +1486,7 @@ object LibgdxLadder:
                 0,
                 "def gl: sge.graphics.GL20 = gl20",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Graphics#gl"),
-                Some("sge's `graphics.gl` alias of the GL20 property (PROGRESS.md §13.29)"),
+                Some("sge's `graphics.gl` alias of the GL20 property"),
                 false
               )
             ),
@@ -1496,7 +1496,7 @@ object LibgdxLadder:
                 1,
                 "inline def rendering[A](inline body: => A): A = {{ begin(); try body finally end() }}",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.Batch#rendering"),
-                Some("sge's `rendering {{ … }}` around `begin()`/`end()` (PROGRESS.md §13.29)"),
+                Some("sge's `rendering {{ … }}` around `begin()`/`end()`"),
                 false
               )
             ),
@@ -1506,7 +1506,7 @@ object LibgdxLadder:
                 2,
                 "inline def rendering[A](cam: sge.graphics.Camera)(inline body: => A): A = {{ begin(cam); try body finally end() }}",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.ModelBatch#rendering"),
-                Some("sge's `rendering(camera) {{ … }}` around `begin(cam)`/`end()` (PROGRESS.md §13.29)"),
+                Some("sge's `rendering(camera) {{ … }}` around `begin(cam)`/`end()`"),
                 false
               )
             ),
@@ -1518,19 +1518,19 @@ object LibgdxLadder:
                 4,
                 "def this(map: sge.maps.tiled.TiledMap, unitScale: scala.Float, batch: sge.graphics.g2d.Batch, ownsBatch: scala.Boolean)(using sge.Sge) = { this(map, unitScale, batch); this.ownsBatch = ownsBatch }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>"),
-                Some("sge's four-argument constructor: the batch-ownership flag made explicit (PROGRESS.md §13.29)"),
+                Some("sge's four-argument constructor: the batch-ownership flag made explicit"),
                 false
               )
             ),
             // java's `T...` is emitted `Array[T]`; sge spells these four as repeated parameters and the
-            // demos call them so — one overload each, until the varargs mechanism lands (PROGRESS.md §13.29).
+            // demos call them so — one overload each, until the varargs mechanism lands.
             "com.badlogic.gdx.graphics.g3d.Material" -> List(
               balticporter.transform.AddMembersTransform.MemberSpec(
                 "this",
                 1,
                 "def this(attributes: sge.graphics.g3d.Attribute*) = this(attributes.toArray)",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.Material#<init>"),
-                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"),
+                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`)"),
                 false
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1538,7 +1538,7 @@ object LibgdxLadder:
                 2,
                 "def this(id: java.lang.String, attributes: sge.graphics.g3d.Attribute*) = this(id, attributes.toArray)",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.Material#<init>"),
-                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"),
+                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`)"),
                 false
               )
             ),
@@ -1548,7 +1548,7 @@ object LibgdxLadder:
                 3,
                 "def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int)(attributes: sge.graphics.VertexAttribute*)(using sge.Sge) = this(isStatic, maxVertices, maxIndices, attributes.toArray)",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.Mesh#<init>"),
-                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"),
+                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`)"),
                 false
               )
             ),
@@ -1560,7 +1560,7 @@ object LibgdxLadder:
                 1,
                 "def apply[T <: sge.math.Vector[T]](points: T*)(using lowlevel.MkArray[T]): sge.math.Bezier[T] = { val b = new sge.math.Bezier[T](); b.set(points*); b }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Bezier#apply"),
-                Some("sge's repeated-parameter constructor, as the companion's `apply` (PROGRESS.md §13.29 card 1)"),
+                Some("sge's repeated-parameter constructor, as the companion's `apply`"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1568,7 +1568,7 @@ object LibgdxLadder:
                 1,
                 "def set(points: T*): Bezier[?] = { val d = new lowlevel.util.DynamicArray[T](); points.foreach(p => d.add(p)); set(d, 0, points.size) }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Bezier#set"),
-                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"),
+                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`)"),
                 false
               )
             ),
@@ -1578,7 +1578,7 @@ object LibgdxLadder:
                 2,
                 "def format(pattern: java.lang.String, args: java.lang.Object*): java.lang.String = format(pattern, args.toArray)",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.TextFormatter#format"),
-                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"),
+                Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`)"),
                 false
               )
             ),
@@ -1590,7 +1590,7 @@ object LibgdxLadder:
                 0,
                 "class Absolute(using sge.Sge) extends sge.assets.loaders.resolvers.AbsoluteFileHandleResolver",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Absolute"),
-                Some("sge nests the resolvers in the companion: `FileHandleResolver.Absolute()` (PROGRESS.md §13.29)"),
+                Some("sge nests the resolvers in the companion: `FileHandleResolver.Absolute()`"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1598,7 +1598,7 @@ object LibgdxLadder:
                 0,
                 "class Classpath(using sge.Sge) extends sge.assets.loaders.resolvers.ClasspathFileHandleResolver",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Classpath"),
-                Some("sge nests the resolvers in the companion: `FileHandleResolver.Classpath()` (PROGRESS.md §13.29)"),
+                Some("sge nests the resolvers in the companion: `FileHandleResolver.Classpath()`"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1606,7 +1606,7 @@ object LibgdxLadder:
                 0,
                 "class External(using sge.Sge) extends sge.assets.loaders.resolvers.ExternalFileHandleResolver",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#External"),
-                Some("sge nests the resolvers in the companion: `FileHandleResolver.External()` (PROGRESS.md §13.29)"),
+                Some("sge nests the resolvers in the companion: `FileHandleResolver.External()`"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1614,7 +1614,7 @@ object LibgdxLadder:
                 0,
                 "class Internal(using sge.Sge) extends sge.assets.loaders.resolvers.InternalFileHandleResolver",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Internal"),
-                Some("sge nests the resolvers in the companion: `FileHandleResolver.Internal()` (PROGRESS.md §13.29)"),
+                Some("sge nests the resolvers in the companion: `FileHandleResolver.Internal()`"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1622,7 +1622,7 @@ object LibgdxLadder:
                 0,
                 "class Local(using sge.Sge) extends sge.assets.loaders.resolvers.LocalFileHandleResolver",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Local"),
-                Some("sge nests the resolvers in the companion: `FileHandleResolver.Local()` (PROGRESS.md §13.29)"),
+                Some("sge nests the resolvers in the companion: `FileHandleResolver.Local()`"),
                 true
               )
             ),
@@ -1632,7 +1632,7 @@ object LibgdxLadder:
                 1,
                 "def load[T <: java.lang.Object](fileName: java.lang.String)(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]])",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#load"),
-                Some("sge's class-tag `load[T](fileName)` (PROGRESS.md §13.29)"),
+                Some("sge's class-tag `load[T](fileName)`"),
                 false
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1640,7 +1640,7 @@ object LibgdxLadder:
                 2,
                 "def load[T <: java.lang.Object](fileName: java.lang.String, parameter: sge.assets.AssetLoaderParameters[T])(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]], parameter)",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#load"),
-                Some("sge's class-tag `load[T](fileName, parameter)` (PROGRESS.md §13.29)"),
+                Some("sge's class-tag `load[T](fileName, parameter)`"),
                 false
               )
             ),
@@ -1991,7 +1991,7 @@ object LibgdxLadder:
                 2,
                 "inline def drawing[A](shapeType: ShapeRenderer.ShapeType)(inline body: => A): A = { begin(shapeType); try body finally end() }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.ShapeRenderer#drawing"),
-                Some("sge's `drawing(type) { … }` around `begin`/`end`, `end` guaranteed (PROGRESS.md §13.29)"),
+                Some("sge's `drawing(type) { … }` around `begin`/`end`, `end` guaranteed"),
                 false
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -1999,7 +1999,7 @@ object LibgdxLadder:
                 1,
                 "inline def drawing[A](inline body: => A): A = { begin(); try body finally end() }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.ShapeRenderer#drawing"),
-                Some("sge's `drawing { … }` around `begin()`/`end` (auto shape type) (PROGRESS.md §13.29)"),
+                Some("sge's `drawing { … }` around `begin()`/`end` (auto shape type)"),
                 false
               )
             )
@@ -2268,7 +2268,7 @@ object LibgdxLadder:
   )
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames` for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix wins);
-    * the `List` rename keeps `scala.List` out; `MutableParamsTransform` is inherited from the base. No drop, inject, resolutions or parity (PROGRESS.md §13.29).
+    * the `List` rename keeps `scala.List` out; `MutableParamsTransform` is inherited from the base. No drop, inject, resolutions or parity.
     */
   def universal(repoRoot: Path, steps: Set[String] = DefaultSteps, reference: Option[Path] = None, upstreamResources: Option[Path] = None): PortManifest =
     val unknown = steps -- Steps.keySet
@@ -2340,7 +2340,7 @@ object LibgdxLadder:
       )
 
 /** The ladder port's TEST source set: libGDX's own `gdx/test` tree converted to MUnit on the universal translation, a dependent of `sge-l0` (+ `lls`) — the suite is the step gate the standing orders
-  * require (PROGRESS.md §13.29); one exclusion list, empty at L0.
+  * require; one exclusion list, empty at L0.
   */
 object LibgdxL0TestMigrate:
 

@@ -43,7 +43,7 @@ class CollectionInternalCheckSpec extends PortSuite:
     // the pair, and the one such cell left (`Kind.Map` into `JavaCollection`) is one java itself
     // cannot write — a `Map` is not a `Collection`. Its vocabulary is asserted here so a row that
     // DOES appear arrives with the §1 classification a bare typer error cannot give (§4.45).
-    assert(clue(Issue.classification(Issue.DeclaredSubtype)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.DeclaredSubtype)).contains("engine"))
     assert(clue(CollectionInternalCheck.summary(Nil)).contains("none"))
   }
 
@@ -91,7 +91,7 @@ class CollectionInternalCheckSpec extends PortSuite:
     assert(clue(sv.head.slot).startsWith("type variable V of put"))
     assertEquals(sv.head.edge, "java.util.ArrayList <: java.util.Collection")
     assert(clue(sv.head.targets).contains("scala.collection.mutable.ArrayBuffer"))
-    assert(clue(Issue.classification(Issue.SplitTypeVariable)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.SplitTypeVariable)).contains("engine"))
   }
 
   test("NEGATIVE: the same variable bound TWICE to one side is an ordinary generic call") {

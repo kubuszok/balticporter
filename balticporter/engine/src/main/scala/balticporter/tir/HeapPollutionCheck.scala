@@ -23,14 +23,14 @@ object HeapPollutionCheck extends RemedySource:
   object Issue:
     def classification(i: Issue): String = i match
       case Acknowledged =>
-        "§1(a) ENGINE, and DELIBERATELY NOT FIXED: the port reproduces java's heap pollution " +
+        "engine (true of every Java program), and DELIBERATELY NOT FIXED: the port reproduces java's heap pollution " +
           "exactly, so there is nothing to translate — what has no Scala image is the " +
           "ACKNOWLEDGEMENT. `@SafeVarargs` is emitted verbatim onto a method whose vararg is now a " +
           "plain `Array` parameter (JS-G37), where scalac neither checks its placement nor derives " +
           "anything from it. Read this row as `the author of the java said they had checked this " +
           "body`, and read the port as carrying that promise unverified."
       case Unacknowledged =>
-        "§1(a) ENGINE, and DELIBERATELY NOT FIXED for the same reason: javac warns at a " +
+        "engine (true of every Java program), and DELIBERATELY NOT FIXED for the same reason: javac warns at a " +
           "declaration whose vararg component is not reifiable (JLS 4.7) and scalac has no such " +
           "warning, so this declaration crossed with neither an annotation nor a diagnostic. " +
           "Nothing in the emitted file mentions it and no other count can see it."

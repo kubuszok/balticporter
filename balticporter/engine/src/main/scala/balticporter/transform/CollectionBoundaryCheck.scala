@@ -99,32 +99,32 @@ object CollectionBoundaryCheck extends RemedySource:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
     def classification(i: Issue): String = i match
       case UnmappedSubtype =>
-        "§1(b): the JDK type is a subtype of one CollectionsTransform maps, so the mapping is not " +
+        "port policy: the JDK type is a subtype of one CollectionsTransform maps, so the mapping is not " +
           "closed downwards — add the type to `typeMap` with a target that keeps the JDK relation " +
           "(CollectionClosureCheck reports the same hole as a type)."
       case UntranslatedFamily =>
-        "§1(a) unbuilt, and REFUSED on purpose: this JDK family is not retyped, so the slot has no " +
-          "translation and the error is loud rather than silent (ENGINE-LIMITS K6, M6). Closing it " +
+        "engine (true of every Java program), unbuilt, and REFUSED on purpose: this JDK family is not retyped, so the slot has no " +
+          "translation and the error is loud rather than silent, by design: an untranslatable " +
+          "construct is refused and counted rather than approximated. Closing it " +
           "needs the family retyped, not a wider guard on an existing rewrite."
       case MappedTypeSurvived =>
-        "§1(a) engine bug: this type IS in `typeMap`, so no occurrence of it should have survived " +
+        "engine bug: this type IS in `typeMap`, so no occurrence of it should have survived " +
           "`transformType`. A node minted with a type computed from an unmapped one is the usual cause."
       case ShimBoundary =>
-        "§1(a) engine gap: a scala collection meets a `balticporter.runtime` shim slot (or the " +
+        "engine gap: a scala collection meets a `balticporter.runtime` shim slot (or the " +
           "reverse) with no wrap — extend `CollectionsTransform.coerce` to this slot, or, if the " +
-          "cell is a deliberate refusal, it stays counted here (ENGINE-LIMITS K2's coverage table)."
+          "cell is a deliberate refusal, it stays counted here."
       case RefusedSource =>
-        "§1(a) engine, and REFUSED on purpose UPSTREAM OF THIS SLOT: the value here comes from a " +
+        "engine (true of every Java program), and REFUSED on purpose UPSTREAM OF THIS SLOT: the value here comes from a " +
           "call `CollectionsTransform` covers and declined to rewrite — the aliasing " +
           "`Arrays.asList(arr)` is the measured one — so the emitted text keeps the JDK name and " +
           "the value really is a `java.util.*`. The `Found` side above is the NODE's type, which " +
           "the position-blind retyping moved on both sides of that call; do not read it as the " +
           "value's. Do NOT close this by wrapping: a factory over a refused value names the " +
-          "WRAPPER instead of the boundary and the refusal stops being findable (ENGINE-LIMITS " +
-          "K2.5, K6.5). It closes when the REFUSAL closes — for `asList` that is one frontend fact, " +
+          "WRAPPER instead of the boundary and the refusal stops being findable. It closes when the REFUSAL closes — for `asList` that is one frontend fact, " +
           "the erased element type."
       case ScopedOut =>
-        "§1(b) PER-LIBRARY: one side of this slot is a declaration this port's " +
+        "port policy: one side of this slot is a declaration this port's " +
           "`CollectionsTransform(scope)` deliberately held back, so it kept its JDK type while the " +
           "other side moved. The direction that CAN be closed already is — a retyped value at a " +
           "held-back java formal goes through `JavaCollections.toJava`, a live view — so what is " +
@@ -133,11 +133,10 @@ object CollectionBoundaryCheck extends RemedySource:
           "narrow it to exclude the other side of the slot too. The engine needs no change; a " +
           "scope that produced this seam SILENTLY would be worse than no scope."
       case ClassFileOverride =>
-        "§1(a) engine, and REFUSED on purpose — WITH NO KEY TO CHANGE, which is the whole reason " +
+        "engine (true of every Java program), and REFUSED on purpose — WITH NO KEY TO CHANGE, which is the whole reason " +
           "this is not a `ScopedOut` row. One side of this slot is a declaration that OVERRIDES a " +
           "member declared in a COMPILED CLASS FILE (a java class the port extends but does not " +
-          "convert), so its formals are a fact about that class file and no phase may move them " +
-          "(§4.56): retyped, the member overrides NOTHING and its own `super.<same>(…)` call " +
+          "convert), so its formals are a fact about that class file and no phase may move them: retyped, the member overrides NOTHING and its own `super.<same>(…)` call " +
           "cannot compile. The phase therefore holds the whole declaration literally, exactly as a " +
           "scope would — and the seam moves here, to the callers that hand it a value this phase " +
           "DID retype. The direction that can be closed already is: a retyped value at the held " +
@@ -147,7 +146,7 @@ object CollectionBoundaryCheck extends RemedySource:
           "when the class file's own type is one the mapping covers, i.e. when the parent is a " +
           "shim rather than a java class the mapping leaves alone (`collection-closure` names it)."
       case InexpressibleParent =>
-        "§1(a) engine, and REFUSED on purpose: this class IMPLEMENTS a java type the mapping " +
+        "engine (true of every Java program), and REFUSED on purpose: this class IMPLEMENTS a java type the mapping " +
           "covers, and the target cannot BE a parent — `scala.Tuple2` is final, has no `setValue` " +
           "and takes its two components in its constructor, so `extends Tuple2[K, V]` is three " +
           "errors with no fix available from inside the class. The parent is therefore left as " +
@@ -156,18 +155,18 @@ object CollectionBoundaryCheck extends RemedySource:
           "moves to the SLOTS where the port hands it to a `Tuple2` — which is where it belongs. " +
           "A second target for the implements-case is NOT the fix: `entrySet()` yields a `Tuple2` " +
           "everywhere in every port, so a shim-typed class would need a coercion at every crossing " +
-          "in both directions, which is a second truth about one java type (ENGINE-LIMITS K5.7)."
+          "in both directions, which is a second truth about one java type."
       case UnbridgedMember =>
-        "§1(a) engine: this class IMPLEMENTS a java collection interface, so the mapping emitted a " +
+        "engine (true of every Java program): this class IMPLEMENTS a java collection interface, so the mapping emitted a " +
           "`scala.collection` parent for it — and that parent declares a member the class has no " +
           "java member to build from, or whose java member could not be renamed out of the way. " +
-          "The bridge (`ENGINE-LIMITS.md` K28.1) renames java's member and synthesises scala's " +
+          "The bridge renames java's member and synthesises scala's " +
           "over it, delegating; the guard that declined is named in the slot. Nothing is wrong with " +
           "any SLOT here — the class is simply missing a member scalac demands, which `RefChecks` " +
-          "does not report until the port reaches 0 typer errors (CLAUDE.md §3), so this count is " +
+          "does not report until the port reaches 0 typer errors, so this count is " +
           "the only instrument that sees it before then."
       case ReifiedOccurrence =>
-        "§1(a) engine, and REFUSED on purpose: this is an `instanceof` or a downcast at a type the " +
+        "engine (true of every Java program), and REFUSED on purpose: this is an `instanceof` or a downcast at a type the " +
           "mapping covers — a REIFIED occurrence, which asks about a RUNTIME OBJECT while the " +
           "retyping moved only the static type. `JavaCollections.Reified` answers java's question " +
           "over both representations wherever the target is one a live view can BE " +
@@ -175,17 +174,17 @@ object CollectionBoundaryCheck extends RemedySource:
           "(`mutable.HashMap`, `ArrayBuffer`, `ArrayDeque`, `scala.Tuple2`) that no view can be, so " +
           "there is nothing to coerce to. Note there is no compile error to look for and never " +
           "was: the emitted test and cast are valid Scala asking a DIFFERENT question, so this " +
-          "count is the only instrument that sees the site (`ENGINE-LIMITS.md` K18). Closing it " +
+          "count is the only instrument that sees the site. Closing it " +
           "needs the mapping to send this java type to an abstract target, or the java code to " +
           "test the interface rather than the implementation class."
       case OpaqueEgress =>
-        "§1(b) PER-LIBRARY, and NOTHING IS BROKEN AT THIS SLOT — which is the whole reason it is " +
+        "port policy, and NOTHING IS BROKEN AT THIS SLOT — which is the whole reason it is " +
           "reported. The formal is `java.lang.Object`, so a collection this port retyped conforms " +
           "perfectly and there is no compile error, no wrong type and no failing check to look " +
           "for. What changed is what the CALLEE sees: java handed it a `java.util.*` and this port " +
           "hands it a `scala.collection.*`, so anything that reads the value's runtime " +
           "representation — a serialiser, a bean mapper, an injector, a `toString` — answers " +
-          "differently (`ENGINE-LIMITS.md` K21 face 1: a JSON filter emitted " +
+          "differently (a JSON filter emitted " +
           "`{\"scala$collection$mutable$HashMap$$table\":[…]}` where java emitted the entries). " +
           "This row is a REVIEW LIST and not a defect: one line per external method, and most of " +
           "them do not care. Where one does, name its owner in " +
@@ -195,13 +194,13 @@ object CollectionBoundaryCheck extends RemedySource:
           "The engine cannot derive the list: which dependency reflects is a fact about the " +
           "library, and java itself guarantees no such type."
       case ExternalCallee =>
-        "§1(a) engine, and REFUSED here on purpose: the other side of this slot is a method the " +
+        "engine (true of every Java program), and REFUSED here on purpose: the other side of this slot is a method the " +
           "program does not declare, so its signature is a fact about a compiled class file and no " +
           "phase can move it. Where a LIVE wrapper exists the phase inserts one " +
           "(`JavaCollections.fromJava`/`toJava`); this site is one where it does not — a target " +
           "with no converter, a nested element type a one-level wrap would silently lie about, or " +
           "a class file the frontend could only partly resolve. A COPY would compile and detach " +
-          "both directions (§4.4), so the seam is counted instead. If the dependency is itself " +
+          "both directions, so the seam is counted instead. If the dependency is itself " +
           "portable, the answer is to PORT it rather than to bridge it. Where the formal is " +
           "`java.lang.Object` there is no compile error to look for and never was: the retyped " +
           "value CONFORMS, and what changed is what the callee's `toString`, `instanceof` and " +

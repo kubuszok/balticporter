@@ -57,7 +57,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
 
   // ---- 1. the no-op --------------------------------------------------------------------------
 
-  test("an empty table is a STRUCTURAL no-op — §1(b)'s 'turned off needs no code path'") {
+  test("an empty table is a STRUCTURAL no-op — a configurable phase's 'turned off needs no code path'") {
     val ph     = new MemberRenameTransform()
     val before = parse(windows)
     ph.bindPolicy(new PolicyBinder(before, before.members))
@@ -379,7 +379,7 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assert(clue(l).isLeft)
   }
 
-  test("fingerprint segment is empty for an empty table — §1(b) no-op") {
+  test("fingerprint segment is empty for an empty table — a configurable phase's no-op") {
     assertEquals(new MemberRenameTransform().surfaceFingerprint, "")
     // …and non-empty when entries exist
     assert(new MemberRenameTransform(Map("a#b" -> "+")).surfaceFingerprint.nonEmpty)

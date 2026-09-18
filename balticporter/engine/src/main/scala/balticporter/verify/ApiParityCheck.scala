@@ -40,39 +40,39 @@ object ApiParityCheck:
   val AllLanes: Set[String] = Families.map(lane).toSet
 
   val Classification: Map[String, String] = Map(
-    "accessor" -> ("§1(a) ENGINE: the engine emits java-shaped accessors (getX/setX/isX) where the hand port " +
+    "accessor" -> ("engine (true of every Java program): the engine emits java-shaped accessors (getX/setX/isX) where the hand port " +
       "collapsed them to scala properties. An idiom phase in the engine produces this shape."),
-    "static-placement" -> ("§1(a) ENGINE: the engine places java statics in the companion; the hand port may place " +
+    "static-placement" -> ("engine (true of every Java program): the engine places java statics in the companion; the hand port may place " +
       "members freely between the class and its companion. Informational."),
-    "mutability" -> ("§1(a) ENGINE: val vs var vs def drift between the two ports. Usually benign " +
+    "mutability" -> ("engine (true of every Java program): val vs var vs def drift between the two ports. Usually benign " +
       "(the hand port narrowed mutability)."),
-    "rename" -> ("§1(a) ENGINE or §1(b) CONFIGURED: the two ports use different names for the same member. " +
+    "rename" -> ("engine or port policy: the two ports use different names for the same member. " +
       "Known renames (from packageRenames or typeRenames) are expected; others may be a " +
       "missing rename rule or a hand-port freedom."),
-    "visibility" -> ("§1(a) ENGINE or §1(c) LIBRARY-SPECIFIC: the two ports disagree on access level. " +
+    "visibility" -> ("engine or library-specific rule: the two ports disagree on access level. " +
       "Often a hand-port decision to widen or narrow access."),
-    "hand-port-extra" -> ("§1(c) LIBRARY-SPECIFIC or INFORMATIONAL: the hand port declares members the emitted port " +
+    "hand-port-extra" -> ("library-specific rule or INFORMATIONAL: the hand port declares members the emitted port " +
       "does not have. These are hand-port additions (factory methods, helpers, redesigned APIs) " +
       "that a mechanical port cannot and should not reproduce."),
     "hand-original" -> ("INFORMATIONAL: a hand-port FILE whose header names no upstream source (`ParityRef." +
       "upstreamMarkers`). It is the hand port's own code, twin to no ported declaration, so its " +
       "members are compared against nothing. One row per top-level type."),
-    "port-extra" -> ("§1(a) ENGINE or §1(b) CONFIGURED: the emitted port declares members the hand port does " +
+    "port-extra" -> ("engine or port policy: the emitted port declares members the hand port does " +
       "not have. These are java members the hand port skipped — either deliberately (drops) or " +
       "because it redesigned the API."),
-    "null-model" -> ("§1(b) CONFIGURED: NullabilityTransform target — the engine's null-model phase produces " +
+    "null-model" -> ("port policy: NullabilityTransform target — the engine's null-model phase produces " +
       "one spelling (T | Null, Nullable[T], Option[T]), the hand port uses another."),
-    "collection-retarget" -> ("§1(b) CONFIGURED: TypeRedirect/CollectionsTransform retarget — the engine retargets JDK " +
+    "collection-retarget" -> ("port policy: TypeRedirect/CollectionsTransform retarget — the engine retargets JDK " +
       "collection types, the hand port may use different collection targets."),
-    "opaque" -> ("§1(c) LIBRARY-SPECIFIC: OpaqueSpec — the hand port uses opaque types for primitives that " +
+    "opaque" -> ("library-specific rule: OpaqueSpec — the hand port uses opaque types for primitives that " +
       "the emitted port keeps as the underlying type."),
-    "operator" -> ("§1(b) CONFIGURED: MemberRename symbolic — the hand port uses symbolic operator names " +
+    "operator" -> ("port policy: MemberRename symbolic — the hand port uses symbolic operator names " +
       "where the emitted port uses the java name, or one side has @targetName."),
-    "factory" -> ("§1(b) CONFIGURED: CtorFunnel factory policy — the hand port has companion " +
+    "factory" -> ("port policy: CtorFunnel factory policy — the hand port has companion " +
       "apply/from/wrap/of/create methods instead of public constructors, or vice versa."),
     "file-merge" -> ("INFORMATIONAL: same FQN in a different file or nesting — no behavioural difference, " +
       "informational only."),
-    "rule" -> ("§1(a) ENGINE: the ONLY difference is one the engine makes BY A CATALOG RULE, so the row is " +
+    "rule" -> ("engine (true of every Java program): the ONLY difference is one the engine makes BY A CATALOG RULE, so the row is " +
       "a decided question, not a hand-port spelling one. The detail names the `JS-…` id whose " +
       "translation produced the emitted spelling; java's behaviour is what the engine kept."),
     "signature" -> ("UNKNOWN: same name and arity but different type signature — the catch-all for type-level " +

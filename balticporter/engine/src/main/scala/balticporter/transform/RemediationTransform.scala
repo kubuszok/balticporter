@@ -103,7 +103,7 @@ final class RemediationTransform(
               s"${f.confidence.label}: ${f.observed}. Dropping it here would leave every referring " +
                 "type naming a class this port does not emit, and the replacement at the same FQN is " +
                 "a file only the port can write — declare `dropTypes` WITH `inject` in the manifest " +
-                "instead [§1(b)]"
+                "instead [port policy]"
             )
             scala.None
           case scala.None =>
@@ -114,7 +114,7 @@ final class RemediationTransform(
               "not-a-chokepoint",
               "no portability site inside this type is chokepointed here, so dropping it removes no " +
                 "unportable API — the selection is aimed at a type this run has nothing to say about " +
-                "[§1(b): check the `remediation` lane for the type the sites really cluster in]"
+                "[port policy: check the `remediation` lane for the type the sites really cluster in]"
             )
             scala.None
       }.toSet
@@ -150,7 +150,7 @@ final class RemediationTransform(
                 "nothing-forwardable",
                 "the template matched this wrapper and every member it found forwards to an API that " +
                   "is ITSELF unportable — inlining those relocates the dependency rather than " +
-                  "removing it [§1(c): those members need a real replacement]"
+                  "removing it [library-specific rule: those members need a real replacement]"
               )
               scala.None
             else
@@ -176,7 +176,7 @@ final class RemediationTransform(
               "not-a-forwarder",
               "no static member of this type was verified to forward its first argument to a " +
                 "same-named member of an external type, which is the only shape this rewrite is " +
-                "faithful for [§1(b): the wrapper's members may already have been inlined by a " +
+                "faithful for [port policy: the wrapper's members may already have been inlined by a " +
                 "`StaticForwarderTransform` earlier in this pipeline]"
             )
             scala.None
@@ -220,7 +220,7 @@ final class RemediationTransform(
               origin,
               "table-not-a-member",
               s"""the destination "$bad" is not `owner#member`, so there is nothing to select — """ +
-                "the redirect is skipped and the lookup stays reflective [§1(b): fix the " +
+                "the redirect is skipped and the lookup stays reflective [port policy: fix the " +
                 "`RemediationTransform(classTables)` value]"
             )
             scala.None
@@ -234,7 +234,7 @@ final class RemediationTransform(
                 "destination would leave the lookup reflective and the port JVM-only with nothing " +
                 s"""said. Add `classTables = { "${r.declaredKey}" = "<your.pkg.TypeTable>#classFor" }` """ +
                 "and an injected object mapping each name this port can round-trip to a `classOf[…]` " +
-                "literal [§1(b)]"
+                "literal [port policy]"
             )
             scala.None
       }.toMap

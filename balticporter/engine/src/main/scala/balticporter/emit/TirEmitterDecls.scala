@@ -794,7 +794,7 @@ private[emit] trait TirEmitterDecls:
       subject = cd.symbol,
       subjectFqn = s.fullName,
       detail = Map("trigger" -> trigger, "forces" -> tg.fullName, "why" -> why),
-      reason = Reason.Universal("class-init-trigger(§4.4)"),
+      reason = Reason.Universal("class-init-trigger"),
       origin = cd.origin
     )
     emissionOf += d

@@ -15,7 +15,7 @@ object CatalogCheck:
 
   /** §1(a) classification — every catalog hole is an engine gap. */
   val Classification: String =
-    "[§1(a) engine] the difference catalog is the universal layer; a row it attaches and an arm " +
+    "[engine (true of every Java program)] the difference catalog is the universal layer; a row it attaches and an arm " +
       "does not consult is an engine gap, never a port's to configure"
 
   private def at(id: DiffId, log: CatalogLog): (String, Int) =

@@ -313,7 +313,7 @@ object Differences:
         "the frontend reads `CtLiteral.getValue`, which Spoon has already resolved through " +
           "JLS 3.10.6 — incidental whitespace stripped, line terminators normalised, escapes " +
           "applied — so a `Constant.StringC` holding exactly the denoted string reaches the TIR. The " +
-          "emitter then re-escapes it (ENGINE-LIMITS L1), so the SHAPE changes (one `\"…\"` with " +
+          "emitter then re-escapes it (a decoded value must be fully re-escaped when emitted, or a raw newline ends the literal), so the SHAPE changes (one `\"…\"` with " +
           "`\\n` where java wrote three lines) and the VALUE does not. PROBED, not assumed"
       ),
       Predicted,
@@ -1866,7 +1866,7 @@ object Differences:
         "An unconstrained method type parameter is inferred at its bound by Java but at the bottom type by Scala, so Java's resolved bound is pinned as an explicit argument."
       ),
       Universal,
-      "SpoonTir.pinUnconstrainedTypeArgs, whose reach is bounded by ENGINE-LIMITS G24's still-open vacuous-bound case",
+      "SpoonTir.pinUnconstrainedTypeArgs, whose reach is bounded by a still-open case: java's implicit `T extends Object` bound admits every reference type, but an emitted `T <: java.lang.Object` does not in Scala",
       Lowered("CtInvocation", Dispatch.Expression)
     ),
     Difference(
@@ -2108,7 +2108,8 @@ object Differences:
       ),
       Universal,
       "SpoonTir.unwritableResultVars erasing an F-BOUNDED, RESULT-ONLY method type parameter to its own " +
-        "bound at the DECLARATION, which is the only instantiation ENGINE-LIMITS G8 could not refute",
+        "bound at the DECLARATION, which is the only instantiation a partially nameable F-bounded class " +
+        "could not refute (filling one sibling formal breaks another)",
       LoweredType("CtTypeParameterReference")
     )
   )

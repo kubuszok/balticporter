@@ -176,7 +176,7 @@ class CollectionClosureCheckSpec extends PortSuite:
     assert(ph.closure(p.after, unit("demo.Base")).nonEmpty)
   }
 
-  test("the check is a NO-OP with an empty mapping — an empty policy needs no code path (§1(b))") {
+  test("the check is a NO-OP with an empty mapping — an empty policy needs no code path") {
     val ph = new CollectionsTransform
     val p  = port(unmapped, ph)
     assertEquals(CollectionClosureCheck.check(p.after, Set.empty), Nil)

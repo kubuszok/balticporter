@@ -21,11 +21,11 @@ object SubstitutionCheck:
     def render: String = kind match
       case Kind.Emitted =>
         s"$fqn is declared dropped but the engine EMITTED it" +
-          "  [§1(a) engine: the emission skip did not fire — the mechanical translation is about " +
+          "  [engine bug: the emission skip did not fire — the mechanical translation is about " +
           "to shadow or collide with the replacement]"
       case Kind.Dangling =>
         s"$fqn is dropped, has no replacement, and is still referenced by $references file(s)" +
-          "  [§1(b)/(c) per-library: supply an `inject` replacement at this FQN, or plug in a rule " +
+          "  [port policy or library-specific rule: supply an `inject` replacement at this FQN, or plug in a rule " +
           "that rewrites its uses away; the engine needs no change]"
 
   /** CHECK 1 -- dropped types the engine nevertheless wrote a file for. Run BEFORE injection. */

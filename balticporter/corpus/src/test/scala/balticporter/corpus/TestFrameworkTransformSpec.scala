@@ -49,7 +49,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(boom.indexOf("intercept[") < boom.indexOf("finally tearDown()"))
   }
 
-  test("every converted test leaves a §1(a) row NAMING THE INLINED LIFECYCLE — the invisible half") {
+  test("every converted test leaves an engine row NAMING THE INLINED LIFECYCLE — the invisible half") {
     // `Pipeline.runTraced`, not `run`: the latter drains each phase's buffer into a log it discards.
     val log = Pipeline.runTraced(SpoonTir.fromSource(lifecycleSrc), List(new TestFrameworkTransform))._2
     val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature).sortBy(_.subjectFqn)
@@ -944,7 +944,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(!clue(out).contains("bpExpected"))
   }
 
-  test("a CONVERTED site is recorded on the test's own Decision — §5.1's other artifact") {
+  test("a CONVERTED site is recorded on the test's own Decision — the diagnostic's other artifact") {
     // The emitted accumulator plainly asserts a throw; what it cannot say is that java said so
     // through a `@Rule` FIELD three screens up, which is the fact an agent reading one emitted file
     // has no way to recover (CLAUDE.md §4.575).

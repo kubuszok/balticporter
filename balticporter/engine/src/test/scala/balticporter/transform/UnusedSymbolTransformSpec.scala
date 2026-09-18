@@ -9,7 +9,7 @@ class UnusedSymbolTransformSpec extends munit.FunSuite:
     val phases = PortRun.derivedPhases
     assert(
       clue(phases).exists(_.isInstanceOf[UnusedSymbolTransform]),
-      "UnusedSymbolTransform must be in PortRun.derivedPhases — it is §1(a) universal"
+      "UnusedSymbolTransform must be in PortRun.derivedPhases — it is engine, true of every Java program"
     )
   }
 

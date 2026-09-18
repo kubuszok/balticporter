@@ -111,5 +111,5 @@ class JavaListIteratorSpec extends munit.FunSuite:
     val b = buf("a")
     JavaListIterator.over(b) match
       case w: Wrapping => assert(w.wrapped.asInstanceOf[AnyRef] eq b)
-      case _ => fail("the cursor must carry the Wrapping marker (ENGINE-LIMITS K19)")
+      case _ => fail("the cursor must carry the Wrapping marker")
   }

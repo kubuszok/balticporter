@@ -150,7 +150,7 @@ class CollectionsScopeSpec extends PortSuite:
     assert(clue(out).contains(s"def take(more: $JList)"), "the excluded formal kept its JDK type")
     assert(out.contains("m.take(balticporter.runtime.JavaCollections.toJava(m.getItems()))"))
     assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0)
-    assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ScopedOut).contains("§1(b)"))
+    assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ScopedOut).contains("port policy"))
   }
 
   test("a reference to a scoped-out DECLARATION is seen through the DECLARATION, not through the node") {
@@ -188,8 +188,8 @@ class CollectionsScopeSpec extends PortSuite:
     assert(!out.contains("b.raw ++="), "the declaring-type fallback must stop at a scoped-out receiver")
   }
 
-  test("…and the seam that call leaves is BRIDGED — §1(b) asks for a wrap first, a count second") {
-    // Refusing the rewrite is only half of §1(b)'s obligation: `Client.push` still hands its own
+  test("…and the seam that call leaves is BRIDGED — port policy asks for a wrap first, a count second") {
+    // Refusing the rewrite is only half of port policy's obligation: `Client.push` still hands its own
     // `Buffer` to the `java.util.List` slot `b.raw.addAll` kept. That USED to be uncloseable and
     // counted, on the reasoning that a `mutable.Buffer` is not a `java.util.List` — which is true
     // of the TYPE and false of the value, because `asJava` is a live view in both directions.
@@ -232,7 +232,7 @@ class CollectionsScopeSpec extends PortSuite:
   test("an entry naming a JDK TYPE fires on the interned EXTERNAL, does nothing, and must be REPORTED") {
     // `java.util.List` is in the symbol table — the frontend interned it on first reference — so the
     // entry matched, was counted as fired, and produced output byte-identical to the unscoped port.
-    // A knob that reads as configured and does nothing is the §1(b) silent no-op exactly; ownership
+    // A knob that reads as configured and does nothing is the silent no-op port policy refuses exactly; ownership
     // is structural (`Program.owned`), and the report says which knob the author actually wants.
     val (ph, _, out) = ported(RuleScope.Everywhere(Set("java.util.List")))
     val bare         = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
@@ -251,20 +251,20 @@ class CollectionsScopeSpec extends PortSuite:
     assertEquals(ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key), List("java.util.List"))
   }
 
-  test("an entry that named nothing is a §1(b) NeverMatched finding — a silent no-op policy is the failure") {
+  test("an entry that named nothing is a port-policy NeverMatched finding — a silent no-op policy is the failure") {
     val (ph, _, _) = ported(RuleScope.Everywhere(Set("demo.Bridge", "demo.Typo")))
     val fs         = ph.policyReport.of(PolicyIssue.NeverMatched)
     assertEquals(fs.map(_.key), List("demo.Typo"))
-    assert(clue(fs.head.render).contains("§1(b)"))
+    assert(clue(fs.head.render).contains("port policy"))
   }
 
-  test("a held-back declaration leaves a ScopedOut row naming the entry VERBATIM (§4.575)") {
+  test("a held-back declaration leaves a ScopedOut row naming the entry VERBATIM") {
     val ph  = new CollectionsTransform(RuleScope.Everywhere(Set("demo.Bridge")))
     val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
     val ds  = log.of(Decision.Kind.ScopedOut)
     assert(clue(ds.map(_.subjectFqn)).contains("demo.Bridge#raw"))
     assert(ds.forall(_.reason == Reason.Configured("java-collections->scala", "demo.Bridge")))
-    assertEquals(ds.head.reason.section, "§1(b) PER-LIBRARY POLICY")
+    assertEquals(ds.head.reason.section, "port policy")
     // …ONCE. The entry lives in `Reason.Configured` and nowhere else: a decider that also puts it
     // in `detail` renders `key=demo.Bridge key=demo.Bridge` in the porter note beside the code.
     assert(ds.forall(!_.detail.contains("key")))

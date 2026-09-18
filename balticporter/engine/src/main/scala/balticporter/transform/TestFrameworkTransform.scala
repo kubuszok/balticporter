@@ -264,8 +264,8 @@ final class TestFrameworkTransform(
           "reconstruction JUnit performs by constructing a fresh instance cannot be written here: " +
           "the `override def " + FreshStateMember + "` this module would emit names a member only the " +
           "base's own run could have put on that parent, and nothing in this model says whether it " +
-          "did (`CLAUDE.md` §1.5). Every field of this suite therefore keeps the previous test's " +
-          "value, exactly as it did before the lowering existed (`ENGINE-LIMITS.md` X4). Move the " +
+          "did. Every field of this suite therefore keeps the previous test's " +
+          "value, exactly as it did before the lowering existed. Move the " +
           "base test class into this module's source set, or keep this suite on the JVM/JUnit path."
       )
     }
@@ -286,7 +286,7 @@ final class TestFrameworkTransform(
               s"initialisers and constructor body run once per test; the lowering that reproduces " +
               s"that has to REPLAY the constructor, and this one $why. Its fields and its " +
               "constructor are therefore emitted exactly as they were and keep the previous test's " +
-              "state (`ENGINE-LIMITS.md` X4); subclasses of it still rebuild their OWN state. " +
+              "state; subclasses of it still rebuild their OWN state. " +
               "Note junit itself refuses a test class with more than one public constructor or with " +
               "a constructor taking arguments unless a `@RunWith` runner supplies them."
           )
@@ -450,7 +450,7 @@ final class TestFrameworkTransform(
                     "and this field's type states no default that can be WRITTEN — a class type " +
                     "parameter takes no `null` and an opaque type is not a reference. The field is " +
                     "left out of the reset and keeps the previous test's value where a test assigns " +
-                    "it (`ENGINE-LIMITS.md` X4); its own initialiser, if it has one, still re-runs."
+                    "it; its own initialiser, if it has one, still re-runs."
                 )
             v.rhs.foreach { r => inits += assignField(v.symbol, v.tpt.tpe, r, v.origin); madeMutable += v.symbol }
             kept += (if v.rhs.isEmpty then v else v.copy(rhs = scala.None))
@@ -481,7 +481,7 @@ final class TestFrameworkTransform(
               "this lowering resets ONE object's fields, so anything that outlives a test holding " +
               "this instance — a listener it registered, a static collection it was put in — sees " +
               "the reset where java saw the old object untouched. The field state itself is " +
-              "reproduced exactly; object identity is not (`ENGINE-LIMITS.md` X4)."
+              "reproduced exactly; object identity is not."
           )
         val above = classAncestry(cd).find(a => freshSym.contains(a.symbol))
         record(
@@ -1176,7 +1176,7 @@ final class TestFrameworkTransform(
       ("junit's `expect` has two overloads — `expect(Class<? extends Throwable>)` and " +
         "`expect(Matcher<?>)`. Which one java resolved is read from the CALLEE's own formal, and " +
         s"this call's is neither a `java.lang.Class` at a literal `classOf` nor an " +
-        s"`$HamcrestMatcher`. A guess here would be a fabricated fact (CLAUDE.md §4.6)."),
+        s"`$HamcrestMatcher`. A guess here would be a fabricated fact."),
     "expect-message-overload" ->
       ("junit's `expectMessage` has two overloads — `expectMessage(String)` (which means " +
         "`containsString`) and `expectMessage(Matcher<String>)`. This call's formal is neither, so " +
@@ -1530,7 +1530,7 @@ object TestFrameworkTransform:
 
   /** the one-line classification every lane with a §1 answer prints beside its count. */
   val Classification: String =
-    "  [§1(a) engine: every row is a fact about JUnit/TestNG and scala, identical for every library " +
+    "  [engine (true of every Java program): every row is a fact about JUnit/TestNG and scala, identical for every library " +
       "— none of them is fixed by configuring this phase or by a library-specific rule. A refused " +
       "construct is NOT a compile error: the class converts to ZERO tests, compiles, and reports " +
       "success, so this lane is the only instrument there is.]"

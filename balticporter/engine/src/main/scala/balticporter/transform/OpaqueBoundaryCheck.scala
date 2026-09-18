@@ -26,18 +26,18 @@ object OpaqueBoundaryCheck:
     /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
     def classification(i: Issue): String = i match
       case ExternalCallee =>
-        "§1(b) the SCOPE FENCE is the answer: the phase cannot read this external callee's " +
+        "port policy: the SCOPE FENCE is the answer: the phase cannot read this external callee's " +
           "formal, so it cannot insert a coercion. Where the port's scope fences the external " +
           "type's declarations out of the seed set, the arguments reaching this call are still " +
           "the primitive and no coercion is needed. Where the scope does not fence them, the fix " +
           "is to add the external type to the scope's `except` set, or to add an `extraHints` " +
           "entry for the declaration whose value reaches this call."
       case ScopedOut =>
-        "§1(b) HELD BACK ON PURPOSE, and counted so the residue does not grow silently: this " +
+        "port policy, HELD BACK ON PURPOSE, and counted so the residue does not grow silently: this " +
           "declaration's type is the spec's primitive and the port's scope excludes it from the " +
           "seed set. The port decided this, and the count is what holds the decision honest."
       case BoxedPrimitive =>
-        "§1(a) engine gap: the boxed form of this primitive (`Integer` for `Int`, etc.) reached " +
+        "engine gap: the boxed form of this primitive (`Integer` for `Int`, etc.) reached " +
           "a slot where the opaque type is expected, and no auto-unbox exists in the TIR. The " +
           "boxed-primitive coercion (wave 2.6) handles the commonest shape; this residue is what " +
           "it could not reach."

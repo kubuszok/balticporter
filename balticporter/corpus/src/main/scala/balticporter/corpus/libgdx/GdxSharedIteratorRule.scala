@@ -62,7 +62,7 @@ final class GdxSharedIteratorRule extends Phase:
     println(s"[gdx-shared-iterator] ${fs.size} nested-iteration hazard(s) over a cached libGDX iterator")
     if fs.nonEmpty then
       println(
-        "  [§1(c) LIBRARY-SPECIFIC: rewrite the INNER loop to `new Array.ArrayIterator<>(a)`. " +
+        "  [library-specific rule: rewrite the INNER loop to `new Array.ArrayIterator<>(a)`. " +
           "The engine cannot know this — it is libGDX's allocation strategy, not a Java/Scala fact.]"
       )
       fs.foreach(f => println("  " + f.render))

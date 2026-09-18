@@ -168,7 +168,7 @@ class PolicySpec extends munit.FunSuite:
     // reader in another repository needs no investigation to act on it.
     all.findings.foreach { f =>
       assert(clue(f.render).contains(f.key))
-      assert(f.render.contains("§1(b)"))
+      assert(f.render.contains("port policy"))
       assert(f.render.contains("manifest"))
     }
   }

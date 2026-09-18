@@ -126,7 +126,7 @@ class UnportableMarkerSpec extends PortSuite:
     assertEquals(fs.size, 1)
     assert(fs.head.detail.contains("unmodelled-node-kind(CtSwitchExpression)"))
     assert(fs.head.detail.contains("JS-S09"), s"the catalog id must be in the finding: ${fs.head.detail}")
-    assert(fs.head.detail.contains("§1(a) ENGINE:"), "a finding must say which of §1's kinds the fix is")
+    assert(fs.head.detail.contains("engine (true of every Java program):"), "a finding must say whose fix it is")
   }
 
   // -- emission --------------------------------------------------------------------------------
@@ -140,7 +140,7 @@ class UnportableMarkerSpec extends PortSuite:
     assertEmits(marked, "unmodelled-node-kind(CtSwitchExpression)")
   }
 
-  test("the refusal is RECORDED as `Unrenderable` — §2.6's reconciliation, not a second kind") {
+  test("the refusal is RECORDED as `Unrenderable` — a reconciliation, not a second kind") {
     marked.out // the decisions are the EMITTER's, made while rendering; nothing exists before it runs
     val ds = marked.emitter.emissionDecisions.filter(_.kind == Decision.Kind.Unrenderable)
     assertEquals(ds.size, 1)
@@ -167,7 +167,7 @@ class UnportableMarkerSpec extends PortSuite:
     assert(p.bestEffortOut.contains("unmodelled-node-kind(CtSwitchExpression) [JS-S09] at"))
   }
 
-  test("AT ZERO OPEN MARKERS the two modes are byte-identical — §6.4's standing claim") {
+  test("AT ZERO OPEN MARKERS the two modes are byte-identical — best-effort mode's standing claim") {
     // Stated as *by construction, same emitter, same tree*, which is true and is exactly the kind
     // of claim that stops being true one refactor later. No marker means no fence and no banner, so
     // there is nothing for the mode to add.
@@ -181,7 +181,7 @@ class UnportableMarkerSpec extends PortSuite:
     assertEquals(p.bestEffortOut, p.out)
   }
 
-  test("a fence may never OPEN or CLOSE a comment — Scala block comments NEST (§4.58)") {
+  test("a fence may never OPEN or CLOSE a comment — Scala block comments NEST") {
     class MintNasty extends Phase:
       def name:                                                        String      = "test/mint-nasty"
       override def transformDefDef(d: Tree.DefDef)(using pr: Program): Tree.DefDef =

@@ -36,7 +36,7 @@ object ElementWitnessCheck:
     /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
     def classification(i: Issue): String = i match
       case OccupancySentinel =>
-        "§1(b) PER-LIBRARY, and it is a REPRESENTATION question the engine may not answer: this " +
+        "port policy, and it is a REPRESENTATION question the engine may not answer: this " +
           "site reads or writes `null` at an element slot to mean THE SLOT IS EMPTY, not to mean " +
           "the value is absent. An open-addressed table does this at every probe. Drop the " +
           "element type's `<: java.lang.Object` bound and the emitted code still compiles — `x == " +
@@ -47,14 +47,14 @@ object ElementWitnessCheck:
           "ships it, KEEP the class out of `dropBound` — which is what this row records — and the " +
           "boxed element type keeps java's own null semantics."
       case NonSubject =>
-        "§1(b) PER-LIBRARY: an array whose element type is one of THIS declaration's own type " +
+        "port policy: an array whose element type is one of THIS declaration's own type " +
           "parameters is created here, and the policy's `subjects` map does not name the " +
           "declaration. Either add it (with the type-parameter indexes the arrays are keyed on) " +
           "so its creations move onto the witness and its constructors take the clause, or leave " +
           "it — a class whose arrays are only ever `Object[]` at run time is correct as java " +
           "wrote it, and this row is the statement that the omission was noticed."
       case UnhandledCreation =>
-        "§1(a)/§1(b): the phase RECOGNISED an array creation at an ELEMENT-typed slot and could " +
+        "engine or port policy: the phase RECOGNISED an array creation at an ELEMENT-typed slot and could " +
           "not route it through the witness. Three shapes reach here: the array type REFLECTED " +
           "out of a `Class` argument java's own signature carries (a deprecated `T[]`-by-`Class` " +
           "constructor), a shape the mechanism does not translate (a multi-dimensional array, one " +
@@ -66,14 +66,14 @@ object ElementWitnessCheck:
           "parameter (`<V> V[] toArray(Class<V>)`) — `V` is nobody's element type, so no policy " +
           "key reaches it and a row naming it would be unactionable."
       case RawConversion =>
-        "§1(a) ENGINE, and IT COMPILES: java wrote a RAW type at this formal (or assignment target), " +
+        "engine (true of every Java program), and IT COMPILES: java wrote a RAW type at this formal (or assignment target), " +
           "which this phase filled with `java.lang.Object` once the element parameter lost its bound " +
           "(a raw wildcard no longer conforms to `Object` unbounded). The filled type is INVARIANT " +
           "where java's raw type accepted any instantiation, so the phase emits java's own unchecked " +
           "conversion at the site: `arg.asInstanceOf[C[java.lang.Object]]`. Sound under erasure " +
           "(the JVM sees one class); a row is a place to give the declaration its type argument."
       case ErasedArrayCast =>
-        "§1(b) PER-LIBRARY, and IT COMPILES: java wrote a RAW receiver here, so javac's own erased " +
+        "port policy, and IT COMPILES: java wrote a RAW receiver here, so javac's own erased " +
           "view of the call presents this element-typed array as `Object[]`, and the port emits " +
           "that view as a cast. While the element type was bounded by `java.lang.Object` the cast " +
           "was a no-op; with the bound dropped a primitive element array (`int[]`) reaches it and " +

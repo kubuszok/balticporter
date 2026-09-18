@@ -114,7 +114,7 @@ class TryResourceSpec extends PortSuite:
   // resource-carrying `try`s are found from the TREES here, and `lowered` is the only thing the
   // emitter contributes — so `_ => false` reproduces the un-repaired engine on the same trees.
 
-  test("un-repaired, the check REPORTS the drop — with an owner, an origin and a §1 classification") {
+  test("un-repaired, the check REPORTS the drop — with an owner, an origin and a classification") {
     val p  = port(oneResource)
     val fs = TryResourceCheck.check(p.after, p.after.units, (_: Tree.Try) => false)
     assertEquals(clue(fs).size, 1)
@@ -122,7 +122,7 @@ class TryResourceSpec extends PortSuite:
     assertEquals(fs.head.resources, List("r"))
     assertEquals(fs.head.owner, "demo.C#f")
     assert(fs.head.origin.line > 0, fs.head.render)
-    assert(clue(Issue.classification(Issue.UnloweredResource)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.UnloweredResource)).contains("engine"))
     assert(clue(TryResourceCheck.summary(fs)).contains("UnloweredResource"))
     assertEquals(fs.head.report.check, TryResourceCheck.Name)
     assert(!fs.head.report.path.startsWith("/"), fs.head.report.path)

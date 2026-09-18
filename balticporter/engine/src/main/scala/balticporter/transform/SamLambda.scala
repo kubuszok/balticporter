@@ -21,14 +21,14 @@ object SamLambda:
       case Unreadable =>
         "NOT a statement about the type: the class file is not on this port's classpath, so the " +
           "question could not be asked. Widening the frontend classpath would move this row; " +
-          "assuming an answer here would be a fabricated fact (§4.6)"
+          "assuming an answer here would be a fabricated fact"
       case BodyNotSingle =>
         "PERMANENT: a scala lambda is one expression and has no place for a field, an instance " +
           "initialiser, a helper method or a nested type. The anonymous class is the faithful form"
       case SelfReference =>
         "PERMANENT: `this`/`super` inside a java anonymous class names the ANON INSTANCE and " +
           "inside a scala lambda names the ENCLOSING class — the conversion would compile and mean " +
-          "something else (§4.4)"
+          "something else"
       case NonCapturing =>
         "PERMANENT, and licensed by the SPECIFICATION'S SILENCE rather than by any measurement: " +
           "JVMS 5.4.3.6 and the `LambdaMetafactory` contract leave a lambda's instance identity " +
@@ -269,7 +269,7 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
               "why" -> ("java's anonymous class had a STABLE class name; a lambda's is a hidden " +
                 "class, so getClass/getSimpleName/toString read differently here")
             ),
-            Reason.Universal("anon-SAM->lambda(DESIGN §8.15)"),
+            Reason.Universal("anon-SAM->lambda"),
             at
           )
         )

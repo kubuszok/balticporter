@@ -554,7 +554,7 @@ object TirEmitter:
   /** the §4.55 rule string every member rename carries. ONE string for all three passes, with the pass distinguished by `detail("clash")`: an agent's first question is "why is this name not the Java
     * one", and the answer is one rule with three causes, not three rules.
     */
-  private[emit] val MemberRenameRule = "member-rename(§4.55)"
+  private[emit] val MemberRenameRule = "member-rename"
 
   /** Drop `private` from the given members. Java lets a parent constructor write its own private fields; REPLAYED one level down (`CtorFunnel.replayFor`) they execute in the subclass, where `private`
     * no longer reaches — widening only removes access errors, never behaviour. `forDependents` is the same widening for a subclass THIS RUN CANNOT SEE (`ENGINE-LIMITS.md` C15), kept separate so the
@@ -599,7 +599,9 @@ object TirEmitter:
                    "a paramful constructor of this class writes this member, and a SUBCLASS IN " +
                      "ANOTHER MODULE can only express its `super(args)` as a replay one level down " +
                      "(scala lets only the primary reach super) — where `private` does not reach " +
-                     "and where nothing but this run can widen it (ENGINE-LIMITS.md C15); widening " +
+                     "and where nothing but this run can widen it (when a super call is replayed " +
+                     "across a module boundary, only the statements touching the base's unreachable " +
+                     "private members may be dropped, never the whole super call); widening " +
                      "can only remove access errors")
             ),
             "ctor-replay-widening"
@@ -906,7 +908,7 @@ object TirEmitter:
                 "it may not be the name the base emitted",
               module,
               fatal = false,
-              fix = "§1(b) PER-LIBRARY: declare the module that emits this field as a base " +
+              fix = "port policy: declare the module that emits this field as a base " +
                 "(`base = \"…\"`) and re-run it with this engine so its port map carries a `name=` row"
             )
           )
@@ -929,7 +931,7 @@ object TirEmitter:
             "from" -> (if s.flags.isPrivate then "private" else "protected"),
             "to" -> "public",
             "why" -> ("java lets this name be reused where scala cannot, so the field is renamed " +
-              "(§4.55) — and a renamed field must stay reachable from every place java read it, " +
+              "by the emitter's own renaming pass — and a renamed field must stay reachable from every place java read it, " +
               "which scala's own access rules do not grant at the new name; widening can only " +
               "remove access errors, never introduce one, and never changes behaviour")
           ),
@@ -1228,7 +1230,7 @@ object TirEmitter:
                       s"the field, and it cannot move the method either: $why",
                     view.memberShape(v.symbol).module,
                     fatal = false,
-                    fix = "§1(a) ENGINE, IN THE BASE: only the module that emits the field can rename " +
+                    fix = "engine (true of every Java program), IN THE BASE: only the module that emits the field can rename " +
                       "it, and only if it can see the clash — which it cannot, because the method is " +
                       "declared here. Rename one of the two in the java, or drop this method"
                   )

@@ -353,7 +353,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     assertEquals(withEmpty, redirectOnly)
   }
 
-  test("the SURFACE FINGERPRINT is unchanged for an entry with no renames (§1.5)") {
+  test("the SURFACE FINGERPRINT is unchanged for an entry with no renames") {
     assertEquals(new TypeRedirectTransform(Map("a.B" -> "c.D")).surfaceFingerprint, "a.B->c.D")
     assertEquals(new TypeRedirectTransform(Map("a.B" -> "c.D"), Map("a.B" -> Map("x" -> "y", "p" -> "q"))).surfaceFingerprint, "a.B->c.D[p=q,x=y]")
   }

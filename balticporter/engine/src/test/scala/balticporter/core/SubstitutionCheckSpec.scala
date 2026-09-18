@@ -61,7 +61,7 @@ class SubstitutionCheckSpec extends munit.FunSuite:
     bothAgree(dir, subs)
     val f = SubstitutionCheck.emittedDroppedTypes(dir, subs)
     assertEquals(f.map(_.fqn), List("com.x.Dropped"))
-    assert(clue(f.head.render).contains("§1(a) engine"), "CHECK 1 must classify as an engine fault")
+    assert(clue(f.head.render).contains("engine bug"), "CHECK 1 must classify as an engine fault")
   }
 
   test("CHECK 2 fires: dropped, unreplaced, still referenced — with the reference COUNT") {
@@ -76,7 +76,7 @@ class SubstitutionCheckSpec extends munit.FunSuite:
       SubstitutionCheck.dangling(dir, subs),
       List(SubstitutionCheck.Finding(SubstitutionCheck.Kind.Dangling, "com.x.Dropped", 2))
     )
-    assert(clue(SubstitutionCheck.dangling(dir, subs).head.render).contains("§1(b)/(c) per-library"))
+    assert(clue(SubstitutionCheck.dangling(dir, subs).head.render).contains("port policy or library-specific rule"))
   }
 
   test("the SUCCESS case: dropped, unreplaced, and every use rewritten away is NOT a finding") {

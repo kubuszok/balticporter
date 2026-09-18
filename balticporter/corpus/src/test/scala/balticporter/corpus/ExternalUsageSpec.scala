@@ -70,7 +70,7 @@ class ExternalSurfaceSpec extends PortSuite:
     assert(clue(vs).contains("java.util.ServiceLoader"))
   }
 
-  test("the EMITTED lane excludes a unit this run does not ship (ENGINE-LIMITS D2)") {
+  test("the EMITTED lane excludes a unit this run does not ship") {
     val everything = ExternalUsage.external(program)
     val bag        = program.units.head.symbol
     val none       = ExternalUsage.external(program, isExcluded = _ == bag)

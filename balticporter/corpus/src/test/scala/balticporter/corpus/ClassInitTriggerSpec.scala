@@ -18,7 +18,7 @@ class ClassInitTriggerSpec extends PortSuite:
       public C(int n) { this.n = n; }
     }"""
 
-  test("un-repaired, the check REPORTS the block — owner, form, origin and a §1 classification") {
+  test("un-repaired, the check REPORTS the block — owner, form, origin and a classification") {
     val p = port(registering)
     p.out
     val fs = ClassInitTriggerCheck.check(p.after, p.after.units, Set.empty, p.emitter.emittedShapes.types.get)
@@ -28,7 +28,7 @@ class ClassInitTriggerSpec extends PortSuite:
     assertEquals(un.head.declarer, "demo.C")
     assertEquals(un.head.form, "class")
     assert(un.head.origin.line > 0, un.head.render)
-    assert(clue(Issue.classification(Issue.Unforced)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.Unforced)).contains("engine"))
     assert(clue(ClassInitTriggerCheck.summary(un)).contains("Unforced"))
     assertEquals(un.head.report.check, ClassInitTriggerCheck.Name)
     assert(!un.head.report.path.startsWith("/"), un.head.report.path)
@@ -175,7 +175,7 @@ class ClassInitTriggerSpec extends PortSuite:
     val fs = ClassInitTriggerCheck.check(p.after, p.after.units, p.emitter.forcedClassInits, p.emitter.emittedShapes.types.get)
     assertEquals(clue(fs).map(_.issue).distinct, List(Issue.ReentrantRefused))
     assertEquals(fs.map(f => f.owner -> f.declarer).toSet, Set("demo.A" -> "demo.B", "demo.B" -> "demo.A"))
-    assert(clue(Issue.classification(Issue.ReentrantRefused)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.ReentrantRefused)).contains("engine"))
     assert(clue(ClassInitTriggerCheck.summary(fs)).contains("ReentrantRefused"))
   }
 
@@ -275,7 +275,7 @@ class ClassInitTriggerSpec extends PortSuite:
     assertEquals(clue(sub).size, 1)
     assertEquals(sub.head.owner, "demo.Sub")
     assertEquals(sub.head.declarer, "demo.Base")
-    assert(clue(Issue.classification(Issue.SubclassInitUnforced)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.SubclassInitUnforced)).contains("engine"))
     // …and the emitter closes it, from `Sub`'s own companion, naming the ANCESTOR.
     assertEmits(p, "val _ = demo.Base")
     assertEquals(ClassInitTriggerCheck.check(p.after, p.after.units, p.emitter.forcedClassInits, shapes.get), Nil)

@@ -78,7 +78,7 @@ object LibgdxEnrich:
   /** core's subclasses of lls's types take the factories themselves (see the object's doc); with the witness step on, an array-like factory supplies the `MkArray` clause.
     */
   private def subclassFactories(w: Boolean): List[(String, MemberSpec)] =
-    val why = "lls factory on a subclass; also what keeps the inherited-statics export unambiguous (PROGRESS.md §13.29)"
+    val why = "lls factory on a subclass; also what keeps the inherited-statics export unambiguous"
     // core's subjects keep java's `<: Object` bound (the ladder threads the clause, drops no bound),
     // so the factory's parameter keeps it too — an unbounded `[T]` matches no constructor.
     def arrayLike(owner: String, self: String, elem: String, tparams: String, mk: String) =

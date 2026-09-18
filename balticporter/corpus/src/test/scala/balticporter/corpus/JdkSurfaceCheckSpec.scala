@@ -62,7 +62,7 @@ class JdkSurfaceCheckSpec extends PortSuite:
     assertEquals(clue(d).get("java.util.Collections#rotate"), Some("unhandled"))
     val f = findings(statics, withPhase = true).filter(_.subject.contains("rotate"))
     assertEquals(clue(f).size, 1)
-    assert(clue(f.head.disposition.classification).contains("§1(b)"))
+    assert(clue(f.head.disposition.classification).contains("port policy"))
   }
 
   test("…and the same static is `kept` with the phase off: nothing retyped, so nothing is a hole") {
@@ -154,19 +154,19 @@ class JdkSurfaceCheckSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  test("K9: an enhanced-for over a KEPT java.util.List is a named finding — before any compile") {
+  test("an enhanced-for over a KEPT java.util.List is a named finding — before any compile") {
     val fs = findings(foreachSrc, withPhase = false).filter(_.disposition.label == "kept-iterable")
     assertEquals(clue(fs).size, 1)
     assertEquals(fs.head.subject, "java.util.List")
-    assert(clue(fs.head.disposition.classification).contains("K9"))
+    assert(clue(fs.head.disposition.classification).contains("port policy"))
   }
 
-  test("K9 NEGATIVE: the same loop over a RETYPED receiver is clean — decided from the phase's table") {
+  test("NEGATIVE: the same loop over a RETYPED receiver is clean — decided from the phase's table") {
     val fs = findings(foreachSrc, withPhase = true).filter(_.disposition.label == "kept-iterable")
     assertEquals(clue(fs), Nil)
   }
 
-  test("K9 NEGATIVE: a loop over a type the PROGRAM declares is not this check's business") {
+  test("NEGATIVE: a loop over a type the PROGRAM declares is not this check's business") {
     val src =
       """package demo;
         |class Own implements java.lang.Iterable<String> {
@@ -178,7 +178,7 @@ class JdkSurfaceCheckSpec extends PortSuite:
     assert(!clue(fs).exists(_.subject.contains("Own")))
   }
 
-  test("K9 NEGATIVE: an ARRAY is iterated natively and is never a demand") {
+  test("NEGATIVE: an ARRAY is iterated natively and is never a demand") {
     val src =
       """package demo;
         |class A { void go(String[] xs) { for (String x : xs) { } } }

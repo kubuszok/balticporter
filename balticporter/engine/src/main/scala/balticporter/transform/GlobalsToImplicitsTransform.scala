@@ -204,7 +204,7 @@ final class GlobalsToImplicitsTransform(
           "members",
           h.holder,
           "no field is mapped onto the context, so every read " +
-            "would be un-mappable and the phase would thread nothing — the §1(b) silent no-op this " +
+            "would be un-mappable and the phase would thread nothing — the silent no-op this " +
             "engine refuses. Map at least one static onto a path on the context type"
         )
 
@@ -409,7 +409,7 @@ final class GlobalsToImplicitsTransform(
       PolicyIssue.Malformed,
       "this module extends a holder that neither it nor any of its bases declares, so every entry " +
         "in the extension names a site of a threading that is not happening. An extension carries " +
-        "the PER-DECLARATION half of a holder the shared surface already states (§1.5); declare " +
+        "the PER-DECLARATION half of a holder the shared surface already states; declare " +
         "the holder in the base manifest, or fix the FQN if it was meant to name a different one"
     )
   }
@@ -1410,7 +1410,7 @@ final class GlobalsToImplicitsTransform(
               "why" -> ("under this mapping the alias IS that path, so java's refresh is a self-assignment; the setter's " +
                 "call it would otherwise become is not one — a setter may treat an absent value as a command")
             ),
-            reason = Reason.Universal("alias-refresh(K57)"),
+            reason = Reason.Universal("alias-refresh"),
             origin = us.map(_.site.origin).minBy(o => (o.javaPath, o.line))
           )
         )
@@ -1733,7 +1733,7 @@ final class GlobalsToImplicitsTransform(
                   "given in scope at that point. The accessor keeps the field's name so no new public " +
                   "name is minted")
               ),
-              reason = Reason.Universal("static-field-holder (CT11)"),
+              reason = Reason.Universal("static-field-holder"),
               origin = Decision.originOf(p, field)
             )
           )

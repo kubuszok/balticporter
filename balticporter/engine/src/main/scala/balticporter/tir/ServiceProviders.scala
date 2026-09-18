@@ -98,7 +98,7 @@ object ServiceProviders:
               0,
               s"this port DROPS the service type itself, so `${d.target}` advertises an interface the " +
                 "emitted code does not declare — drop the descriptor with it, or keep the type " +
-                "[§1(b): `Substitutions.dropTypes` and `serviceProviders` disagree about one type]"
+                "[port policy: `Substitutions.dropTypes` and `serviceProviders` disagree about one type]"
             )
           )
         else Nil
@@ -117,9 +117,11 @@ object ServiceProviders:
                 "is NO classpath scan and providers resolve by REGISTRATION. The wrapper's " +
                 "registration sits in a generated object body that nothing in a ported library ever " +
                 "forces, so `load` answers an EMPTY iterator on those backends with no compile error " +
-                "and no other count — P5's defect one platform over. UNWIRED, not broken: the " +
+                "and no other count — the same defect one platform over. UNWIRED, not broken: the " +
                 "trigger emission is named as future work rather than built " +
-                "[§1(a) ENGINE: `ENGINE-LIMITS.md` P9, `DESIGN.md` §8.19 — narrow `targets` to " +
+                "[engine (true of every Java program): the descriptor ships, but Scala.js and Native resolve " +
+                "providers by registration nothing in a ported library triggers, so `load` returns empty there — " +
+                "narrow `targets` to " +
                 "`[jvm]` if this module is not built off the JVM, which is a statement and not a " +
                 "silencer]"
             )
@@ -134,7 +136,7 @@ object ServiceProviders:
               0,
               "the descriptor declares no provider, so `ServiceLoader.load` finds nothing through it — " +
                 "which is indistinguishable from the resource being absent, the failure this key exists " +
-                "to remove [§1(b): check the file this port declared]"
+                "to remove [port policy: check the file this port declared]"
             )
           )
         else Nil
@@ -150,7 +152,7 @@ object ServiceProviders:
               i + 1,
               s"`${d.target}` would advertise `$e`, which this port DROPS — `ServiceLoader` throws " +
                 "`ServiceConfigurationError` on the first load and nothing before it does " +
-                "[§1(b): remove the provider from the upstream descriptor's port, or stop dropping it]"
+                "[port policy: remove the provider from the upstream descriptor's port, or stop dropping it]"
             )
           )
         else
@@ -163,7 +165,7 @@ object ServiceProviders:
                    i + 1,
                    s"this port renames, and `$u` came through unmoved — legitimate for a provider " +
                      "genuinely outside the renamed namespace, and identical to a stale descriptor " +
-                     "[§1(b): confirm against `packageRenames`/`typeRenames`]"
+                     "[port policy: confirm against `packageRenames`/`typeRenames`]"
                  )
                )
              else Nil)

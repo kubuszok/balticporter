@@ -40,7 +40,7 @@ object LlsEnrich:
 
   private[corpus] def arrayMembers(k: ArrayKind): List[(String, MemberSpec)] =
     val E      = k.elem
-    val why    = "lls collection API on the emitted array surface (PROGRESS.md §13.29)"
+    val why    = "lls collection API on the emitted array surface"
     val common = List(
       ("apply", 1, s"def apply(index: scala.Int): $E = this.get(index)"),
       ("update", 2, s"def update(index: scala.Int, value: $E): scala.Unit = this.set(index, value)"),
@@ -93,7 +93,7 @@ object LlsEnrich:
     */
   private def refArrayExtras: List[(String, MemberSpec)] =
     val S     = "lowlevel.util.DynamicArray[? <: T]"
-    val why   = "lls's flag-free / ByRef pair for java's `identity` argument (PROGRESS.md §13.29)"
+    val why   = "lls's flag-free / ByRef pair for java's `identity` argument"
     val pairs = List(
       ("contains", 1, (id: String) => s"(value: T): scala.Boolean = this.contains(lowlevel.Nullable(value), $id)"),
       ("containsAll", 1, (id: String) => s"(values: $S): scala.Boolean = this.containsAll(values, $id)"),
@@ -115,7 +115,7 @@ object LlsEnrich:
       "preserveOrder",
       0,
       "def preserveOrder: scala.Boolean = this.ordered",
-      "lls's name for java's `ordered` flag, added beside it (PROGRESS.md §13.29)"
+      "lls's name for java's `ordered` flag, added beside it"
     )
 
   // ---------------------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ object LlsEnrich:
     val K   = k.key
     val V   = k.value
     val EV  = k.entryValue
-    val why = "lls collection API on the emitted map surface (PROGRESS.md §13.29)"
+    val why = "lls collection API on the emitted map surface"
     // ONE traversal accessor for all three: `entries()` is the only iterator every emitted map
     // family implements as a `JavaIterator` (`Keys` on the int-keyed maps carries a FIELD instead),
     // and a subclass that overrides it — `OrderedMap` — supplies the right order for free.
@@ -210,7 +210,7 @@ object LlsEnrich:
   private[corpus] def setMembers(k: SetKind): List[(String, MemberSpec)] =
     val E    = k.elem
     val hn   = k.hasNext
-    val why  = "lls collection API on the emitted set surface (PROGRESS.md §13.29)"
+    val why  = "lls collection API on the emitted set surface"
     val core = List(
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
       ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = { val it = this.iterator(); while (it.$hn) { f(it.next()) } }"),
@@ -243,7 +243,7 @@ object LlsEnrich:
   private def arrays(w: Boolean): List[ArrayKind] = List(
     // `Array` is a WITNESS SUBJECT: with the rung on its element type loses java's implicit
     // `<: java.lang.Object` bound and its constructors take the type class, so every factory
-    // written here must lose the bound and supply the clause too (PROGRESS.md §13.29).
+    // written here must lose the bound and supply the clause too.
     ArrayKind(
       "Array",
       "lowlevel.util.DynamicArray[T]",
@@ -292,7 +292,7 @@ object LlsEnrich:
     * factory answers with the SUBCLASS's type, which is what a caller wants.
     */
   private def subclassFactories(): List[(String, MemberSpec)] =
-    val why                                                     = "lls factory on a subclass; also what keeps the inherited-statics export unambiguous (PROGRESS.md §13.29)"
+    val why                                                     = "lls factory on a subclass; also what keeps the inherited-statics export unambiguous"
     def tableLike(owner: String, self: String, tparams: String) = List(
       ("apply", 0, s"def apply$tparams(): $self = new $self()"),
       ("apply", 1, s"def apply$tparams(initialCapacity: scala.Int): $self = new $self(initialCapacity)"),
@@ -309,14 +309,14 @@ object LlsEnrich:
       "containsValue",
       1,
       "def containsValue(value: V): scala.Boolean = this.containsValue(value, false)",
-      "lls's flag-free spelling of java's identity argument (PROGRESS.md §13.29)"
+      "lls's flag-free spelling of java's identity argument"
     ),
     spec(
       "ArrayMap",
       "indexOfValue",
       1,
       "def indexOfValue(value: V): scala.Int = this.indexOfValue(value, false)",
-      "lls's flag-free spelling of java's identity argument (PROGRESS.md §13.29)"
+      "lls's flag-free spelling of java's identity argument"
     )
   )
 

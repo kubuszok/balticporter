@@ -188,8 +188,8 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.ExternalProducer), 3)
     assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.StaticReceiver), 1)
     assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.CastToTarget), 1)
-    // …and every one of them says which of §1's three kinds the fix is (§4.45)
-    assert(fs.forall(f => RetargetBoundaryCheck.Issue.classification(f.issue).contains("§1")))
+    // …and every one of them says whose fix it is
+    assert(fs.forall(f => RetargetBoundaryCheck.Issue.classification(f.issue).contains("engine")))
     // the emitted text is the evidence that none of this is a compile error the port would see:
     // the declaration moved and the producer did not.
     assert(clue(out).contains("scala.math.Ordering[java.lang.String]"))

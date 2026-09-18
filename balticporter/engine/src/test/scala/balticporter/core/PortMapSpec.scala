@@ -21,7 +21,7 @@ class PortMapSpec extends munit.FunSuite:
     typeShapes:  Map[String, String] = Map.empty
   ) = PortMap.of("m", "eng", emitted, SrcMap.Recording(members), dropTypes, dropMethods, injected, bodies, renames, typeShapes = typeShapes)
 
-  test("the SEARCH PATH is several roots, nearest first — §4.45's consumer has no run tree") {
+  test("the SEARCH PATH is several roots, nearest first — a consumer in another repository has no run tree") {
     // An agent in another repository points a published Baltic Porter at its own java. Its base's map
     // arrives from wherever that base was run, or unpacked from an artifact — never from a
     // `port-report/` tree of this checkout's shape. With one root the discovery finds nothing and
@@ -533,7 +533,7 @@ class PortMapSpec extends munit.FunSuite:
 
   test("a map with NO `jdk=` is UNVERIFIED, never agreement — 'the field did not exist' is not 'we agreed'") {
     val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
-    assertEquals(m0.jdk, "", "`PortMap.of` asserts no JDK its caller did not state (§4.6)")
+    assertEquals(m0.jdk, "", "`PortMap.of` asserts no JDK its caller did not state")
     PortMap.freshness(m0, "eng", List(root), jdk = "22") match
       case PortMap.Freshness.Unverified(r) => assert(clue(r).contains("no `jdk=` fingerprint"))
       case other                           => fail(s"expected Unverified, got $other")

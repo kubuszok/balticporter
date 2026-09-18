@@ -65,7 +65,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // D1: the base is the base AS THE BASE RAN IT
   // -------------------------------------------------------------------------------------------
 
-  test("D1: a dependent's merge does not reach the BASE's own effective surface") {
+  test("a dependent's merge does not reach the BASE's own effective surface") {
     val b      = base(List(redirect("com.other.A" -> "com.dep.A")))
     val before = fps(b)
     val dep    = b.extendedBy(PortManifest("dep", surface = List(redirect("com.other.B" -> "com.dep.B"))))
@@ -266,7 +266,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assert(Kind.SurfaceIntrusion.fatal)
     assert(clue(f.head.detail).contains("com.demo.Widget"))
     assert(clue(f.head.detail).contains("base"))
-    assert(clue(Kind.SurfaceIntrusion.classification).contains("§1"))
+    assert(clue(Kind.SurfaceIntrusion.classification).contains("port policy"))
   }
 
   test("…and a subject the base DROPS is ALLOWED — nothing stands at that name in its output") {
@@ -503,7 +503,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   // what the fold hands the run
   // -------------------------------------------------------------------------------------------
 
-  test("`ownKeys` records only the FOLDED manifest's contribution — a §1(b) finding must be fixable here") {
+  test("`ownKeys` records only the FOLDED manifest's contribution — a port-policy finding must be fixable here") {
     val a = base(List(redirect("com.other.A" -> "com.dep.A")))
     val b = a.extendedBy(PortManifest("mid", governs = Set("com.mid"), surface = List(redirect("com.other.B" -> "com.dep.B"))))
     val c = b.extendedBy(PortManifest("last", surface = List(redirect("com.other.C" -> "com.dep.C"))))

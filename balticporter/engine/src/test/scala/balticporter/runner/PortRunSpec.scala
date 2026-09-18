@@ -171,7 +171,7 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(r.report.policy.findings, Nil)
   }
 
-  test("a REFUSED per-type rename is a §1(b) `policy` finding, and the type does not move") {
+  test("a REFUSED per-type rename is a port-policy `policy` finding, and the type does not move") {
     // The whole point of the seam: a rename that cannot be carried out must not be a silent no-op.
     val (root, src) = fixture()
     val r           = run(root, src)(_.copy(typeRenames = Map("com.demo.Widget" -> "Gadget")))
@@ -180,10 +180,10 @@ class PortRunSpec extends munit.FunSuite:
       r.report.policy.findings.map(f => (f.phase, f.key, f.issue)),
       List(("package-rename", "com.demo.Widget", PolicyIssue.Malformed))
     )
-    assert(clue(r.report.policy.render).contains("§1(b)"))
+    assert(clue(r.report.policy.render).contains("port policy"))
   }
 
-  test("dropped-types.tsv carries a per-TYPE rename in BOTH namespaces (§4.56)") {
+  test("dropped-types.tsv carries a per-TYPE rename in BOTH namespaces") {
     // The same two-namespace obligation `packageRenames` has, one level finer: an artifact that
     // joined the manifest's upstream FQN to an EMITTED stack frame matched nothing, silently.
     val (root, src) = fixture()
@@ -278,7 +278,7 @@ class PortRunSpec extends munit.FunSuite:
     // BOTH policies, so the reader has the pair to reconcile — the thing the silent drop hid
     assert(err.getMessage.contains("com.demo.Widget#classFor"))
     assert(err.getMessage.contains("com.demo.Gadget#classFor"))
-    assert(err.getMessage.contains("§1"), "every finding says which of §1's three kinds the fix is")
+    assert(err.getMessage.contains("port policy"), "every finding says whose fix it is")
     assert(err.getMessage.contains("before any phase runs"))
     // …and nothing was emitted: the gate runs ahead of the translation, not after it
     assert(!Files.exists(root.resolve("port").resolve("src_managed/main/scala/com/demo/Widget.scala")))
@@ -600,14 +600,14 @@ class PortRunSpec extends munit.FunSuite:
       "no declared base publishes a contract row",
       Some("base-mod"),
       fatal = false,
-      fix = "\u00a71(b) PER-LIBRARY: declare the base"
+      fix = "port policy: declare the base"
     )
     val consumed = unconsumed.copy(subject = "p.Other", fatal = true)
     val fs       = PortRun.baseSurfaceFindings(List(unconsumed, consumed))
     assertEquals(fs.map(_.check).distinct, List(PortRun.BaseSurface))
     assertEquals(fs.map(f => f.kind -> f.owner), List("unanswered" -> "p.Base#m", "shaped emitted text" -> "p.Other"))
     // \u00a74.45 \u2014 the classification rides in `detail`, so an agent holding only findings.tsv has it
-    assert(clue(fs.head.detail).contains("\u00a71(b) PER-LIBRARY"), fs.head.detail)
+    assert(clue(fs.head.detail).contains("port policy"), fs.head.detail)
     assert(fs.head.detail.contains("[base: base-mod]"), fs.head.detail)
     // no origin: a contract question is about a SYMBOL, and a plausible-looking path would be worse
     assertEquals(fs.map(f => f.path -> f.line).distinct, List("" -> 0))
@@ -740,7 +740,7 @@ class PortRunSpec extends munit.FunSuite:
     assert(
       clue(out).contains(
         "/* porter: dropped-member reason=universal " +
-          "rule=ctor-funnel/nilary-dropped(C11) arguments=1 member=<init>() owner=com.demo.Font"
+          "rule=ctor-funnel/nilary-dropped arguments=1 member=<init>() owner=com.demo.Font"
       ),
       out
     )
@@ -822,8 +822,8 @@ class PortRunSpec extends munit.FunSuite:
     }
     assert(clue(err.getMessage).contains("com.demo.Handle"))
     assert(err.getMessage.contains("basemod"))
-    // the message says which of §1's three kinds the fix is, and where the rule is (§4.45)
-    assert(err.getMessage.contains("§1(a) ENGINE"))
+    // the message says whose fix it is, and where the rule is
+    assert(err.getMessage.contains("engine (true of every Java program)"))
     assert(err.getMessage.contains("RunScope.emits"))
     // …and nothing was written: the refusal runs before the emission loop
     assert(!Files.exists(root.resolve("port").resolve("src_managed/main/scala/com/demo/Handle.scala")))

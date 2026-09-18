@@ -10,17 +10,17 @@ class PorterNoteSpec extends munit.FunSuite:
   // the grammar
   // -------------------------------------------------------------------------
 
-  test("one line: kind slug, the §1 classification, the detail, and no free text") {
+  test("one line: kind slug, the classification, the detail, and no free text") {
     val note = PorterNote.render(
       d(
         Decision.Kind.RenamedMember,
         "p.Foo#style",
         Map("from" -> "style", "to" -> "style$shadow"),
-        Reason.Universal("member-rename(§4.55)")
+        Reason.Universal("member-rename")
       ),
       ""
     )
-    assertEquals(note, "/* porter: renamed-member reason=universal rule=member-rename(§4.55) from=style to=style$shadow */\n")
+    assertEquals(note, "/* porter: renamed-member reason=universal rule=member-rename from=style to=style$shadow */\n")
   }
 
   test("a CONFIGURED reason names the phase and the key — the two things an agent edits") {
@@ -58,7 +58,7 @@ class PorterNoteSpec extends munit.FunSuite:
     assert(note.linesIterator.forall(l => l.isEmpty || l.startsWith("  ")), note)
   }
 
-  test("a note can never OPEN or CLOSE a comment — scala block comments NEST (§4.58)") {
+  test("a note can never OPEN or CLOSE a comment — scala block comments NEST") {
     val note = PorterNote.render(
       d(Decision.Kind.SubstitutedBody, "p.Foo#bar", Map("why" -> "the java said /* keep */ and then some"), Reason.Universal("r")),
       ""
@@ -90,7 +90,7 @@ class PorterNoteSpec extends munit.FunSuite:
       Decision.Kind.RenamedMember,
       "p.Foo#style",
       Map("from" -> "style", "to" -> "style$shadow"),
-      Reason.Universal("member-rename(§4.55)")
+      Reason.Universal("member-rename")
     )
   private val printed  = PorterNote.Printed(Decision.Kind.RenamedMember, sym, "p.Foo#style", "p.Foo")
   private val goodText = "p.Foo" -> ("class Foo {\n" + PorterNote.render(renamed, "  ") + "  var style$shadow = 0\n}")

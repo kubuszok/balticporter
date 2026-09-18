@@ -1103,7 +1103,7 @@ anim8-measure:
     echo "@Test in upstream java: $JAVA_TESTS (upstream ships DEMOS, not a suite — nothing to port)"
     echo "hand-written munit in {{anim8_module}}/src/test/scala: $HAND_TESTS   emitted: $EMITTED_TESTS"
     [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS A SUITE — $JAVA_TESTS @Test method(s) that this port does not migrate; add an Anim8TestMigrate"
-    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing (CLAUDE.md §3)"
+    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing"
 
     echo
     break_residue {{anim8_module}}/src_managed
@@ -1337,14 +1337,14 @@ screens-measure:
     echo "@Test in upstream java: $JAVA_TESTS   emitted by this port: $EMITTED_TESTS"
     echo "  (10 of the 12 need gdx-backend-headless — NO libGDX backend is ported — or Mockito"
     echo "   mockStatic/spy over the type under test, which is JVM bytecode instrumentation and"
-    echo "   not portable to the Scala.js/Native targets this port exists for. See PROGRESS.md.)"
+    echo "   not portable to the Scala.js/Native targets this port exists for.)"
     echo "hand-written munit in {{screens_module}}/src/test/scala: $HAND_TESTS"
     [ "$JAVA_TESTS" != "12" ] && echo "!! UPSTREAM'S @Test COUNT MOVED ($JAVA_TESTS, was 12) — re-read whether the suite is now migratable"
-    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing (CLAUDE.md §3)"
+    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing"
 
     echo
     break_residue {{screens_module}}/src_managed
-    echo "-- hand-written support sources (CLAUDE.md §5.5: src/ is the hand-written half) --"
+    echo "-- hand-written support sources (src/ is the hand-written half; src_managed/ is generated) --"
     echo "$(find {{screens_module}}/src/main/scala -name '*.scala' | wc -l | tr -d ' ') file(s), $(cat $(find {{screens_module}}/src/main/scala -name '*.scala') | wc -l | tr -d ' ') lines — the guacamole replacements TypeRedirectTransform points at"
 
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
@@ -1448,7 +1448,7 @@ vfx-measure:
     echo "@Test in upstream java (WHOLE checkout): $JAVA_TESTS (gdx-vfx ships no test source set — nothing to port)"
     echo "hand-written munit in {{vfx_module}}/src/test/scala: $HAND_TESTS   emitted: $EMITTED_TESTS"
     [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS A SUITE — $JAVA_TESTS @Test method(s) that this port does not migrate; add a VfxTestMigrate"
-    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing (CLAUDE.md §3)"
+    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing"
 
     echo
     break_residue {{vfx_module}}/src_managed
@@ -1575,7 +1575,7 @@ ai-measure:
     echo "emitted test files: 0 (this port has no test source set yet — a GdxAiTestMigrate is the next milestone)"
     [ "$JAVA_TESTS" != "10" ] && echo "!! UPSTREAM SUITE MOVED — $JAVA_TESTS @Test, not 10. Milestone 1 ports NONE of them, so nothing else would notice; re-read gdx-ai/gdx-ai/tests before touching this number"
     [ "$DEMO_TESTS" != "0" ] && echo "!! THE DEMO PROJECT NOW DECLARES $DEMO_TESTS @Test — it was an application; it may now be a suite, and this lane must say which"
-    echo "   (no run phase: every CLAUDE.md §4.4 form is UNMEASURED for this port — see PROGRESS.md §sge-ai)"
+    echo "   (no run phase: every Java-vs-Scala statement-semantics form is UNMEASURED for this port)"
 
     echo
     break_residue {{ai_module}}/src_managed
@@ -1766,7 +1766,7 @@ ai-diff-measure:
     ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
     ADAPTED_TESTS=$(munit_emitted "$TREE")
     echo "reference hand port ({{ai_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
-    echo "adapted here (class (a)+(b) of §10.7.12): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    echo "adapted here (class (a)+(b)): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
     echo "class (c), left out and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
     # 196 is `munit_emitted`'s count — the SHARED mechanism every other lane's discovery figure uses.
     # It read 194 here until that counter learned MUnit's registration SHAPE: the two it missed put
@@ -1779,7 +1779,7 @@ ai-diff-measure:
     # name now (CLAUDE.md §4.56; `scripts/_lib.sh`).
     if [ "$REF_FILES" != "24" ] || [ "$REF_TESTS" != "196" ]; then
       echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 24 / 196."
-      echo "   PROGRESS.md §10.7.12's census was taken against 24 / 196 and is now STALE: a file"
+      echo "   the last census of this reference suite was taken against 24 / 196 and is now STALE: a file"
       echo "   added there is a file nobody has classified, and one removed may be one of the ten"
       echo "   this lane copied. Re-run the census before trusting the outcomes below."
       exit 1
@@ -1994,8 +1994,8 @@ noise4j-measure:
     # loudly rather than continuing to report a port with no behavioural evidence as complete.
     JAVA_TESTS=$(java_test_count {{n4j_src}}/src {{n4j_src}}/test {{n4j_src}}/tests)
     echo "@Test in Java: $JAVA_TESTS   emitted test files: 0 (this port has no test source set)"
-    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS $JAVA_TESTS @Test — this port has no test.conf, so none of them runs; add one (CLAUDE.md §3)"
-    echo "   (no run phase: every CLAUDE.md §4.4 form is UNMEASURED for this port — see PROGRESS.md §noise4j)"
+    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS $JAVA_TESTS @Test — this port has no test.conf, so none of them runs; add one"
+    echo "   (no run phase: every Java-vs-Scala statement-semantics form is UNMEASURED for this port)"
 
     echo
     break_residue {{n4j_module}}/src_managed
@@ -2088,7 +2088,7 @@ lls-measure:
     # a port whose only evidence is somebody else's suite.
     JAVA_TESTS=$(java_test_count {{gdx_src}}/src)
     echo "@Test in the upstream source root: $JAVA_TESTS   emitted test files: 0 (this port has no test source set)"
-    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS $JAVA_TESTS @Test — this port emits no tests, so none of them runs (CLAUDE.md §3)"
+    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS $JAVA_TESTS @Test — this port emits no tests, so none of them runs"
     # …and the DIFFERENTIAL population, RE-DERIVED from the lls checkout on every run. A hand port
     # that gains or loses a file or a `test(…)` makes any census taken against it stale, and nothing
     # else in this repository could say so (`ai-diff-measure`'s rule).
@@ -2207,7 +2207,7 @@ lls-diff-measure:
     echo "reference hand port ({{lls_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
     if [ "$REF_FILES" != "18" ] || [ "$REF_TESTS" != "423" ]; then
       echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 18 / 423."
-      echo "   PROGRESS.md §13.29's census was taken against 18 / 423 and is now STALE: a file added"
+      echo "   the last census of this reference suite was taken against 18 / 423 and is now STALE: a file added"
       echo "   there is a file nobody has classified, and one removed may be one this lane adapts."
       echo "   Re-run the census before trusting the outcomes below."
       exit 1
@@ -2317,7 +2317,7 @@ jbump-measure:
     if [ "$JAVA_TESTS" = "0" ]; then
       echo "   NO SUITE UPSTREAM — nothing for the engine to port, so the behavioural gate for this"
       echo "   port is the DIFFERENTIAL PROBE below, not a ported suite. It is hand-written and must"
-      echo "   never be counted as a ported test (CLAUDE.md §3); PROGRESS.md §jbump says what it covers."
+      echo "   never be counted as a ported test."
     else
       echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
       echo "   source set; add balticporter/corpus/ports/jbump/test.conf (\`base = \"main.conf\"\`) and a lane stage."
@@ -2482,7 +2482,7 @@ usl-measure:
     fi
     if [ "$HEADERS" != "$USL_JAVA" ]; then
       echo "!! A SOURCE HAS LOST ITS APACHE HEADER ($HEADERS of $USL_JAVA) — this port declares NO"
-      echo "   \`notices\` BECAUSE every file carries the notice itself (CLAUDE.md §4.57). With one"
+      echo "   \`notices\` BECAUSE every file carries the notice itself. With one"
       echo "   missing, the banner NAMES a licence and reproduces no notice, and nothing else reports it."
       exit 1
     fi
@@ -2545,7 +2545,7 @@ usl-measure:
     echo
     if [ "$ERRORS" != "0" ]; then
       echo "-- oracle: NOT RUN — the port does not compile, and scalac reaching no backend phase"
-      echo "   writes no class file, so there is nothing to run (CLAUDE.md §3.5). A gate that cannot"
+      echo "   writes no class file, so there is nothing to run. A gate that cannot"
       echo "   run is not a gate that agreed."
       headline "$ERRORS" "$REPORT"
       exit 0
@@ -2617,7 +2617,7 @@ usl-measure:
     if [ "$J_EXACT" = "0" ]; then
       echo "!! THE AUTHORITY REPRODUCES THE CHECKED-IN SKIN FOR NO FIXTURE AT ALL. That is not a port"
       echo "   failure — it means the oracle's own premise is gone (a re-compiled skin, a moved file),"
-      echo "   and a tier that passes by comparing 0 against 0 is exactly the bar CLAUDE.md §5 refuses."
+      echo "   and a tier that passes by comparing 0 against 0 is exactly the bar measurement discipline refuses."
       exit 1
     fi
 
@@ -2878,7 +2878,7 @@ liqp-measure:
     if [ ! -f "$SERVICES" ]; then
       echo "!! $SERVICES is MISSING — the suite's ServiceLoader lookups would find zero providers,"
       echo "   applyCustomDateTypes() would silently no-op, and no compile error, check count or"
-      echo "   finding would say so (ENGINE-LIMITS.md P5). The run writes it from the port's"
+      echo "   finding would say so. The run writes it from the port's"
       echo "   \`serviceProviders\` key; a run that emitted nothing here did not emit this."
       exit 1
     fi
@@ -2973,7 +2973,7 @@ liqp-measure:
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
       echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
-      echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
+      echo "   Every Java-vs-Scala statement-semantics form in this port is UNMEASURED until that line stops printing."
     fi
 
 
@@ -3068,12 +3068,12 @@ md-measure:
     echo "@Test in the twelve scoped modules: $JAVA_TESTS   emitted test files: 0 (this milestone has no test source set)"
     if [ "$JAVA_TESTS" = "0" ]; then
       echo "   NO SUITE IN SCOPE — the split util libraries are tested from flexmark-util's own module,"
-      echo "   which milestone 1 does not parse. Every CLAUDE.md §4.4 form in this port is UNMEASURED,"
-      echo "   and this library is a character-level parser: see PROGRESS.md §10.6 for what that costs."
+      echo "   which milestone 1 does not parse. Every Java-vs-Scala statement-semantics form in this port is UNMEASURED,"
+      echo "   and this library is a character-level parser."
     else
       echo "!! A SUITE HAS APPEARED IN SCOPE — $JAVA_TESTS @Test method(s) under a module this port"
       echo "   converts, and none of them runs. Add balticporter/corpus/ports/ssg-md/test.conf (\`base = \"main.conf\"\`)"
-      echo "   and a lane stage, or narrow the scope deliberately (CLAUDE.md §3)."
+      echo "   and a lane stage, or narrow the scope deliberately."
     fi
 
     echo
@@ -3239,7 +3239,7 @@ md-test-measure:
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
       echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
-      echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
+      echo "   Every Java-vs-Scala statement-semantics form in this port is UNMEASURED until that line stops printing."
     fi
 
 
@@ -3487,7 +3487,7 @@ md-ext-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
       echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
       echo "   An extension is a REGISTRATION mechanism and every failure mode of one is silent; until"
-      echo "   that line stops printing this milestone has a compile and no evidence (CLAUDE.md §3)."
+      echo "   that line stops printing this milestone has a compile and no evidence."
     fi
 
 
@@ -3568,19 +3568,19 @@ textra-measure:
     echo "    the other $((EMITTED - APACHE)) emitted file(s) come from upstream files that carry NO per-file notice —"
     echo "    which is the second obligation (c) discharges, and why 'reproduced by construction' is not enough here"
     [ "$APACHE" = "0" ] && echo "!! THE PER-FILE HARVEST IS PRODUCING NOTHING — every emitted file is an unattributed derived work"
-    [ "$APACHE" != "$UP_APACHE" ] && echo "!! THE TWO SIDES DISAGREE — $UP_APACHE upstream against $APACHE emitted. Either the harvest lost a notice or upstream's headers moved; §4.58 says only a text-to-text comparison can see this."
+    [ "$APACHE" != "$UP_APACHE" ] && echo "!! THE TWO SIDES DISAGREE — $UP_APACHE upstream against $APACHE emitted. Either the harvest lost a notice or upstream's headers moved; only a text-to-text comparison can see this."
     if grep -rqs "Mathias Bynens" {{textra_module}}/src_managed/main/scala; then
       echo "(b) the emoji-regex MIT notice, reproduced inline (EmojiProcessor)"
     else
       echo "!! (b) THE EMOJI-REGEX MIT NOTICE IS GONE — it is a self-contained MIT text in one upstream"
-      echo "   file's leading comment, so losing it is a licence failure the compile cannot see (§4.58)"
+      echo "   file's leading comment, so losing it is a licence failure the compile cannot see"
     fi
     for n in LICENSE typing-label.LICENSE; do
       if [ -f "{{textra_module}}/src_managed/main/$n" ] || [ -f "{{textra_module}}/src_managed/$n" ]; then
         echo "(c) $n copied beside the emitted code"
       else
         echo "!! (c) $n WAS NOT COPIED — declared in Provenance.notices; MIT's one condition is that"
-        echo "   the notice be INCLUDED in copies, and the port names it without shipping it (§4.57)"
+        echo "   the notice be INCLUDED in copies, and the port names it without shipping it"
       fi
     done
 
@@ -3595,8 +3595,8 @@ textra-measure:
     if [ "$JAVA_TESTS" = "0" ]; then
       echo "   NO SUITE UPSTREAM — build.gradle names no JUnit coordinate and every file there is a"
       echo "   manual LWJGL3 demo with a main(). There is nothing for the engine to port, so this port"
-      echo "   has NO behavioural evidence at all yet (CLAUDE.md §3) and every §4.4 form in it is"
-      echo "   UNMEASURED. PROGRESS.md §10.8 scopes the differential probe that would change that."
+      echo "   has NO behavioural evidence at all yet and every Java-vs-Scala statement-semantics form in it is"
+      echo "   UNMEASURED. A differential probe would change that."
     else
       echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
       echo "   source set; add a TextraTypistTestMigrate and a lane stage."
@@ -3686,7 +3686,7 @@ textra-diff-measure:
     ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
     ADAPTED_TESTS=$(munit_emitted "$TREE")
     echo "reference hand port ({{textra_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
-    echo "adapted here (class (a) of §10.8.17): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    echo "adapted here (class (a)): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
     # NOT "class (c)": §10.8.17 re-classified the residue after MEASURING what blocks it. 18 files /
     # 69 tests are class (b) — they construct the hand port's own nilary `Font()`, which java does
     # not have — one file / 5 tests is a byte-identical `scalanative` duplicate of a file that IS
@@ -3694,7 +3694,7 @@ textra-diff-measure:
     echo "not copied, and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
     if [ "$REF_FILES" != "32" ] || [ "$REF_TESTS" != "239" ]; then
       echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 32 / 239."
-      echo "   PROGRESS.md §10.8.17's census was taken against 32 / 239 and is now STALE: a file"
+      echo "   the last census of this reference suite was taken against 32 / 239 and is now STALE: a file"
       echo "   added there is a file nobody has classified, and one removed may be one of the eleven"
       echo "   this lane copied. Re-run the census before trusting the outcomes below."
       exit 1
@@ -3797,7 +3797,7 @@ visui-measure:
     PKG_INFO=$(find {{visui_src}}/ui/src/main/java -name 'package-info.java' | wc -l | tr -d ' ')
     USL_JAVA=$(find {{visui_src}}/usl/src/main/java -name '*.java' | wc -l | tr -d ' ')
     echo "ui/ .java: $ALL_JAVA   package-info: $PKG_INFO   in scope: $((ALL_JAVA - PKG_INFO))"
-    echo "usl/ .java: $USL_JAVA  — OUT OF SCOPE for this port and stated as such (PROGRESS.md §10.9)"
+    echo "usl/ .java: $USL_JAVA  — OUT OF SCOPE for this port and stated as such"
     # The one-directional independence is what makes the deferral cost nothing, and it is a GREP
     # rather than a claim: `usl/` names no libGDX type, and `ui/` names no `com.kotcrab.vis.usl`
     # type. The coupling is build-time only — the root `build.gradle` runs an already-published USL
@@ -3809,7 +3809,7 @@ visui-measure:
     echo "ui/ files referencing usl: $UI_USES_USL   usl/ files referencing libGDX: $USL_USES_GDX"
     if [ "$UI_USES_USL" != "0" ] || [ "$USL_USES_GDX" != "0" ]; then
       echo "!! THE TWO MODULES ARE NO LONGER INDEPENDENT — the USL deferral was priced on that"
-      echo "   independence (PROGRESS.md §10.9) and the price has changed."
+      echo "   independence and the price has changed."
     fi
 
     echo
@@ -3831,7 +3831,7 @@ visui-measure:
     echo "    the other $((EMITTED - APACHE)) emitted file(s) come from upstream files that carry NO per-file"
     echo "    notice — GdxAiPolicy's one-file case exactly, and the first reason (b)'s key exists"
     [ "$APACHE" = "0" ] && echo "!! THE PER-FILE HARVEST IS PRODUCING NOTHING — every emitted file is an unattributed derived work"
-    [ "$APACHE" != "$UP_APACHE" ] && echo "!! THE TWO SIDES DISAGREE — $UP_APACHE upstream against $APACHE emitted. Either the harvest lost a notice or upstream's headers moved; §4.58 says only a text-to-text comparison can see this."
+    [ "$APACHE" != "$UP_APACHE" ] && echo "!! THE TWO SIDES DISAGREE — $UP_APACHE upstream against $APACHE emitted. Either the harvest lost a notice or upstream's headers moved; only a text-to-text comparison can see this."
     for n in LICENSE NOTICE icons-license; do
       if [ -f "{{visui_module}}/src_managed/main/$n" ] || [ -f "{{visui_module}}/src_managed/$n" ]; then
         echo "(b) $n copied beside the emitted code"
@@ -3839,7 +3839,7 @@ visui-measure:
         echo "!! (b) $n WAS NOT COPIED — declared in Provenance.notices. ui/NOTICE states that the"
         echo "   shipped ICONS are CC BY-ND 3.0 and points at icons-license; Apache-2.0 §4(d) makes"
         echo "   carrying that NOTICE unconditional for a derivative, and no harvest can reach a"
-        echo "   licence that lives on a PNG (§4.57)"
+        echo "   licence that lives on a PNG"
       fi
     done
 
@@ -3881,7 +3881,7 @@ visui-measure:
     for b in "com/kotcrab/vis/vis-ui.gwt.xml" "META-INF/robovm/ios/robovm.xml"; do
       if [ -f "$RES_DIR/$b" ]; then
         echo "!! $b IS SHIPPED, and it is the upstream BUILD's file rather than this library's."
-        echo "   PROGRESS.md §10.9.3 and DESIGN.md §8.22 say why a DECLARATION and not a scan."
+        echo "   a resource tree is a DECLARATION and not a scan."
         exit 1
       fi
     done
@@ -3903,10 +3903,10 @@ visui-measure:
       echo "   \"extends VisWindow\" demos needing a GL context: $MANUAL under test.manual, which"
       echo "   ui/build.gradle excludes by name, and $((UI_TEST_FILES - 2 - MANUAL)) OUTSIDE it that the include glob"
       echo "   \"**/*Test.**\" still matches and that declares zero @Test. This port has NO test source set yet, so it has NO"
-      echo "   behavioural evidence at all (CLAUDE.md §3) and every §4.4 form in it is UNMEASURED."
-      echo "   PROGRESS.md §10.9 scopes both waves that would change that."
+      echo "   behavioural evidence at all and every Java-vs-Scala statement-semantics form in it is UNMEASURED."
+      echo "   Both remaining waves would change that."
     else
-      echo "!! THE UPSTREAM TEST COUNT HAS MOVED — was 2. Re-read PROGRESS.md §10.9's test plan."
+      echo "!! THE UPSTREAM TEST COUNT HAS MOVED — was 2. Re-read this port's test plan."
     fi
     echo "emitted test files: 0 (this port has no test source set)"
 
@@ -3996,7 +3996,7 @@ visui-diff-measure:
     ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
     ADAPTED_TESTS=$(munit_emitted "$TREE")
     echo "reference hand port ({{visui_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
-    echo "adapted here (class (a) of §10.9.12): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    echo "adapted here (class (a)): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
     # NOT "class (c)": §10.9.12 classified the residue after MEASURING what blocks it. 7 files / 22
     # tests are class (b) — every one needs `VisUITestFixture.headlessSge()`, which rests on types
     # this port does not emit, and behind it the skin resources §10.9.3 counts as NAMED-but-unshipped
@@ -4004,7 +4004,7 @@ visui-diff-measure:
     echo "not copied, and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
     if [ "$REF_FILES" != "12" ] || [ "$REF_TESTS" != "72" ]; then
       echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 12 / 72."
-      echo "   PROGRESS.md §10.9.12's census was taken against 12 / 72 and is now STALE: a file"
+      echo "   the last census of this reference suite was taken against 12 / 72 and is now STALE: a file"
       echo "   added there is a file nobody has classified, and one removed may be one of the four"
       echo "   this lane copied. Re-run the census before trusting the outcomes below."
       exit 1
@@ -4040,7 +4040,7 @@ visui-diff-measure:
       echo "!! A CLOSURE FILE IS ONE THE PORT CANNOT COMPILE:$OVERLAP"
       echo "   The subset compile below would be measuring a file the whole-port run reports an"
       echo "   error in, which is the one thing scoping the compile must never hide. Classify those"
-      echo "   suites (c)-by-the-floor in PROGRESS.md §10.9.12 and drop them from this lane."
+      echo "   suites (c)-by-the-floor and drop them from this lane."
       exit 1
     fi
     echo "none of the closure files appears in errors.tsv — the port's 8 are all in widget/ and layout/"
@@ -4506,7 +4506,7 @@ correlate OUT *ARGS:
     if [ -z "{{ARGS}}" ]; then
       echo "usage: just correlate <out-dir> [--scalac <file>] [--tests <file>] [--srcmap [scope=]<file>]…"
       echo
-      echo "  CLAUDE.md §5.1: never open an emitted file to work out which member an error is in."
+      echo "  never open an emitted file to work out which member an error is in."
       echo "  The lanes do this for you; this is the same command for a compile you ran by hand."
       echo
       echo "  scala-cli compile --scala 3.8.4 --server=false --jvm {{jdk_version}} <port>/src_managed/main/scala > /tmp/c.txt"
@@ -5281,7 +5281,7 @@ injections-lint:
     if [ "$bad" = "0" ]; then
       echo "injections-lint: all $N file(s) parse under -no-indent"
     else
-      echo "!! injections-lint FAILED — rewrite the file(s) above in brace syntax (CLAUDE.md §5)"
+      echo "!! injections-lint FAILED — rewrite the file(s) above in brace syntax"
       exit 1
     fi
 
@@ -5339,7 +5339,7 @@ upstream-pin:
     echo "checked $TOTAL vendored trees: $((TOTAL - MISMATCH)) match, $MISMATCH mismatch"
     if [ "$MISMATCH" != "0" ]; then
       echo "!! FATAL — $MISMATCH vendored tree(s) do not match the reference repo's pin."
-      echo "   Re-pinning is a per-port decision with a measurement (PROGRESS.md §13)."
+      echo "   Re-pinning is a per-port decision with a measurement."
       exit 1
     fi
 

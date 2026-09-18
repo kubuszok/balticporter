@@ -313,7 +313,7 @@ final class PackageRenameTransform(
       didBind || !perTypeDeclared,
       "package-rename carries per-TYPE policy and was run WITHOUT being bound: `Pipeline.runTraced` " +
         "binds every `PolicyBound` phase before the first one runs, and a phase run unbound matches " +
-        "nothing, silently (CLAUDE.md §1(b))."
+        "nothing, silently — the silent no-op every configurable phase's empty parameter must refuse."
     )
     if accepted.isEmpty then program
     else
@@ -545,7 +545,7 @@ object PackageRenameTransform:
       val miss =
         if unmatched.isEmpty then Nil
         else
-          List("  unmatched prefixes (policy names a namespace this program does not declare — §1b, configure the phase):")
+          List("  unmatched prefixes (policy names a namespace this program does not declare — port policy, configure the phase):")
             ++ unmatched.sorted.map(p => s"    $p")
       (hits ++ miss).mkString("\n")
 

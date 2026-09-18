@@ -183,9 +183,9 @@ final case class RemedyHint(fix: FixKind, what: String):
     */
   def render:                    String = s"${label(fix)} ${what}"
   private def label(f: FixKind): String = f match
-    case FixKind.Universal     => "§1(a) ENGINE:"
-    case FixKind.Parameterised => "§1(b) CONFIGURE:"
-    case FixKind.LibraryRule   => "§1(c) LIBRARY RULE:"
+    case FixKind.Universal     => "engine (true of every Java program):"
+    case FixKind.Parameterised => "port policy:"
+    case FixKind.LibraryRule   => "library-specific rule:"
     case FixKind.NoFix         => "—"
 
 /** Open, or discharged by a named phase (discharge is an explicit act, `Open → Resolved(byPhase, how)`, and a marker never leaves the tree until emission). A phase that deletes a marked subtree has

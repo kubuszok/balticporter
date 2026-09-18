@@ -23,7 +23,7 @@ class BreakCatchCheckSpec extends PortSuite:
       String parse(String s, String p) { return s; }
     }"""
 
-  test("un-repaired, the check REPORTS the crossing — with an origin and a §1 classification") {
+  test("un-repaired, the check REPORTS the crossing — with an origin and a classification") {
     val p  = port(crossing)
     val fs = BreakCatchCheck.check(p.after, p.after.units, (_: Tree.Try) => false)
     assertEquals(clue(fs).size, 1)
@@ -32,7 +32,7 @@ class BreakCatchCheckSpec extends PortSuite:
     assertEquals(fs.head.caught, "java.lang.Exception")
     assertEquals(fs.head.owner, "demo.C#f")
     assert(fs.head.origin.line > 0, fs.head.render)
-    assert(clue(Issue.classification(Issue.UnguardedJump)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.UnguardedJump)).contains("engine"))
     assert(clue(BreakCatchCheck.summary(fs)).contains("UnguardedJump"))
     // and the row a run would write carries the lane name and a relative path
     assertEquals(fs.head.report.check, BreakCatchCheck.Name)

@@ -77,7 +77,7 @@ class PortResourcesSpec extends munit.FunSuite:
     val cands = PortResources.candidates(trees, plan)
     val fs    = PortResources.findings(plan, cands, trees, named = Set("p/q/shipped.json", "p/q/forgotten.properties"))
     assertEquals(kinds(fs), List(("named-unshipped", "p/q/forgotten.properties"), ("shipped", "p/q/shipped.json")))
-    assert(fs.exists(f => f.kind == "named-unshipped" && f.detail.contains("§1(b)")))
+    assert(fs.exists(f => f.kind == "named-unshipped" && f.detail.contains("port policy")))
   }
 
   tmp.test("…and it is asked of BOTH spellings, because a lookup is written either way") { dir =>

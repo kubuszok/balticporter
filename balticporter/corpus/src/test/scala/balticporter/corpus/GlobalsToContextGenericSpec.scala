@@ -114,7 +114,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // prints once per kind rather than once per row — a per-row copy of the same advice is what the
     // reader skips.
     assert(clue(ContextSeamCheck.Kind.classification(f.kind)).contains("`sites` policy"), f.render)
-    assert(ContextSeamCheck.Kind.classification(f.kind).contains("§1(b)"))
+    assert(ContextSeamCheck.Kind.classification(f.kind).contains("port policy"))
   }
 
   test("a TYPE ARGUMENT at a `new` is not a construction — `new Pool[Cell]` constructs no `Cell`") {
@@ -229,8 +229,8 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     assert(clue(p.policyReport.findings).nonEmpty)
     assertEquals(clue(f).map(_.issue), Some(PolicyIssueLazy))
     assert(f.get.detail.contains("nothing for a context to arrive for"), f.get.render)
-    // …and it says which of §1's three kinds the fix is (§4.45)
-    assert(f.get.render.contains("§1(b)"), f.get.render)
+    // …and it says whose fix it is
+    assert(f.get.render.contains("port policy"), f.get.render)
   }
 
   test("a `lazy-init` entry on a field with no movable initialiser reports too") {

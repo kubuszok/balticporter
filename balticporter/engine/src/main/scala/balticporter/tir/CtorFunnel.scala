@@ -260,13 +260,13 @@ object CtorFunnel:
                                "the two modules. "
                            else "") +
                           "The published descriptor names types the dependent's local derivation cannot " +
-                          "resolve (an opaque type the base's retyping phases minted over base units, " +
-                          "D12/O8). This run does not emit this class, so the local plan is used for the " +
+                          "resolve (an opaque type the base's retyping phases minted over base units). " +
+                          "This run does not emit this class, so the local plan is used for the " +
                           "fixpoint only and the dependent follows the base's published signature at " +
                           "call sites",
                         Some(module),
                         fatal = false,
-                        fix = "§1(a) ENGINE, FOLLOWED (D15): the dependent follows the base's published " +
+                        fix = "engine (true of every Java program), FOLLOWED: the dependent follows the base's published " +
                           "constructor signature — the descriptor disagreement is expected (the " +
                           "opaque/retyping phases do not re-derive over base units) and does not " +
                           "reach emitted text"
@@ -281,11 +281,11 @@ object CtorFunnel:
                   module,
                   fatal = wall,
                   fix = if wall then
-                    "§1(b) PER-LIBRARY, OPERATIONAL: run the base port so it publishes a contract, " +
+                    "port policy, OPERATIONAL: run the base port so it publishes a contract, " +
                       "or declare an EMPTY manifest for that resolution root if it is genuinely not a " +
-                      "ported module (§1.5) — that is a statement, and it exempts this question"
+                      "ported module — that is a statement, and it exempts this question"
                   else
-                    "§1(b) PER-LIBRARY, OPERATIONAL: this class's primary does not depend on its " +
+                    "port policy, OPERATIONAL: this class's primary does not depend on its " +
                       "subclasses, so the local derivation is the base's answer and nothing is wrong " +
                       "today; running the base port would let the engine CONFIRM that"
                 )
@@ -839,7 +839,7 @@ object CtorFunnel:
                     "replay is refused and the `super(args)` it expressed is counted as an omission",
                   Some(module),
                   fatal = false,
-                  fix = s"§1(a) ENGINE, in the BASE: only $module can widen a member it emits, and it " +
+                  fix = s"engine (true of every Java program), in the BASE: only $module can widen a member it emits, and it " +
                     "cannot know a future dependent will replay one. The divergence is counted by " +
                     "`omissions`; hand-write the constructor in this module if the behaviour is needed"
                 )
@@ -853,7 +853,7 @@ object CtorFunnel:
                   "because a replay across a module boundary cannot widen anything",
                 module,
                 fatal = false,
-                fix = "§1(b) PER-LIBRARY: declare the module that emits this member as a base " +
+                fix = "port policy: declare the module that emits this member as a base " +
                   "(`base = \"…\"`) and re-run it with this engine so its port map carries a `vis=` row"
               )
             )

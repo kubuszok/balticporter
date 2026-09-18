@@ -89,7 +89,7 @@ class RewriteCallSitesSpec extends PortSuite:
     assertEquals(p.rewrites.all.map(_.phase), Nil)
   }
 
-  test("…and only OWNED declarations: an external's signature is a fact about a class file (§4.56)") {
+  test("…and only OWNED declarations: an external's signature is a fact about a class file") {
     val p     = port(src, new Unaccounted)
     val moved = p.rewrites.all.head.retyped
     assert(moved.nonEmpty)
@@ -143,10 +143,10 @@ class RewriteCallSitesSpec extends PortSuite:
     assertEquals(RewriteCallSitesCheck.check(p.rewrites, scala.None).map(_.issue), List(Issue.Unaccounted))
   }
 
-  test("every issue carries a §1 classification — a finding an agent cannot classify costs it a full investigation (§4.45)") {
+  test("every issue carries a classification — a finding an agent cannot classify costs it a full investigation") {
     Issue.values.foreach { i =>
       val c = Issue.classification(i)
-      assert(c.contains("§1("), s"$i does not say which of §1's three kinds the fix is")
+      assert(c.contains("engine"), s"$i does not say whose fix it is")
       assert(c.length > 120, s"$i's classification is too short to act on")
     }
   }

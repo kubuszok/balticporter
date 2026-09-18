@@ -80,7 +80,7 @@ jdk_guard() {
   if [ ! -f "$jvm" ]; then
     echo "!! NO JVM RECORD — this run did not say which JDK its frontend read class files with."
     echo "   $jvm does not exist, so a frontend on JDK 24 emitting an \`override\` that the JDK-22"
-    echo "   compile below rejects would print as an ordinary engine gap (ENGINE-LIMITS M5.10)."
+    echo "   compile below rejects would print as an ordinary engine gap."
     echo "   Every migration writes it; a run that did not is one whose artifact layer was off."
     exit 1
   fi
@@ -104,7 +104,7 @@ jdk_guard() {
   if [ -z "$compile" ]; then
     echo "!! COULD NOT DERIVE THE COMPILE JDK — \`java -XshowSettings:property\` printed no"
     echo "   specification version. The frontend recorded JDK $frontend; the compiler's half is"
-    echo "   UNKNOWN, and 'I could not check' is not 'they agree' (CLAUDE.md §3)."
+    echo "   UNKNOWN, and 'I could not check' is not 'they agree'."
     exit 1
   fi
 
@@ -116,7 +116,7 @@ jdk_guard() {
   echo "   The migration read its class files on JDK $frontend and this lane compiles on JDK $compile,"
   echo "   so the emitted Scala is a function of a JDK the compiler does not have. It arrives as an"
   echo "   ordinary typer error at a member whose translation is perfect — measured as one"
-  echo "   \`E037 … overrides nothing\` on \`sge.utils.CharArray\` (ENGINE-LIMITS M5.10), with every"
+  echo "   \`E037 … overrides nothing\` on \`sge.utils.CharArray\`, with every"
   echo "   check count, every finding and all three port-map fingerprints flat."
   echo
   echo "   WHAT TO DO — make the two agree, then re-run this lane:"
@@ -1145,7 +1145,7 @@ port_map_guard() {
   fi
   echo "   If this is the change you made, ACKNOWLEDGE it: just baseline-accept <port>"
   echo "   …and re-measure every DEPENDENT of this module: a base's map decides their emitted text,"
-  echo "   and a base port's green numbers are not evidence about its dependents (CLAUDE.md §1.5)."
+  echo "   and a base port's green numbers are not evidence about its dependents."
   rm -f "$b" "$r"
   : > "$marker"; return 1
 }

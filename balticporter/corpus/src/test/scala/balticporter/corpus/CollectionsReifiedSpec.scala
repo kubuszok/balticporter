@@ -163,7 +163,7 @@ class CollectionsReifiedSpec extends PortSuite:
     val reified = ph.boundary(program).filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
     assertEquals(clue(reified).size, 1)
     assert(reified.head.detail.contains("reified cast"))
-    assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ReifiedOccurrence).contains("§1(a)"))
+    assert(CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ReifiedOccurrence).contains("engine"))
   }
 
   // -------------------------------------------------------------------------

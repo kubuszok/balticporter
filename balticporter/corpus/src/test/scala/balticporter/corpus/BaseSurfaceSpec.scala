@@ -140,7 +140,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     val cd = p.units.find(u => fqn(p, u.symbol) == name).get
     plans(cd).primaryParams.map(v => p.symbolOf(v.symbol).map(_.name).getOrElse("?"))
 
-  test("D4: a dependent's EXTRA subclass no longer demotes a base class's primary") {
+  test("a dependent's EXTRA subclass no longer demotes a base class's primary") {
     val (p, root) = model(basePkg, dependentSubclass)
     val owned     = ownedUnits(p, root)
 
@@ -157,7 +157,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(clue(primaryOf(p, scoped, "p.Base")), List("n"))
   }
 
-  test("D4 NEGATIVE: the fixpoint still demotes an OWNED class — the guard is a scope, not a removal") {
+  test("NEGATIVE: the fixpoint still demotes an OWNED class — the guard is a scope, not a removal") {
     val (p, root) = model(
       basePkg,
       Map(
@@ -173,10 +173,10 @@ class BaseSurfaceSpec extends munit.FunSuite:
     )
   }
 
-  test("D15: a non-wall class whose published row disagrees is NON-FATAL — the dependent follows the base") {
-    // D15 (wave 3.1ab): the dependent does NOT emit the class, so the plan's content does not reach
+  test("a non-wall class whose published row disagrees is NON-FATAL — the dependent follows the base") {
+    // the dependent does NOT emit the class, so the plan's content does not reach
     // emitted text. The descriptor disagreement is expected when the base's retyping/opaque phases
-    // renamed parameter types and the dependent did not re-derive (D12, O8). The dependent follows
+    // renamed parameter types and the dependent did not re-derive. The dependent follows
     // the base's published constructor signature at call sites through `coerceArgs` /
     // `baseMemberUpstream`.
     val (p, root) = model(basePkg, Map("q/Mine.java" -> "package q; public class Mine { }"))
@@ -235,7 +235,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   // 3. D6's cross-module face — attribution, because there is no local repair
   // -------------------------------------------------------------------------
 
-  test("D6: naming a base type the base emitted as an `object` is a finding ATTRIBUTED to the base") {
+  test("naming a base type the base emitted as an `object` is a finding ATTRIBUTED to the base") {
     val (p, root) = model(basePkg, Map("q/Uses.java" -> "package q; public class Uses { p.Holder h; }"))
     val collapsed = Surface.TypeShape(form = "object", primaryKind = "unique-root")
     val surface   = new PublishedSurface(p, ownedUnits(p, root), List("base-mod" -> contract("base-mod", "p.Holder" -> collapsed)))
@@ -304,9 +304,9 @@ class BaseSurfaceSpec extends munit.FunSuite:
     val cd    = p.units.find(u => fqn(p, u.symbol) == cls).get
     CtorFunnel.ctorsOf(p, cd.body).exists(d => plans.replayFor(cd, d).isDefined)
 
-  test("D5: a replay reaching a BASE's `private` member is REFUSED, and the refusal is attributed") {
+  test("a replay reaching a BASE's `private` member is REFUSED, and the refusal is attributed") {
     val (p, root) = model(privateBase, privateHeir)
-    // the pre-D5 behaviour, reproduced: with the whole program as the surface the owner has a TREE,
+    // the pre-fence behaviour, reproduced: with the whole program as the surface the owner has a TREE,
     // which is what `classOfSym(...).isDefined` asked, so the replay is accepted and the emitted
     // call to a `private` base member does not compile (4 errors on gdx-gltf).
     assert(replayed(p, TrivialSurface(p), "q.Mine"), "the whole-program answer ACCEPTS the replay")
@@ -324,10 +324,10 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assert(gap.head.subject.startsWith("p.Base#touch"), gap.head.subject)
     assertEquals(gap.head.module, Some("base-mod"))
     assertEquals(gap.head.fatal, false, "a withheld rewrite did not shape emitted text — only the BASE can fix it")
-    assert(clue(gap.head.fix).contains("§1(a) ENGINE, in the BASE"), gap.head.fix)
+    assert(clue(gap.head.fix).contains("engine (true of every Java program), in the BASE"), gap.head.fix)
   }
 
-  test("D5 NEGATIVE: a member the base published PUBLIC is reachable, and no gap is recorded") {
+  test("NEGATIVE: a member the base published PUBLIC is reachable, and no gap is recorded") {
     val (p, root) = model(privateBase, privateHeir)
     val published = new PublishedSurface(
       p,
@@ -340,7 +340,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(published.gaps, Nil)
   }
 
-  test("D5: the WITHIN-module widening is untouched — the guard is a scope, not a removal") {
+  test("the WITHIN-module widening is untouched — the guard is a scope, not a removal") {
     // libGDX core makes 22 sound `WidenedVisibility` decisions of its own; a blanket refusal
     // regresses the base to fix the dependent (`PROGRESS.md` §8.5).
     val (p, root) = model(Map("z/Unused.java" -> "package z; public class Unused { }"), privateBase ++ privateHeir)
@@ -449,7 +449,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   private def emittedWith(p: Program, s: Surface): String =
     new TirEmitter(p, surfaceView = Some(s)).emit
 
-  test("§4.55: a DEPENDENT's method does not rename the BASE's field — and the CLASH still moves") {
+  test("a renaming pass: a DEPENDENT's method does not rename the BASE's field — and the CLASH still moves") {
     val (p, root) = model(clashBase, clashHeir)
     // the pre-contract answer, reproduced: with the whole program as the surface the base's field is
     // renamed by a descendant the base never saw.
@@ -509,7 +509,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(clue(published.gaps).map(_.subject).count(_ == "q.Heir#x"), 1)
     assertEquals(mine.head.fatal, false)
     assert(clue(mine.head.why).contains("p.Base#x"), mine.head.why)
-    assert(clue(mine.head.fix).contains("§1(a) ENGINE, IN THE BASE"))
+    assert(clue(mine.head.fix).contains("engine (true of every Java program), IN THE BASE"))
   }
 
   test("…and where the BASE DID rename it, the dependent spells the base's name, not its own") {
@@ -680,7 +680,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     val text    = emitter.emit
     (emitter.emittedShapes.types, text)
 
-  test("D15: a synthesised primary's PRIMITIVE slot publishes as a primitive, and re-derives equal") {
+  test("a synthesised primary's PRIMITIVE slot publishes as a primitive, and re-derives equal") {
     val (rows, text) = published(guardedBase)
     val guarded      = rows.getOrElse("p.Guarded", fail(s"no row for p.Guarded in ${rows.keys.toList.sorted}"))
     assertEquals(clue(guarded.primaryKind), "synthesised-primary", "the fixture lost its synthesis")

@@ -8,7 +8,7 @@ object CatalogDoc:
   def render: String =
     val sb = StringBuilder()
     sb ++= "# The difference catalog\n\n"
-    sb ++= "GENERATED from `balticporter.catalog` — a build product, never committed (CLAUDE.md §5.5).\n"
+    sb ++= "GENERATED from `balticporter.catalog` — a build product, never committed.\n"
     sb ++= "Edit the registry; regenerate with `just catalog`.\n\n"
 
     for (area, rows) <- Differences.all.groupBy(_.id.area).toList.sortBy(_._1.ordinal) do

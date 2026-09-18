@@ -10,7 +10,7 @@ object NoteCoverageCheck:
   val Name = "porter-notes"
 
   val Classification: String =
-    "  §1(a) ENGINE: a decision the port made is not visible in the code it produced (or a note in " +
+    "  engine (true of every Java program): a decision the port made is not visible in the code it produced (or a note in " +
       "the code has no decision behind it). Every note is DERIVED from `decisions.tsv` — fix the " +
       "emitter's note placement (TirEmitter) or the recording (PortRun/Pipeline), both in engine. No manifest change " +
       "helps, and nothing else in the pipeline reports this."

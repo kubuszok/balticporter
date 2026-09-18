@@ -55,7 +55,9 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     assert(clue(out).contains("def byValue(x: java.lang.Integer): scala.Boolean"))
   }
 
-  test("OVERLOAD EXACTNESS: a key for remove(Object) does not touch remove(int) — §4.4's flagship") {
+  test(
+    "OVERLOAD EXACTNESS: a key for remove(Object) does not touch remove(int) — the flagship case of matching a member by signature, never bare name"
+  ) {
     val (phase, out) = run(Map("demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"))
     assert(clue(out).contains("demo.Support.removeValue(this.bag, x)"))
     // the by-INDEX overload is a different member and stays exactly as translated. `Symbol.fullName`
@@ -117,7 +119,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  test("a call to a member `dropMethods` REMOVED is still rewritten — `ENGINE-LIMITS.md` D7") {
+  test("a call to a member `dropMethods` REMOVED is still rewritten") {
     // The case the whole seam exists for. The base drops a member; the dependent still calls it,
     // from inside a method that is otherwise entirely mechanical. Before this phase the port's only
     // two options were to replace the CALLER's whole body (forking it from upstream permanently) or

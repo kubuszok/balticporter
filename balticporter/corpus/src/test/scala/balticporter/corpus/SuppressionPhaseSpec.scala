@@ -10,7 +10,7 @@ class SuppressionPhaseSpec extends munit.FunSuite:
     val phases = PortRun.derivedPhases
     assert(
       clue(phases).exists(_.isInstanceOf[SuppressionPhase]),
-      "SuppressionPhase must be in PortRun.derivedPhases — it is §1(a) universal and a no-op " +
+      "SuppressionPhase must be in PortRun.derivedPhases — it is engine, true of every Java program, and a no-op " +
         "when no Named nullability target is in the pipeline"
     )
   }

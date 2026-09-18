@@ -24,7 +24,7 @@ object OverloadRiskCheck extends RemedySource:
   object Issue:
     def classification(i: Issue): String = i match
       case VarargPhaseSpan =>
-        "§1(a) ENGINE, COUNTED and deliberately NOT resolved (catalog `JS-C22`, JLS 15.12.2): this " +
+        "engine (true of every Java program), COUNTED and deliberately NOT resolved (catalog `JS-C22`, JLS 15.12.2): this " +
           "call has both a fixed-arity and a variable-arity candidate applicable to its argument " +
           "count. Java tries the fixed-arity phases FIRST and reaches the vararg one only if both " +
           "fail, so javac bound this call to the fixed-arity member; Scala resolves in one phase " +
@@ -33,15 +33,15 @@ object OverloadRiskCheck extends RemedySource:
           "member it now names. Closing this needs scala's own resolution modelled well enough to " +
           "predict a divergence, which is a compiler-sized project; the honest step is this count."
       case BoxingPhaseSpan =>
-        "§1(a) ENGINE, COUNTED and deliberately NOT resolved (catalog `JS-C22`, JLS 15.12.2): two " +
+        "engine (true of every Java program), COUNTED and deliberately NOT resolved (catalog `JS-C22`, JLS 15.12.2): two " +
           "candidates applicable to this call take a PRIMITIVE and its wrapper (or a universal " +
           "type) at the same position. That is java's phase 1 / phase 2 boundary exactly: javac " +
           "admits the primitive alternative WITHOUT boxing and stops there, while scala boxes " +
           "freely in one phase and then picks by specificity. `remove(int)` against " +
-          "`remove(Object)` is the shape `CLAUDE.md` §4.4 already records for one JDK member; this " +
+          "`remove(Object)` is the same shape already recorded for one JDK member; this " +
           "row is the same question asked of the library's own declarations."
       case GenericTieBreak =>
-        "§1(a) ENGINE, COUNTED and deliberately NOT resolved (catalog `JS-C23`, JLS 15.12.2.5): " +
+        "engine (true of every Java program), COUNTED and deliberately NOT resolved (catalog `JS-C23`, JLS 15.12.2.5): " +
           "among the candidates applicable here, one is GENERIC and one is not. Java's " +
           "most-specific rule does not prefer the non-polymorphic alternative and Scala's " +
           "relative-weight rule does, so the two languages can pick different members with no " +

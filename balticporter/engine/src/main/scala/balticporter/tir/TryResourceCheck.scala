@@ -16,8 +16,8 @@ object TryResourceCheck:
   object Issue:
     def classification(i: Issue): String = i match
       case UnloweredResource =>
-        "§1(a) ENGINE: java's try-with-resources is a universal java-vs-scala fact, never " +
-          "per-library policy. `TirEmitter.resourceStr` emits JLS 14.20.3.1's own lowering — the " +
+        "engine (true of every Java program): java's try-with-resources is a universal java-vs-scala fact, never " +
+          "port policy. `TirEmitter.resourceStr` emits JLS 14.20.3.1's own lowering — the " +
           "resource binding, a `finally` that closes in reverse declaration order, and " +
           "`addSuppressed` for a `close()` that throws while the body is already completing " +
           "abruptly. A finding here means a `try` with resources reached the output through a " +

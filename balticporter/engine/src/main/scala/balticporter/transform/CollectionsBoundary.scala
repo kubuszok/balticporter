@@ -133,7 +133,7 @@ private[transform] trait CollectionsBoundary:
                         "takes its components in its constructor. The parent stays java's so the class " +
                         "itself compiles; a value of it meeting the target is counted at the slot")
                     ),
-                    reason = Reason.Universal("inexpressible-parent(K5.7)"),
+                    reason = Reason.Universal("inexpressible-parent"),
                     origin = orig.origin
                   )
                 )
@@ -220,7 +220,7 @@ private[transform] trait CollectionsBoundary:
             "the detached pair would compile and change nothing (K2); dropping the member would " +
             "leave the class abstract against the parent it kept")
         ),
-        reason = Reason.Universal("inexpressible-parent(K5.7)"),
+        reason = Reason.Universal("inexpressible-parent"),
         origin = o
       )
     )
@@ -340,7 +340,7 @@ private[transform] trait CollectionsBoundary:
               "that justified it, so the modifier was a statement about a type the emitted class no " +
               "longer extends. The member itself is unchanged")
           ),
-          reason = Reason.Universal("minted-parent-override(§1, K28)"),
+          reason = Reason.Universal("minted-parent-override"),
           origin = Decision.originOf(p, s.id)
         )
       )
@@ -473,7 +473,7 @@ private[transform] trait CollectionsBoundary:
         MemberRenamer.Request(
           j,
           s.name + CollectionsTransform.BridgeSuffix,
-          Reason.Universal("minted-parent-surface(§1, K28.1)"),
+          Reason.Universal("minted-parent-surface"),
           MemberKey(ownerFqn, s.name).render,
           ownerFqn,
           detachedFor(cls)
@@ -679,10 +679,10 @@ private[transform] trait CollectionsBoundary:
           "why" -> ("the parent this phase minted declares this member and java's own is the wrong " +
             "SHAPE for it, so java's member was RENAMED and scala's is synthesised over it. " +
             "Retyping java's member instead would close the same error and delete whatever its " +
-            "result type was carrying; a rename moves a name and nothing else, and §4.55's machinery " +
+            "result type was carrying; a rename moves a name and nothing else, and the renaming pass's machinery " +
             "re-points every reference exactly")
         ),
-        reason = Reason.Universal("minted-parent-surface(§1, K28.1)"),
+        reason = Reason.Universal("minted-parent-surface"),
         origin = o
       )
     )
@@ -709,7 +709,7 @@ private[transform] trait CollectionsBoundary:
                 "`this` — so standing it on `this` is what `super` meant, and is licensed for this " +
                 "member and not in general")
             ),
-            reason = Reason.Universal("jdk-default-at-this(§1)"),
+            reason = Reason.Universal("jdk-default-at-this"),
             origin = o
           )
         )
@@ -736,7 +736,7 @@ private[transform] trait CollectionsBoundary:
                 "`super` call could not compile. Nothing in this port's configuration changes " +
                 "that; the seam moves to the callers, where it is counted")
             ),
-            reason = Reason.Universal("class-file-override(§4.56)"),
+            reason = Reason.Universal("class-file-override"),
             origin = Decision.originOf(p, s.id)
           )
         )

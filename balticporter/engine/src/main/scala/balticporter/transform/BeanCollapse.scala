@@ -45,7 +45,7 @@ object BeanCollapse:
           "own class — an inherited field, or one whose declaration this run does not hold — so " +
           "there is no declaration here to become the property"
       case NotRequested =>
-        "NOT a defect and NOT a limit: the pair passes every §8.5 obligation and the port has not " +
+        "NOT a defect and NOT a limit: the pair passes every obligation and the port has not " +
           "asked for it. Write `target = \"var\"` (or `\"val\"`) on this entry to convert it; read " +
           "this row as the DENOMINATOR the converted lane is drawn from"
       case VarWithoutSetter =>
@@ -63,7 +63,7 @@ object BeanCollapse:
           "skip and an under-refusal is `E052 Reassignment to val` at best"
       case ExposedField =>
         "the port asks for two opposite things at one type: `public-field-accessors` PUTS java-bean " +
-          "names on this field for a reflective framework to find (`ENGINE-LIMITS.md` K21 face 2), " +
+          "names on this field for a reflective framework to find, " +
           "and the collapse TAKES them off. Remove one of the two policy entries"
 
   /** the ANSWER for one configured pair. */

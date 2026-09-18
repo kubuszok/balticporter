@@ -18,7 +18,7 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     assertEquals(lane.toSet & PortabilityCheck.dependencyRulesFor(All).toSet, Set.empty[PortabilityCheck.Rule])
   }
 
-  test("an EMPTY target set is the no-op §1(b) asks for") {
+  test("an EMPTY target set is the no-op a configurable phase asks for") {
     assertEquals(PortabilityCheck.rulesFor(Set.empty), Nil)
     // and it is deliberately NOT what any port gets by default — that is `PortManifest.targets`.
     assertEquals(balticporter.core.PortManifest(name = "x").targets, All)
@@ -174,7 +174,7 @@ class PortabilityTargetsSpec extends munit.FunSuite:
     assert(PortabilityCheck.names(thread, "java.lang.Thread"))
     assert(
       !PortabilityCheck.names(thread, "java.lang.ThreadLocal"),
-      "`startsWith` covered ThreadLocal, which Scala.js implements — §4.56's own hazard, live"
+      "`startsWith` covered ThreadLocal, which Scala.js implements — the cut-only-at-a-separator rule's own hazard, live"
     )
     val file = PortabilityCheck.all.find(_.api == "java.nio.file.").get
     assert(PortabilityCheck.names(file, "java.nio.file.Path"))

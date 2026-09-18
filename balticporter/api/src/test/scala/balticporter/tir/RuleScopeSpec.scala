@@ -51,7 +51,7 @@ class RuleScopeSpec extends munit.FunSuite:
   // the two directions
   // -------------------------------------------------------------------------
 
-  test("the DEFAULT scope is unrestricted and includes everything — §1(b)'s no-op parameter") {
+  test("the DEFAULT scope is unrestricted and includes everything — a configurable phase's no-op parameter") {
     val s = RuleScope.Everywhere()
     assert(s.isUnrestricted)
     assert(s.includes("anything.at.all"))
@@ -171,7 +171,7 @@ class RuleScopeSpec extends munit.FunSuite:
   // reporting a policy that never fired
   // -------------------------------------------------------------------------
 
-  test("neverFired is the complement of what the phase observed — the §1(b) silent-no-op report") {
+  test("neverFired is the complement of what the phase observed — the silent-no-op report") {
     val s = RuleScope.Only(Set("com.foo.Bar", "com.foo.Typo"))
     assertEquals(s.neverFired(Set("com.foo.Bar")), Set("com.foo.Typo"))
     assertEquals(s.neverFired(Set("com.foo.Bar", "com.foo.Typo")), Set.empty[String])

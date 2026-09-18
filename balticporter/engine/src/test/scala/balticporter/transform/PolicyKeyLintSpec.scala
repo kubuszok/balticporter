@@ -30,7 +30,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
       "fullName ==",
       _.contains("fullName =="),
       "compare SYMBOLS (`SymId`), or bind the name through `PolicyBinder` — a name is not a " +
-        "structural fact about anything (§4.56)"
+        "structural fact about anything"
     ),
     Shape(
       "fullName.startsWith",
@@ -88,7 +88,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     "TypeRedirectTransform.scala" -> Map(
       "fullName.startsWith" ->
         ("renaming a twinned member's own `fullName` by replacing its owner's prefix, carrying the " +
-          "`#`/`$` separators across verbatim (§4.56) rather than re-deriving them")
+          "`#`/`$` separators across verbatim rather than re-deriving them")
     ),
     "MemberRenameTransform.scala" -> Map(
       "fullName ==" ->
@@ -98,7 +98,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     ),
     "PackageRenameTransform.scala" -> Map(
       "fullName.startsWith" ->
-        ("this phase IS the prefix rule §4.56 is about; it owns the separator cut and is specced " +
+        ("this phase IS the ownership-by-structure rule about renaming at a separator; it owns the separator cut and is specced " +
           "against it"),
       "fullName ==" -> "the same phase, reading back what it rewrote"
     ),
@@ -173,7 +173,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "what the string is"),
       "fullName ==" ->
         ("a published port map's `upstream` column is a string in the EMITTED namespace, joined " +
-          "against a key rebuilt the same way (ENGINE-LIMITS D1); both ends of that join move " +
+          "against a key rebuilt the same way; both ends of that join move " +
           "together or neither does")
     ),
     "PrimitiveToOpaqueTransform.scala" -> Map(
@@ -218,13 +218,13 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "asks it of `scala.Int`. It is also load-bearing rather than incidental: guard 4 has to " +
           "know which members a BARE reference inside an anonymous body would re-resolve under a " +
           "lambda, and those are precisely the ones java bound to the ANON through this root. The " +
-          "phase has no policy keys at all — it is §1(a) and takes no parameters")
+          "phase has no policy keys at all — it is engine, unparameterised, and takes no parameters")
     ),
     "RegistryTransform.scala" -> Map(
       "fullName ==" ->
         ("two lookups by a NAME the port DECLARED or java fixes: the placement owner is the FQN the " +
           "manifest names (find-or-create, as MemberRenameTransform's target), and `java.lang.Class` " +
-          "is the one universal reified carrier (K20) — a well-known external type, never a member key")
+          "is the one universal reified carrier (a type argument a third party reads back at run time) — a well-known external type, never a member key")
     ),
     "ClassTableTransform.scala" -> Map(
       "fullName ==" ->
@@ -233,7 +233,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     ),
     "ClassToTraitTransform.scala" -> Map(
       "fullName ==" ->
-        ("the nominated type FQN from `specs` is a CONFIG PARAMETER (§1(b)) the port hands in; " +
+        ("the nominated type FQN from `specs` is a CONFIG PARAMETER (port policy) the port hands in; " +
           "the program-level lookup matches it against every symbol once, and the `java.lang.Object` " +
           "check is the same mint-or-reuse as PublicFieldAccessorTransform — an external the program " +
           "never declares"),
@@ -253,7 +253,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
       val t = l.trim; t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")
     }
 
-  test("no phase reconstructs member identity from a STRING — the §8.1 convention, enforced") {
+  test("no phase reconstructs member identity from a STRING — matching by signature, enforced") {
     assert(sources.nonEmpty, "the transform package has no sources — this lint proves nothing")
     val violations = for
       (file, src) <- sources

@@ -44,7 +44,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     assertEmits(p, "val st: java.util.stream.Stream[java.lang.String] =")
   }
 
-  test("…and the check names it, with an origin and a §1 classification") {
+  test("…and the check names it, with an origin and a classification") {
     val (_, fs) = findings(streamSlot)
     val decl    = fs.filter(f => f.slot == "declaration" && f.expected.startsWith("java.util.stream."))
     assertEquals(clue(decl).size, 1)
@@ -53,7 +53,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     assert(decl.head.origin.line > 0)
     // the classification is the whole point: an agent in another repository can act on this
     // without investigating which of the three kinds it is (CLAUDE.md §4.45).
-    assert(clue(Issue.classification(Issue.UntranslatedFamily)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.UntranslatedFamily)).contains("engine"))
     assert(clue(CollectionBoundaryCheck.summary(fs)).contains("UntranslatedFamily"))
   }
 
@@ -79,7 +79,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
         |""".stripMargin
     )
     assertEquals(clue(fs.filter(_.issue == Issue.ShimBoundary)), Nil)
-    assert(clue(Issue.classification(Issue.ShimBoundary)).contains("§1(a)"))
+    assert(clue(Issue.classification(Issue.ShimBoundary)).contains("engine"))
     assert(clue(Issue.classification(Issue.ShimBoundary)).contains("coerce"))
   }
 
@@ -180,7 +180,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     assert(ph.boundary(p.after, unit("demo.Base")).nonEmpty)
   }
 
-  test("the check is a NO-OP with an empty mapping — an empty policy needs no code path (§1(b))") {
+  test("the check is a NO-OP with an empty mapping — an empty policy needs no code path") {
     // The program a phase with no mapping produces is the UNCHANGED program, so there is no scala
     // side for anything to be stranded against. Note what this test must NOT be: running the check
     // with an empty mapping over a program a REAL mapping already retyped still reports, and

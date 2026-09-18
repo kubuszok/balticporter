@@ -93,7 +93,7 @@ class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
     assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
   }
 
-  test("D1: the merge does not reach the BASE's own effective surface") {
+  test("the merge does not reach the BASE's own effective surface") {
     val b      = base(List(globals(List(holder()))))
     val before = b.effectiveSurface.map(PortManifest.fingerprint)
     val dep    = b.extendedBy(

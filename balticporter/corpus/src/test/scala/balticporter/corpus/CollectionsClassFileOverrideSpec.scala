@@ -55,7 +55,7 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
       !clue(CollectionsTransform.typeMap).contains(UnmappedBase),
       s"$UnmappedBase is now MAPPED, so it can no longer play the unmapped-parent role here. " +
         "Move this fixture to a base that is still absent from `typeMap` (java.util.AbstractList, " +
-        "java.util.AbstractSequentialList) — and see ENGINE-LIMITS.md K29, because mapping an " +
+        "java.util.AbstractSequentialList), because mapping an " +
         "abstract base is exactly the step that owes the JDK defaults a definer calls through `super`."
     )
   }
@@ -193,7 +193,7 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
       "this run set no scope: a ScopedOut row would send its reader after a key that does not exist"
     )
     val sentence = CollectionBoundaryCheck.Issue.classification(CollectionBoundaryCheck.Issue.ClassFileOverride)
-    assert(sentence.contains("§1(a)"), clue(sentence))
-    assert(!sentence.contains("§1(b)"), clue(sentence))
+    assert(sentence.contains("engine"), clue(sentence))
+    assert(!sentence.contains("port policy"), clue(sentence))
     assert(rows.forall(_.expected.startsWith("java.")), clue(rows).toString)
   }

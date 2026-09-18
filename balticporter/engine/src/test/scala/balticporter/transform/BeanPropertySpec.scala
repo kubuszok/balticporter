@@ -171,7 +171,7 @@ class BeanPropertySpec extends munit.FunSuite:
     assert(clue(r.out).contains("g.getCell(3)"), "the parameterised overload must not move")
   }
 
-  test("the decision carries `Reason.Configured` with the MANIFEST ENTRY as the key (§4.575)") {
+  test("the decision carries `Reason.Configured` with the MANIFEST ENTRY as the key") {
     val r  = run(layerSrc, "MapLayer#opacity" -> "getOpacity/setOpacity")
     val ds = r.log.of(Decision.Kind.RenamedMember)
     assertEquals(ds.size, 2)
@@ -275,7 +275,7 @@ class BeanPropertySpec extends munit.FunSuite:
     assert(clue(r.refusals.mkString("\n")).contains("STATIC"))
   }
 
-  test("a collision with an existing METHOD named `x` refuses — no §4.55 pass moves a method") {
+  test("a collision with an existing METHOD named `x` refuses — no renaming pass moves a method") {
     val r = run(
       """
       class Thing {

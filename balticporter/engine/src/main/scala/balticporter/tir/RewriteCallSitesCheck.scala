@@ -21,19 +21,19 @@ object RewriteCallSitesCheck:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
     def classification(i: Issue): String = i match
       case Unaccounted =>
-        "§1(a) engine: this phase RETYPES declarations and no check counts the seams that creates. " +
+        "engine (true of every Java program): this phase RETYPES declarations and no check counts the seams that creates. " +
           "A retyping is position-blind, so most slots move on both sides and the port compiles — " +
           "what is left is the slots where one side could not move (an external callee's class " +
           "file, a scoped-out declaration, a reified occurrence), and those reach whoever compiles " +
-          "the port as bare `Found: … / Required: …` with no §1 classification, which CLAUDE.md " +
-          "§4.45 names as the bulk of a new library's first wall. The fix is the one the four " +
+          "the port as bare `Found: … / Required: …` with no classification saying whose fix it is, which is " +
+          "the bulk of a new library's first wall. The fix is the one the four " +
           "existing retyping phases already took: count the residue in a check of this phase's own, " +
           "with a classification per issue kind, and name it in `Rewrite.accountedBy`. Where a " +
           "phase's retyping genuinely cannot strand anything, that is a claim worth writing down " +
           "AND counting at zero — a lane that reports 0 and a phase nobody instrumented are the " +
-          "same silence otherwise (ENGINE-LIMITS K5.6)."
+          "same silence otherwise."
       case UnwiredAccounting =>
-        "§1(a) engine WIRING, not a translation defect: this phase names a check lane that counts " +
+        "engine (true of every Java program) WIRING, not a translation defect: this phase names a check lane that counts " +
           "its residue and that lane recorded NOTHING in this run — so either the check is not " +
           "called from `PortRun` on this port's path, or it is called under a condition this " +
           "pipeline does not meet. A number that reaches stdout and not `findings.tsv` fails the " +

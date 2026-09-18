@@ -223,7 +223,7 @@ object PortabilityCheck extends RemedySource:
         "wrapper can delegate to it and nativeConfig.withServiceProviders enlistment serves only " +
         "direct load(classOf[Concrete]) sites, which a ported library's generic lookup is not. Native " +
         "therefore resolves providers by REGISTRATION exactly as Scala.js does, off the same " +
-        "descriptor (ENGINE-LIMITS P5), and a package rename moves both that file's NAME and its " +
+        "descriptor, and a package rename moves both that file's NAME and its " +
         "CONTENTS",
       on = Rule.NativeOnly,
       at = p(25)
@@ -266,7 +266,7 @@ object PortabilityCheck extends RemedySource:
       "java.text.MessageFormat",
       "no implementation anywhere surveyed — not in either core " +
         "javalib, not in the locales artifact. The only path is a hand-written shim over the format " +
-        "subset one library actually uses, which is §1(c) knowledge about that library",
+        "subset one library actually uses, which is library-specific knowledge about that library",
       at = l(68)
     ),
     Rule(
@@ -363,7 +363,7 @@ object PortabilityCheck extends RemedySource:
       "java.lang.ref.WeakReference",
       "removed from Scala.js's core javalib in 1.6.0 — its " +
         "maintainers took OUT a stub that silently held STRONG references rather than leave a " +
-        "wrong-but-compiling one, which is CLAUDE.md §3's argument made by a platform team about " +
+        "wrong-but-compiling one — the same argument that compiling is not the gate, made by a platform team about " +
         "their own stdlib. The opt-in artifact implements it over ECMAScript 2021's WeakRef; Scala " +
         "Native's is GC-integrated with a dedicated handler thread",
       on = Rule.JsOnly,

@@ -135,7 +135,7 @@ class CollectionsCarrierSpec extends PortSuite:
     )
     assert(
       clue(out).contains("Token[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]"),
-      "a phase concluding `this looks like a super-type token` from a name is §4.56's failure"
+      "a phase concluding `this looks like a super-type token` from a name is a structural-ownership failure"
     )
   }
 
@@ -175,10 +175,10 @@ class CollectionsCarrierSpec extends PortSuite:
     assertEquals(rows.map(_.reason.className).distinct, List("configured"))
     assert(
       rows.forall(_.reason.detail.contains(Carrier)),
-      "the key is the manifest entry VERBATIM — it is the string an agent edits (§4.575)"
+      "the key is the manifest entry VERBATIM — it is the string an agent edits"
     )
     assert(
       clue(out).contains("/* porter: reified-type-arg reason=configured"),
-      "the question is asked at a line of Scala, so the answer is emitted beside it (§4.575)"
+      "the question is asked at a line of Scala, so the answer is emitted beside it"
     )
   }

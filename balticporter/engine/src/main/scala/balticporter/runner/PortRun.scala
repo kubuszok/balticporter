@@ -214,7 +214,7 @@ final case class PortRun(
     require(
       !declaredPhases.exists(_.isInstanceOf[PackageRenameTransform]),
       s"[$label] PackageRenameTransform must not be listed in `phases`: it has to run AFTER every " +
-        "other phase (CLAUDE.md §4.56), which `runsAfter` cannot express. Pass `packageRenames` " +
+        "other phase, which `runsAfter` cannot express. Pass `packageRenames` " +
         "instead and PortRun places it last."
     )
     require(
@@ -242,7 +242,7 @@ final case class PortRun(
           "phase that would both transform this program with two policies — give the phase a " +
           "`MergeablePolicy`, reconcile the two values, or share one instance. An INTRUSION would " +
           "re-shape a namespace a base module emits, so the two ports could not compile together — " +
-          "move the entry to the base's manifest. DESIGN.md §8.13]"
+          "move the entry to the base's manifest.]"
       )
 
     val roots = if frontend.resolutionRoots.isEmpty then "" else s" (resolving against ${frontend.resolutionRoots.size} extra root(s))"
@@ -409,12 +409,13 @@ final case class PortRun(
       sys.error(
         s"[$label] ${claimed.size} synthesised unit(s) would be written at an FQN a base module " +
           "already emits:\n" + claimed.map("  " + _.render).mkString("\n") +
-          "\n  [§1(a) ENGINE — the phase that minted these must fence its mint on `RunScope.emits`, " +
+          "\n  [engine (true of every Java program) — the phase that minted these must fence its mint on `RunScope.emits`, " +
           "so the unit is written by the module that owns the declarations it was minted FOR and by " +
-          "no other. A dependent still retypes and coerces; it resolves the name against the base's " +
+          "no other (a unit a phase mints has no source origin, so without an explicit owner every " +
+          "module in the pipeline would emit it). A dependent still retypes and coerces; it resolves the name against the base's " +
           "emitted output. There is no manifest key for this: `surface` is inherited through " +
           "`extendedBy` and cannot be subtracted, and holding the phase back in a dependent is " +
-          "CLAUDE.md §1.5's compile-alone-but-not-together failure. See ENGINE-LIMITS.md §13 O5]"
+          "the compile-alone-but-not-together failure a dependent module inheriting the shared surface must avoid]"
       )
 
     // ---- base-surface contract ----
@@ -445,7 +446,7 @@ final case class PortRun(
           "answered from a base's published port map:\n" +
           fatalGaps.map("  " + _.render).mkString("\n") +
           "\n  [a run that falls back to re-deriving these emits text that compiles alone and cannot " +
-          "compile against the module it resolves against — DESIGN.md §8.3]"
+          "compile against the module it resolves against]"
       )
 
     // ---- port-map references (recorded on every run, even when empty) ----
@@ -493,7 +494,7 @@ final case class PortRun(
                 s", and ${v.api} is exactly what ${offJvm.toList.map(_.toString).sorted.mkString(" / ")} " +
                 "cannot provide — a module cannot be built for a backend and accept an API that " +
                 "backend does not have. The two honest knobs are `targets` (module-wide) and " +
-                "`verdictOverrides` (per API, where this port ships its own answer) [§1(b)]"
+                "`verdictOverrides` (per API, where this port ships its own answer) [port policy]"
             )
           }
         }
@@ -658,7 +659,7 @@ final case class PortRun(
           s"written, and any tree a previous run left at $outDir was REMOVED.\n$head" +
           (if openMarkers.size > 10 then s"    … and ${openMarkers.size - 10} more\n" else "") +
           "  Close them in the engine, drop the declarations that use them and inject replacements, " +
-          "or re-run with best-effort emission to inspect the degraded output (DESIGN.md §6.4). " +
+          "or re-run with best-effort emission to inspect the degraded output. " +
           "A port that ships an approximation it cannot name is the failure this gate exists for."
       )
 
@@ -671,7 +672,7 @@ final case class PortRun(
       // Sentinel file so degraded output cannot be mistaken for a deliverable tree.
       Files.writeString(
         emitDir.resolve("BALTICPORTER-BEST-EFFORT"),
-        s"This tree is BEST-EFFORT output (DESIGN.md §6.4) and MUST NOT SHIP.\n" +
+        s"This tree is BEST-EFFORT output and MUST NOT SHIP.\n" +
           s"${openMarkers.size} region(s) are not a faithful translation; each is fenced in the " +
           s"file that contains it and named in that file's banner.\n" +
           s"The deliverable tree for this port is $outDir; this run did not write it, and it " +
@@ -720,8 +721,7 @@ final case class PortRun(
         sys.error(
           s"[$label] the manifest declares a service descriptor that is not there: $src. " +
             "A `META-INF/services` resource the port does not ship makes every `ServiceLoader.load` " +
-            "find zero providers, with no compile error, no check count and no finding to say so " +
-            "(ENGINE-LIMITS.md P5)."
+            "find zero providers, with no compile error, no check count and no finding to say so."
         )
     }
     // Use `emittedName` (the phase's rule) not `packageRenames` -- covers typeRenames too.
@@ -749,7 +749,7 @@ final case class PortRun(
           s"[$label] the manifest declares a resource that is not there: ${r.source}. A " +
             "classpath resource the port does not ship makes the emitted lookup — a string literal no " +
             "rename may move — fail at first use, with no compile error, no check count and no " +
-            "finding to say so (DESIGN.md §8.22)."
+            "finding to say so."
         )
     }
     if declaredTrees.nonEmpty then
@@ -1351,9 +1351,9 @@ final case class PortRun(
                 "why" -> ("java lets EVERY constructor pick its own `super(...)`; scala lets " +
                   "only the primary reach super and a secondary must begin with `this(...)`. This " +
                   "root's arguments reach neither the extends clause nor a replay, so they are gone " +
-                  "— padding them would be a guess (ENGINE-LIMITS.md C3)")
+                  "— padding them would be a guess")
               ),
-              reason = Reason.Universal("ctor-funnel/super-args-dropped(C3)"),
+              reason = Reason.Universal("ctor-funnel/super-args-dropped"),
               origin = d.origin
             )
           )
@@ -1382,10 +1382,10 @@ final case class PortRun(
                   "nowhere to put it. `new " + owner.substring(owner.lastIndexOf('.') + 1) + "()` " +
                   "therefore builds an object java could not build. Emitting, promoting and " +
                   "marker-disambiguating it were each measured and each emits a WRONG answer in place " +
-                  "of a missing one (ENGINE-LIMITS.md C11); a port that needs the behaviour writes the " +
-                  "constructor by hand (§1.5's `inject`)")
+                  "of a missing one; a port that needs the behaviour writes the " +
+                  "constructor by hand (the dependent module's `inject`)")
               ),
-            reason = Reason.Universal("ctor-funnel/nilary-dropped(C11)"),
+            reason = Reason.Universal("ctor-funnel/nilary-dropped"),
             origin = d.origin
           )
         )
@@ -1665,7 +1665,7 @@ final case class PortRun(
       if missing.nonEmpty then
         sys.error(
           s"[$label] ${missing.size} check(s) produced no record: ${missing.toList.sorted.mkString(", ")}" +
-            "  [§1(a) engine: PortRun ran but did not register these, so their numbers would silently " +
+            "  [engine bug: PortRun ran but did not register these, so their numbers would silently " +
             "vanish from findings.tsv while stdout still showed them]"
         )
 
@@ -1805,7 +1805,7 @@ final case class PortRun(
     sys.error(
       s"[$label] determinism violation ($what): ${diffs.size} unit(s) differ between two runs — " +
         names.mkString(", ") +
-        "  [§1(a) engine: the emitter or a phase leaks unordered iteration; every diff-based " +
+        "  [engine bug: the emitter or a phase leaks unordered iteration; every diff-based " +
         "workflow (baselines, the action cache, before->after counts) is invalid until it is fixed]"
     )
 
@@ -2115,7 +2115,7 @@ object PortRun:
                   "no count moves",
                 Some(module),
                 fatal = true,
-                fix = "§1(b) PER-LIBRARY: this module may not re-shape the base's surface (§1.5). " +
+                fix = "port policy: this module may not re-shape the base's surface (a dependent inherits the shared surface and never restates it). " +
                   s"Either drop `$key` from the pairs table so the base's shape stands, or move the " +
                   "declaration that changed the derivation (the overriding accessor, or the write) " +
                   "and re-run the BASE so both modules derive the same verdict"
@@ -2131,7 +2131,7 @@ object PortRun:
                   "base published. Assuming the base did not collapse it would be a fabricated fact",
                 Some(module),
                 fatal = false,
-                fix = "§1(b) PER-LIBRARY, OPERATIONAL: re-run the base port with this engine so its " +
+                fix = "port policy, OPERATIONAL: re-run the base port with this engine so its " +
                   "port map carries a `form=` row for this member"
               )
             )
@@ -2333,45 +2333,45 @@ object PortReport:
   enum Kind(val classification: String):
     case Signature
         extends Kind(
-          "  §1(a) ENGINE: a call site disagrees with its declaration's CURRENT signature — a rewrite " +
+          "  engine (true of every Java program): a call site disagrees with its declaration's CURRENT signature — a rewrite " +
             "changed one and not the other. Fix the phase that moved the signature; no manifest change helps."
         )
     case Omission
         extends Kind(
-          "  §1(a) ENGINE: the TIR carries these constructs and emission loses them. A green compile " +
-            "says nothing about them (CLAUDE.md §3). Fix in the engine, or record the limit in ENGINE-LIMITS.md."
+          "  engine (true of every Java program): the TIR carries these constructs and emission loses them. A green compile " +
+            "says nothing about them. Fix in the engine, or report it to the Baltic Porter project."
         )
     case Portability
         extends Kind(
-          "  §1(b)/(c) PER-LIBRARY: the JDK APIs listed are absent from Scala.js/Native. Either drop " +
+          "  port policy or library-specific rule: the JDK APIs listed are absent from Scala.js/Native. Either drop " +
             "the type and inject a replacement (`Substitutions`), re-point it (`StaticForwarderTransform`/" +
             "`ClassTableTransform`), or accept it if this port targets the JVM only."
         )
     case InjectedPortability
         extends Kind(
-          "  §1(b) PER-LIBRARY: a hand-written replacement reintroduced the very API its substitution " +
+          "  port policy: a hand-written replacement reintroduced the very API its substitution " +
             "removed. Fix the injected source in this port's overrides directory."
         )
     case Substitution
         extends Kind(
-          "  §1(a)/(b): a dropped type was EMITTED (engine — the skip did not fire) or is dropped, " +
+          "  engine or port policy: a dropped type was EMITTED (engine — the skip did not fire) or is dropped, " +
             "unreplaced and still referenced (manifest — inject a replacement or rewrite its uses)."
         )
     case Policy
         extends Kind(
-          "  §1(b) PER-LIBRARY: a declared key matched nothing, so the rule silently did not run. Fix " +
+          "  port policy: a declared key matched nothing, so the rule silently did not run. Fix " +
             "the key in this library's manifest; the engine needs no change."
         )
     case Trivia
         extends Kind(
-          "  §1(a) ENGINE: a comment in the upstream Java reached no harvest point in the frontend, or " +
+          "  engine (true of every Java program): a comment in the upstream Java reached no harvest point in the frontend, or " +
             "an emission path renders its node without the `leading` it carries. Nothing else reports " +
             "it — the output compiles perfectly with the comment gone, and a LICENCE notice among " +
-            "these is a §4.57 obligation, not a formatting nicety. Fix in frontend-spoon or the engine emitter."
+            "these is a provenance obligation, not a formatting nicety. Fix in frontend-spoon or the engine emitter."
         )
     case Manifest
         extends Kind(
-          "  §1(b) PER-LIBRARY: this module's policy for the SHARED surface differs from the module " +
+          "  port policy: this module's policy for the SHARED surface differs from the module " +
             "that emits it — the two ports each compile alone and cannot compile together. Configure " +
             "this port's `PortManifest` to match its base, or inherit it with `base.extendedBy(...)`. " +
             "Every finding below carries its own, more specific classification."

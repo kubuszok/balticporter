@@ -78,7 +78,7 @@ object DebugFlagsMain:
     sb.append(
       "\nNOTE  a migration runs in a JVM FORKED from the sbt server, so it sees the two FILES plus\n" +
         "      build.sbt's javaOptions — never your shell's environment, never a -D on your command\n" +
-        "      line (CLAUDE.md §4.6). The system-property layer above is THIS process's.\n" +
+        "      line. The system-property layer above is THIS process's.\n" +
         "      Set one with `just debug-set <key> <value>`; clear them with `just debug-clear`.\n"
     )
 

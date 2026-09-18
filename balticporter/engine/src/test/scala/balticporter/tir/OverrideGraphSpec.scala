@@ -87,7 +87,7 @@ class OverrideGraphSpec extends munit.FunSuite:
     )
   }
 
-  test("an UNPARSED parent ANCHORS — refuse and count, never guess (DESIGN.md §8.5)") {
+  test("an UNPARSED parent ANCHORS — refuse and count, never guess") {
     val (p, g) = graphOf(
       """
       import java.util.Comparator;
@@ -119,7 +119,7 @@ class OverrideGraphSpec extends munit.FunSuite:
     assert(g.closureOf(sym(p, "ByName#compare")).isAnchored, "…and says `compare` IS")
   }
 
-  test("a PLATFORM interface's closed surface lifts the anchor by DEFAULT — ENGINE-LIMITS K12") {
+  test("a PLATFORM interface's closed surface lifts the anchor by DEFAULT") {
     // `java.lang.Iterable` declares three methods and no library can add to it, so an absence from
     // its member set really is proof. Before this, every accessor of every class with `implements
     // Iterable` in its parent list was frozen — 12 of libGDX's 17 refused property renames.
@@ -231,7 +231,7 @@ class OverrideGraphSpec extends munit.FunSuite:
     assert(!g.closureOf(sym(p, "Thing#getWidth")).isAnchored)
   }
 
-  test("a BASE-owned declaration anchors the component (ENGINE-LIMITS D2)") {
+  test("a BASE-owned declaration anchors the component") {
     val (p0, _) = graphOf(
       """
       interface Layer { int getDepth(); }

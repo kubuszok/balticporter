@@ -22,9 +22,9 @@ final case class PolicyFinding(
   def render: String =
     s"""$phase — $setting: "$key" ${issue.label}: $detail""" + (about match
       case PolicyFinding.About.TheKey =>
-        "  [§1(b) per-library policy: fix this key in the library's manifest; the engine needs no change]"
+        "  [port policy: fix this key in the library's manifest; the engine needs no change]"
       case PolicyFinding.About.ThisRun =>
-        "  [§1(b) per-library policy, in THIS module: the key may be a base's and correct there — " +
+        "  [port policy, in THIS module: the key may be a base's and correct there — " +
           "what refused is this run, over declarations only this module has]")
 
 object PolicyFinding:

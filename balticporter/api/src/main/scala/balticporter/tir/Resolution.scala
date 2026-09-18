@@ -339,11 +339,11 @@ object ResolutionPlan:
     val skipped = DebugFlags.skipPhases
     if skipped.isEmpty then
       " — `balticporter.skipPhases` is not set in this run, so if the remedy's phase is in `surface` " +
-        "it did run (CLAUDE.md §4.6)"
+        "it did run"
     else
       s" — THIS RUN SKIPS ${skipped.toList.sorted.mkString(", ")} (`balticporter.skipPhases`), which " +
         "is the first thing to clear before reading this row as a fact about the program " +
-        "(`just debug-clear`, CLAUDE.md §4.6)"
+        "(`just debug-clear`)"
 
   final case class Trouble(declared: String, id: String, issue: Issue, detail: String)
 

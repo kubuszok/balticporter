@@ -95,7 +95,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
     assertEquals(clue(ws).map(_.subject), List("demo.ModelTest"), render(p, a))
     assert(clue(ws.head.detail).contains("munit.FunSuite"), ws.head.render)
     assert(ws.head.detail.contains("selfSupplied"), ws.head.render)
-    assert(ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.UnconstructedThread).contains("§1(b)"))
+    assert(ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.UnconstructedThread).contains("port policy"))
   }
 
   test("an ARRAY ALLOCATION is not a construction — `new Suite[4]` must not suppress the warning") {

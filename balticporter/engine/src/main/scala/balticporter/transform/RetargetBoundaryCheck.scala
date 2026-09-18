@@ -30,28 +30,28 @@ object RetargetBoundaryCheck:
     /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
     def classification(i: Issue): String = i match
       case ExternalProducer =>
-        "§1(a) engine gap, or §1(b) policy: an external member PRODUCES the java type this port " +
+        "engine gap, or port policy: an external member PRODUCES the java type this port " +
           "retargets, and the retarget's subtyping licence runs the other way — the produced value " +
           "is NOT the scala type the slot now declares. Wrap it at this site, or move the type out " +
           "of `retarget` into `typeMap` with a kind and a factory, where the seam becomes a counted " +
-          "`coerce` boundary (DESIGN.md §8.12)."
+          "`coerce` boundary."
       case StaticReceiver =>
-        "§1(a) engine gap: the receiver of a STATIC access is a term reference to the type's own " +
+        "engine gap: the receiver of a STATIC access is a term reference to the type's own " +
           "symbol, which `transformType` cannot see, so it still names the java type while the " +
           "node's type moved. The value produced is the java one — the same defect a redirect fixes " +
           "with a member TWIN (`TypeRedirectTransform.transformIdent`)."
       case CastToTarget =>
-        "§1(a) engine gap, and the one with NO compile error: the cast target moved with the type " +
+        "engine gap, and the one with NO compile error: the cast target moved with the type " +
           "and the value did not, so this is a `ClassCastException` at run time on a port that " +
-          "compiles clean (CLAUDE.md §4.4's class of defect). Refuse the retarget for this type or " +
+          "compiles clean — java statement semantics Scala does not share, of the kind that compiles cleanly and means something else. Refuse the retarget for this type or " +
           "wrap the operand."
       case IteratorRemove =>
-        "§1(a) engine gap, REFUSED and counted: java's `Iterator.remove()` mutates the collection " +
+        "engine gap, REFUSED and counted: java's `Iterator.remove()` mutates the collection " +
           "the iterator came from, and the scala target's `iterator` is a read-only view, so " +
           "`JavaIterator.from(x.iterator)` can only refuse — `UnsupportedOperationException` at run " +
           "time, on a port that compiles clean. A faithful image is a removing iterator minted " +
           "OVER THE COLLECTION (index-tracking, calling the target's own remove), which is a " +
-          "runtime shim the bridge does not have yet (ENGINE-LIMITS.md K34)."
+          "runtime shim the bridge does not have yet."
 
   /** one producer-direction site. `produced` is the java type the value really has; `slot` is what the emitted code now says.
     */

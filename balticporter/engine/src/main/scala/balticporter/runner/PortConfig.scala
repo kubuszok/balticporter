@@ -58,8 +58,8 @@ object PortConfig:
       throw ConfigError(
         file.toString,
         s"${junk.size} key(s) nobody read: ${junk.mkString(", ")}. HOCON accepts any key it is " +
-          "given, so a misspelt one is a policy entry that silently does nothing — the §1(b) " +
-          "no-op this engine refuses everywhere else. Fix the spelling, or delete the key."
+          "given, so a misspelt one is a policy entry that silently does nothing — the silent no-op " +
+          "this engine refuses everywhere else. Fix the spelling, or delete the key."
       )
 
   private def read(

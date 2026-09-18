@@ -420,7 +420,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
         throw ConfigError(
           config.at("holders"),
           "required, and absent — with no holder named, the phase would find none and do nothing, " +
-            "which is the §1(b) silent no-op this engine refuses"
+            "which is the silent no-op this engine refuses"
         )
       )
     // No `context` block = extension (dependent's per-declaration keys only). // ENGINE-LIMITS CT8

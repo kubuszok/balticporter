@@ -472,10 +472,10 @@ private[transform] trait CollectionsPolicy:
                         "spelled two ways, and the parent this mapping minted for the other clause " +
                         "already carries that relation. Minting both would declare one name at two " +
                         "arities, which scala's single namespace cannot hold and which no repair at " +
-                        "the member can fix (CLAUDE.md §4.5). A value of this class meeting a slot " +
+                        "the member can fix — never model a Java interface on a Scala collection trait. A value of this class meeting a slot " +
                         "typed at the dropped shim is coerced there instead")
                     ),
-                    reason = Reason.Universal("subsumed-minted-parent(§4.5, K28.1)"),
+                    reason = Reason.Universal("subsumed-minted-parent"),
                     origin = cd.origin
                   )
                 )

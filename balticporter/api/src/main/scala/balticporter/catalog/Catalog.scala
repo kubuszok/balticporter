@@ -113,9 +113,9 @@ enum FixKind:
     * catalog value to a literal or bare case.
     */
   def section: String = this match
-    case Universal     => "§1(a) ENGINE"
-    case Parameterised => "§1(b) PER-LIBRARY POLICY"
-    case LibraryRule   => "§1(c) LIBRARY RULE"
+    case Universal     => "engine (true of every Java program)"
+    case Parameterised => "port policy"
+    case LibraryRule   => "library-specific rule"
     case NoFix         => "no fix owed"
 
 /** One row of the language half of the catalog — `JS-{E,S,C,G}`. Every field a literal or enum case (`DifferenceTakesNoParameterSpec`, see [[Catalog]]). @param id stable @param title one line (longer

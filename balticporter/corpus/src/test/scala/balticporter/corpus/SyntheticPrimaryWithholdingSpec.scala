@@ -22,7 +22,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
       |}
       |/** This subclass's roots reach two DIFFERENT `Mid` constructors. Because `Mid` has a
       |  * synthesised plan with `rootArgs`, the child resolves through that plan and also
-      |  * synthesises — no withholding cascade. // ENGINE-LIMITS C3 item 4c */
+      |  * synthesises — no withholding cascade. */
       |class Sub extends Mid {
       |  Sub(int a)     { super(a); }
       |  Sub(boolean f) { super(f); }
@@ -78,7 +78,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
   // ---- C1.5: `nilaryPlan` and the two readings of "is this a synthesis" ----
 
-  test("C1.5 — `nilaryPlan` must NOT claim a SYNTHESIS: `primary.isEmpty` is true of both") {
+  test("`nilaryPlan` must NOT claim a SYNTHESIS: `primary.isEmpty` is true of both") {
     // No constructor of this class carries `super(args)`, which is `nilaryPlan`'s entire domain —
     // and it is also exactly where the synthesis fires on the IMPLICIT `super()`. Read as
     // "nothing was nominated", the empty `primary` of a synthesised plan handed every one of these
@@ -99,7 +99,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
     assert(o.contains("def this() = {"))
   }
 
-  test("C1.5 — a MARKER-ONLY synthesis has an EMPTY slot list and still emits a valid primary") {
+  test("a MARKER-ONLY synthesis has an EMPTY slot list and still emits a valid primary") {
     // No super slots (the parent is `Object`), no hoistable field, and a real nilary constructor
     // whose erased parameter list EQUALS the empty slot list — so the class needs the marker and
     // nothing else. `synthetic.nonEmpty` is false here, and a predicate reading it emitted

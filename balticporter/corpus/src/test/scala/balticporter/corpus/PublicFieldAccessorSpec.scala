@@ -92,7 +92,7 @@ class PublicFieldAccessorSpec extends PortSuite:
         "getter, so this signature is the phase's own and its only reader is the framework, reading " +
         "the RUNTIME value. `toJavaValue` is the identity on a `String`, so this is behaviour-" +
         "identical where the old `Object`-only bridge was right — and correct where it was not, at a " +
-        "field whose type a retyping phase moved (§4.56 forbids this phase asking which)"
+        "field whose type a retyping phase moved (ownership is decided structurally, never by asking which)"
     )
   }
 
@@ -174,7 +174,7 @@ class PublicFieldAccessorSpec extends PortSuite:
     assertEquals(ds.map(_.reason.className).distinct, List("configured"))
     assert(
       clue(out).contains("/* porter: bean-accessor reason=configured"),
-      "the reader is looking at a `def getA()` the source map cannot answer for (§4.575)"
+      "the reader is looking at a `def getA()` the source map cannot answer for"
     )
   }
 
@@ -211,7 +211,7 @@ class PublicFieldAccessorSpec extends PortSuite:
     val fs = rows(ph, after).filter(_.issue == BeanExposureCheck.Issue.NameUnreachable)
     assertEquals(clue(fs).size, 1)
     assert(fs.head.subject.endsWith("#eMail"), clue(fs.head.subject))
-    assert(clue(BeanExposureCheck.Issue.classification(BeanExposureCheck.Issue.NameUnreachable)).contains("§1(a)"))
+    assert(clue(BeanExposureCheck.Issue.classification(BeanExposureCheck.Issue.NameUnreachable)).contains("engine"))
   }
 
   test("…and the same field gets NO accessors at all, never a getter without a setter") {

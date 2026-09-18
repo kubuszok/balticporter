@@ -32,8 +32,8 @@ class SubstitutionPolicySpec extends munit.FunSuite:
     val r = report(Substitutions(dropTypes = Set("demo.Reflect", "demo.Reflct"))) // second is the typo
     assertEquals(r.keys, Set("demo.Reflct"))
     assertEquals(r.findings.map(_.issue), List(PolicyIssue.NeverMatched))
-    // and the line tells an agent in another repository what KIND of fix this is (CLAUDE.md §4.45)
-    assert(clue(r.render).contains("§1(b)"))
+    // and the line tells an agent in another repository what KIND of fix this is
+    assert(clue(r.render).contains("port policy"))
   }
 
   test("dropMethods: bare, overload-precise and constructor keys are each credited or reported") {

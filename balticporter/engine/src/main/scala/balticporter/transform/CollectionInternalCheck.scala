@@ -25,7 +25,7 @@ object CollectionInternalCheck:
     /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
     def classification(i: Issue): String = i match
       case SplitTypeVariable =>
-        "§1(a) engine gap: java bound ONE type variable from two arguments whose types it related " +
+        "engine gap: java bound ONE type variable from two arguments whose types it related " +
           "by subtyping (`ArrayList <: Collection`), and the mapping sent those two java types to " +
           "targets with no relation — a standalone `balticporter.runtime` shim and a " +
           "`scala.collection.*` type — so no scala type satisfies both slots and there is nothing " +
@@ -33,7 +33,7 @@ object CollectionInternalCheck:
           "argument whose type fixes the variable), not at the formal, because the formal has no " +
           "head to compare. NOT a `typeMap` row: both java types are already mapped."
       case DeclaredSubtype =>
-        "§1(a) engine gap: this class IMPLEMENTS the java type on one end of a broken edge, so the " +
+        "engine gap: this class IMPLEMENTS the java type on one end of a broken edge, so the " +
           "phase re-parented it onto that end's target, and the slot it is handed to carries the " +
           "OTHER end's. Java admitted the value by its own subtyping; scala has no such relation " +
           "between the two targets. `CollectionsTransform.coerce` bridges a VALUE at such a slot " +

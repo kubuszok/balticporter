@@ -33,12 +33,16 @@ class MarkerNamespaceSpec extends munit.FunSuite:
     val after = program("org.port", Some(Tree.Literal(Constant.IntC(0), TypeRepr.NoType, o)))
 
     val fs = MarkerCheck.check(before, after, after.units)
-    assertEquals(fs.map(_.kind), List("erased"), "the check compared two namespaces and reported nothing — §4.56's failure, reproduced")
+    assertEquals(
+      fs.map(_.kind),
+      List("erased"),
+      "the check compared two namespaces and reported nothing — a name-based comparison's failure, reproduced"
+    )
     assertEquals(
       fs.head.owner,
       "com.demo.Plain#twice",
       "the owner is named as the marker was MINTED — the upstream name, which is what a policy key " +
-        "and an ENGINE-LIMITS entry are both written in"
+        "is written in"
     )
   }
 

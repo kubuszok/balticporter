@@ -72,14 +72,14 @@ object ContextSeamCheck extends RemedySource:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
     def classification(k: Kind): String = k match
       case ResidualGlobalRead =>
-        "§1(b) PER-LIBRARY: this read still reaches a global. It is at a site with no signature to " +
+        "port policy: this read still reaches a global. It is at a site with no signature to " +
           "thread a context through — a class initialiser, a static field's initialiser, or a " +
           "declaration inside a refused override component. Move it behind a method the closure " +
           "can reach, give the site a `sites` policy (`lazy-init`), or accept it and set " +
           "`boundary = \"residual-global\"` so the read at least names the context rather than the " +
           "upstream holder. The engine needs no change."
       case UnsuppliableUse =>
-        "§1(b) PER-LIBRARY, and IT DOES NOT COMPILE: this declaration constructs or calls something " +
+        "port policy, and IT DOES NOT COMPILE: this declaration constructs or calls something " +
           "the threading reached, and it has no signature to take a context through — a class " +
           "initialiser, a static field's initialiser, or a declaration inside a refused override " +
           "component. Unlike a residual READ, there is nothing here to re-spell: the emitted Scala " +
@@ -91,20 +91,20 @@ object ContextSeamCheck extends RemedySource:
           "taking a clause and there is nothing for this site to supply; or, where none of those " +
           "fits, `scope` the declaration out and keep the global it reads."
       case DeferredInit =>
-        "§1(b) PER-LIBRARY and DELIBERATE: a `sites` entry asked for `lazy-init`, so this static is " +
+        "port policy and DELIBERATE: a `sites` entry asked for `lazy-init`, so this static is " +
           "now initialised at first READ instead of at class initialisation. Java runs a class " +
           "initialiser at first active use of the class; the two coincide only when nothing else " +
           "in the class is touched first. Read the decision row and confirm that holds here."
       case CapturedContext =>
-        "§1(a) and CORRECT: the read is inside a lexically nested body whose own signature could " +
+        "engine (true of every Java program), and CORRECT: the read is inside a lexically nested body whose own signature could " +
           "not change, so it captures the context from the enclosing declaration's clause. Nothing " +
           "to fix; the count exists so a port can size how much of its context outlives the call " +
           "that supplied it."
       case LostClause =>
-        "§1(a) ENGINE, and SILENT until this line: the threading put a `using` clause on this " +
+        "engine (true of every Java program), and SILENT until this line: the threading put a `using` clause on this " +
           "class's constructors and the emitted type does not carry one, so its body has no given " +
           "in scope — while its decision row and its porter note both say it does. A `class` here " +
-          "is an engine bug in the constructor region (`DESIGN.md` §8.2), reachable from no " +
+          "is an engine bug in the constructor region, reachable from no " +
           "manifest key. The other three forms are the engine refusing rather than guessing, and " +
           "each has a port-level answer: an `object` is an all-static class with no constructor to " +
           "carry anything, a `trait` needs a `promoteToClass` entry (scala's trait parameters are " +
@@ -112,7 +112,7 @@ object ContextSeamCheck extends RemedySource:
           "its java constructor, which every case object reaches with its own argument list — move " +
           "what needs the context off the enum, or scope the enum out."
       case SelfSupplied =>
-        "§1(b) PER-LIBRARY and DELIBERATE: the port declared this type framework-instantiated, so " +
+        "port policy and DELIBERATE: the port declared this type framework-instantiated, so " +
           "its constructors keep the signature java gave them and the context arrives from a " +
           "`given` member filled by the port's own expression. Nothing here is broken; the count " +
           "exists because the value this type threads is no longer its caller's, and because a " +
@@ -120,7 +120,7 @@ object ContextSeamCheck extends RemedySource:
           "decision row for the expression, and confirm that a context built once per instance is " +
           "the one this type should have."
       case UnconstructedThread =>
-        "§1(b) PER-LIBRARY, and it may be nothing: this class was threaded and NOTHING IN THIS " +
+        "port policy, and it may be nothing: this class was threaded and NOTHING IN THIS " +
           "PROGRAM CONSTRUCTS IT, while its ancestry leaves the program — which is exactly the " +
           "shape of a class a FRAMEWORK instantiates (a test suite, a `ServiceLoader` " +
           "implementation, a bean). A reflective instantiation cannot supply a `using`, so the " +
@@ -131,7 +131,7 @@ object ContextSeamCheck extends RemedySource:
           "of the ported API: the engine cannot tell the two apart, which is why this warns rather " +
           "than refuses."
       case StaticFieldHolder =>
-        "§1(a) ENGINE and DERIVED: this static field's initialiser constructs a type whose " +
+        "engine (true of every Java program) and DERIVED: this static field's initialiser constructs a type whose " +
           "constructor the threading reached, so the companion object cannot evaluate it at " +
           "initialisation time. The field becomes a holder with a throwing accessor, and the " +
           "initialiser runs at the head of every threaded static method on the same class. No " +
@@ -139,7 +139,7 @@ object ContextSeamCheck extends RemedySource:
           "initialiser constructs a threaded class, because the accessor keeps the field's name " +
           "and no new public name is minted."
       case FrozenComponent =>
-        "§1(b)/§1(a): this override component reaches a declaration this program does not own — an " +
+        "port policy or engine: this override component reaches a declaration this program does not own — an " +
           "unparsed parent, or a resolution root's — so its signature is not this module's to " +
           "change, and threading half a component is a broken `override`. If the parent IS ported, " +
           "port it in the same run; if it is a trait of this program's own whose body needs the " +

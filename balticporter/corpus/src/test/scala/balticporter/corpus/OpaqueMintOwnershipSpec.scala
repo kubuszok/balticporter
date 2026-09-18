@@ -117,7 +117,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     val after     = run(p, root, phase, "dep")
     assert(
       !clue(unitNames(after)).contains("p.Handle"),
-      "the dependent wrote its own copy of a unit its base already emits — ENGINE-LIMITS §13 O5"
+      "the dependent wrote its own copy of a unit its base already emits — only the module that owns the declarations may mint the unit"
     )
     // O8: without a published port map the dependent does not propagate the base's seeds at all,
     // so the fence is structurally guaranteed. The NEGATIVE test below proves the fence is load-bearing
@@ -151,9 +151,9 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     )
   }
 
-  test("O8: without a port map the dependent's GROWN seed set is empty — the fence is structural") {
-    // Pre-O8 the grown set reached the dependent's own unit, making the hint-based fence
-    // load-bearing. Post-O8 the dependent does not propagate at all without a published port map,
+  test("without a port map the dependent's GROWN seed set is empty — the fence is structural") {
+    // Before this fence the grown set reached the dependent's own unit, making the hint-based fence
+    // load-bearing. Now the dependent does not propagate at all without a published port map,
     // so the fence is moot and the type mapping is empty.
     val (p, root) = model()
     val ph        = phase
@@ -192,8 +192,8 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     assert(clue(err.getMessage).contains("MORE THAN ONE module"))
     assert(err.getMessage.contains("p.Gpu#handle"), "the side this module does NOT emit is named")
     assert(err.getMessage.contains("q.Own#handle"), "…and so is the side it does")
-    assert(err.getMessage.contains("§1(c)"), "a refusal says which of §1's three kinds the fix is")
-    assert(err.getMessage.contains("ENGINE-LIMITS.md` §13 O5"))
+    assert(err.getMessage.contains("library-specific rule"), "a refusal says whose fix it is")
+    assert(err.getMessage.contains("a unit a phase mints has no source origin"))
   }
 
   test("…and the BASE side of the same tree refuses too — neither module may decide alone") {
