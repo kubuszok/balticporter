@@ -155,20 +155,43 @@ object LlsEnrich:
     val V   = k.value
     val EV  = k.entryValue
     val why = "lls collection API on the emitted map surface"
-    // ONE traversal accessor for all three: `entries()` is the only iterator every emitted map
-    // family implements as a `JavaIterator` (`Keys` on the int-keyed maps carries a FIELD instead),
-    // and a subclass that overrides it — `OrderedMap` — supplies the right order for free.
-    def walk(body: String) =
-      if k.indexed then s"{ var i: scala.Int = 0; while (i < this.size) { $body; i += 1 } }"
-      else s"{ val it = this.entries(); while (it.hasNext()) { val e = it.next(); $body } }"
-    def at(what: String) = if k.indexed then s"this.get${what}At(i)" else s"e.${what.toLowerCase}"
-    val core             = List(
+    // The traversals loop over the BACKING ARRAYS, as the hand-written lls did — through an iterator
+    // they measured 2x-34x slower (the ordered map's iterator does a hash lookup per key, and a
+    // generic array read boxes a primitive value). The function receives the RAW stored value, null
+    // included, never the `Nullable` storage.
+    //   * indexed (`ArrayMap`): both arrays read through the array type class RESOLVED AT THE CALL
+    //     SITE (`MkArray.withResolved`), where the key and value types are known — no boxing.
+    //   * hash table: the key/value tables in slot order, which is the iterator's own order; an
+    //     `OrderedMap` is walked in insertion order through `orderedKeys`.
+    def walk(useValue: Boolean, call: (String, String) => String): String =
+      if k.indexed && k.mk.isEmpty then
+        // no type class in scope (the element-witness step is off): the accessors are all there is
+        s"{ var i: scala.Int = 0; while (i < this.size) { ${call("this.getKeyAt(i)", "this.getValueAt(i)")}; i += 1 } }"
+      else if k.indexed then
+        val mkOf  = (t: String) => s"scala.Predef.summon[lowlevel.MkArray[$t]]"
+        val inner =
+          s"{ val ks = mkK.castArray(this.keys$$field); val vs = mkV.castArray(this.values$$field); var i: scala.Int = 0; val n: scala.Int = this.size; " +
+            s"while (i < n) { ${call(s"mkK.get(ks, i).asInstanceOf[$K]", s"mkV.get(vs, i).asInstanceOf[$V]")}; i += 1 } }"
+        s"lowlevel.MkArray.withResolved[$K, scala.Unit](${mkOf(K)}) { [BK, MkK <: lowlevel.MkArray[BK]] => (mkK: MkK) => " +
+          s"lowlevel.MkArray.withResolved[$V, scala.Unit](${mkOf(V)}) { [BV, MkV <: lowlevel.MkArray[BV]] => (mkV: MkV) => $inner } }"
+      else
+        // The arrays are read as `Array[AnyRef]` and each element narrowed: expanded where the key
+        // type is known, a local typed `Array[K]` would cast the whole `Object[]` store to `K[]`.
+        val refs         = ".asInstanceOf[scala.Array[scala.AnyRef]]"
+        val orderedValue = if useValue then k.unwrap("this.get(key)") else "null"
+        val ordered      =
+          s"{ val ord = o.orderedKeys; val ks = ord.items$refs; val n: scala.Int = ord.size; var i: scala.Int = 0; " +
+            s"while (i < n) { val key: $K = ks(i).asInstanceOf[$K]; ${call("key", orderedValue)}; i += 1 } }"
+        val table =
+          s"{ val ks = this.keyTable$refs; val vs = this.valueTable$refs; val n: scala.Int = ks.length; var i: scala.Int = 0; " +
+            s"while (i < n) { val slot = ks(i); if (slot ne null) { val key: $K = slot.asInstanceOf[$K]; ${call("key", s"vs(i).asInstanceOf[$V]")} } else () ; i += 1 } }"
+        s"this match { case o: lowlevel.util.OrderedMap[?, ?] => $ordered; case _ => $table }"
+    val core = List(
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
       // `inline` with an `inline` function, as in the hand-written lls: no function object per traversal
-      ("foreachKey", 1, s"inline def foreachKey(inline f: $K => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")})")}"),
-      // the reference hands the RAW value (`vals(i)`, null included), never the `Nullable` storage
-      ("foreachValue", 1, s"inline def foreachValue(inline f: $V => scala.Unit): scala.Unit = ${walk(s"f(${k.unwrap(at("Value"))})")}"),
-      ("foreachEntry", 1, s"inline def foreachEntry(inline f: ($K, $V) => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")}, ${k.unwrap(at("Value"))})")}"),
+      ("foreachKey", 1, s"inline def foreachKey(inline f: $K => scala.Unit): scala.Unit = ${walk(false, (key, _) => s"f($key)")}"),
+      ("foreachValue", 1, s"inline def foreachValue(inline f: $V => scala.Unit): scala.Unit = ${walk(true, (_, value) => s"f($value)")}"),
+      ("foreachEntry", 1, s"inline def foreachEntry(inline f: ($K, $V) => scala.Unit): scala.Unit = ${walk(true, (key, value) => s"f($key, $value)")}"),
       ("update", 2, s"def update(key: $K, value: $V): scala.Unit = { this.put(key, ${k.wrap("value")}); () }"),
       ("$plus$eq", 1, s"@scala.annotation.targetName(\"plusEquals\") def +=(kv: ($K, $V)): scala.Unit = this.update(kv._1, kv._2)")
     )
@@ -208,21 +231,26 @@ object LlsEnrich:
   private[corpus] case class SetKind(owner: String, elem: String, self: String, tparams: String = "", hasNext: String = "hasNext()", mk: String = "")
 
   private[corpus] def setMembers(k: SetKind): List[(String, MemberSpec)] =
-    val E    = k.elem
-    val hn   = k.hasNext
-    val why  = "lls collection API on the emitted set surface"
+    val E   = k.elem
+    val why = "lls collection API on the emitted set surface"
+    // Over the backing storage, not the iterator (see `mapMembers`): the key table in slot order — the
+    // iterator's own order — and an `OrderedSet` in insertion order through `orderedItems`. `go` is
+    // the loop's continuation test, `body` sees the element as `key`.
+    def scan(go: String, body: String): String =
+      val refs    = ".asInstanceOf[scala.Array[scala.AnyRef]]"
+      val ordered =
+        s"{ val ord = o.orderedItems; val ks = ord.items$refs; val n: scala.Int = ord.size; var i: scala.Int = 0; " +
+          s"while (i < n && $go) { val key: $E = ks(i).asInstanceOf[$E]; $body; i += 1 } }"
+      val table =
+        s"{ val ks = this.keyTable$refs; val n: scala.Int = ks.length; var i: scala.Int = 0; " +
+          s"while (i < n && $go) { val slot = ks(i); if (slot ne null) { val key: $E = slot.asInstanceOf[$E]; $body } else () ; i += 1 } }"
+      s"this match { case o: lowlevel.util.OrderedSet[?] => $ordered; case _ => $table }"
     val core = List(
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
-      ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = { val it = this.iterator(); while (it.$hn) { f(it.next()) } }"),
-      ("exists",
-       1,
-       s"inline def exists(inline p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = false; val it = this.iterator(); while (it.$hn && !r) { if (p(it.next())) { r = true } else () }; r }"
-      ),
-      ("forall",
-       1,
-       s"inline def forall(inline p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = true; val it = this.iterator(); while (it.$hn && r) { if (!p(it.next())) { r = false } else () }; r }"
-      ),
-      ("count", 1, s"inline def count(inline p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; val it = this.iterator(); while (it.$hn) { if (p(it.next())) { c += 1 } else () }; c }"),
+      ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = ${scan("true", "f(key)")}"),
+      ("exists", 1, s"inline def exists(inline p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = false; ${scan("!r", "if (p(key)) { r = true } else ()")}; r }"),
+      ("forall", 1, s"inline def forall(inline p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = true; ${scan("r", "if (!p(key)) { r = false } else ()")}; r }"),
+      ("count", 1, s"inline def count(inline p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; ${scan("true", "if (p(key)) { c += 1 } else ()")}; c }"),
       ("$plus$eq", 1, s"@scala.annotation.targetName(\"plusEquals\") def +=(key: $E): scala.Unit = { this.add(key); () }"),
       ("$minus$eq", 1, s"@scala.annotation.targetName(\"minusEquals\") def -=(key: $E): scala.Unit = { this.remove(key); () }")
     )
