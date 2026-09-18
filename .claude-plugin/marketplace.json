@@ -1,0 +1,11 @@
+{
+  "name": "balticporter",
+  "owner": { "name": "kubuszok" },
+  "plugins": [
+    {
+      "name": "balticporter",
+      "source": "./plugin",
+      "description": "Skills and guard hooks for repositories that generate Scala sources with Baltic Porter."
+    }
+  ]
+}

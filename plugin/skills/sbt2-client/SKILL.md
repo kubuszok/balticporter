@@ -40,6 +40,9 @@ regression; read `Failed:` not `Total`.
 `export JAVA_HOME=$(cs java-home --jvm adoptium:<v>); export PATH=$JAVA_HOME/bin:$PATH` in every
 shell. Baltic Porter lanes: 22 (`jdk_version`, `jdk_guard` refuses the rest). sge, ssg: 25 (their
 CI). lls `release.yml` pins temurin 17 (pre-existing). `overrides nothing` is a JDK mismatch first.
+On macOS `/usr/libexec/java_home -v 25` silently answers an OLDER JDK when 25 is not registered
+there: check `java -version`, and point `JAVA_HOME` at the real install (`~/.sdkman/candidates/java/…`).
+The JDK a server runs on is fixed when the server starts: `sbt --client shutdown`, then start again.
 
 ## 5. Commands live in build.sbt, never in YAML
 
@@ -59,10 +62,31 @@ A multi-command CI step is an sbt ALIAS in `build.sbt` (sbt-welcome lists it): s
 
 ## 7. The consumer's generation marker
 
-sge/ssg regenerate only when `target/balticporter-<port>/.generated-marker` is absent or the pin
-changed: after a new pin, `rm -f target/balticporter-sge/.generated-marker
-target/balticporter-lls/.generated-marker`, then `reload`. Parallel matrix rows share the generator
-(`BalticPorterGen` is `synchronized`). The marker is keyed on the VENDORED java commit, not the
-engine pin: a run still ahead of yours on the server rewrites it after your `rm`, and your command
-then compiles the previous engine's tree — the log says `[Baltic Porter] Using cached generated
-sources`. Remove the markers only when the server is idle, and grep that line before reading errors.
+sge regenerates when `target/balticporter-sge/.generated-marker` does not read the current
+fingerprint: engine pin, libGDX commit, generator source hash, JDK major. A new pin or a JDK change
+regenerates by itself after `reload`; delete the marker only to force it. Parallel matrix rows share
+the generator (`BalticPorterGen` is `synchronized`). The log says which tree a command compiled:
+`[Baltic Porter] Using cached generated sources (engine=… libgdx=… generator=… jdk=…)` — grep that
+line before reading errors. `sbt --client generatePort` runs the generation alone.
+
+## 8. Project ids and command strings
+
+- Ask the build: `sbt --client projects`. Matrix rows are `<id>` (JVM), `<id>JS`, `<id>Native` —
+  `sge`, `sgeJS`, `sgeNative`; there is no `sgeJVM`. Baltic Porter's ids are `engine`, `corpus`,
+  `api`, `testkit`, `runtime`, `frontend-spoon`, `frontend-ts` — hyphenated ids need backticks only in
+  `build.sbt`, never on the command line; there is no `frontendSpoon`, `balticporter-engine`.
+- ONE quoted string, tasks joined with `;`. Two arguments (`sbt --client "a" "b"`) are joined into one
+  command line and fail with `Expected whitespace character` / `Expected ID character`.
+
+## 9. When the server misbehaves
+
+`sbt server disconnected`, `failed to connect to server`, `Connection refused; starting a new
+server`: another client was killed mid-command or the server died. Run `sbt --client shutdown` in THAT
+checkout, confirm with `pgrep -fl sbt-launch` and the PID's cwd (`lsof -p <pid> | grep cwd`), `kill`
+that ONE pid if it survived, and rerun. Wiping `~/Library/Caches/sbt` is never the fix and cold-starts
+every other agent.
+
+## 10. Waiting
+
+Start a long command with `run_in_background` and wait for the completion notification; read the
+`tee`d log afterwards. Never `sleep`-poll, never loop on `launchctl list` / `ps` / `tail`.

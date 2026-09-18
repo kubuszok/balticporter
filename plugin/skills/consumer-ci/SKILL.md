@@ -35,17 +35,27 @@ CI is not the debugger. One push per cycle, every row green locally first.
 
 ```
 # Baltic Porter                          # JDK 22
-sbt --client "reload; publishLocal"      → note <hash>
-# sge                                    # JDK 25
+git commit …; sbt --client "reload; publishLocal"      → note <hash> (the version IS the commit)
+# sge                                    # JDK 25 (a real 25: see sbt2-client §6)
 Edit project/plugins.sbt: both balticporter pins → <hash>-SNAPSHOT
-rm -f target/balticporter-sge/.generated-marker target/balticporter-lls/.generated-marker
-sbt --client "reload; testCompile-jvm-3"; sbt --client "testCompile-js-3"; sbt --client "testCompile-native-3"
-sbt --client "ci-jvm-3"; sbt --client "test-js-3"; sbt --client "test-native-3"
+sbt --client "reload; generatePort"
+sbt --client "testCompile-jvm-3"; sbt --client "testCompile-js-3"; sbt --client "testCompile-native-3"
+git commit …; sbt --client "verifyLocal"   # ci-jvm-3; test-js-3; test-native-3; records the verified commit
 sbt --client "scalafmtCheckAll; scalafmtSbtCheck; sge / Compile / packageSrc"
 PATH=<re-scale>/bin:$PATH .rescale/scripts/covenant-gate.sh
 ```
 Each command through `tee` (skill `sbt2-client`). Rows fail in order: fix the first row's
 root cause before reading the next; the same cause usually explains all three.
+
+A hook refuses `git push` in a consumer until `target/local-verification` names HEAD (changes to
+docs and `.github/` alone are exempt). A LOCAL pin is never pushed: push the engine ONCE, wait for its
+snapshot release to finish, probe the pom (skill `generated-code`), repin to that hash, verify, push.
+
+What CI does with it (sge): one `generate` job runs Baltic Porter and stores the tree in the Actions
+cache; `compile` builds each platform row once into the remote cache; every other job restores both and
+only links and runs; the demos build against the snapshot `release.yml` publishes. After a push: ONE
+`gh run watch <id>`, then read every red job before touching anything — never poll, never re-push a
+one-line guess, never an empty commit to retrigger (`gh run rerun <id> --failed`).
 
 ## 4. The consumer's generator and dedup
 
