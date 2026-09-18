@@ -46,15 +46,24 @@ object LlsEnrich:
       ("update", 2, s"def update(index: scala.Int, value: $E): scala.Unit = this.set(index, value)"),
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
       ("last", 0, s"def last: $E = { if (this.size == 0) { throw new java.lang.IndexOutOfBoundsException(\"Array is empty.\") } else () ; this.items(this.size - 1) }"),
-      ("foreach", 1, s"def foreach(f: $E => scala.Unit): scala.Unit = { var i: scala.Int = 0; while (i < this.size) { f(this.items(i)); i += 1 } }"),
+      // the higher-order members are `inline` with an `inline` function parameter, as the hand-written lls had
+      // them: the loop is expanded at the call site, so no function object is created and — the element type
+      // being known there — the array is read without boxing (lls's README states both)
+      ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = { var i: scala.Int = 0; while (i < this.size) { f(this.items(i)); i += 1 } }"),
       ("indexWhere",
        1,
-       s"def indexWhere(p: $E => scala.Boolean): scala.Int = { var i: scala.Int = 0; var r: scala.Int = -1; while (i < this.size && r < 0) { if (p(this.items(i))) { r = i } else () ; i += 1 }; r }"
+       s"inline def indexWhere(inline p: $E => scala.Boolean): scala.Int = { var i: scala.Int = 0; var r: scala.Int = -1; while (i < this.size && r < 0) { if (p(this.items(i))) { r = i } else () ; i += 1 }; r }"
       ),
-      ("exists", 1, s"def exists(p: $E => scala.Boolean): scala.Boolean = this.indexWhere(p) >= 0"),
-      ("forall", 1, s"def forall(p: $E => scala.Boolean): scala.Boolean = this.indexWhere((x: $E) => !p(x)) < 0"),
-      ("find", 1, s"def find(p: $E => scala.Boolean): lowlevel.Nullable[$E] = { val i: scala.Int = this.indexWhere(p); if (i < 0) lowlevel.Nullable.empty[$E] else lowlevel.Nullable(this.items(i)) }"),
-      ("count", 1, s"def count(p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; var i: scala.Int = 0; while (i < this.size) { if (p(this.items(i))) { c += 1 } else () ; i += 1 }; c }"),
+      ("exists", 1, s"inline def exists(inline p: $E => scala.Boolean): scala.Boolean = this.indexWhere(p) >= 0"),
+      ("forall", 1, s"inline def forall(inline p: $E => scala.Boolean): scala.Boolean = this.indexWhere((x: $E) => !p(x)) < 0"),
+      ("find",
+       1,
+       s"inline def find(inline p: $E => scala.Boolean): lowlevel.Nullable[$E] = { val i: scala.Int = this.indexWhere(p); if (i < 0) lowlevel.Nullable.empty[$E] else lowlevel.Nullable(this.items(i)) }"
+      ),
+      ("count",
+       1,
+       s"inline def count(inline p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; var i: scala.Int = 0; while (i < this.size) { if (p(this.items(i))) { c += 1 } else () ; i += 1 }; c }"
+      ),
       ("$plus$eq", 1, s"@scala.annotation.targetName(\"plusEquals\") def +=(value: $E): scala.Unit = this.add(value)")
     )
     val removes =
@@ -155,10 +164,11 @@ object LlsEnrich:
     def at(what: String) = if k.indexed then s"this.get${what}At(i)" else s"e.${what.toLowerCase}"
     val core             = List(
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
-      ("foreachKey", 1, s"def foreachKey(f: $K => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")})")}"),
+      // `inline` with an `inline` function, as in the hand-written lls: no function object per traversal
+      ("foreachKey", 1, s"inline def foreachKey(inline f: $K => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")})")}"),
       // the reference hands the RAW value (`vals(i)`, null included), never the `Nullable` storage
-      ("foreachValue", 1, s"def foreachValue(f: $V => scala.Unit): scala.Unit = ${walk(s"f(${k.unwrap(at("Value"))})")}"),
-      ("foreachEntry", 1, s"def foreachEntry(f: ($K, $V) => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")}, ${k.unwrap(at("Value"))})")}"),
+      ("foreachValue", 1, s"inline def foreachValue(inline f: $V => scala.Unit): scala.Unit = ${walk(s"f(${k.unwrap(at("Value"))})")}"),
+      ("foreachEntry", 1, s"inline def foreachEntry(inline f: ($K, $V) => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")}, ${k.unwrap(at("Value"))})")}"),
       ("update", 2, s"def update(key: $K, value: $V): scala.Unit = { this.put(key, ${k.wrap("value")}); () }"),
       ("$plus$eq", 1, s"@scala.annotation.targetName(\"plusEquals\") def +=(kv: ($K, $V)): scala.Unit = this.update(kv._1, kv._2)")
     )
@@ -203,16 +213,16 @@ object LlsEnrich:
     val why  = "lls collection API on the emitted set surface (PROGRESS.md §13.29)"
     val core = List(
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
-      ("foreach", 1, s"def foreach(f: $E => scala.Unit): scala.Unit = { val it = this.iterator(); while (it.$hn) { f(it.next()) } }"),
+      ("foreach", 1, s"inline def foreach(inline f: $E => scala.Unit): scala.Unit = { val it = this.iterator(); while (it.$hn) { f(it.next()) } }"),
       ("exists",
        1,
-       s"def exists(p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = false; val it = this.iterator(); while (it.$hn && !r) { if (p(it.next())) { r = true } else () }; r }"
+       s"inline def exists(inline p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = false; val it = this.iterator(); while (it.$hn && !r) { if (p(it.next())) { r = true } else () }; r }"
       ),
       ("forall",
        1,
-       s"def forall(p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = true; val it = this.iterator(); while (it.$hn && r) { if (!p(it.next())) { r = false } else () }; r }"
+       s"inline def forall(inline p: $E => scala.Boolean): scala.Boolean = { var r: scala.Boolean = true; val it = this.iterator(); while (it.$hn && r) { if (!p(it.next())) { r = false } else () }; r }"
       ),
-      ("count", 1, s"def count(p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; val it = this.iterator(); while (it.$hn) { if (p(it.next())) { c += 1 } else () }; c }"),
+      ("count", 1, s"inline def count(inline p: $E => scala.Boolean): scala.Int = { var c: scala.Int = 0; val it = this.iterator(); while (it.$hn) { if (p(it.next())) { c += 1 } else () }; c }"),
       ("$plus$eq", 1, s"@scala.annotation.targetName(\"plusEquals\") def +=(key: $E): scala.Unit = { this.add(key); () }"),
       ("$minus$eq", 1, s"@scala.annotation.targetName(\"minusEquals\") def -=(key: $E): scala.Unit = { this.remove(key); () }")
     )
