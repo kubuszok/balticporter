@@ -6,9 +6,13 @@ cd "$(dirname "$0")/.." || exit 1
 range="${1:-}"; bad=0
 if [ -n "$range" ]; then
   # range mode: only comment blocks made of ADDED lines, and narrative words in added comment lines
-  narrative=$(git diff "$range" -- '*.scala' | grep -E '^\+\s*(//|\*|/\*)' | grep -viE 'ENGINE-LIMITS|CLAUDE\.md|DESIGN\.md|subplan' \
-    | grep -iE '\b(wave [0-9]|previously|used to (be|match|cost|fire|refuse|drop|emit|read)|measured at|the earlier|the first time|initially|the prior one)\b' || true)
+  added=$(git diff "$range" -- '*.scala' | /usr/bin/grep -E '^\+\s*(//|\*|/\*)' || true)
+  narrative=$(echo "$added" \
+    | /usr/bin/grep -iE '\b(wave [0-9]|previously|used to (be|match|cost|fire|refuse|drop|emit|read)|measured at|the earlier|the first time|initially|the prior one)\b' || true)
   [ -n "$narrative" ] && { echo "!! narrative in added comments:"; echo "$narrative"; bad=1; }
+  # a comment explains itself: no pointer to an internal document, no letter-number id
+  cites=$(echo "$added" | /usr/bin/grep -E 'ENGINE-LIMITS|DESIGN\.md|PROGRESS\.md|\((CT|K|G|T|M|D|P|O|V|X|F|C)[0-9]+(\.[0-9]+)*\)' || true)
+  [ -n "$cites" ] && { echo "!! internal document or id cited in added comments:"; echo "$cites"; bad=1; }
   blocks=$(git diff -U0 "$range" -- '*.scala' | awk '
     /^\+\+\+ / { f=substr($0,7); n=0; next }
     /^@@/ { match($0, /\+[0-9]+/); ln=substr($0, RSTART+1, RLENGTH-1)+0; n=0; next }

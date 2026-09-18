@@ -4158,6 +4158,10 @@ visui-measure-full:
 # sequence, for the same reason every lane aborts on a migration that did not run: the next number
 # would be stale, and a stale number reads exactly like a result.
 # ---------------------------------------------------------------------------------------------
+[doc("publish the committed engine locally and run each consumer's own tests against it (level: jvm | full; consumers default to lls sge)")]
+consumers-check level="jvm" *consumers:
+    "{{root}}/scripts/consumers-check.sh" {{level}} {{consumers}}
+
 [doc("every lane, SERIALLY, in dependency order — never in parallel")]
 measure-all:
     #!/usr/bin/env bash
