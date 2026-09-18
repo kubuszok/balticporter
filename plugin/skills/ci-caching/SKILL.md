@@ -87,6 +87,23 @@ For an sbt 2 build the `sbt` launcher defaults to a thin client that starts a ba
 `--server` ("run sbt in the foreground instead of using sbtn") — one JVM per call, no state between
 steps. Never install sbt in a workflow any other way, and never add `--client` there.
 
+## Measured (sge, 2026-09-18, the same commit content before and after)
+
+| | before | after |
+|---|---|---|
+| runner time, CI + release workflows | 276 min | 168 min (−39 %) |
+| jobs that run Baltic Porter | 17 | 1 (66 s on a cache hit, ~4–5 min on a miss) |
+| jobs that check out the engine / the submodule | 18 / 16 | 0 / 1 |
+| compile of the three platform rows | inside every job | 3 parallel jobs, 3.5–4 min each |
+| demos (smoke, compile-all, release verification ×4, browser IT) | built 5× from locally published artifacts, ~47 runner-min | against the published snapshot, ~20 runner-min |
+| CI wall clock | 24.6 min | 26.6 min |
+| lls: runner time / longest job | 85 min / 27.5 min | 56 min / 13.7 min |
+
+The wall clock did NOT improve: the critical path is `generate` → `compile` → the slowest
+non-Linux Native row (Windows 17 min, macOS 16.5 min), and those rows still compile everything
+themselves because the remote cache is namespaced per OS. Sharing platform-independent compile
+outputs across operating systems is the open lever; it needs a poisoning-safe experiment first.
+
 ## Reading a run
 
 - Wall clock and runner-minutes: `gh run view <id> --json jobs --jq '.jobs[] | [.name, .conclusion, ((.completedAt|fromdate)-(.startedAt|fromdate))] | @tsv'`.
