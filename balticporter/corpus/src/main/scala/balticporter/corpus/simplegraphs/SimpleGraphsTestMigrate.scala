@@ -6,8 +6,8 @@ import balticporter.runner.PortConfig
 import java.nio.file.{ Files, Path }
 
 /** Port simple-graphs' own JUnit suite (`src/test/java`) through the same pipeline as `src/main/java`. The port is `.../ports/simplegraphs/test.conf`; 7 files, 16 `@Test` — the only behavioural
-  * evidence this port can have (CLAUDE.md §3). Exercises `Comparator` ordering, `java.util.stream` chain collapse, a colliding `hashCode`, and the COLLECTION surface K5 covers. A DEPENDENT of
-  * [[SimpleGraphsMigrate]] via `base = "main.conf"` (CLAUDE.md §1.5).
+  * evidence this port can have. Exercises `Comparator` ordering, `java.util.stream` chain collapse, a colliding `hashCode`, and the collection surface a re-parented class covers. A DEPENDENT of
+  * [[SimpleGraphsMigrate]] via `base = "main.conf"`.
   */
 object SimpleGraphsTestMigrate:
 
@@ -16,8 +16,7 @@ object SimpleGraphsTestMigrate:
     PortConfig.load(SimpleGraphsPort.conf("test.conf"), args.toSeq).execute()
 
 /** simple-graphs' TEST-scope dependency, for shadow-class resolution only — JUnit 4 (`build.gradle` declares exactly `junit:junit:4.12`). `TestFrameworkTransform` converts the JUnit surface to MUnit,
-  * so the jar is a frontend input only. Written to a FILE rather than inlined, since a config naming a COMMAND is the strings-that-are-secretly-code the transform SPI exists to keep out (CLAUDE.md
-  * §1.5).
+  * so the jar is a frontend input only. Written to a FILE rather than inlined, since a config naming a COMMAND is the strings-that-are-secretly-code the transform SPI exists to keep out.
   */
 object SimpleGraphsClasspath:
 

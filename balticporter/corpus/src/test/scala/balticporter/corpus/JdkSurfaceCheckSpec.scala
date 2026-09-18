@@ -142,7 +142,7 @@ class JdkSurfaceCheckSpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // K9, as a DERIVED demand
+  // the enhanced-for-over-a-kept-JDK-Iterable rewrite, as a DERIVED demand
   // -------------------------------------------------------------------------------------------
 
   private val foreachSrc =

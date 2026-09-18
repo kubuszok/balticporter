@@ -67,7 +67,7 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
     assert(clue(out).contains("def log(level: scala.Int): scala.Unit = { log$handle.invokeExact(level); () }"))
   }
 
-  // -- ENGINE-LIMITS M10: the handle NAME is keyed on the method, never on the mint counter -------
+  // -- the handle NAME is keyed on the method, never on the mint counter -------
 
   private val overloaded =
     """package demo;

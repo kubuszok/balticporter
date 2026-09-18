@@ -8,9 +8,9 @@ import balticporter.runner.{ Determinism, PortRun, SourceSet, VendoredCommit }
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **TextraTypist** (`src/main/java`, 92 types — libGDX's rich-text label family: a font engine with markup, effects and scene2d widgets) through the TIR. A DEPENDENT port with a THIRD-PARTY
-  * compile dependency of its own (`regexodus`, see [[TextraTypistClasspath]]): `gdx/src` a RESOLUTION root, policy [[LibgdxPolicy.core]] EXTENDED (§1.5). NO TEST SOURCE SET (upstream declares zero
-  * `@Test`); evidence is a DIFFERENTIAL probe (`PROGRESS.md` §10.8).
+/** Migrate **TextraTypist** (`src/main/java`, 92 types — libGDX's rich-text label family: a font engine with markup, effects and scene2d widgets) through the TIR. A dependent port with a third-party
+  * compile dependency of its own (`regexodus`, see [[TextraTypistClasspath]]): `gdx/src` a resolution root, policy [[LibgdxPolicy.core]] extended. No test source set (upstream declares zero `@Test`);
+  * evidence is a differential probe.
   */
 object TextraTypistMigrate:
 
@@ -44,7 +44,7 @@ object TextraTypistMigrate:
           originalLicense = "Apache-2.0",
           sourcePathPrefix = "textratypist/src/main/java",
           sourceRoot = base.toString,
-          // TWO LICENCE REGIMES need a `notices` key here (CLAUDE.md §4.57): the emoji-regex MIT
+          // TWO LICENCE REGIMES need a `notices` key here: the emoji-regex MIT
           // notice is INLINE in `EmojiProcessor.java`'s own header; the typing-label MIT notice is
           // in NO file's comment anywhere (upstream discharges it via a repo-root file), so it is
           // declared explicitly. The reference hand port ships NEITHER file — this port is more
@@ -72,8 +72,8 @@ object TextraTypistClasspath:
   def entries(repoRoot: Path): List[Path] =
     ClasspathCache.entries(cache(repoRoot), "textratypist", Coordinates)
 
-/** TextraTypist's per-library policy -- a DEPENDENT of libGDX core's, deliberately almost empty. `dropTypes`/`dropMethods`/`packageRenames`/every signature-affecting phase are INHERITED, not restated
-  * (CLAUDE.md §1.5); `inject` is NOT inherited. This wave adds a namespace claim, a rename, one build coordinate and the base-surface residue check, nothing else.
+/** TextraTypist's per-library policy -- a dependent of libGDX core's, deliberately almost empty. `dropTypes`/`dropMethods`/`packageRenames`/every signature-affecting phase are inherited, not
+  * restated; `inject` is NOT inherited. This wave adds a namespace claim, a rename, one build coordinate and the base-surface residue check, nothing else.
   */
 object TextraTypistPolicy:
 
@@ -85,16 +85,16 @@ object TextraTypistPolicy:
           name = "sge-textra",
           governs = Set("com.github.tommyettinger.textra"),
           // ONE PAIR, UNIFORM; the reference port's one deviation (hoisting `LzmaUtils` to
-          // top-level) is deliberately NOT reproduced — MEASURED and found not to apply here (§3.5):
+          // top-level) is deliberately NOT reproduced — measured and found not to apply here:
           // the base already ports libGDX's compression sub-package under the inherited rename, and
           // nothing outside the destination package consumes the hoisted spelling. If a consumer is
           // ever found that needs the hand spelling, it is one `typeRenames` entry away.
           packageRenames = Map("com.github.tommyettinger.textra" -> "sge.textra"),
           // THE ARTIFACT THIS MODULE'S BUILD ADDS — what `SbtGen` writes into `libraryDependencies`
-          // and `dependency-coverage` reads against. Not inherited (§1.5). RESIDUE: RegExodus is
+          // and `dependency-coverage` reads against. Not inherited. RESIDUE: RegExodus is
           // JVM-only (no `_sjs1_3`/`_native0.5_3` published), while this module inherits the
-          // all-platform default — narrowing `targets` is NOT the answer; `PROGRESS.md` §10.8 holds
-          // it as a residue (RegExodus exists BECAUSE `java.util.regex` is missing off the JVM).
+          // all-platform default — narrowing `targets` is NOT the answer; this is recorded
+          // as a residue (RegExodus exists BECAUSE `java.util.regex` is missing off the JVM).
           dependencies = List(balticporter.catalog.ArtifactDep("com.github.tommyettinger", "regexodus", "0.1.21", balticporter.catalog.CrossKind.Java)),
           externalParenless = Set(
             "lowlevel.util.DynamicArray#isEmpty",
@@ -109,7 +109,7 @@ object TextraTypistPolicy:
             // reach (their connection to Align is bitwise ops, not pure-move flows). Folds into the
             // base's ONE `PrimitiveToOpaqueTransform` instance via `MergeablePolicy` (`hints`
             // union; identity fields must agree with `LibgdxPolicy.core`'s entry). Four FIELDS and
-            // one PARAMETER, upstream FQNs (the rename runs last, §4.56).
+            // one PARAMETER, upstream FQNs (the rename runs last).
             new balticporter.transform.PrimitiveToOpaqueTransform(
               balticporter.tir.OpaqueSpec(
                 fqn = "com.badlogic.gdx.utils.Align",
@@ -131,7 +131,7 @@ object TextraTypistPolicy:
             // 3.1ba: body substitutions for retarget-chained-call residue — THREE FAMILIES, each a
             // Collect-produced DynamicArray at a slot the chained call cannot reach: (1) Parser:
             // `keys().toArray(tokens)` inlined via `foreachKey(tokens.add)`; (2) TextraListBox/
-            // SelectBox selectedIndex: lls `OrderedSet` does NOT extend `ObjectSet` (K37), inline
+            // SelectBox selectedIndex: lls `OrderedSet` does NOT extend `ObjectSet`, inline
             // `selection.items` directly. Font ctor/loadJSON: counted `CollectChainedCall` residue.
             new balticporter.transform.MethodBodyTransform(
               Map(
@@ -152,14 +152,13 @@ object TextraTypistPolicy:
             // emitted; must run after any seam re-pointing such a reference.
             balticporter.transform.PortMapTransform.forBases("sge")
           ),
-          // THE REFERENCE HAND PORT for sge-textra. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-textra. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/textra/src/main/scala").normalize)))
         )
       )
 
-  /** WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER (`ENGINE-LIMITS.md` CT8) — closed the way the REFERENCE HAND PORT closed it. `LinkEffect#onApply` calls `Gdx.net.openURI(link)` from a LAMBDA
-    * in a companion-initialised registry, where no context is threadable; the standard exits were priced and refused (`PROGRESS.md` §10.8.9). The hand port's own answer (§3.5): `retain` on
-    * `TextraLabel` plus `selfSupplied` reading `this.label.sgeContext`.
+  /** WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER — closed the way the REFERENCE HAND PORT closed it. `LinkEffect#onApply` calls `Gdx.net.openURI(link)` from a LAMBDA in a companion-initialised
+    * registry, where no context is threadable; the standard exits were priced and refused. The hand port's own answer: `retain` on `TextraLabel` plus `selfSupplied` reading `this.label.sgeContext`.
     */
   def globals: balticporter.transform.GlobalsToImplicitsTransform =
     new balticporter.transform.GlobalsToImplicitsTransform(

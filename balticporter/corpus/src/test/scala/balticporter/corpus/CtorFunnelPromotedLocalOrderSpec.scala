@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A PROMOTED constructor LOCAL keeps java's POSITION — `ENGINE-LIMITS.md` C12. */
+/** A PROMOTED constructor LOCAL keeps java's POSITION. */
 class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
 
   private val src =
@@ -75,7 +75,7 @@ class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
     */
   private def at(s: String): Int = out.linesIterator.indexWhere(_.contains(s))
 
-  // the `$p` suffixes below are §4.55's promotion rename, asserted deliberately: C12's fix moves
+  // the `$p` suffixes below are the promotion rename, asserted deliberately: this fix moves
   // the PLACEMENT only, and a rename that stopped firing would be a second change measured as one.
   test("a promoted local's initialiser runs where java's declaration stood, not at the head") {
     val assigned = at("this.h = holder$p")
@@ -109,7 +109,7 @@ class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
   }
 
   // -----------------------------------------------------------------------------------------
-  // …AND STEP 4 HAS TWO KINDS OF MEMBER IN IT. C12's own doc said the hoist "reproduces java
+  // …AND STEP 4 HAS TWO KINDS OF MEMBER IN IT. The stated rule was that the hoist "reproduces java
   // WHATEVER order the java file declared them in", which is true of fields ALONE and false the
   // moment an instance initialiser block is in the same class: JLS 12.5 step 4 runs field
   // initialisers and instance initialisers as ONE sequence, in TEXTUAL ORDER.

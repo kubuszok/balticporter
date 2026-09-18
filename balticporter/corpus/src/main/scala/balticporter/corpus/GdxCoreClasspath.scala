@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import java.nio.file.Path
 
-/** The libGDX core jar at the VENDORED tree's version, for a port that emits a SUBSET of `gdx/src`: the few types the subset references outside itself resolve as class-file externals (K15), where a
-  * whole-tree resolution root would ask a base contract for every type (ENGINE-LIMITS.md K43).
+/** The libGDX core jar at the VENDORED tree's version, for a port that emits a SUBSET of `gdx/src`: the few types the subset references outside itself resolve as class-file externals, where a
+  * whole-tree resolution root would ask a base contract for every type.
   */
 object GdxCoreClasspath:
   val Coordinates:             List[String] = List("com.badlogicgames.gdx:gdx:1.14.1")

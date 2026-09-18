@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, Pipeline, PorterNote, Reason }
 import balticporter.transform.CollectionsTransform
 
-/** A MINTED PARENT ANOTHER MINTED PARENT SUBSUMES is dropped — `ENGINE-LIMITS.md` K28.1. */
+/** A MINTED PARENT ANOTHER MINTED PARENT SUBSUMES is dropped. */
 class CollectionsSubsumedParentSpec extends PortSuite:
 
   private val src =
@@ -96,7 +96,7 @@ class CollectionsSubsumedParentSpec extends PortSuite:
     assertEquals(pairs.get("subsumed-by"), Some("scala.collection.mutable.Map"))
     assert(clue(pairs.getOrElse("dropped", "")).startsWith("balticporter.runtime.JavaIterable"))
     // …and it is RENDERED at the declaration. A dropped clause is text that is simply ABSENT, so
-    // the java `implements` line reads as untranslated and nothing local says why (§4.575).
+    // the java `implements` line reads as untranslated and nothing local says why.
     assert(PorterNote.Rendered.contains(Decision.Kind.SubsumedParent))
     assert(PorterNote.AtDeclaration.contains(Decision.Kind.SubsumedParent))
   }

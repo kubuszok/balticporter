@@ -4,7 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, RuleScope }
 import balticporter.transform.TypeRedirectTransform
 
-/** `TypeRedirectTransform` RETYPES declarations, so CLAUDE.md §1 owes it a `RuleScope` — and this suite is what says the scope is real rather than a constructor parameter nobody reads.
+/** `TypeRedirectTransform` RETYPES declarations, so a retyping phase owes it a `RuleScope` — and this suite is what says the scope is real rather than a constructor parameter nobody reads.
   */
 class TypeRedirectScopeSpec extends PortSuite:
 

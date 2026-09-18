@@ -9,8 +9,8 @@ import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** Migrate **anim8-gdx** (`src/main/java`, 16 types — GIF/PNG8/APNG writers, dithering/ palette-reduction machinery) through the TIR. Difficulty is per-LINE (19,594 lines, `PNG8` alone 8,351):
-  * enormous constant data and bulk bit-pattern arithmetic. A DEPENDENT port: `gdx/src` a RESOLUTION root, policy [[LibgdxPolicy.core]] EXTENDED (§1.5). No upstream suite; evidence is the hand-written
-  * suite in `ported/sge-anim8/src/test/scala` (CLAUDE.md §3).
+  * enormous constant data and bulk bit-pattern arithmetic. A DEPENDENT port: `gdx/src` a RESOLUTION root, policy [[LibgdxPolicy.core]] EXTENDED. No upstream suite; evidence is the hand-written suite
+  * in `ported/sge-anim8/src/test/scala`.
   */
 object Anim8Migrate:
 
@@ -67,7 +67,7 @@ object Anim8Policy:
           governs = Set("com.github.tommyettinger.anim8"),
           // sge puts anim8 at sge.anim8; libGDX's com.badlogic.gdx -> sge is INHERITED, not restated.
           packageRenames = Map("com.github.tommyettinger.anim8" -> "sge.anim8"),
-          // ONE PER-LOCATION SELECTION on `jdk-surface` (`DESIGN.md` §8.16/§8.21): 195 sites of
+          // ONE PER-LOCATION SELECTION on `jdk-surface`: 195 sites of
           // `java.util.Arrays.fill(<float[]>, 0, w, 0)` in dithering loops -- a primitive-array
           // receiver with no scala-collection image to map onto, so the phase's silence is coverage
           // by coincidence, examined and accepted. The other six `Arrays` rows stay: same shape, not
@@ -86,7 +86,7 @@ object Anim8Policy:
             // after any seam re-pointing such a reference.
             balticporter.transform.PortMapTransform.forBases("sge")
           ),
-          // THE REFERENCE HAND PORT for sge-anim8. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-anim8. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/anim8/src/main/scala").normalize)))
         )
       )

@@ -51,10 +51,10 @@ class InheritedFormalCastSpec extends munit.FunSuite:
   }
 
   test("a DIMENSION mismatch is PACKED, and the cast lands on the ELEMENT — never on the array") {
-    // The one cell where this rule and `ENGINE-LIMITS.md` G26's meet, and the reason the cast alone
+    // The one cell where this rule and the vararg-packing rule meet, and the reason the cast alone
     // was refused for a wave: at an `H[]...` slot java PACKS a one-dimensional argument into a fresh
     // `H[][]`, so a cast to the two-dimensional type is a `checkcast [[L…` against a value that is
-    // `[L…` — it COMPILES and throws at run time, which is the one direction §3 forbids.
+    // `[L…` — it COMPILES and throws at run time, which is the one direction a refusal must avoid.
     val out  = emitted(single)
     val flat = out.linesIterator.filter(_.contains("super.takeAll")).toList.filterNot(_.contains("hs.asInstanceOf[scala.Array[scala.Array"))
     assertEquals(clue(flat).size, 1, s"--- emitted ---\n$out")

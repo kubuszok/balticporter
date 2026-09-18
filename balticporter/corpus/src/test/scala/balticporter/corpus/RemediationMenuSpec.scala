@@ -55,7 +55,7 @@ class RemediationMenuSpec extends munit.FunSuite:
       Map("com.demo.Reflector" -> "substitutions-drop"),
       new RemediationTransform()
     )
-    // the type is STILL THERE — a refusal leaves the construct alone (ENGINE-LIMITS M6)
+    // the type is STILL THERE — a refusal leaves the construct alone
     assert(unitNames(out.after).contains("com.demo.Reflector"), unitNames(out.after))
     val plan = out.binder.resolutions
     assertEquals(plan.all, Nil)
@@ -112,7 +112,7 @@ class RemediationMenuSpec extends munit.FunSuite:
     // `Names#forName`; the redirect rewrites the wrapper's CALL SITES and leaves that body alone,
     // so the lane falls by nothing here. `drained` used to be the number of call sites of the
     // wrapper, which is neither the rows removed nor a number this lane holds — `resolved` gained N
-    // while the lane fell by 0, and `sum(drained)` is the one arithmetic §5's drain rule rests on.
+    // while the lane fell by 0, and `sum(drained)` is the one arithmetic the drain rule rests on.
     val caller =
       """package com.demo;
         |public class Uses {
@@ -203,7 +203,7 @@ class RemediationMenuSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // D2 — a dependent's Program CONTAINS its base's units, and a selection is INHERITED
+  // a dependent's Program CONTAINS its base's units, and a selection is INHERITED
   // -------------------------------------------------------------------------------------------
 
   /** run the phase under a `RunScope` this spec chooses — which is how a run reaches it: the two facts a phase may not derive (what this module EMITS, and which BACKENDS it is ported for) arrive on
@@ -223,7 +223,7 @@ class RemediationMenuSpec extends munit.FunSuite:
     underScope(sources, resolutions, phase, _ => RunScope.of(Set.empty, Map.empty))
 
   test("a base's selection does NOT re-apply in a dependent — the D2 guard both Wave B appliers carry") {
-    // `PortManifest.resolutions` is inherited (§8.16: a remedy decides emitted text at a shared
+    // `PortManifest.resolutions` is inherited (a remedy decides emitted text at a shared
     // declaration), and a dependent's model holds its base's units — so the key binds HERE too, at
     // the very same symbol. Unguarded, this phase drops a base's unit out of the dependent's model
     // and files `remediation(resolved)` rows and `SelectedRemedy` decisions about declarations this

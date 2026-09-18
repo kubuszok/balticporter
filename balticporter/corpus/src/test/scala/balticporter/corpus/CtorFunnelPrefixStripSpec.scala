@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ CtorFunnel, OmissionCheck, Pipeline }
 
-/** A10 / `ENGINE-LIMITS.md` C7 — the PREFIX STRIP, and the runtime shape it repairs. */
+/** The PREFIX STRIP, and the runtime shape it repairs. */
 class CtorFunnelPrefixStripSpec extends munit.FunSuite:
 
   private val src =
@@ -62,7 +62,7 @@ class CtorFunnelPrefixStripSpec extends munit.FunSuite:
   }
 
   test("…and the emitted class therefore installs ONE listener, not two, on that path") {
-    // the runtime shape, counted the way the C7 probe counts it: how many times `initialize()`
+    // the runtime shape, counted the way the promoted-body probe counts it: how many times `initialize()`
     // appears on the `Button(String)` construction path — class body once, secondary body zero.
     val body   = out.substring(out.indexOf("class Button private[demo] ()"), out.indexOf("class NotAPrefix"))
     val onPath = body.linesIterator.count(_.trim == "this.initialize()")

@@ -45,7 +45,7 @@ class TryResourceSpec extends PortSuite:
     assertEmits(p, "var primary$1: java.lang.Throwable = null")
     assertEmits(p, "primary$1.addSuppressed")
     // …and the body's own throwable is re-thrown rather than swallowed, which is also why this
-    // catch-all needs no §4.4 BreakGuard beside it: a `boundary.Break` crossing it is re-thrown.
+    // catch-all needs no BreakGuard beside it: a `boundary.Break` crossing it is re-thrown.
     assert(clue(p.out).contains("throw thrown$1"), p.out)
   }
 

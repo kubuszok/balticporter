@@ -4,8 +4,8 @@ import balticporter.tir.Reason
 import balticporter.transform.AddMembersTransform
 import balticporter.transform.AddMembersTransform.MemberSpec
 
-/** lls's ADDED API as a §1(c) VALUE: the members and factories the hand port put on the twelve types it ported, generated from ONE template per KIND (array / map / set) and applied by analogy to
-  * every sibling in the utilities family (`PROGRESS.md` §13.29). A member whose body would need `MkArray` or reflection is not here — that is a different rung.
+/** lls's ADDED API as a library-specific VALUE: the members and factories the hand port put on the twelve types it ported, generated from ONE template per KIND (array / map / set) and applied by
+  * analogy to every sibling in the utilities family. A member whose body would need `MkArray` or reflection is not here — that is a different rung.
   */
 object LlsEnrich:
 
@@ -89,7 +89,7 @@ object LlsEnrich:
     (common ++ removes).map((n, a, s) => spec(k.owner, n, a, s, why)) ++
       factories.map((n, a, s) => spec(k.owner, n, a, s, why, static = true))
 
-  /** `Array` alone carries java's `identity` FLAG on nine members. lls spelled the two settings as two names; both are ADDITIONS — java's flag-taking members stay (`PROGRESS.md` §13.29).
+  /** `Array` alone carries java's `identity` FLAG on nine members. lls spelled the two settings as two names; both are ADDITIONS — java's flag-taking members stay.
     */
   private def refArrayExtras: List[(String, MemberSpec)] =
     val S     = "lowlevel.util.DynamicArray[? <: T]"

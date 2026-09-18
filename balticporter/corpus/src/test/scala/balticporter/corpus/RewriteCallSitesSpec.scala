@@ -5,7 +5,7 @@ import balticporter.tir.*
 import balticporter.tir.RewriteCallSitesCheck.Issue
 import balticporter.transform.{ CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, RetargetBoundaryCheck }
 
-/** THE STANDING QUESTION every retyping phase owes — `Rewrite`, `RewriteCallSitesCheck`, and the `ENGINE-LIMITS.md` K5.6 sentence they close.
+/** THE STANDING QUESTION every retyping phase owes — `Rewrite`, `RewriteCallSitesCheck`, and the cast-re-examination obligation they close.
   */
 class RewriteCallSitesSpec extends PortSuite:
 
@@ -38,7 +38,7 @@ class RewriteCallSitesSpec extends PortSuite:
     def accountedBy:                                        Set[String] = account
     override def transformType(t: TypeRepr)(using Program): TypeRepr    = repoint(t)
 
-  /** …and the same rewrite with no account at all: the shape `ENGINE-LIMITS.md` K5.6 says can be reintroduced at any time, and which nothing in the engine could see.
+  /** …and the same rewrite with no account at all: the shape a cast around a moved type can be reintroduced at any time, and which nothing in the engine could see.
     */
   private class Unaccounted extends Phase:
     def name:                                               String   = "unaccounted-mover"
@@ -132,7 +132,7 @@ class RewriteCallSitesSpec extends PortSuite:
   test("…and with the artifact layer OFF the wiring question is NOT ASKED — an empty snapshot is not an answer") {
     val p = port(src, new Mover(Set("some-lane")))
     // `None` is "nothing recorded because nothing COULD record", which is what `CheckReport` reports
-    // when the layer is off (§5.1). Read as the empty SET it would say every accounted phase in the
+    // when the layer is off. Read as the empty SET it would say every accounted phase in the
     // engine is unwired — a finding manufactured by a diagnostic switch.
     assertEquals(RewriteCallSitesCheck.check(p.rewrites, scala.None), Nil)
     assertEquals(RewriteCallSitesCheck.check(p.rewrites, Some(Set.empty)).map(_.issue), List(Issue.UnwiredAccounting))

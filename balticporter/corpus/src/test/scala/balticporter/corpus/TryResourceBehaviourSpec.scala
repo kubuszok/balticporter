@@ -76,7 +76,7 @@ class TryResourceBehaviourSpec extends munit.FunSuite:
   }
 
   test("a JUMP out of the body still closes, and the catch-all RE-THROWS it") {
-    // `boundary.Break extends RuntimeException` (CLAUDE.md §4.4), so the catch-all sees it — and
+    // `boundary.Break extends RuntimeException`, so the catch-all sees it — and
     // re-throwing is what makes this arm need no BreakGuard beside it. Java's own semantics say
     // the resource closes on a jump too (JLS 14.20.3.1).
     val log = collection.mutable.ListBuffer.empty[String]

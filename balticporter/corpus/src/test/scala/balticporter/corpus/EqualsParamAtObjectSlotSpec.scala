@@ -2,8 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `ENGINE-LIMITS.md` G8.9 — the frontend widens a java `equals(Object)`'s parameter to `scala.Any` so that it OVERRIDES `Object.equals` instead of clashing with it, and every forwarding of that
-  * parameter to an `Object` slot then has an argument scala types as strictly wider.
+/** The frontend widens a java `equals(Object)`'s parameter to `scala.Any` so that it OVERRIDES `Object.equals` instead of clashing with it, and every forwarding of that parameter to an `Object` slot
+  * then has an argument scala types as strictly wider.
   */
 class EqualsParamAtObjectSlotSpec extends PortSuite:
 

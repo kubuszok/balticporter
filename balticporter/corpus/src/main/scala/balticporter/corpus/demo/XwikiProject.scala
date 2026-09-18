@@ -54,7 +54,7 @@ object XwikiProject:
     val srcDir = balticporter.sbtgen.SbtGen.managedMain(projRoot)
     if Files.exists(srcDir) then Files.walk(srcDir).iterator().asScala.toList.reverse.foreach(Files.delete)
 
-    // PLAN §7 whole-file overrides: hand-ported Scala for the irreducible
+    // Whole-file overrides: hand-ported Scala for the irreducible
     // F-bounded / same-erasure-varargs families the engine can't mechanize
     // (keyed by the flattened package path; each must carry the header). The unit
     // is still parsed for cross-closure resolution — only its OUTPUT is replaced.

@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, Pipeline, PorterNote, Program, Reason }
 import balticporter.transform.CollectionsTransform
 
-/** A `super.<JDK DEFAULT>` ON A CLASS THE PHASE RE-PARENTED — `ENGINE-LIMITS.md` K29, and `CLAUDE.md` §1's *an obligation the engine's own translation created*.
+/** A `super.<JDK DEFAULT>` ON A CLASS THE PHASE RE-PARENTED — an obligation the engine's own translation created.
   */
 class CollectionsSuperDefaultSpec extends PortSuite:
 
@@ -57,7 +57,7 @@ class CollectionsSuperDefaultSpec extends PortSuite:
     val ps  = PorterNote.pairs(one).toMap
     assertEquals(ps.get("was"), Some("super.containsAll"))
     // the licence itself, at the line — an agent reading the emitted file cannot otherwise recover
-    // WHY a `super` call became a static call on `this` (§4.575).
+    // WHY a `super` call became a static call on `this`.
     assert(clue(ps.getOrElse("jdkDefault", "")).contains("!contains(e)"))
     // …and it is rendered where the member is, not in a sibling TSV.
     assert(PorterNote.Rendered.contains(Decision.Kind.SubstitutedCall))
@@ -73,7 +73,7 @@ class CollectionsSuperDefaultSpec extends PortSuite:
     // `superPlaced` refuses it for exactly the reason it used to refuse them. What separates them
     // is not the shape of the rewrite: it is that `AbstractList.subList` reads the receiver's own
     // FIELDS, so no helper standing on `this` computes what `super` named. The call stays as java
-    // wrote it and fails to compile naming the member, which is M6's refusal working.
+    // wrote it and fails to compile naming the member, which is the refusal working.
     val out = emitted(src)
     assert(out.contains("super.subList("), out)
     assert(!out.contains("JavaCollections.subList(this,"), out)
@@ -100,7 +100,7 @@ class CollectionsSuperDefaultSpec extends PortSuite:
 
   test("NEGATIVE — a class the phase did NOT re-parent is owed nothing") {
     // No mapped parent means `parentClash` has no entry, `super.containsAll` still resolves to the
-    // library's own member, and the phase has no standing to say anything about it (§4.56).
+    // library's own member, and the phase has no standing to say anything about it.
     val out = emitted(
       """package demo;
         |import java.util.*;
@@ -116,8 +116,8 @@ class CollectionsSuperDefaultSpec extends PortSuite:
 
   test("NEGATIVE — a SHIM parent already HAS java's members, which is K29's two-way bind") {
     // `java.util.AbstractCollection` maps to the shim, which carries java's own member NAMES and
-    // arity by construction (§4.5) — so `super.containsAll(c)` resolves there and there is nothing
-    // to supply. This is precisely why `AbstractCollection` never had K29's problem and
+    // arity by construction — so `super.containsAll(c)` resolves there and there is nothing
+    // to supply. This is precisely why `AbstractCollection` never had this problem and
     // `AbstractSet` does: the difference is the target, not the member.
     val out = emitted(
       """package demo;

@@ -10,7 +10,7 @@ import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** Migrate **libgdx-screenmanager** (`src/main/java`, 22 types — a screen stack, transition queue, eleven concrete transitions) through the TIR. A DEPENDENT port (`gdx/src` a RESOLUTION root,
-  * [[LibgdxPolicy.core]] EXTENDED, §1.5), with a SECOND dependency, guacamole, which RESOLVES via [[ScreensClasspath]] but cannot be EMITTED — re-pointed at hand-written Scala this port ships
+  * [[LibgdxPolicy.core]] EXTENDED), with a SECOND dependency, guacamole, which RESOLVES via [[ScreensClasspath]] but cannot be EMITTED — re-pointed at hand-written Scala this port ships
   * ([[TypeRedirectTransform]]). Scope: `src/main/java` only.
   */
 object ScreensMigrate:
@@ -108,25 +108,25 @@ object ScreensPolicy:
             ),
             balticporter.transform.PortMapTransform.forBases("sge")
           ),
-          // THE REFERENCE HAND PORT for sge-screens. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-screens. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/screens/src/main/scala").normalize)))
         )
       )
 
   /** screenmanager's OWN nullability annotation (`org.jspecify.annotations.Nullable`), a SECOND `NullabilityTransform` instance rather than a line in the base's set — folding it in would report
-    * `never-fired` on every libGDX lane forever. `MergeablePolicy` composes both halves (§8.13). K13 CLOSED: `Named("lowlevel.Nullable")` composes at every `T`. CONSUMED (stripped from every
-    * declaration), so `jspecify` stays only on the FRONTEND classpath.
+    * `never-fired` on every libGDX lane forever. `MergeablePolicy` composes both halves: `Named("lowlevel.Nullable")` composes at every `T`. CONSUMED (stripped from every declaration), so `jspecify`
+    * stays only on the FRONTEND classpath.
     */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(annotations = Set("org.jspecify.annotations.Nullable"))
 
   /** The guacamole seam: `com.github.crykn.guacamole:gdx`'s types RESOLVE (via [[ScreensClasspath]]) but cannot be EMITTED, since this run converts no guacamole compilation unit -- re-pointed at
-    * Scala this port ships (`ported/sge-screens/src/main/scala/sge/screen/guacamole`, hand-written per CLAUDE.md §5.5). This table retires the day guacamole becomes a corpus port of its own.
+    * Scala this port ships (`ported/sge-screens/src/main/scala/sge/screen/guacamole`, hand-written). This table retires the day guacamole becomes a corpus port of its own.
     */
   def guacamole: TypeRedirectTransform = new TypeRedirectTransform(
     Map(
       // NestableFrameBuffer is why upstream depends on guacamole at all, and its ABSENCE
-      // from the reference hand port is a behavioural defect (PROGRESS.md §1.1).
+      // from the reference hand port is a behavioural defect.
       "de.damios.guacamole.gdx.graphics.NestableFrameBuffer" -> "sge.screen.guacamole.NestableFrameBuffer",
       "de.damios.guacamole.gdx.graphics.GLUtils" -> "sge.screen.guacamole.GLUtils",
       "de.damios.guacamole.gdx.graphics.QuadMeshGenerator" -> "sge.screen.guacamole.QuadMeshGenerator",

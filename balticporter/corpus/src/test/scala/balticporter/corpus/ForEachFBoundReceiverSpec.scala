@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** AN F-BOUNDED TYPE APPLIED TO A WILDCARD CANNOT CAPTURE-CONVERT — `ENGINE-LIMITS.md` G31. */
+/** AN F-BOUNDED TYPE APPLIED TO A WILDCARD CANNOT CAPTURE-CONVERT. */
 class ForEachFBoundReceiverSpec extends PortSuite:
 
   test("a `for` over an F-bounded wildcard receiver iterates at the Iterable supertype java read") {
@@ -21,7 +21,7 @@ class ForEachFBoundReceiverSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    // K9: the F-bound fix casts the receiver to `java.lang.Iterable[Object]`, and that type is a
+    // The F-bound fix casts the receiver to `java.lang.Iterable[Object]`, and that type is a
     // kept JDK iterable — so the emitter uses the while-loop form (JLS 14.14.2). The upcast still
     // appears inside the iterator binding, which is correct: it evaluates the iterable once.
     assertEmits(p, "builder.asInstanceOf[java.lang.Iterable[java.lang.Object]].iterator()")
@@ -42,7 +42,7 @@ class ForEachFBoundReceiverSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    // K9 (2026-09-05): a program type reaching `java.lang.Iterable` with no `foreach` iterates by
+    // A program type reaching `java.lang.Iterable` with no `foreach` iterates by
     // java's own protocol; the F-bound guard still interposes no view.
     assertEmits(p, "xs.iterator()")
     assertNotEmits(p, "xs.asInstanceOf[java.lang.Iterable")
@@ -60,7 +60,7 @@ class ForEachFBoundReceiverSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    // K9 (2026-09-05): a program type reaching `java.lang.Iterable` with no `foreach` iterates by
+    // A program type reaching `java.lang.Iterable` with no `foreach` iterates by
     // java's own protocol; the F-bound guard still interposes no view.
     assertEmits(p, "xs.iterator()")
     assertNotEmits(p, "xs.asInstanceOf[java.lang.Iterable")

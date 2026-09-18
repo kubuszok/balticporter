@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A JAVA `@interface` AND ITS ELEMENTS — `ENGINE-LIMITS.md` T22. */
+/** A JAVA `@interface` AND ITS ELEMENTS. */
 class AnnotationTypeSpec extends PortSuite:
 
   test("an @interface's ELEMENTS become the emitted class's parameters, with java's defaults") {
@@ -44,7 +44,7 @@ class AnnotationTypeSpec extends PortSuite:
   }
 
   test("an EXTERNAL annotation's element keeps its parens — the class file is java's, not this port's") {
-    // §4.56: the arm asks PROGRAM OWNERSHIP, never a name and never a package prefix. Scalac reads
+    // The arm asks PROGRAM OWNERSHIP, never a name and never a package prefix. Scalac reads
     // `java.lang.annotation.Retention` out of a class file, where `value()` is a method.
     val p = port(
       "package p;\n" +

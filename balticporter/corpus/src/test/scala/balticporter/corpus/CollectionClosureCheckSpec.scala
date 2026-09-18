@@ -50,7 +50,7 @@ class CollectionClosureCheckSpec extends PortSuite:
     // `java.lang.Iterable`, which is also mapped and also an ancestor — and useless as advice.
     assertEquals(vs.map(_.coveredBy).distinct, List("java.util.List"))
     assertEquals(vs.map(_.mapsTo).distinct, List("scala.collection.mutable.Buffer"))
-    // located, so the finding is actionable without opening the emitted file (CLAUDE.md §5.1).
+    // located, so the finding is actionable without opening the emitted file.
     assert(vs.forall(_.origin.line > 0), clue(vs.map(_.origin.line)))
     assert(clue(CollectionClosureCheck.summary(vs)).contains("java.util.concurrent.CopyOnWriteArrayList"))
   }
@@ -80,7 +80,7 @@ class CollectionClosureCheckSpec extends PortSuite:
 
   test("a JDK type unrelated to anything mapped is NOT reported — the family is decided by the edges") {
     // `java.util.Random` and `java.util.Comparator` live in `java.util` and are not collections.
-    // A check that decided the family from the PACKAGE would report both (CLAUDE.md §4.56 — a
+    // A check that decided the family from the PACKAGE would report both (a
     // prefix is not a structural fact), which is exactly the noise that makes a check unread.
     val ph = new CollectionsTransform
     val p  = port(
@@ -100,7 +100,7 @@ class CollectionClosureCheckSpec extends PortSuite:
 
   test("an ABSTRACT base a library extends is covered too — K5's shape, as a finding") {
     // `java.util.AbstractList` is what a library EXTENDS while `java.util.List` is what it
-    // DECLARES, and the two disagreeing is 13 of simple-graphs' 20 errors (ENGINE-LIMITS K5).
+    // DECLARES, and the two disagreeing is 13 of simple-graphs' 20 errors.
     // `AbstractCollection` is mapped, so this is the SAME hole one level down.
     val ph = new CollectionsTransform
     val p  = port(
@@ -158,8 +158,8 @@ class CollectionClosureCheckSpec extends PortSuite:
     // Unfiltered, this check reported the SAME two findings for libGDX core, libGDX's test suite
     // and both Ashley source sets: `AsyncExecutor`'s two `java.util.concurrent` queues, seen four
     // times, three of them by a repository that cannot act on them. A finding an agent cannot fix
-    // in its own repository is CLAUDE.md §4.45's "cannot classify" failure with a plausible owner
-    // attached (ENGINE-LIMITS D2).
+    // in its own repository is a "cannot classify" failure with a plausible owner
+    // attached.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;

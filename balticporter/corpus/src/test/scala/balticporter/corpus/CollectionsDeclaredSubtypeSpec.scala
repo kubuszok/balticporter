@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** K26's `DeclaredSubtype` half, CLOSED AT THE SLOT — a value the PROGRAM declares, meeting a shim. */
+/** The `DeclaredSubtype` half, CLOSED AT THE SLOT — a value the PROGRAM declares, meeting a shim. */
 class CollectionsDeclaredSubtypeSpec extends PortSuite:
 
   private val setSubtype =
@@ -52,7 +52,7 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
       new CollectionsTransform
     )
     // the slot is a formal THIS PROGRAM DECLARES, which is where `coerce` is reached at all: a
-    // call at a symbol the PHASE MINTED carries no signature, and K26 records that third blindness
+    // call at a symbol the PHASE MINTED carries no signature, and this check records that third blindness
     // with the number the operand-only arm measured (2 rows, 1 of them false).
     assertEmits(p, "this.take(balticporter.runtime.JavaCollection.from(r))")
   }
@@ -81,7 +81,7 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // §4.56's fast-path rule: a test written for the shape in front of you answers for that shape
+    // The fast-path rule: a test written for the shape in front of you answers for that shape
     // and silently declines for every one added since. `Leaf` is re-parented exactly as much as
     // `Base` is — through it.
     assertEmits(p, "a.retainAll(balticporter.runtime.JavaCollection.fromSet(b))")
@@ -97,8 +97,8 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
       new CollectionsTransform
     )
     // `Feed` is emitted `extends JavaCollection[E]`, so it IS the slot's type. A wrap here would be
-    // a factory call around a value that already conforms — the over-approximation `CLAUDE.md` §5
-    // has no instrument for.
+    // a factory call around a value that already conforms — the over-approximation no check
+    // has an instrument for.
     assertNotEmits(p, "JavaCollection.from(f)")
     assertNotEmits(p, "JavaCollection.fromSet(f)")
   }
@@ -112,7 +112,7 @@ class CollectionsDeclaredSubtypeSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // nothing re-parented `Loose`, so the phase has no standing to say what it is (§4.56) and
+    // nothing re-parented `Loose`, so the phase has no standing to say what it is, and
     // guessing a factory would be a wrap that cannot compile.
     assertNotEmits(p, "JavaCollection.from(l)")
     assertNotEmits(p, "JavaCollection.fromSet(l)")

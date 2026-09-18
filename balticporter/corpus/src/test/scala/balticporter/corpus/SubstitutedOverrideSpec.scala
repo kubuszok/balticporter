@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `override` ACROSS A SUBSTITUTION — `ENGINE-LIMITS.md` K28.2. */
+/** `override` ACROSS A SUBSTITUTION. */
 class SubstitutedOverrideSpec extends PortSuite:
 
   private val files = List(

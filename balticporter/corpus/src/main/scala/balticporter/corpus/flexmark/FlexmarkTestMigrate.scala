@@ -7,8 +7,8 @@ import java.io.File
 import java.nio.file.{ Files, Path }
 
 /** Port **flexmark-util**'s own JUnit suite — 52 files, **730 plain `@Test`** — through the same pipeline as milestone 1's twelve modules: `.../ports/ssg-md/test.conf`. The port's FIRST behavioural
-  * evidence (§3: an error count is typer-only), living in the `flexmark-util` AGGREGATOR module. Its two refusals (`@Rule ExpectedException`, nine `@RunWith(Suite.class)`) are reported with §1's
-  * classification, as a DEPENDENT of [[FlexmarkMigrate]] (§1.5).
+  * evidence (an error count is typer-only), living in the `flexmark-util` AGGREGATOR module. Its two refusals (`@Rule ExpectedException`, nine `@RunWith(Suite.class)`) are reported with the
+  * classification, as a DEPENDENT of [[FlexmarkMigrate]].
   */
 object FlexmarkTestMigrate:
 
@@ -18,7 +18,7 @@ object FlexmarkTestMigrate:
 
 /** flexmark's TEST frontend classpath: everything [[FlexmarkClasspath]] resolves, plus JUnit — exactly ONE test-scope coordinate (`junit:junit`, version pinned by the parent pom's
   * `dependencyManagement`); `hamcrest-core` arrives transitively and is deliberately NOT named. The MAIN classpath is included since `resolutionRoots` is flexmark's Java source, delegated to
-  * [[FlexmarkClasspath]]'s `ensure`, never duplicated. Written to a FILE, not inlined (§1.5).
+  * [[FlexmarkClasspath]]'s `ensure`, never duplicated. Written to a FILE, not inlined.
   */
 object FlexmarkTestClasspath:
 

@@ -9,8 +9,8 @@ import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** Migrate **gdx-gltf** (`gltf/src`, 135 types / 11,307 lines — a glTF 2.0 loader, exporter and PBR rendering pipeline for libGDX) through the TIR. Largest port after libGDX core, first whose
-  * difficulty is INHERITANCE DEPTH: 135 types stacked on libGDX's 3D pipeline, every parent EMITTED Scala this run never sees (§1.5). A DEPENDENT port: `gdx/src` a RESOLUTION root,
-  * [[LibgdxPolicy.core]] EXTENDED. Scope: `gltf/src` plus one real test file (see [[GltfTestMigrate]]).
+  * difficulty is INHERITANCE DEPTH: 135 types stacked on libGDX's 3D pipeline, every parent EMITTED Scala this run never sees. A DEPENDENT port: `gdx/src` a RESOLUTION root, [[LibgdxPolicy.core]]
+  * EXTENDED. Scope: `gltf/src` plus one real test file (see [[GltfTestMigrate]]).
   */
 object GltfMigrate:
 
@@ -68,10 +68,10 @@ object GltfPolicy:
           // sge puts gdx-gltf at sge.gltf, package for package. libGDX's own
           // com.badlogic.gdx -> sge is INHERITED, not restated.
           packageRenames = Map("net.mgsx.gltf" -> "sge.gltf"),
-          // ONE PER-LOCATION SELECTION (`DESIGN.md` §8.16/§8.21): CtorFunnel promoted the NILARY
+          // ONE PER-LOCATION SELECTION: CtorFunnel promoted the NILARY
           // GLTFLoaderBase() (java body `this(null)`), so its five statements run on EVERY
           // construction path. `promotionEscapes` deliberately does not decide whether this MATTERS
-          // (C6/C7) — READ at this site: all four discarded objects have no-arg constructors
+          // — READ at this site: all four discarded objects have no-arg constructors
           // initialising only their own empty containers, so nothing observes the waste.
           resolutions = Map(
             "net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver)" -> "accept-promoted-body"
@@ -79,14 +79,14 @@ object GltfPolicy:
           // 3.1az: GLTFMorphTarget extends ObjectMap<String, Integer>, and lls ObjectMap is
           // final -- the hand port extends HashMap[String, Int] instead (Json.Serializable is
           // dead, Json is dropped by the base); the injected replacement reproduces that shape
-          // (K37 SubclassOfTarget, §1c).
+          // (a library-specific rule).
           dropTypes = Set("net.mgsx.gltf.data.geometry.GLTFMorphTarget"),
           // gdx-gltf's OWN replacements. `inject` is not inherited — exactly one module ships each
           // replacement file, and libGDX core ships the ones for the types IT dropped.
           inject = List(repoRoot.resolve("balticporter/corpus/gltf-overrides")),
           surface = List(
             // THE THREE REFLECTIVE SITES are a GWT workaround, not a genuine need: two say so in an
-            // upstream comment. CLAUDE.md §3.5: the reference hand port SOLVED both the same way,
+            // upstream comment. The reference hand port SOLVED both the same way,
             // making the direct call the facade was emulating (WebGL guard kept). KEY is upstream
             // namespace (matched before rename); BODY is the port's FINAL namespace (spliced
             // verbatim).
@@ -116,13 +116,13 @@ object GltfPolicy:
                 // A THIRD entry (GLTFMaterialExporter#ext) is retired by `RegistryTransform` below:
                 // the registry is MINTED, so the body is java's own again.
                 // A FOURTH entry (AnimationsPlayer#clearAnimations, an ascription working around
-                // ENGINE-LIMITS T12's dropped `protected`) retired once T12 closed: DESIGN.md §8.7
-                // renders `protected` as `protected[<package>]` and matches javac's resolution.
+                // a then-dropped `protected`) retired once the emitter started
+                // rendering `protected` as `protected[<package>]`, matching javac's resolution.
               )
             ),
             // gdx-gltf's ONE reflective instantiation: `GLTFMaterialExporter#ext` fabricates a
             // material-extension object from its `Class`. The registry is MINTED at the placement
-            // (`ENGINE-LIMITS.md` P10) and replaces the injected `GLTFExtensionFactories.scala`;
+            // and replaces the injected `GLTFExtensionFactories.scala`;
             // `seeds` are the seven extensions upstream itself defines, `handles` names the
             // exception whose thrower this retires, and `miss` restates java's own answer.
             new balticporter.transform.RegistryTransform(
@@ -157,7 +157,7 @@ object GltfPolicy:
             // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted.
             balticporter.transform.PortMapTransform.forBases("sge")
           ),
-          // THE REFERENCE HAND PORT for sge-gltf. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-gltf. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/gltf/src/main/scala").normalize)))
         )
       )

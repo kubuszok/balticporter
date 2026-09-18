@@ -6,7 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program }
 import balticporter.transform.PackageRenameTransform
 
-/** `PackageRenameTransform` — the §1(b) phase that moves a port out of the upstream namespace. */
+/** `PackageRenameTransform` — the parameterised phase that moves a port out of the upstream namespace. */
 class PackageRenameTransformSpec extends munit.FunSuite:
 
   private val src =
@@ -124,7 +124,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // the check (CLAUDE.md §3 — a translation path gets a check at the same time)
+  // the check — a translation path gets a check at the same time it gets a translation
   // ---------------------------------------------------------------------------
 
   test("check counts what will move before the phase, and reports zero residue after it") {
@@ -150,7 +150,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // M6 — the PER-TYPE maps: `typeRenames`, `subPackages`, `flattenNestedTypes`
+  // the PER-TYPE maps: `typeRenames`, `subPackages`, `flattenNestedTypes`
 
   private def phase(
     pkg:   Map[String, String] = Map.empty,
@@ -314,7 +314,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // THE PACKAGE-SPLIT RULE (DESIGN.md §8.7) — M6 falsifies the no-split premise
+  // THE PACKAGE-SPLIT RULE — a case that falsifies the no-split premise
   // ---------------------------------------------------------------------------
 
   private val splitSrc =
@@ -359,7 +359,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
     assertEquals(rows.head.detail("cause"), "package-split")
     assertEquals(rows.head.detail("type"), "com.example.demo.Alpha")
     assertEquals(rows.head.detail("reader"), "com.example.demo.Beta#use")
-    // §1's classification is on the row, because which repository the fix lives in is the reader's
+    // The classification is on the row, because which repository the fix lives in is the reader's
     // first question — and this one is CONFIGURED, exactly as `package-merge` is.
     assertEquals(rows.head.reason.className, "configured")
   }
@@ -374,7 +374,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   test("a SUB-PACKAGE move blocks only the OUTGOING half — subpackage nesting widens, never blocks") {
-    // DESIGN.md §8.7. Scala's `private[p]` covers `p` AND its subpackages, so nesting a type under
+    // Scala's `private[p]` covers `p` AND its subpackages, so nesting a type under
     // `p.internal` keeps everything `p` restricts reachable FROM it. What it does take away is the
     // other direction, and only that half is a split.
     val incoming =
@@ -421,7 +421,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // the table the RUN reads for BOTH namespaces (§4.56), and the check
+  // the table the RUN reads for BOTH namespaces, and the check
   // ---------------------------------------------------------------------------
 
   test("the accepted table carries both namespaces, and a REFUSED entry is not in it") {
@@ -443,7 +443,7 @@ class PackageRenameTransformSpec extends munit.FunSuite:
   }
 
   // ---------------------------------------------------------------------------
-  // an UNOWNED symbol under a port prefix — CLAUDE.md §4.56: a class-file FQN no phase may move
+  // an UNOWNED symbol under a port prefix — a class-file FQN no phase may move
   // ---------------------------------------------------------------------------
 
   private val withExternal = SpoonTir.fromSource(

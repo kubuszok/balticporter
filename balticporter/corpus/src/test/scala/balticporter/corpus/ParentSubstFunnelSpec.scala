@@ -5,7 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
 /** A SYNTHESISED PRIMARY's slots are the PARENT CONSTRUCTOR's formals, and those formals are written in the parent's scope — so they take the same substitution the diamond forwarder does
-  * (`balticporter.tir.ParentSubst`, `CLAUDE.md` §4.56: one derivation, not one per caller).
+  * (`balticporter.tir.ParentSubst`: one derivation, not one per caller).
   */
 class ParentSubstFunnelSpec extends munit.FunSuite:
 

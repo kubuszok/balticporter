@@ -2,7 +2,8 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** Java's array covariance (JLS 10.10) asked at the RENDERING, because java's own erasure can write both sides of the slot as one type — `ENGINE-LIMITS.md` G13.5, which is §0's rule read at a slot.
+/** Java's array covariance (JLS 10.10) asked at the RENDERING, because java's own erasure can write both sides of the slot as one type, so the check also compares the rendered Scala types read at a
+  * slot.
   */
 class ArrayCovarianceRenderedSpec extends PortSuite:
 
@@ -46,7 +47,7 @@ class ArrayCovarianceRenderedSpec extends PortSuite:
         |""".stripMargin
     )
     // the predicate declines by arithmetic here, which is what keeps it from putting a no-op
-    // `asInstanceOf` on every array initialiser in every port — the over-approximation §5 has no
+    // `asInstanceOf` on every array initialiser in every port — the over-approximation no measure has
     // instrument for.
     assertNotEmits(p, "xs: scala.Array[java.lang.String] = demo.Same.names().asInstanceOf")
   }

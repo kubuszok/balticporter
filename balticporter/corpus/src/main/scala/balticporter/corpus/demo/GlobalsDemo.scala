@@ -6,7 +6,7 @@ import balticporter.tir.Pipeline
 import balticporter.transform.{ ContextHolder, ContextType, GlobalsToImplicitsTransform }
 
 /** Demonstrates globals → context: a class `Config` whose `static` state is ambient context becomes a value threaded as an anonymous `(using Ctx)` through every declaration that reaches it — found by
-  * the five-edge closure, not the call graph — with every read rewritten to a summon, and NO ambient `given` anywhere (DESIGN.md §8.4).
+  * the five-edge closure, not the call graph — with every read rewritten to a summon, and NO ambient `given` anywhere.
   */
 object GlobalsDemo:
 

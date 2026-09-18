@@ -94,7 +94,7 @@ class SamLambdaTransformSpec extends PortSuite:
   }
 
   test("…and the refusal that USED to fire there is counted at ZERO for it") {
-    // `OmissionCheck.unnameableLambdaReturn` is M6's residue turned into a number. The point of
+    // `OmissionCheck.unnameableLambdaReturn` turns a refused residue into a number. The point of
     // asserting it here is the NARROWING: this exact tree used to be the residue, and after the
     // thread it is not, so the count is evidence about the fix rather than about the corpus.
     val p = port(valuedReturn, new SamLambdaTransform)
@@ -102,7 +102,7 @@ class SamLambdaTransformSpec extends PortSuite:
   }
 
   test("a GENERIC SAM result is ADAPTED at the target — `Supplier<String>.get` is `String` here") {
-    // This tree used to be M6's standing residue: `Supplier.get` is declared `T get()`, `T` is not
+    // This tree used to be a standing refused residue: `Supplier.get` is declared `T get()`, `T` is not
     // a name the emitted code can write, and the refusal's stated reason was that substituting the
     // REFERENCE's actual arguments for the DECLARATION's formals is a different mechanism from
     // reading a class file.
@@ -121,8 +121,8 @@ class SamLambdaTransformSpec extends PortSuite:
     // The other half of the narrowing, and what makes the zero above mean anything. A raw
     // `Supplier` supplies no argument for `T`, so the adapted result still mentions a type variable
     // and the emitter refuses rather than erasing to `Object` — which would compile and mean
-    // something else (§4.6's fabricated fact). Non-vacuity by FIXTURE, since the corpus has no such
-    // site, which is exactly the state a residue count is worthless without (§3).
+    // something else. Non-vacuity by FIXTURE, since the corpus has no such
+    // site, which is exactly the state a residue count is worthless without.
     val p = port(
       """class C {
         |  @SuppressWarnings("rawtypes")
@@ -163,7 +163,7 @@ class SamLambdaTransformSpec extends PortSuite:
   }
 
   test("the DECISION is subjected at the ENCLOSING DECLARATION, never at the site") {
-    // `CLAUDE.md` §5.1's granularity rule, and here it is also what makes the wave's blast
+    // The granularity rule, and here it is also what makes the wave's blast
     // classification COMPUTABLE: a decision subjected at a `Tree.New` has no declaration symbol for
     // `members.tsv` to be joined on, so every converted site would land in the unexplained residue
     // and the gate would fail on its own successes.
@@ -190,7 +190,7 @@ class SamLambdaTransformSpec extends PortSuite:
   test("the decision RECORDS the residue no guard can reach — java's STABLE class name") {
     // A capturing lambda allocates per evaluation, which is what guard 5 buys; its CLASS is still
     // not the anonymous class's. Nothing structural can reach that (every reference to a value can
-    // reach `getClass()`), so it is counted where §4.45's reader is: on the conversion's own row.
+    // reach `getClass()`), so it is counted where an agent reading the report would look: on the conversion's own row.
     val p = port(runnable, new SamLambdaTransform)
     val d = p.decisions.find(_.kind == Decision.Kind.SamLambda).get
     assert(clue(d.detail.getOrElse("was", "")).nonEmpty, "the java class name is not recorded")
@@ -198,7 +198,7 @@ class SamLambdaTransformSpec extends PortSuite:
   }
 
   test("…and a conversion inside a LOCAL `val` is claimed by the enclosing MEMBER, not by the local") {
-    // The failure D3's rule exists to prevent, and it is silent: a decision subjected at a local has
+    // The failure this rule exists to prevent, and it is silent: a decision subjected at a local has
     // no row in `members.tsv` for the wave's blast classification to join on, so every converted
     // site would land in the unexplained residue and the gate would fail on its own successes.
     val p = port(
@@ -234,7 +234,7 @@ class SamLambdaTransformSpec extends PortSuite:
       "     not assumed, because the guard it would have justified is not free"
   ) {
     // The ascription is `nw.tpt`, and for a RAW generic use this engine renders `[?]` (the reference
-    // port's own answer, §3.5). So a raw `new Comparator(){…}` emits
+    // port's own answer). So a raw `new Comparator(){…}` emits
     // `((a, b) => …): java.util.Comparator[?]`, and a scala lambda at a WILDCARD-APPLIED type is a
     // shape worth doubting: if scalac refuses to instantiate a SAM there, the conversion is a
     // compile error the corpus cannot see, because no corpus site has this shape.

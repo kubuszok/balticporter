@@ -5,8 +5,8 @@ import balticporter.runner.PortConfig
 import java.nio.file.Path
 
 /** Migrate **noise4j** (`src`, 12 types — dependency-free procedural map-generation). First corpus library with **Java enum constant bodies** — the reference hand port REWROTE each into an ordinary
-  * `enum` plus `this match`, a redesign no mechanical engine may copy. Also: an unqualified interface CONSTANT read, `continue` in a doubly-nested `for` (§4.4), and `java.util` mutation through the
-  * iterator (why this port runs no `collections` phase).
+  * `enum` plus `this match`, a redesign no mechanical engine may copy. Also: an unqualified interface CONSTANT read, `continue` in a doubly-nested `for`, and `java.util` mutation through the iterator
+  * (why this port runs no `collections` phase).
   */
 object Noise4jMigrate:
 

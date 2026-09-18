@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `ENGINE-LIMITS.md` G8.10 — java's UNCHECKED override, where an F-BOUNDED result-only method type parameter is erased at the DECLARATION.
+/** Java's UNCHECKED override, where an F-BOUNDED result-only method type parameter is erased at the DECLARATION.
   */
 class UncheckedErasureOverrideSpec extends PortSuite:
 
@@ -81,7 +81,7 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |""".stripMargin
     )
     // `class MyNode implements Node` satisfies `N <: Node` perfectly, and java callers DO write it;
-    // erasing this to `Node` would throw away the caller's own answer (G8's conjunct).
+    // erasing this to `Node` would throw away the caller's own answer.
     assertEmits(p, "def first[N <: demo.Node]")
   }
 
@@ -94,7 +94,7 @@ class UncheckedErasureOverrideSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    // java's `<T>` IS `<T extends Object>` (§4.55's own note), which is a bound with no variable in
+    // java's `<T>` IS `<T extends Object>`, which is a bound with no variable in
     // it — the clause survives, which is the point.
     assertEmits(p, "def emptyList[T <: java.lang.Object]")
   }

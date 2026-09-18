@@ -58,7 +58,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
 
     // `test("one") { … }` obviously came from a `@Test`. That setUp and tearDown were INLINED into
     // its body is exactly what the emitted file cannot tell you was a DECISION — and it is where
-    // both of §4.4's lifecycle defects lived.
+    // both lifecycle defects lived.
     assert(ds.forall(_.detail("inlined") == "setUp, tearDown"), clue(ds.map(_.detail("inlined"))))
     // and `@Test(expected = …)` is recorded as the intercept it became, not lost in the body
     assertEquals(ds.head.detail("intercept"), "java.lang.IllegalStateException")
@@ -108,7 +108,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   test("@Ignore registers a DISABLED test, not an enabled one") {
     val (out, _) = emit(ignoreSrc)
     // `munit.TestOptions(...)` rather than `"name".ignore`: the latter needs MUnit's implicit
-    // String conversion, and this phase emits fully-qualified names with no imports (CLAUDE.md §6).
+    // String conversion, and this phase emits fully-qualified names with no imports.
     assert(clue(out).contains("test(munit.TestOptions(\"broken\").ignore)"))
     // the un-ignored one is untouched, and the ignored one is NOT also registered plainly.
     assert(out.contains("test(\"live\")"))
@@ -174,7 +174,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   // ------------------------------------------------------ a test HIERARCHY --
 
   /** Java's ordinary inherited-suite shape: an abstract root with no `@Test`, an abstract middle that declares the one `@Test`, a subclass that OVERRIDES it, and a concrete leaf that inherits it.
-    * Both halves of the structural transform break on this and neither is visible from the class being converted (`DESIGN.md` §3.6).
+    * Both halves of the structural transform break on this and neither is visible from the class being converted.
     */
   private val hierarchySrc =
     """package demo;
@@ -328,7 +328,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(out.contains("munit.Assertions.assertEquals(b, false)"))
     assert(out.contains("munit.Assertions.assertEquals(o, null)"))
     assert(out.contains("munit.Assertions.assertNotEquals(o, null)"))
-    // REFERENCE identity: scala's `==` is java's `equals` (CLAUDE.md §4.4), so assertEquals here
+    // REFERENCE identity: scala's `==` is java's `equals`, so assertEquals here
     // would silently weaken the assertion into a value comparison that usually still passes.
     assert(out.contains("munit.Assertions.assert(s eq o)"))
     assert(out.contains("munit.Assertions.assert(s ne o)"))
@@ -563,7 +563,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(!TestFrameworkTransform.getClass.getMethods.exists(_.getName == "runtimeSources"))
   }
 
-  // BEHAVIOUR: the emitted shapes, run. Each is a §4.4 defect — every one of them compiles either
+  // BEHAVIOUR: the emitted shapes, run. Each is a java-semantics defect — every one of them compiles either
   // way, so only executing them says whether the translation kept java's meaning.
 
   test("BEHAVIOUR: the emitted permutation names the right side in a failure") {
@@ -713,7 +713,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   test("…and a site IN A LOOP BODY converts too — the position no lexical wrap could express") {
-    // The 17 sites `ENGINE-LIMITS.md` X5 records as refused under the `intercept` shape, and the
+    // The 17 sites recorded as refused under the `intercept` shape, and the
     // whole reason this lowering exists: java's rule is armed from the CALL to the end of the test,
     // so an `intercept` around "the rest of the enclosing block" fails a body that completes
     // normally where java simply ran the next iteration. An arming is a statement and has no such
@@ -947,7 +947,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   test("a CONVERTED site is recorded on the test's own Decision — the diagnostic's other artifact") {
     // The emitted accumulator plainly asserts a throw; what it cannot say is that java said so
     // through a `@Rule` FIELD three screens up, which is the fact an agent reading one emitted file
-    // has no way to recover (CLAUDE.md §4.575).
+    // has no way to recover.
     val log = Pipeline
       .runTraced(
         SpoonTir.fromSources(
@@ -1193,11 +1193,11 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assertEquals(ph.findings.map(_.render), Nil)
   }
 
-  // ---- the refusal POPULATION as a lane, not as a println (`CLAUDE.md` §3, §5) --------------
+  // ---- the refusal population as a lane, not as a println --------------
 
   test("every refusal renders a `test-framework(refused)` row NAMING ITS GUARD") {
-    // Until this lane existed the population was a grouped `println` and a PROSE row in
-    // `PROGRESS.md` somebody kept in step by hand: no baseline diffed it, so a refusal that
+    // Until this lane existed the population was a grouped `println` and a PROSE row in a
+    // status document somebody kept in step by hand: no baseline diffed it, so a refusal that
     // appeared, changed owner or changed its advice reached nobody. That matters more here than
     // almost anywhere, because the failure mode is SILENT — an unrecognised annotation means the
     // class is not converted at all, so it registers ZERO tests, compiles and reports success.
@@ -1222,10 +1222,10 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // the KIND is the GUARD: the construct this site was declined at, never a total.
     assert(clue(rows.map(_.kind)).contains("org.junit.runner.RunWith"))
     assert(clue(rows.map(_.kind)).contains("org.junit.Rule"))
-    // §4.45 — the §1 classification rides in the row, so an agent holding only `findings.tsv` has it
+    // the classification rides in the row, so an agent holding only `findings.tsv` has it
     assert(clue(rows.head.detail).startsWith("("), rows.head.detail)
     assert(rows.forall(_.detail.startsWith("(a)")), clue(rows.map(_.detail.take(4))))
-    // …and the owner is the caller's, which is the D2 filter doing double duty.
+    // …and the owner is the caller's, which is the structural-ownership filter doing double duty.
     assertEquals(rows.map(_.owner).distinct, List("demo.RefusedTest"))
     // EVERY finding LOCATES ITSELF STRUCTURALLY, and this is the assertion that keeps the lane
     // whole. A `Symbol`'s `origin` defaults to `Origin.synthetic`, so a construct reported from a

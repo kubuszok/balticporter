@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** A BOUND METHOD REFERENCE AT A REWRITTEN MEMBER — `ENGINE-LIMITS.md` K23's named row, built. */
+/** A BOUND METHOD REFERENCE AT A REWRITTEN MEMBER — a java default method needing its own rewrite, built. */
 class CollectionsBoundMethodRefSpec extends PortSuite:
 
   test("a BOUND reference at a rewritten map member lowers to the lambda, receiver bound once") {
@@ -71,7 +71,7 @@ class CollectionsBoundMethodRefSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // `kindOf` is the phase's OWN record of what it moved (§4.56). A receiver it never touched has
+    // `kindOf` is the phase's OWN record of what it moved. A receiver it never touched has
     // the member java gave it, so there is nothing to lower and lowering would be pure churn.
     assertEmits(p, "apply(t.get)")
     assertNotEmits(p, "val recv$")

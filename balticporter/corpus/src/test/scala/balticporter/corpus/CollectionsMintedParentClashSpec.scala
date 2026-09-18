@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** THE CLASH THE MINTED PARENT MADE — `CLAUDE.md` §4.5 read at a CALL rather than at a shim. */
+/** THE CLASH THE MINTED PARENT MADE — the collection-interface rule read at a CALL rather than at a shim. */
 class CollectionsMintedParentClashSpec extends PortSuite:
 
   /** the shape, on all three kinds at once. Each class declares java's `Object`-formal member and a CALLER of it, so the pin's effect is visible in the emitted caller.
@@ -51,7 +51,7 @@ class CollectionsMintedParentClashSpec extends PortSuite:
   test("a MAP class's own `Object`-formal members are PINNED at every caller") {
     val p = port(src, new CollectionsTransform)
     // the minted parent is `mutable.Map[String, Integer]`, whose `get`/`remove`/`contains` all take
-    // the KEY — so an unpinned `l.remove(k)` WOULD be ambiguous. K28.1's bridge removes the second
+    // the KEY — so an unpinned `l.remove(k)` WOULD be ambiguous. The synthesised bridge removes the second
     // alternative instead of disambiguating it, so the call is re-pointed and no ascription is
     // emitted at all (see the header).
     assertEmits(p, "l.remove$java(k)")
@@ -71,7 +71,7 @@ class CollectionsMintedParentClashSpec extends PortSuite:
 
   test("the class's OWN body still delegates through the probe helpers — the pin is at the CALLER") {
     val p = port(src, new CollectionsTransform)
-    // K24's helpers answer inside `Ledger`, where the receiver is a RETYPED java map rather than a
+    // The probe helpers answer inside `Ledger`, where the receiver is a RETYPED java map rather than a
     // re-parented program class; the two mechanisms sit at different receivers and neither eats the
     // other's site.
     assertEmits(p, "balticporter.runtime.JavaCollections.mapRemove(this.slots, o)")
@@ -90,7 +90,7 @@ class CollectionsMintedParentClashSpec extends PortSuite:
       new CollectionsTransform
     )
     // nothing minted a parent here, so there is no second alternative and no ambiguity: the
-    // conjunct that decides this is the phase's OWN record of what it re-parented (§4.56).
+    // conjunct that decides this is the phase's OWN record of what it re-parented.
     assertEmits(p, "r.remove(s)")
     assertEmits(p, "r.contains(s)")
     assertNotEmits(p, "asInstanceOf[java.lang.Object]")
@@ -110,7 +110,7 @@ class CollectionsMintedParentClashSpec extends PortSuite:
       new CollectionsTransform
     )
     // `java.util.Iterator` maps to the `JavaIterator` SHIM, which carries java's shape and declares
-    // nothing at the element type — §4.5's whole reason for a standalone target. Counting it as a
+    // nothing at the element type — the whole reason for a standalone target. Counting it as a
     // re-parenting would pin calls against a parent that has no such member.
     assertNotEmits(p, "c.holds(s.asInstanceOf[java.lang.Object])")
   }
@@ -139,7 +139,7 @@ class CollectionsMintedParentClashSpec extends PortSuite:
       new CollectionsTransform
     )
     // an `Object` at an `Object` slot already selects java's alternative uniquely; ascribing it to
-    // its own type is emitted text for nothing, which is the over-approximation §5 cannot see. The
+    // its own type is emitted text for nothing, which is the over-approximation no count can see. The
     // bridge renames the member either way, so what this negative still pins is the ABSENCE of the
     // ascription — which is what it was always about.
     assertEmits(p, "s.remove$java(probe)")

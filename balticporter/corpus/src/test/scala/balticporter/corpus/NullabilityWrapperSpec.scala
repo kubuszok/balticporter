@@ -96,7 +96,7 @@ class NullabilityWrapperSpec extends PortSuite:
     assertNotEmits(ported, "given Conversion")
     assertNotEmits(ported, "Conversion[")
     // `.orNull` IS emitted at slot coercions — that is the faithful spelling for java slots that
-    // accept null. What is NOT emitted is `given Conversion`, which is the measured dead end (K2).
+    // accept null. What is NOT emitted is `given Conversion`, which is the measured dead end.
     assertEmits(ported, ".orNull")
   }
 
@@ -201,7 +201,7 @@ class NullabilityWrapperSpec extends PortSuite:
     // WRAPPED, and with NO ascription: the SAM's retyped result is `W[T]` in `Own`'s own `T`, which
     // is not writable inside `Manager` — the ascription this used to emit read
     // `asInstanceOf[lowlevel.Nullable[T]]` and was correct only because `Manager`'s parameter
-    // happens to be spelled `T` too (`CLAUDE.md` §4.56's name hazard, at a type variable). The
+    // happens to be spelled `T` too (a name hazard, at a type variable). The
     // types agree once `Own[T]` is read through the slot, so the honest emission is the value.
     assertEmits(p, "this.hold(() => transition)")
     assertNotEmits(p, "hold(() => transition.get")
@@ -212,7 +212,7 @@ class NullabilityWrapperSpec extends PortSuite:
   // -------------------------------------------------------------------------
 
   /** `(int) poll()` at junit's `assertEquals(long, long)`: java unboxed at `int` and WIDENED to the slot, and the port has to unwrap the `Nullable` under that cast. The unwrap is the OPERAND's
-    * business and the cast is untouched — so the node still emits `.asInstanceOf[scala.Int]`, and recording the slot's `long` on it is a type the emitted Scala does not have (`ENGINE-LIMITS.md` §0).
+    * business and the cast is untouched — so the node still emits `.asInstanceOf[scala.Int]`, and recording the slot's `long` on it is a type the emitted Scala does not have.
     * `TestFrameworkTransform.promote` is the reader that pays for it.
     */
   private val junitStub =
@@ -273,8 +273,8 @@ class NullabilityWrapperSpec extends PortSuite:
   // a call from ONE unit into a RETYPED member of another — the dependent's shape
   // -------------------------------------------------------------------------
 
-  /** A dependent port's `Program` CONTAINS its base's units (`ENGINE-LIMITS.md` D2), and the inherited phase runs over both — so a base member the annotations retype has to be seen as retyped at a
-    * call site in the other unit, or the dependent emits a call to a signature that no longer exists.
+  /** A dependent port's `Program` CONTAINS its base's units, and the inherited phase runs over both — so a base member the annotations retype has to be seen as retyped at a call site in the other
+    * unit, or the dependent emits a call to a signature that no longer exists.
     */
   private val baseUnit =
     """package base;
@@ -390,7 +390,7 @@ class NullabilityWrapperSpec extends PortSuite:
 
   test("`W.empty` is never ASCRIBED — it conforms at every element type by the wrapper contract") {
     // the one operand that reaches a slot whose element is written in a scope the site does not
-    // have: a companion or `static` member (`ENGINE-LIMITS.md` G20) and a super-constructor
+    // have: a companion or `static` member and a super-constructor
     // argument list. An ascription there is `E006 Not found: type T`; the bare `W.empty` is right
     // wherever the slot is, so the arm declines structurally rather than asking about scope.
     List(ported, port(overrideChain, phase), portAll(castSources, phase)).foreach(p => assertNotEmits(p, "empty.asInstanceOf"))

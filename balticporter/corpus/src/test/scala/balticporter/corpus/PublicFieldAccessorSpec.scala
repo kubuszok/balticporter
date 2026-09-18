@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program, RuleScope }
 import balticporter.transform.{ BeanExposureCheck, CollectionsTransform, PublicFieldAccessorTransform }
 
-/** A JAVA `public` FIELD IS NOT PUBLIC ON THE JVM ONCE IT IS SCALA — `ENGINE-LIMITS.md` K21 face 2. */
+/** A JAVA `public` FIELD IS NOT PUBLIC ON THE JVM ONCE IT IS SCALA. */
 class PublicFieldAccessorSpec extends PortSuite:
 
   private def ported(source: String, scope: RuleScope = RuleScope.Everywhere()): (DecisionLog, Program, PublicFieldAccessorTransform, String) =
@@ -97,9 +97,9 @@ class PublicFieldAccessorSpec extends PortSuite:
   }
 
   test("…including a field whose type a RETYPING phase moved — the case the old rule missed") {
-    // K21 face 2's second half. `public Map<String,String> some` is a `scala.collection.mutable.Map`
+    // The second half of the bean-read seam. `public Map<String,String> some` is a `scala.collection.mutable.Map`
     // by the time this phase sees it, so the getter handed jackson the map's INTERNALS, exactly as
-    // K21 face 1's argument seam did one hop earlier. Asserted through the SETTER as well, because
+    // the argument seam did one hop earlier. Asserted through the SETTER as well, because
     // the two types are now deliberately different and a reader has to be able to see which is which.
     val ph  = new PublicFieldAccessorTransform(RuleScope.Everywhere())
     val src =
@@ -192,7 +192,7 @@ class PublicFieldAccessorSpec extends PortSuite:
   test("a name `decapitalize` cannot INVERT is REFUSED and counted — the accessor would be for nobody") {
     // `eMail` -> `getEMail`, and `Introspector.decapitalize("EMail")` is `"EMail"` (two leading
     // capitals keep their spelling), so the property a bean reader registers is `EMail` and the one
-    // the framework asks for is `eMail`. That is K21 face 2's OWN failure class arriving through
+    // the framework asks for is `eMail`. That is the bean-read seam's OWN failure class arriving through
     // the repair for it: an accessor is emitted, the port compiles, every count is flat, and the
     // lookup reads absent. `lowerUpper` is not exotic — `eTag`, `xAxis`, `iValue`.
     val (_, after, ph, out) = ported(
@@ -258,8 +258,8 @@ class PublicFieldAccessorSpec extends PortSuite:
 
   test("an INHERITED accessor is seen — the screen climbs the parents this program declares") {
     // `memberNames` read the type's OWN body, so a subclass whose PARENT declares `getMapper()`
-    // minted a second one: a bare typer error with no finding and no §1 classification behind it.
-    // An ancestor outside the program is a class file this pass cannot read, and K21 states that
+    // minted a second one: a bare typer error with no finding and no classification behind it.
+    // An ancestor outside the program is a class file this pass cannot read, and the check states that
     // half rather than guessing at it.
     val (_, after, ph, out) = ported(
       """package demo;

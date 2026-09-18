@@ -4,7 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.JdkSurfaceCheck
 import balticporter.transform.CollectionsTransform
 
-/** K23's `listIterator` refusal, RE-READ and closed — and its sibling, which is not. */
+/** The `listIterator` refusal, RE-READ and closed — and its sibling, which is not. */
 class CollectionsListIteratorSpec extends PortSuite:
 
   private val delegating =
@@ -55,7 +55,7 @@ class CollectionsListIteratorSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // §4.5: java's arity survives, because the shim carries java's own shape rather than scala's
+    // Java's arity survives, because the shim carries java's own shape rather than scala's
     // parameterless one.
     assertEmits(p, "extends balticporter.runtime.JavaListIterator[java.lang.String]")
     assertEmits(p, "def hasPrevious(): scala.Boolean")
@@ -105,7 +105,7 @@ class CollectionsListIteratorSpec extends PortSuite:
     // java declares `spliterator()` on `Collection` and RE-DECLARES it on `List` and `Set`, so the
     // owner a call resolves at is whichever type the receiver was declared as. Keyed at `Collection`
     // alone the refusal once matched nothing on a `List` receiver and the site read as `unhandled` —
-    // a reader sent to a wall instead of to the reason (§4.45).
+    // a reader sent to a wall instead of to the reason.
     val keys = JdkSurfaceCheck.Refusals.map(_.api).toSet
     assert(keys.contains("java.util.Collection#spliterator"), keys.toList.sorted.mkString(", "))
     assert(!keys.contains("java.util.List#spliterator"), "the `List#spliterator` refusal is STALE — the phase now answers for it")

@@ -94,7 +94,7 @@ class NumericOverloadAscriptionSpec extends munit.FunSuite:
   }
 
   // -- NEGATIVE 3: a variable owned by the callee's own METHOD has no `extends` clause to resolve
-  //    it at all, so it takes the same conservative arm (`ENGINE-LIMITS.md` G12's own sentence).
+  //    it at all, so it takes the same conservative arm.
   test("a method-level type variable in the result declines the pin") {
     val o = out(
       """package demo;

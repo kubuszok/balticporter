@@ -6,8 +6,8 @@ import balticporter.runner.PortConfig
 import java.nio.file.Path
 
 /** Migrate **flexmark-java** — milestone 1: `flexmark` core plus the eleven `flexmark-util-*` split libraries (486 java files, 458 declaring a type): `.../ports/ssg-md/main.conf`, plus
-  * [[FlexmarkClasspath]] (§1.5). LARGEST java surface either reference repository has, a first for a MAVEN MULTI-MODULE TREE WITH ONE PACKAGE ROOT. SKELETON milestone — not expected to compile, the
-  * first error census is MEASURED (§10.6).
+  * [[FlexmarkClasspath]]. LARGEST java surface either reference repository has, a first for a MAVEN MULTI-MODULE TREE WITH ONE PACKAGE ROOT. SKELETON milestone — not expected to compile, the first
+  * error census is MEASURED.
   */
 object FlexmarkMigrate:
 
@@ -29,7 +29,7 @@ object FlexmarkPort:
   def upstream: Path = repoRoot.resolve("../ssg/original-src/flexmark-java").normalize
 
 /** flexmark's FRONTEND classpath: one jar. `org.jetbrains:annotations` is compile-scope on every `flexmark-util-*` pom (594 files import `@NotNull`/`@Nullable`), version read from the poms that
-  * DECLARE it — an unresolvable annotation resolves WRONGLY rather than failing (§5.1). ONE list, not one per source set (a COMPILE-scope coordinate is visible everywhere). Mechanism is
+  * DECLARE it — an unresolvable annotation resolves WRONGLY rather than failing. ONE list, not one per source set (a COMPILE-scope coordinate is visible everywhere). Mechanism is
   * [[balticporter.corpus.ClasspathCache]], shared with every port.
   */
 object FlexmarkClasspath:

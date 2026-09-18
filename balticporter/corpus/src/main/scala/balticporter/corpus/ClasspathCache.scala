@@ -3,9 +3,9 @@ package balticporter.corpus
 import java.io.File
 import java.nio.file.{ Files, Path }
 
-/** The frontend classpath every port resolves once and CACHES, with the coordinates it was resolved from recorded beside it (§1(b): five porting programs wrote this loop independently). The resolver
-  * INVOCATION is written to a sidecar (`<cache>.coords`) and compared before a cached line is reused — an unresolved import resolves WRONGLY rather than failing (CLAUDE.md §5.1). A header INSIDE the
-  * file would be a phantom classpath entry instead.
+/** The frontend classpath every port resolves once and CACHES, with the coordinates it was resolved from recorded beside it (five porting programs wrote this loop independently). The resolver
+  * INVOCATION is written to a sidecar (`<cache>.coords`) and compared before a cached line is reused — an unresolved import resolves WRONGLY rather than failing. A header INSIDE the file would be a
+  * phantom classpath entry instead.
   */
 object ClasspathCache:
 

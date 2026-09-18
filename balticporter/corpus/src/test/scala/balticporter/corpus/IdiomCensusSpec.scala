@@ -71,7 +71,7 @@ class IdiomCensusSpec extends PortSuite:
   }
 
   test("an UNREADABLE class file refuses under its own guard and is never silently `NotSam`") {
-    // §4.6 read literally: the default must not be indistinguishable from a real answer. Both
+    // A kill switch read literally: the default must not be indistinguishable from a real answer. Both
     // answers lead to the same ACTION here, which is precisely why they must be different ROWS —
     // a port whose classpath is incomplete would otherwise read as a port with no SAM sites.
     val anon = Tree.AnonClass(balticporter.tir.SymId(1), Nil, Origin.synthetic, Nil, Sam.Answer.Unreadable)
@@ -486,7 +486,7 @@ class IdiomCensusSpec extends PortSuite:
   test("the CENSUS phase is EMISSION-INERT — the tree it hands back IS the tree it got") {
     // The wave-0 property, still true of the ONE phase that is still a census. Neither the SAM
     // phase nor the bean collapse is one any more: each wired its transformer, and a census beside
-    // one is a second answer to its own question (§4.6).
+    // one is a second answer to its own question.
     val src =
       """class C {
         |  int n = 1;

@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** THE ERASED VIEW IS DECIDED PER POSITION — `ENGINE-LIMITS.md` G21's second half. */
+/** THE ERASED VIEW IS DECIDED PER POSITION — a raw result read through an erased receiver is typed as the erased instantiation, decided per argument position. */
 class ErasedReceiverPositionSpec extends PortSuite:
 
   private val mixed =
@@ -26,7 +26,7 @@ class ErasedReceiverPositionSpec extends PortSuite:
   test("a written position that MENTIONS A TYPE VARIABLE still erases — the co-reader guard") {
     // `Fn<? super D, D>`: position 1 is written, and it is a type VARIABLE. Carried, the receiver
     // would say `D` while the argument erasure three functions away still says `Object`, which is
-    // the 0 → 1 regression G21 records. Both positions erase until those three are one derivation.
+    // a regression measured before. Both positions erase until those three are one derivation.
     val p = port(
       """package demo;
         |interface Fn<A, B> { B apply(A a); }

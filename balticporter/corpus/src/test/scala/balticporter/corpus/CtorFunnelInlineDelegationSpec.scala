@@ -12,7 +12,7 @@ import balticporter.tir.{ CtorFunnel, OmissionCheck, Pipeline }
   * (a) PURE delegation — the parent secondary's body is ONLY the `this(args)` call, nothing after it. The resolution is exact and nothing is lost.
   *
   * (b) Delegation WITH a replayable post-body — the parent secondary has statements after its `this(args)` (e.g., `this.desc = desc`). The post-body is replayed through a synthesised PARAMETER in the
-  * child's primary, guarded by a null check. The effectful argument is evaluated ONCE per secondary's `this(...)` call. // ENGINE-LIMITS C3 item 4
+  * child's primary, guarded by a null check. The effectful argument is evaluated ONCE per secondary's `this(...)` call.
   *
   * (c) Delegation with a NON-REPLAYABLE post-body — the post-body contains `super.m()` or `return`, which dispatch wrongly or leave the wrong frame in a subclass. The resolution is REFUSED and the
   * synthesis falls back (E134, loud).
@@ -171,7 +171,7 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     assert(clue(refusedDropped).exists(_.owner.contains("RetSub")), "super args reported as dropped for the refused root")
   }
 
-  // ---- (d) Generic constructor type param -> wildcard slot type // G25, card 4e ----
+  // ---- (d) Generic constructor type param -> wildcard slot type ----
 
   private val genericCtorSrc =
     """package demo;
@@ -260,14 +260,14 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
   test("(g) non-owned parent with 2+ roots: plan0 without parent plan refuses synthesis") {
     val prog = Pipeline.run(SpoonTir.fromSource(chainSrc), Nil)
     // plan0 WITHOUT a parent plan lookup: the parent (ChainMid) has 2+ roots and its plan is
-    // unknown, so resolvedThroughParentPlan refuses and the child gets Plan.none. // D4, C3
+    // unknown, so resolvedThroughParentPlan refuses and the child gets Plan.none.
     val leafCd = prog.units.flatMap(balticporter.tir.StandardTraversal.allClassDefs(_)(using prog)).find(cd => prog.symbolOf(cd.symbol).exists(_.name == "ChainLeaf")).get
     val plan   = CtorFunnel.plan0(prog, leafCd)
     assert(clue(plan.superArgs.isEmpty), "no super args without parent plan")
     assert(clue(!plan.isSynthesised), "no synthesis without parent plan")
   }
 
-  // ---- (h) Delegation-head slot: parameter used >1x with non-simple caller arg. C3 ----
+  // ---- (h) Delegation-head slot: parameter used >1x with non-simple caller arg. ----
 
   private val dhSlotSrc =
     """package demo;

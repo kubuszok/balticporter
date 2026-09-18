@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, Pipeline, PorterNote, Program, Reason }
 import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 
-/** A MEMBER THAT OVERRIDES A CLASS FILE keeps its formals — `CLAUDE.md` §4.56 read at an OVERRIDE rather than at a call.
+/** A MEMBER THAT OVERRIDES A CLASS FILE keeps its formals — the class-file signature read at an OVERRIDE rather than at a call.
   */
 class CollectionsClassFileOverrideSpec extends PortSuite:
 
@@ -80,7 +80,7 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
     assert(ds.head.reason.isInstanceOf[Reason.Universal], clue(ds.head.reason).toString)
     assertEquals(PorterNote.pairs(ds.head).toMap.get("overrides"), Some(s"$UnmappedBase#putAll"))
     // …and it is RENDERED at the declaration: a signature that did not move shows nothing in a diff
-    // against the java, so the note is the only evidence at the line (§4.575).
+    // against the java, so the note is the only evidence at the line.
     assert(PorterNote.Rendered.contains(Decision.Kind.RetainedSignature))
     assert(PorterNote.AtDeclaration.contains(Decision.Kind.RetainedSignature))
     // the fixture must not pass because the phase held nothing at all

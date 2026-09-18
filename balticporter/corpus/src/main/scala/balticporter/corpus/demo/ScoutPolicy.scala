@@ -1,8 +1,8 @@
 package balticporter.corpus.demo
 
-/** The per-library policy the BIR SCOUTS share — stated HERE since `frontend-spoon` may not name a ported library or its dependencies (CLAUDE.md §1). Surveys ssg's java libraries (liqp, xwiki,
-  * flexmark) and sge's jbump; common thread is a JVM-FAITHFUL disposition — an annotation a framework reads at run time is behaviour and must survive the port, even where a cross-platform port would
-  * substitute it (ssg's own disposition for jackson).
+/** The per-library policy the BIR SCOUTS share — stated HERE since `frontend-spoon` may not name a ported library or its dependencies. Surveys ssg's java libraries (liqp, xwiki, flexmark) and sge's
+  * jbump; common thread is a JVM-FAITHFUL disposition — an annotation a framework reads at run time is behaviour and must survive the port, even where a cross-platform port would substitute it (ssg's
+  * own disposition for jackson).
   */
 object ScoutPolicy:
 

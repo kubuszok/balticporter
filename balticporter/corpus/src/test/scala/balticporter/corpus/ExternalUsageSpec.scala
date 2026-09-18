@@ -46,7 +46,7 @@ class ExternalSurfaceSpec extends PortSuite:
     assert(clue(vs).nonEmpty)
     assert(vs.forall(_.api == "java.util.ArrayList"))
     // …and an exactMember rule, which is the one that keys on `owner#name` and had never fired
-    // before P4 gave an external member an owner (ENGINE-LIMITS P4)
+    // before an external member symbol was owned by its declaring external type
     val ms = PortabilityCheck.check(program, List(PortabilityCheck.Rule("java.lang.Math#max", "test rule", exactMember = true)))
     assertEquals(clue(ms).size, 2)
     assert(ms.forall(_.api == "java.lang.Math#max"))

@@ -5,7 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, Pipeline }
 import balticporter.transform.TestFrameworkTransform
 
-/** JUnit 4 CONSTRUCTS A FRESH TEST OBJECT PER `@Test`; MUnit runs one suite instance (`ENGINE-LIMITS.md` X4, `CLAUDE.md` §4.4).
+/** JUnit 4 CONSTRUCTS A FRESH TEST OBJECT PER `@Test`; MUnit runs one suite instance.
   */
 class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
 
@@ -113,7 +113,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
 
   test("STEP 4 IS ONE SEQUENCE IN TEXTUAL ORDER — a field initialiser and an INSTANCE INITIALISER BLOCK interleave") {
     // probed: fieldA-init / init-block / fieldB-init. Grouped "fields then blocks" the assignment
-    // java ran FIRST would run LAST — `CLAUDE.md` §4.55's own correction, met here.
+    // java ran FIRST would run LAST — textual order preserved, met here.
     val (out, _) = emit(
       """package demo;
         |import org.junit.Test;
@@ -199,7 +199,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
 
   test("A HIERARCHY CHAINS, ZEROING BEFORE DELEGATING UPWARD — java zeroes the whole object first") {
     // probed: `Base.ctor sees sub=null` on the SECOND test too. Zeroing on the way down would show
-    // the superclass the previous test's value, which is X4 one level in.
+    // the superclass the previous test's value, which is the same fresh-instance defect one level in.
     val (out, _) = emit(hierarchySrc)
     val sub      = out.substring(out.indexOf("class SubTest"))
     val body     = rebuild(sub)
@@ -330,7 +330,7 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     assert(ds.forall(_.detail("rebuilt") == "bpFreshState"), clue(ds.map(_.detail("rebuilt"))))
   }
 
-  // -- P11: a DROPPED FIELD must not appear in bpFreshState ----------------------------------
+  // -- a DROPPED FIELD must not appear in bpFreshState ----------------------------------
 
   private val droppedFieldSrc =
     """import org.junit.Test;

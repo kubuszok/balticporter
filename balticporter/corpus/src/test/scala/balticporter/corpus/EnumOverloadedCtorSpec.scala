@@ -5,7 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 import balticporter.tir.{ OmissionCheck, Pipeline }
 
-/** A java enum's primary is its ROOT constructor, not the first one written (`CLAUDE.md` §4.4's `super(args)` row read at an enum body).
+/** A java enum's primary is its ROOT constructor, not the first one written (the `super(args)` promotion rule read at an enum body).
   */
 class EnumOverloadedCtorSpec extends PortSuite:
 

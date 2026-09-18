@@ -23,7 +23,7 @@ import balticporter.tir.{
 }
 import balticporter.transform.*
 
-/** THE CLAUSE-BEARING EMPTY PRIMARY — a class the funnel neither PROMOTES nor SYNTHESISES, carrying a context clause (`ENGINE-LIMITS.md` CT5, `DESIGN.md` §8.2).
+/** THE CLAUSE-BEARING EMPTY PRIMARY — a class the funnel neither PROMOTES nor SYNTHESISES, carrying a context clause.
   */
 class CtorFunnelContextClauseSpec extends munit.FunSuite:
 
@@ -120,8 +120,8 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
       val (a1, _, _) = threaded(s)
       // the clause-bearing primary DELEGATES NOTHING — it hosts the clause and leaves the `extends`
       // clause, every secondary's delegation and every dropped `super(args)` exactly as they were.
-      // So this is not the synthesis widened past its parent-agreement preconditions (CT5's
-      // caution): the roots whose `super(args)` were already counted omissions still are.
+      // So this is not the synthesis widened past its parent-agreement preconditions: the roots
+      // whose `super(args)` were already counted omissions still are.
       assertEquals(OmissionCheck.check(a1, a1.units).size, OmissionCheck.check(a0, a0.units).size, s)
     }
   }
@@ -235,8 +235,8 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
     val (_, e, out) = run(enumSrc, List(CtorFunnelContextClauseSpec.Clause(Set("demo.Filter"))))
     // the parameter is ANONYMOUS, so carrying it into the enum's promoted parameter list renders
     // `var : demo.Ctx`, which does not parse — and every CONSTANT would have to pass it. True of
-    // both shapes: a `case object` and a scala 3 `enum` case reach the primary the same way
-    // (`ENGINE-LIMITS.md` T21), and this enum takes the `enum` one.
+    // both shapes: a `case object` and a scala 3 `enum` case reach the primary the same way,
+    // and this enum takes the `enum` one.
     assert(!clue(out).contains("var : demo.Ctx"), out)
     // `val` and public: the parameter supersedes `public final int glEnum` and therefore ships at
     // that field's own modifiers (`EnumPromotedParamFlagsSpec`).
@@ -256,7 +256,7 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // the probe a real compiler reads (M2's lesson: a claim about scalac needs scalac)
+  // the probe a real compiler reads (a claim about scalac needs scalac)
   // -------------------------------------------------------------------------
 
   /** `class X(using T)` reached by `this()` from a secondary, by `new X(…)`, by an argument-free `extends` and by a body `summon` is a claim about scala's overload resolution, and a string assertion

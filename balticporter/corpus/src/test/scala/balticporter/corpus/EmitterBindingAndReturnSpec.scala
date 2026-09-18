@@ -3,8 +3,8 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** Two emitter seams that had no spec at all, pinned THROUGH THE PIPELINE — a java snippet in, the emitted Scala asserted. Both are §4.4's defect class (valid Scala meaning something else), and both
-  * were built from a failure found by running a ported test suite rather than by compiling.
+/** Two emitter seams that had no spec at all, pinned THROUGH THE PIPELINE — a java snippet in, the emitted Scala asserted. Both are valid Scala meaning something else, and both were built from a
+  * failure found by running a ported test suite rather than by compiling.
   */
 class EmitterBindingAndReturnSpec extends PortSuite:
 
@@ -22,7 +22,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class B { void each(List<String> xs) { for (Object e : xs) { e.hashCode(); } } }
         |""".stripMargin
     )
-    // K9: `xs` is a `java.util.List` the pipeline kept, so the emitter uses java's own desugaring
+    // `xs` is a `java.util.List` the pipeline kept, so the emitter uses java's own desugaring
     // (JLS 14.14.2) — a while-loop over `iterator()`/`hasNext()`/`next()` — rather than `for`,
     // which would fail with "value foreach is not a member of java.util.List".
     assertEmits(p, "e$it = xs.iterator()")
@@ -58,7 +58,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class B { void each(List<String> xs) { for (Object object : xs) { object.hashCode(); } } }
         |""".stripMargin
     )
-    // K9: `xs` is a `java.util.List` the pipeline kept, so the while-loop form is emitted.
+    // `xs` is a `java.util.List` the pipeline kept, so the while-loop form is emitted.
     // The iterator variable derives from the RAW name: `object$it`, not `` `object`$it ``.
     assertEmits(p, "object$it = xs.iterator()")
     assertEmits(p, "val `object`: java.lang.Object = object$it.next().asInstanceOf[java.lang.Object]")
@@ -95,7 +95,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
 
   test("a VALUE-returning lambda takes the SAM's result — ADAPTED at the target where it is generic") {
     // `Supplier<String>.get` is declared `T get()`; the reference says what `T` is and Spoon's own
-    // `TypeAdaptor` substitutes it, so the nested `def` can be named. This used to be I9's standing
+    // `TypeAdaptor` substitutes it, so the nested `def` can be named. This used to be a standing
     // refusal, whose stated reason was a missing mechanism rather than a property of the language.
     val p = port(
       """package demo;
@@ -110,7 +110,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
   test("…and it is REFUSED, not guessed, where the adaptation cannot answer — a RAW target") {
     // A `def` with a wrong result type would COMPILE. Left alone this is a bare `return` under a
     // function literal — scala's NON-LOCAL RETURN — which is why `OmissionCheck` counts it
-    // (ENGINE-LIMITS M6/I9: "refuse loudly" is a claim about the emitted text, and here it is false).
+    // ("refuse loudly" is a claim about the emitted text, and here it is false).
     val p = port(
       """package demo;
         |import java.util.function.Supplier;
@@ -185,7 +185,7 @@ class EmitterBindingAndReturnSpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // F9 arity: iterator/hasNext parens decided from the CALLEE SYMBOL, never `program.owns`
+  // arity: iterator/hasNext parens decided from the CALLEE SYMBOL, never `program.owns`
   // -------------------------------------------------------------------------------------------
 
   test("a program-declared iterable keeps java arity — iterator()/hasNext() with parens") {

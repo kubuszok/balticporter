@@ -58,7 +58,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
 
   test("the rename carries a porter note on the ENCLOSING METHOD") {
     val out = emitWithNotes(captured)
-    // subject is the DECLARATION whose emitted form changed (§5.1) — a parameter has no `def` of
+    // subject is the DECLARATION whose emitted form changed — a parameter has no `def` of
     // its own to sit above
     assert(clue(out).contains("clash=captured-local-vs-nested-member"))
     assert(out.contains("from=filter to=filter$local"))
@@ -103,7 +103,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   // pass. The pass itself is indifferent — it reads `Tree.ClassDef` and `Tree.
 
   // -------------------------------------------------------------------------------------------
-  // THE SECOND RULE — AMBIGUITY, which is not shadowing (ENGINE-LIMITS.md C16)
+  // THE SECOND RULE — AMBIGUITY, which is not shadowing
 
   private val ambiguous =
     """package demo;
@@ -294,7 +294,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // LAMBDA BODY — the shape `TestFrameworkTransform` creates (ENGINE-LIMITS C16.1)
+  // LAMBDA BODY — the shape `TestFrameworkTransform` creates
 
   test("a local inside a LAMBDA body that shadows an inherited member is renamed (C16.1)") {
     val out = emit(

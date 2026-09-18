@@ -64,7 +64,7 @@ class NullAtTypeParamSpec extends PortSuite:
     )
     // `?` is a capture, and rendering it would put a `?` where a real type has to go — the `?T`
     // stub this frontend refuses everywhere else. `receiverTypeArgs` excludes wildcards outright,
-    // so this slot's answer comes from the ERASED-RECEIVER arm that was already here (G11) and
+    // so this slot's answer comes from the ERASED-RECEIVER arm that was already here and
     // names `java.lang.Object`. What must never appear is the capture itself.
     assertEmits(p, "add(null.asInstanceOf[java.lang.Object])")
     assertNotEmits(p, "add(null.asInstanceOf[?")

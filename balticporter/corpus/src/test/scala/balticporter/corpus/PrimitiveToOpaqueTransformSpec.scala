@@ -58,7 +58,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
     val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
 
-    // (c) — CLAUDE.md §1's canonical library rule. WHICH primitives are really a domain value is
+    // The canonical example of a library-specific rule. Which primitives are really a domain value is
     // knowledge about one library, so the row must send its reader to that library's own rule and
     // not to a manifest key or to the engine.
     assert(clue(ds).nonEmpty)
@@ -173,8 +173,8 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O1 — a seed reaching a boundary through a COMPOUND EXPRESSION
-  // `ENGINE-LIMITS.md` §13 O1. The shape is the corpus's, not a constructed one: a null-guarding
+  // A seed reaching a boundary through a compound expression.
+  // The shape is the corpus's, not a constructed one: a null-guarding
   // ternary feeding an arithmetic operand and a local that correctly keeps the primitive.
   // -------------------------------------------------------------------------
 
@@ -224,7 +224,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   test("a DECLARATION that correctly kept the primitive is a BOUNDARY, and gets its coercion") {
     // `h1` is rightly NOT a seed: an `if` is not a pure move, so `FlowPropagation` builds no edge to
     // it and the local keeps `int`. That is precisely a boundary — which is exactly where a coercion
-    // was owed and where none was inserted (2 of O1's 3 errors).
+    // was owed and where none was inserted.
     assert(clue(ternaryOut).contains("val h1: scala.Int ="))
     assert(ternaryOut.contains("val h2: scala.Int ="))
     assertEquals(clue(ternaryOut.sliding("Handle.unwrap(".length).count(_ == "Handle.unwrap(")), 3, "one per ternary: the operand, h1, h2")
@@ -262,13 +262,13 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     val ph      = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "Handle", hints = Set("demo.Tex#handle")))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(uniform), List(ph))).emit
     // `other` never reaches `handle` by a pure move (an assignment through an `if` is not one), so
-    // both branches are plain and the pre-O1 answer — one coercion around the carrier — is right.
+    // both branches are plain and the whole-carrier answer — one coercion around the carrier — is right.
     assert(clue(emitted).contains("Handle(if"))
   }
 
   // -------------------------------------------------------------------------
-  // O2 — a retyped PARAMETER moves its METHOD's signature
-  // `ENGINE-LIMITS.md` §13 O2. The TIR stores a parameter's type twice; the emitter reads the
+  // A retyped parameter moves its method's signature.
+  // The TIR stores a parameter's type twice; the emitter reads the
   // `ValDef` and the constructor funnel reads the signature, so the two must not disagree.
   // -------------------------------------------------------------------------
 
@@ -325,7 +325,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O3 — an array-of-prim is now EXPRESSIBLE (O3 CLOSED). The seed reaches
+  // An array-of-prim is expressible. The seed reaches
   // `Array[Prim]` declarations, retypes them to `Array[Opaque.T]`, and mints
   // `wrapArray`/`unwrapArray` on the companion.
   // -------------------------------------------------------------------------
@@ -406,7 +406,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       fingerprint(ph(base.copy(scope = RuleScope.Only(Set("a"))))),
       fingerprint(ph(base.copy(scope = RuleScope.Everywhere(Set("a")))))
     )
-    // …and so are the primitive, the HINTS THEMSELVES (O4 CLOSED), and every agent-supplied extra hint.
+    // …and so are the primitive, the hints themselves, and every agent-supplied extra hint.
     assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(underlying = OpaqueSpec.Primitive.Long))))
     assertNotEquals(
       fingerprint(ph(base)),
@@ -446,7 +446,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O6 CLOSED — the Existing form: retype against an EXISTING/injected opaque type
+  // the Existing form: retype against an existing/injected opaque type
 
   private def existingSpec(scope: RuleScope = RuleScope.Everywhere()) =
     OpaqueSpec(
@@ -579,7 +579,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O8 — array ELEMENT coercion at three positions
+  // array element coercion at three positions
 
   private val arrayElem =
     """package demo;
@@ -628,9 +628,9 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O8 DEPENDENT BLAST (wave 2.11): a dependent calling a base method whose
-  // parameter the base retyped must NOT unwrap its opaque argument — the
-  // compiled class file ALSO has the opaque formal.
+  // A dependent calling a base method whose
+  // parameter the base retyped must not unwrap its opaque argument — the
+  // compiled class file also has the opaque formal.
   // -------------------------------------------------------------------------
 
   private val depBase =
@@ -713,7 +713,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     val binder       = new PolicyBinder(p, p.members, scope)
     val after        = Pipeline.runTraced(p, List(ph), binder)._1
     val emitted      = new TirEmitter(after).emit
-    // O8: without a published port map declaring getAlign's return as the opaque type, the
+    // Without a published port map declaring getAlign's return as the opaque type, the
     // dependent cannot seed — local stays Int, and bump(local) needs no unwrap. The base's
     // memberUpstream carries only the NON-retyped member (bump); the retyped members (getAlign,
     // align) require a full port map the test does not supply.
@@ -721,7 +721,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O9: duplicate primitive symbol after CollectionsTransform.retargetFixedTypeSyms
+  // duplicate primitive symbol after CollectionsTransform.retargetFixedTypeSyms
   // -------------------------------------------------------------------------
 
   test("seeding works when the program has a DUPLICATE scala.Int symbol (retarget FixedType)") {

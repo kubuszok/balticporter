@@ -164,7 +164,7 @@ object AshleyPolicy:
                 // NOT SystemManager#getSystem: wrapping breaks the internal call chain --
                 // .orNull unwraps to the NestedNone sentinel, not JVM null, so
                 // `old != null` stays true and a cast throws (measured: 33 newly failing
-                // tests, K13.6; known residue, 7 drop-in errors).
+                // tests; known residue, 7 drop-in errors).
               )
             ),
             // 3.2g: hand-port-added members (ecs drop-in parity) -- sge's factory-registry API
@@ -196,7 +196,7 @@ object AshleyPolicy:
               )
             ),
             // Ashley's one reflective instantiation site (`Engine#createComponent`): the registry is
-            // MINTED, not injected (`ENGINE-LIMITS.md` P10). `miss = JvmReflect` is DECLARED and its
+            // MINTED, not injected. `miss = JvmReflect` is DECLARED and its
             // non-JVM cost COUNTED (`registry(jvm-only-miss)`): the suite instantiates component
             // classes nothing registers. `handles` names the exception whose thrower this retires.
             new balticporter.transform.RegistryTransform(
@@ -243,7 +243,7 @@ object AshleyPolicy:
       name = "sge-ecs-test",
       // 3.3c: ComponentClassFactory extends ClassLoader (system parent), invisible to
       // sge.ecs.Component under sbt's forked test JVM; injected copy differs in parent loader
-      // only (`ENGINE-LIMITS.md` X8).
+      // only.
       dropTypes = Set("com.badlogic.ashley.core.ComponentClassFactory"),
       inject = List(repoRoot.resolve("balticporter/corpus/ashley-test-overrides")),
       surface = List(

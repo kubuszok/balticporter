@@ -8,9 +8,8 @@ import balticporter.runner.{ Determinism, PortRun, SourceSet, VendoredCommit }
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **VisUI**'s `ui/` module (162 files — a scene2d widget toolkit) through the TIR. A DEPENDENT port: `gdx/src` is a RESOLUTION root, and the policy is [[LibgdxPolicy.core]] EXTENDED, not
-  * restated (CLAUDE.md §1.5). Scope is `ui/` only; `usl/` is a NAMED follow-up (`PROGRESS.md` §10.9). No test source set this wave — behavioural evidence is DIFFERENTIAL against the reference hand
-  * port's 72-case suite (`PROGRESS.md` §10.9).
+/** Migrate **VisUI**'s `ui/` module (162 files — a scene2d widget toolkit) through the TIR. A dependent port: `gdx/src` is a resolution root, and the policy is [[LibgdxPolicy.core]] extended, not
+  * restated. Scope is `ui/` only; `usl/` is a named follow-up. No test source set this wave — behavioural evidence is differential against the reference hand port's 72-case suite.
   */
 object VisUiMigrate:
 
@@ -44,7 +43,7 @@ object VisUiMigrate:
           originalLicense = "Apache-2.0",
           sourcePathPrefix = "vis-ui/ui/src/main/java",
           sourceRoot = base.toString,
-          // TWO LICENCE REGIMES (CLAUDE.md §4.57): (a) Apache-2.0 per-file header, covering 161/162
+          // TWO LICENCE REGIMES: (a) Apache-2.0 per-file header, covering 161/162
           // in-scope sources (`layout/FlowGroup.java` gets a NAMES-not-INCLUDES banner instead);
           // (b) CC BY-ND 3.0 on the shipped ICONS (`ui/NOTICE`/`ui/icons-license`) — a
           // NO-DERIVATIVES licence no harvest or banner can reach, baked into `uiskin.atlas`/`.png`
@@ -60,8 +59,8 @@ object VisUiMigrate:
       nextStep = "just visui-measure"
     ).execute()
 
-/** VisUI's per-library policy -- a DEPENDENT of libGDX core's, deliberately almost empty. `dropTypes`/`dropMethods`/`packageRenames`/every signature-affecting phase are INHERITED, not restated
-  * (CLAUDE.md §1.5); `inject` is NOT inherited (exactly one module ships each replacement file). This wave adds a namespace claim, ONE rename and the base-surface residue check, nothing else.
+/** VisUI's per-library policy -- a dependent of libGDX core's, deliberately almost empty. `dropTypes`/`dropMethods`/`packageRenames`/every signature-affecting phase are inherited, not restated;
+  * `inject` is NOT inherited (exactly one module ships each replacement file). This wave adds a namespace claim, ONE rename and the base-surface residue check, nothing else.
   */
 object VisUiPolicy:
 
@@ -77,10 +76,10 @@ object VisUiPolicy:
           // ONE PAIR, UNIFORM, verified 1:1 against the reference port's tree (22 sub-packages, name
           // for name). WHAT THE RENAME DOES NOT REACH: VisUI loads its own skin/i18n/shader
           // resources through HARDCODED CLASSPATH STRINGS — a rename moves SYMBOLS, never a string
-          // literal (§4.56) — so the 22 resources below ship at their UPSTREAM classpath path,
+          // literal — so the 22 resources below ship at their UPSTREAM classpath path,
           // verified byte-identical to the reference hand port's own layout.
           packageRenames = Map("com.kotcrab.vis.ui" -> "sge.visui"),
-          // THE 22 RESOURCES THE EMITTED CODE ASKS FOR, COPIED VERBATIM (`DESIGN.md` §8.22). The
+          // THE 22 RESOURCES THE EMITTED CODE ASKS FOR, COPIED VERBATIM. The
           // other 2 files under that root (`robovm.xml`, `vis-ui.gwt.xml`) belong to the UPSTREAM
           // BUILD, not the library — confirmed against upstream's own GWT resource enumeration,
           // which lists exactly these 22. Most are reached through indirection (another resource's
@@ -121,7 +120,7 @@ object VisUiPolicy:
           ),
           // NOTHING IS WRITTEN HERE FOR `AsyncTask` (a DECISION, not an omission): upstream's
           // `com.kotcrab.vis.ui.util.async.AsyncTask` and libGDX's own share a simple name and
-          // nothing else (verified: neither imports the other). §4.56's trap, not a construct
+          // nothing else (verified: neither imports the other). A name-only trap, not a construct
           // with two answers -- no rename/substitution/redirect may reach across on the name
           // alone.
           externalParenless = Set(
@@ -129,7 +128,7 @@ object VisUiPolicy:
             "sge.scenes.scene2d.Actor#y"
           ),
           surface = List(
-            // THE ONE MEMBER THIS LIBRARY HAS TO MOVE (`PROGRESS.md` §10.9.7 family 2, D13):
+            // THE ONE MEMBER THIS LIBRARY HAS TO MOVE:
             // libGDX's Disposable->AutoCloseable redirect renames `dispose -> close`, and two of
             // VisUI's own Disposable implementors already declare `close()` — `OnCollision.Refuse`
             // correctly refused the component. VisUI's OWN member moves to `closeWindow` instead; the
@@ -140,7 +139,7 @@ object VisUiPolicy:
               )
             ),
             // THE CONTEXT SEAM'S EXIT: an EXTENSION of the base's `Gdx` holder, never a second
-            // holder (`PROGRESS.md` §10.9.7 family 1, §10.9.10; `ENGINE-LIMITS.md` CT8). `cache` on
+            // holder. `cache` on
             // `VisUI` (all-`static`, clause on its METHODS, matching the hand port's `sgeInstance`
             // name). `selfSupplied` on three enums the threading could not sign: an enum's primary
             // IS its constructor, so these take the context without a parameter, from `sgeInstance`.
@@ -150,7 +149,7 @@ object VisUiPolicy:
                 balticporter.transform.ContextHolderExtension(
                   holder = "com.badlogic.gdx.Gdx",
                   cache = Map("com.kotcrab.vis.ui.VisUI" -> "sgeInstance"),
-                  // NO `sites` ENTRY FOR `Draggable#BLOCKER` — MEASURED, not assumed (CT11): `lazy-init`
+                  // NO `sites` ENTRY FOR `Draggable#BLOCKER` — MEASURED, not assumed: `lazy-init`
                   // fires but only MOVES the error to the static block reading the now-context-taking
                   // field, which has no clause of its own (8 -> 8 errors, 9 member digests, zero net).
                   // Stays a counted `unsuppliable-use`. The other EIGHT sites arrived once the graph
@@ -214,7 +213,7 @@ object VisUiPolicy:
             // the BASE actually emitted; must run after any seam re-pointing such a reference.
             balticporter.transform.PortMapTransform.forBases("sge")
           ),
-          // THE REFERENCE HAND PORT for sge-visui. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-visui. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/visui/src/main/scala").normalize)))
         )
       )

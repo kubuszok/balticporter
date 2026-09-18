@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** THE SEAM WITH NO HEAD TO COERCE AGAINST — `ENGINE-LIMITS.md` K26's first blindness, at the fix. */
+/** THE SEAM WITH NO HEAD TO COERCE AGAINST — the mapping-to-two-families blindness, at the fix. */
 class CollectionsInferenceSiteSpec extends PortSuite:
 
   private val src =
@@ -65,7 +65,7 @@ class CollectionsInferenceSiteSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // §4.56 at its sharpest: `V` here owns to the CLASS, so this call cannot bind it and reading it
+    // Ownership at its sharpest: `V` here owns to the CLASS, so this call cannot bind it and reading it
     // as though it could would be a name test wearing a symbol's clothes. The seam stays the
     // counted refusal it was — closing it needs the RECEIVER's instantiation, a different
     // derivation — and `CollectionInternalCheck` declines on the very same test.

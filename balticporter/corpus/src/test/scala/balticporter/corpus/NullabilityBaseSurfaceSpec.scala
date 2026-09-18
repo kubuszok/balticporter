@@ -56,7 +56,7 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
     )
     (SpoonTir.fromTypes(types), root)
 
-  /** exactly what `PortRun.partitionUnits` computes — by ORIGIN, realpathed on both sides (§5.4). */
+  /** exactly what `PortRun.partitionUnits` computes — by ORIGIN, realpathed on both sides. */
   private def emittedUnits(p: Program, root: Path): Set[SymId] =
     val mine = RealPath.str(root.resolve("dep"))
     p.units.filter(u => RealPath.str(Path.of(u.origin.javaPath)).startsWith(mine)).map(_.symbol).toSet
@@ -168,6 +168,6 @@ class NullabilityBaseSurfaceSpec extends munit.FunSuite:
     val claimed = PortManifest(name = "base", governs = Set("p"), dropTypes = Set("p.Gone"))
     assertEquals(unclaimed(claimed.extendedBy(PortManifest(name = "dep", dropTypes = Set("p.Gone")))), 0)
     // the EMPTY manifest — the documented way to say "this resolution root is not a ported module"
-    // (CLAUDE.md §1.5) — has no policy to protect and is a statement, not a finding.
+    // — has no policy to protect and is a statement, not a finding.
     assertEquals(unclaimed(PortManifest(name = "notaport").extendedBy(PortManifest(name = "dep"))), 0)
   }

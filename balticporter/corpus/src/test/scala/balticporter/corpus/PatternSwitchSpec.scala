@@ -79,7 +79,7 @@ class PatternSwitchSpec extends PortSuite:
   }
 
   // ---------------------------------------------------------------------------------------------
-  // THE RECORD PATTERN — `ENGINE-LIMITS.md` T19, unblocked by `JS-C43`'s derived extractor
+  // THE RECORD PATTERN — needs an extractor over the accessors, unblocked by `JS-C43`'s derived extractor
   // ---------------------------------------------------------------------------------------------
 
   /** the record itself, so a test can assert on the extractor the arms below NAME. */
@@ -193,7 +193,7 @@ class PatternSwitchSpec extends PortSuite:
     )
     assert(clue(p.out).contains("case p.Coin.HEADS =>"), p.out)
     // javac throws MatchException here; scala's `match` throws MatchError. Both throw — and a
-    // synthesised `case _ => ()` throws NOTHING, which is the silent half of §4.4.
+    // synthesised `case _ => ()` throws NOTHING, which would be the silent defect here.
     assert(!clue(p.out).contains("case _ => ()"), p.out)
     // …and the implicit NPE stays: java's enhanced switch still NPEs on a null selector (JLS
     // 14.11.3), which the probe confirmed at run time.
@@ -216,7 +216,7 @@ class PatternSwitchSpec extends PortSuite:
 
   test("an UNRESOLVABLE selector type keeps the fall-out arm — the conservative arm, not a guess") {
     // The reason the disjunct is `provably outside`: under `noClasspath` a type that does not
-    // resolve says nothing, and dropping the arm on a resolution failure is §4.4's defect in the
+    // resolve says nothing, and dropping the arm on a resolution failure would be the same defect in the
     // other direction, on every classic switch in a corpus.
     val p = port(
       """package p;

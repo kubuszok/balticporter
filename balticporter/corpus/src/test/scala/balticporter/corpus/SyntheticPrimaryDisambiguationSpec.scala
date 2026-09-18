@@ -131,7 +131,7 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val o2 = new TirEmitter(Pipeline.run(SpoonTir.fromSource(clash), Nil)).emit
-    // §4.55 one level down: keep appending until the name is free rather than assuming the first
+    // The renaming rule one level down: keep appending until the name is free rather than assuming the first
     // is — the java `Funnel` lives in the same companion the marker would.
     assert(clue(o2).contains("ctor$: M2.Funnel$"))
     assert(o2.contains("protected final class Funnel$"))

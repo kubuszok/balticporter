@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, Pipeline }
 
-/** A `private` a CONSTRUCTOR writes is widened for a subclass THIS RUN CANNOT SEE — `ENGINE-LIMITS.md` C15.
+/** A `private` a CONSTRUCTOR writes is widened for a subclass THIS RUN CANNOT SEE.
   */
 class CtorFunnelExternalReplaySpec extends munit.FunSuite:
 

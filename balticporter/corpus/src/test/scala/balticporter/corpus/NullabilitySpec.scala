@@ -85,7 +85,7 @@ class NullabilitySpec extends PortSuite:
       assert(!d.detail.contains("key"))
     }
     // a parameter's retype is attributed to its METHOD — one row per declaration, never one per
-    // parameter (§5.1) — and the row says which positions moved.
+    // parameter — and the row says which positions moved.
     assertEquals(rows.find(_.subjectFqn == "demo.Group#find").get.detail("positions"), "param:name,return")
   }
 
@@ -180,7 +180,7 @@ class NullabilitySpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
-  // §1(b) — the policy half
+  // the policy half
   // -------------------------------------------------------------------------
 
   test("EMPTY annotations is a no-op, byte-for-byte — the (b) requirement, as an identity") {
@@ -219,12 +219,12 @@ class NullabilitySpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
-  // the SCOPE's own two obligations — `ENGINE-LIMITS.md` K13, as plan-time reports
+  // the SCOPE's own two obligations, as plan-time reports
   // -------------------------------------------------------------------------
 
   test("a scope entry that names no ANNOTATED declaration is REPORTED — the no-op only this phase sees") {
     // `demo.Actor` is a real type with no annotated member, so `PolicyBinder.bindScope` BINDS it —
-    // the region exists — and it holds nothing back. That is K13's `OrderedMap`, whose only previous
+    // the region exists — and it holds nothing back. That is the known `OrderedMap` case, whose only previous
     // evidence was a byte-identical `members.tsv`.
     val ph = phase(scope = RuleScope.Everywhere(Set("demo.Group#parent", "demo.Actor")))
     run(ph)
@@ -266,7 +266,7 @@ class NullabilitySpec extends PortSuite:
     // The negative this is written for: with parameters refused, a scope entry that holds one back
     // REMOVED that site's `AbstractTypeParameter`/refusal row and added nothing, so
     // `nullability-boundary` fell with nothing to attribute the fall to — indistinguishable from a
-    // check that stopped asking (CLAUDE.md §5).
+    // check that stopped asking.
     val only         = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
     val (after, log) = Pipeline.runTraced(PortFixture.parse(java), List(only))
     val out          = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)
@@ -311,14 +311,14 @@ class NullabilitySpec extends PortSuite:
     // it merely inherits, declares no annotation of its own, so nothing is planned for it and a
     // scope entry naming it would be the dead policy the test above reports.
     assertEquals(closureOf(RuleScope.Everywhere(Set("demo.Box"))), List("demo.SubBox#find"))
-    // …closed, exactly as K13's exit closes: name the subtype beside its ancestor
+    // …closed, exactly as that closure works: name the subtype beside its ancestor
     assertEquals(closureOf(RuleScope.Everywhere(Set("demo.Box", "demo.SubBox"))), Nil)
     // …and with no scope at all there is no half-pair to report
     assertEquals(closureOf(RuleScope.Everywhere()), Nil)
   }
 
   test("the SURFACE fingerprint carries the annotations, the target and the scope") {
-    // §1(b)'s no-op rule at the fingerprint: the target segment is OMITTED when default (Union),
+    // the no-op rule at the fingerprint: the target segment is OMITTED when default (Union),
     // so a port that never stated a target contributes no segment for one.
     assertEquals(phase().surfaceFingerprint, "demo.Null|")
     assertEquals(phase(target = Target.Named("lowlevel.Nullable")).surfaceFingerprint, "demo.Null|named:lowlevel.Nullable|")
@@ -326,7 +326,7 @@ class NullabilitySpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
-  // the two things the output must NEVER contain (ENGINE-LIMITS K2, and the lint tripwire)
+  // the two things the output must NEVER contain
   // -------------------------------------------------------------------------
 
   test("no `given Conversion` and no `orNull` reach the output — measured dead end, and a tripwire") {

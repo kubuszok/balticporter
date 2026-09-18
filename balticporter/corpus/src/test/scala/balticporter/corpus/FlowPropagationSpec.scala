@@ -107,7 +107,7 @@ class FlowPropagationSpec extends PortSuite:
     assert(clue(es).contains((field, param)), "`this.layer = l` is an assignment edge")
   }
 
-  // ---- O8: array element read/write is a pure move of the ELEMENT ----
+  // ---- array element read/write is a pure move of the ELEMENT ----
 
   private val arraySrc =
     """package demo;

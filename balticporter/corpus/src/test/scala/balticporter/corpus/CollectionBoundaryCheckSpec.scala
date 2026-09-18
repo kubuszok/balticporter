@@ -38,7 +38,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     // the SHIM's accessor and this receiver is not one (`CollectionsTransform.streamSource`) …
     assertEmits(p, "= this.f\n")
     // … while the DECLARATION still says `java.util.stream.Stream`, because the stream family is
-    // deliberately not retyped (ENGINE-LIMITS K6). Two types that java made agree, and no number
+    // deliberately not retyped. Two types that java made agree, and no number
     // in the pipeline moves: this is not an omission, not a portability site, not a signature
     // mismatch. Measured as 2 compile errors, and until now that was the ONLY evidence.
     assertEmits(p, "val st: java.util.stream.Stream[java.lang.String] =")
@@ -52,7 +52,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     assertEquals(decl.head.actual, "scala.collection.mutable.Buffer")
     assert(decl.head.origin.line > 0)
     // the classification is the whole point: an agent in another repository can act on this
-    // without investigating which of the three kinds it is (CLAUDE.md §4.45).
+    // without investigating which of the three kinds it is.
     assert(clue(Issue.classification(Issue.UntranslatedFamily)).contains("engine"))
     assert(clue(CollectionBoundaryCheck.summary(fs)).contains("UntranslatedFamily"))
   }
@@ -161,7 +161,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
   }
 
   test("a stranded slot is held to the units the run EMITS — a dependent never reports its base's (D2)") {
-    // The same D2 filter `OmissionCheck` and `PortabilityCheck.inEmittedCode` carry: a dependent
+    // The same structural-ownership filter `OmissionCheck` and `PortabilityCheck.inEmittedCode` carry: a dependent
     // port's program contains its base's units, and a slot stranded inside one of those is the
     // base's finding.
     val ph = new CollectionsTransform

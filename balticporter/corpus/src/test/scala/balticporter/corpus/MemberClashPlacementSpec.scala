@@ -128,7 +128,7 @@ class MemberClashPlacementSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   /** Every artifact that joins POLICY to EMITTED CODE keys a member on `owner#name` (`MemberKey`), and the port map's `upstream` column is that key spelled in JAVA's names. That is right today for
-    * one reason and one only: the §4.55 passes rewrite `Symbol.name`, which the emitter renders, and leave `Symbol.fullName`, which is a separate stored field.
+    * one reason and one only: renaming passes rewrite `Symbol.name`, which the emitter renders, and leave `Symbol.fullName`, which is a separate stored field.
     */
   test("a renaming pass rename moves the emitted NAME and leaves `Symbol.fullName` spelling JAVA's") {
     val src =

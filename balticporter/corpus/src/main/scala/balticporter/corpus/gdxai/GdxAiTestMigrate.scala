@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters.*
 
 /** Migrate **gdx-ai's own JUnit suite** (`gdx-ai/tests`, 2 files / 10 `@Test`) through the TIR. Only two upstream files carry `@Test`; the separate `gdx-ai/tests` gradle project (111 files) declares
   * ZERO `@Test`, an LWJGL demo application. `ai-test-measure` censuses the two trees apart, since every wrong answer this library produced came from conflating them. A dependent OF a dependent (both
-  * RESOLUTION ROOTS, §1.5), manifest [[GdxAiPolicy.test]] extended.
+  * RESOLUTION ROOTS), manifest [[GdxAiPolicy.test]] extended.
   */
 object GdxAiTestMigrate:
 

@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** K5.7's OTHER half — a `Tuple2` is impossible as a PARENT and exact at a SLOT, and which of the two a class gets is decided by a CAPABILITY the class either has or has not.
+/** The OTHER half — a `Tuple2` is impossible as a PARENT and exact at a SLOT, and which of the two a class gets is decided by a CAPABILITY the class either has or has not.
   */
 class CollectionsDetachedEntrySpec extends PortSuite:
 
@@ -54,7 +54,7 @@ class CollectionsDetachedEntrySpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // TWO facts at once, and both are flexmark's own shape. The interface hop is §4.56's fast-path
+    // TWO facts at once, and both are flexmark's own shape. The interface hop is the fast-path
     // rule (`Pair implements Paired`, `Paired extends Map.Entry`), and the EXCEPTION CLASS is not
     // pinned: what licenses the projection is that no write can happen, and a body whose first act
     // is to throw cannot perform one whatever it throws — flexmark's `Pair` throws an
@@ -78,7 +78,7 @@ class CollectionsDetachedEntrySpec extends PortSuite:
       new CollectionsTransform
     )
     // java runs this member and callers read the value back through the entry. A copy here compiles
-    // and silently drops every later write — `CLAUDE.md` §4.4's defect class — so the honest answer
+    // and silently drops every later write — valid scala meaning something else — so the honest answer
     // is the compile error the slot already had.
     assertNotEmits(p, "entryToPair")
   }

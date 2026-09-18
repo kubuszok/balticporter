@@ -4,9 +4,9 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Correlate, Decision, DecisionLog, Pipeline, PorterNote, SrcMap }
 
-/** E9 — PREVIEW MODE: say it in the OUTPUT, or refuse and count. `preview = true` turns a residue site into `scala.compiletime.error`, naming WHAT could not be rendered, WHY, WHAT the agent must do,
-  * and the JAVA ORIGIN — for an agent in another repository (CLAUDE.md §4.45) who has to find the residue at all. With the flag OFF the emitted text is EXACTLY what it was, character for character: a
-  * diagnostic mode that perturbs the shipping emission is not a diagnostic mode.
+/** PREVIEW MODE: say it in the OUTPUT, or refuse and count. `preview = true` turns a residue site into `scala.compiletime.error`, naming WHAT could not be rendered, WHY, WHAT the agent must do, and
+  * the JAVA ORIGIN — for an agent in another repository who has to find the residue at all. With the flag OFF the emitted text is EXACTLY what it was, character for character: a diagnostic mode that
+  * perturbs the shipping emission is not a diagnostic mode.
   */
 class PreviewModeSpec extends munit.FunSuite:
 

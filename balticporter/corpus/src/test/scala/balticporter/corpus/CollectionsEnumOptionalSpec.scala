@@ -83,8 +83,8 @@ class CollectionsEnumOptionalSpec extends PortSuite:
   test("`orElse` is the ONE member of that family that is not a rename — java evaluates its default") {
     // `Optional.orElse(v)` takes a VALUE: java computes it before the call, whatever the optional
     // holds. `Option.getOrElse` takes it BY NAME and computes it only when empty. Same name, same
-    // answer, and a side effect that runs in java and does not run in the port — `CLAUDE.md` §4.4's
-    // defect class, with a green compile and no moved count. The strict helper restores java's
+    // answer, and a side effect that runs in java and does not run in the port — valid scala
+    // meaning something else, with a green compile and no moved count. The strict helper restores java's
     // evaluation order at the call.
     assert(clue(out).contains("balticporter.runtime.JavaCollections.optionalOrElse(this.limit, d)"))
     assert(!out.contains("this.limit.getOrElse(d)"))

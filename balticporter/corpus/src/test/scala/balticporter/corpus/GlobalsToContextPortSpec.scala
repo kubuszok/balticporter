@@ -60,9 +60,9 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     members = Map("graphics" -> "graphics", "files" -> "files")
   )
 
-  /** A class with TWO constructors reaching ONE parent constructor — §8.2's SYNTHESISED primary, which is the shape the constructor clause is hardest for and the one `ENGINE-LIMITS.md` CT4's first
-    * cause lived in. Its own source rather than a fifth class in `src`, because in METHOD mode only the constructor that READS would take a clause and the two roots would then disagree about their
-    * signatures — a legitimate refusal, and noise in every assertion above.
+  /** A class with TWO constructors reaching ONE parent constructor — the synthesised primary, which is the shape the constructor clause is hardest for. Its own source rather than a fifth class in
+    * `src`, because in METHOD mode only the constructor that READS would take a clause and the two roots would then disagree about their signatures — a legitimate refusal, and noise in every
+    * assertion above.
     */
   private val synthSrc =
     """package demo;
@@ -118,7 +118,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(source, "Demo.java"), List(phase))
     (phase, after, log, new TirEmitter(after, notes = log).emit)
 
-  /** the emitted CODE with the porter notes stripped: a note names the UPSTREAM member on purpose, so a check that searches emitted text for an upstream name has to strip them first (§4.575).
+  /** the emitted CODE with the porter notes stripped: a note names the UPSTREAM member on purpose, so a check that searches emitted text for an upstream name has to strip them first.
     */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
@@ -209,7 +209,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   }
 
   test("its classification says IT DOES NOT COMPILE, and offers no re-spelling") {
-    // §4.45: an error an agent cannot classify costs it a full investigation, and the wrong
+    // An error an agent cannot classify costs it a full investigation, and the wrong
     // classification costs it the investigation plus a wrong fix. The two sentences must not be
     // interchangeable.
     val c = ContextSeamCheck.Kind.classification(ContextSeamCheck.Kind.UnsuppliableUse)
@@ -223,7 +223,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   }
 
   test("NOTHING accepts an `unsuppliable-use` — an accept answers a question, not a build failure") {
-    // CLAUDE.md §5's second screen, at the one kind where it decides. Every accept on every menu is
+    // This is the second check an accept must pass, at the one kind where it decides. Every accept on every menu is
     // a port saying *I have read this site and the residue is right here*, which is a statement only
     // where the ENGINE declined to decide. Here the target compiler has already decided: an accept
     // would drain the row and leave the `No given` failing the build, with the arithmetic balanced.
@@ -237,7 +237,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   private lazy val ctorRef = portedFrom(ctorRefSrc, base.copy(attach = ContextAttach.Class))
 
   test("`C::new` in a `<clinit>` is a COUNTED unsuppliable use — a factory reference constructs") {
-    // The whole of PROGRESS.md §10.8.9, in miniature. `Link::new` lowers to `(a) => new demo.Link(a)`
+    // `Link::new` lowers to `(a) => new demo.Link(a)`
     // and `Link` took the clause, so the emitted lambda needs a given and a class initialiser has
     // none — a hard `No given` that arrived as a BARE TYPER ERROR with nothing in the run pointing
     // at it, because the closure never saw the construction at all.
@@ -385,7 +385,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
 
   test("a `retain` NAME that is not an identifier is MALFORMED, not spliced into a header") {
     // The value is emitted into `val <nm>:`, so anything else is a SYNTAX error at a line the port
-    // never wrote — §4.45's bar, and a malformed entry must not also emit.
+    // never wrote, and a malformed entry must not also emit.
     val (p, _, _, o) = portedFrom(retainSrc, retainHolder.copy(retain = Map("demo.Label" -> "demo ctx")))
     val f            = p.policyReport.findings.find(_.key == "demo.Label")
     assert(clue(f).isDefined, p.policyReport.render)
@@ -433,7 +433,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   }
 
   test("…and the accessor THROWS rather than answering `null` — java's own contract, not a stand-in") {
-    // CLAUDE.md §1: where the engine's own translation creates the obligation, the honest emission
+    // Where the engine's own translation creates the obligation, the honest emission
     // is the contract's own refusal, which is louder than java and never quieter. A public `var`
     // would answer `null` before anything had captured one and let anything write it.
     // NEGATIVE: emit the holder public and the accessor disappears with the `throw`.
@@ -441,7 +441,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     val c            = code(o)
     assert(clue(c).contains("throw new java.lang.IllegalStateException("), c)
     assert(c.contains("demoCtx$cache eq null"), c)
-    // the message names the SIMPLE name, which a package rename does not move (§4.56).
+    // the message names the SIMPLE name, which a package rename does not move.
     assert(c.contains("Boot has captured no Ctx yet"), c)
   }
 
@@ -511,7 +511,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   }
 
   test("…and a type with NO static member gets ONE — an unused given is emitted text for nothing") {
-    // §5's over-approximation, the one shape no count can see. `Panel` reads the holder from an
+    // An over-approximation, the one shape no count can see. `Panel` reads the holder from an
     // instance method and declares nothing static, so there is no companion for a second to go in.
     val (_, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Boot" -> "demoCtx"), selfSupplied = Map("demo.Panel" -> "demo.Boot.demoCtx")))
     assertEquals(clue(code(o)).linesIterator.count(_.contains("private given demo.Ctx")), 1, code(o))
@@ -582,10 +582,10 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     val ds = l.of(Decision.Kind.DeferredInit)
     assertEquals(clue(ds).map(_.subjectFqn), List("demo.Boot#banner"))
     assertEquals(ds.head.reason, balticporter.tir.Reason.Configured("globals->implicits", "demo.Boot#<clinit>"))
-    // …and the `sites` key appears ONCE in the note: the §1 classification carries it, so repeating
+    // …and the `sites` key appears ONCE in the note: the classification carries it, so repeating
     // it in the detail renders `key=` twice in one comment.
     assertEquals(clue(o).sliding("key=demo.Boot".length).count(_ == "key=demo.Boot"), 1, o)
-    // …and the note is BESIDE the declaration, where the question is asked (§4.575).
+    // …and the note is BESIDE the declaration, where the question is asked.
     assert(clue(o).contains("/* porter: deferred-init"), o)
     assert(o.contains("key=demo.Boot#<clinit>"), o)
     assertEquals(p.seams(a).count(_.kind == ContextSeamCheck.Kind.DeferredInit), 1)
@@ -617,7 +617,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(frozen.exists(_.subject == "demo.Widget#paint"), frozen.map(_.render).mkString("\n"))
     // NOT threaded — a clause here would not match the parent's declaration.
     assert(!code(o).contains("def paint(g: java.awt.Graphics)(using"), o)
-    // and the refusal is a §1(b) finding an agent can act on, not silence.
+    // and the refusal is a finding an agent can act on, not silence.
     assert(clue(phase.policyReport.findings).exists(_.detail.contains("cannot take a context clause")))
   }
 
@@ -627,8 +627,8 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
 
   test("`attach = class` EMITS — the refusal is gone, and nothing is reported in its place") {
     // This spec was the REFUSAL's spec: `attach = "class"` recorded a counted `Unverifiable`
-    // finding because the constructor funnel undid the clause three ways (ENGINE-LIMITS CT4, 5
-    // scalac errors on this fixture). All three were in the constructor region DESIGN.md §8.
+    // finding because the constructor funnel undid the clause three ways (5
+    // scalac errors on this fixture). All three were in the constructor region.
     val (p, _, _, _) = ported(base.copy(attach = ContextAttach.Class))
     assertEquals(clue(p.policyReport.findings.filter(_.setting.endsWith(".attach"))), Nil, p.policyReport.render)
     assertEquals(phase.policyReport.findings.count(_.setting.endsWith(".attach")), 0)
@@ -644,7 +644,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(clue(c).contains("class Basic(using demo.Ctx)"), c)
     assert(!c.contains("$p: demo.Ctx"), c)
     // …and NOT on the instance methods, which is the whole argument for class attachment: 275
-    // threaded declarations against 2,497, and `frozen-component` 32 -> 0 (PROGRESS §11.12).
+    // threaded declarations against 2,497, and `frozen-component` 32 -> 0.
     assert(!c.contains("def render()(using"), c)
     // a SUBCLASS of a threaded class takes the clause too, or its own `extends` has nothing to pass
     assert(clue(c).contains("class Loud(using demo.Ctx)"), c)
@@ -654,9 +654,9 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(clue(classRows).contains("demo.Basic"), classRows.toString)
   }
 
-  /** CT4's FIRST cause, end to end: a constructor that has gained a clause is not java's nilary one, and reading it as paramful is what made the funnel decline the promotion and emit a synthetic
-    * nilary primary beside it — a class body with no given in scope anywhere. The class here needs a SYNTHESISED primary (two roots, one parent constructor), so the clause has to survive both the
-    * nomination and the emission, and every secondary's `this(...)` has to still resolve.
+  /** The first cause, end to end: a constructor that has gained a clause is not java's nilary one, and reading it as paramful is what made the funnel decline the promotion and emit a synthetic nilary
+    * primary beside it — a class body with no given in scope anywhere. The class here needs a SYNTHESISED primary (two roots, one parent constructor), so the clause has to survive both the nomination
+    * and the emission, and every secondary's `this(...)` has to still resolve.
     */
   test("a SYNTHESISED primary carries the clause as its own GROUP, and the secondaries reach it") {
     val holder = ContextHolder(
@@ -768,9 +768,9 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     val dir        = _root_.java.nio.file.Path.of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), s"globals-$label")
     _root_.java.nio.file.Files.createDirectories(dir)
     // the INJECTED context type is the port's own hand-written Scala — the engine never saw it, so
-    // the probe supplies it exactly as a port would (§8.4: `inject` is where the ergonomics live).
+    // the probe supplies it exactly as a port would (`inject` is where the ergonomics live).
     _root_.java.nio.file.Files.writeString(dir.resolve("Ctx.scala"), ctx)
-    // ONE FILE PER UNIT, because that is the layout a port writes (§5.5) and because the whole-
+    // ONE FILE PER UNIT, because that is the layout a port writes, and because the whole-
     // program `emit` concatenates ten `package demo` clauses into one file, which is not Scala.
     after.units.foreach { u =>
       val nm = after.symbolOf(u.symbol).map(_.name).getOrElse("Unit")

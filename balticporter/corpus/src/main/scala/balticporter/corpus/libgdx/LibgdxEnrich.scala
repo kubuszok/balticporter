@@ -5,8 +5,8 @@ import balticporter.corpus.lls.LlsEnrich.{ ArrayKind, MapKind, SetKind, spec }
 import balticporter.transform.AddMembersTransform
 import balticporter.transform.AddMembersTransform.MemberSpec
 
-/** lls's added API on CORE's own collections (the ones lls does not carry), through lls's generators — the ladder's "enrich" step (PROGRESS.md §13.29). The subclasses of lls's types declare the
-  * factories themselves: the inherited-statics export would otherwise clash with scala's constructor proxy (`E120`, three at L0).
+/** lls's added API on CORE's own collections (the ones lls does not carry), through lls's generators — the ladder's "enrich" step. The subclasses of lls's types declare the factories themselves: the
+  * inherited-statics export would otherwise clash with scala's constructor proxy (`E120`, three at L0).
   */
 object LibgdxEnrich:
 
@@ -33,8 +33,8 @@ object LibgdxEnrich:
     ArrayKind("BooleanArray", "sge.utils.BooleanArray", "scala.Boolean", removeMany = "this.removeAll(other)")
   )
 
-  /** the two object-VALUED maps wrap `get` in `Nullable`: their templates were written against lls's nullable-returning API and need the nullability step first (a measured dependency, PROGRESS.md
-    * §13.29 — 2 errors when added ahead of it).
+  /** the two object-VALUED maps wrap `get` in `Nullable`: their templates were written against lls's nullable-returning API and need the nullability step first (a measured dependency — 2 errors when
+    * added ahead of it).
     */
   private val nullableMaps: List[MapKind] = List(
     MapKind(

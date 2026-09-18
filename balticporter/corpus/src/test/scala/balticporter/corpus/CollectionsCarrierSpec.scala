@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program }
 import balticporter.transform.CollectionsTransform
 
-/** The THIRD reified position — a generic type ARGUMENT a third party reads out of the class file's generic signature and CONSTRUCTS from (`ENGINE-LIMITS.md` K20).
+/** The THIRD reified position — a generic type ARGUMENT a third party reads out of the class file's generic signature and CONSTRUCTS from.
   */
 class CollectionsCarrierSpec extends PortSuite:
 

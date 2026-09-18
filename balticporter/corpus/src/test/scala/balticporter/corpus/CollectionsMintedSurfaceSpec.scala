@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** THE SURFACE THE MINTED PARENT DECLARES — `ENGINE-LIMITS.md` K28.1's bridge. */
+/** THE SURFACE THE MINTED PARENT DECLARES — the synthesised bridge member. */
 class CollectionsMintedSurfaceSpec extends PortSuite:
 
   private val src =
@@ -77,7 +77,7 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
     assertNotEmits(p, "containsKey$java")
   }
 
-  /** …and the one below it that THIS FIXTURE CANNOT PROVE, which is worth stating rather than hiding (§4.59: a fixture only promotes a fact it can actually distinguish).
+  /** …and the one below it that THIS FIXTURE CANNOT PROVE, which is worth stating rather than hiding (a fixture only promotes a fact it can actually distinguish).
     */
   test("a VARARG overload is never the delegate while a fixed-arity one exists") {
     val p = port(src, new CollectionsTransform)

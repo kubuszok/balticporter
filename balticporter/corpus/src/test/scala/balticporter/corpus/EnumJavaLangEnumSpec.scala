@@ -31,7 +31,7 @@ class EnumJavaLangEnumSpec extends PortSuite:
     // package-private and final in java (`EnumPromotedParamFlagsSpec`).
     assert(clue(out).contains("enum Flags(private[en1] val bits: scala.Int) extends java.lang.Enum[Flags] with en1.Bits"))
     // the constants, with the ROOT constructor's arguments — `NODE_TEXT` named the delegating
-    // overload and java ran `this(1)`, which is the T11.5 derivation this arm shares.
+    // overload and java ran `this(1)`, which is the same delegation-root derivation this arm shares.
     assert(out.contains("case LINK_TEXT extends Flags(3)"))
     assert(out.contains("case NODE_TEXT extends Flags(1)"))
     // FOUR members the sealed shape wrote are absent, and each would be an ERROR rather than a
@@ -93,7 +93,7 @@ class EnumJavaLangEnumSpec extends PortSuite:
 
   test("REFUSED — a promoted parameter named `name` cannot coexist with the final `Enum.name()`") {
     // java's TWO namespaces let a `String name` constructor parameter sit beside the final method;
-    // scala's ONE cannot, and the promotion makes the parameter a member (`CLAUDE.md` §4.55).
+    // scala's ONE cannot, and the promotion makes the parameter a member.
     val (out, fs) = emit(
       """package en4;
         |enum Dither {

@@ -8,8 +8,8 @@ import balticporter.corpus.lls.{ LlsMigrate, LlsPolicy }
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Rung L0 of the libGDX ladder ON THE LLS BASE: core minus the utilities family, a DEPENDENT of `ported/lls` (CLAUDE.md §1.5), with no policy of its own — its compile count is the honest measure of
-  * Java-as-Scala over the base's decisions, before any of core's own.
+/** Rung L0 of the libGDX ladder on the lls base: core minus the utilities family, a dependent of `ported/lls`, with no policy of its own — its compile count is the honest measure of Java-as-Scala
+  * over the base's decisions, before any of core's own.
   */
 object LibgdxL0Migrate:
 
@@ -59,18 +59,18 @@ object LibgdxLadder:
   /** JUnit's `@Rule TestWatcher` has no MUnit model; the field is dropped, as on the full port. */
   private val watcherDrop = "com.badlogic.gdx.utils.JsonMatcherTests#watcher"
 
-  /** The test manifest: JUnit -> MUnit only (`TestFrameworkTransform`), inheriting `universal`; `externalParenless` is P11 (munit's JS/Native `Description` is parenless). No sge policy.
+  /** The test manifest: JUnit -> MUnit only (`TestFrameworkTransform`), inheriting `universal`; `externalParenless` lists it — munit's JS/Native `Description` is parenless. No sge policy.
     */
   def universalTest(repoRoot: Path, steps: Set[String] = DefaultSteps, reference: Option[Path] = None): PortManifest = universal(repoRoot, steps, reference).extendedBy(
     PortManifest(
       name = "sge-l0-test",
       dropMethods = Set(watcherDrop),
-      // the test tree calls into sge-l0: it FOLLOWS what sge-l0 PUBLISHED (properties, parenless), D14.
+      // the test tree calls into sge-l0: it follows what sge-l0 published (properties, parenless).
       surface = List(
         new balticporter.transform.TestFrameworkTransform(dropFields = Set(watcherDrop)),
         balticporter.transform.PortMapTransform.forBases("sge-l0")
       ) ++
-        // CT7: `AnimationControllerTest` is constructed by MUnit, so the threaded context cannot reach
+        // `AnimationControllerTest` is constructed by MUnit, so the threaded context cannot reach
         // it as a parameter — it takes one from the hand-written fixture (`ported/sge-l0/src/test`).
         (if steps("context") then
            List(
@@ -102,8 +102,8 @@ object LibgdxLadder:
   def referenceFrom(args: Array[String]): Option[Path] =
     args.collectFirst { case a if a.startsWith("--reference=") => a.stripPrefix("--reference=").trim }.filter(_.nonEmpty).map { v =>
       val p = Path.of(v).toAbsolutePath.normalize
-      // a reference that is not there derives NOTHING and says so nowhere (CLAUDE.md §4.6): the L0 lane
-      // read 730 opaque-slot errors off a mistyped path with no engine change (2026-09-16)
+      // a reference that is not there derives nothing and says so nowhere: a mistyped path
+      // silently derives from no hand port instead of failing.
       val hand = p.resolve("sge/src/main/scala")
       require(java.nio.file.Files.isDirectory(hand), s"--reference=$v names no hand port: $hand is not a directory")
       p
@@ -115,8 +115,8 @@ object LibgdxLadder:
       case Some("none") => Set.empty
       case Some(v)      => v.split(',').map(_.trim).filter(_.nonEmpty).toSet
 
-  /** Core's declarations that allocate an array at their OWN type parameter, or construct a `DynamicArray` at it, so they take the `MkArray` clause (PROGRESS.md §13.29, step "witness"); the
-    * null-as-empty tables (`IntMap`, `ObjectIntMap`, …) stay refused and counted (K41).
+  /** Core's declarations that allocate an array at their own type parameter, or construct a `DynamicArray` at it, so they take the `MkArray` clause (the "witness" step); the null-as-empty tables
+    * (`IntMap`, `ObjectIntMap`, …) stay refused and counted.
     */
   val CoreWitnessSubjects: Map[String, List[Int]] = Map(
     "com.badlogic.gdx.utils.SnapshotArray" -> List(0),
@@ -128,16 +128,16 @@ object LibgdxLadder:
     "com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch" -> List(0)
   )
 
-  /** The step fragments, cumulative; each merges with the base's instance of the same phase at the base's position (CLAUDE.md §1.5).
+  /** The step fragments, cumulative; each merges with the base's instance of the same phase at the base's position.
     */
   /** the GL statics' two-hop path: the property step renames the getter (`gl20`); before it, the call. */
   private def glPath(sel: Set[String], n: String): String =
     if sel("properties") then s"graphics.gl$n" else s"graphics.getGL$n()"
 
-  /** sge's remaining GL enums (all in the injected `GLEnum.scala`): one opaque per family, seeded at every GL parameter sge types with it, GL20 through GL32 (PROGRESS.md §13.30 step 1: sge's ANGLE
-    * bindings implement THAT surface). A `def`: a phase instance carries binding state.
+  /** sge's remaining GL enums (all in the injected `GLEnum.scala`): one opaque per family, seeded at every GL parameter sge types with it, GL20 through GL32 (sge's ANGLE bindings implement that
+    * surface). A `def`: a phase instance carries binding state.
     */
-  /** the derive step: an opaque spec's seeds and fence are the REFERENCE's alone (PROGRESS.md §13.31 step 1) — the hand-listed hints and the propagation fences were the pre-derivation device.
+  /** the derive step: an opaque spec's seeds and fence are the reference's alone — the hand-listed hints and the propagation fences were the pre-derivation device.
     */
   private def opaque(spec: balticporter.tir.OpaqueSpec)(using derive: Boolean): balticporter.tir.Phase =
     new balticporter.transform.PrimitiveToOpaqueTransform(
@@ -302,7 +302,7 @@ object LibgdxLadder:
       // opaque, nullability and arity phases and declares sge's tree as the manifest's reference.
       "derive" -> Nil,
       // sge's `[T: ClassTag]` bounds where java takes a `Class<T>` (`PoolManager.addPool`, `Skin.get`,
-      // `Actions.action`, `AssetManager.get`): read off sge's tree (DESIGN.md §8.30 (9))
+      // `Actions.action`, `AssetManager.get`): read off sge's tree
       "classtags" -> List(new balticporter.transform.ClassTagParamsTransform(derive = derive)),
       // members sge ships public where java declared them protected (`FileHandle(File, FileType)`), off sge's tree
       "visibility" -> List(
@@ -321,14 +321,16 @@ object LibgdxLadder:
           derive = derive
         )
       ),
-      // sge's OWN members the suite reaches for, read verbatim off sge's tree by name (DESIGN.md §8.30 (8));
+      // sge's own members the suite reaches for, read verbatim off sge's tree by name;
       // a member whose body wants a type the port lacks comes off this list with its finding
       "extras" -> List(
         new balticporter.transform.AddMembersTransform(
           fromReference = Map(
             "com.badlogic.gdx.graphics.g2d.Animation$PlayMode" -> List("isLooping", "isReversed"),
-            // the vector OPERATORS (`+`, `-`), `Vector3.rotateAround*`/`cross` and `Ray.endPoint` return `this.type` off
-            // sge's own float overloads: the fluent shape (ENGINE-LIMITS I1), not a splice — left to that card
+            // the vector operators (`+`, `-`), `Vector3.rotateAround*`/`cross` and `Ray.endPoint` return `this.type` off
+            // sge's own float overloads: the fluent shape. A general rewrite of `return this` methods to
+            // `this.type` was refused — most would gain no precision from it, and it would constrain every
+            // dependent's overrides — so these members are added individually instead.
             "com.badlogic.gdx.math.Vector" -> List("copy"),
             "com.badlogic.gdx.math.Vector2" -> List("*", "copy", "cross"),
             "com.badlogic.gdx.math.Vector3" -> List("copy"),
@@ -901,7 +903,7 @@ object LibgdxLadder:
             )
           )
         ),
-        // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*` (K6.5)
+        // varargs constructors: java's `T...` emits `Array[T]`; sge writes `T*`
         new balticporter.transform.AddMembersTransform(
           Map(
             "com.badlogic.gdx.graphics.g2d.Animation" -> List(
@@ -1020,9 +1022,9 @@ object LibgdxLadder:
       // sge's `Align` opaque over java's `int` alignment bitmasks — the full port's spec, seeded here from
       // the reference (`GlyphLayout.setText`'s `halign`, `BitmapFont.draw`'s, every scene2d field; ISS-770)
       "align" -> List(opaque(LibgdxPolicy.AlignSpec)),
-      // java's `Gdx.app.log/error/debug(tag, msg[, t])` become sge's context-free `Log` (PROGRESS.md
-      // §13.31 step 2): a class that only LOGS then takes no context (sge commented the particle
-      // values' call out — a skip; the port keeps java's call). Placed BEFORE the context step.
+      // java's `Gdx.app.log/error/debug(tag, msg[, t])` become sge's context-free `Log`: a class that only
+      // logs then takes no context (sge commented the particle
+      // values' call out — a skip; the port keeps java's call). Placed before the context step.
       "logging" -> List(
         new balticporter.transform.CallSiteSubstitutionTransform(
           Map(
@@ -1042,7 +1044,7 @@ object LibgdxLadder:
       // not supported in WebGL"). sge's hand port falls back to `VertexBufferObject` on every platform — the one
       // site where it diverged (java's SpriteBatch already defaults to buffer objects, PolygonSpriteBatch is kept);
       // the body is java's, that constant apart. Shadowing `VertexArray` per row was tried and refused: shared
-      // suites pin its java semantics on every row (rules/phases.md K58).
+      // suites pin its java semantics on every row.
       "webgl" -> List(
         new balticporter.transform.MethodBodyTransform(
           Map(
@@ -1071,18 +1073,18 @@ object LibgdxLadder:
           )
         )
       ),
-      // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
+      // sge's platform contract and its JVM implementations, copied: no phase, injections only.
       "backend-jvm" -> Nil,
-      // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
+      // the 59 java `native` members answered on the JVM: bodies from
       // `LibgdxNativeBodies`, the objects they call injected (`Gdx2DNative`, `BufferUtilsNative`, `ETC1Native`).
       // sge's shared `BufferUtils`/`Gdx2DPixmap`/`ETC1`/`UIUtils` over the platform ops traits (one
-      // implementation per row, already injected) replace java's JNI classes on EVERY row; only
-      // `Matrix4`'s three native loops keep a substituted body (PROGRESS.md §13.31 step 3).
+      // implementation per row, already injected) replace java's JNI classes on every row; only
+      // `Matrix4`'s three native loops keep a substituted body.
       "natives" -> List(new balticporter.transform.MethodBodyTransform(LibgdxNativeBodies.matrix4)),
-      // sge's desktop backend (GLFW window, input, files, preferences, net, miniaudio), copied (PROGRESS.md §13.30 step 3): injections only.
+      // sge's desktop backend (GLFW window, input, files, preferences, net, miniaudio), copied: injections only.
       "backend-desktop" -> Nil,
       // sge's typed JSON/UBJSON documents with Kindlings-derived codecs replace java's reflective JSON stack, one
-      // consumer family at a time (PROGRESS.md §13.30, JSON step): first the g3d model loader.
+      // consumer family at a time: first the g3d model loader.
       "json" -> List(
         // the g3d particle loader reads sge's typed document (`ResourceData.fromJson` over the jsoniter AST)
         // and rebuilds the effect through the injected `ParticleEffectCodecs` in `loadSync`, where the
@@ -1159,14 +1161,14 @@ object LibgdxLadder:
         new balticporter.transform.ElementWitnessTransform(
           witness = LlsPolicy.Witness,
           subjectTypes = CoreWitnessSubjects,
-          // the clause is threaded; java's implicit `<: Object` bound STAYS on core's subjects — their
-          // collaborators (`ObjectSet[T]`) keep theirs (ENGINE-LIMITS.md K48).
+          // the clause is threaded; java's implicit `<: Object` bound stays on core's subjects — their
+          // collaborators (`ObjectSet[T]`) keep theirs.
           dropBound = Set.empty,
           boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]")
         )
       ),
       // core's collections onto lls's and the JDK table, `Comparator -> Ordering`: the base's instance
-      // widened to core's entry (merged `Only` scopes, CLAUDE.md §1.5 D12).
+      // widened to core's entry (merged `Only` scopes).
       "collections" -> List(
         new balticporter.transform.CollectionsTransform(
           scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
@@ -1335,7 +1337,7 @@ object LibgdxLadder:
               // `Gdx.app.error` inside stays a counted residual global read.
               scope = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap#dispose")),
               // sge's `GLProfiler(graphics)` takes no context: the GL statics it swaps are read off the
-              // `graphics` it was handed (DESIGN.md §8.4 `through`).
+              // `graphics` it was handed (the `through` mapping).
               through = Map("com.badlogic.gdx.graphics.profiling.GLProfiler" -> "graphics"),
               // sge's `FileHandle(file, type, externalStoragePath)` is context-free: java's one read of
               // `Gdx.files.getExternalStoragePath()` (in `file()`) is a value given at construction.
@@ -1413,7 +1415,7 @@ object LibgdxLadder:
               "com.badlogic.gdx.Screen#resize#width",
               "com.badlogic.gdx.Screen#resize#height"
             )
-              // sge types these GL20 parameters in `Pixels` (its ANGLE bindings implement that surface, §13.30)
+              // sge types these GL20 parameters in `Pixels` (its ANGLE bindings implement that surface)
               ++ Set(
                 "glCompressedTexImage2D#width",
                 "glCompressedTexImage2D#height",
@@ -1466,7 +1468,7 @@ object LibgdxLadder:
                 "com.badlogic.gdx.graphics.GL30#glCopyTexSubImage3D",
                 "com.badlogic.gdx.graphics.GL30#glBlitFramebuffer",
                 "com.badlogic.gdx.graphics.GL30#glRenderbufferStorageMultisample",
-                // sge sizes ETC1 in plain Int throughout (its JNI-shaped statics answer through the contract, §13.30 step 2)
+                // sge sizes ETC1 in plain Int throughout (its JNI-shaped statics answer through the contract)
                 "com.badlogic.gdx.graphics.glutils.ETC1",
                 // sge sizes a NinePatch in plain Int (the flow had reached `left`/`right` and not `top`/`bottom`)
                 "com.badlogic.gdx.graphics.g2d.NinePatch"
@@ -1864,7 +1866,7 @@ object LibgdxLadder:
         )
       ),
       // sge's typed GL enums (`GLEnum.scala`, injected) at the GL20 parameters the demos reach; the raw
-      // `GL_*` constants stay java's `inline val`s (a constant is never a seed, K51 xv) and wrap at the call.
+      // `GL_*` constants stay java's `inline val`s (a constant is never a seed) and wrap at the call.
       "glenum" -> (List(
         opaque(
           balticporter.tir.OpaqueSpec(
@@ -1960,8 +1962,8 @@ object LibgdxLadder:
       // lifted by reference, on core's entry; the `Only` scope merges with lls's arity instance.
       "properties" -> List(
         // sge's own setter decisions the demos rely on (`game.screen = …`, `batch.projectionMatrix = …`):
-        // configured pairs, which the behaviour-setter guard does not apply to (`Cell.setTile` is FLUENT:
-        // a configured pair collapses it, the property's setter returns Unit, the chain is counted, K51 xix).
+        // configured pairs, which the behaviour-setter guard does not apply to (`Cell.setTile` is fluent:
+        // a configured pair collapses it, the property's setter returns Unit, the chain is counted).
         new balticporter.transform.BeanPropertyTransform(
           LibgdxPolicy.beanPropertyPairs ++ Map(
             "com.badlogic.gdx.Game#screen" -> "getScreen/setScreen",
@@ -2085,7 +2087,7 @@ object LibgdxLadder:
     // sge's `InputProcessor` (every callback defaulted to `false`, so `new InputProcessor {}` stands)
     "backend-desktop" -> Set("com.badlogic.gdx.InputProcessor"),
     // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
-    // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
+    // their own `Net` (sge's capability convention).
     "net" -> Set(
       "com.badlogic.gdx.net.NetJavaImpl",
       // sge's HTTP stack (`Net.httpClient`, an sttp client) replaces java's Net and its net helpers;
@@ -2119,7 +2121,7 @@ object LibgdxLadder:
     )
   ).withDefaultValue(Set.empty)
 
-  /** per step, the hand-written injections (standing order 4): `ladder-overrides/` holds the reflection-free `Json`, `ReflectionException` and the asset-type registry.
+  /** per step, the hand-written injections: `ladder-overrides/` holds the reflection-free `Json`, `ReflectionException` and the asset-type registry.
     */
   def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
     "helpers" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-helpers")),
@@ -2142,8 +2144,8 @@ object LibgdxLadder:
     "json" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-json"))
   ).withDefaultValue(Nil)
 
-  /** Per step, the PLATFORM ROWS' injections (`PortManifest.platformDirs`, PROGRESS.md §13.31 step 3): sge's `scalajvm`/`scaladesktop` layers and the port's own JVM-only files go to the `jvm` row
-    * (`src_managed/jvm/scala`), which only that row compiles.
+  /** Per step, the platform rows' injections (`PortManifest.platformDirs`): sge's `scalajvm`/`scaladesktop` layers and the port's own JVM-only files go to the `jvm` row (`src_managed/jvm/scala`),
+    * which only that row compiles.
     */
   def stepPlatformInjects(repoRoot: Path): Map[String, Map[String, List[Path]]] = Map(
     // the async executor and its result: java's own (java.util.concurrent) on the threaded rows,
@@ -2231,7 +2233,7 @@ object LibgdxLadder:
     "visibility"
   )
 
-  /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
+  /** the steps landed so far (measured, baselined). */
   val DefaultSteps: Set[String] = Set(
     "witness",
     "collections",
@@ -2281,15 +2283,15 @@ object LibgdxLadder:
           governs = Set("com.badlogic.gdx"),
           dropTypes = StepOrder.filter(steps).flatMap(stepTypeDrops).toSet,
           dropMethods = StepOrder.filter(steps).flatMap(stepDrops).toSet,
-          // sge ships `TextFormatter` public (java: package-private): declared, the split publishes it (K51 xviii).
+          // sge ships `TextFormatter` public (java: package-private): declared, the split publishes it.
           allowPackageSplit = (if steps("helpers") then Set("com.badlogic.gdx.utils.TextFormatter") else Set.empty) ++
             // sge's top-level `BitmapFontData`: promoted out of `BitmapFont`, whose package-private
-            // members it reads ship public (K47) — the split declared, as sge's own tree has it
+            // members it reads ship public — the split declared, as sge's own tree has it
             Set("com.badlogic.gdx.graphics.g2d.BitmapFont$BitmapFontData"),
           inject = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
           platformDirs = StepOrder.filter(steps).flatMap(stepPlatformInjects(repoRoot)(_).toList).groupMapReduce(_._1)(_._2)(_ ++ _),
-          // a dependent FOLLOWS the base's published member spellings (`first()` -> `first`, D14): the
-          // port-map follow reads what lls PUBLISHED, never re-derives it (CLAUDE.md §1.5).
+          // a dependent follows the base's published member spellings (`first()` -> `first`): the
+          // port-map follow reads what lls published, never re-derives it.
           surface = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)) :+
             balticporter.transform.PortMapTransform.forBases("lls"),
           packageRenames = Map("com.badlogic.gdx" -> "sge"),
@@ -2339,8 +2341,8 @@ object LibgdxLadder:
         )
       )
 
-/** The ladder port's TEST source set: libGDX's own `gdx/test` tree converted to MUnit on the universal translation, a dependent of `sge-l0` (+ `lls`) — the suite is the step gate the standing orders
-  * require; one exclusion list, empty at L0.
+/** The ladder port's TEST source set: libGDX's own `gdx/test` tree converted to MUnit on the universal translation, a dependent of `sge-l0` (+ `lls`) — the suite is the step gate every step must
+  * pass; one exclusion list, empty at L0.
   */
 object LibgdxL0TestMigrate:
 
@@ -2352,8 +2354,8 @@ object LibgdxL0TestMigrate:
 
     // the one exclusion (1 java test): JUnit's `Parameterized` runner declares
     // `Collection<Object[]> parameters()` and fills it from `new ArrayList<>()` — the collections
-    // step's `Collection`/`ArrayList` seam, uncoerced under the merged entry scope (K2 in a TEST tree;
-    // the full port coerces it). A named delta, not an edited assertion (standing order 1).
+    // step's `Collection`/`ArrayList` seam, uncoerced under the merged entry scope (in the test tree only;
+    // the full port coerces it). A named delta, not an edited assertion.
     val excludedFiles = Set(
       "com/badlogic/gdx/math/BezierTest.java",
       // json step dropped java's `Json` and replaced it with `LegacyJson` (a stub for particle/Skin

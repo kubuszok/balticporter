@@ -148,7 +148,7 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     assert(fout.contains("final val tag: java.lang.String = f$tag"))
     // `spare`: a perfectly good SLOT whose field a method also writes. Reading slot-eligibility and
     // `val`-eligibility as ONE gate would have demoted it out of the slot set for no semantic
-    // reason — `DESIGN.md` §8.2's correction, and this is the case that shows the difference.
+    // reason — this is the case that shows the difference.
     assert(fout.contains("var spare: scala.Int = f$spare"))
   }
 
@@ -156,13 +156,13 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // ASCRIBED at the slot's type, and that is this argument list's own property rather than a
     // decoration: java never wrote this delegation, so `null` here is applicable to the primary AND
     // to any real one-argument constructor at a reference type — `TirEmitter.slotArg`, which is
-    // `markerArg`'s ascription one argument to the left (`ENGINE-LIMITS.md` C8). The int and String
+    // `markerArg`'s ascription one argument to the left. The int and String
     // defaults beside it are unchanged, because only `null` inhabits more than its own type.
     assert(clue(fout).contains("this((null: java.lang.Object), k, k, \"x\", 0)"))
   }
 
   test("A1 NEGATIVE — a package-private, non-final slot stays a `var` whatever the count says") {
-    // The other half of `ENGINE-LIMITS.md` C1.6, and the half no other fixture had: `loose` is
+    // The other half of this rule, and the half no other fixture had: `loose` is
     // written ONCE in the whole program, from a parameter, in the leading run — `val`-eligible by
     // the write count and by nothing else. The count is over THIS run's program, so a dependent
     // module compiled against the emitted base can assign it and the `val` is `E052 Reassignment to
@@ -229,7 +229,7 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
   }
 
   test("a COMMENT above a consumed `super(args)` rides the delegation that replaces it") {
-    // §4.58: the call is consumed into a `this(...)`, and what somebody wrote ABOUT it is not. The
+    // The call is consumed into a `this(...)`, and what somebody wrote ABOUT it is not. The
     // funnel is the one place a statement disappears without a diff showing where it went, so the
     // carriage is pinned rather than left to whichever harvest runs last.
     val commented =

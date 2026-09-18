@@ -7,9 +7,9 @@ import balticporter.frontend.spoon.SpoonFrontend
 import java.nio.file.{ Files, Path, StandardCopyOption }
 import scala.jdk.CollectionConverters.*
 
-/** M5 bump gate (DESIGN.md §3.9): an upstream pin move must trigger SCOPED regeneration — retranslate exactly the changed units plus the interface-ripple, everything else served from cache. The
-  * vendored tree is never touched; the "pin move" is simulated on staged copies under `out/bump-demo`: v2 differs from v1 by a body-only edit (no ripple) and a signature addition (must ripple). Exit
-  * != 0 on any violated expectation.
+/** The bump gate: an upstream pin move must trigger SCOPED regeneration — retranslate exactly the changed units plus the interface-ripple, everything else served from cache. The vendored tree is
+  * never touched; the "pin move" is simulated on staged copies under `out/bump-demo`: v2 differs from v1 by a body-only edit (no ripple) and a signature addition (must ripple). Exit != 0 on any
+  * violated expectation.
   */
 object BumpDemo:
 

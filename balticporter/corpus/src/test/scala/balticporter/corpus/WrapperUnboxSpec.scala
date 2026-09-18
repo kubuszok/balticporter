@@ -24,7 +24,7 @@ class WrapperUnboxSpec extends PortSuite:
   }
 
   test("a NUMBER wrapper keeps the one-step form: `Long` at a `double` really is `doubleValue()`") {
-    // The half that must NOT move. K17 face 2's measured shape asserts this text in
+    // The half that must NOT move. This measured shape asserts this text in
     // `CatalogAreaESpec`; asserted here too, because the change that breaks it is a change to this
     // function and a reader of this file has to see which side of the line each wrapper is on.
     val p = port("public class A { double f(Long v) { return v; } }")

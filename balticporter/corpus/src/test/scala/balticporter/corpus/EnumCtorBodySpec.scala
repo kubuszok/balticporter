@@ -63,7 +63,7 @@ class EnumCtorBodySpec extends PortSuite:
     )
     // …and it is now the SHAPE that the collision decides, not just the synthesis: a member named
     // `name` cannot coexist with `java.lang.Enum`'s final `name()` at all, so this enum keeps the
-    // sealed lowering and is counted (`ENGINE-LIMITS.md` T21, `EnumShape.Reserved`).
+    // sealed lowering and is counted (`EnumShape.Reserved`).
     assertEmits(p, "sealed abstract class Algo(var name: java.lang.String)")
     assertNotEmits(p, "def name(): java.lang.String")
     assertEmits(p, "this.legibleName = name")
@@ -147,7 +147,7 @@ class EnumCtorBodySpec extends PortSuite:
     assertNotEmits(p, "override def ordinal()")
   }
 
-  // -- T11's OTHER half: the collidee is DECLARED, not synthesised ------------------------------
+  // -- the OTHER half: the collidee is DECLARED, not synthesised ------------------------------
 
   test("a promoted enum parameter clashing with a DECLARED method is renamed, and the method stays") {
     val p = port(

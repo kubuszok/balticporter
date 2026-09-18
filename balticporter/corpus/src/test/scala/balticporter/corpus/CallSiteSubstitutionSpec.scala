@@ -90,8 +90,8 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
   test("a spliced argument is a TREE: the package rename, which runs LAST, still reaches it") {
     // The load-bearing property. `demo.Store` is renamed to `port.Store`, and the receiver spliced
     // into the template is a reference INSIDE the replaced expression — as text it would keep the
-    // upstream namespace in a file that declares the new one, which is §4.56's failure exactly, and
-    // it would compile nowhere and be reported by nothing.
+    // upstream namespace in a file that declares the new one, and it would compile nowhere and be
+    // reported by nothing.
     val (_, out, _, _) = runTraced(
       Map("demo.Bag#remove(Object)" -> "demo.Support.removeValue({recv}, {arg0})"),
       List(new PackageRenameTransform(Map("demo" -> "port")))
@@ -176,7 +176,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
   }
 
   test("a BARE key on an overloaded callee is AMBIGUOUS with the candidates, never one of them") {
-    // DESIGN.md §8.1's asymmetry decided on purpose: bare stays legal for `dropMethods` and is
+    // This asymmetry is decided on purpose: bare stays legal for `dropMethods` and is
     // refused here, because a positional template can only be right for one arity.
     val (phase, out) = run(Map("demo.Bag#remove" -> "f({arg0})"))
     assertEquals(phase.substituted, Nil)
@@ -210,7 +210,7 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     assert(!ds.exists(_.detail.contains("key")))
     assert(ds.forall(_.reason.className == "configured"))
     // …and each one is BESIDE the code, because a substituted call may have no resemblance to the
-    // Java the source map points at (§4.575)
+    // Java the source map points at
     assert(clue(out).contains("/* porter: substituted-call"))
     assertEquals(notes.map(_.kind.toString).distinct, List("SubstitutedCall"))
     assertEquals(notes.size, 2)

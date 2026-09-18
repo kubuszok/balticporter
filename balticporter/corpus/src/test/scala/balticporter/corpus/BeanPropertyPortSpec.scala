@@ -58,7 +58,7 @@ class BeanPropertyPortSpec extends PortSuite:
     val (after, log) = Pipeline.runTraced(before, List(phase))
     (phase, after, log, new TirEmitter(after, notes = log).emit)
 
-  /** the emitted CODE, with the porter notes stripped. A note names the UPSTREAM member on purpose (§4.575's `from=`), so any check that searches emitted text for an upstream name has to strip them
+  /** the emitted CODE, with the porter notes stripped. A note names the UPSTREAM member on purpose (the `from=` pair), so any check that searches emitted text for an upstream name has to strip them
     * first — the mistake `SubstitutionCheck.dangling` made on its first run with notes.
     */
   private def code(out: String): String =

@@ -8,7 +8,7 @@ import balticporter.transform.PrimitiveToOpaqueTransform
 
 import java.nio.file.{ Files, Path }
 
-/** A phase that MINTS a top-level unit owes the same one-module answer an `inject` does — `ENGINE-LIMITS.md` §13 O5, CLAUDE.md §1.5.
+/** A phase that MINTS a top-level unit owes the same one-module answer an `inject` does.
   */
 class OpaqueMintOwnershipSpec extends munit.FunSuite:
 
@@ -56,12 +56,12 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     )
     (SpoonTir.fromTypes(types), root)
 
-  /** exactly what `PortRun.partitionUnits` computes — by ORIGIN, realpathed on both sides (§5.4). */
+  /** exactly what `PortRun.partitionUnits` computes — by ORIGIN, realpathed on both sides. */
   private def emittedUnits(p: Program, root: Path, module: String): Set[SymId] =
     val mine = RealPath.str(root.resolve(module))
     p.units.filter(u => RealPath.str(Path.of(u.origin.javaPath)).startsWith(mine)).map(_.symbol).toSet
 
-  /** the ONE instance both modules hold: a base declares it, a dependent inherits it through `extendedBy` and cannot subtract it (§1.5). The hint names a BASE declaration.
+  /** the ONE instance both modules hold: a base declares it, a dependent inherits it through `extendedBy` and cannot subtract it. The hint names a BASE declaration.
     */
   private def phase = new PrimitiveToOpaqueTransform(
     OpaqueSpec(
@@ -119,7 +119,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
       !clue(unitNames(after)).contains("p.Handle"),
       "the dependent wrote its own copy of a unit its base already emits — only the module that owns the declarations may mint the unit"
     )
-    // O8: without a published port map the dependent does not propagate the base's seeds at all,
+    // Without a published port map the dependent does not propagate the base's seeds at all,
     // so the fence is structurally guaranteed. The NEGATIVE test below proves the fence is load-bearing
     // by showing that RunScope.whole (the pre-fence behaviour) DOES mint.
   }
@@ -127,7 +127,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   test("NEGATIVE: with no run scope the SAME dependent program mints — the fence is what stops it") {
     // `RunScope.whole` is the pre-fix behaviour and remains the truth for a base port, a
     // single-module port, a spec and `DebugEmit`. Running the dependent's own program under it
-    // reproduces the O5 duplicate exactly, which is what makes the test above a measurement of the
+    // reproduces the same duplicate exactly, which is what makes the test above a measurement of the
     // fence rather than of some other difference between the two runs.
     val (p, root) = model()
     val ph        = phase
@@ -142,7 +142,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   test("a dependent that mints nothing does not retype without a published port map (O8)") {
     val (p, root) = model()
     val after     = run(p, root, phase, "dep")
-    // O8: a formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP.
+    // A formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP.
     // Without one, the dependent keeps the base's original types — no propagation, no coercion.
     // The NEGATIVE test proves RunScope.whole (base behaviour) still retypes and mints.
     assert(
@@ -185,7 +185,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   test("SPANNING hints FAIL THE RUN — `exists` would have minted in BOTH modules") {
     // Pre-fix this was silent: `mintsHere` is `hints.exists(owned)`, true in the dependent because
     // of `q.Own#handle` and true in the base because of `p.Gpu#handle`, so both modules write
-    // `p.Handle.scala` — O5 in full, with the fence in place and answering. The belt behind it
+    // `p.Handle.scala` — the mint-ownership violation in full, with the fence in place and answering. The belt behind it
     // (`PortRun.claimedSynthetic`) does not catch it either: with no published base map it ADMITS.
     val (p, root) = modelWith(depWithOwnField)
     val err       = intercept[IllegalStateException](run(p, root, patternPhase, "dep"))

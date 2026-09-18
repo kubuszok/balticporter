@@ -137,7 +137,7 @@ class PortMapTransformSpec extends munit.FunSuite:
   // an ENGINE REFUSAL is a `Dropped` MEMBER row, not an absence from `secondaries`
   // -------------------------------------------------------------------------
 
-  /** A base whose nilary constructor `ENGINE-LIMITS.md` C11 refuses, and a dependent that calls it. */
+  /** A base whose nilary constructor the constructor funnel refuses, and a dependent that calls it. */
   private val refusedBase = Map(
     "p/Font.java" ->
       """package p;
@@ -181,7 +181,7 @@ class PortMapTransformSpec extends munit.FunSuite:
   test("a dependent's `new C()` on a REFUSED constructor is a counted call-site finding") {
     // the row itself, in BOTH namespaces: the upstream half is the join key a dependent looks up by,
     // the emitted half is what a reader greps the base's output for — the TYPE is emitted here and
-    // only the member is missing, which is what makes an emitted name meaningful at all (§4.56).
+    // only the member is missing, which is what makes an emitted name meaningful at all.
     val row = refusedMap.members.find(_.upstream == "p.Font#<init>()").getOrElse(fail(s"no refused row in ${refusedMap.members.map(_.upstream)}"))
     assertEquals(row.disposition, PortMap.Disposition.Dropped)
     assertEquals(row.emitted, "p.Font#<init>()")
@@ -191,9 +191,9 @@ class PortMapTransformSpec extends munit.FunSuite:
     val dropped    = phase.findings.filter(_.issue == PortMapTransform.Issue.DroppedMember)
     assertEquals(clue(dropped).map(f => (f.symbol, f.base)), List(("p.Font#<init>()", "base-mod")))
     assert(clue(dropped.head.origin.javaPath).endsWith("Uses.java"))
-    // …and the message says which of §1's three kinds the fix is, which is the reader's FIRST
+    // …and the message says which of the three kinds the fix is, which is the reader's FIRST
     // question and the one a bare `Dropped` cannot answer: a policy drop can be asked back, an
-    // engine refusal cannot (§4.45).
+    // engine refusal cannot.
     assert(clue(dropped.head.detail).contains("ctor-funnel/nilary-dropped"), dropped.head.detail)
     assert(dropped.head.detail.contains("engine (true of every Java program), IN THE BASE"), dropped.head.detail)
 
@@ -299,8 +299,8 @@ class PortMapTransformSpec extends munit.FunSuite:
 
     // Every row is the DEPENDENT's own — never the base's. A dependent's `Program` CONTAINS the
     // base (`resolutionRoots` parses it), so `Array`'s own references to `Array` are in the model
-    // too, and reporting them tells this module's author about a module they do not own
-    // (ENGINE-LIMITS D2). The filter is the phase's own `ownedByBase`, as `scan` already uses.
+    // too, and reporting them tells this module's author about a module they do not own.
+    // The filter is the phase's own `ownedByBase`, as `scan` already uses.
     assert(clue(ds).nonEmpty)
     assert(ds.forall(_.subjectFqn.startsWith("com.badlogic.ashley.")), clue(ds.map(_.render)))
 

@@ -56,7 +56,7 @@ object LibgdxCoreMigrate:
       nextStep = "sbt sge/compile"
     ).execute()
 
-/** libGDX's per-library policy, in one place because two source sets share it. CLAUDE.md §1: the WHICH, not the mechanism.
+/** libGDX's per-library policy, in one place because two source sets share it. This is the WHICH, not the mechanism.
   */
 object LibgdxPolicy:
 
@@ -76,7 +76,7 @@ object LibgdxPolicy:
     Set("quat", "quat2", "l_vez", "l_vex", "l_vey", "tmpVec", "tmpMat", "right", "tmpForward", "tmpUp").map(f => s"com.badlogic.gdx.math.Matrix4#$f")
 
   /** libGDX core's policy AS A VALUE — imported and extended by every dependent module. Shared-surface policy only: drop/rename tables and the phases that reshape signatures a dependent compiles
-    * against (CLAUDE.md §1.5). `governs` is the namespace claim; the test suite lives inside it too, so substitution agreement works from unit origins, not a prefix.
+    * against. `governs` is the namespace claim; the test suite lives inside it too, so substitution agreement works from unit origins, not a prefix.
     */
   def core(repoRoot: Path): PortManifest =
     val s = substitutions(repoRoot)
@@ -111,14 +111,14 @@ object LibgdxPolicy:
           )
         )
       ),
-      // THE ARTIFACT THIS MODULE'S BUILD ADDS (CLAUDE.md §1.5). Locale calls (I18NBundle)
+      // The artifact this module's build adds. Locale calls (I18NBundle)
       // need scala-java-locales; not inherited — each dependent declares its own if it needs it.
       dependencies = List(
         balticporter.catalog.ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4", balticporter.catalog.CrossKind.Platform),
-        // lowlevel.Nullable's opaque wrapper — coordinate is the port's to state (§1).
+        // lowlevel.Nullable's opaque wrapper — coordinate is the port's to state.
         balticporter.catalog.ArtifactDep("com.kubuszok", "lls", "0.3.0")
       ),
-      // THE REFERENCE HAND PORT for sge. NOT inherited (DESIGN.md §8.23).
+      // The reference hand port for sge. Not inherited.
       parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge/src/main/scala").normalize))),
       externalParenless = Set(
         "lowlevel.util.DynamicArray#isEmpty",
@@ -137,8 +137,8 @@ object LibgdxPolicy:
       )
     )
 
-  /** Boundary rows this port has read and accepted (`DESIGN.md` §8.16) — each leaves its refusal lane and moves to `remediation(resolved)`. On `core`, not a dependent: these are facts about libGDX
-    * core's own declarations (`ENGINE-LIMITS.md` D2).
+  /** Boundary rows this port has read and accepted — each leaves its refusal lane and moves to `remediation(resolved)`. On `core`, not a dependent: these are facts about libGDX core's own
+    * declarations.
     */
   def reviewedBoundaries: Map[String, String] = Map(
     // identityHashCode reads OBJECT IDENTITY only — exactly OpaqueEgress's question.
@@ -154,7 +154,7 @@ object LibgdxPolicy:
 
   /** libGDX's own JUnit suite, as a DEPENDENT of [[core]]. Adds one phase and inherits everything else.
     */
-  /** P11: watcher field is dead on every munit platform (no @Rule protocol); dropped via dropMethods/dropFields. JVM loses a diagnostic println on test failure.
+  /** watcher field is dead on every munit platform (no @Rule protocol); dropped via dropMethods/dropFields. JVM loses a diagnostic println on test failure.
     */
   private val watcherDrop = "com.badlogic.gdx.utils.JsonMatcherTests#watcher"
 
@@ -192,7 +192,7 @@ object LibgdxPolicy:
           )
         )
       ),
-      // P11: munit JS/Native Description declares these parenless; the JVM class file has ().
+      // munit JS/Native Description declares these parenless; the JVM class file has ().
       // Both call forms are legal on both — Scala 3 auto-applies, the parenless def is its own match.
       externalParenless = Set(
         "org.junit.runner.Description#getTestClass",
@@ -206,9 +206,8 @@ object LibgdxPolicy:
     )
   )
 
-  /** THE ONE `selfSupplied` ENTRY (`ENGINE-LIMITS.md` CT7): `AnimationControllerTest` is constructed reflectively by MUnit, so the threaded context cannot reach it as a parameter — it takes one
-    * without a clause, an emitted `private given sge.Sge = sge.SgeTestFixture.testSge()`, matching the reference hand port. Lives on the DEPENDENT (test source set): the key names a test declaration
-    * the base never parses.
+  /** The one `selfSupplied` entry: `AnimationControllerTest` is constructed reflectively by MUnit, so the threaded context cannot reach it as a parameter — it takes one without a clause, an emitted
+    * `private given sge.Sge = sge.SgeTestFixture.testSge()`, matching the reference hand port. Lives on the dependent (test source set): the key names a test declaration the base never parses.
     */
   def selfSuppliedSuites: balticporter.transform.GlobalsToImplicitsTransform =
     new balticporter.transform.GlobalsToImplicitsTransform(
@@ -244,13 +243,13 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.reflect.Method",
       "com.badlogic.gdx.utils.reflect.ReflectionException",
       // NetJavaImpl (java.net.HttpURLConnection-based) has no JS/Native target and no in-corpus
-      // caller — dropped with no replacement. NB: conceals ENGINE-LIMITS K2, a still-open
+      // caller — dropped with no replacement. NB: conceals a still-open
       // JDK/Scala collection boundary gap, not closed by this drop.
       "com.badlogic.gdx.net.NetJavaImpl",
       // dropped with no replacement; disableRedirect re-points references at
-      // java.lang.AutoCloseable (a redirect never deletes a declaration, ENGINE-LIMITS D8).
+      // java.lang.AutoCloseable (a redirect never deletes a declaration).
       "com.badlogic.gdx.utils.Disposable",
-      // O6 CLOSED: Align -> injected `opaque type Align = Int` (sge convention), retyped by
+      // Align -> injected `opaque type Align = Int` (sge convention), retyped by
       // PrimitiveToOpaqueTransform(Existing) below.
       "com.badlogic.gdx.utils.Align",
       // wave 3.1a: retargetted to mutable.BitSet (0 callers in gdx/src; serves ashley).
@@ -370,7 +369,7 @@ object LibgdxPolicy:
   )
 
   /** `java.util.Comparator` -> `scala.math.Ordering`, the port's one RETARGET entry -- moves the type at every occurrence with no coercion, licensed by `Ordering[T] extends Comparator[T]`. No call
-    * site is rewritten. SHARED SURFACE, lives in [[core]] alone (§1.5); a parameter of the existing `CollectionsTransform`, not a second instance (`ENGINE-LIMITS.md` D9).
+    * site is rewritten. Shared surface, lives in [[core]] alone; a parameter of the existing `CollectionsTransform`, not a second instance.
     */
   def comparatorRetarget: Map[String, String] =
     Map("java.util.Comparator" -> "scala.math.Ordering")
@@ -464,7 +463,7 @@ object LibgdxPolicy:
     // Inner iterator types — java's Keys/Values/Entries are live views backed by the map's
     // own table; lls has foreachKey/foreachValue/foreachEntry (inline) instead.  As TYPES these
     // are used only where java stores them in a local (`I18NBundle`) — Collect handles the call.
-    // nested iterator types -> scala Iterator over a snapshot (K36)
+    // nested iterator types -> scala Iterator over a snapshot
     "com.badlogic.gdx.utils.ObjectMap$Keys" -> "scala.collection.Iterator",
     "com.badlogic.gdx.utils.ObjectMap$Values" -> "scala.collection.Iterator",
     "com.badlogic.gdx.utils.ObjectMap$Entries" -> "scala.collection.Iterator",
@@ -581,7 +580,7 @@ object LibgdxPolicy:
         ("empty", 0) -> Rename("isEmpty"),
         // ForEach: for (Entry e : map.entries()) -> map.foreachEntry((k, v) => body)
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: lls ObjectMap.get(K) returns Nullable[V]; the 1-arg overload must be
@@ -632,7 +631,7 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ArrayMap$Values" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.ArrayMap$Entries" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       // set-iterator types: hasNext is parenless; toArray builds a DynamicArray from the iterator.
-      // toArray(1) collects into the caller's provided array. remove left to IteratorRemove count (K36).
+      // toArray(1) collects into the caller's provided array. remove left to IteratorRemove count.
       "com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator" -> Map(
         ("hasNext", 0) -> Chain(List("hasNext")),
         ("toArray", 0) -> Template(
@@ -694,7 +693,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.OrderedMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -721,7 +720,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -740,7 +739,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -752,7 +751,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -764,7 +763,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -781,7 +780,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -794,7 +793,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -807,7 +806,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -820,7 +819,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -838,7 +837,7 @@ object LibgdxPolicy:
         ("<init>", 4) -> Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() is Entries
         ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0) -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -881,12 +880,12 @@ object LibgdxPolicy:
         ("empty", 0) -> Rename("isEmpty"),
         // parameterless methods: DynamicArray declares peek, first, iterator, nonEmpty as
         // parameterless (no ()) but java calls them with (). Chain with empty parens set
-        // produces arr.peek without (). F9's rule: lls methods are parameterless.
+        // produces arr.peek without (). lls methods are parameterless.
         ("iterator", 0) -> Chain(List("iterator")),
         // wave 3.1o: field-write images. DynamicArray exposes `size` as a METHOD (getter only),
         // so `arr.size = n` must become `arr.setSize(n)`. `setSize` handles both growing (pads
         // with defaults) and shrinking (truncates), which is java's Array.size field semantics.
-        // `arr.ordered` read -> `arr.preserveOrder`; write dropped (immutable ctor param, K36).
+        // `arr.ordered` read -> `arr.preserveOrder`; write dropped (immutable ctor param).
         ("size", 0) -> FieldWrite("size", "setSize"),
         ("ordered", 0) -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0) -> IndexedField("items"),
@@ -907,11 +906,11 @@ object LibgdxPolicy:
         ("of", 1) -> Template("$Target.apply[$T0]()"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         )
@@ -947,11 +946,11 @@ object LibgdxPolicy:
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         )
@@ -984,11 +983,11 @@ object LibgdxPolicy:
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         )
@@ -1010,18 +1009,18 @@ object LibgdxPolicy:
         ("toArray", 0) -> Chain(List("toArray")),
         ("toArray", 1) -> Chain(List("toArray"), dropArgs = true),
         // IntArray.incr(index, value) -> { val i = index; da(i) = da(i) + value }
-        // $recv appears twice — Template binds it to a temp (§4.4/F7).
+        // $recv appears twice — Template binds it to a temp.
         ("incr", 2) -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
         // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4) -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1057,11 +1056,11 @@ object LibgdxPolicy:
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1114,11 +1113,11 @@ object LibgdxPolicy:
         ("resize", 1) -> Template("{ $recv.setSize($0); $recv }.items"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1158,11 +1157,11 @@ object LibgdxPolicy:
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1198,11 +1197,11 @@ object LibgdxPolicy:
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1246,11 +1245,11 @@ object LibgdxPolicy:
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // item 7: CharArray.toString() returns the chars, not DynamicArray's own toString.
         ("toString", 0) -> Template("new java.lang.String($recv.toArray)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1288,11 +1287,11 @@ object LibgdxPolicy:
         ("with", 1) -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds)
         ("peek", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive
         ("removeRange", 2) -> Template(
           "{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"
         ),
@@ -1341,7 +1340,7 @@ object LibgdxPolicy:
     )
 
   /** DESCRIPTOR-KEYED retarget rewrites — for arity-1 constructors where `(name, arity)` is ambiguous. `Array` has four surviving arity-1 constructors: `(int)` capacity, `(ArraySupplier)` factory,
-    * `(Array)` copy, `(T[])` from-array. §4.55: a map from an over-approximate key to a single value is a choice nobody made.
+    * `(Array)` copy, `(T[])` from-array. A map from an over-approximate key to a single value is a choice nobody made.
     */
   def libCollectionConstructRewritesByDesc: Map[String, Map[(String, Descriptor), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
     import balticporter.transform.CollectionsTransform.RetargetRewrite.*
@@ -1520,8 +1519,8 @@ object LibgdxPolicy:
     )
 
   /** `com.badlogic.gdx.utils.Disposable` -> `java.lang.AutoCloseable`, `dispose` -> `close` — the JDK's own type under a different name. `memberRenames` renames the whole PRE-REDIRECT override
-    * component (66 declarations) so unrelated `void dispose()` members elsewhere keep their name. Paired `dropTypes` entry is required (`ENGINE-LIMITS.md` D8). SHARED SURFACE, lives in [[core]]
-    * (§1.5); `MergeablePolicy` folds dependents' own redirects in (D9).
+    * component (66 declarations) so unrelated `void dispose()` members elsewhere keep their name. Paired `dropTypes` entry is required. Shared surface, lives in [[core]]; `MergeablePolicy` folds
+    * dependents' own redirects in.
     */
   def disposableRedirect: balticporter.transform.TypeRedirectTransform =
     new balticporter.transform.TypeRedirectTransform(
@@ -1529,18 +1528,16 @@ object LibgdxPolicy:
       memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"))
     )
 
-  /** libGDX's JavaBean accessor pairs the reference hand port turned into Scala properties (`def x`/`def x_=`), harvested from sge's `Renames:` file headers (`DESIGN.md` §8.5). An INCLUDE LIST, not a
-    * pattern: sge converts only ~14% of get/set methods, inconsistently by type. Per-COMPONENT, not per-implementor (would duplicate). SHARED SURFACE, lives in [[core]] alone (§1.5); runs FIRST in
-    * the pipeline.
+  /** libGDX's JavaBean accessor pairs the reference hand port turned into Scala properties (`def x`/`def x_=`), harvested from sge's `Renames:` file headers. An include list, not a pattern: sge
+    * converts only ~14% of get/set methods, inconsistently by type. Per-component, not per-implementor (would duplicate). Shared surface, lives in [[core]] alone; runs first in the pipeline.
     */
   def beanProperties: balticporter.transform.BeanPropertyTransform =
     // WHOLE-PROGRAM detection (Everywhere()); dependents follow the base's published shape
     // via PortMapTransform.followMemberRenames rather than re-deciding.
     new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets, scope = balticporter.tir.RuleScope.Everywhere())
 
-  /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5) — `def-pair` is the default for everything not named here. The phase REFUSES a mismatch rather than picking
-    * (a counted `idiom(refused)` row). Declared even for PERMANENT refusals so the run's denominator stays honest. `MapLayer#opacity` deliberately absent: its getter is computed, never a stored
-    * value.
+  /** Which pairs collapse to a plain `var`/`val` instead of a `def` pair — `def-pair` is the default for everything not named here. The phase refuses a mismatch rather than picking (a counted
+    * `idiom(refused)` row). Declared even for PERMANENT refusals so the run's denominator stays honest. `MapLayer#opacity` deliberately absent: its getter is computed, never a stored value.
     */
   def beanPropertyTargets: Map[String, balticporter.transform.BeanPropertyTransform.Target] =
     import balticporter.transform.BeanPropertyTransform.Target
@@ -1644,8 +1641,8 @@ object LibgdxPolicy:
       "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#scale" -> Target.Val
     )
 
-  /** the harvested pairs. KEY is the emitted property in the UPSTREAM namespace (§4.56 — the package rename runs last); VALUE names the accessors explicitly, because a hand port's names are not
-    * always bean-derivable (`getDragActor` -> `currentDragActor`) and a never-fired report needs them as DATA.
+  /** the harvested pairs. The key is the emitted property in the upstream namespace (the package rename runs last); the value names the accessors explicitly, because a hand port's names are not
+    * always bean-derivable (`getDragActor` -> `currentDragActor`) and a never-fired report needs them as data.
     */
   def beanPropertyPairs: Map[String, String] = Map(
     // -- com.badlogic.gdx.audio --
@@ -1839,7 +1836,7 @@ object LibgdxPolicy:
       "lowlevel.util.DynamicArray.wrap($0)"
   )
 
-  /** Indexed field rewrites for retarget sources where a field and a method of the same name need different rewrite kinds (ArrayMap `keys`/`values`). // CLAUDE.md §1(b)
+  /** Indexed field rewrites for retarget sources where a field and a method of the same name need different rewrite kinds (ArrayMap `keys`/`values`).
     */
   def libRetargetIndexedFields: Map[String, Map[String, CollectionsTransform.RetargetRewrite.IndexedField]] = {
     import balticporter.transform.CollectionsTransform.RetargetRewrite.IndexedField
@@ -1851,7 +1848,8 @@ object LibgdxPolicy:
     )
   }
 
-  /** the `gdx/src` pipeline. Universal phases first, then the three §1(b) phases configured above, then the one §1(c) rule libGDX plugs in from OUTSIDE the engine ([[GdxSharedIteratorRule]]).
+  /** the `gdx/src` pipeline. Universal phases first, then the three parameterised phases configured above, then the one library-specific rule libGDX plugs in from outside the engine
+    * ([[GdxSharedIteratorRule]]).
     */
   def mainPhases: List[balticporter.tir.Phase] =
     List(
@@ -1902,8 +1900,7 @@ object LibgdxPolicy:
       ),
       new balticporter.transform.MethodBodyTransform(
         Map(
-          // AssetManager#clear, ArraySelection#validate: retired by K36 rows.
-          // wave 3.1m: SelectBox.selectedIndex — OrderedSet vs ObjectSet (broken subtyping edge).
+          // SelectBox.selectedIndex — OrderedSet vs ObjectSet (broken subtyping edge).
           // sge: val sel = selection.items (inferred OrderedSet). Fix: widen the type annotation
           // from ObjectSet to OrderedSet. collection-internal seam — java's OrderedSet <: ObjectSet
           // has no image in lls.
@@ -2101,7 +2098,6 @@ object LibgdxPolicy:
               |    this.updateParticle(particle, offsetTime / 1000.0f, offsetTime)
               |  } else ()
               |}""".stripMargin,
-          // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
           // --- Screen default empty bodies (sge convention: only `render` is abstract) ---
           "com.badlogic.gdx.Screen#show" -> "{}",
           "com.badlogic.gdx.Screen#resize" -> "{}",
@@ -2153,7 +2149,7 @@ object LibgdxPolicy:
           )
         )
       )
-      // SuppressionPhase is now derived unconditionally by PortRun (§1(a) universal, no-op
+      // SuppressionPhase is now derived unconditionally by PortRun (universal, no-op
       // when no `.orNull` symbols exist) — removed from surface, no port needs to declare it.
     )
 
@@ -2175,7 +2171,7 @@ object LibgdxPolicy:
     new balticporter.transform.MemberRenameTransform(
       // ---- wave 1.3: member renames from the `Migration notes: Renames:` census ----
       // Each entry is traceable to sge's documented Renames: line on the type's source file.
-      // The key is the upstream FQN#member in the UPSTREAM namespace (§4.56).
+      // The key is the upstream FQN#member in the upstream namespace.
       renames = Map(
         // `type` is a Scala reserved word; sge renamed the field to `eventType` (1 sge file).
         // The `getType`/`setType` bean pair is handled separately by `beanProperties`.
@@ -2186,8 +2182,8 @@ object LibgdxPolicy:
       )
     )
 
-  /** `com.badlogic.gdx.Gdx`'s `public static` fields retired into `sge.Sge`, threaded as a `using` parameter (`DESIGN.md` §8.4). `attach = "class"`: measured against method attachment, which freezes
-    * declarations anchored on an external parent the program doesn't declare. `sites` marks the two CONSTRUCT-at-init sites (no caller for a clause). SHARED SURFACE, in [[core]] (§1.5); LAST (after
+  /** `com.badlogic.gdx.Gdx`'s `public static` fields retired into `sge.Sge`, threaded as a `using` parameter. `attach = "class"`: measured against method attachment, which freezes declarations
+    * anchored on an external parent the program doesn't declare. `sites` marks the two construct-at-init sites (no caller for a clause). Shared surface, in [[core]]; last (after
     * [[disposableRedirect]] and [[beanProperties]]).
     */
   def globalsToContext: balticporter.transform.GlobalsToImplicitsTransform =
@@ -2236,9 +2232,9 @@ object LibgdxPolicy:
       )
     )
 
-  /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type, matching the reference hand port's `GLHandle.scala`. Only `TextureHandle` is configured (§1c); the four
-    * GL interfaces are FENCED out of propagation, or a nullary `glGenTexture()` flow edge would retype the whole GL interface. SHARED SURFACE, lives in [[core]] (§1.5); phase RUNS in dependents too,
-    * coercing against the object THIS module minted (O5).
+  /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type, matching the reference hand port's `GLHandle.scala`. Only `TextureHandle` is configured (a
+    * library-specific rule); the four GL interfaces are fenced out of propagation, or a nullary `glGenTexture()` flow edge would retype the whole GL interface. Shared surface, lives in [[core]];
+    * phase runs in dependents too, coercing against the object this module minted.
     */
   def textureHandle: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(
@@ -2257,9 +2253,9 @@ object LibgdxPolicy:
       )
     )
 
-  /** libGDX's `Align` — a class of `static final int` constants — as an opaque type against an EXISTING/injected type (O6 CLOSED): `Substitutions.dropTypes` drops the java class, `inject` supplies
-    * sge's own `Align.scala`; the transform seeds from align-typed FIELDS and propagates to getters/setters/parameters, coercing via `Align(rawInt)`/`Align.toInt(value)`. SHARED SURFACE, composed via
-    * `MergeablePolicy` (§1.5): a dependent unions its own `hints`.
+  /** libGDX's `Align` — a class of `static final int` constants — as an opaque type against an existing/injected type: `Substitutions.dropTypes` drops the java class, `inject` supplies sge's own
+    * `Align.scala`; the transform seeds from align-typed fields and propagates to getters/setters/parameters, coercing via `Align(rawInt)`/`Align.toInt(value)`. Shared surface, composed via
+    * `MergeablePolicy`: a dependent unions its own `hints`.
     */
   def align: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(LibgdxPolicy.AlignSpec)
@@ -2300,7 +2296,7 @@ object LibgdxPolicy:
     )
 
   /** GL uniform locations — the `int` that is really a distinct domain value — as an opaque type following the Align pattern: no java class to drop, injected as `sge.graphics.UniformLocation` with
-    * sge's own comparison extensions. Seeds: `fetchUniformLocation`'s return and `BaseShader#locations` (`int[]`, O3). Same GL-interface FENCE as [[textureHandle]].
+    * sge's own comparison extensions. Seeds: `fetchUniformLocation`'s return and `BaseShader#locations` (an `int[]` array seed). Same GL-interface fence as [[textureHandle]].
     */
   def uniformLocation: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(
@@ -2327,15 +2323,15 @@ object LibgdxPolicy:
       )
     )
 
-  /** libGDX's own `@Null` moved OUT of the annotation and INTO the type — `lowlevel.Nullable[T]`, the hand port's own wrapper (`DESIGN.md` §8.6 N1). SHARED SURFACE, lives here once, inherited via
-    * `extendedBy` (§1.5). `Named` CLOSES K13: the union floor `T | Null` is not transparent at an abstract `T`; `Nullable[T]` composes at every `T`, so that scope exit is gone entirely.
+  /** libGDX's own `@Null` moved out of the annotation and into the type — `lowlevel.Nullable[T]`, the hand port's own wrapper. Shared surface, lives here once, inherited via `extendedBy`. `Named`
+    * closes the abstract-type-parameter mismatch: the union floor `T | Null` is not transparent at an abstract `T`; `Nullable[T]` composes at every `T`, so that scope exit is gone entirely.
     */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope = balticporter.tir.RuleScope.Everywhere(nullabilityErasureExempt)
-      // K13.6 CLOSED: after retarget to lls ObjectMap, get(K) returns Nullable[V] natively;
+      // after retarget to lls ObjectMap, get(K) returns Nullable[V] natively;
       // 3.1al's .orNull Template forces the 1-arg overload where Scala would otherwise pick
       // get(K,V):V (SuppressionPhase places @nowarn on the resulting deprecated-orNull call).
     )

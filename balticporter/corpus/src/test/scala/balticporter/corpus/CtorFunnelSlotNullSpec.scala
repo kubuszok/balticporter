@@ -4,7 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A `null` in a delegation THE ENGINE MINTED is ASCRIBED — `ENGINE-LIMITS.md` C8's own sentence, one argument to the left of where it was already written.
+/** A `null` in a delegation THE ENGINE MINTED is ASCRIBED, one argument to the left of where it was already written.
   */
 class CtorFunnelSlotNullSpec extends munit.FunSuite:
 

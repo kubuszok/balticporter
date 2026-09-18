@@ -4,7 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.ClassInitTriggerCheck
 import balticporter.tir.ClassInitTriggerCheck.Issue
 
-/** K22's WATCHDOG, driven in both directions — the check that had never had a spec. */
+/** The class-initialiser trigger watchdog, driven in both directions — the check that had never had a spec. */
 class ClassInitTriggerSpec extends PortSuite:
 
   /** a `static { }` block on a class with instance state — no all-static collapse, so the block lands in a companion and `new C` touches nothing.
@@ -51,7 +51,7 @@ class ClassInitTriggerSpec extends PortSuite:
   }
 
   test("a NESTED bearer names its companion path with `.`, never the JVM's `$`") {
-    // `Symbol.fullName` separates a nested type with `$` (§4.56) and no Scala path may spell one —
+    // `Symbol.fullName` separates a nested type with `$` and no Scala path may spell one —
     // `demo.Outer$Inner` is a single identifier to the parser and resolves to nothing.
     val p = port(
       """
@@ -97,7 +97,7 @@ class ClassInitTriggerSpec extends PortSuite:
     p.out
     val shapes = p.emitter.emittedShapes.types
     // `enum` and not `enum-class`: this enum is expressible as a scala 3 `enum extends
-    // java.lang.Enum[E]` (`ENGINE-LIMITS.md` T21), and BOTH forms are in `notInstantiable` for the
+    // java.lang.Enum[E]`, and BOTH forms are in `notInstantiable` for the
     // one reason this test is about — the constants are companion members either way.
     assertEquals(clue(shapes.get("demo.E")).map(_.form), Some("enum"))
     assertEquals(ClassInitTriggerCheck.check(p.after, p.after.units, Set.empty, shapes.get), Nil)
@@ -151,7 +151,7 @@ class ClassInitTriggerSpec extends PortSuite:
   // ---- the REFUSAL: java tolerates a cyclic class initialiser and a scala companion does not -----
 
   test("a MUTUAL initialisation cycle is REFUSED and counted, not forced") {
-    // §4.4's `Vector3`/`Matrix4` shape, minimised. Java runs both initialisers with a cycle in the
+    // The `Vector3`/`Matrix4` shape, minimised. Java runs both initialisers with a cycle in the
     // graph and survives — JLS 12.4.2 step 3 lets a thread re-enter a class it is already
     // initialising — and a scala companion whose `MODULE$` has not been assigned yet does not.
     val p = portAll(
@@ -230,7 +230,7 @@ class ClassInitTriggerSpec extends PortSuite:
   }
 
   test("a CONSTANT-ONLY class gets nothing — java inlines the read, and so does this port (JS-C08)") {
-    // The half that keeps `ENGINE-LIMITS.md` K22 safe against §4.4's `Vector3`/`Matrix4` cycle: a
+    // The half that keeps the trigger safe against the `Vector3`/`Matrix4` cycle: a
     // java constant variable is inlined by javac and emitted `inline val` here, so reading one
     // triggers no initialisation in either language and the class owes no force. Widening the
     // census to step 9 must not reach these, or the repair adds a trigger java never had.

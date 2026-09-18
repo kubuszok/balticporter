@@ -7,8 +7,8 @@ import balticporter.runner.{ Determinism, PortRun, SourceSet, VendoredCommit }
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Port Ashley's own JUnit suite (`ashley/tests`) through the same pipeline as `ashley/src`. 18 files, 118 `@Test`, 458 assertions — the only behavioural evidence this port can have (§3). A DEPENDENT
-  * of a DEPENDENT: resolves against `ashley/src` (ported by [[AshleyMigrate]]) which resolves against `libgdx/gdx/src`; `PortManifest.baseChain` carries both ancestors' drops/renames/surface phases,
+/** Port Ashley's own JUnit suite (`ashley/tests`) through the same pipeline as `ashley/src`. 18 files, 118 `@Test`, 458 assertions — the only behavioural evidence this port can have. A DEPENDENT of a
+  * DEPENDENT: resolves against `ashley/src` (ported by [[AshleyMigrate]]) which resolves against `libgdx/gdx/src`; `PortManifest.baseChain` carries both ancestors' drops/renames/surface phases,
   * including Ashley's own seams, which the suite must see.
   */
 object AshleyTestMigrate:
@@ -34,7 +34,7 @@ object AshleyTestMigrate:
       portRoot = repoRoot.resolve("ported/sge-ecs"),
       sourceSet = SourceSet.Test,
       // an unresolved `import static org.mockito.Mockito.*` resolves WRONGLY (as an unqualified
-      // call on the suite itself), not fails -- 12 errors, all one cause, ENGINE-LIMITS.md §6.
+      // call on the suite itself), not fails -- 12 errors, all one cause.
       frontend = FrontendConfig(testRoot, files, AshleyClasspath.resolve(repoRoot), resolutionRoots = List(ashleySrc, gdxSrc)),
       phases = Nil, // supplied by the manifest — the two sources are mutually exclusive
       manifest = Some(AshleyPolicy.test(repoRoot)),

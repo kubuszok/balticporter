@@ -37,7 +37,7 @@ class MethodBodyTransformSpec extends munit.FunSuite:
     val after  = Pipeline.run(before, List(phase))
     (phase, new TirEmitter(after).emit)
 
-  /** the same, but keeping the DECISION LOG — a substituted body must also carry its porter note (CLAUDE.md §4.575), and only the traced form can show that.
+  /** the same, but keeping the DECISION LOG — a substituted body must also carry its porter note, and only the traced form can show that.
     */
   private def emitTraced(source: String, policy: Map[String, String]) =
     val before       = SpoonTir.fromSource(source)

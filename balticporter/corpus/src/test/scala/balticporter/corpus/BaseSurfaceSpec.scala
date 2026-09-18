@@ -7,7 +7,7 @@ import balticporter.tir.{ CtorFunnel, Program, Surface, SymId, Tree, TrivialSurf
 
 import java.nio.file.{ Files, Path }
 
-/** The BASE-SURFACE CONTRACT, end to end (`DESIGN.md` §8.3). */
+/** The base-surface contract, end to end. */
 class BaseSurfaceSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
@@ -122,10 +122,10 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // 2. D4 — the funnel's fixpoint stops spanning the base
+  // 2. the funnel's fixpoint stops spanning the base
   // -------------------------------------------------------------------------
 
-  /** The D4 shape exactly: the base's `Base` has a paramful root, and the DEPENDENT adds a subclass whose `extends` clause passes no arguments. In the base's own run nothing puts `Base` into
+  /** This shape exactly: the base's `Base` has a paramful root, and the dependent adds a subclass whose `extends` clause passes no arguments. In the base's own run nothing puts `Base` into
     * `needNilary`; in the dependent's, this subclass does.
     */
   private val dependentSubclass = Map(
@@ -144,7 +144,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     val (p, root) = model(basePkg, dependentSubclass)
     val owned     = ownedUnits(p, root)
 
-    // the pre-D1 behaviour, reproduced: with the whole program as the surface — which is what a
+    // the old whole-program behaviour, reproduced: with the whole program as the surface — which is what a
     // dependent had — `Bare extends p.Base` puts `Base` in `needNilary` and the fixpoint strips its
     // parameters. The base emitted them, so the two modules cannot compile together, and NOTHING in
     // the dependent's run disagrees with itself about it.
@@ -232,7 +232,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // 3. D6's cross-module face — attribution, because there is no local repair
+  // 3. the cross-module face — attribution, because there is no local repair
   // -------------------------------------------------------------------------
 
   test("naming a base type the base emitted as an `object` is a finding ATTRIBUTED to the base") {
@@ -246,7 +246,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(gaps.head.module, Some("base-mod"))
     assert(clue(gaps.head.why).contains("bare `object`"))
     // …and NOT fatal: the base is emitted and gone, so there is no local repair — the contract buys
-    // attribution and nothing more (§8.3's honest-scope statement).
+    // attribution and nothing more.
     assertEquals(gaps.head.fatal, false)
     assert(clue(gaps.head.fix).contains("nothing in this module can repair it"))
   }
@@ -261,10 +261,10 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // 3.5 D5 — a REPLAY may not widen a `private` member this run does not EMIT
+  // 3.5 a replay may not widen a `private` member this run does not emit
   // -------------------------------------------------------------------------
 
-  /** The D5 shape exactly. `p.Base(int)` runs `touch()`, which is `private` in the base; a dependent subclass writes `super(3)`, which scala cannot express, so `replayFor` would lift `Base`'s
+  /** This shape exactly. `p.Base(int)` runs `touch()`, which is `private` in the base; a dependent subclass writes `super(3)`, which scala cannot express, so `replayFor` would lift `Base`'s
     * constructor body into `Mine` — and there `touch()` is not reachable. Within one module that is repaired by widening; across the boundary the DECLARATION is in a file this run does not write.
     */
   private val privateBase = Map(
@@ -342,7 +342,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
 
   test("the WITHIN-module widening is untouched — the guard is a scope, not a removal") {
     // libGDX core makes 22 sound `WidenedVisibility` decisions of its own; a blanket refusal
-    // regresses the base to fix the dependent (`PROGRESS.md` §8.5).
+    // regresses the base to fix the dependent.
     val (p, root) = model(Map("z/Unused.java" -> "package z; public class Unused { }"), privateBase ++ privateHeir)
     assert(
       replayed(p, new PublishedSurface(p, ownedUnits(p, root)), "q.Mine"),
@@ -368,7 +368,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   test("a FIELD and a METHOD of one name are TWO rows, and each symbol gets its own") {
-    // §4.55's whole reason for existing, arriving at the lookup: java lets `FileHandle.file` be a
+    // The whole reason this exists, arriving at the lookup: java lets `FileHandle.file` be a
     // field AND `file()` a method, the field is renamed `file$field`, and the two rows therefore
     // DISAGREE by construction. Read as one overload set every renamed field in every base answered
     // `Unknown` — 272 of them on one dependent, each a false report about a row sitting right there.
@@ -430,7 +430,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // 3.6 §4.55 — a DESCENDANT clash may not rename a field this run does not EMIT
+  // 3.6 a descendant clash may not rename a field this run does not emit
   // -------------------------------------------------------------------------
 
   /** The face with **0 corpus sites**, which is exactly why it is pinned here rather than measured. */
@@ -484,7 +484,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     // The half this module owns is only movable when it answers to nothing outside this module. Here
     // `q.Heir` implements `p.Iface.x()`, whose declaration lives in the BASE — renaming `Heir.x`
     // would leave that interface unimplemented, so the closure is anchored and the pass refuses.
-    // Refuse-and-count is the honest outcome for a clash with no local repair (`DESIGN.md` §8.3).
+    // Refuse-and-count is the honest outcome for a clash with no local repair.
     val (p, root) = model(
       clashBase ++ Map("p/Iface.java" -> "package p; public interface Iface { int x(); }"),
       Map(
@@ -618,7 +618,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
 
   test("the contract records the COLLAPSE, which no other artifact can say") {
     // `members.tsv` records `Holder`'s kind as `class`; it emits as `object Holder`. That gap is
-    // D6's cross-module face at its source, and it is the row a dependent reads.
+    // the cross-module face of this mismatch at its source, and it is the row a dependent reads.
     val root = Files.createTempDirectory("base-surface-own")
     Files.createDirectories(root.resolve("p"))
     Files.writeString(root.resolve("p/Holder.java"), "package p; public class Holder { public static final int X = 1; }")
@@ -640,7 +640,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // 2.5 D15 — a PUBLISHED slot and its re-derivation are ONE derivation
+  // 2.5 a published slot and its re-derivation are one derivation
   // -------------------------------------------------------------------------
 
   /** `Base()` is a SECONDARY whose body runs AFTER its `this(1)` delegation and reads no parameter, so `Guarded`'s synthesised primary carries the boolean guard slot `via$pb` — a slot whose type a
@@ -688,7 +688,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
     // interned from java, which is what makes the two derivations reachable from two symbols.
     assert(clue(text).contains("via$pb: scala.Boolean"), "the fixture lost its boolean guard slot")
     // the guard slot is java's `boolean`, not the wrapper's name: the slot's type is a value class
-    // a phase minted, and its spelling is read off the type's identity (ENGINE-LIMITS D15).
+    // a phase minted, and its spelling is read off the type's identity.
     assertEquals(clue(guarded.primary.map(_.render)), Some("int,boolean"))
 
     // …and the DEPENDENT, which does not emit `p.Guarded`, re-derives that row locally and agrees.

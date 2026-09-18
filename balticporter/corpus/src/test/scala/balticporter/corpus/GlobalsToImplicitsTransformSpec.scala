@@ -50,7 +50,7 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
   test("the read is an anonymous clause plus a SUMMON — never a named context parameter") {
     assert(clue(out).contains("scala.Predef.summon[demo.Ctx].verbosity"), out)
     // a parameter named after an emitted root package shadows it and breaks every qualified
-    // reference in scope; this backend emits nothing but qualified references (§6).
+    // reference in scope; this backend emits nothing but qualified references.
     assert(!out.contains("(using ctx:"), out)
     assert(!out.matches("(?s).*\\(using [A-Za-z_][A-Za-z0-9_]*: demo\\.Ctx\\).*"), out)
   }
@@ -136,7 +136,7 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     assert(need.exists(e => e.kind == ContextNeed.Edge.Kind.Use))
   }
 
-  // ---- CT11: static field holders ---------------------------------------------------------------
+  // ---- static field holders ---------------------------------------------------------------
 
   /** A class whose static field CONSTRUCTS a threaded type, and whose static method reads it. The field's initialiser cannot run at companion-initialisation time; the method's body is where the
     * context first becomes available, so the field becomes a holder there. `Widget` reads `Config.verbosity` so that the growth threads it.

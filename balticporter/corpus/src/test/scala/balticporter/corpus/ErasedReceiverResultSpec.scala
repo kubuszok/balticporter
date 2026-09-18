@@ -22,7 +22,7 @@ class ErasedReceiverResultSpec extends PortSuite:
 
   test("the raw result of an erased-receiver call is cast to the slot the receiver pins") {
     val p = port(pooled)
-    // the receiver IS read through java's erased view — that part is G11 and unchanged …
+    // the receiver IS read through java's erased view — that part is the existing rule and unchanged …
     assertEmits(p, "asInstanceOf[demo.Holder.W[java.lang.Object]]")
     // … and the value it produces is converted back to what the slot's own instantiation says,
     // which is java's unchecked conversion written out.

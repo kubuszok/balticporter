@@ -9,8 +9,8 @@ import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
 /** Migrate **gdx-vfx** (44 types — post-processing shader effects for libGDX) through the TIR. First GL-facing library: nearly every signature mentions a BASE-emitted type
-  * (`FrameBuffer`/`Mesh`/`ShaderProgram`/`GL20`), testing §1.5's agreement. A DEPENDENT port: `gdx/src` a RESOLUTION root, [[LibgdxPolicy.core]] EXTENDED. Scope: `core/src`+`effects/src` into ONE sbt
-  * module. No upstream suite; evidence is the hand-written suite under `ported/sge-vfx`.
+  * (`FrameBuffer`/`Mesh`/`ShaderProgram`/`GL20`), testing the base-inheritance agreement. A DEPENDENT port: `gdx/src` a RESOLUTION root, [[LibgdxPolicy.core]] EXTENDED. Scope:
+  * `core/src`+`effects/src` into ONE sbt module. No upstream suite; evidence is the hand-written suite under `ported/sge-vfx`.
   */
 object VfxMigrate:
 
@@ -76,7 +76,7 @@ object VfxPolicy:
           packageRenames = Map("com.crashinvaders.vfx" -> "sge.vfx"),
           // base renamed setTransform -> transform_= (BeanPropertyTransform); this override must go
           dropMethods = Set("com.crashinvaders.vfx.scene2d.VfxWidgetGroup#setTransform"),
-          // TWO PER-LOCATION SELECTIONS (`DESIGN.md` §8.16/§8.21): `@SuppressWarnings` on
+          // TWO PER-LOCATION SELECTIONS: `@SuppressWarnings` on
           // ShaderVfxEffect suppresses nothing even in java (no cast, no type variable, no raw
           // type anywhere in the 193-line class) -- the port drops a marker that was already
           // vestigial upstream.
@@ -90,7 +90,7 @@ object VfxPolicy:
           ),
           surface = List(
             // VfxGLUtils' STATIC INITIALISER reflectively instantiates a GWT-only class out of
-            // scope, so the branch is UNREACHABLE (hand port reaches the same conclusion, §3.5).
+            // scope, so the branch is UNREACHABLE (hand port reaches the same conclusion).
             // `DefaultVfxGlExtension` now takes the threaded `sge.Sge` context, so `<clinit>`
             // becomes EMPTY and construction moves to the first call with one; a call made without
             // a context fails loudly, residue the hand port avoids by hand-writing the member.
@@ -148,8 +148,8 @@ object VfxPolicy:
                     |}""".stripMargin
               )
             ),
-            // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER (CT8): the holder is SHARED
-            // SURFACE, inherited from `LibgdxPolicy.core` (§1.5); this carries only the
+            // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER: the holder is SHARED
+            // SURFACE, inherited from `LibgdxPolicy.core`; this carries only the
             // PER-DECLARATION half. `VfxFrameBuffer#tmpCam` (a base-threaded class) moved to first
             // READ via `LazyInit`. NOT carried: `VfxGLUtils#<clinit>` (READS the holder, wrong site
             // kind); a `selfSupplied` entry (the suite is HAND-WRITTEN, declares its own `given`).
@@ -172,8 +172,8 @@ object VfxPolicy:
             // DEPENDENT SEEDS for the base's Align opaque family, folded via `MergeablePolicy` at
             // the base's pipeline position. Propagation follows pure-move flows and does NOT follow
             // a bitwise test, so these four PARAMETERS (only combined with Align.* via bitwise ops)
-            // are unreachable from the base's field hints alone (O6). Hints are parameter FQNs
-            // (§4.56); identity fields match the base's so `mergedWith` composes.
+            // are unreachable from the base's field hints alone. Hints are parameter FQNs;
+            // identity fields match the base's so `mergedWith` composes.
             new balticporter.transform.PrimitiveToOpaqueTransform(
               balticporter.tir.OpaqueSpec(
                 fqn = "com.badlogic.gdx.utils.Align",
@@ -197,7 +197,7 @@ object VfxPolicy:
             // must run after any seam re-pointing such a reference.
             balticporter.transform.PortMapTransform.forBases("sge")
           ),
-          // THE REFERENCE HAND PORT for sge-vfx. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-vfx. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/vfx/src/main/scala").normalize)))
         )
       )

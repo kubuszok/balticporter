@@ -62,8 +62,8 @@ class CollectionsObjectProbeSpec extends PortSuite:
   test("face 2 — the FRONTEND's `Object` coercion at a type-parameter key takes the same helpers") {
     val p = port(coerced, new CollectionsTransform)
     // `keyArg` runs first and cannot strip this one: what the cast wraps is a `P`, and the map's key
-    // type is `String`. The mint is G14-correct for a call to a java `Map`; the phase that moved the
-    // receiver is the one that owes the answer (CLAUDE.md §4.56).
+    // type is `String`. The mint is correct for a call to a java `Map`; the phase that moved the
+    // receiver is the one that owes the answer.
     assertEmits(p, "balticporter.runtime.JavaCollections.mapGet(m, probe.asInstanceOf[java.lang.Object])")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapRemove(m, probe.asInstanceOf[java.lang.Object])")
     assertEmits(p, "balticporter.runtime.JavaCollections.mapContainsKey(m, probe.asInstanceOf[java.lang.Object])")
@@ -132,7 +132,7 @@ class CollectionsObjectProbeSpec extends PortSuite:
         |""".stripMargin,
       new CollectionsTransform
     )
-    // §4.56: the arms are keyed on the receiver's KIND, which is this phase's own record. A
+    // The arms are keyed on the receiver's KIND, which is this phase's own record. A
     // library's own `contains(Object)` is not a JDK member and the probe question never arises.
     assertEmits(p, "r.contains(o)")
     assertEmits(p, "r.get(o)")
@@ -140,7 +140,7 @@ class CollectionsObjectProbeSpec extends PortSuite:
     assertNotEmits(p, "JavaCollections.mapGet(")
   }
 
-  /** face 4 — the PROBE AT A PROPER ANCESTOR, `ENGINE-LIMITS.md` K24's third face. */
+  /** face 4 — the PROBE AT A PROPER ANCESTOR, the third face of this rule. */
   private val ancestry =
     """package demo;
       |import java.util.*;
@@ -168,7 +168,7 @@ class CollectionsObjectProbeSpec extends PortSuite:
   test("face 4's negatives — an EQUAL probe and a NARROWER one both keep the ordinary rewrite") {
     val p = port(ancestry, new CollectionsTransform)
     // equal: scala's own member takes it, and routing through the helper would be emitted text for
-    // nothing on every port in the corpus (§5's widening rule).
+    // nothing on every port in the corpus.
     assertEmits(p, "m.contains(tag)")
     // narrower: the walk runs from the ELEMENT up, so a key that does not descend from the probe
     // never reaches it — `Map[Nd, String].contains(aTag)` is exactly what scala accepts.

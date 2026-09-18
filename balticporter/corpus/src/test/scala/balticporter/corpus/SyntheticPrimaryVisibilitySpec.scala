@@ -42,7 +42,7 @@ class SyntheticPrimaryVisibilitySpec extends munit.FunSuite:
   }
 
   test("bare `protected`, never package-qualified — a qualifier would deny a dependent's subclass") {
-    // §8.11: the synthetic primary is NOT a java declaration, so the `protected[<pkg>]` mapping that
+    // The synthetic primary is NOT a java declaration, so the `protected[<pkg>]` mapping that
     // governs java-declared members does not reach it. Its only legitimate callers are this class's
     // own secondaries and a subclass's `extends` clause IN ANY PACKAGE — which is exactly the pair
     // bare `protected` permits and a package qualifier denies across a module boundary.

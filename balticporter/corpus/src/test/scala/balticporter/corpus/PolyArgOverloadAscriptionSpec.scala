@@ -38,7 +38,7 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
   test("NEGATIVE — the UNOVERLOADED callee in the same statement gets nothing") {
     val p = port(src)
     // `tagIndent` has one alternative of this arity, so scala already has the expected type and
-    // SAM-converts the bare literal. Ascribing here would be emitted text for nothing (§5), and
+    // SAM-converts the bare literal. Ascribing here would be emitted text for nothing, and
     // this is the case that sits closest to the positive: one java statement, two callees.
     assertEmits(p, "fa.tagIndent(\"ul\", () =>")
   }
@@ -142,7 +142,7 @@ class PolyArgOverloadAscriptionSpec extends PortSuite:
     )
     // a reference is a poly expression too, and `TirEmitter.samAscribed` is the one mechanism that
     // answers for it — the STATIC form renders as a bare qualified name, where an ascription applies
-    // a nilary method rather than converting it. Two mechanisms for one question is F8's finding.
+    // a nilary method rather than converting it. Two mechanisms answering one question must be one shared function.
     assertNotEmits(p, "this.tick: java.lang.Runnable")
   }
 

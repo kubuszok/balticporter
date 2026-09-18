@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type — `ENGINE-LIMITS.md` G22.
+/** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type.
   */
 class UnconstrainedTypeParamSpec extends PortSuite:
 

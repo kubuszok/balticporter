@@ -31,18 +31,18 @@ class CollectionInternalCheckSpec extends PortSuite:
   test("the DeclaredSubtype seam is BRIDGED at the slot, so the lane that named it now reads zero") {
     val (p, fs, _) = findings(ownSet)
     // the phase re-parented the class onto `Set`'s target and the slot onto `Collection`'s, and
-    // those two have no relation: `JavaCollection` is standalone BECAUSE §4.5 says it must be.
+    // those two have no relation: `JavaCollection` is standalone BECAUSE the runtime-shim rule says it must be.
     assertEmits(p, "extends scala.collection.mutable.Set[E]")
     assertEmits(p, "def all(): balticporter.runtime.JavaCollection[E]")
     // …and THAT is what `coerce` now closes: the class really IS a `mutable.Set` here because this
     // phase made it one, so `JavaCollection.fromSet` conforms and the value is wrapped at the slot
-    // rather than left to a java subtyping edge with no scala image (`ENGINE-LIMITS.md` K26).
+    // rather than left to a java subtyping edge with no scala image.
     assertEmits(p, "balticporter.runtime.JavaCollection.fromSet(this.own)")
     assertEquals(clue(fs.filter(_.issue == Issue.DeclaredSubtype)), Nil)
     // The ARM is kept as a GUARD rather than deleted: it fires wherever `coerce` has no factory for
     // the pair, and the one such cell left (`Kind.Map` into `JavaCollection`) is one java itself
     // cannot write — a `Map` is not a `Collection`. Its vocabulary is asserted here so a row that
-    // DOES appear arrives with the §1 classification a bare typer error cannot give (§4.45).
+    // DOES appear arrives with the classification a bare typer error cannot give.
     assert(clue(Issue.classification(Issue.DeclaredSubtype)).contains("engine"))
     assert(clue(CollectionInternalCheck.summary(Nil)).contains("none"))
   }
@@ -69,8 +69,7 @@ class CollectionInternalCheckSpec extends PortSuite:
 
   // THE SHAPE IS NOW THE RESIDUE, not the population — and that is the pass draining the lane.
   // `set(Key<V> k, V v)` used to be this fixture, and `CollectionsTransform` now answers it: `Key<V>`
-  // is INVARIANT, so the key argument fixes `V` and the value is coerced TO it (`ENGINE-LIMITS.md`
-  // K26, measured `collection-internal` 5 -> 0 with its five errors).
+  // is INVARIANT, so the key argument fixes `V` and the value is coerced TO it.
   private val splitVar =
     """package demo;
       |import java.util.*;
@@ -104,7 +103,7 @@ class CollectionInternalCheckSpec extends PortSuite:
     val (p, fs, _) = findings(splitVar)
     // `keyed(k, xs)` is the very shape this lane used to be written on, and it reports nothing now
     // because the coercion runs at the inference site and the seam is CLOSED rather than merely
-    // uncounted — which is the distinction `CLAUDE.md` §5 asks a falling lane to make. The emitted
+    // uncounted — which is the distinction a falling lane must make. The emitted
     // wrap is the evidence: a lane reading zero because a check stopped asking looks identical.
     assertEmits(p, "balticporter.runtime.JavaCollection.from(xs)")
     assertEquals(clue(fs.filter(f => f.issue == Issue.SplitTypeVariable && f.slot.contains("keyed"))), Nil)
@@ -143,7 +142,7 @@ class CollectionInternalCheckSpec extends PortSuite:
     // the helper has NO signature to check either against — which is exactly why an arm reading the
     // operands alone cannot tell this site (2 compile errors) from
     // `JavaCollections.containsAll`, whose `IterableOnce[?] | JavaIterable[?]` formal exists for
-    // this shape and closes it. `ENGINE-LIMITS.md` K2.
+    // this shape and closes it.
     assertEmits(p, "balticporter.runtime.JavaCollections.addAll(")
     assertEquals(clue(fs), Nil)
   }

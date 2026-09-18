@@ -8,9 +8,9 @@ import balticporter.runner.{ Determinism, PortRun, SourceSet, VendoredCommit }
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **gdx-ai** (`gdx-ai/src` — libGDX's AI extension: behaviour trees, state machines, message dispatch, pathfinding, steering, formation motion, scheduling) through the TIR. A DEPENDENT port:
-  * `gdx/src` a RESOLUTION root only, [[LibgdxPolicy.core]] EXTENDED (§1.5). Scope excludes `com/badlogic/gdx/emu/` (GWT super-source collision). Reflective behaviour-tree parser kept via five
-  * `MethodBodyTransform` bodies (`PROGRESS.md` §10.7.8).
+/** Migrate **gdx-ai** (`gdx-ai/src` — libGDX's AI extension: behaviour trees, state machines, message dispatch, pathfinding, steering, formation motion, scheduling) through the TIR. A dependent port:
+  * `gdx/src` a resolution root only, [[LibgdxPolicy.core]] extended. Scope excludes `com/badlogic/gdx/emu/` (GWT super-source collision). Reflective behaviour-tree parser kept via five
+  * `MethodBodyTransform` bodies.
   */
 object GdxAiMigrate:
 
@@ -30,7 +30,7 @@ object GdxAiMigrate:
       // GWT SUPER-SOURCE — upstream's own `compileJava` exclusion, and a second declaration of
       // `com.badlogic.gdx.ai.StandaloneFileSystem` if it is not honoured. See the scope note above.
       // Matched on the path SEGMENT and not as a substring: `com/badlogic/gdx/emu/` is a directory,
-      // and a bare `contains("emu")` would also name a package called `emulation` (CLAUDE.md §4.56).
+      // and a bare `contains("emu")` would also name a package called `emulation`.
       .filterNot(f => f.startsWith("com/badlogic/gdx/emu/"))
       .toList
       .sorted
@@ -50,7 +50,7 @@ object GdxAiMigrate:
           sourcePathPrefix = "gdx-ai/src",
           sourceRoot = base.toString,
           // ONE FILE IN 167 CARRIES NO PER-FILE NOTICE (PooledBehaviorTreeLibrary.java) --
-          // ship the upstream LICENSE beside it (CLAUDE.md §4.57).
+          // ship the upstream LICENSE beside it.
           notices = List(upstream.resolve("LICENSE"))
         )
       ),
@@ -62,9 +62,8 @@ object GdxAiMigrate:
       nextStep = "just ai-measure"
     ).execute()
 
-/** gdx-ai's per-library policy -- a DEPENDENT of libGDX core's, deliberately almost empty. `dropTypes`/`dropMethods`/`packageRenames`/every signature-affecting phase are INHERITED, not restated
-  * (CLAUDE.md §1.5). `inject` is NOT inherited: a drop is shared-API policy, but exactly one module ships each replacement file. Milestone 1 adds a namespace CLAIM and the base-surface residue check,
-  * nothing else.
+/** gdx-ai's per-library policy -- a dependent of libGDX core's, deliberately almost empty. `dropTypes`/`dropMethods`/`packageRenames`/every signature-affecting phase are inherited, not restated.
+  * `inject` is NOT inherited: a drop is shared-API policy, but exactly one module ships each replacement file. Milestone 1 adds a namespace CLAIM and the base-surface residue check, nothing else.
   */
 object GdxAiPolicy:
 
@@ -83,9 +82,9 @@ object GdxAiPolicy:
           surface = List(
             // THE BEHAVIOUR-TREE PARSER'S REFLECTIVE HALF: DefaultBehaviorTreeReader names the
             // base's dropped reflect.Field in three signatures, inside an ENUM CONSTANT WITH A
-            // BODY, whose members MemberKey.parse cannot name (T23); TypeRedirectTransform fixes
+            // BODY, whose members MemberKey.parse cannot name; TypeRedirectTransform fixes
             // all three at once. SCOPED to com.badlogic.gdx.ai: a dependent's Program CONTAINS
-            // its base (D2), so unscoped would re-point `Field` in libGDX itself (0->1 FATAL).
+            // its base, so unscoped would re-point `Field` in libGDX itself (0->1 FATAL).
             new balticporter.transform.TypeRedirectTransform(
               redirects = Map(
                 "com.badlogic.gdx.utils.reflect.Field" -> "com.badlogic.gdx.ai.btree.utils.TaskField"
@@ -133,7 +132,7 @@ object GdxAiPolicy:
                 // `newInstance(forName(className))` STAYS a body: `RegistryTransform` keys on a
                 // `Class` VALUE, and the name half would need a SCOPED, mergeable
                 // `ClassTableTransform` — the phase takes neither, and the base already binds
-                // `forName` globally (`ENGINE-LIMITS.md` P10). The catch is kept so the table's
+                // `forName` globally. The catch is kept so the table's
                 // refusal arrives at the caller in java's own words.
                 "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#openTask(String,boolean)" ->
                   """{
@@ -189,7 +188,7 @@ object GdxAiPolicy:
 
                 // getAnnotation(...) + getFields + each field's getDeclaredAnnotation. The CACHE
                 // and the null protocol are java's own: null means "no @TaskConstraint in this
-                // hierarchy". THE BASE'S @Null SURFACE IS READ OFF THE GENERATED CALLER (§1): this
+                // hierarchy". The base's @Null surface is read off the generated caller: this
                 // hand-written body is outside the threading closure, so it must NOT use the
                 // engine's checked `.get` unwrap — an empty cache is the NORMAL case here.
                 "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#findMetadata(Class)" ->
@@ -255,8 +254,7 @@ object GdxAiPolicy:
             ),
             // gdx-ai's ONE keyable reflective instantiation: `Task#cloneTask`'s fallback
             // `ClassReflection.newInstance(this.getClass())`. `miss = JvmReflect` is DECLARED,
-            // its non-JVM cost COUNTED, and it is what admits a SELF-CLONE (`ENGINE-LIMITS.md`
-            // P10). `onFailure` is java's OWN answer where reflection fails -- Task.java:270
+            // its non-JVM cost COUNTED, and it is what admits a SELF-CLONE. `onFailure` is java's OWN answer where reflection fails -- Task.java:270
             // `catch (ReflectionException e) { throw new TaskCloneException(e) }` -- so `handles`
             // names that exception and java's now-dead handler is elided EXACTLY.
             new balticporter.transform.RegistryTransform(
@@ -296,13 +294,13 @@ object GdxAiPolicy:
           // GdxAI chooses two of its three services by SNIFFING THE AMBIENT ENVIRONMENT at class
           // init, and the base retired Gdx.* into a threaded context — a static field
           // initialiser runs before anything could pass one, a QUESTION THE PORT CANNOT ASK. The
-          // replacement installs JAVA'S OWN NEGATIVE BRANCH; both alternatives measured worse (§10.7.6).
+          // replacement installs JAVA'S OWN NEGATIVE BRANCH; both alternatives measured worse.
           dropTypes = Set("com.badlogic.gdx.ai.GdxAI"),
           // THREE injected files, only ONE replacing a drop: sge/ai/GdxAI.scala stands at the
           // dropped FQN; TaskField.scala/TaskRegistry.scala stand at names nothing drops. NOT
           // inherited by test below -- exactly one module ships each file.
           inject = List(repoRoot.resolve("balticporter/corpus/gdxai-overrides")),
-          // THE REFERENCE HAND PORT for sge-ai. NOT inherited (DESIGN.md §8.23).
+          // THE REFERENCE HAND PORT for sge-ai. NOT inherited.
           parity = Some(ParityRef(roots = List(repoRoot.resolve("../sge/sge-extension/ai/src/main/scala").normalize)))
         )
       )

@@ -1,7 +1,7 @@
 package balticporter.corpus.libgdx
 
-/** The bodies of libGDX core's 59 java `native` members on the JVM (PROGRESS.md §13.30 step 2): each delegates to a port-written object injected with the `natives` step (`Gdx2DNative`,
-  * `BufferUtilsNative`, `ETC1Native`); `Matrix4`'s three strided loops are written out over the class's own single-vector statics. Keyed in `MethodBodyTransform`'s `owner#name(params)` grammar.
+/** The bodies of libGDX core's 59 java `native` members on the JVM: each delegates to a port-written object injected with the `natives` step (`Gdx2DNative`, `BufferUtilsNative`, `ETC1Native`);
+  * `Matrix4`'s three strided loops are written out over the class's own single-vector statics. Keyed in `MethodBodyTransform`'s `owner#name(params)` grammar.
   */
 object LibgdxNativeBodies {
   private val BU = "com.badlogic.gdx.utils.BufferUtils#"

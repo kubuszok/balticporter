@@ -44,7 +44,7 @@ class CollectionsRawConstantSpec extends PortSuite:
   test("the FIELD and the CALL land on the same helper, which is what keeps java's IDENTITY") {
     // java's `EMPTY_LIST` IS the object `emptyList()` returns, and the runtime hands back one shared
     // instance for exactly that reason — so `xs == Collections.EMPTY_LIST`, which this engine emits
-    // as `eq` (§4.4), goes on answering what java answers. Two different targets would not.
+    // as `eq`, goes on answering what java answers. Two different targets would not.
     val p = port(
       """package demo;
         |import java.util.*;

@@ -92,7 +92,7 @@ class CollectionsSe8MembersSpec extends PortSuite:
   }
 
   test("NEGATIVE — the same member names on a receiver the phase did NOT retype are untouched") {
-    // §4.56: the arms are keyed on the receiver's KIND, so a library's own `sort`/`removeIf` is not
+    // The arms are keyed on the receiver's KIND, so a library's own `sort`/`removeIf` is not
     // a JDK member and must survive verbatim. Without the phase there is no kind at all, which is
     // the same question asked the other way.
     val p = port(

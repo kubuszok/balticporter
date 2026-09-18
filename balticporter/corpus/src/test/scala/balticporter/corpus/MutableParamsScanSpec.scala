@@ -5,8 +5,8 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.MutableParamsTransform
 
-/** `MutableParamsTransform` finds a reassigned parameter by SCANNING the method body, and the scan used to be a hand-rolled recursion over a hand-maintained list of node kinds — the thing CLAUDE.md
-  * §3 bans, and the shape of two of the four silent defects this project has found. Each method below is a Java form that list did not reach.
+/** `MutableParamsTransform` finds a reassigned parameter by SCANNING the method body, and the scan used to be a hand-rolled recursion over a hand-maintained list of node kinds — a private recursion
+  * that walks the tree by hand, and the shape of two of the four silent defects this project has found. Each method below is a Java form that list did not reach.
   */
 class MutableParamsScanSpec extends munit.FunSuite:
 

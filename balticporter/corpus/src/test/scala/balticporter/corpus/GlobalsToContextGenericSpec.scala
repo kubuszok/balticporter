@@ -5,11 +5,11 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, PorterNote, Program, UsageKind }
 import balticporter.transform.*
 
-/** `ENGINE-LIMITS.md` CT6 — the two faces of the same blindness, and the fixture that dumped them. */
+/** The two faces of the same blindness, and the fixture that dumped them. */
 class GlobalsToContextGenericSpec extends munit.FunSuite:
 
-  /** The five shapes CT6 needs, side by side — a GENERIC and a NON-GENERIC class with the same constructor, each constructed from a static field initialiser, plus the type-argument slot that must NOT
-    * read as a construction.
+  /** The five shapes instantiation detection needs, side by side — a GENERIC and a NON-GENERIC class with the same constructor, each constructed from a static field initialiser, plus the
+    * type-argument slot that must NOT read as a construction.
     */
   private val src =
     """package demo;
@@ -31,7 +31,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
       |public class Sized { static Pool<Cell> mine = new Pool<Cell>(); }
       |""".stripMargin
 
-  /** an anonymous subclass of a GENERIC parent written inside a METHOD, whose body reads the holder — CT1's shape, for generics, from the other side of the same table.
+  /** an anonymous subclass of a GENERIC parent written inside a METHOD, whose body reads the holder — the anonymous-class-ownership shape, for generics, from the other side of the same table.
     */
   private val anonSrc =
     """package demo;
@@ -60,7 +60,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   private def ported(h: ContextHolder) = portedFrom(src, h)
 
-  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose (§4.575).
+  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose.
     */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
@@ -75,7 +75,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
 
   test("the shared index labels a GENERIC `new` `Tycon` and a non-generic one `Instantiate`") {
-    // This is not a wish: it is the state of `Xref` that CT6 says stays as it is, because
+    // This is not a wish: it is the deliberate state of `Xref`, unchanged because
     // `UsageKind` is read by the portability check, the rewrite trace and the external-surface walk
     // and re-labelling one arm is its own thirteen-port measure cycle. The phase compensates; the
     // index does not change. If this test ever fails because the arm was re-labelled, the two
@@ -99,7 +99,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   test("a GENERIC class's `new` imposes the need, exactly as a non-generic one does") {
     // the CONTROL and the case, in one assertion pair: both static field initialisers construct a
-    // threaded class, and before CT6 only the non-generic one was a counted boundary.
+    // threaded class, and before generic detection only the non-generic one was a counted boundary.
     // NEGATIVE: make `ContextNeed.instantiates` read `u.kind == UsageKind.Instantiate` only, and the
     // `demo.Tbl#cellPool` row disappears while `demo.Named#p` stays.
     val subjects = seams(phase, after).filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse).map(_.subject).toSet
@@ -169,7 +169,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     assertEquals(clue(ds).map(_.subjectFqn), List("demo.Tbl#cellPool"))
     assertEquals(ds.head.reason, balticporter.tir.Reason.Configured("globals->implicits", "demo.Tbl#cellPool"))
     assertEquals(p.seams(a).count(_.kind == ContextSeamCheck.Kind.DeferredInit), 1, render(p, a))
-    // …and the porter note is beside the declaration, where the question is asked (§4.575)
+    // …and the porter note is beside the declaration, where the question is asked
     assert(clue(o).contains("/* porter: deferred-init"), o)
   }
 
@@ -185,7 +185,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
   }
 
   test("the read-derived trigger still fires: a class initialiser that READS the holder") {
-    // the pre-CT6 path, kept — the widening adds a candidate set, it does not replace one. A
+    // the original path, kept — the widening adds a candidate set, it does not replace one. A
     // `<clinit>` is an engine-minted member the binder refuses to bind, so nothing but the read
     // derivation can reach it.
     val clinitSrc =

@@ -8,7 +8,7 @@ import balticporter.tir.Pipeline
   */
 class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
-  // ---- C1: the withholding fixpoint, on the shape that named it ----
+  // ---- the withholding fixpoint, on the shape that named it ----
 
   private val withheldSrc =
     """package with1;
@@ -32,7 +32,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
   private val withheld = new TirEmitter(Pipeline.run(SpoonTir.fromSource(withheldSrc), Nil)).emit
 
   test("C1 — child resolves through parent plan: no withholding cascade") {
-    // C3 item 4c: Sub resolves through Mid's synthesised plan, so Mid keeps its synthesis
+    // Sub resolves through Mid's synthesised plan, so Mid keeps its synthesis
     assert(clue(withheld).contains("class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Base(sup$0, sup$1)"))
     assert(clue(withheld).contains("class Sub protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Mid(sup$0, sup$1)"))
   }
@@ -40,7 +40,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
   test("C1 — a child with ONLY a nilary ctor still withholds the parent's synthesis") {
     // A child whose only constructor is nilary (implicit `super()`) cannot synthesise and its
     // plan has empty superArgs. The fixpoint sees `superArgs.isEmpty && !isSynthesised` and
-    // correctly withholds the parent. // ENGINE-LIMITS C1, C3
+    // correctly withholds the parent.
     val src =
       """package with1b;
         |class Base { Base(int a, int b) {} }
@@ -76,7 +76,7 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
     assert(clue(o).contains("class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with2.Base(sup$0, sup$1)"))
   }
 
-  // ---- C1.5: `nilaryPlan` and the two readings of "is this a synthesis" ----
+  // ---- `nilaryPlan` and the two readings of "is this a synthesis" ----
 
   test("`nilaryPlan` must NOT claim a SYNTHESIS: `primary.isEmpty` is true of both") {
     // No constructor of this class carries `super(args)`, which is `nilaryPlan`'s entire domain —

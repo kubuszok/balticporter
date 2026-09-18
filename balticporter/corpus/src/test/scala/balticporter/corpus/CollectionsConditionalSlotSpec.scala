@@ -55,6 +55,6 @@ class CollectionsConditionalSlotSpec extends PortSuite:
       new CollectionsTransform
     )
     // the descent is identity-preserving where neither arm moves, so no member digest shifts for a
-    // conditional that was already right — the over-approximation §5 has no instrument for.
+    // conditional that was already right — the over-approximation no measure has an instrument for.
     assertEmits(p, "return if (n > 0) a else b")
   }

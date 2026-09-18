@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A NILARY STATIC METHOD REFERENCE — `ENGINE-LIMITS.md` G32, the one qualified name scala will not eta-expand.
+/** A NILARY STATIC METHOD REFERENCE — the one qualified name scala will not eta-expand.
   */
 class StaticMethodRefAritySpec extends PortSuite:
 

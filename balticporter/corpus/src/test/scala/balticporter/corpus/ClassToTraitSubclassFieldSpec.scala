@@ -4,7 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.ClassToTraitTransform
 
 /** A subclass's OWN field assignment must survive `class-to-trait`. `stripSuperArgs` reconstructs the constructor body as a `Block`; it must preserve the original `expr` so that statements stay in
-  * `stats` where `CtorFunnel.stmtsOf` can read them. ENGINE-LIMITS A1.
+  * `stats` where `CtorFunnel.stmtsOf` can read them.
   */
 class ClassToTraitSubclassFieldSpec extends PortSuite:
 

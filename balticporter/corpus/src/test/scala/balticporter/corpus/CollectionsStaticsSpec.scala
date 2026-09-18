@@ -30,7 +30,7 @@ class CollectionsStaticsSpec extends PortSuite:
   test("every `java.util.Collections` static in the table rewrites onto the runtime object") {
     val p = port(statics, new CollectionsTransform)
     // IN PLACE, both of them — java mutates the argument and returns nothing, and a sorted COPY
-    // would leave every caller reading the original order (§4.4, no compile error).
+    // would leave every caller reading the original order (no compile error).
     assertEmits(p, "balticporter.runtime.JavaCollections.sort(xs, c)")
     // the natural-ordering overload is a DIFFERENT helper: scala needs an `Ordering` where java
     // resolves through `Comparable`, so the arity is the discriminator and the target is not `sort`.
@@ -246,7 +246,7 @@ class CollectionsStaticsSpec extends PortSuite:
   test("`forEach` is the ONE exception, and it is listed ABOVE the guard so it cannot be added by omission") {
     val p = port(onShim, new CollectionsTransform)
     // java 8's `forEach(Consumer)` has no counterpart on the shim itself — `JavaIterable` supplies
-    // `foreach` as an EXTENSION, which is the whole point of the family (§4.5). Left alone this is
+    // `foreach` as an EXTENSION, which is the whole point of runtime shims. Left alone this is
     // a call to a member that does not exist.
     assertEmits(p, "c.foreach(f)")
     assertNotEmits(p, "c.forEach(")

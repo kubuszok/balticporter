@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `ENGINE-LIMITS.md` G8.7 — G22's pin at the shape its FOURTH condition declines. */
+/** The unconstrained-type-parameter pin at the shape its FOURTH condition declines. */
 class UnconstrainedResultPinSpec extends PortSuite:
 
   test("an F-BOUNDED result variable is ascribed at its bound, own variables wildcarded") {
@@ -94,6 +94,6 @@ class UnconstrainedResultPinSpec extends PortSuite:
         |""".stripMargin
     )
     // a RAW receiver says nothing about `T`, so `receiverTypeArgs` is empty and the pin declines —
-    // the call keeps its error rather than gaining a type this scope cannot write (§4.6).
+    // the call keeps its error rather than gaining a type this scope cannot write.
     assertNotEmits(p, "asInstanceOf[demo.Builder5[")
   }

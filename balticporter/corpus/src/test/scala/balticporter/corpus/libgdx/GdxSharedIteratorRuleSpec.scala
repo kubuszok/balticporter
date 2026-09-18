@@ -2,7 +2,7 @@ package balticporter.corpus.libgdx
 
 import balticporter.testkit.PortSuite
 
-/** How a §1(c) rule is TESTED — from the porting repository, with the engine's testkit, on a Java snippet. The third of the three things [[GdxSharedIteratorRule]] exists to demonstrate.
+/** How a library-specific rule is TESTED — from the porting repository, with the engine's testkit, on a Java snippet. The third of the three things [[GdxSharedIteratorRule]] exists to demonstrate.
   */
 class GdxSharedIteratorRuleSpec extends PortSuite:
 

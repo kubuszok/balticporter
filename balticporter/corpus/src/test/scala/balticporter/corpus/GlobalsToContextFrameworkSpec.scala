@@ -6,10 +6,10 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, PorterNote, Program }
 import balticporter.transform.*
 
-/** `ENGINE-LIMITS.md` CT7 — THE THIRD ANSWER, and the warning that makes its absence visible. */
+/** The third answer, and the warning that makes its absence visible. */
 class GlobalsToContextFrameworkSpec extends munit.FunSuite:
 
-  /** the CT7 shape beside its two controls: a threaded class this program DOES construct, and a threaded class nothing constructs whose ancestry never leaves the program.
+  /** the reflectively-constructed shape beside its two controls: a threaded class this program DOES construct, and a threaded class nothing constructs whose ancestry never leaves the program.
     */
   private val src =
     """package demo;
@@ -27,8 +27,8 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
       |public class Runner { void go() { Boot b = new Boot(); } }
       |""".stripMargin
 
-  /** the same CT7 shape, with an ARRAY ALLOCATION of the suite somewhere in the program. `Xref` records `Instantiate` for a `NewArray`'s ELEMENT type, and `new ModelTest[4]` runs no constructor at
-    * all — so reading that edge as a construction suppressed the warning for a class nothing constructs.
+  /** the same shape, with an ARRAY ALLOCATION of the suite somewhere in the program. `Xref` records `Instantiate` for a `NewArray`'s ELEMENT type, and `new ModelTest[4]` runs no constructor at all —
+    * so reading that edge as a construction suppressed the warning for a class nothing constructs.
     */
   private val arrayAllocSrc =
     """package demo;
@@ -69,7 +69,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
 
   private def ported(h: ContextHolder) = portedFrom(src, h)
 
-  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose (§4.575).
+  /** the emitted CODE with the porter notes stripped — a note names the UPSTREAM member on purpose.
     */
   private def code(out: String): String =
     out.linesIterator.filterNot(l => l.contains(PorterNote.Marker) || l.trim.startsWith("—")).mkString("\n")
@@ -80,7 +80,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
   private def render(p: GlobalsToImplicitsTransform, a: Program) = p.seams(a).map(_.render).mkString("\n")
 
   // -------------------------------------------------------------------------
-  // the WARNING — the check CT7 lacked
+  // the WARNING — the check this suite lacked before
   // -------------------------------------------------------------------------
 
   test("a threaded class NOTHING CONSTRUCTS whose ancestry leaves the program is WARNED on") {
@@ -100,7 +100,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
 
   test("an ARRAY ALLOCATION is not a construction — `new Suite[4]` must not suppress the warning") {
     // `new ModelTest[4]` allocates four null slots and runs no constructor, so nothing in this
-    // program builds a `ModelTest` and the CT7 shape is exactly what it was. The recorded
+    // program builds a `ModelTest` and the shape is exactly what it was. The recorded
     // `Instantiate` edge on a `NewArray`'s ELEMENT type means "this type is named here", which is
     // the opposite of what the suppressor read it as.
     // NEGATIVE: drop the `!u.site.isInstanceOf[Tree.
@@ -174,7 +174,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
 
   test("the decision says the SIGNATURE DID NOT MOVE, and the note sits above the class") {
     // `InjectedMember` and not `RetypedSignature`, because nothing was retyped: what the port
-    // gained is a member the engine put there. §4.575 — the reader is an agent holding the emitted
+    // gained is a member the engine put there. The reader is an agent holding the emitted
     // file, and its question is asked at the `class` line.
     val (_, _, log, out) = supplied
     val ds               = log.of(Decision.Kind.InjectedMember).filter(_.subjectFqn == "demo.ModelTest")
@@ -217,7 +217,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
 
   test("an entry naming a type the closure never reaches is a DEAD BINDING, reported") {
     // `PolicyBinder.bindType` asks *does this program declare this type*, which a real class answers
-    // whether or not the threading would ever have touched it — CT6's blindness, one key over.
+    // whether or not the threading would ever have touched it — the same blindness, one key over.
     // NEGATIVE: delete `recordDeadSelf` and the entry binds, emits nothing, and is invisible.
     val (p, _, _, out) = ported(base.copy(selfSupplied = Map("demo.Svc" -> "demo.TestFixture.ctx()")))
     val fs             = p.policyReport.findings.filter(_.issue == PolicyIssue.NeverMatched)
@@ -245,7 +245,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // the probe a real compiler reads (the M2 lesson: a claim about scalac needs scalac)
+  // the probe a real compiler reads (a claim about scalac needs scalac)
   // -------------------------------------------------------------------------
 
   /** {{{ scala-cli compile --scala 3.8.4 --server=false <the path printed below> }}} */

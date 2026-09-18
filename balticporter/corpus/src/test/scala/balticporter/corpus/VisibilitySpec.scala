@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.tir.Decision
 
-/** JAVA'S FOUR ACCESS LEVELS, pinned through the pipeline — `DESIGN.md` §8.7. */
+/** Java's four access levels, pinned through the pipeline. */
 class VisibilitySpec extends PortSuite:
 
   private def widenings(p: balticporter.testkit.Ported): List[Decision] =
@@ -39,14 +39,14 @@ class VisibilitySpec extends PortSuite:
     assertEmits(p, "private[util] def share()")
     assertEmits(p, "protected[util] def guard()")
     assertEmits(p, "def show()")
-    // the mapping IS the diff (§4.575): a faithful rendering records nothing.
+    // the mapping IS the diff: a faithful rendering records nothing.
     assertEquals(causes(p), Nil)
   }
 
   test("a top-level package-private TYPE is bare `private` — which already means its package") {
     // Scala's top-level `private` is `private[enclosingPackage]`, so no qualifier is needed and the
     // one form that IS barred from a public signature (an unqualified private NESTED type) cannot
-    // arise here. This is the anim8 §7.8 gap: the level used to be erased at the class header, so
+    // arise here. This was a gap in anim8's port: the level used to be erased at the class header, so
     // nothing could render it, record it or check it.
     val p = port(
       """package demo.util;
@@ -77,8 +77,8 @@ class VisibilitySpec extends PortSuite:
   }
 
   test("a `protected static` NESTED TYPE widens with the members — same companion, same reason") {
-    // The type moves to the companion `object` exactly as a static member does, so P8's argument
-    // is the same one: nothing subclasses an object, and a qualified form there would DENY the
+    // The type moves to the companion `object` exactly as a static member does, so the same argument
+    // applies: nothing subclasses an object, and a qualified form there would DENY the
     // cross-package subclass access java grants. Its CONSTRUCTOR is not static and keeps its own
     // qualified `protected`, which still admits a subclass in any package.
     val p = port(
@@ -129,7 +129,7 @@ class VisibilitySpec extends PortSuite:
   // -------------------------------------------------------------------------
 
   test("a `protected static` widens to public and RECORDS it") {
-    // P8: the member moves to the companion `object`, and a subclass of the class is not a subclass
+    // The member moves to the companion `object`, and a subclass of the class is not a subclass
     // of its companion — so `protected[pkg]` there would DENY java's cross-package subclass access.
     // Public is the only side to err on, and it is a residue rather than a mapping.
     val p = port(
@@ -205,7 +205,7 @@ class VisibilitySpec extends PortSuite:
   }
 
   test("a CROSS-PACKAGE protected override takes the nearest common ancestor, and records") {
-    // P5/P14: the child can keep neither bare `protected` nor its own package's qualifier — both
+    // The child can keep neither bare `protected` nor its own package's qualifier — both
     // are "has weaker access privileges" — but it CAN name any ENCLOSING package, and the nearest
     // common one covers the parent's boundary while still enclosing the child.
     val p = portAll(
@@ -299,7 +299,7 @@ class VisibilitySpec extends PortSuite:
   }
 
   test("the QUALIFIER-SHADOWED guard fires loudly rather than narrowing silently") {
-    // P12: `private[util]` inside a type named `util` binds to the CLASS, not to the package — a
+    // `private[util]` inside a type named `util` binds to the CLASS, not to the package — a
     // silent narrowing with a green compile. The guard widens and says so.
     val p = port(
       """package demo.util;
@@ -330,7 +330,7 @@ class VisibilitySpec extends PortSuite:
   test("`override` is dropped for java `private` and KEPT for package-private") {
     // A java `private` method is invisible to subclasses, so it overrides NOTHING and the pair
     // `private override` is both illegal and contradictory. A package-private one DOES override
-    // within its package (P10) and needs the keyword — so the rule is scoped to the LEVEL, never
+    // within its package and needs the keyword — so the rule is scoped to the LEVEL, never
     // to the presence of a qualifier.
     val p = portAll(
       List(
@@ -352,7 +352,7 @@ class VisibilitySpec extends PortSuite:
   }
 
   test("a companion re-export does NOT forward a parent static that is not public") {
-    // P11: `export P.*` publishes a forwarder at the EXPORTING object's visibility, so a
+    // `export P.*` publishes a forwarder at the EXPORTING object's visibility, so a
     // same-package companion re-exporting a `private[p]` static hands it to every package —
     // silently undoing the mapping for exactly the members java scoped most tightly.
     val p = portAll(

@@ -8,7 +8,7 @@ import balticporter.transform.PortMapTransform
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** The acceptance case of `DESIGN.md` §5.4, on the REAL sources and the REAL artifact. */
+/** The acceptance case, on the REAL sources and the REAL artifact. */
 class PortMapAcceptanceSpec extends munit.FunSuite:
 
   override val munitTimeout = scala.concurrent.duration.Duration(600, "s")
@@ -32,7 +32,7 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
     PortMap.read(baseMapPath).fold(e => fail(s"$baseMapPath is unreadable: $e"), identity)
 
   test("ACCEPTANCE: the base's published map reports the forwarder BEFORE emission, naming the base") {
-    // The vendored sources are FATAL too, and for §5.1's reason rather than for convenience: this
+    // The vendored sources are FATAL too, and for a real reason rather than for convenience: this
     // spec's whole claim is a property of a real library's size and its same-arity overloads, so a
     // checkout that cannot see them cannot check it, and saying so is the only honest outcome.
     assume(

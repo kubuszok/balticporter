@@ -145,7 +145,7 @@ class CollectionsScopeSpec extends PortSuite:
   test("a held-back FORMAL is bridged where the scope let a retyped value reach it") {
     // `Model.take(List)` is excluded, so its parameter stays `java.util.List`, while `Client.feed`
     // hands it `m.getItems()` — which moved. That is the CONSUMER direction and it has a live
-    // wrapper, so §1(b)'s first obligation applies before its second: insert the coercion.
+    // wrapper, so the obligation to bridge every such seam applies: insert the coercion.
     val (ph, after, out) = ported(RuleScope.Everywhere(Set("demo.Model#take")))
     assert(clue(out).contains(s"def take(more: $JList)"), "the excluded formal kept its JDK type")
     assert(out.contains("m.take(balticporter.runtime.JavaCollections.toJava(m.getItems()))"))

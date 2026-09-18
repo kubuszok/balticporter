@@ -7,8 +7,8 @@ import java.io.File
 import java.nio.file.{ Files, Path }
 
 /** Port liqp's own JUnit suite (`src/test/java`) through the pipeline: `.../ports/liqp/test.conf`. 105 files, 639 live `@Test`, no behavioural gate until they RUN — liqp's MAIN source set is not yet
-  * at 0 errors (§3). Unusually clean for `TestFrameworkTransform`; exercises the LIBRARY: `ServiceLoader`, the filesystem via the PROCESS working directory, 38 anonymous classes, 767 hamcrest sites
-  * left on hamcrest. A DEPENDENT of [[LiqpMigrate]] (§1.5).
+  * at 0 errors. Unusually clean for `TestFrameworkTransform`; exercises the LIBRARY: `ServiceLoader`, the filesystem via the PROCESS working directory, 38 anonymous classes, 767 hamcrest sites left
+  * on hamcrest. A DEPENDENT of [[LiqpMigrate]].
   */
 object LiqpTestMigrate:
 
@@ -17,7 +17,7 @@ object LiqpTestMigrate:
     PortConfig.load(LiqpPort.conf("test.conf"), args.toSeq).execute()
 
 /** liqp's TEST frontend classpath: everything [[LiqpClasspath]] resolves, plus JUnit — exactly ONE test-scope coordinate; `hamcrest-core` arrives transitively and is deliberately NOT named. The MAIN
-  * classpath is included since the test sources import the javac-compiled ANTLR parser directly (D-liqp-1). Cannot supply: the `META-INF/services` RESOURCE (hand-written, §5.5) or the process WORKING
+  * classpath is included since the test sources import the javac-compiled ANTLR parser directly (D-liqp-1). Cannot supply: the `META-INF/services` RESOURCE (hand-written) or the process WORKING
   * DIRECTORY 45 tests read fixtures through.
   */
 object LiqpTestClasspath:

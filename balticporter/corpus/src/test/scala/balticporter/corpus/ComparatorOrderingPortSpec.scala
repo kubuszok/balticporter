@@ -106,7 +106,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
   }
 
   test("a retyped declaration is attributed to the ENTRY, never to the engine") {
-    // §4.45: the reader's first question is which repository the fix lives in, and a retarget is a
+    // The reader's first question is which repository the fix lives in, and a retarget is a
     // line in their manifest. Reported as `Universal` it would send them to `CollectionsTransform`.
     val phase    = new CollectionsTransform(retarget = Retarget)
     val (_, log) = Pipeline.runTraced(SpoonTir.fromSource(src), List(phase))
@@ -237,7 +237,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     // `CollectionsTransform`'s universal statics table already maps `Collections.sort` onto the
     // runtime helper. Placed after it, a call-site entry's callee occurs nowhere and it rewrites
     // nothing — with every count unchanged and the emitted code exactly what the port asked to
-    // change. This is the §1(b) silent no-op in its most expensive form, so it has its own finding.
+    // change. This is the silent-no-op pattern in its most expensive form, so it has its own finding.
     val m4  = new CallSiteSubstitutionTransform(Map("java.util.Collections#sort(List,Comparator)" -> "{arg0}.sortInPlace()(using {arg1})"))
     val out = emit(List(new CollectionsTransform(retarget = Retarget), m4))
     assertEquals(m4.substituted, Nil)

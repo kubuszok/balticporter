@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Decision, DecisionLog, Pipeline, Program }
 import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 
-/** THE OTHER END OF THE CARRIER'S CALL — a value this phase retyped, handed to external code that reads its RUNTIME REPRESENTATION (`ENGINE-LIMITS.md` K21 face 1).
+/** THE OTHER END OF THE CARRIER'S CALL — a value this phase retyped, handed to external code that reads its RUNTIME REPRESENTATION.
   */
 class CollectionsSinkSpec extends PortSuite:
 
@@ -128,12 +128,12 @@ class CollectionsSinkSpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
-  // 4b. the D2 filter, which the DEDUP has to survive
+  // 4b. the structural-ownership filter, which the DEDUP has to survive
   // -------------------------------------------------------------------------
 
   test("a DEPENDENT's row survives a BASE that reaches the same callee at a smaller (path, line)") {
-    // "One row per callee" is right, and the site kept for it is a REPORTING detail that the D2
-    // filter then reads as if it were the whole population. Keep ONE origin per callee across the
+    // "One row per callee" is right, and the site kept for it is a REPORTING detail that the
+    // structural-ownership filter then reads as if it were the whole population. Keep ONE origin per callee across the
     // whole program — base units included — and `boundary(units)` drops the row whenever the
     // surviving origin is in a file this module does not emit: the dependent has the seam, has no
     // row, and nothing anywhere says so. `Base.java` sorts before `Dep.

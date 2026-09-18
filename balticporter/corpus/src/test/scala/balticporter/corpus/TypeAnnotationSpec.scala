@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 
-/** A TYPE's argument-bearing annotation, from the harvest to the emitted text — `ENGINE-LIMITS.md` T16.
+/** A TYPE's argument-bearing annotation, from the harvest to the emitted text.
   */
 class TypeAnnotationSpec extends PortSuite:
 
@@ -37,7 +37,7 @@ class TypeAnnotationSpec extends PortSuite:
   }
 
   test("unclaimed: nothing is emitted, and the drop is REPORTED rather than emitted bare") {
-    // §1(b)'s default. `@Ser` where java wrote `@Ser(using = …)` is a DIFFERENT annotation, so the
+    // The default when nothing is claimed. `@Ser` where java wrote `@Ser(using = …)` is a DIFFERENT annotation, so the
     // marker form is never the fallback; `omissions` is where a port reads the residue.
     val out = emitted(AnnotationPolicy.none)
     assert(!clue(out).contains("@demo.Ser"))

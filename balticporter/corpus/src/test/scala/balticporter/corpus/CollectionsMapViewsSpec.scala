@@ -74,7 +74,7 @@ class CollectionsMapViewsSpec extends PortSuite:
     assertNotEmits(p, "e.setValue(")
   }
 
-  // ---- the NEGATIVES: a receiver this phase did not retype is none of its business (§4.56) ----
+  // ---- the NEGATIVES: a receiver this phase did not retype is none of its business ----
 
   private val ownSrc =
     """package demo;

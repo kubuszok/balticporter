@@ -2,9 +2,9 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** Two LEXICAL seams of the emitter, pinned through the pipeline — a Java snippet in, the emitted Scala asserted. Both are CLAUDE.md §1(a) facts about the two languages' lexers, both were found by
-  * porting anim8-gdx, and neither is visible to any check: the emitted file simply does not parse, so the whole failure arrives as a wall of syntax errors attributed to whatever the lexer was reading
-  * when it gave up.
+/** Two LEXICAL seams of the emitter, pinned through the pipeline — a Java snippet in, the emitted Scala asserted. Both are universal facts about the two languages' lexers, both were found by porting
+  * anim8-gdx, and neither is visible to any check: the emitted file simply does not parse, so the whole failure arrives as a wall of syntax errors attributed to whatever the lexer was reading when it
+  * gave up.
   */
 class EmitterLiteralSpec extends PortSuite:
 

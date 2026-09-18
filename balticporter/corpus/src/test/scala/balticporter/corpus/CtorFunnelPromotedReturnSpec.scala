@@ -54,7 +54,7 @@ class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
       "the `def` is not inside a block — as a class member it would be emitted surface"
     )
     // …and the block opens a statement, so `joinStats` must have put the `;` in front of it or the
-    // `{` reads as an anonymous-class body of the statement above (§4.58)
+    // `{` reads as an anonymous-class body of the statement above
     assert(
       clue(out).contains(";\n  {\n    def ctorBody$()"),
       "the block was emitted without the separator that keeps it a statement"

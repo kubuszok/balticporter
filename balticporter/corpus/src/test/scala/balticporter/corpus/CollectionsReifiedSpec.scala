@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ Pipeline, Program }
 import balticporter.transform.{ CollectionBoundaryCheck, CollectionsTransform }
 
-/** A REIFIED occurrence of a retyped type — `ENGINE-LIMITS.md` K18, catalog `JS-G48`. */
+/** A REIFIED occurrence of a retyped type — catalog `JS-G48`. */
 class CollectionsReifiedSpec extends PortSuite:
 
   private def ported(source: String): (CollectionsTransform, Program, String) =
@@ -255,7 +255,7 @@ class CollectionsReifiedSpec extends PortSuite:
   }
 
   // -------------------------------------------------------------------------
-  // provably-false: a FINAL retarget target unrelated to the operand (K18)
+  // provably-false: a FINAL retarget target unrelated to the operand
   // -------------------------------------------------------------------------
 
   test("a type test at a FINAL retarget target unrelated to the operand emits the literal false") {

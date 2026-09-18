@@ -2,9 +2,9 @@ package balticporter.corpus.libgdx
 
 import balticporter.tir.*
 
-/** A CLAUDE.md §1(c) rule — a phase living OUTSIDE the engine, in `corpus`, because `com.badlogic.gdx.utils.Array.iterator()` returns a CACHED iterator reset in place, so nested iteration over the
+/** A library-specific rule — a phase living OUTSIDE the engine, in `corpus`, because `com.badlogic.gdx.utils.Array.iterator()` returns a CACHED iterator reset in place, so nested iteration over the
   * same collection silently terminates the outer loop early — a libGDX allocation invariant, not a Java/Scala fact. Enters the pipeline as an ordinary `Phase` element of `PortRun(phases = …)`.
-  * REPORTS rather than rewrites (deferred, §5).
+  * REPORTS rather than rewrites (deferred).
   */
 final class GdxSharedIteratorRule extends Phase:
 
@@ -38,8 +38,8 @@ final class GdxSharedIteratorRule extends Phase:
 
   def findings: List[Finding] = found.toList
 
-  /** Full-control entry point: a whole-program analysis, then the program returned UNCHANGED. Uses `StandardTraversal.scanTerm` rather than a private recursion (CLAUDE.md §3: a walk that misses a
-    * node kind reports zero hazards from a program that has them).
+  /** Full-control entry point: a whole-program analysis, then the program returned UNCHANGED. Uses `StandardTraversal.scanTerm` rather than a private recursion (a walk that misses a node kind reports
+    * zero hazards from a program that has them).
     */
   override def run(program: Program): Program =
     given Program = program

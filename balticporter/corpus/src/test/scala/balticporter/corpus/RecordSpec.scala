@@ -22,7 +22,7 @@ class RecordSpec extends PortSuite:
     assertEmits(p, "def unapply(r$rec: Point): (scala.Int, scala.Int)")
     // …and the STRUCTURAL half, which the text cannot give: the difference was considered here and
     // it APPLIED. A record whose emitted text happened to be right without the row being consulted
-    // is exactly the shape §2.8's obligation surface exists to catch.
+    // is exactly the shape this obligation surface exists to catch.
     assertConsults(p, JS.C(43), fired = true)
     // …through `emissionDecisions` and not `assertDecides`, which reads the PIPELINE's log: this is
     // a decision the emitter takes while rendering, exactly as `WidenedSeal` is.
@@ -36,12 +36,12 @@ class RecordSpec extends PortSuite:
     assert(clue(ds.head.detail("reflective")).contains("isRecord=false"))
     assert(clue(ds.head.detail("patternAccessors")).contains("ALL, eagerly"))
     assert(clue(ds.head.detail("patternThrow")).contains("MatchException"))
-    // …and the note beside the code (§4.575), which is the only form §4.45's agent can find
+    // …and the note beside the code, which is the only form an agent reading the file can find
     assertEmits(p, "/* porter: record-members reason=universal rule=record-members(JS-C43)")
   }
 
   test("…and the class still extends java.lang.Record, which is now CONCRETE") {
-    // The parent is what made the pre-lowering emission fail at §3's gate rather than silently:
+    // The parent is what made the pre-lowering emission fail at the compile gate rather than silently:
     // `java.lang.Record` declares all three abstract. Keeping it is the faithful half of a residue
     // whose other half cannot be closed — `x instanceof java.lang.Record` answers as java's does.
     val p = rec("")
@@ -85,14 +85,14 @@ class RecordSpec extends PortSuite:
   test("…and an unrelated overload of the same NAME does not count as one") {
     // JLS 8.10.3's rule is about the member with the right SIGNATURE. A record may declare
     // `equals(int, int)` beside java's own, and reading the bare name would then suppress the
-    // derived `equals(Object)` and leave the class abstract — `ENGINE-LIMITS.md` K5.7's shape at a
-    // synthesis instead of at a body substitution.
+    // derived `equals(Object)` and leave the class abstract — the same shape as a match-by-signature
+    // rule at a synthesis instead of at a body substitution.
     val p = rec("  boolean equals(int a, int b) { return a == b; }\n")
     assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean")
   }
 
   test("…and NEITHER does a same-ARITY overload — `equals(String)` is not java's `equals`") {
-    // K5.7's signature rule, one cell finer than the arity test above could see. Java resolves
+    // The match-by-signature rule, one cell finer than the arity test above could see. Java resolves
     // `equals(String)` and `equals(Object)` separately (JLS 8.4.9), so a record declaring the first
     // still DERIVES the second — and suppressing it does not leave the class abstract, because
     // `AnyRef.equals` is concrete: the record silently downgrades to REFERENCE equality, with a

@@ -4,11 +4,11 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{ Constant, CtorFunnel, OmissionCheck, Phase, Pipeline, Program, Term, Tree, Trivia, TriviaKind }
 
-/** WHAT SHAPE A CONSTRUCTOR'S BODY ARRIVES IN — and why `CtorFunnel.delegationOnlyNilary` may not have a fallback arm (`ENGINE-LIMITS.md` C11).
+/** WHAT SHAPE A CONSTRUCTOR'S BODY ARRIVES IN — and why `CtorFunnel.delegationOnlyNilary` may not have a fallback arm.
   */
 class CtorFunnelBodyShapeSpec extends munit.FunSuite:
 
-  /** The C11 shape itself: `Font()` is nilary, delegates with ARGUMENTS, and sits in front of a class whose primary is scala's own implicit nilary one.
+  /** The shape itself: `Font()` is nilary, delegates with ARGUMENTS, and sits in front of a class whose primary is scala's own implicit nilary one.
     */
   private val src =
     """package demo;
@@ -25,7 +25,7 @@ class CtorFunnelBodyShapeSpec extends munit.FunSuite:
 
   private def parsed: Program = SpoonTir.fromSource(src, "Font.java")
 
-  /** rewrite the rhs of the NILARY constructor of `demo.Font`, through the pipeline rather than by a private walk (CLAUDE.md §3).
+  /** rewrite the rhs of the NILARY constructor of `demo.Font`, through the pipeline rather than by a private walk.
     */
   private def reshaped(p: Program)(f: Tree.Block => Term): Program =
     val phase = new Phase:

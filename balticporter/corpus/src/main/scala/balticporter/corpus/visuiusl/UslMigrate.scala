@@ -5,8 +5,8 @@ import balticporter.runner.PortConfig
 import java.nio.file.Path
 
 /** Migrate **USL** — VisUI's skin-definition language compiler (18 files, 1,604 LOC: lexer, recursive parser, style merger, JSON writer). The port is `.../ports/visui-usl/main.conf`, STANDALONE (not
-  * a scope edit to `sge-visui` — independent maven coordinates). Reference hand port never ported USL at all (§3.5): a hand-written CHARACTER SCANNER and a ZERO-AUTHORING ORACLE (upstream ships both
-  * `.usl` fixtures and expected `.json`).
+  * a scope edit to `sge-visui` — independent maven coordinates). Reference hand port never ported USL at all: a hand-written CHARACTER SCANNER and a ZERO-AUTHORING ORACLE (upstream ships both `.usl`
+  * fixtures and expected `.json`).
   */
 object UslMigrate:
 

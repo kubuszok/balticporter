@@ -6,7 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
-/** The external-producer bridge is about what a callee HANDS BACK — a `new` hands back nothing of java's (`CLAUDE.md` §4.56).
+/** The external-producer bridge is about what a callee HANDS BACK — a `new` hands back nothing of java's.
   */
 class ExternalProducerNewSpec extends PortSuite:
 

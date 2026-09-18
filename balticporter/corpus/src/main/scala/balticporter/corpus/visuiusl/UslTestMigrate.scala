@@ -7,7 +7,7 @@ import java.nio.file.Path
 
 /** Port USL's own JUnit suite (`usl/src/test/java`) through the same pipeline as its main sources: `.../ports/visui-usl/test.conf`, 2 files, 7 `@Test` — seven of VisUI's nine live `@Test`s.
   * Best-shaped suite in the corpus: six live tests parse a `.usl` resource and compare against upstream's own `-expected.json`, a CONFORMANCE suite over the whole pipeline. `RemoteTest.testRemote`
-  * stays `@Ignore`d (§5.1). A DEPENDENT of [[UslMigrate]] (CLAUDE.md §1.5).
+  * stays `@Ignore`d. A DEPENDENT of [[UslMigrate]].
   */
 object UslTestMigrate:
 

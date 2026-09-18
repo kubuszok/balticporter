@@ -62,8 +62,7 @@ class T9ResidueProbeSpec extends PortSuite:
     ).out
     assert(clue(out).contains("enum Level extends java.lang.Enum[Level]"))
     assert(clue(out).contains("case HIGH extends Level"))
-    // …and NOT the sealed shape's hand-written `values()`: the desugaring supplies a PARENLESS one
-    // (`ENGINE-LIMITS.md` T21).
+    // …and NOT the sealed shape's hand-written `values()`: the desugaring supplies a PARENLESS one.
     assert(!out.contains("def values(): scala.Array[Level]"))
   }
 

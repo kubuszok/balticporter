@@ -7,13 +7,13 @@ import balticporter.transform.{ CollectionsTransform, ElementWitnessTransform, G
 import java.nio.file.Path
 
 /** Migrate the twelve libGDX sources **lls** carries `Ported from` headers for — `utils.{Array, ObjectMap, ObjectSet, OrderedMap, OrderedSet, ArrayMap, Sort, TimSort, ComparableTimSort, Select,
-  * QuickSelect}` and `math.MathUtils` — onto `lowlevel.{util,math}`. A STANDALONE base with no resolution root: every reference to the rest of libGDX is EXTERNAL, and a COUNTED seam rather than a
-  * drop or a shim (`PROGRESS.md` §13.28).
+  * QuickSelect}` and `math.MathUtils` — onto `lowlevel.{util,math}`. A standalone base with no resolution root: every reference to the rest of libGDX is external, and a counted seam rather than a
+  * drop or a shim.
   */
 object LlsMigrate:
 
-  /** The java files the REAL lls declares (maintainer, 2026-09-06: narrowed from 54 to 12, ENGINE-LIMITS.md K43) plus the `@Null` annotation their sources carry (a refused site KEEPS it, so the base
-    * ships the type once); the five outside references are answered by policy in [[LlsPolicy.core]]; everything else under `utils`/`math` is core's, on this base (PROGRESS.md §13.29).
+  /** The java files the real lls declares (narrowed from 54 to 12) plus the `@Null` annotation their sources carry (a refused site KEEPS it, so the base ships the type once); the five outside
+    * references are answered by policy in [[LlsPolicy.core]]; everything else under `utils`/`math` is core's, on this base.
     */
   val Files: List[String] = List(
     "com/badlogic/gdx/math/MathUtils.java",
@@ -38,7 +38,7 @@ object LlsMigrate:
   def main(args: Array[String]): Unit =
     val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
     val base     = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
-    // `--rungs=nullable,ordering`: the decision rungs switched on above L0 (PROGRESS.md §13.29).
+    // `--rungs=nullable,ordering`: the decision rungs switched on above L0.
     val rungs = args.collectFirst { case a if a.startsWith("--rungs=") => a.stripPrefix("--rungs=") }.toList.flatMap(_.split(',')).map(_.trim).filter(_.nonEmpty).toSet
 
     PortRun(
@@ -47,7 +47,7 @@ object LlsMigrate:
       sourceSet = SourceSet.Main,
       // NO resolution root and NO classpath. `gdx/src` as one puts 593 libGDX types this port does
       // not emit into the program, and 300 of the contract questions they raise shape emitted text
-      // with no base to answer them (`DESIGN.md` §8.3) — the run refuses. Standalone means the rest
+      // with no base to answer them — the run refuses. Standalone means the rest
       // of libGDX is EXTERNAL: unresolved, and counted like any other foreign symbol.
       frontend = FrontendConfig(base, Files, balticporter.corpus.GdxCoreClasspath.entries(repoRoot), resolutionRoots = Nil),
       phases = Nil, // supplied by the manifest — the two sources are mutually exclusive
@@ -68,13 +68,13 @@ object LlsMigrate:
       nextStep = "just lls-measure"
     ).execute()
 
-/** lls's per-library policy AS A VALUE (`CLAUDE.md` §1.5), the manifest libGDX core is to extend (`PROGRESS.md` §13.28). It declares the two namespace facts and the hand port to compare against and
-  * NOTHING else — no drops, no bodies, no surface phases — so every divergence the run reports is a measurement rather than a policy decision.
+/** lls's per-library policy as a value, the manifest libGDX core is to extend. It declares the two namespace facts and the hand port to compare against and NOTHING else — no drops, no bodies, no
+  * surface phases — so every divergence the run reports is a measurement rather than a policy decision.
   */
 object LlsPolicy:
 
   /** lls's array type class, and the declarations whose element arrays it allocates: the ARRAY-LIKE family, upstream FQN -> the element type-parameter indexes. The seven open-addressed tables are
-    * deliberately absent — `keyTable[i] == null` is their occupancy test, counted as `witness(OccupancySentinel)` (PROGRESS.md §13.29, ENGINE-LIMITS.md K41).
+    * deliberately absent — `keyTable[i] == null` is their occupancy test, counted as `witness(OccupancySentinel)`.
     */
   val Witness = "lowlevel.MkArray"
 
@@ -88,7 +88,7 @@ object LlsPolicy:
   )
 
   /** …and the declarations that only LOSE java's implicit `Object` bound: the three sort/select entry points the array family calls with its own element type. `TimSort` is NOT among them — `Sort`
-    * holds it in a RAW field and hands it `Object[]`, so an unbounded element type there would type-check and throw (`witness(ErasedArrayCast)`, PROGRESS.md §13.29).
+    * holds it in a RAW field and hands it `Object[]`, so an unbounded element type there would type-check and throw (`witness(ErasedArrayCast)`).
     */
   val WitnessUnbound: Set[String] = WitnessSubjects.keySet ++ Set(
     "com.badlogic.gdx.utils.Sort",
@@ -99,7 +99,7 @@ object LlsPolicy:
   /** The DEFAULT array factory this fork of libGDX threads through its constructors. With the rung on, the witness IS that factory: one added companion member and one call-site substitution keep
     * java's `ArraySupplier` API and make its default allocate through the type class.
     */
-  /** `ArraySupplier` is not lls's: java's `T[] get(int)` becomes `scala.Function1[Int, T[]]` and the default supplier is the witness (`MkArray.create`), so no supplier type is emitted (K43).
+  /** `ArraySupplier` is not lls's: java's `T[] get(int)` becomes `scala.Function1[Int, T[]]` and the default supplier is the witness (`MkArray.create`), so no supplier type is emitted.
     */
   val ArraySupplier = "com.badlogic.gdx.utils.ArraySupplier"
   def collections(rungs: Set[String]): CollectionsTransform = new CollectionsTransform(
@@ -112,7 +112,7 @@ object LlsPolicy:
     retargetRewrites = Map(ArraySupplier -> Map(("get", 1) -> CollectionsTransform.RetargetRewrite.Rename("apply")))
   )
 
-  /** The decision rungs a run may switch on above L0, each a manifest fragment (PROGRESS.md §13.29).
+  /** The decision rungs a run may switch on above L0, each a manifest fragment.
     * @param rungs
     *   what else is on — `enrich`'s verbatim factories are written against the signatures `witness` decides, so they are not independent of it.
     */
@@ -125,7 +125,7 @@ object LlsPolicy:
       )
     ),
     "ordering" -> List(collections(rungs)),
-    // L1 candidates (PROGRESS.md §13.29): getter-like nullary methods lose `()`; java-convention
+    // L1 candidates: getter-like nullary methods lose `()`; java-convention
     // accessor pairs become properties (empty explicit tables: derivation only).
     "renames" -> List(
       new balticporter.transform.MemberRenameTransform(
@@ -153,7 +153,7 @@ object LlsPolicy:
     "bean" -> List(new balticporter.transform.BeanPropertyTransform(Map.empty, Map.empty, scope = Twelve)),
     "enrich" -> List(LlsEnrich.transform(rungs("witness"))),
     "witness" -> List(
-      // the CONSTRUCTOR half of the clause, threaded by the phase that owns that mechanism (CT7)
+      // the constructor half of the clause, threaded by the phase that owns that mechanism
       new GlobalsToImplicitsTransform(requiredGivens = ElementWitnessTransform.constructorGivens(WitnessSubjects, Witness)),
       new ElementWitnessTransform(
         witness = Witness,
@@ -180,17 +180,17 @@ object LlsPolicy:
   /** the rungs lls carries by default (the lane's `LLS_RUNGS` default spells the same set). */
   val DefaultRungs: Set[String] = Set("renames", "arity", "nullable", "ordering", "enrich", "witness")
 
-  /** every lls rung stops at lls's own declarations (D12): the inherited surface must not decide core's, which takes each decision as a rung of its own (PROGRESS.md §13.29).
+  /** every lls rung stops at lls's own declarations: the inherited surface must not decide core's, which takes each decision as a rung of its own.
     */
   val Twelve: balticporter.tir.RuleScope = balticporter.tir.RuleScope.Only(LlsMigrate.Fqns)
 
-  /** the four of the twelve that carry `@Null` plus the two whose OVERRIDES they reach — a scope cut through an override component splits it instead of refusing (ENGINE-LIMITS.md K13.8), and an entry
-    * holding nothing back is a `policy` row, so neither `Twelve` nor the four alone will do.
+  /** the four of the twelve that carry `@Null` plus the two whose overrides they reach — a scope cut through an override component splits it instead of refusing, and an entry holding nothing back is
+    * a `policy` row, so neither `Twelve` nor the four alone will do.
     */
   val Annotated: Set[String] = Set("Array", "ArrayMap", "ObjectMap", "ObjectSet", "OrderedMap", "OrderedSet").map("com.badlogic.gdx.utils." + _)
 
-  /** `GdxRuntimeException` and `RandomXS128` are core's: inside the twelve they are the JDK types lls used (`RuntimeException` where lls chose per site; `java.util.Random`), scoped to the ENTRY (D12)
-    * so the inherited surface leaves core's own uses alone (K43).
+  /** `GdxRuntimeException` and `RandomXS128` are core's: inside the twelve they are the JDK types lls used (`RuntimeException` where lls chose per site; `java.util.Random`), scoped to the entry so
+    * the inherited surface leaves core's own uses alone.
     */
   val redirects: TypeRedirectTransform = new TypeRedirectTransform(
     redirects = Map(
@@ -217,7 +217,7 @@ object LlsPolicy:
     PortManifest(
       name = "lls",
       governs = LlsMigrate.Fqns,
-      // the five references the twelve make outside themselves, answered the way lls did (K43):
+      // the five references the twelve make outside themselves, answered the way lls did:
       // `Collections` -> lls's own hand-written flag holder (`lowlevel.util.Collections`, in its tree since
       // lls 6cc2226 — no longer injected here, or the lane compiles it twice); dropped for the DEPENDENT,
       // redirected there, where it is a class-file external; the reflective `Class`-typed constructors and `toArray(Class)`
@@ -235,11 +235,11 @@ object LlsPolicy:
         "com.badlogic.gdx.utils.ArrayMap#<init>(Class,Class)"
       ),
       inject = List(repoRoot.resolve("balticporter/corpus/lls-overrides")),
-      // lls's OWN types live under `lowlevel` (maintainer, 2026-09-06): a per-type move (a dotted
+      // lls's own types live under `lowlevel`: a per-type move (a dotted
       // `typeRenames` target), never a package claim — the rest of `utils`/`math` is core's and
       // follows core's own rename (`sge.*`). lls renamed `Array` to `DynamicArray` (`scala.Array`).
       // the three of the twelve whose package-private members core reads (`ObjectSet.tableSize`,
-      // `ObjectMap.dummy`, …): the move is declared, so those members ship public (§8.7 widenings).
+      // `ObjectMap.dummy`, …): the move is declared, so those members ship public.
       allowPackageSplit = Set(
         "com.badlogic.gdx.utils.Array",
         "com.badlogic.gdx.utils.ObjectMap",
@@ -255,12 +255,12 @@ object LlsPolicy:
         fqn -> s"$pkg.$simple"
       }.toMap,
       // L0 of the lls ladder: the universal phases only (`MutableParamsTransform` is universal but
-      // per-port today); the decision rungs are added one at a time (PROGRESS.md §13.29).
+      // per-port today); the decision rungs are added one at a time.
       // `enrich` LAST: its members are verbatim text written against what the rungs below it
       // emit, so it reads the surface rather than contributing one another phase must walk.
       surface = List(new MutableParamsTransform, redirects) ++
         RungOrder.filter(rungs).flatMap(rungPhases(rungs)(_)) ++
         (if rungs("ordering") then Nil else List(collections(rungs))),
-      // THE REFERENCE HAND PORT for lls. NOT inherited (DESIGN.md §8.23).
+      // The reference hand port for lls. Not inherited.
       parity = Some(ParityRef(roots = List(repoRoot.resolve("../lls/lls/src/main/scala").normalize)))
     )
