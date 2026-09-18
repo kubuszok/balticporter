@@ -91,9 +91,26 @@ object LlsEnrich:
 
   /** `Array` alone carries java's `identity` FLAG on nine members. lls spelled the two settings as two names; both are ADDITIONS — java's flag-taking members stay.
     */
-  private def refArrayExtras: List[(String, MemberSpec)] =
-    val S     = "lowlevel.util.DynamicArray[? <: T]"
-    val why   = "lls's flag-free / ByRef pair for java's `identity` argument"
+  private def refArrayExtras(w: Boolean): List[(String, MemberSpec)] =
+    val S   = "lowlevel.util.DynamicArray[? <: T]"
+    val why = "lls's flag-free / ByRef pair for java's `identity` argument"
+    // With the array type class in scope the four value-equality lookups compare THROUGH it, as the
+    // hand-written lls did: java's body reads the element as an object and calls `equals`, which on a
+    // primitive-backed array boxes every element (measured 2.5x on `contains` over an `Int` array).
+    // Same answers as java's: `value.equals(element)` in java's order, null equal only to null, the
+    // first match from the front (`indexOf`, `removeValue`) or from the back (`lastIndexOf`).
+    def scanFor(from: String, go: String, step: String) =
+      s"scala.util.boundary { val mk = scala.Predef.summon[lowlevel.MkArray[T]]; val items = this.items; var i: scala.Int = $from; " +
+        s"while ($go) { if (mk.elemEquals(value, mk.get(items, i))) { scala.util.boundary.break(i) } else () ; i $step 1 }; -1 }"
+    val viaTypeClass: Map[String, String] =
+      if !w then Map.empty
+      else
+        Map(
+          "indexOf" -> s"def indexOf(value: T): scala.Int = ${scanFor("0", "i < this.size", "+=")}",
+          "lastIndexOf" -> s"def lastIndexOf(value: T): scala.Int = ${scanFor("this.size - 1", "i >= 0", "-=")}",
+          "contains" -> "def contains(value: T): scala.Boolean = this.indexOf(value) >= 0",
+          "removeValue" -> "def removeValue(value: T): scala.Boolean = { val i: scala.Int = this.indexOf(value); if (i < 0) { false } else { this.removeIndex(i); true } }"
+        )
     val pairs = List(
       ("contains", 1, (id: String) => s"(value: T): scala.Boolean = this.contains(lowlevel.Nullable(value), $id)"),
       ("containsAll", 1, (id: String) => s"(values: $S): scala.Boolean = this.containsAll(values, $id)"),
@@ -107,7 +124,7 @@ object LlsEnrich:
     )
     pairs.flatMap { (name, arity, body) =>
       List(
-        spec("Array", name, arity, s"def $name${body("false")}", why),
+        spec("Array", name, arity, viaTypeClass.getOrElse(name, s"def $name${body("false")}"), why),
         spec("Array", name + "ByRef", arity, s"def ${name}ByRef${body("true")}", why)
       )
     } :+ spec(
@@ -349,7 +366,7 @@ object LlsEnrich:
   )
 
   private def all(w: Boolean): List[(String, MemberSpec)] =
-    arrays(w).flatMap(arrayMembers) ++ refArrayExtras ++
+    arrays(w).flatMap(arrayMembers) ++ refArrayExtras(w) ++
       maps(w).flatMap(mapMembers) ++ arrayMapExtras ++ sets.flatMap(setMembers) ++
       subclassFactories()
 
