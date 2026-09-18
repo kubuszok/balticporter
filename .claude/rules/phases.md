@@ -205,6 +205,15 @@ sees the kind); the screen is *would a reader act differently*.
   the setter's call. The path's `seg()` hop is a minted symbol: compare it by resolving it on the
   receiver's type, and find the elided line through the holder static's usages.
 
+- **K58** a platform limit is answered at the smallest site the REFERENCE answered it, measured first.
+  Do NOT retry: shadowing a whole class on one row with upstream's per-platform emulation (libGDX's GWT
+  `VertexArray`/`IndexArray` over buffer objects) — the emulation needs the context the java class does
+  not take, and shared suites pin the java semantics on every row (sge JS test-compile 0 -> 27 errors).
+  The reference diverged at ONE use site (`DecalBatch.initialize`'s no-GL30 fallback), carried as a body
+  rule. A consumer wires three things or the port fails at RUN time with a green compile: the port's
+  platform-row directories, its classpath RESOURCES (on Scala.js an embedded-resources object of their
+  own), and a masking `finally` hides the first exception — read the FIRST error, not the last.
+
 ## The §1(b) phase table (moved from CLAUDE.md 2026-09-16 — loads with the transform files)
 
 | phase(params) — mechanism | policy |

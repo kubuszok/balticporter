@@ -1037,6 +1037,40 @@ object LibgdxLadder:
       ),
       // the async executor per platform row (java's own on JVM/Native, libGDX's GWT emulation on JS): no phase, a drop and platform injections only.
       "async" -> Nil,
+      // WebGL refuses vertex arrays from client memory, and java's `DecalBatch.initialize` falls back to
+      // `VertexDataType.VertexArray` without GL30 (sge browser IT, Viewer3D: "Vertex arrays from client memory
+      // not supported in WebGL"). sge's hand port falls back to `VertexBufferObject` on every platform — the one
+      // site where it diverged (java's SpriteBatch already defaults to buffer objects, PolygonSpriteBatch is kept);
+      // the body is java's, that constant apart. Shadowing `VertexArray` per row was tried and refused: shared
+      // suites pin its java semantics on every row (rules/phases.md K58).
+      "webgl" -> List(
+        new balticporter.transform.MethodBodyTransform(
+          Map(
+            "com.badlogic.gdx.graphics.g3d.decals.DecalBatch#initialize" ->
+              """{
+                |  this.vertices = new scala.Array[scala.Float](size * sge.graphics.g3d.decals.Decal.SIZE)
+                |  val vertexDataType: sge.graphics.Mesh.VertexDataType =
+                |    if (!scala.Predef.summon[sge.Sge].graphics.gl30.isEmpty) sge.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO
+                |    else sge.graphics.Mesh.VertexDataType.VertexBufferObject
+                |  this.mesh = new sge.graphics.Mesh(vertexDataType, false, size * 4, size * 6, scala.Array[sge.graphics.VertexAttribute](new sge.graphics.VertexAttribute(sge.graphics.VertexAttributes.Usage.Position, 3, sge.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new sge.graphics.VertexAttribute(sge.graphics.VertexAttributes.Usage.ColorPacked, 4, sge.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new sge.graphics.VertexAttribute(sge.graphics.VertexAttributes.Usage.TextureCoordinates, 2, sge.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
+                |  val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](size * 6)
+                |  var v: scala.Int = 0
+                |  var i: scala.Int = 0
+                |  while (i < indices.length) {
+                |    indices(i) = v.asInstanceOf[scala.Short]
+                |    indices(i + 1) = (v + 2).asInstanceOf[scala.Short]
+                |    indices(i + 2) = (v + 1).asInstanceOf[scala.Short]
+                |    indices(i + 3) = (v + 1).asInstanceOf[scala.Short]
+                |    indices(i + 4) = (v + 2).asInstanceOf[scala.Short]
+                |    indices(i + 5) = (v + 3).asInstanceOf[scala.Short]
+                |    i = i + 6
+                |    v = v + 4
+                |  }
+                |  this.mesh.setIndices(indices)
+                |}""".stripMargin
+          )
+        )
+      ),
       // sge's platform contract and its JVM implementations, copied (PROGRESS.md §13.30 step 1): no phase, injections only.
       "backend-jvm" -> Nil,
       // the 59 java `native` members answered on the JVM (PROGRESS.md §13.30 step 2): bodies from
@@ -2186,6 +2220,7 @@ object LibgdxLadder:
     "time",
     "glenum",
     "async",
+    "webgl",
     "backend-jvm",
     "natives",
     "backend-desktop",
@@ -2221,6 +2256,7 @@ object LibgdxLadder:
     "time",
     "glenum",
     "async",
+    "webgl",
     "backend-jvm",
     "natives",
     "backend-desktop",
