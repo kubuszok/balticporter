@@ -52,6 +52,11 @@ theme:
 nav:
   - "Welcome": "index.md"
   - "Getting started": "getting-started.md"
+  - "Configuring a port": "configuring-a-port.md"
+  - "Customizing the translation": "customizing-translation.md"
+  - "Multi-module ports": "multi-module-ports.md"
+  - "Reading the report": "reading-the-report.md"
+  - "Debugging a port": "debugging.md"
   - "Java semantics Scala does not share": "java-semantics.md"
 
 markdown_extensions:
