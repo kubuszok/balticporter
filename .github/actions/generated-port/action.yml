@@ -91,6 +91,14 @@ runs:
         GENERATE_COMMAND: ${{ inputs.command }}
       run: bash -c "$GENERATE_COMMAND"
 
+    # On a runner `sbt` is a thin client: the command above left a SERVER running, and every later
+    # `sbt` call of the job would talk to it — with the environment of THIS step, not its own
+    # (a publish step's credentials never reach it). Stop it so the next call starts a fresh one.
+    - name: Stop the sbt server the generation started
+      if: inputs.mode == 'generate' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: sbt shutdown || true
+
     - name: Save the generated port
       if: inputs.mode == 'generate' && steps.restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4

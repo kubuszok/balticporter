@@ -67,6 +67,20 @@ Rules that keep it that way:
 - A tagged release: built from source, remote cache off.
 - Fork PRs have no secrets: the remote cache is off and nothing is published; everything still works.
 
+## One sbt server per job — and it keeps the FIRST step's environment
+
+On a runner, `sbt <command>` is a thin client: the first call of a job starts a server in the
+background and every later call of that job talks to it. The server has the environment of the step
+that started it, so a later step's `env:` never reaches the build: Sonatype credentials on a publish
+step after a generation step ("Unable to find credentials"), `SGE_REMOTE_CACHE=off` on a doc step
+after a compile step, `JAVA21_HOME` exported after the first sbt call. Either put such variables at
+JOB level (or in `$GITHUB_ENV` before the first sbt call), or run `sbt shutdown` between the two
+steps — the `generated-port` action does that itself after generating.
+
+In **bash on Windows** that thin client cannot start its server at all (`Cannot run program
+"C:/Program Files"`): call `sbt.bat` there, which is what `sbt` means in a PowerShell step. The
+`sbt-guarded` action does the substitution.
+
 ## Reading a run
 
 - Wall clock and runner-minutes: `gh run view <id> --json jobs --jq '.jobs[] | [.name, .conclusion, ((.completedAt|fromdate)-(.startedAt|fromdate))] | @tsv'`.
