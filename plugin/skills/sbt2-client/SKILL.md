@@ -40,8 +40,9 @@ regression; read `Failed:` not `Total`.
 `export JAVA_HOME=$(cs java-home --jvm adoptium:<v>); export PATH=$JAVA_HOME/bin:$PATH` in every
 shell. Baltic Porter lanes: 22 (`jdk_version`, `jdk_guard` refuses the rest). sge, ssg: 25 (their
 CI). lls `release.yml` pins temurin 17 (pre-existing). `overrides nothing` is a JDK mismatch first.
-On macOS `/usr/libexec/java_home -v 25` silently answers an OLDER JDK when 25 is not registered
-there: check `java -version`, and point `JAVA_HOME` at the real install (`~/.sdkman/candidates/java/…`).
+On macOS `/usr/libexec/java_home -v <N>` silently answers ANOTHER JDK when N is not registered
+there (asked for 22 and for 25, it answered 24): check `java -version`, and point `JAVA_HOME` at the
+real install (`~/.sdkman/candidates/java/…`, or `cs java-home --jvm <id>`).
 The JDK a server runs on is fixed when the server starts: `sbt --client shutdown`, then start again.
 
 ## 5. Commands live in build.sbt, never in YAML
