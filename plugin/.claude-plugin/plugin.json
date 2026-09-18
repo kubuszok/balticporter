@@ -1,7 +1,7 @@
 {
   "name": "balticporter",
-  "version": "0.1.0",
-  "description": "Skills and guard hooks for repositories that generate Scala sources with Baltic Porter: how generation is wired, tracing a generated defect back to the translation layer, bumping the engine pin, the local gate before a push, CI and caching.",
+  "version": "0.2.0",
+  "description": "Skills and guard hooks for repositories that generate Scala sources with Baltic Porter: configuring and customizing a port, reading what a run could not handle, how generation is wired, tracing a generated defect back to the translation layer, bumping the engine pin, the local gate before a push, CI and caching.",
   "author": { "name": "kubuszok" },
   "license": "Apache-2.0",
   "repository": "https://github.com/kubuszok/balticporter"

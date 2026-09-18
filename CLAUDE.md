@@ -187,9 +187,9 @@ an opinion.
 
 Shipped to consumers in the plugin (`plugin/skills/`, with the blocking guard hook): `sbt2-client`
 (before ANY sbt invocation), `generated-code`, `consumer-ci` (before pushing to a consumer branch),
-`root-cause-port` (before any workaround), `cross-platform-port`, `ci-caching`. Engine development
-(`.claude/skills/`): `iterate-lane`, `read-port-issues`, `port-first-attempt`, `port-status`,
-`configure-port`, `customize-port`, `add-corpus-library`, `debug-port`.
+`root-cause-port` (before any workaround), `cross-platform-port`, `ci-caching`, `configure-port`,
+`customize-port`, `read-port-issues`. Engine development (`.claude/skills/`): `iterate-lane`,
+`port-first-attempt`, `port-status`, `add-corpus-library`, `debug-port`.
 
 ## 3.7 A RESEARCH FILE IS NOT A DELIVERABLE
 
