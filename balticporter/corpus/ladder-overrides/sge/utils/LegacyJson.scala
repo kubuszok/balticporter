@@ -1,5 +1,5 @@
 // (json step) java's reflective `Json` lives on under the name `LegacyJson` — the name `Json` is the Kindlings JSON AST
-// (`sge.utils.JsonCodecs`); the stub goes with the particle system's and Skin's last references (PROGRESS.md §13.30).
+// (`sge.utils.JsonCodecs`); the stub goes with the particle system's and Skin's last references.
 package sge.utils
 
 import sge.files.FileHandle
@@ -204,9 +204,9 @@ class LegacyJson {
     * from `readFields`, and `Skin` overrides it. Absent here, that override compiled to nothing. */
 
   // …and it is `protected[utils]` rather than public because that is what the upstream declaration
-  // it replaces is (DESIGN §8.7 renders java `protected` as `protected[<emitted package>]`). An
-  // INJECTED file supplies an FQN the port does not emit, so nothing derives its surface from the
-  // Java — it has to AGREE by hand, and a public member here is weaker-access at every override.
+  // it replaces is (java `protected` renders as `protected[<emitted package>]`). An
+  // injected file supplies an FQN the port does not emit, so nothing derives its surface from the
+  // Java — it has to agree by hand, and a public member here is weaker-access at every override.
   protected[utils] def ignoreUnknownField(`type`: Class[?], fieldName: String): Boolean = false
 
   def readValue[T](`type`: Class[T], jsonData: JsonValue): T = codec("Json.readValue")

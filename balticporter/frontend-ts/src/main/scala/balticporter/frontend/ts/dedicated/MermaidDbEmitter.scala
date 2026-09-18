@@ -18,7 +18,7 @@ import scala.collection.mutable
   *   - `commonClear()` -> inline reset of common fields
   *   - exported `db` object -> determines the class's public API
   *
-  * DESIGN.md: this is a TS frontend emitter, not an engine phase.
+  * This is a TS frontend emitter, not an engine phase.
   */
 object MermaidDbEmitter {
 

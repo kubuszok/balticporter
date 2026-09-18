@@ -5,11 +5,11 @@
  * Licensed under the Apache License, Version 2.0
  */
 
-/** INJECTED — the reflection-free stand-in for what `DefaultBehaviorTreeReader` asked the JVM at
+/** Injected — the reflection-free stand-in for what `DefaultBehaviorTreeReader` asked the JVM at
   * run time (`ClassReflection.newInstance/getAnnotation/getField` become [[TaskRegistry.newTask]],
-  * [[TaskRegistry.metaOf]], [[TaskRegistry.fieldOf]]); five reader method BODIES substitute onto
-  * this table (`MethodBodyTransform`, `GdxAiPolicy`). CLOSED where java's mechanism is OPEN: an
-  * unregistered task type REFUSES loudly (CLAUDE.md §1) rather than silently matching nothing. */
+  * [[TaskRegistry.metaOf]], [[TaskRegistry.fieldOf]]); five reader method bodies substitute onto
+  * this table (`MethodBodyTransform`, `GdxAiPolicy`). Closed where java's mechanism is open: an
+  * unregistered task type refuses loudly rather than silently matching nothing. */
 package sge.ai.btree.utils
 
 /** The reflection-free task table `DefaultBehaviorTreeReader` resolves against.
@@ -183,10 +183,10 @@ object TaskRegistry {
     both("decorator.SemaphoreGuard", () => new sge.ai.btree.decorator.SemaphoreGuard[java.lang.Object]())
     both("decorator.Repeat", () => new sge.ai.btree.decorator.Repeat[java.lang.Object]())
     both("decorator.Include", () => new sge.ai.btree.decorator.Include[java.lang.Object]())
-    // THE ONE FACTORY THAT IS NOT A BARE `new`, and it is not a choice. Java's `Random()` delegates
+    // the one factory that is not a bare `new`, and it is not a choice. Java's `Random()` delegates
     // — `this(ConstantFloatDistribution.ZERO_POINT_FIVE)` — and the port's emitted `Random` has no
-    // nilary constructor to carry that: `ENGINE-LIMITS.md` C11 refuses to emit one, because scala's
-    // implicit nilary primary runs NOTHING and `def this()` beside it is `E120`.
+    // nilary constructor to carry that: scala's implicit nilary primary runs nothing, and
+    // `def this()` beside it is `E120`.
     both("decorator.Random", () => {
       val t = new sge.ai.btree.decorator.Random[java.lang.Object]()
       t.success$shadow = sge.ai.utils.random.ConstantFloatDistribution.ZERO_POINT_FIVE
@@ -219,8 +219,8 @@ object TaskRegistry {
       (v, a) => asDistribution(v, classOf[sge.ai.utils.random.IntegerDistribution], a),
       (t, v) => t.asInstanceOf[sge.ai.btree.decorator.Repeat[java.lang.Object]].times =
         v.asInstanceOf[sge.ai.utils.random.IntegerDistribution])
-    // Random: @TaskAttribute public FloatDistribution success;  — the field SHADOWS an inherited
-    // one, so §4.55 renamed the emitted member to `success$shadow`. The java field is still
+    // Random: @TaskAttribute public FloatDistribution success;  — the field shadows an inherited
+    // one, so CLAUDE.md §4.55 renamed the emitted member to `success$shadow`. The java field is still
     // `success`, which is the name the `.btree` text uses and the name `getField` is handed.
     attribute("sge.ai.btree.decorator.Random", "success", "success", false, "FloatDistribution",
       (v, a) => asDistribution(v, classOf[sge.ai.utils.random.FloatDistribution], a),

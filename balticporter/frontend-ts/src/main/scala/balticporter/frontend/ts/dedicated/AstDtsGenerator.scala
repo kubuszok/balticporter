@@ -6,7 +6,7 @@ import scala.collection.mutable
 
 /** Generates TypeScript declaration files (.d.ts) from a DEFNODE hierarchy and per-property type inference derived from a hand-ported reference.
   *
-  * The generated declarations let the TypeScript checker type `this.x` accesses inside DEFMETHOD bodies, replacing the blanket `any` with concrete field types. DESIGN.md: N7 capability.
+  * The generated declarations let the TypeScript checker type `this.x` accesses inside DEFMETHOD bodies, replacing the blanket `any` with concrete field types.
   */
 object AstDtsGenerator:
 

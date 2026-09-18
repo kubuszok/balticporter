@@ -1,5 +1,5 @@
 /*
- * Port-written (PROGRESS.md §13.30 step 3, ADJUSTMENTS.tsv): the port keeps java's Application
+ * Port-written (ADJUSTMENTS.tsv): the port keeps java's Application
  * logging surface (log level, ApplicationLogger, log/error/debug), which sge replaced by its Log;
  * sge's applications gain it here, over sge's Log, together with sge's frame-hook host that the
  * port's Application does not extend.

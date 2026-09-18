@@ -1,6 +1,6 @@
 // Copied verbatim from sge/demos/project/AssetGenerator.scala (sge-original; the object renamed): the
 // textures and sounds sge's asset-showcase demo loads are GENERATED at build time, so the demo-check
-// project that runs the demos must generate them too (PROGRESS.md §13.30, demo census).
+// project that runs the demos must generate them too.
 import sbt._
 import sbt.Keys._
 
