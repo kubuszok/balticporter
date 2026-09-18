@@ -197,6 +197,13 @@ sees the kind); the screen is *would a reader act differently*.
   for JLS 12.4.2's class-init LOCK as well as its trigger: the value is assigned under the companion's
   monitor, double-checked, the flag written LAST. Only a parallel suite sees the race (sge textra 1 NPE
   -> 0 at 0 compile errors); a green serial run is no evidence.
+- **K57** a holder member mapped to a PATH through another service (`gl30 -> graphics.getGL30()`) is an
+  ALIAS: java's write refreshing it from that same path (`Holder.gl30 = graphics.getGL30()`) is a
+  self-assignment under the mapping and is ELIDED (a `SubstitutedCall` decision on the enclosing
+  declaration), never the setter's call — a hand-written setter read the absent value as a command and the
+  browser backend lost its GL20 handle (2 demos NPE at 0 compile errors). A write of ANOTHER value stays
+  the setter's call. The path's `seg()` hop is a minted symbol: compare it by resolving it on the
+  receiver's type, and find the elided line through the holder static's usages.
 
 ## The §1(b) phase table (moved from CLAUDE.md 2026-09-16 — loads with the transform files)
 

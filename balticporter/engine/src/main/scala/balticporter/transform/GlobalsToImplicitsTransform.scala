@@ -866,8 +866,13 @@ final class GlobalsToImplicitsTransform(
     val applySym  = mint.member("apply", MemberKey(ctxFqn, "apply").render, ctxSym, ctxRef, Flags(isStatic = true))
     val globalSym = mint.member("global", MemberKey(ctxFqn, "global").render, ctxSym, ctxRef, Flags(isStatic = true, isMutable = true))
     val segCache  = collection.mutable.Map.empty[String, SymId]
+
+    /** the plain (property-form) hops minted for a path segment, by symbol — read back by the alias-refresh comparison. */
+    val plainHops = collection.mutable.Map.empty[SymId, String]
     def segSym(seg: String): SymId =
-      segCache.getOrElseUpdate(seg, mint.member(seg, MemberKey(ctxFqn, seg).render, ctxSym, TypeRepr.NoType, Flags()))
+      val id = segCache.getOrElseUpdate(seg, mint.member(seg, MemberKey(ctxFqn, seg).render, ctxSym, TypeRepr.NoType, Flags()))
+      plainHops.getOrElseUpdate(id, seg)
+      id
 
     /** `scala.Predef.summon[T]`, or `T.apply()`. Built structurally, not as text — a name spliced into a string would be the one reference the package rename (§4.56) cannot see.
       */
@@ -1004,11 +1009,60 @@ final class GlobalsToImplicitsTransform(
           case Some(ReadPlan.Threaded) => Some(call(pathOn(contextExpr, run.hop, TypeRepr.NoType, at)))
           case Some(ReadPlan.Global)   => Some(call(pathOn(Tree.Ident(globalSym, ctxRef, o), run.hop, TypeRepr.NoType, at)))
           case _                       => scala.None
+
+    /** the alias refreshes the read pass elided, by hop getter — recorded as decisions once the pass has run. */
+    val aliasRefreshes = collection.mutable.ListBuffer.empty[(SymId, Origin)]
+
+    /** a policy path's hop — `seg()` or the property-form `seg` — is a MINTED symbol: it names the real nilary member `real` of its receiver's type. */
+    def hopIs(receiver: Term, minted: SymId, real: SymId): Boolean =
+      methodHops.get(minted).orElse(plainHops.get(minted)).exists(seg => headSymOf(receiver.tpe).flatMap(realMember(_, seg)).exists(_.id == real))
+
+    /** one read path, compared by SYMBOL: `this.f.g()` against `this.f.g()`. */
+    def samePath(a: Term, b: Term): Boolean = (Tree.uncomment(a), Tree.uncomment(b)) match
+      case (Tree.This(c1, _, _), Tree.This(c2, _, _))   => c1 == c2
+      case (Tree.Ident(s1, _, _), Tree.Ident(s2, _, _)) => s1 == s2
+      // java's bare `f` and `this.f` are one read
+      case (Tree.Select(_: Tree.This, s1, _, _), Tree.Ident(s2, _, _))  => s1 == s2
+      case (Tree.Ident(s1, _, _), Tree.Select(_: Tree.This, s2, _, _))  => s1 == s2
+      case (Tree.Select(q1, s1, _, _), Tree.Select(q2, s2, _, _))       => (s1 == s2 || hopIs(q1, s1, s2) || hopIs(q2, s2, s1)) && samePath(q1, q2)
+      case (Tree.Apply(f1, Nil, _, _, _), Tree.Apply(f2, Nil, _, _, _)) => samePath(f1, f2)
+      // a property-form hop (`q.gl`) against java's getter call (`q.getGl()`)
+      case (Tree.Select(q1, s1, _, _), Tree.Apply(Tree.Select(q2, s2, _, _), Nil, _, _, _)) => hopIs(q1, s1, s2) && samePath(q1, q2)
+      case (Tree.Apply(Tree.Select(q1, s1, _, _), Nil, _, _, _), Tree.Select(q2, s2, _, _)) => hopIs(q2, s2, s1) && samePath(q1, q2)
+      case _                                                                                => false
+
+    /** does `rhs` read the path `lhs` writes — bare, or under ONE nullary member this program does not declare (a wrapper's unwrap, which moves no value)? */
+    def refreshesFrom(lhs: Term, rhs: Term)(using p: Program): Boolean =
+      def declaredHere(s: SymId): Boolean =
+        val roots = p.units.map(_.symbol).toSet
+        @annotation.tailrec
+        def climb(id: SymId, n: Int): Boolean =
+          if id == SymId.None || n > 64 then false
+          else if roots(id) then true
+          else
+            p.symbolOf(id) match
+              case Some(sym)  => climb(sym.owner, n + 1)
+              case scala.None => false
+        climb(s, 0)
+      samePath(lhs, rhs) || (Tree.uncomment(rhs) match
+        case Tree.Apply(Tree.Select(inner, s, _, _), Nil, _, _, _) if !declaredHere(s) => samePath(lhs, inner)
+        case _                                                                         => false)
+
     val rewrite = new Phase:
       def name = "globals->implicits/read"
       override def transformIdent(t:  Tree.Ident)(using Program):  Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
       override def transformSelect(t: Tree.Select)(using Program): Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
       override def transformTerm(t: Term)(using Program):          Term = t match
+        // java REFRESHES a global alias from its own source (`Holder.alias = service.getX()`). Under this
+        // mapping the alias IS that path, so the write is a self-assignment: elided and recorded, never the
+        // setter's call — a setter may read null as a command (a backend lost its GL handle this way).
+        case Tree.Assign(lhs @ Tree.Apply(Tree.Select(_, m, _, _), Nil, _, _, _), rhs, _, at, None) if (methodHops.contains(m) || realSetterOf.get(m).exists(_.isDefined)) && refreshesFrom(lhs, rhs) =>
+          aliasRefreshes += (m -> at)
+          Tree.Literal(Constant.UnitC, TypeRepr.NoType, at)
+        // …the same refresh where the path names the PROPERTY (`service.x`): the lhs is a plain minted hop
+        case Tree.Assign(lhs @ Tree.Select(_, m, _, _), rhs, _, at, None) if plainHops.contains(m) && refreshesFrom(lhs, rhs) =>
+          aliasRefreshes += (m -> at)
+          Tree.Literal(Constant.UnitC, TypeRepr.NoType, at)
         // the lhs was rewritten (children first) into a getter-hop CALL: an assignment to a call is
         // the setter's call instead.
         case Tree.Assign(Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _), rhs, _, at, None) if methodHops.contains(m) =>
@@ -1338,6 +1392,30 @@ final class GlobalsToImplicitsTransform(
     val prog1  = program0.rebuilt(symbols = SymbolTable(promotedTbl.all ++ mint.minted))
     val units1 = prog1.units.map(u => deferred.apply(u)(using prog1))
     val units2 = units1.map(u => StandardTraversal.mapClassDef(rewrite, u)(using prog1))
+    // every elided alias refresh is a decision on the declaration it sat in (rules/phases.md K57)
+    // (the hop is a minted symbol with no usages: the elided line is found through the holder static it wrote)
+    locally {
+      val lines = aliasRefreshes.toList.map((_, at) => (at.javaPath, at.line)).toSet
+      val wrote = statics.map(_._1).toList.sortBy(_.raw).flatMap(prog1.usages).filter(u => lines((u.site.origin.javaPath, u.site.origin.line)))
+      wrote.groupBy(_.enclosing).toList.sortBy(_._1.raw).foreach { (encl, us) =>
+        record(
+          Decision(
+            kind = Decision.Kind.SubstitutedCall,
+            subject = encl,
+            subjectFqn = Decision.fqnOf(prog1, encl, h.holder),
+            detail = Map(
+              "sites" -> us.size.toString,
+              "from" -> s"a write refreshing a `${h.holder}` alias from the path it is mapped to",
+              "to" -> "nothing",
+              "why" -> ("under this mapping the alias IS that path, so java's refresh is a self-assignment; the setter's " +
+                "call it would otherwise become is not one — a setter may treat an absent value as a command")
+            ),
+            reason = Reason.Universal("alias-refresh(K57)"),
+            origin = us.map(_.site.origin).minBy(o => (o.javaPath, o.line))
+          )
+        )
+      }
+    }
     val units3 = units2.map(u => StandardTraversal.mapClassDef(edit, u)(using prog1))
     val prog2  = prog1.rebuilt(units = units3, symbols = SymbolTable(prog1.symbols.all ++ mint.minted))
     val prog3  = prog2.rebuilt(xref = Xref.build(prog2.units))

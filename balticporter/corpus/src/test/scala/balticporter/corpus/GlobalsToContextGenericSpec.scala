@@ -280,6 +280,41 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     assertEquals(clue(p.policyReport.findings.count(_.key == "demo.NoSuch#member")), 1, p.policyReport.render)
   }
 
+  /** libGDX's `GLProfiler.enable` shape: a holder ALIAS mapped two hops deep, refreshed from that same path after the service's own setter ran. */
+  private val aliasSrc =
+    """package demo;
+      |public class Cfg { public static Svc svc; public static Gl gl; }
+      |public class Gl {}
+      |public class Svc { Gl g; public Gl getGl() { return g; } public void setGl(Gl v) { g = v; } }
+      |public class Prof {
+      |  Svc svc; Gl mine;
+      |  Prof(Svc s) { svc = s; }
+      |  void enable() { svc.setGl(mine); Cfg.gl = svc.getGl(); }
+      |  void swap(Gl other) { Cfg.gl = other; }
+      |}
+      |""".stripMargin
+
+  private def aliasHolder = base.copy(members = Map("svc" -> "svc", "gl" -> "svc.getGl()"), through = Map("demo.Prof" -> "svc"))
+
+  test("a write REFRESHING an alias from the path it is mapped to is elided — never the setter's call (K57)") {
+    val (_, _, log, out) = portedFrom(aliasSrc, aliasHolder)
+    val enable           = out.substring(out.indexOf("def enable"), out.indexOf("def swap"))
+    assertEquals(enable.split("setGl").length - 1, 1, s"java's own setter call stays; the refresh adds none:\n$enable")
+    val elided = log.of(Decision.Kind.SubstitutedCall).map(_.subjectFqn)
+    assert(clue(elided).exists(_.contains("Prof#enable")), enable)
+  }
+
+  test("…the same when the path names the PROPERTY (`svc.gl`), which resolves to the real getter") {
+    val (_, _, _, out) = portedFrom(aliasSrc, aliasHolder.copy(members = Map("svc" -> "svc", "gl" -> "svc.gl")))
+    val enable         = out.substring(out.indexOf("def enable"), out.indexOf("def swap"))
+    assertEquals(enable.split("setGl").length - 1, 1, s"java's own setter call stays; the refresh adds none:\n$enable")
+  }
+
+  test("…and a write of ANOTHER value through the alias is still the setter's call") {
+    val (_, _, _, out) = portedFrom(aliasSrc, aliasHolder)
+    assert(clue(out.substring(out.indexOf("def swap"))).contains("setGl(other)"))
+  }
+
   test("no `sites` at all: no dead-binding row, and the report is what it always was") {
     assertEquals(clue(phase.policyReport.findings), Nil, phase.policyReport.render)
   }
