@@ -43,8 +43,8 @@ object SpoonTir:
   val UnreadableAnnotations     = "<unreadable-annotations>"
   val FailedAnnotationArguments = "<annotation-arguments-failed>"
 
-  /** Build a [[Program]] from already-resolved top-level Spoon types. `catalog` is the run's obligation log — a parameter, not a field of `Program`, because a log is a value one run owns (CLAUDE.md
-    * §5.1); default is a fresh discarding log.
+  /** Build a [[Program]] from already-resolved top-level Spoon types. `catalog` is the run's obligation log — a parameter, not a field of `Program`, because a log is a value one run owns; default is
+    * a fresh discarding log.
     */
   def fromTypes(
     types:       List[CtType[?]],
@@ -62,13 +62,13 @@ object SpoonTir:
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
-    // comments must stay enabled — the licence-notice harvest below needs them (CLAUDE.md §4.58)
+    // comments must stay enabled — the licence-notice harvest below needs them
     env.setCommentEnabled(true)
     env.setNoClasspath(lenient)
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     if cfg.resolutionRoots.nonEmpty then
       cfg.resolutionRoots.foreach(r => addResolutionRoot(launcher, r, cfg.resolutionExcludes))
-      // declared inputs: an absent one is fatal with a named diagnostic (CLAUDE.md §5.4)
+      // declared inputs: an absent one is fatal with a named diagnostic
       val covered = cfg.resolutionRoots.map(r => RealPath.ofExisting(r, "resolution root"))
       cfg.files
         .map(f => RealPath.ofExisting(cfg.sourceRoot.resolve(f), s"declared source file $f"))
@@ -78,7 +78,7 @@ object SpoonTir:
     launcher.buildModel().getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
 
   /** Add one resolution root, minus whatever the port excluded from it ([[balticporter.core.FrontendConfig.resolutionExcludes]]). No exclusions: add the directory whole. With exclusions: add
-    * surviving `.java` files individually; `cfg.resolutionRoots` itself stays unchanged. Matched at a path separator, never substring (CLAUDE.md §4.56).
+    * surviving `.java` files individually; `cfg.resolutionRoots` itself stays unchanged. Matched at a path separator, never substring.
     */
   private def addResolutionRoot(launcher: Launcher, root: Path, excludes: List[String]): Unit =
     if excludes.isEmpty then launcher.addInputResource(root.toString)
@@ -134,11 +134,11 @@ object SpoonTir:
     sources.foreach((name, code) => launcher.addInputResource(new VirtualFile(code, name)))
     val model = launcher.buildModel()
     val tops  = model.getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
-    // VirtualFile has no source buffer of its own — pass texts explicitly or comments re-print (§4.58)
+    // VirtualFile has no source buffer of its own — pass texts explicitly or comments re-print
     new Builder(subs, sources.toMap, catalog, annotations).build(tops, internTypes)
 
   /** The one classification of a Spoon type reference. Since `CtWildcardReference` extends `CtTypeParameterReference`, the wildcard arm must be matched ABOVE the variable arm or `?` reads as a type
-    * variable — derived once here so no caller re-derives it by `isInstanceOf`. `ref`/`args` let a caller treat Prim/Intersection/Named alike. CLAUDE.md §4.56, ENGINE-LIMITS G21
+    * variable — derived once here so no caller re-derives it by `isInstanceOf`. `ref`/`args` let a caller treat Prim/Intersection/Named alike.
     */
   private[spoon] enum TypeShape:
     case Absent

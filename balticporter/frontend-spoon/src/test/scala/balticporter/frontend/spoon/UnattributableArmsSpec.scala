@@ -2,8 +2,7 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** §0.4's UNATTRIBUTABLE ARMS — fallbacks that answer with a VALUE indistinguishable from a real answer.
-  */
+/** Fallback arms that answer with a value indistinguishable from a real one. */
 class UnattributableArmsSpec extends munit.FunSuite:
 
   private def rendered(java: String): String =

@@ -2,8 +2,8 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** G34 — under `noClasspath`, Spoon's `getExecutableDeclaration` can resolve to an UNRELATED type's method that happens to share the name. The frontend must validate that the declaration's owner is
-  * the receiver's static type or a supertype (an inherited method), and fall through when it is not.
+/** Under `noClasspath`, Spoon's `getExecutableDeclaration` can resolve to an unrelated type's method that happens to share the name. The frontend must validate that the declaration's owner is the
+  * receiver's static type or a supertype (an inherited method), and fall through when it is not.
   */
 class MethodResolutionSpec extends munit.FunSuite:
 

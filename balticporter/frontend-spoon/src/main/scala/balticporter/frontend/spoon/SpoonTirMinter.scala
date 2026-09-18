@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-// Split out of SpoonTir.scala for file size (context diet S2): the symbol-key interner.
+// Split out of SpoonTir.scala for file size: the symbol-key interner.
 
 import balticporter.core.{ AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions }
 import balticporter.catalog.{ CatalogLog, Dispatch, JS, Lowering, Obligations, Typing }
@@ -77,10 +77,9 @@ final private[spoon] class Minter:
     byKey.get(key).flatMap(id => syms.get(id).map(id -> _))
   private[spoon] def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
 
-  /** the DECLARED type this frontend interned for `id` — `NoType` where nothing was declared. Answers *did this frontend retype this declaration?* (CLAUDE.md §4.56).
-    */
+  /** the DECLARED type this frontend interned for `id` — `NoType` where nothing was declared. Answers *did this frontend retype this declaration?* */
   private[spoon] def infoOf(id: SymId): TypeRepr = syms.get(id).map(_.info).getOrElse(NoType)
 
-  /** the interned OWNER of a member — the type that declares it (not the subclass name it was reached through, T14). `SymId.None` for a type or an unresolved member.
+  /** the interned OWNER of a member — the type that declares it, not the subclass name it was reached through. `SymId.None` for a type or an unresolved member.
     */
   private[spoon] def ownerOf(id: SymId): SymId = syms.get(id).map(_.owner).getOrElse(SymId.None)

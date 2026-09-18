@@ -78,31 +78,18 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // absorption costs a construct with a green compile and no moved count, and a never-visited
     // kind costs whatever was written in a file the walk does not enter. A single number would let
     // one shrink while another grew.
-    assertEquals(
-      SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently),
-      // ONE, and the three kinds that left went the two DIFFERENT ways this classification exists
-      // to tell apart. `CtTextBlock` left when `TextBlockSpec` established that the absorption is
-      // FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm that takes it is
-      // the right arm — and `CtRecord` left when the absorption turned out to be four defects at
-      // once (`JS-C43`) and each was fixed.
-      List("CtAnnotationFieldAccess")
-    )
-    // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
-    // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
-    // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the
-    // size of the FILE, which is the difference between "this library cannot be ported" and "these
-    // three declarations cannot".
+    // Silently absorbed: a kind whose value is read through a different node without a translator
+    // of its own (`CtLiteral.getValue` already gives `CtTextBlock`'s denoted string, JLS 3.10.6).
+    assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.AbsorbedSilently), List("CtAnnotationFieldAccess"))
+    // Marked unportable: still blocks the port (the emission gate refuses any open marker), but the
+    // failure is the size of the construct, not the whole file.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable), List("CtTypePattern"))
-    // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
-    // stand here named "the type operand of an `instanceof`" as a shape a term-level marker cannot
-    // take — true of the OPERAND and false of the construct, because the whole `instanceof` is a
-    // boolean expression and marking there refuses the same thing at the size of an expression.
-    // No kind a java source can produce now costs a whole compilation unit.
+    // Refused loudly: no kind a java source can actually produce should cost a whole compilation
+    // unit, so this list is empty.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.RefusedLoudly), Nil)
-    // NINE, and the ninth is a kind that was on the REFUSED list until a probe went looking for a
-    // fixture that reaches it and found none: `CtUnnamedPattern` is not something this parser builds
-    // from any source it accepts. A refusal nobody can trigger reads exactly like a refusal that
-    // fires, which is the reason this census is three named lists and not a total.
+    // Never visited: no fixture reaches these — some (`CtUnnamedPattern`) because no accepted source
+    // shape builds them at all. Three named lists rather than one total, since a refusal nobody can
+    // trigger reads exactly like a refusal that fires.
     assertEquals(
       SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
       List(

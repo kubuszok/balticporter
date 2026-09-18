@@ -6,7 +6,7 @@ import balticporter.tir.TypeRepr.*
 
 import java.nio.file.Files
 
-/** An EXTERNAL member's `MethodType` — `ENGINE-LIMITS.md` K15's frontend half. */
+/** An external member's `MethodType`, read from its class file rather than assumed. */
 class ExternalSignatureSpec extends munit.FunSuite:
 
   private val src =
@@ -269,8 +269,8 @@ class ExternalSignatureSpec extends munit.FunSuite:
     assertEquals(member("ext.Partial", "plain").descriptor, scala.None)
     // …and the FEATURE, on the same classpath, in the same run. A class file compiled from source
     // carries its generic signature, so this one is exact all the way into the type argument —
-    // which is what makes `java.util.Set[String]` at a third party's formal a seam a phase can now
-    // close instead of only count (`ENGINE-LIMITS.md` K15).
+    // which is what makes `java.util.Set[String]` at a third party's formal a signature a phase
+    // can bridge rather than merely count.
     val feed = member("ext.Whole", "feed")
     feed.info match
       case MethodType(List((_, AppliedType(TypeRef(_, h), List(TypeRef(_, a))))), _, _) =>

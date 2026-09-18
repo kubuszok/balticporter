@@ -28,8 +28,8 @@ object SpoonKinds:
       */
     case RefusedLoudly
 
-    /** reaches a mint site producing a `Tree.Unportable` marker: refused PER SITE, the rest of the unit translates, and the emission gate refuses to ship until the marker is closed (`DESIGN.md`
-      * §6.4). Strictly better than [[RefusedLoudly]], strictly worse than a lowering.
+    /** reaches a mint site producing a `Tree.Unportable` marker: refused PER SITE, the rest of the unit translates, and the emission gate refuses to ship until the marker is closed. Strictly better
+      * than [[RefusedLoudly]], strictly worse than a lowering.
       */
     case MarkedUnportable
 
@@ -136,8 +136,8 @@ object SpoonKinds:
     ),
     Kind("CtImport", Positional("SpoonTir.harvestHeader — only for its comments"), scala.None),
     Kind("CtJavaDoc", Positional("SpoonTir.triviaOf, through the CtComment arm"), scala.None),
-    // getTags is never called; the tag text survives only via the trivia harvest's
-    // verbatim source slice (CLAUDE.md §4.58).
+    // getTags is never called; the tag text survives only via the trivia harvest's verbatim source
+    // slice.
     Kind("CtJavaDocTag", Positional("SpoonTir.triviaOf — by verbatim source slice, with no node-level read"), scala.None),
     Kind("CtParameter", Positional("SpoonTir.execDef"), scala.None),
     // Consumed inside `classDef`'s record arm: a component is not a member the walk reaches, it is
@@ -215,8 +215,7 @@ object SpoonKinds:
     "CtInterface" -> "SpoonTir.typeFlags",
     "CtMethod" -> "SpoonTir.execDef",
     // CtAnnotationMethod extends CtMethod, so execDef always took it, but discarded the
-    // element's DEFAULT (JLS 9.6.2) -- now read and rendered as a constructor parameter
-    // (ENGINE-LIMITS.md T22).
+    // element's DEFAULT (JLS 9.6.2) -- now read and rendered as a constructor parameter.
     "CtAnnotationMethod" -> ("SpoonTir.execDef, with annotationDefault for JLS 9.6.2's `default` " +
       "clause -> TirEmitter.classDef1's annotation arm, as a class parameter")
   ).map((n, by) => Kind(n, Lowered(by), scala.None)) ++ List(
@@ -258,8 +257,8 @@ object SpoonKinds:
     ),
 
     // the marker for an instanceof PATTERN is minted at the WHOLE instanceof (a boolean
-    // expression), not the type operand, which cannot carry a term marker -- same
-    // refusal (ENGINE-LIMITS.md T18), smaller SIZE.
+    // expression), not the type operand, which cannot carry a term marker -- same refusal,
+    // smaller SIZE.
     Kind(
       "CtTypePattern",
       Absent(
@@ -390,8 +389,8 @@ object SpoonKinds:
     */
   def refNameOf(cls: Class[?]): String = nameIn(cls, byRefName)
 
-  /** ONE resolver for both registries (`ENGINE-LIMITS.md` F8): the `Impl` shortcut, the structural walk and the most-specific tie-break are the same three rules whichever taxonomy is asking, and a
-    * copy is the one that would not gain the next fix.
+  /** One resolver for both registries: the `Impl` shortcut, the structural walk and the most-specific tie-break are the same three rules whichever taxonomy is asking, and a copy is the one that would
+    * not gain the next fix.
     */
   private def nameIn(cls: Class[?], known: Map[String, Kind]): String =
     val stripped = cls.getSimpleName.stripSuffix("Impl")

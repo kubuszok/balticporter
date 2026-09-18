@@ -1,7 +1,7 @@
 package balticporter.frontend.spoon
 
-/** The frontend records the JLS 9.4.3 `default` methods of an EXTERNAL interface parent off the class file, so the emitter's diamond forwarder ASKS instead of guessing which external parent is
-  * concrete (`ENGINE-LIMITS.md` K39). Arity-only, keyed by parent FQN.
+/** The frontend records the JLS 9.4.3 `default` methods of an external interface parent from its class file, so the emitter's diamond forwarder can ask which external parent is concrete instead of
+  * guessing. Arity-only, keyed by parent FQN.
   */
 class ExternalDefaultsSpec extends munit.FunSuite:
 

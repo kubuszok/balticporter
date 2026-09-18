@@ -14,9 +14,9 @@ class JavaCollectionsSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
 
   test("sort is IN PLACE — the reference the caller kept sees the new order") {
-    // A sorted COPY compiles, returns the right answer to nobody, and leaves the original in its
-    // original order (§4.4, no compile error and no count moved). Java's `Collections.sort` mutates
-    // and returns nothing, and every caller reads the list afterwards through the same reference.
+    // A sorted copy compiles, returns the right answer to nobody, and leaves the original in its
+    // original order. Java's `Collections.sort` mutates and returns nothing, and every caller reads
+    // the list afterwards through the same reference.
     val xs: Buffer[Int] = ArrayBuffer(3, 1, 2)
     val alias = xs
     JavaCollections.sort(xs, byNatural)
@@ -255,7 +255,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // `java.util.Collection`'s BULK DEFAULTS at the SECOND target — the K29 receiver contract
+  // `java.util.Collection`'s bulk defaults at the second target — the receiver contract they need
 
   /** the emitted shape itself: a class that DEFINES a set, re-parented onto `mutable.Set`, whose `super.<default>` the phase rewrites to a helper standing on `this`.
     */
@@ -468,7 +468,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("toArray(a) FILLS the caller's array when the elements fit, and returns THAT array") {
     // java's contract, and the reason this is not an allocate-and-copy: a caller may pass an array
     // it still holds and read it afterwards. An implementation that always allocated would compile,
-    // return the right elements and leave the caller's array untouched (§4.4).
+    // return the right elements and leave the caller's array untouched.
     val a   = new Array[String](3)
     val out = JavaCollections.toArray(ArrayBuffer("x", "y"), a)
     assert(out eq a, "the caller's array must be the array returned when it fits")
@@ -592,8 +592,8 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   test("emptyList/emptyMap/emptySet are SHARED, as java's are — reference identity is observable") {
     // java's `Collections.EMPTY_LIST` is one instance, and a java `xs == Collections.emptyList()`
-    // is a REFERENCE comparison, which this engine emits as `eq` (§4.4). A fresh instance per call
-    // would answer `false` where java answers `true`.
+    // is a reference comparison, which this engine emits as `eq`. A fresh instance per call would
+    // answer `false` where java answers `true`.
     assert(JavaCollections.emptyList[String]() eq JavaCollections.emptyList[Int]())
     assert(JavaCollections.emptyMap[String, Int]() eq JavaCollections.emptyMap[Int, Int]())
     assert(JavaCollections.emptySet[String]() eq JavaCollections.emptySet[Int]())
@@ -614,8 +614,8 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   test("unmodifiableList/Set/Map are LIVE VIEWS — a later change to the source is visible") {
     // The distinction that made these unmappable while the only candidates were the stdlib's: a
-    // COPY compiles, returns the right elements now, and silently detaches every later change
-    // (§4.4). Java's result reflects them; so does this.
+    // copy compiles, returns the right elements now, and silently detaches every later change.
+    // Java's result reflects them; so does this.
     val xs: Buffer[String] = ArrayBuffer("a")
     val ro = JavaCollections.unmodifiableList(xs)
     xs += "b"
@@ -776,7 +776,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   // java's UNTYPED PROBE — the members declared over `Object` rather than over the element type.
   // Two receivers need them: a map whose type arguments are WILDCARDS (`K` is an unnameable
   // capture), and any retyped collection reached with java's own `Object` still on the argument —
-  // an implementing class's `remove(Object o)`, or the frontend's G14 erasure coercion.
+  // an implementing class's `remove(Object o)`, or an erasure coercion from the frontend.
 
   test("mapGet is java's `get(Object)`: the value, or NULL when absent") {
     val m = scala.collection.mutable.Map("a" -> "x")
@@ -816,8 +816,8 @@ class JavaCollectionsSpec extends munit.FunSuite:
   test("NO `checkcast` on the probe — the whole reason this is a helper and not a cast") {
     // `o.asInstanceOf[String]` is the translation that COMPILES and means something else: it throws
     // `ClassCastException` where java's `Map<String, ?>.get(anInteger)` answers `null`. The widening
-    // here is of the PROBE POSITION only and is erased, so java's own lookup runs and misses.
-    // CLAUDE.md §4.4 — a green compile says nothing about this cell.
+    // here is of the PROBE POSITION only and is erased, so java's own lookup runs and misses —
+    // a compile alone says nothing about this cell.
     val m = scala.collection.mutable.Map("a" -> "x")
     assertEquals(JavaCollections.mapGet(m, new Object), null)
     assertEquals(JavaCollections.mapRemove(m, new Object), null)
@@ -854,7 +854,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // Reified — `ENGINE-LIMITS.md` K18. Both representations, and the LIVENESS of the coercion.
+  // Reified: predicates and coercions that accept both representations, and the liveness of the coercion.
 
   test("every predicate accepts BOTH representations — the port's and the producer's") {
     assert(JavaCollections.Reified.isMap(scala.collection.mutable.Map("a" -> 1)))
@@ -868,8 +868,8 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   test("a MAP is not a COLLECTION — the loose widening to scala.collection.Iterable is WRONG") {
     // The measured difference: a `mutable.Map` IS a `scala.collection.Iterable` while a
-    // `java.util.Map` is NOT a `java.util.Collection`, so widening the scala side turns
-    // `x instanceof Collection` true for a map — two liqp test failures worse (K18).
+    // `java.util.Map` is NOT a `java.util.Collection`, so widening the scala side would turn
+    // `x instanceof Collection` true for a map, which java never answers.
     assert(!JavaCollections.Reified.isCollection(scala.collection.mutable.Map("a" -> 1)))
     assert(!JavaCollections.Reified.isCollection(new java.util.HashMap[String, Int]()))
     assert(!JavaCollections.Reified.isIterable(scala.collection.mutable.Map("a" -> 1)))
@@ -877,8 +877,8 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   test("isCollection reaches the mapped SUBTYPES' targets — the shim does not inherit java's relation") {
     // `java.util.List <: java.util.Collection` in java; `mutable.Buffer` is NOT a `JavaCollection`,
-    // because the shim exists so a class can EXTEND `AbstractCollection` (CLAUDE.md §4.5). Without
-    // this the port's own lists answer NO to a test java answered YES to.
+    // because the shim exists so a class can extend `AbstractCollection`. Without this the port's
+    // own lists answer NO to a test java answered YES to.
     assert(JavaCollections.Reified.isCollection(ArrayBuffer(1)))
     assert(JavaCollections.Reified.isCollection(scala.collection.mutable.Set(1)))
     assert(JavaCollections.Reified.isCollection(new java.util.ArrayList[Int]()))
@@ -932,7 +932,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // …AND THE COERCION'S OWN RESULT IS ASKED ABOUT AGAIN. `ENGINE-LIMITS.md` K19.
+  // …and the coercion's own result is asked about again.
 
   test("WRAP-THEN-RETEST: a coerced value still answers for what it was made of") {
     val xs: Buffer[Int] = ArrayBuffer(1)
@@ -992,7 +992,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // THE EGRESS DIRECTION — `ENGINE-LIMITS.md` K21 face 1
+  // the egress direction — a value the port retyped, handed back to a reflective consumer
   // -------------------------------------------------------------------------
 
   private def jv(x: Any) = JavaCollections.Reified.toJavaValue(x)
@@ -1104,7 +1104,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // `java.util.Optional.orElse(T other)` takes a VALUE. Java evaluates the argument expression
     // before the call, so a side-effecting default runs even on a PRESENT optional; scala's
     // `Option.getOrElse` takes it by name and runs it only on an empty one. Both directions are
-    // asserted, because a helper that fixed one and not the other would still be a §4.4 defect.
+    // asserted, because a helper that fixed only one would still be a silent behavioural defect.
     var runs = 0
     def d(): Int = { runs += 1; 7 }
     assertEquals(JavaCollections.optionalOrElse(Some(1), d()), 1)
@@ -1121,7 +1121,7 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
-  // SE8's default methods on List / Map / Collection (`ENGINE-LIMITS.md` K23)
+  // SE8's default methods on List / Map / Collection
 
   test("computeIfAbsent treats a key mapped to NULL as ABSENT, where getOrElseUpdate does not") {
     // java's own words: "if the specified key is not already associated with a value (or is mapped

@@ -2,8 +2,7 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** Proves `FrontendConfig.internTypes` mints classpath types with `isFinal` and parents in the xref — so `CollectionsTransform.mint` inherits them and `provablyUnrelated` can decide (K18).
-  */
+/** Proves `FrontendConfig.internTypes` mints classpath types with `isFinal` and parents in the xref — so `CollectionsTransform.mint` inherits them and `provablyUnrelated` can decide. */
 class InternTypesSpec extends munit.FunSuite:
 
   private val src =

@@ -4,7 +4,7 @@ import balticporter.core.Substitutions
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** THE RECOVERY BACKSTOP — the completeness half of comment preservation (`DESIGN.md` §8.8). */
+/** The recovery backstop — the completeness half of comment preservation. */
 class RecoveredTriviaSpec extends munit.FunSuite:
 
   private def occurrences(hay: String, needle: String): Int =

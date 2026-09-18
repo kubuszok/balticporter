@@ -14,9 +14,9 @@ class BreakInCatchSpec extends PortSuite:
   // ---- the jump crosses the catch ----
 
   test("`break` inside a try with `catch (Exception)` gets a re-throw arm ahead of it") {
-    // BasicDateParser's shape: a loop over patterns, each attempt guarded, the success leaving the
-    // loop. Without the guard the `break` is caught by the handler that exists to ignore a PARSE
-    // failure, and the loop tries every remaining pattern instead of stopping.
+    // a loop over attempts, each one guarded, success leaving the loop. Without the guard the
+    // `break` is caught by the handler meant to ignore one failed attempt, and the loop tries every
+    // remaining attempt instead of stopping.
     val out = emit(
       """
       package demo;
@@ -82,8 +82,8 @@ class BreakInCatchSpec extends PortSuite:
   }
 
   test("a LABELLED break crossing a nested try's broad catch is guarded at that try") {
-    // For.java's shape: `break outer` from an inner loop, with the inner body guarded. The label
-    // makes the jump cross two constructs by definition; the catch it crosses is the inner one.
+    // `break outer` from an inner loop, with the inner body guarded. The label makes the jump cross
+    // two constructs by definition; the catch it crosses is the inner one.
     val out = emit(
       """
       package demo;

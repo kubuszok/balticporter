@@ -108,7 +108,7 @@ class JavaCollectionSpec extends munit.FunSuite:
 
   test("`add` on the BASE throws, because java.util.AbstractCollection.add does") {
     // Not abstract: a subclass that does not override it really does reject `add`, and making it
-    // abstract would demand code the source never contained (ENGINE-LIMITS K5).
+    // abstract would demand code the source never contained.
     val c = new JavaCollection[String]:
       def iterator(): JavaIterator[String] = JavaIterator.from(Iterator("a"))
       def size():     Int                  = 1
@@ -183,8 +183,8 @@ class JavaCollectionSpec extends munit.FunSuite:
 
   test("removeIf takes JAVA's Predicate signature — a ported class OVERRIDES it") {
     // `Predicate<? super A>` rather than `A => Boolean`, because scala requires an override's
-    // parameter type to match EXACTLY; mapping it to `Function1` moves the disagreement rather
-    // than removing it (ENGINE-LIMITS K6).
+    // parameter type to match exactly; mapping it to `Function1` would move the disagreement
+    // rather than remove it.
     val b: Buffer[String] = ArrayBuffer("a", "bb", "ccc")
     val c = JavaCollection.from(b)
     assert(c.removeIf((s: String) => s.length > 1))

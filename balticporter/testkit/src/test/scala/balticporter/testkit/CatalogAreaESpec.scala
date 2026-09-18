@@ -37,7 +37,7 @@ class CatalogAreaESpec extends PortSuite:
     val p = port("public class B { int f(int i) { return i++; } }")
     assertConsults(p, JS.E(2), fired = true)
     // the emitter renders the temporary; what matters is that the RETURNED value is the old one,
-    // which the naive `{ i += 1; i }` gets wrong and every circular buffer noticed (§4.4).
+    // which the naive `{ i += 1; i }` gets wrong.
     assertEmitsMatch(p, "(?s).*i \\+= 1.*")
   }
 
@@ -260,8 +260,8 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   test("JS-E05 — MIXED BOXED NUMERICS: java UNBOXES both branches, so the port must too") {
-    // `ENGINE-LIMITS.md` K17 face 2, at the shape that produced it. JLS 15.25.2 gives a conditional
-    // whose operands are `Long` and `Double` binary numeric promotion: both are unboxed, promoted to
+    // JLS 15.25.2 gives a conditional whose operands are `Long` and `Double` binary numeric
+    // promotion: both are unboxed, promoted to
     // `double`, and the result re-boxed — so the expression's type really is `Double` and the `Long`
     // branch really does become one. Scala's `if` types as the lub (`java.lang.
     val p = port(
@@ -289,11 +289,10 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   test("JS-E05 — a WIDENING branch is converted TOO: scala 3 has NO weak conformance") {
-    // The cell this suite used to enshrine, and it was FALSE. Scala 2's weak conformance made
-    // `if (b) i else d` a `Double`; SCALA 3 DROPPED IT, so the two branches type as `Int | Double`,
-    // the `Int` branch BOXES, and the expression java computed as a `double` is a
-    // `java.lang.Integer` at run time. PROBED on 3.8.4 before this was written: `("" + x)` prints
-    // `3` where java prints `3.0`, and the `asInstanceOf[java.lang.
+    // Scala 3 has no weak conformance, so `if (b) i else d` types the two branches as `Int |
+    // Double`: the `Int` branch boxes, and the expression java computed as a `double` would be a
+    // `java.lang.Integer` at run time without this conversion — `("" + x)` would print `3` where
+    // java prints `3.0`.
     val p = port("public class E { double f(boolean b, int i, double d) { return b ? i : d; } }")
     assertConsults(p, JS.E(5), fired = true)
     assertEmits(p, "i.asInstanceOf[scala.Double]")
@@ -309,8 +308,8 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   test("JS-E05 — an operand the SOURCE already cast is read AFTER its cast, and ONCE") {
-    // The defect this pass shipped and the CORPUS caught, on the first `measure-all`. `be.getType`
-    // is the type Spoon records BEFORE the source's own casts, which `expr` applies on top — so a
+    // `be.getType` is the type Spoon records BEFORE the source's own casts, which `expr` applies
+    // on top — so a
     // `(float) Math.asin(…)` operand of a `float` conditional reads as a `double`, earns a
     // narrowing, and gets one more `asInstanceOf[scala.Float]` stacked on a term that is already a
     // `Float`.
@@ -350,11 +349,11 @@ class CatalogAreaESpec extends PortSuite:
   // -- JS-E06: a cast expression's TYPE is the cast's, and the enclosing context converts THAT ----
 
   test("JS-E06 — a cast expression at a REFERENCE slot boxes at the CAST's type, not the operand's") {
-    // `ENGINE-LIMITS.md` K17 face 3, at the shape that produced it. JLS 5.1.7 boxes the expression's
-    // OWN type, and a cast expression's type is the cast's — so `(long) Math.ceil(d)` returned from
-    // a method declared `Object` is a `java.lang.Long`. Read as the operand's pre-cast `double` the
-    // port wrote `.asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]`, which is an ASSERTION
-    // that a `Long` is a `Double`: `class java.lang.Long cannot be cast to class java.lang.
+    // JLS 5.1.7 boxes the expression's own type, and a cast expression's type is the cast's — so
+    // `(long) Math.ceil(d)` returned from a method declared `Object` is a `java.lang.Long`. Read as
+    // the operand's pre-cast `double`, the port would instead write
+    // `.asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]`, asserting that a `Long` is a
+    // `Double` — a `ClassCastException` at run time.
     val p = port(
       """public class E {
         |  public Object f(double d) { return (long) Math.ceil(d); }

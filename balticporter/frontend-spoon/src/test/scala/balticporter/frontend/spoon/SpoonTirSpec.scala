@@ -163,7 +163,7 @@ class SpoonTirSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // …and the TYPE, which had no translator at all — `ENGINE-LIMITS.md` T16.
+  // …and the TYPE, which had no translator at all.
 
   private val typeAnnotated =
     """package demo;
@@ -186,8 +186,8 @@ class SpoonTirSpec extends munit.FunSuite:
     )
 
   test("a TYPE's argument-bearing annotation is DROPPED when the port claims no family") {
-    // §1(b): the empty parameter is the no-op, and the no-op is what every port did before the
-    // translator existed. The drop is REPORTED — `omissions` is where a port reads it.
+    // The empty parameter is the no-op, matching what every port did before the translator
+    // existed. The drop is reported — `omissions` is where a port reads it.
     val p = SpoonTir.fromSource(typeAnnotated)
     assertEquals(typeAnns(p, "demo.Model"), (Nil, List("demo.Ser")))
   }
@@ -220,7 +220,7 @@ class SpoonTirSpec extends munit.FunSuite:
     assertEquals(AnnotationPolicy(List("com.foo.")).claims("com.foo.Bar"), p.claims("com.foo.Bar"))
   }
 
-  // ---- isFinal on external types (K18) ----
+  // ---- isFinal on external types ----
 
   test("an external FINAL class (java.lang.String) is interned with isFinal = true") {
     val p = SpoonTir.fromSource(

@@ -7,7 +7,7 @@ import spoon.reflect.declaration.*
 import spoon.reflect.reference.*
 import spoon.support.compiler.VirtualFile
 
-/** THE ONE CLASSIFICATION OF A TYPE REFERENCE — `CLAUDE.md` §4.56's match-arm rule, pinned. */
+/** The single classification of a type reference; every caller matches on this shape instead of re-deriving it. */
 class TypeShapeSpec extends munit.FunSuite:
 
   private val src =
@@ -64,8 +64,8 @@ class TypeShapeSpec extends munit.FunSuite:
         case SpoonTir.TypeShape.Wildcard(_, _, _) => ()
         case other                                => fail(s"$f's argument classified as $other, not Wildcard")
     }
-    // …and the NESTED one, which is the position `ENGINE-LIMITS.md` G21 is about: `Class<?>` is a
-    // type this port can write, and its argument is the `?` the variable arm used to claim.
+    // …and the nested one: `Class<?>`'s argument is a wildcard, not a type variable, even though
+    // Spoon models a wildcard reference as a subtype of a type-parameter reference.
     SpoonTir.TypeShape.of(argRef("nestedWildcard")) match
       case SpoonTir.TypeShape.Wildcard(_, _, _) => ()
       case other                                => fail(s"Class<?>'s argument classified as $other, not Wildcard")

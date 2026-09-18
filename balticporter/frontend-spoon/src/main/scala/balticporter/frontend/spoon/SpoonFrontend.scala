@@ -16,10 +16,10 @@ import spoon.reflect.reference.*
 import java.nio.file.{ Files, Path }
 import scala.jdk.CollectionConverters.*
 
-/** Frontend on Spoon 11.x (ECJ underneath, full-classpath mode, comments enabled). The only module that sees Spoon types (DESIGN.md §3.2 insulation rule).
+/** Frontend on Spoon 11.x (ECJ underneath, full-classpath mode, comments enabled). The only module that sees Spoon types.
   * @param preservedAnnotationPrefixes
-  *   annotation packages carried through verbatim, by FQN prefix (CLAUDE.md §1(b): which annotations are behaviour-bearing is a library fact, never java's). `Nil` preserves only
-  *   `java.lang.Deprecated`; anything else reported via `unsupported`.
+  *   annotation packages carried through verbatim, by FQN prefix — which annotations are behaviour-bearing is a library fact, never java's. `Nil` preserves only `java.lang.Deprecated`; anything else
+  *   reported via `unsupported`.
   */
 final class SpoonFrontend(preservedAnnotationPrefixes: List[String] = Nil) extends Frontend:
 
@@ -55,7 +55,7 @@ final class SpoonFrontend(preservedAnnotationPrefixes: List[String] = Nil) exten
     if cfg.resolutionRoots.nonEmpty then
       // whole roots participate in resolution; conversion is limited to cfg.files
       cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
-      // §5.4 on both operands, STRICT on both — see the same block in `SpoonTir.buildModel`.
+      // real path comparison on both operands, strict on both — see the same block in `SpoonTir.buildModel`.
       val covered = cfg.resolutionRoots.map(r => RealPath.ofExisting(r, "resolution root"))
       cfg.files
         .map(f => RealPath.ofExisting(cfg.sourceRoot.resolve(f), s"declared source file $f"))
@@ -690,7 +690,7 @@ final private class UnitBuilder(sourcePath: String, source: String, preservedAnn
     }
     if midCaseBreaks then breakLoops += s
     // pre-compute each case's (bodyStmts, terminated); fallthrough closure = own body
-    // ++ the next case's closure when not terminated (tail duplication, RESEARCH §4.2)
+    // ++ the next case's closure when not terminated (tail duplication)
     val split = cases.map { c =>
       val stmts = effStmts(c)
       stmts.reverse match
@@ -1002,7 +1002,7 @@ final private class UnitBuilder(sourcePath: String, source: String, preservedAnn
         case t => Select(expr(t), ref.getSimpleName)
 
   /** When a this-access inside a named inner class refers to an enclosing type, returns that type's simple name (the `Outer.this` qualifier). None for the ordinary own-instance case, and inside
-    * anonymous/local classes (their outer accesses resolve lexically and stay bare — the M2/M3-green encoding).
+    * anonymous/local classes, whose outer accesses resolve lexically and stay bare.
     */
   private def outerThisName(ta: CtThisAccess[?]): Option[String] =
     val thisTypeQ = Option(ta.getType).map(_.getQualifiedName)

@@ -17,7 +17,7 @@ class StructuralAssertionsSpec extends PortSuite:
   test("assertDecides sees a decision a phase RECORDED, which no emitted text states") {
     val p = port(renamed, new PackageRenameTransform(Map("p" -> "q")))
     // the emitted text says `package q`; it does not say that a POLICY entry moved it, which is the
-    // question an agent reading the file in another repository actually asks (§4.575).
+    // question an agent reading the file in another repository actually asks.
     assertEmits(p, "package q")
     assertDecides(p, Decision.Kind.RenamedPackage, about = "p.Renamed")
   }
@@ -37,7 +37,7 @@ class StructuralAssertionsSpec extends PortSuite:
     val p = port(renamed, new PackageRenameTransform(Map("p" -> "q")))
     assertDecides(p, Decision.Kind.RenamedPackage, about = "p.Renamed")
     // `q.Renamed` is what the file says and is NOT what the decision is keyed on: a rename runs
-    // last (§4.56), so every decision recorded before it names an upstream symbol.
+    // last, so every decision recorded before it names an upstream symbol.
     intercept[munit.FailException](assertDecides(p, Decision.Kind.RenamedPackage, about = "q.Renamed"))
   }
 
@@ -101,8 +101,8 @@ class StructuralAssertionsSpec extends PortSuite:
   }
 
   test("the two emitters are two RECORDINGS — reading the preview does not disturb `out`") {
-    // `TirEmitter.srcMap` and the member digests are values one emitter owns (§5.1). A preview that
-    // shared the instance would leave a spec asserting about a recording made twice.
+    // `TirEmitter.srcMap` and the member digests are values one emitter owns. A preview that shared
+    // the instance would leave a spec asserting about a recording made twice.
     val first = jumpy.out
     jumpy.previewOut
     assertEquals(jumpy.out, first)
@@ -110,8 +110,8 @@ class StructuralAssertionsSpec extends PortSuite:
   }
 
   test("with nothing unrenderable, preview and deliverable agree once the fences come off") {
-    // `DESIGN.md` §6.4's standing claim in miniature: at zero refusals the two modes are the same
-    // emitter over the same tree. This is the fixture that would see them diverge.
+    // At zero refusals the two modes are the same emitter over the same tree; this is the fixture
+    // that would see them diverge.
     val p = port(renamed)
     assertEquals(p.previewOut, p.out)
   }

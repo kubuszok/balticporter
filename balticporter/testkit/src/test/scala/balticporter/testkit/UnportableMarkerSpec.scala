@@ -2,7 +2,7 @@ package balticporter.testkit
 
 import balticporter.tir.*
 
-/** THE MARKER (`DESIGN.md` §6.2/§6.4/§6.5), under test end to end. */
+/** The unportable-construct marker, under test end to end. */
 class UnportableMarkerSpec extends PortSuite:
 
   private val src = "package p; public class M { public int go(int a) { return a + 1; } }"
@@ -26,16 +26,16 @@ class UnportableMarkerSpec extends PortSuite:
           )
         )
 
-  // a `lazy val`, not a `def`: `Ported.emitter` is a value that RECORDS as it renders (§5.1), so a
-  // fresh fixture per call would hand each test an emitter that has emitted nothing.
+  // a `lazy val`, not a `def`: `Ported.emitter` is a value that records as it renders, so a fresh
+  // fixture per call would hand each test an emitter that has emitted nothing.
   private lazy val marked = port(src, new Mint)
 
   // -- the smart constructor -----------------------------------------------------------------
 
   test("a marker must point at REAL JAVA — a synthetic origin is refused at construction") {
-    // §6.2's rule, and the precondition `markerKey` depends on: `<synthetic>:0:0` would collapse
-    // every marker in a program onto ONE key, and the conservation check would then report nothing
-    // while looking correct.
+    // the precondition `markerKey` depends on: `<synthetic>:0:0` would collapse every marker in a
+    // program onto one key, and the conservation check would then report nothing while looking
+    // correct.
     val t = Tree.Literal(Constant.UnitC, TypeRepr.NoType, Origin.synthetic)
     intercept[IllegalArgumentException](Tree.Unportable.open(t, UnportableKind.FrontendBlindSpot, scala.None, "x", TypeRepr.NoType, Origin.synthetic))
   }
@@ -107,8 +107,8 @@ class UnportableMarkerSpec extends PortSuite:
   }
 
   test("a marker whose whole DECLARATION is gone is not an erasure — no exemption list needed") {
-    // §6.5's own risk row. The owner answers it: if the declaration is gone then so is everything
-    // in it, and the marker went WITH the code rather than being taken out of it.
+    // if the declaration is gone then so is everything in it, and the marker went with the code
+    // rather than being taken out of it.
     class DropTheMethod extends Phase:
       def name:                                                           String        = "test/drop-method"
       override def transformClassDef(c: Tree.ClassDef)(using p: Program): Tree.ClassDef =

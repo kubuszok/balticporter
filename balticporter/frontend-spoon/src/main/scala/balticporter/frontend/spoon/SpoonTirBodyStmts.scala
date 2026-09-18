@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-// Split out of SpoonTir.scala for file size (context diet S2): BodyTranslator's statement-side lowering.
+// Split out of SpoonTir.scala for file size: BodyTranslator's statement-side lowering.
 
 import balticporter.core.{ AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions }
 import balticporter.catalog.{ CatalogLog, Dispatch, JS, Lowering, Obligations, Typing }
@@ -106,7 +106,7 @@ private[spoon] trait SpoonTirBodyStmts:
       primRank.get(lt.getSimpleName).exists(l => primRank.get(rt.getSimpleName).exists(r => math.max(r, primRank("int")) > l))
     if narrow then Some(lt) else scala.None
 
-  /** THE STATEMENT DISPATCH — obligation wrapper sits HERE, not per-arm, so no arm can opt out of it (DESIGN.md §2.8). `Lowering.of` maps the runtime class to its registry name once.
+  /** THE STATEMENT DISPATCH — obligation wrapper sits HERE, not per-arm, so no arm can opt out of it. `Lowering.of` maps the runtime class to its registry name once.
     */
   private[spoon] def stmtKind(s: CtStatement): Statement =
     // `s` is the SUBJECT — the node itself, so a delegation into the expression dispatch
@@ -173,7 +173,7 @@ private[spoon] trait SpoonTirBodyStmts:
       Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
     case t: CtTryWithResource =>
       // SE9 form (`try (existingLocal)`, JLS 14.20.3) is a variable REFERENCE, not a
-      // `CtLocalVariable` — refused LOUDLY (M6) rather than silently closing one resource fewer
+      // `CtLocalVariable` — refused loudly rather than silently closing one resource fewer
       val res = t.getResources.asScala.toList.map {
         case lv: CtLocalVariable[?] =>
           val rt = tpe(lv.getType)
@@ -231,7 +231,7 @@ private[spoon] trait SpoonTirBodyStmts:
     case c: CtComment => Tree.Literal(Constant.UnitC, unitT, originOf(c))
     // A METHOD-LOCAL NAMED CLASS — JLS 14.3, catalog JS-C30. Two things this arm decides that the
     // DECLARATION path does not: OWNER is the enclosing EXECUTABLE, not the enclosing TYPE (Spoon
-    // reports the type, which would render a member reference that does not exist — §4.56's chain
+    // reports the type, which would render a member reference that does not exist — ownership
     // still reaches the unit through the method); NAME is java's SOURCE name (Spoon's is
     // binary-disambiguated, not a legal identifier). Captures need no lowering.
     case c: CtClass[?] =>
@@ -244,12 +244,12 @@ private[spoon] trait SpoonTirBodyStmts:
       classDef(c, owner = Some(methodId), sourceName = Some(localName(c)), selfClass = classId, outerVars = varScope)
     // NO ARM EXISTS for this Java statement kind. A MARKER, not a throw: the failure is the
     // size of the construct rather than the size of the file, and the gate still refuses to
-    // ship the port (§6.4). `unitT` because a statement produces no value.
+    // ship the port. `unitT` because a statement produces no value.
     case other => unlowered(other, s"statement ${SpoonKinds.nameOf(other.getClass)}", unitT)
 
-  /** THE ENHANCED-FOR'S ITERABLE, at the type JAVA READ IT AT (ENGINE-LIMITS G31). JLS 14.14.2 iterates at `Iterable<T>` found among the supertypes, not the expression's own type — an F-BOUNDED
-    * wildcard capture fails at an INFERRED type in scala (`E057`) unless ascribed here. Ordinary bounded wildcards are left alone (capture-convert unaided, §5's widening rule). Declines where the
-    * found `Iterable` argument mentions a type VARIABLE (§4.6).
+  /** THE ENHANCED-FOR'S ITERABLE, at the type JAVA READ IT AT. JLS 14.14.2 iterates at `Iterable<T>` found among the supertypes, not the expression's own type — an F-BOUNDED wildcard capture fails at
+    * an INFERRED type in scala (`E057`) unless ascribed here. Ordinary bounded wildcards are left alone (capture-convert unaided). Declines where the found `Iterable` argument mentions a type
+    * VARIABLE.
     */
   private[spoon] def iterableOperand(e: CtExpression[?]): Term =
     val t  = expr(e)
@@ -260,7 +260,7 @@ private[spoon] trait SpoonTirBodyStmts:
       case scala.None => t
 
   /** is this an application with a WILDCARD at a SELF-REFERENTIALLY bounded slot — the one shape scala's capture conversion cannot answer? Read off the DECLARATION's own bounds, and the unreadable
-    * answer is `false`, which is the pre-rule emission: the failure path leaves the port exactly where it was rather than interposing a view on evidence nobody has (§4.6).
+    * answer is `false`, which is the pre-rule emission: the failure path leaves the port exactly where it was rather than interposing a view on evidence nobody has.
     */
   private[spoon] def fboundWildcardUse(r: CtTypeReference[?]): Boolean = TypeShape.of(r) match
     case TypeShape.Named(_, as) if as.nonEmpty =>
@@ -271,8 +271,7 @@ private[spoon] trait SpoonTirBodyStmts:
       }
     case _ => false
 
-  /** `java.lang.Iterable<E>` as reached from `r`'s supertypes, and only where `E` is a type this scope can WRITE — java's own enhanced-for lookup, with §4.6's honest decline.
-    */
+  /** `java.lang.Iterable<E>` as reached from `r`'s supertypes, and only where `E` is a type this scope can WRITE — java's own enhanced-for lookup, with an honest decline where it cannot. */
   private[spoon] def javaIterableSuper(r: CtTypeReference[?]): Option[CtTypeReference[?]] =
     def walk(ref: CtTypeReference[?], fuel: Int): Option[CtTypeReference[?]] =
       if ref == null || fuel <= 0 then scala.None
@@ -347,9 +346,7 @@ private[spoon] trait SpoonTirBodyStmts:
 
   /** Java's UNCHECKED generic conversion — converts a RAW-typed value to any instantiation without a check; emits exactly the cast java performs implicitly.
     */
-  /** JS-G31 — a POLY EXPRESSION (JLS 15.2), typed by the slot it fills: a cast would elaborate the literal to `scala.FunctionN` first then fail, so emit it AT THE SLOT, never a cast (scala 3.8.4,
-    * ENGINE-LIMITS F8).
-    */
+  /** JS-G31 — a POLY EXPRESSION (JLS 15.2), typed by the slot it fills: a cast would elaborate the literal to `scala.FunctionN` first then fail, so emit it AT THE SLOT, never a cast. */
   private[spoon] def polyExpression(e: CtExpression[?]): Boolean =
     e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtExecutableReferenceExpression[?, ?]]
 
@@ -384,8 +381,8 @@ private[spoon] trait SpoonTirBodyStmts:
           case _ => t
       }
 
-  /** the LAMBDA whose own type is the target this argument ascribes to — the argument itself, or a BRANCH of a poly CONDITIONAL (JLS 15.25 pushes the target type through both branches, ENGINE-LIMITS
-    * K30 face 3). Target ascribed on the WHOLE conditional, not each branch. `polyExpression` deliberately NOT widened to match — different catalog population.
+  /** the LAMBDA whose own type is the target this argument ascribes to — the argument itself, or a BRANCH of a poly CONDITIONAL (JLS 15.25 pushes the target type through both branches). Target
+    * ascribed on the WHOLE conditional, not each branch. `polyExpression` deliberately NOT widened to match — different catalog population.
     */
   private[spoon] def samLambdaOf(e: CtExpression[?]): Option[CtLambda[?]] = e match
     case l: CtLambda[?]      => Some(l)
@@ -394,8 +391,8 @@ private[spoon] trait SpoonTirBodyStmts:
     case _ => scala.None
 
   /** is the callee overloaded at this arity, AND does the slot at argument `i` fail to give scala an expected type — read off the declaring type's ALL methods (java's overload set spans the
-    * hierarchy) by QUALIFIED NAME. Fires when alternatives DISAGREE at `i`, or agree on a TYPE VARIABLE not yet inferred. Unreadable declaration → no alternatives (§4.6); `RuntimeException` only, so
-    * a deep model's `StackOverflowError` is not swallowed.
+    * hierarchy) by QUALIFIED NAME. Fires when alternatives DISAGREE at `i`, or agree on a TYPE VARIABLE not yet inferred. Unreadable declaration → no alternatives; `RuntimeException` only, so a deep
+    * model's `StackOverflowError` is not swallowed.
     */
   private[spoon] def overloadedSamSlot(ex: CtExecutableReference[?], arity: Int, i: Int): Boolean =
     val alts: List[List[CtTypeReference[?]]] =
@@ -443,7 +440,7 @@ private[spoon] trait SpoonTirBodyStmts:
       packed.map(headTs :+ _)
 
   /** the casts an ARGUMENT ARM added, removed; the ones the JAVA SOURCE wrote, kept. Unreadable cast list DECLINES (not "java wrote none") — a term left as-is is at worst a cast too many.
-    * `RuntimeException` only, so a `StackOverflowError` is not swallowed (CLAUDE.md §4.58).
+    * `RuntimeException` only, so a `StackOverflowError` is not swallowed.
     */
   private[spoon] def uncastAdded(t: Term, e: CtExpression[?]): Term =
     val own = try Some(e.getTypeCasts.size)
@@ -460,9 +457,9 @@ private[spoon] trait SpoonTirBodyStmts:
     own.fold(t)(n => strip(t, depth(t) - n))
 
   /** THE FORMAL OF AN INHERITED CALLEE, with the ANCESTOR's type variables replaced by what THIS class instantiated them with — `None` where nothing substitutes (`extends` says what THIS class
-    * instantiated it as, `ParentSubst`, CLAUDE.md §4.56). Declines a WILDCARD formal.
+    * instantiated it as, `ParentSubst`). Declines a WILDCARD formal.
     */
-  /** how many `[]` a type reference carries — decides whether a cast at an inherited formal is a translation or a `ClassCastException` (ENGINE-LIMITS G26).
+  /** how many `[]` a type reference carries — decides whether a cast at an inherited formal is a translation or a `ClassCastException`.
     */
   private[spoon] def arrayDims(tr: CtTypeReference[?]): Int = tr match
     case a: CtArrayTypeReference[?] => 1 + arrayDims(a.getComponentType)
@@ -509,8 +506,8 @@ private[spoon] trait SpoonTirBodyStmts:
       e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
     // …the INHERITED formal, which the gates below cannot reach: a formal written as an
     // ancestor's own type variable is not `isGenericUse` at all ([[inheritedFormal]] resolves it
-    // via the `extends` clause). A DIMENSION MISMATCH DECLINES rather than casts (G26) — a cast
-    // would make an arity defect COMPILE and throw at run time instead of a loud typer error.
+    // via the `extends` clause). A DIMENSION MISMATCH DECLINES rather than casts — a cast would
+    // make an arity defect COMPILE and throw at run time instead of a loud typer error.
     // Computed ONCE, behind the two cheap tests.
     val inherited =
       if target == null || et == null || bad then scala.None
@@ -556,14 +553,14 @@ private[spoon] trait SpoonTirBodyStmts:
         val subst = fs.map(_.getSimpleName).zip(as).collect { case (n, a) if a != null && tpNameableHere(a) => n -> tpe(a) }.toMap
         // EVERY variable, or none: a partial substitution leaves `substFormal`'s by-NAME fallback
         // to answer for the rest, and that resolves an enclosing scope's variable of the same
-        // spelling (CLAUDE.md §4.56).
+        // spelling.
         val vars = typeVarsOf(target)
         if subst.isEmpty || vars.isEmpty || !vars.forall(subst.contains) then scala.None
         else substFormal(target, subst)
     }
 
   /** JS-G13's clause, as a function of the SLOT — java's array covariance (JLS 10.10) puts a value of one array type where another is declared, and scala's `Array` is invariant. Extracted so
-    * [[coerce]]/[[slotConsults]] read ONE predicate (ENGINE-LIMITS F8).
+    * [[coerce]]/[[slotConsults]] read one predicate.
     */
   private[spoon] def arrayCovSlot(target: CtTypeReference[?], et: CtTypeReference[?]): Boolean =
     target != null && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&
@@ -592,7 +589,7 @@ private[spoon] trait SpoonTirBodyStmts:
       (mentionsRawGeneric(et) || mentionsRawGeneric(target))
 
   /** THE SLOT ROWS, consulted at every arm that has a slot — JS-G09, JS-G13, JS-G14. One function, six call sites (`Differences.everySlot`, one JLS 5.2 conversion). Called from the ARM, never
-    * [[coerce]] (unreached for a slot-less node, honest discharge). Reads [[castType]] bare, same as `coerce` (ENGINE-LIMITS K17, CLAUDE.md §4.6).
+    * [[coerce]] (unreached for a slot-less node, honest discharge). Reads [[castType]] bare, same as `coerce`.
     */
   private[spoon] def slotConsults(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)(using Obligations): Unit =
     val pairs = slots.map((tg, e) => (tg, castType(e)))
@@ -608,7 +605,7 @@ private[spoon] trait SpoonTirBodyStmts:
   private[spoon] def slotConsultsAt(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)(using Obligations): Unit = slotConsults(slots, at)
 
   /** the (formal, argument) pairs of a call — the slot list [[slotConsults]] wants. Empty where arities disagree (same case `coerceArgs` declines). Formals read BARE — a `catch` here would fabricate
-    * "this callee takes no parameters" (CLAUDE.md §4.6).
+    * "this callee takes no parameters".
     */
   private[spoon] def argSlots(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): List[(CtTypeReference[?], CtExpression[?])] =
     val formals = ex.getParameters.asScala.toList
@@ -618,7 +615,7 @@ private[spoon] trait SpoonTirBodyStmts:
     val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
     // the type the COERCED TERM actually has — [[castType]], not `e.getType`, since `expr`
     // already folded java's own casts onto it (JLS 5.2, 5.3). Matters for `boxing` below, which
-    // names the WRAPPER to convert to, not just whether to (ENGINE-LIMITS K17 face 3).
+    // names the WRAPPER to convert to, not just whether to.
     val et        = castType(e)
     val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
       primRank.get(target.getSimpleName).exists(tr => primRank.get(et.getSimpleName).exists(_ > tr))
@@ -666,14 +663,14 @@ private[spoon] trait SpoonTirBodyStmts:
         downcast // Object → specific
     if cast then
       // a target naming an ANCESTOR's type variable is rendered through the `extends` clause
-      // ([[uncheckedGeneric]]'s own fact, ENGINE-LIMITS G12) — else `tpe` renders a sentinel
-      // `Array[?]`. Asked ONLY where a cast is really emitted, to avoid moving denominators for nothing.
+      // ([[uncheckedGeneric]]'s own fact) — else `tpe` renders a sentinel `Array[?]`. Asked ONLY
+      // where a cast is really emitted, to avoid moving denominators for nothing.
       val cct = if mentionsAnyTypeVar(target) then inheritedFormal(target).getOrElse(ct) else ct
       Tree.Typed(t, tt(cct, e), cct, originOf(e))
     else if unchecked then
       // a CONDITIONAL's unchecked conversion belongs to its BRANCHES (java assigns each operand
-      // to the target type separately, K30 face 3) — recurses through `coerce`, not
-      // `uncheckedGeneric` directly, so each branch gets whatever conversion IT needs
+      // to the target type separately) — recurses through `coerce`, not `uncheckedGeneric`
+      // directly, so each branch gets whatever conversion IT needs
       conditionalBranches(e, t) match
         case Some((c, i)) =>
           val th = coerce(target, c.getThenExpression, i.thenp, arrayCov, tpToObject, unchecked)
@@ -722,7 +719,7 @@ private[spoon] trait SpoonTirBodyStmts:
   )
 
   /** `wrapper.<prim>Value()` — explicit unboxing to a primitive, plus the WIDENING beside it where a shortcut would name a nonexistent member. Java's unboxing is TWO conversions (JLS 5.1.8 then
-    * 5.1.2); collapsed to one call for the six `Number` wrappers (ENGINE-LIMITS K17 face 2). `Character`/`Boolean` are NOT `Number`s — emitted as two explicit steps instead.
+    * 5.1.2); collapsed to one call for the six `Number` wrappers. `Character`/`Boolean` are NOT `Number`s — emitted as two explicit steps instead.
     * @param from
     *   the wrapper's FQN — the SOURCE, known by both callers.
     */
@@ -747,7 +744,7 @@ private[spoon] trait SpoonTirBodyStmts:
       case None      => TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
 
   /** Java VARARGS at the CALL SITE (`T...` emitted `Array[T]`) — materializes the array java would build; already-array/generic components pass through. Stops at an EXTERNAL callee's `T...` (class
-    * file, read REPEATED — K6.5). [[varargHoldsArray]] below: cast wins, primitive component must match exactly, bare `null` counts, array dimension decides (G26, F8).
+    * file, read REPEATED). [[varargHoldsArray]] below: cast wins, primitive component must match exactly, bare `null` counts, array dimension decides.
     */
   /* …and every one of the three reads below is BARE, because `varargPack` — the TRANSLATION
      this predicate is about, which calls this very function — reads all three bare within ten
@@ -756,8 +753,8 @@ private[spoon] trait SpoonTirBodyStmts:
      unwrapped can only ever hide a divergence between the two, and each default was a
      statement rather than an absence: `getComponentType` failing answered *the components
      agree* (so the argument passes through and java's `new Object[]{ x }` is not built),
-     `getTypeCasts` failing answered *the source wrote no cast*. `CLAUDE.md` §4.6. The `null`
-     handling is unchanged — an absent `getType` is normal under `noClasspath` and is what the
+     `getTypeCasts` failing answered *the source wrote no cast*. The `null` handling is
+     unchanged — an absent `getType` is normal under `noClasspath` and is what the
      `collectFirst` declines on. */
   private[spoon] def varargHoldsArray(comp: CtTypeReference[?], e: CtExpression[?]): Boolean =
     def componentAgrees(arr: CtArrayTypeReference[?]): Boolean =
@@ -770,9 +767,9 @@ private[spoon] trait SpoonTirBodyStmts:
     (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }.exists(componentAgrees) ||
     (e match { case lit: CtLiteral[?] => lit.getValue == null && casts.isEmpty; case _ => false })
 
-  /** the callee's declared parameters, or `scala.None` where the declaration cannot be read (CLAUDE.md §4.6), shared by [[varargPack]]/[[callConsults]] so they never disagree. At a `CtNewClass` the
-    * parser SYNTHESISES a wrong declaration (§4.59) — Spoon's anonymous-subtype constructor has no real parameter list — so the SUPERCLASS's constructor is read instead (JLS 15.9.5.1), chosen by the
-    * ERASED parameter types the reference carries.
+  /** the callee's declared parameters, or `scala.None` where the declaration cannot be read, shared by [[varargPack]]/[[callConsults]] so they never disagree. At a `CtNewClass` the parser SYNTHESISES
+    * a wrong declaration — Spoon's anonymous-subtype constructor has no real parameter list — so the SUPERCLASS's constructor is read instead (JLS 15.9.5.1), chosen by the ERASED parameter types the
+    * reference carries.
     */
   private[spoon] def declParams(ex: CtExecutableReference[?]): Option[List[CtParameter[?]]] =
     anonSuperCtor(ex).orElse(execDeclOf(ex)).map(_.getParameters.asScala.toList)
@@ -806,7 +803,7 @@ private[spoon] trait SpoonTirBodyStmts:
     // BARE, for [[argSlots]]' reason: `coerceArgsFixed` and `passedThrough` both read
     // `isExternalCallee` unwrapped, and `false` here is not "unknown" — it is *this callee is
     // one of ours*, which is the fact JS-G37 and JS-G39/G40 are the two sides of, so a swallowed
-    // failure would move the consult from one row to its opposite (`CLAUDE.md` §4.6).
+    // failure would move the consult from one row to its opposite.
     val external = isExternalCallee(ex)
     val ps       = declParams(ex)
     val variadic = ps.exists(l => l.nonEmpty && l.last.isVarArgs)
@@ -846,14 +843,13 @@ private[spoon] trait SpoonTirBodyStmts:
           case arr: CtArrayTypeReference[?] => arr.getComponentType
           case _ => null
         // already an array in the vararg slot — passed THROUGH where the callee is ours, a
-        // SPREAD at an external one (see `passThrough`). Component types must agree (java
-        // packs a primitive array mismatch instead, CLAUDE.md §4.4); reference components pass
+        // SPREAD at an external one (see `passThrough`). Component types must agree (java would
+        // otherwise pack a primitive array mismatch instead); reference components pass
         val passesArray = argEs.sizeIs == l.size && varargHoldsArray(comp, argEs.last)
         // the vararg element type, in priority order: the DECLARED component when concrete
-        // (preferred over argument inference — ENGINE-LIMITS §0/G1, erase USES never
-        // DECLARATIONS, 94 errors otherwise); else the RECEIVER's instantiation for a known
-        // receiver's own type variable (ENGINE-LIMITS G12); else inferred from the trailing
-        // arguments' own type, only when they all agree on one concrete type
+        // (preferred over argument inference — erase USES, never DECLARATIONS); else the
+        // RECEIVER's instantiation for a known receiver's own type variable; else inferred from
+        // the trailing arguments' own type, only when they all agree on one concrete type
         val elemRef: Option[CtTypeReference[?]] =
           if comp != null && tpConcrete(comp) then Some(comp)
           else if comp != null && !comp.isInstanceOf[CtTypeParameterReference] then Some(comp)
@@ -873,8 +869,8 @@ private[spoon] trait SpoonTirBodyStmts:
         else
           val (head, rest) = argEs.splitAt(fixed)
           val fixedTerms   = head.zipWithIndex.map((e, i) => coerce(l(i).getType, e, expr(e)))
-          // THE ELEMENT TYPE, with an ANCESTOR's type variables replaced (ENGINE-LIMITS G26) —
-          // else `tpe` renders a `?H` sentinel. [[inheritedFormal]] is the SAME lookup the
+          // THE ELEMENT TYPE, with an ANCESTOR's type variables replaced — else `tpe` renders a
+          // `?H` sentinel. [[inheritedFormal]] is the SAME lookup the
           // inherited-formal cast uses; `scala.None` where nothing substitutes. Argument
           // INFERENCE remains refused here (measured worse, 81 -> 83, twice).
           val ct    = inheritedFormal(elemRef.get).getOrElse(tpe(elemRef.get))
@@ -885,9 +881,9 @@ private[spoon] trait SpoonTirBodyStmts:
                               else Tree.NewArray(TypeTree(ct, o), Nil, Some(elems), at, o)))
       case _ => None
 
-  /** java already holds the array and passes it WHOLE through the `T...` slot — the MIRROR of the pack above (ENGINE-LIMITS K6.5). Callee OURS: `None`, ordinary argument list. Callee a CLASS FILE:
-    * scalac reads `T...` as REPEATED and a bare array conforms as ONE element (a silent `Object`-element bug, CLAUDE.md §4.4, or an uncounted compile error otherwise) — so the array is SPREAD
-    * (`arr*`), which still ALIASES `arr` as java's pass-through does.
+  /** java already holds the array and passes it WHOLE through the `T...` slot — the MIRROR of the pack above. Callee OURS: `None`, ordinary argument list. Callee a CLASS FILE: scalac reads `T...` as
+    * REPEATED and a bare array conforms as ONE element (a silent `Object`-element bug, or an uncounted compile error otherwise) — so the array is SPREAD (`arr*`), which still ALIASES `arr` as java's
+    * pass-through does.
     */
   private[spoon] def passedThrough(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], external: Boolean, recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
     if !external then None
@@ -933,8 +929,8 @@ private[spoon] trait SpoonTirBodyStmts:
       else Map.empty
 
   /** @param recvSubst
-    *   the RECEIVER's own type arguments ([[receiverTypeArgs]]) — THREADED from [[coerceArgs]], never re-derived (F8). Only [[nullToTypeParam]] reads it, for G12's rule: a callee's own type variables
-    *   do not resolve at the call site, but the CLASS's do.
+    *   the RECEIVER's own type arguments ([[receiverTypeArgs]]) — THREADED from [[coerceArgs]], never re-derived. Only [[nullToTypeParam]] reads it: a callee's own type variables do not resolve at
+    *   the call site, but the CLASS's do.
     */
   private[spoon] def coerceArgsFixed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], recvSubst: Map[String, CtTypeReference[?]] = Map.empty): List[Term] =
     // array covariance at call args DISABLED for OUR OWN methods (Spoon erases `T[]` to
@@ -967,8 +963,8 @@ private[spoon] trait SpoonTirBodyStmts:
     else argEs.map(expr)
 
   /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it (`m(null)` → `m(null.asInstanceOf[T])`). Dominant case: a self-call in scope. Second case: the
-    * RECEIVER's, G12's rule — the declaring CLASS's variables resolve through the receiver's type arguments, tried FIRST (exact, keyed on the DECLARING CLASS's own formals, unlike the name-based
-    * `resolveTypeParam`), and only for a variable the class declares (§4.56).
+    * RECEIVER's — the declaring CLASS's variables resolve through the receiver's type arguments, tried FIRST (exact, keyed on the DECLARING CLASS's own formals, unlike the name-based
+    * `resolveTypeParam`), and only for a variable the class declares.
     */
   private[spoon] def nullToTypeParam(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], recvSubst: Map[String, CtTypeReference[?]], t: Term): Term =
     val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
@@ -983,7 +979,7 @@ private[spoon] trait SpoonTirBodyStmts:
       // through the BARRIER-AWARE frame — *is this name WRITABLE here*, not just *does it
       // resolve* (`resolveTypeParam` sees every enclosing scope, including names java forbids).
       // [[tpAccessibleHere]] is used by every cast this frontend builds — deliberately WEAKER
-      // than `sameVarInScope` (measured 0 -> 2 on two ports, §5's narrowing-is-not-exempt).
+      // than `sameVarInScope`.
       case Some(tp: CtTypeParameterReference) if isNull && tpAccessibleHere(tp) =>
         cast(tp)
       case _ => t
@@ -1017,8 +1013,8 @@ private[spoon] trait SpoonTirBodyStmts:
       case _ => false
     // the THIRD value scala types wider than `Object` is one THIS FRONTEND made:
     // `execDef.anyForEquals` retypes `equals(Object)`'s parameter to `scala.Any`, so forwarding
-    // it hands `Any` to an `Object` slot. Read off THIS FRONTEND's own record (§4.56), not the
-    // java — the widening happened only at the DECLARATION.
+    // it hands `Any` to an `Object` slot. Read off THIS FRONTEND's own record, not the java — the
+    // widening happened only at the DECLARATION.
     val anyDeclared = t match
       case Tree.Ident(s, _, _) =>
         minter.infoOf(s) match
@@ -1049,7 +1045,7 @@ private[spoon] trait SpoonTirBodyStmts:
     Tree.Try(resources, blockTerm(t.getBody), catches, Option(t.getFinalizer).map(blockTerm), unitT, originOf(t))
 
   /** Java switch → TIR `Match`. Empty (grouping) cases merge their labels into the next; genuine fallthrough is lowered by TAIL DUPLICATION — a non-terminated case's body is its own statements
-    * followed by the next case's closure (the same faithful lowering the BIR frontend uses, RESEARCH §4.2), so no `Unsupported`.
+    * followed by the next case's closure (the same faithful lowering the BIR frontend uses), so no `Unsupported`.
     */
   private[spoon] def switchStmt(s: CtSwitch[?])(using Obligations): Term =
     val cases = s.getCases.asScala.toList
@@ -1070,7 +1066,7 @@ private[spoon] trait SpoonTirBodyStmts:
 
   /** A SWITCH EXPRESSION — JLS 15.28, catalog `JS-S09`. `CtSwitchExpression` does NOT extend `CtSwitch`; `Tree.Match` renders in either position, only the arms differ. THREE JLS rules: no fall-out
     * arm (EXHAUSTIVE, 15.28.1); an arm produces a VALUE (tail `yield` peeled, others stay [[Tree.Yield]] under a boundary); `yield` not unwrapped here. Fallthrough/break/label shared with the
-    * statement form via [[switchArms]] (ENGINE-LIMITS F8).
+    * statement form via [[switchArms]].
     */
   private[spoon] def switchExpr(sw: CtSwitchExpression[?, ?])(using Obligations): Term =
     val resT = ty(sw)
@@ -1148,7 +1144,7 @@ private[spoon] trait SpoonTirBodyStmts:
     // is really written, and stated HERE rather than inside `caseLabel` for two reasons: the
     // obligation is owed at the two switch kinds' dispatches, which is where the scope is; and
     // `caseLabel` has two arms — the lowered type pattern and the refused record one — so a
-    // consult written in each would be the F8 shape, one rule with two copies.
+    // consult written in each would be one rule with two copies.
     Obligations.consult(JS.S(10), originOf(el))(Option.when(cases.exists(_.getCaseExpressions.asScala.exists(_.isInstanceOf[CtCasePattern])))(()))
     val out     = List.newBuilder[Tree.CaseDef]
     var pending = List.empty[Term]
@@ -1173,8 +1169,8 @@ private[spoon] trait SpoonTirBodyStmts:
     out.result()
 
   /** one case LABEL — the SPLIT `JS-S10` is about. A TYPE PATTERN (JLS 14.11.1) lowers to `Tree.TypePattern` + `CaseDef.guard`; a RECORD pattern too ([[recordPattern]]). An UNNAMED pattern stays
-    * refused (no source builds one, ENGINE-LIMITS T19). MARKER minted HERE since `CtCasePattern` carries no source POSITION — carries the SELECTOR's type. The binding is an ordinary local, interning
-    * correctly even when two same-named arms shadow.
+    * refused, since no source this parser accepts builds one. MARKER minted HERE since `CtCasePattern` carries no source POSITION — carries the SELECTOR's type. The binding is an ordinary local,
+    * interning correctly even when two same-named arms shadow.
     */
   private[spoon] def caseLabel(e: CtExpression[?], c: CtCase[?], selT: TypeRepr): Term = e match
     case cp: CtCasePattern =>
@@ -1197,7 +1193,7 @@ private[spoon] trait SpoonTirBodyStmts:
 
   /** `case Point(int x, int y) ->` — java's RECORD PATTERN, as scala's constructor pattern. THE ONE DISTINCTION: JLS 14.30.2's UNCONDITIONAL component matches `null` ([[Tree.BindPattern]]), a
     * narrowing one ([[Tree.TypePattern]]) does not — asked of SPOON's `isSubtypeOf`. A component that is neither shape is refused IN PLACE. The RECORD must be one this run LOWERS (`JS-C43`'s
-    * `unapply`), decided STRUCTURALLY (§4.56), never by name.
+    * `unapply`), decided structurally, never by name.
     */
   private[spoon] def recordPattern(rp: CtRecordPattern, c: CtCase[?], selT: TypeRepr): Term =
     val rt = tpe(rp.getRecordType)
@@ -1267,7 +1263,7 @@ private[spoon] trait SpoonTirBodyStmts:
     case _ => t
 
   /** is this an ENHANCED switch STATEMENT — one java requires EXHAUSTIVE (JLS 14.11.2), so it does NOT fall out? Asks BOTH disjuncts: the LABEL shape, and the SELECTOR'S TYPE (a QUALIFIED ENUM
-    * CONSTANT betrays nothing in the label list, JEP 441). Label alone is WRONG (measured against javac). `noClasspath` unresolvable → `false` (§4.6, pre-existing).
+    * CONSTANT betrays nothing in the label list, JEP 441). Label alone is wrong against javac. `noClasspath` unresolvable → `false`.
     */
   private[spoon] def isEnhanced(cases: List[CtCase[?]], selector: CtExpression[?]): Boolean =
     cases.exists(_.getCaseExpressions.asScala.exists {
@@ -1292,8 +1288,8 @@ private[spoon] trait SpoonTirBodyStmts:
   )
 
   /** does the selector's type PROVABLY resolve to something outside [[ClassicSelectorTypes]]? `false` is the answer for everything this cannot see — an absent type, an unresolved name, a type
-    * parameter, an annotation type — the pre-existing behaviour rather than a fabricated fact (§4.6): keeps the fall-out arm java's classic form has. The one lookup wrapped is the RESOLUTION, where
-    * an absent value is normal under `noClasspath`.
+    * parameter, an annotation type: keeps the fall-out arm java's classic form has rather than fabricating a fact. The one lookup wrapped is the RESOLUTION, where an absent value is normal under
+    * `noClasspath`.
     */
   private[spoon] def selectorOutsideClassicSet(selector: CtExpression[?]): Boolean =
     val ref = try Option(selector.getType)

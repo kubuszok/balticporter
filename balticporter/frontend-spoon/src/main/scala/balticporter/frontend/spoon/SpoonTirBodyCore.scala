@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-// Split out of SpoonTir.scala for file size (context diet S2): BodyTranslator's own state, its small term-building helpers, and the exported view of its enclosing Builder.
+// Split out of SpoonTir.scala for file size: BodyTranslator's own state, its small term-building helpers, and the exported view of its enclosing Builder.
 
 import balticporter.core.{ AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions }
 import balticporter.catalog.{ CatalogLog, Dispatch, JS, Lowering, Obligations, Typing }

@@ -6,11 +6,10 @@ import scala.collection.mutable.ArrayBuffer
 class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
 
   test("spliterator reports JAVA'S OWN characteristics — the cell K23's refusal was about") {
-    // The whole content of that fix, and the one thing no compile can check.
-    // `buf.asJava.spliterator()` — the near miss the refusal rested on — reports NEITHER `ORDERED`
-    // nor `SIZED` where the `ArrayList` java held reports both, so a consumer reading
-    // `characteristics()` gets a different answer silently (CLAUDE.md §4.4). These assert the answer
-    // java's OWN defaults give, which is what the two helpers reproduce.
+    // `buf.asJava.spliterator()` reports neither `ORDERED` nor `SIZED` where the `ArrayList` java
+    // held reports both, so a consumer reading `characteristics()` gets a different answer silently
+    // and no compile catches it. These assert the answer java's own defaults give, which is what
+    // the two helpers reproduce.
     val ordered = JavaCollections.orderedSpliterator(ArrayBuffer("a", "b", "c"))
     assert(ordered.hasCharacteristics(java.util.Spliterator.ORDERED), "List.spliterator() passes ORDERED")
     assert(
@@ -37,9 +36,9 @@ class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
   }
 
   test("MEASURED: `asJava.spliterator()` agrees today — K23's recorded NEAR MISS does not reproduce") {
-    // K23 refused `spliterator` and its stated evidence was that `buf.asJava.spliterator()` reports
-    // NEITHER `ORDERED` nor `SIZED` where the `ArrayList` java held reports both. On scala 3.8.4 and
-    // this JDK that is FALSE: the converter hands back a `java.util.List` wrapper whose
+    // The claim above — that `buf.asJava.spliterator()` reports neither `ORDERED` nor `SIZED` where
+    // the `ArrayList` java held reports both — no longer holds on this scala and JDK: the converter
+    // hands back a `java.util.List` wrapper whose
     // `spliterator()` is `List`'s own default, so it reports ORDERED, SIZED and SUBSIZED — exactly
     // what the two helpers above produce, characteristics `16464` either way.
     import scala.jdk.CollectionConverters.*

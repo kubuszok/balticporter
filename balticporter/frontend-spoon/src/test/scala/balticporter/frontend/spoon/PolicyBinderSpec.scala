@@ -78,7 +78,7 @@ class PolicyBinderSpec extends munit.FunSuite:
     val p = tree(Substitutions.none)(source)
     val b = bind(p, "com.demo.Shop#make")
     assertEquals(b.why, Some(NotBound.Ambiguous(List("com.demo.Shop#make(Class)", "com.demo.Shop#make(String)"))))
-    // the message must be the string an agent EDITS (§4.575) — so the candidates appear verbatim.
+    // the message is what an agent reads and edits from, so the candidates appear verbatim.
     assert(clue(b.why.get.detail).contains("com.demo.Shop#make(Class)"))
     assert(clue(b.why.get.detail).contains("com.demo.Shop#make(String)"))
   }
@@ -126,9 +126,9 @@ class PolicyBinderSpec extends munit.FunSuite:
       |}""".stripMargin
 
   test("bindCallee reaches a DROPPED member's CALL SITES, which is the one thing bindMembers cannot") {
-    // `ENGINE-LIMITS.md` D7 in one assertion. The DECLARATION is gone and the key still fired, so
-    // the declaration-side answer is "bound, nothing to point at" — correct, and useless to a phase
-    // that rewrites CALLS, which is exactly the phase a dropped-and-still-called member needs.
+    // The declaration is gone and the key still fired, so the declaration-side answer is "bound,
+    // nothing to point at" — correct, and useless to a phase that rewrites calls, which is exactly
+    // what a dropped-and-still-called member needs.
     val p = tree(Substitutions(dropMethods = Set("com.demo.Shop#make(Class)")))(source, caller)
     assertEquals(bindAll(p, "com.demo.Shop#make(Class)").toOption.map(_.flatMap(_.sym)), Some(Nil))
 
@@ -165,7 +165,7 @@ class PolicyBinderSpec extends munit.FunSuite:
     val b = binderOf(p)
     // `java.util.List` is interned by the frontend on first reference and matches a scope entry
     // perfectly. The phase would then rewrite nothing at all while the entry counted as fired —
-    // the §1(b) silent no-op wearing the costume of a working knob.
+    // a silent no-op wearing the costume of a working setting.
     val scoped = b.bindScope("spec", "CollectionsTransform(scope)", "java.util.List")
     assertEquals(scoped.why, Some(NotBound.ExternalOnly("java.util.List")))
     assert(clue(scoped.why.get.detail).contains("REFERENCES and does not DECLARE"))

@@ -206,8 +206,8 @@ class CatalogAreaGSpec extends PortSuite:
 
   test("JS-G09 / JS-G13 / JS-G14 — the slot rows are owed at a LOCAL, an ASSIGNMENT and a `new`'s argument too") {
     // The six-dispatch attachment, exercised at three of the six that are not a `return`. A consult
-    // stated once per arm is a rule the next arm will not have (`ENGINE-LIMITS.md` F8), so what this
-    // asserts is that all three arms reach the SAME function and none of them is a hole.
+    // stated once per arm is a rule the next arm will not have, so what this asserts is that all
+    // three arms reach the SAME function and none of them is a hole.
     val p = port(
       """public class A {
         |  static class Box { Box(Object o) {} }
@@ -465,8 +465,8 @@ class CatalogAreaGSpec extends PortSuite:
 
   test("JS-G40 — …and an ARRAY forwarded through that slot is the COMPOSITION, which is java's own idiom") {
     // `String.format(fmt, args)`: a bare array conforms as ONE element wherever the repeated element
-    // is `Object`, so `%s` prints the array and the second `%s` throws — `CLAUDE.md` §4.4, no error
-    // and no moved count. The spread is what makes it java's arity again.
+    // is `Object`, so `%s` prints the array and the second `%s` throws, with no compile error to
+    // catch it. The spread is what makes it java's arity again.
     val p = port("""public class A { String f(String fmt, Object[] args) { return String.format(fmt, args); } }""".stripMargin)
     assertConsults(p, JS.G(40), fired = true)
     assertConsults(p, JS.G(39), fired = true)
@@ -645,7 +645,7 @@ class CatalogAreaGSpec extends PortSuite:
     // `Entries` is nested in `Box<T>`, so a raw use inside a non-static member fills from the
     // enclosing instantiation's own name, while a STATIC frame — where the class's parameters are
     // not in scope at all — must fall back to a wildcard. One java type, two renderings, and both
-    // are right (`ENGINE-LIMITS.md` G3, G20).
+    // are right.
     val p = port(
       """public class A {
         |  static class Box<T> {
@@ -686,8 +686,7 @@ class CatalogAreaGSpec extends PortSuite:
     // No finite type satisfies `N <: Node[N]` except a real subclass, and every unrolling fails the
     // same bound because `Node` is invariant. Java carries the bound and does not check it at an
     // erased use; scala checks. The WILDCARD asserts only that SOME type satisfies it, which is
-    // exactly the erased claim — so the slot stays `?` and the row stays a refusal
-    // (`ENGINE-LIMITS.md` G8).
+    // exactly the erased claim — so the slot stays `?` and the row stays a refusal.
     val p = port(
       """public class A {
         |  static class Node<N extends Node<N>> { }
@@ -727,10 +726,10 @@ class CatalogAreaGSpec extends PortSuite:
   }
 
   test("JS-G06 — a class declaring BOTH of an inherited overload set aligns each on ITS OWN parent") {
-    // §4.55's *a `find` IS that map*, at the derivation JS-G06 names. The parent member used to be
-    // picked by `(name, param counts)` taking the FIRST hit up the chain, so a class declaring both
-    // of an interface's overloads — ordinary java — had the SECOND one aligned onto the FIRST one's
-    // formal, and an `asInstanceOf` the source never wrote inserted at every call to make it fit.
+    // the parent member is looked up as a `(name, param counts)` map, not picked as the first hit up
+    // the chain: a class declaring both of an interface's overloads — ordinary java — must align
+    // each on its own parent, or the second one gets aligned onto the first one's formal and an
+    // `asInstanceOf` the source never wrote is inserted at every call to make it fit.
     val p = port(
       """public class A {
         |  static class Cell<T> { }
@@ -745,9 +744,9 @@ class CatalogAreaGSpec extends PortSuite:
         |  }
         |}""".stripMargin
     )
-    // THE OVERRIDE, not the interface's own member. The interface's rendering is the CONTROL that
-    // identified the defect (`PROGRESS.md` §10.9.7 family 5) and it was always right, so an
-    // assertion that only asks whether the wildcard is writable here proves nothing at all —
+    // THE OVERRIDE, not the interface's own member. The interface's rendering is the control and is
+    // always right, so an assertion that only asks whether the wildcard is writable here proves
+    // nothing at all —
     // mis-aligned, this emitted `override def conv(c: scala.Array[java.lang.String])` beside a
     // trait that still read `A.Cell[?]`. The parameter NAME is what separates the pair.
     assertEmits(p, "override def conv(c: scala.Array[A.Cell[?]])")
@@ -784,8 +783,8 @@ class CatalogAreaGSpec extends PortSuite:
   test("JS-G10 — a RAW anonymous class WITH a body has no faithful image, and the refusal is CONSULTED") {
     // Without a body scala infers the argument from the expected type; with one the anonymous
     // class's type is fixed, so a raw use gives `Box[Nothing]` and naming the argument does not help
-    // either — the body is written against the erasure. `ENGINE-LIMITS.md` G10 left it refused and
-    // reported rather than approximated, and this is what makes the refusal countable.
+    // either — the body is written against the erasure. It is refused and reported rather than
+    // approximated, which is what makes the refusal countable.
     val p = port(
       """public class A {
         |  interface Box<T> { T get(); }
@@ -913,10 +912,8 @@ class CatalogAreaGSpec extends PortSuite:
         case _                                                      => "none"
     )
     assertEquals(byKind.values.map(_.size).sum, Differences.generics.size)
-    // THE CHUNK'S OWN BAR, in the form that can fail. Area G opened with 38 of its 40 rows on
-    // `Unmechanised` — the largest such claim in the registry — chunk 12 took it to eleven, and the
-    // fourth surface takes it to TWO, and `JS-G41`'s counter to ONE. The audit question is
-    // unchanged: were the rows instrumented, or renamed to keep a lane green.
+    // The bar this area must clear: only `JS-G20` may remain `Unmechanised`. The audit question is
+    // whether the rest were genuinely instrumented, or renamed to keep this assertion green.
     assertEquals(
       byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set(JS.G(20)),
@@ -931,11 +928,10 @@ class CatalogAreaGSpec extends PortSuite:
     def hasLeaf(f: Attaches => Boolean) = Differences.generics.exists(d => Differences.leaves(d.attaches).exists(f))
     assert(hasLeaf(_.isInstanceOf[Attaches.LoweredType]), "no JS-G row is wired to the TYPE-REFERENCE dispatch")
     assert(hasLeaf(_.isInstanceOf[Attaches.RenderedType]), "no JS-G row is wired to the emitter's TYPE dispatch")
-    // The area's TWO citations. `JS-G48` is asserted here rather than tested above because a
-    // citation needs `CollectionsTransform`, whose reified rewrites
-    // `balticporter.corpus.CollectionsReifiedSpec` exercises; `JS-G06` HAS a test above, and is
-    // listed anyway so that the row losing its surface fails here too. Without this line either
-    // could lose it and nothing in this file would say so.
+    // The area's two citations. `JS-G48` is asserted here rather than tested above because it needs
+    // `CollectionsTransform`, whose reified rewrites `balticporter.corpus.CollectionsReifiedSpec`
+    // exercises; `JS-G06` has a test above and is listed anyway so that either losing its surface
+    // fails here too.
     assertEquals(byKind.getOrElse("cited", Nil).map(_.id), List(JS.G(6), JS.G(48)))
     // …and a row claiming NO obligation must not be one the registry calls Open.
     assertEquals(

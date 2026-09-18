@@ -99,7 +99,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
     assert(p.symbols.all.exists(_.fullName == "demo.R#go"))
   }
 
-  /** CLAUDE.md §4.4 row 7, for the shape a String switch takes. */
+  /** the `Tree.Match` nodes in a member's body, for the shape a String switch takes. */
   private def matchesOf(p: Program, member: String): List[Tree.Match] =
     val sym = p.symbols.all.find(_.fullName == member).map(_.id).getOrElse(fail(s"no member $member"))
     p.definitionOf(sym) match
@@ -148,7 +148,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
     assertEquals(matchesOf(p, "demo.Cmp2#apply").head.cases.count(_.isDefault), 1)
   }
 
-  // -- a java VARARG PACK stops at the program's edge (`ENGINE-LIMITS.md` K6.5, third case) ------
+  // -- a java VARARG PACK stops at the program's edge --------------------------------------------
 
   private def callsIn(p: Program, member: String): List[Tree.Apply] =
     given Program = p
@@ -196,7 +196,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case other                         => fail(s"expected an empty Repeated, got $other")
   }
 
-  // -- …and the MIRROR: java PASSES AN ARRAY THROUGH the same slot (K6.5, fourth case) -----------
+  // -- …and the MIRROR: java PASSES AN ARRAY THROUGH the same slot --------------------------------
 
   private val passThroughProgram = SpoonTir.fromSource(
     """package demo;
@@ -284,7 +284,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
       case None                   => fail("no argument at all")
   }
 
-  // -- …and the OTHER half of that same assignability rule is the ARRAY DIMENSION (G26) ----------
+  // -- …and the OTHER half of that same assignability rule is the ARRAY DIMENSION ----------------
   private val dimProgram = SpoonTir.fromSource(
     """package demo;
       |class Dim {
@@ -332,13 +332,13 @@ class SpoonTirBodySpec extends munit.FunSuite:
   test("…and `String[][]` at an EXTERNAL `Object...` spreads — `String[] <: Object`") {
     // javac's fourth cell, read at the program's edge: the component is `Object`, `dims(comp) + 1`
     // is 1, and the two-dimensional argument clears it. `Arrays.asList` is a class file, so the
-    // faithful rendering of that forward is the spread (`ENGINE-LIMITS.md` K6.5).
+    // faithful rendering of that forward is the spread.
     dimLastArg("twoAtObject") match
       case Some(_: Tree.Spread) => ()
       case other                => fail(s"expected Spread, got $other")
   }
 
-  // -- T14: a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING ------
+  // -- a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING -----------
 
   private val staticProgram = SpoonTir.fromSources(
     List(
@@ -400,8 +400,8 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   test("a static field reached through an IMPLEMENTING class resolves to the INTERFACE") {
-    // java interface constants are `static` and inherited through `implements` — `CLAUDE.md` §1(a)'s
-    // own example. A walk up the SUPERCLASS chain alone never reaches one.
+    // java interface constants are `static` and inherited through `implements`; a walk up the
+    // superclass chain alone never reaches one.
     assertEquals(staticReceiverIn("fieldViaInterface"), "demo.Consts")
   }
 

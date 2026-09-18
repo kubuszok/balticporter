@@ -60,7 +60,7 @@ class EnumConstantBodySpec extends PortSuite:
 
   test("NEGATIVE: an enum constant with no body at all contributes nothing of its OWN") {
     // The braces are not the test either. An enum with NO constant body is expressible as a scala 3
-    // `enum` (`ENGINE-LIMITS.md` T21), so its constants are cases with no template at all — and
+    // `enum`, so its constants are cases with no template at all — and
     // `ordinal()` comes from `java.lang.Enum` rather than from an override the lowering writes. What
     // this asserts is that the harvest adds nothing: no method of the enum's, no field, and nothing
     // from its sibling.

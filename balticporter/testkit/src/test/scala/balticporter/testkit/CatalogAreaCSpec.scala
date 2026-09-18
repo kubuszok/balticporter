@@ -224,8 +224,8 @@ class CatalogAreaCSpec extends PortSuite:
   }
 
   test("JS-C18 — a field initialiser and an init BLOCK are ONE step-4 sequence, in java's order") {
-    // `ENGINE-LIMITS.md` C12's correction, as an assertion: the block runs FIRST because java wrote
-    // it first, and a frontend that grouped the two kinds would have run it last.
+    // the block runs first because java wrote it first; a frontend that grouped the two kinds
+    // separately would have run it last.
     val p = port("public class A { { b = 2; } int b = 5; }")
     assertConsults(p, JS.C(18), fired = true)
     assertEmitsMatch(p, "(?s).*locally \\{.*b = 2.*\\}.*var b: scala\\.Int = 5.*")
@@ -361,10 +361,9 @@ class CatalogAreaCSpec extends PortSuite:
     assertNotEmits(p, "super[")
   }
 
-  // …and the one shape where SCALA DOES NOT DISAGREE, so the repair is the defect. A `final`
+  // …and the one shape where scala does not disagree, so the repair would be the defect. A `final`
   // superclass member implements the mixin's declaration exactly as java's does — there is nothing
   // to disambiguate — and an override of a `final` member is `E164`, which scalac rejects outright.
-  // 18 rows on one port before the emitter declined (`ENGINE-LIMITS.md` K28).
   test("JS-C33 — a FINAL superclass member takes no forwarder: scala already agrees with java") {
     val p = port(
       """public class A {
@@ -419,8 +418,8 @@ class CatalogAreaCSpec extends PortSuite:
     // The rows still FIRE — they are about java's four synthesised members being part of every
     // enum's surface — and where the answer comes from moved: an enum the scala 3 `enum` can express
     // extends `java.lang.Enum[A]`, whose `name()`/`ordinal()` are FINAL, and the desugaring puts
-    // `values`/`valueOf` in the companion (`ENGINE-LIMITS.md` T21). Emitting any of the four beside
-    // them would be an error rather than a duplicate.
+    // `values`/`valueOf` in the companion. Emitting any of the four beside them would be an error
+    // rather than a duplicate.
     val p = port("public enum A { RED, GREEN }")
     assertConsults(p, JS.C(37), fired = true)
     assertConsults(p, JS.C(39), fired = true)
@@ -641,7 +640,7 @@ class CatalogAreaCSpec extends PortSuite:
     // Java tries the fixed-arity phases FIRST and reaches the vararg one only if both fail, so
     // javac bound `f("x")` to `f(String)`. Scala has no such staging. Neither compiler rejects the
     // program, which is why this is a count and not an error — and why the row is `Partial` and not
-    // `Handled`: WHICH member scalac binds is not modelled (`ENGINE-LIMITS.md` T17).
+    // `Handled`: which member scalac binds is not modelled.
     val p = port(
       """public class A {
         |  void f(String a) { }
@@ -713,7 +712,7 @@ class CatalogAreaCSpec extends PortSuite:
     // `Found: A / Required: ?{ Inner: ? }`, which names neither the missing arguments nor the
     // construct. Java's reference is RAW — an inner class of a generic outer imported by simple
     // name from another file is ordinary java — so `?` per parameter is what the source wrote, and
-    // it is the reference hand port's rendering of every raw generic (§3.5).
+    // matches how the reference hand port renders every raw generic.
     val p = port(
       """public class A<T> {
         |  class Inner { }
@@ -763,22 +762,18 @@ class CatalogAreaCSpec extends PortSuite:
         case _                                                      => "none"
     )
     assertEquals(byKind.values.map(_.size).sum, Differences.classes.size)
-    // THE CHUNK'S OWN BAR. Area C opened with all 47 rows on `Unmechanised` — a claim that nothing
-    // was measuring any of them — and the audit point for this wave is whether the rows were really
-    // instrumented or renamed to keep a lane green. This is that question in the exact form that can
-    // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
-    // which one it is waiting for.
+    // The bar this area must clear: the only rows allowed to stay `Unmechanised` are the six whose
+    // surface genuinely does not exist yet, each naming which one it is waiting for.
     assertEquals(
       byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set.empty,
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +
         "nobody has built still says nothing is measuring it"
     )
-    // JS-C22 and JS-C23 were on that set and left it when the RISK COUNTER landed. The pair is the
-    // worked example of the distinction `Unmechanised` is FOR: their sentence said no surface
-    // existed to owe a consult, and what did not exist was a RESOLVER — the rendered call is a
-    // surface, and what it owes is the risk, not the answer (`ENGINE-LIMITS.md` T17). Both are
-    // `Partial`, both attach at `Rendered("Apply")`, and neither claims the resolution.
+    // JS-C22 and JS-C23 are the worked example of the distinction `Unmechanised` is for: no surface
+    // existed to owe a consult, because what did not exist was a resolver — the rendered call is a
+    // surface, and what it owes is the risk, not the answer. Both are `Partial`, both attach at
+    // `Rendered("Apply")`, and neither claims the resolution.
     assert(!Differences.byId(JS.C(22)).status.isOpen && !Differences.byId(JS.C(23)).status.isOpen)
     // JS-C29 was the sixth and is the one row this area shares with area G's residue: it is decided
     // while RENDERING A TYPE, which is the fourth obligation surface. Asserted here so the row

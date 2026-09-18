@@ -241,9 +241,8 @@ class CatalogAreaSSpec extends PortSuite:
   // -- JS-S21: `return` inside a lambda returns from the LAMBDA -------------------------------------------
 
   test("JS-S21 — a `return` in a lambda body is CONSULTED, FIRES, and is LOWERED into a nested `def`") {
-    // The happy path, which this suite could not assert before `ENGINE-LIMITS.md` I9: the nested
-    // `def` needs the SAM METHOD's result type — `String`, not `Str` — and nothing carried it. The
-    // frontend reads it off the interface now, so the lowering is here rather than one repair away.
+    // The nested `def` needs the SAM method's result type — `String`, not `Str` — so the frontend
+    // reads it off the interface rather than leaving the lowering to guess.
     val p = port("public class R { interface Str { String get(); } Str s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
@@ -251,11 +250,8 @@ class CatalogAreaSSpec extends PortSuite:
   }
 
   test("JS-S21 — a GENERIC SAM result is ADAPTED at the target, so the branch fires and LOWERS") {
-    // `Supplier<String>.get` is declared `T get()`, and this used to be I9's standing refusal on the
-    // grounds that substituting the reference's actual arguments for the declaration's formals is a
-    // different mechanism from reading a class file. That was an argument about a MISSING MECHANISM
-    // rather than about the language: the target reference says what `T` is, and Spoon's own
-    // `TypeAdaptor` performs the substitution.
+    // `Supplier<String>.get` is declared `T get()`; the target reference says what `T` is, and
+    // Spoon's own `TypeAdaptor` performs the substitution to get a real result type.
     val p = port("public class R2 { java.util.function.Supplier<String> s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertEmitsMatch(p, """def body\$\d+\(\): java\.lang\.String = """)
@@ -263,10 +259,9 @@ class CatalogAreaSSpec extends PortSuite:
   }
 
   test("JS-S21 — where the ADAPTATION cannot answer the branch fires and the engine REFUSES") {
-    // §2.3(a) in one test, and what I9 still does NOT close. A RAW target supplies no argument for
-    // `T`, so the adapted result still mentions a type variable and the site is REFUSED, with
-    // `OmissionCheck.unnameableLambdaReturn` counting it. A guessed `T`, or an erased `Object`, is
-    // §4.6's fabricated fact — it compiles.
+    // A raw target supplies no argument for `T`, so the adapted result still mentions a type
+    // variable and the site is refused, with `OmissionCheck.unnameableLambdaReturn` counting it.
+    // A guessed `T`, or an erased `Object`, would compile while being a fabricated fact.
     val p = port("public class R3 { @SuppressWarnings(\"rawtypes\") java.util.function.Supplier s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertNotEmits(p, "body$")

@@ -74,14 +74,14 @@ final case class Ported(
   /** the emitted Scala for the whole program. */
   lazy val out: String = emitter.emit
 
-  /** the same program emitted in PREVIEW mode (`DESIGN.md` §7.4). A SECOND emitter over the same tree, never a flag on the first: an emitter records its own source map and member digests as it goes,
-    * so a shared instance would double-record.
+  /** the same program emitted in preview mode. A second emitter over the same tree, never a flag on the first: an emitter records its own source map and member digests as it goes, so a shared
+    * instance would double-record.
     */
   lazy val previewEmitter: TirEmitter = emitterWith(preview = true)
 
   lazy val previewOut: String = previewEmitter.emit
 
-  /** the same program emitted in BEST-EFFORT mode (`DESIGN.md` §6.4). */
+  /** the same program emitted in best-effort mode. */
   lazy val bestEffortEmitter: TirEmitter = emitterWith(bestEffort = true)
 
   lazy val bestEffortOut: String = bestEffortEmitter.emit
@@ -111,10 +111,10 @@ object PortFixture:
     portIn(mode, java, Map.empty, phases.toList)
 
   private def portIn(mode: RuntimeMode, java: String, resolutions: Map[String, String], phases: List[Phase]): Ported =
-    // `fatal = true` — the TESTKIT is the mode where an undischarged obligation is an ERROR.
-    // `DESIGN.md` §2.8 stages enforcement deliberately: a port run counts, because a run that died
-    // on an incomplete rule produces no diagnostics at all, and a spec fails, because every
-    // difference gets an edge-case suite and that suite is what the guarantee rests on.
+    // `fatal = true` — the testkit is the mode where an undischarged obligation is an error. A real
+    // port run only counts it, because a run that died on an incomplete rule would produce no
+    // diagnostics at all; a spec fails, because every difference gets an edge-case suite and that
+    // suite is what the guarantee rests on.
     val catalog  = new CatalogLog(fatal = true)
     val rewrites = new RewriteLog
     val idioms   = new IdiomLog
@@ -288,7 +288,7 @@ abstract class PortSuite extends munit.FunSuite:
   /** the check reported NOTHING.
     *
     * Kept as its own assertion rather than `assertEquals(fs.size, 0)` so the failure prints what was found: a check-count assertion that fails on a number tells its reader to go and run the check by
-    * hand, which is the diagnostic `CLAUDE.md` §5.1 exists to remove.
+    * hand instead of reading it from the failure.
     */
   def assertNoFindings(findings: Seq[CheckReport.Finding])(using munit.Location): Unit =
     if findings.nonEmpty then fail(s"expected no findings, got ${findings.size}:\n${renderFindings(findings)}")
@@ -296,8 +296,8 @@ abstract class PortSuite extends munit.FunSuite:
   private def renderFindings(fs: Seq[CheckReport.Finding]): String =
     if fs.isEmpty then "  (none)" else fs.map("  " + _.render).mkString("\n")
 
-  /** a catalog row was CONSULTED while this fixture was lowered -- the structural assertion for `DESIGN.md` §2.8's obligation surfaces. Asserts that the engine CONSIDERED the difference at this
-    * construct, which `assertEmits` cannot: a string can be present for many reasons, including a lowering that produced the right text without asking.
+  /** a catalog row was CONSULTED while this fixture was lowered. Asserts that the engine CONSIDERED the difference at this construct, which `assertEmits` cannot: a string can be present for many
+    * reasons, including a lowering that produced the right text without asking.
     */
   def assertConsults(p: Ported, id: DiffId, fired: Boolean = false)(using munit.Location): Unit =
     val n = reached(p).consulted(id)
@@ -350,7 +350,7 @@ abstract class PortSuite extends munit.FunSuite:
     if rows.isEmpty then "  (none)"
     else rows.map(r => s"  ${r.id} consulted=${r.consulted} fired=${r.fired} declarations=${r.declarations}").mkString("\n")
 
-  /** the PREVIEW emission (`DESIGN.md` §7.4) contains `snippet`.
+  /** the preview emission contains `snippet`.
     *
     * Separate from [[assertEmits]] and never a mode on it: preview is a DIAGNOSTIC rendering and `Ported.out` is what a port would ship, so a spec that could flip one into the other would be a spec
     * that can assert about output no run produces.

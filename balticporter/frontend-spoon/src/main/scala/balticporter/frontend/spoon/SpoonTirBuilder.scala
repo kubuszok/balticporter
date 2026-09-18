@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-// Split out of SpoonTir.scala for file size (context diet S2): the Spoon-model-to-TIR Builder.
+// Split out of SpoonTir.scala for file size: the Spoon-model-to-TIR Builder.
 
 import balticporter.core.{ AnnotationPolicy, FrontendConfig, RealPath, Substituted, Substitutions }
 import balticporter.catalog.{ CatalogLog, Dispatch, JS, Lowering, Obligations, Typing }
@@ -20,8 +20,7 @@ import scala.jdk.CollectionConverters.*
 import balticporter.frontend.spoon.SpoonTir.TypeShape
 
 /** @param inMemorySources
-  *   each compilation unit's text by file name, for units with no buffer of their own (`fromSources`). Empty for real files. Keyed because a position is meaningful in only one unit's buffer
-  *   (CLAUDE.md §4.58).
+  *   each compilation unit's text by file name, for units with no buffer of their own (`fromSources`). Empty for real files. Keyed because a position is meaningful in only one unit's buffer.
   */
 final private[spoon] class Builder(
   subs:            Substitutions = Substitutions.none,
@@ -105,10 +104,10 @@ final private[spoon] class Builder(
   private[spoon] val seenTypes   = collection.mutable.Set.empty[String]
 
   private[spoon] def build(types: List[CtType[?]], internTypes: Set[String] = Set.empty): Program =
-    // headers harvested BEFORE any type translates — positional claim must run first (§4.58)
+    // headers harvested BEFORE any type translates — positional claim must run first
     val headers = types.map(fileHeader)
     val units   = types.zip(headers).map((t, h) => classDef(t).copy(unitLeading = h))
-    // Intern extra classpath types so downstream phases inherit isFinal and parents (K18).
+    // Intern extra classpath types so downstream phases inherit isFinal and parents.
     val interned = if internTypes.isEmpty || types.isEmpty then Nil
     else internFromClasspath(types.head.getFactory, internTypes)
     new Program(
@@ -121,7 +120,7 @@ final private[spoon] class Builder(
     )
 
   /** JLS 9.4.3 `default` methods of the EXTERNAL interfaces this program's types name as parents, read off the class-file shadow, so the diamond forwarder ASKS instead of guessing which external
-    * parent is concrete (`ENGINE-LIMITS.md` K39). Keyed by parent FQN, arity-only. A parent this program DECLARES is excluded — the emitter already reads its body.
+    * parent is concrete. Keyed by parent FQN, arity-only. A parent this program DECLARES is excluded — the emitter already reads its body.
     */
   private def externalDefaults(types: List[CtType[?]]): Map[String, Set[(String, List[Int])]] =
     val mine = collection.mutable.Set.empty[String]
@@ -154,15 +153,15 @@ final private[spoon] class Builder(
     types.foreach(walk)
     acc.filter((_, ms) => ms.nonEmpty).toMap
 
-  /** JLS 9.4.3: an interface method that is neither `abstract`, `static` nor `private` has a body. `getBody` is null on a class-file shadow, so the MODIFIERS decide (`ENGINE-LIMITS.md` K39).
+  /** JLS 9.4.3: an interface method that is neither `abstract`, `static` nor `private` has a body. `getBody` is null on a class-file shadow, so the MODIFIERS decide.
     */
   private def isDefaultMethod(m: CtMethod[?]): Boolean =
     m.isDefaultMethod || !(m.hasModifier(ModifierKind.ABSTRACT) ||
       m.hasModifier(ModifierKind.STATIC) ||
       m.hasModifier(ModifierKind.PRIVATE))
 
-  /** Intern classpath types so downstream phases inherit `isFinal` and parents (K18). Minimal ClassDefs for the xref only — never in `units`, never emitted. An FQN the classpath does not reach reads
-    * `None` through [[typeDeclarationOf]] (§4.6) and the downstream seam stays counted.
+  /** Intern classpath types so downstream phases inherit `isFinal` and parents. Minimal ClassDefs for the xref only — never in `units`, never emitted. An FQN the classpath does not reach reads `None`
+    * through [[typeDeclarationOf]] and the downstream seam stays counted.
     */
   private def internFromClasspath(factory: spoon.reflect.factory.Factory, fqns: Set[String]): List[Tree.ClassDef] =
     fqns.toList.sorted.flatMap { fqn =>
@@ -194,8 +193,8 @@ final private[spoon] class Builder(
   private[spoon] val claimed: java.util.Set[CtComment] =
     java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[CtComment, java.lang.Boolean]())
 
-  /** VERBATIM comment text, sliced from the original source (delimiters included). Never `CtComment.toString`, which re-prints and loses exact formatting — unacceptable for a licence notice
-    * (CLAUDE.md §4.57). Re-printed form is the fallback for a comment with no position.
+  /** VERBATIM comment text, sliced from the original source (delimiters included). Never `CtComment.toString`, which re-prints and loses exact formatting — unacceptable for a licence notice.
+    * Re-printed form is the fallback for a comment with no position.
     */
   private[spoon] def triviaOf(c: CtComment): Trivia =
     val kind = c.getCommentType match
@@ -230,7 +229,7 @@ final private[spoon] class Builder(
       .orElse(Option.when(inMemorySources.sizeIs == 1)(inMemorySources.values.head))
       .getOrElse("")
 
-  /** the comments Spoon attached DIRECTLY to `el`. Deliberately NOT wrapped in a `catch` — a harvest that throws is a defect to see (CLAUDE.md §4.6).
+  /** the comments Spoon attached DIRECTLY to `el`. Deliberately NOT wrapped in a `catch` — a harvest that throws is a defect to see.
     */
   private[spoon] def leadingOf(el: CtElement): List[Trivia] =
     el.getComments.asScala.toList.filter(unheaded).map { c => claimed.add(c); triviaOf(c) }
@@ -264,8 +263,8 @@ final private[spoon] class Builder(
     el.getElements(new spoon.reflect.visitor.filter.TypeFilter[CtComment](classOf[CtComment])).asScala.toList.filter(unheaded).filter(claimed.add).map(triviaOf)
 
   /** The FILE's own header: everything above the first line of code, plus anything hanging off the imports — the licence, in every library seen so far. Read POSITIONALLY, not from the parser's
-    * attachment model, which mis-attaches the second of two leading block comments to the package declaration (ENGINE-LIMITS V3). Does not respect `claimed`: two top-level types from one file each
-    * need the header, so it is cached per compilation unit instead.
+    * attachment model, which mis-attaches the second of two leading block comments to the package declaration. Does not respect `claimed`: two top-level types from one file each need the header, so
+    * it is cached per compilation unit instead.
     */
   private[spoon] val fileHeaders = collection.mutable.Map.empty[String, List[Trivia]]
 
@@ -326,7 +325,7 @@ final private[spoon] class Builder(
   private[spoon] def externalMember(owner: SymId, sig: String, name: String, descriptor: Option[Descriptor] = None, info: TypeRepr = NoType, annotations: List[Annot] = Nil): SymId =
     minter.external(memberKey(owner, sig), name, owner, descriptor, info, annotations)
 
-  /** `@Deprecated` on a class-file member, interned so `DeprecatedUseScan` sees it (CLAUDE.md §4.4). */
+  /** `@Deprecated` on a class-file member, interned so `DeprecatedUseScan` sees it. */
   private[spoon] def deprecatedOf(decl: CtElement): List[Annot] =
     if decl.hasAnnotation(classOf[java.lang.Deprecated])
     then List(Annot(TypeRef(NoPrefix, minter.external("java.lang.Deprecated", "Deprecated")), Nil, Origin.synthetic))
@@ -366,8 +365,8 @@ final private[spoon] class Builder(
       case scala.None => true
       case Some(d)    => isShadowDecl(d)
 
-  /** The `MethodType` of an EXTERNAL member (ENGINE-LIMITS K15) — only for a SHADOW declaration ([[isShadowDecl]]). Rendered SCOPE-FREE: a type variable, intersection or raw generic renders as no
-    * answer rather than a name from the CALLER's scope, since an external symbol is interned once and never clobbered. ALL slots or NONE ([[Descriptor.total]]'s rule).
+  /** The `MethodType` of an EXTERNAL member — only for a SHADOW declaration ([[isShadowDecl]]). Rendered SCOPE-FREE: a type variable, intersection or raw generic renders as no answer rather than a
+    * name from the CALLER's scope, since an external symbol is interned once and never clobbered. ALL slots or NONE ([[Descriptor.total]]'s rule).
     */
   private[spoon] def externalSignature(m: CtExecutable[?]): TypeRepr =
     if !isShadowDecl(m) then NoType
@@ -396,7 +395,7 @@ final private[spoon] class Builder(
     // a type variable or intersection at the slot names something only the CALLEE's scope has
     case TypeShape.Variable(_)        => NoType
     case TypeShape.Intersection(_, _) => NoType
-    // PRESERVED SHADOW: wildcard answers NoType here too, not `?` (ENGINE-LIMITS G21)
+    // PRESERVED SHADOW: wildcard answers NoType here too, not `?`
     case TypeShape.Wildcard(_, _, _) => NoType
     case s @ TypeShape.Named(r, _)   =>
       val head  = TypeRef(NoPrefix, typeSym(r))
@@ -447,8 +446,8 @@ final private[spoon] class Builder(
     tpErased.iterator.collectFirst { case m if m.contains(name) => m(name) }
 
   /** an executable's own type parameters that have NO WRITABLE INSTANTIATION ANYWHERE — java's UNCHECKED generic method (JLS 8.4.2 subsignature-by-erasure), erased at the declaration to its own
-    * bound. Three conditions, all required: the variable occurs in no PARAMETER type; the bound MENTIONS THE VARIABLE ITSELF (F-bound, the load-bearing conjunct, ENGINE-LIMITS G8); the RESULT
-    * mentions the variable. Does not touch a variable the DECLARING TYPE owns.
+    * bound. Three conditions, all required: the variable occurs in no PARAMETER type; the bound MENTIONS THE VARIABLE ITSELF (F-bound, the load-bearing conjunct); the RESULT mentions the variable.
+    * Does not touch a variable the DECLARING TYPE owns.
     */
   private[spoon] def unwritableResultVars(m: CtExecutable[?]): List[CtTypeParameter] = m match
     case ftd: CtFormalTypeDeclarer =>
@@ -495,7 +494,7 @@ final private[spoon] class Builder(
     tps.map(tp => tp.getSimpleName -> tp).toMap
 
   // Java's type parameters are always reference types (`<T>` means `<T extends Object>`);
-  // scala's `[T]` means `T <: Any`, strictly weaker — restoring the bound is a java fact (§1a).
+  // scala's `[T]` means `T <: Any`, strictly weaker — restoring the bound is a java fact.
   /** parent formal NAME -> the argument this class supplies, walking supertypes breadth-first (so a grandparent's names are covered too).
     */
   private[spoon] def ancestorsOf(t: CtType[?]): Set[String] =
@@ -516,8 +515,8 @@ final private[spoon] class Builder(
     // NOT the class itself — its own helpers' formals must render outside the override gate too
     acc.toSet - t.getQualifiedName
 
-  /** ONE walk over `t`'s ancestry, yielding every (DECLARING TYPE, formal name, argument) triple the `extends`/`implements` clauses instantiate — two consumer maps fold from it so they cannot drift
-    * (ENGINE-LIMITS F8, CLAUDE.md §4.56). Filters unnameable arguments here.
+  /** ONE walk over `t`'s ancestry, yielding every (DECLARING TYPE, formal name, argument) triple the `extends`/`implements` clauses instantiate — two consumer maps fold from it so they cannot drift.
+    * Filters unnameable arguments here.
     */
   private[spoon] def parentInstantiations(t: CtType[?]): List[(String, String, CtTypeReference[?])] =
     val out = collection.mutable.ListBuffer[(String, String, CtTypeReference[?])]()
@@ -596,7 +595,7 @@ final private[spoon] class Builder(
       case None     => TypeBounds(NoType, objectT)
 
   /** Reconstruct a raw generic type's args from IN-SCOPE type parameters of the same NAME (wildcards for the rest) — preserves self-reference/enclosing instantiation that a plain wildcard fill
-    * erases. `None` for arity-0. Every slot is LICENSED first ([[licensedFills]]), since java stops checking at a raw use and scala does not (ENGINE-LIMITS G30).
+    * erases. `None` for arity-0. Every slot is LICENSED first ([[licensedFills]]), since java stops checking at a raw use and scala does not.
     */
   private[spoon] def nameFilledArgs(r: CtTypeReference[?], resolve: String => Option[SymId], resolveDecl: String => Option[CtTypeParameter]): Option[List[TypeRepr]] =
     val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
@@ -611,9 +610,8 @@ final private[spoon] class Builder(
         }
       )
 
-  /** WHICH of a raw type's formals may take the in-scope variable of the same name (CLAUDE.md §4.56 at a BOUND, ENGINE-LIMITS G30). Licensed iff: the variable IS the formal (F-bound); the formal is
-    * unbounded; or both declare the SAME bound, spelled the same ([[boundSpelling]]). Propagates as a greatest fixpoint over free names in the bound. Unreadable bound licenses the fill (the third
-    * value, never a fabricated `catch` answer, §4.6).
+  /** WHICH of a raw type's formals may take the in-scope variable of the same name. Licensed iff: the variable IS the formal (F-bound); the formal is unbounded; or both declare the SAME bound,
+    * spelled the same ([[boundSpelling]]). Propagates as a greatest fixpoint over free names in the bound. Unreadable bound licenses the fill (the third value, never a fabricated `catch` answer).
     */
   private[spoon] def licensedFills(formals: List[CtTypeParameter], resolveDecl: String => Option[CtTypeParameter]): Set[String] =
     val names = formals.map(_.getSimpleName).toSet
@@ -657,7 +655,7 @@ final private[spoon] class Builder(
     case TypeShape.Named(n, as)        =>
       n.getQualifiedName + (if as.isEmpty then "" else as.map(boundSpelling).mkString("<", ",", ">"))
 
-  /** the NAMED type variables a bound mentions — [[mentionsTypeVar]]'s question asked the other way round, and with the wildcard arm ahead of the variable one (§4.56's dead-arm rule).
+  /** the NAMED type variables a bound mentions — [[mentionsTypeVar]]'s question asked the other way round, and with the wildcard arm ahead of the variable one (the dead-arm ordering rule).
     */
   private[spoon] def mentionedTypeVarNames(r: CtTypeReference[?]): Set[String] = TypeShape.of(r) match
     case TypeShape.Absent              => Set.empty
@@ -683,7 +681,7 @@ final private[spoon] class Builder(
     else
       TypeShape.of(b) match
         // `seen` breaks F-bounded cycles; wildcard asserts SOME type satisfies the bound, which
-        // scalac accepts where a flat `Object` fails an invariant F-bound. PRESERVED SHADOW G21.
+        // scalac accepts where a flat `Object` fails an invariant F-bound. PRESERVED SHADOW.
         case TypeShape.Wildcard(_, _, _) => objectT
         case TypeShape.Variable(tv)      =>
           if seen(tv.getSimpleName) then TypeBounds(NoType, NoType)
@@ -780,7 +778,7 @@ final private[spoon] class Builder(
   private[spoon] def mentionsRawGeneric(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
     case TypeShape.Absent      => false
     case TypeShape.Variable(_) => false
-    // PRESERVED SHADOW (ENGINE-LIMITS G21) — answers `false`, as the shadowed variable arm did
+    // PRESERVED SHADOW — answers `false`, as the shadowed variable arm did
     case TypeShape.Wildcard(_, _, _) => false
     case TypeShape.Arr(_, c)         => mentionsRawGeneric(c)
     case TypeShape.Prim(_)           => false
@@ -789,7 +787,7 @@ final private[spoon] class Builder(
       else formalArity(s.ref) > 0
 
   /** the DECLARED type-parameter arity of a type reference — `Map` → 2, `String` → 0. The `catch` covers ONLY `getTypeDeclaration` being absent (not on the classpath — normal, arity 0 is the only
-    * answer); a declaration that resolves but cannot state its own arity PROPAGATES rather than silently answering 0 (CLAUDE.md §4.6).
+    * answer); a declaration that resolves but cannot state its own arity PROPAGATES rather than silently answering 0.
     */
   private[spoon] def formalArity(r: CtTypeReference[?]): Int =
     typeDeclarationOf(r).map(_.getFormalCtTypeParameters.size).getOrElse(0)
@@ -803,34 +801,34 @@ final private[spoon] class Builder(
       catch { case _: Throwable => scala.None }
 
   /** the ONE Spoon lookup for a type variable's declaration where an absent value is normal — the type variable belongs to an external generic whose declaration is not on the classpath. Callers treat
-    * `None` as "unknown/external"; see [[typeDeclarationOf]] for the same argument at the type level. `CLAUDE.md` §4.6: one function, one doc, one `catch`.
+    * `None` as "unknown/external"; see [[typeDeclarationOf]] for the same argument at the type level. One function, one doc, one `catch`.
     */
   private[spoon] def typeParamDeclOf(tv: CtTypeParameterReference): Option[CtTypeParameter] =
     try Option(tv.getDeclaration)
     catch { case _: Throwable => scala.None }
 
   /** the ONE Spoon lookup for an executable's declaration where an absent value is normal — the method is external and its source declaration is not on the classpath. Callers that receive `None`
-    * decline the rule they were about to apply, which is the correct fallback for an unknowable signature. `CLAUDE.md` §4.6.
+    * decline the rule they were about to apply, which is the correct fallback for an unknowable signature.
     */
   private[spoon] def execDeclOf(ex: CtExecutableReference[?]): Option[CtExecutable[?]] =
     try Option(ex.getExecutableDeclaration)
     catch { case _: Throwable => scala.None }
 
-  /** the ONE Spoon lookup for an annotation's type reference where an absent value is normal — the annotation class might not be on the classpath. `CLAUDE.md` §4.6.
+  /** the ONE Spoon lookup for an annotation's type reference where an absent value is normal — the annotation class might not be on the classpath.
     */
   private[spoon] def annotationTypeRefOf(a: CtAnnotation[?]): Option[CtTypeReference[?]] =
     try Option(a.getAnnotationType)
     catch { case _: Throwable => scala.None }
 
-  /** the ONE Spoon lookup for a FIELD's declaration where an absent value is normal — external class not on the classpath. Callers decline the rule they were about to apply. CLAUDE.md §4.6
+  /** the ONE Spoon lookup for a FIELD's declaration where an absent value is normal — external class not on the classpath. Callers decline the rule they were about to apply.
     */
   private[spoon] def fieldDeclOf(ref: CtFieldReference[?]): Option[CtField[?]] =
     try Option(ref.getFieldDeclaration)
     catch { case _: Throwable => scala.None }
 
-  /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), computed here from the class file (CLAUDE.md §4.56) since the TIR only interns members the program references. Target must be an INTERFACE;
-    * abstract methods counted INHERITED (`getAllMethods`); `static`/`default` excluded; a member override-equivalent to `java.lang.Object`'s excluded. Unreadable → [[Sam.Answer.Unreadable]], never
-    * `No`. `java.io.Serializable` reported BESIDE the answer, not folded into it.
+  /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), computed here from the class file since the TIR only interns members the program references. Target must be an INTERFACE; abstract methods counted
+    * INHERITED (`getAllMethods`); `static`/`default` excluded; a member override-equivalent to `java.lang.Object`'s excluded. Unreadable → [[Sam.Answer.Unreadable]], never `No`.
+    * `java.io.Serializable` reported BESIDE the answer, not folded into it.
     */
   private[spoon] def samAnswerOf(r: CtTypeReference[?]): Sam.Answer =
     typeDeclarationOf(r) match
@@ -877,8 +875,8 @@ final private[spoon] class Builder(
         if a.getQualifiedName != b.getQualifiedName
       yield a.isSubtypeOf(b)).getOrElse(false)
 
-  /** THE SAM METHOD'S RESULT TYPE for a lambda the SOURCE wrote (ENGINE-LIMITS I9) — needed since the emitter interposes a nested `def` needing a result type from the SAM method, not the interface. A
-    * generic result is ADAPTED at the target via Spoon's [[TypeAdaptor]]. Refused where adaptation cannot answer — counted by `OmissionCheck.unnameableLambdaReturn` (§4.6).
+  /** THE SAM METHOD'S RESULT TYPE for a lambda the SOURCE wrote — needed since the emitter interposes a nested `def` needing a result type from the SAM method, not the interface. A generic result is
+    * ADAPTED at the target via Spoon's [[TypeAdaptor]]. Refused where adaptation cannot answer — counted by `OmissionCheck.unnameableLambdaReturn`.
     */
   private[spoon] def samResultTpt(l: CtLambda[?]): Option[TypeTree] =
     if !returnsAValue(l) then scala.None
@@ -890,7 +888,7 @@ final private[spoon] class Builder(
         case _ => scala.None
 
   /** the SAM method's declared result, read IN THE TARGET REFERENCE'S CONTEXT. Asked only where the declared type mentions a variable. Default on failure is the UNADAPTED type, which still mentions
-    * the variable — so the caller refuses rather than reading a fabricated answer (§4.6).
+    * the variable — so the caller refuses rather than reading a fabricated answer.
     */
   private[spoon] def adaptedToTarget(target: CtTypeReference[?], t: CtTypeReference[?]): CtTypeReference[?] =
     if target == null || !mentionsTypeVariable(t, 8) then t
@@ -958,7 +956,7 @@ final private[spoon] class Builder(
   private[spoon] def tpResolvable(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
     case TypeShape.Absent       => true
     case TypeShape.Variable(tv) => resolveTypeParam(tv.getSimpleName).isDefined
-    // PRESERVED SHADOW (ENGINE-LIMITS G21) — answers `false` for every wildcard
+    // PRESERVED SHADOW — answers `false` for every wildcard
     case TypeShape.Wildcard(_, _, _) => false
     case TypeShape.Arr(_, c)         => tpResolvable(c)
     case s                           => s.args.forall(tpResolvable)
@@ -969,7 +967,7 @@ final private[spoon] class Builder(
   private[spoon] def tpConcrete(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
     case TypeShape.Absent            => true
     case TypeShape.Variable(_)       => false
-    case TypeShape.Wildcard(_, _, _) => false // PRESERVED SHADOW — `ENGINE-LIMITS.md` G21
+    case TypeShape.Wildcard(_, _, _) => false // PRESERVED SHADOW
     case TypeShape.Arr(_, c)         => tpConcrete(c)
     case s                           => s.args.forall(tpConcrete)
 
@@ -979,7 +977,7 @@ final private[spoon] class Builder(
   private[spoon] def tpNameableHere(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
     case TypeShape.Absent       => true
     case TypeShape.Variable(tv) => sameVarInScope(tv)
-    // PRESERVED SHADOW (ENGINE-LIMITS G21) — `Class<?>` answers `false` here
+    // PRESERVED SHADOW — `Class<?>` answers `false` here
     case TypeShape.Wildcard(_, _, _) => false
     case TypeShape.Arr(_, c)         => tpNameableHere(c)
     case s                           => s.args.forall(tpNameableHere)
@@ -999,7 +997,7 @@ final private[spoon] class Builder(
     */
   private[spoon] def calleeBounded(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
     case TypeShape.Absent => true
-    // PRESERVED SHADOW (ENGINE-LIMITS G21)
+    // PRESERVED SHADOW
     case TypeShape.Wildcard(_, _, _)                  => false
     case TypeShape.Variable(tv) if sameVarInScope(tv) => true
     case TypeShape.Variable(tv)                       =>
@@ -1012,7 +1010,7 @@ final private[spoon] class Builder(
   /** `tpe`, but every type variable replaced by the erasure of its bound (see [[calleeBounded]]); identical to `tpe` on a variable-free type.
     */
   private[spoon] def tpBoundErased(tr: CtTypeReference[?]): TypeRepr = TypeShape.of(tr) match
-    // PRESERVED SHADOW (ENGINE-LIMITS G21) — answers `objectT`, as the variable arm did
+    // PRESERVED SHADOW — answers `objectT`, as the variable arm did
     case TypeShape.Wildcard(_, _, _)                  => objectT
     case TypeShape.Variable(tv) if sameVarInScope(tv) => tpe(tv)
     case TypeShape.Variable(tv)                       =>
@@ -1072,7 +1070,7 @@ final private[spoon] class Builder(
   private[spoon] def typeVarsOf(tr: CtTypeReference[?]): Set[String] = TypeShape.of(tr) match
     case TypeShape.Absent       => Set.empty
     case TypeShape.Variable(tv) => Set(tv.getSimpleName)
-    // PRESERVED SHADOW (ENGINE-LIMITS G21) — reports the literal name "?", never bound variables
+    // PRESERVED SHADOW — reports the literal name "?", never bound variables
     case TypeShape.Wildcard(w, _, _) => Set(w.getSimpleName)
     case TypeShape.Arr(_, c)         => typeVarsOf(c)
     case TypeShape.Prim(_)           => Set.empty
@@ -1082,7 +1080,7 @@ final private[spoon] class Builder(
   private[spoon] def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
     case TypeShape.Absent      => false
     case TypeShape.Variable(_) => true
-    // SHADOW FLIPPED (ENGINE-LIMITS G21): `?` mentions no type var itself; its bound is walked
+    // SHADOW FLIPPED: `?` mentions no type var itself; its bound is walked
     case TypeShape.Wildcard(_, b, _) => b.exists(mentionsAnyTypeVar)
     case TypeShape.Arr(_, c)         => mentionsAnyTypeVar(c)
     case s                           => s.args.exists(mentionsAnyTypeVar)
@@ -1156,7 +1154,7 @@ final private[spoon] class Builder(
       Typing.ofReference(SpoonKinds.refNameOf(tr.getClass), at, tr)(tpeArm(tr, at))
 
   /** JS-G07 and JS-G08 — the two questions a PLAIN class reference is asked, STATED ONCE and called from both arms a `CtTypeReference` reaches (primitive fast path and the general arm are ONE Spoon
-    * kind). Both about a RAW USE (JLS 4.8); G08 narrows to sites where the fill DEPENDS on the frame (a companion body cannot name the class's own params).
+    * kind). Both about a RAW USE (JLS 4.8); JS-G08 narrows to sites where the fill DEPENDS on the frame (a companion body cannot name the class's own params).
     */
   private[spoon] def rawUseConsults(r: CtTypeReference[?], at: Origin)(using Obligations): Unit =
     val raw = isRawGenericUse(r)
@@ -1232,9 +1230,8 @@ final private[spoon] class Builder(
                   )
         case args => AppliedType(head, args.map(tpe))
 
-  /** id of a referenced class type — our own or an external stub. Carries `@FunctionalInterface` and `isFinal` from the class file when readable (JS-C52, K18), and `isResolved` where Spoon DID find a
-    * declaration — in the model, on the frontend classpath, or by reflection. Affirmative (CLAUDE.md §4.56): unreadable means unannotated, not-final and "no declaration reached us", never "this type
-    * does not exist".
+  /** id of a referenced class type — our own or an external stub. Carries `@FunctionalInterface` and `isFinal` from the class file when readable (JS-C52), and `isResolved` where Spoon DID find a
+    * declaration — in the model, on the frontend classpath, or by reflection. Affirmative: unreadable means unannotated, not-final and "no declaration reached us", never "this type does not exist".
     */
   private[spoon] def typeSym(r: CtTypeReference[?]): SymId =
     val (anns, flags) = try
@@ -1297,7 +1294,7 @@ final private[spoon] class Builder(
     // fields carry their source positions — JLS 12.5 step 4 interleaves them with init blocks (step4 below)
     val local    = owner.isDefined
     val bodySelf = if local then id else SymId.None
-    // no `catch` — a swallowed failure would be indistinguishable from "not a local class" (§4.6)
+    // no `catch` — a swallowed failure would be indistinguishable from "not a local class"
     val bodyQName = if local then t.getQualifiedName else ""
     val fields    = t.getFields.asScala.toList.filterNot(_.isInstanceOf[CtEnumValue[?]]).sortBy(posKey).map(f => posKey(f) -> fieldDef(id, f, selfClass, outerVars, bodySelf, bodyQName))
     // include enum constructors — the emitter folds their params into the sealed class's primary ctor
@@ -1330,10 +1327,11 @@ final private[spoon] class Builder(
     val ctors = t match
       case c: CtClass[?] => walked(c.getConstructors.asScala.toList.sortBy(posKey), _ => "<init>")(execDef(id, _, "<init>", selfClass, outerVars, false, bodySelf, bodyQName))
       case _ => Nil
-    // ordinary methods consult the hierarchy for `override` — RefChecks never ran to report its absence (§3)
+    // ordinary methods consult the hierarchy for `override` — a typer error skips RefChecks, so it
+    // never runs to report its absence
     val methods = walked(t.getMethods.asScala.toList.sortBy(posKey), _.getSimpleName)(m => execDef(id, m, m.getSimpleName, selfClass, outerVars, overridesInherited(m), bodySelf, bodyQName))
     // java initialiser blocks (`static { }`, instance `{ }`) — translated as synthetic members;
-    // silent omission is forbidden (DESIGN.md §3.4). Emitter inlines at the equivalent scala point.
+    // silent omission is forbidden. Emitter inlines at the equivalent scala point.
     val initBlocks = t match
       case c: CtClass[?] =>
         c.getAnonymousExecutables.asScala.toList.sortBy(posKey).map { ae =>
@@ -1360,7 +1358,7 @@ final private[spoon] class Builder(
     val comps = recordComponents(t, id)
     if t.isInstanceOf[CtRecord] then
       minter.defined(typeKey(t.getReference)).foreach((sid, sy) => minter.set(sid, sy.copy(components = comps.getOrElse(Nil), flags = sy.flags.copy(isRecord = comps.isDefined))))
-      // component field access untouched (JLS 8.10.1 private final); widening is `TirEmitter.recordClashWidening`'s job (§4.55)
+      // component field access untouched (JLS 8.10.1 private final); widening is `TirEmitter.recordClashWidening`'s job
     Tree.ClassDef(
       id,
       parents,
@@ -1559,8 +1557,8 @@ final private[spoon] class Builder(
       def sig(x: CtMethod[?]): List[String] =
         x.getParameters.asScala.toList.map(p => Option(p.getType).map(_.getQualifiedName).getOrElse("?"))
       val mine = sig(m)
-      // ancestor signature read under the `extends` clause's SUBSTITUTION (ENGINE-LIMITS K28.2) —
-      // an exact-string comparison silently misses an override through a generic superclass.
+      // ancestor signature read under the `extends` clause's SUBSTITUTION — an exact-string
+      // comparison silently misses an override through a generic superclass.
       // frame composed one edge at a time; a RAW supertype contributes an EMPTY frame (declines,
       // which errs toward a missing `override` rather than a spurious one).
       def declares(t: CtTypeReference[?], subst: Map[String, String], fuel: Int): Boolean =
@@ -1594,8 +1592,8 @@ final private[spoon] class Builder(
     val q = typeKey(t.getReference)
     // substituted type stays in the model with resolved references, tagged for later rewriting
     val tags: Set[SymTag] = if subs.dropsType(q) then Set(Substituted(q)) else Set.empty
-    // a type's annotation values are constant expressions (ENGINE-LIMITS T16); `resolve` first so
-    // the translator can be built against the id before the record exists; WHICH families carry
+    // a type's annotation values are constant expressions; `resolve` first so the translator can
+    // be built against the id before the record exists; WHICH families carry
     // is the port's ([[AnnotationPolicy]]), default empty
     val (anns, annDropped) =
       annotationsOf(t, Some(new BodyTranslator(minter.resolve(q), minter.resolve(q))), annotations.claims)
@@ -1640,7 +1638,7 @@ final private[spoon] class Builder(
     if selfClass == SymId.None then owner else selfClass
 
   /** …the DECLARATION obligation scope (`Dispatch.Declaration`) — a field initialiser is a JLS 5.2 assignment slot like a local's, but `CtField` enters neither statement nor expression dispatch, so
-    * it needed its own. Opens for EVERY field, initialiser or not (ENGINE-LIMITS F8).
+    * it needed its own. Opens for EVERY field, initialiser or not.
     */
   private[spoon] def fieldDef(
     owner:     SymId,
@@ -1777,7 +1775,7 @@ final private[spoon] class Builder(
     )
     // translate the body — makes Call/field-ref usages and `callersOf` real; abstract/interface
     // methods have none. An ANNOTATION TYPE ELEMENT also has none, but carries JLS 9.6.2's DEFAULT
-    // off `getDefaultExpression` (§4.56 parser-hierarchy hazard: `CtAnnotationMethod extends CtMethod`)
+    // off `getDefaultExpression` (a parser-hierarchy hazard: `CtAnnotationMethod extends CtMethod`)
     val body = Option(m.getBody).map(b => bt.methodBody(b)).orElse(annotationDefault(m, bt))
     tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
     tpErased.remove(0)
@@ -1799,7 +1797,7 @@ final private[spoon] class Builder(
   private[spoon] def annotationsOf(el: CtElement, bt: Option[BodyTranslator], claimed: String => Boolean = _ => true): (List[Annot], List[String]) =
     val out     = collection.mutable.ListBuffer[Annot]()
     val dropped = collection.mutable.ListBuffer[String]()
-    // a set that cannot be READ AT ALL is COUNTED, not read as "this declaration has none" (§4.6)
+    // a set that cannot be READ AT ALL is COUNTED, not read as "this declaration has none"
     val as =
       try el.getAnnotations.asScala.toList
       catch { case _: Throwable => dropped += SpoonTir.UnreadableAnnotations; Nil }
@@ -1862,9 +1860,9 @@ final private[spoon] class Builder(
   private[spoon] def has(m: CtModifiable, k: ModifierKind): Boolean = m.hasModifier(k)
   import ModifierKind.*
 
-  /** Java's FOURTH access level, and it is NOT "no modifier is present". Default access is granted implicitly in three places (DESIGN §8.7): interface/`@interface` members (JLS 9.4, 9.6, 9.5, 9.3)
-    * are `public`; enum constructors (JLS 8.9.2) are `private`; enum constants and anonymous/local classes carry no user-written access. Read from the JLS, not `hasModifier(PUBLIC)`, since the
-    * parser's implicit-modifier model is what's in question.
+  /** Java's FOURTH access level, and it is NOT "no modifier is present". Default access is granted implicitly in three places: interface/`@interface` members (JLS 9.4, 9.6, 9.5, 9.3) are `public`;
+    * enum constructors (JLS 8.9.2) are `private`; enum constants and anonymous/local classes carry no user-written access. Read from the JLS, not `hasModifier(PUBLIC)`, since the parser's
+    * implicit-modifier model is what's in question.
     */
   private[spoon] def implicitlyPublic(el: CtElement): Boolean = el match
     case m: CtTypeMember => m.getDeclaringType.isInstanceOf[CtInterface[?]]
@@ -1959,8 +1957,7 @@ final private[spoon] class Builder(
     val path = if p != null && p.isValidPosition && p.getFile != null then p.getFile.getPath else "<snippet>"
     throw balticporter.core.Unsupported(path, line, what)
 
-  /** MINT A MARKER instead of failing the whole compilation unit (DESIGN.md §6.2/§6.5) — the port still doesn't ship (emission gate refuses any open marker, §6.4), but the run REPORTS which
-    * construct, where, and a possible fix.
+  /** MINT A MARKER instead of failing the whole compilation unit — the port still doesn't ship (emission gate refuses any open marker), but the run REPORTS which construct, where, and a possible fix.
     */
   /** `about` is the node the refusal is ABOUT, where that differs from the marker's own POSITION (e.g. Spoon's unpositioned `CtCasePattern`) — KIND still comes from the no-arm node.
     */

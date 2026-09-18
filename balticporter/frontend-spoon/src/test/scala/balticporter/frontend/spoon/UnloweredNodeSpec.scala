@@ -2,12 +2,10 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** THE FIRST MINT SITE (`DESIGN.md` §6.5): `SpoonTir.unsupported`'s two default dispatch arms. */
+/** The first mint site: `SpoonTir.unsupported`'s two default dispatch arms. */
 class UnloweredNodeSpec extends munit.FunSuite:
 
-  /** every term this program holds, `StandardTraversal` doing the walking (`CLAUDE.md` §3: never a private recursion — two of the four silent defects were hand-rolled walks that stopped one node
-    * short).
-    */
+  /** every term this program holds, walked with `StandardTraversal` rather than a private recursion — a hand-rolled walk can stop one node short and miss it silently. */
   private def scan[A](p: Program)(f: PartialFunction[Term, A]): List[A] =
     given Program = p
     p.units.flatMap { cd =>
@@ -29,11 +27,6 @@ class UnloweredNodeSpec extends munit.FunSuite:
   private def markers(p: Program): List[Tree.Unportable] = scan(p) { case m: Tree.Unportable => m }
 
   test("a RECORD PATTERN case label mints NOTHING — and the rest of the class still translates") {
-    // THIS SPEC HAS NOW OUTLIVED TWO OF ITS OWN CONSTRUCTS, which is the mechanism working: a
-    // marker inventory is a WORK LIST and a work list shrinks. It was written against a switch
-    // EXPRESSION, which `JS-S09` lowered; it was then re-pointed at the RECORD PATTERN, which
-    // `JS-S10`'s second half lowers now that `JS-C43` derives an `unapply` over the record's
-    // ACCESSORS.
     val p = SpoonTir.fromSource(
       """package p;
         |public class Sw {
@@ -73,7 +66,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
     assertEquals(ms.head.kind, UnportableKind.UnmodelledNodeKind("CtRecordPattern"))
     assertEquals(ms.head.diff.map(_.toString), Some("JS-S10"))
     assert(ms.head.what.contains("does not model"), ms.head.what)
-    // …and the unit survives, which is the whole of `DESIGN.md` §6.2's subject-vs-site rule.
+    // …and the unit survives: a marker replaces the one construct, not the whole compilation unit.
     assert(p.symbols.all.map(_.name).toSet.contains("untouched"))
   }
 
@@ -100,20 +93,17 @@ class UnloweredNodeSpec extends munit.FunSuite:
   }
 
   test("an UNNAMED pattern is a TYPE PATTERN whose variable is `_` — and lowers, which is why nothing refuses it") {
-    // `SpoonKinds` used to file `CtUnnamedPattern` as a refusal on both pattern paths. It is not
-    // reachable at all: `case Object _ ->` is built as a `CtTypePattern` named `_`, which is exactly
-    // scala's own `case _: T`. The kind is `NeverVisited` now, and this is the fixture that says so.
+    // `case Object _ ->` is built as a `CtTypePattern` named `_`, exactly scala's own `case _: T`;
+    // `CtUnnamedPattern` itself is never reachable from any source this parser accepts.
     val p = SpoonTir.fromSource("package p; public class S4 { public int f(Object o) { return switch (o) { case Object _ -> 1; default -> 0; }; } }")
     assertEquals(markers(p), Nil)
     assertEquals(scan(p) { case tp: Tree.TypePattern => tp }.size, 1)
   }
 
   test("an `instanceof` PATTERN marks the whole EXPRESSION — the unit survives, and JS-G21 says why") {
-    // The last kind to leave `RefusedLoudly`. `SpoonKinds` used to name the type operand of an
-    // `instanceof` as a shape a term-level marker cannot take, which is true of the OPERAND and
-    // false of the construct: the whole `instanceof` is a boolean expression. The refusal itself
-    // is unchanged (`ENGINE-LIMITS.md` T18 — java's binding is flow-scoped and scala has no
-    // expression that binds outside itself); what changed is that it costs one expression.
+    // The marker sits on the whole `instanceof` expression, not its type operand: java's pattern
+    // binding is flow-scoped and no scala expression binds outside itself, so the construct is
+    // refused as one expression rather than costing the whole compilation unit.
     val p = SpoonTir.fromSource(
       """package p;
         |public class Iof {
@@ -130,8 +120,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
     assert(ms.head.origin.line > 0, ms.head.origin.toString)
     // the whole point: the unit TRANSLATED. Before this it threw and took the sibling with it.
     assert(p.symbols.all.map(_.name).toSet.contains("untouched"))
-    // …and the marker says WHY, in the emitted report — a refusal a reader cannot act on is the
-    // failure `CLAUDE.md` §4.45 is about.
+    // …and the marker says WHY, in the emitted report — a refusal a reader cannot act on is useless.
     assert(ms.head.what.contains("FLOW-SCOPED"), ms.head.what)
   }
 
@@ -142,9 +131,6 @@ class UnloweredNodeSpec extends munit.FunSuite:
   }
 
   test("a SWITCH EXPRESSION mints NOTHING — `JS-S09` is lowered, and the negative is the evidence") {
-    // The construct the two tests above used to be written against. Asserted rather than deleted,
-    // because a marker inventory that shrinks silently is one nobody can tell from a mint site that
-    // stopped being reached.
     val p = SpoonTir.fromSource(
       """package p;
         |public class Sw2 {

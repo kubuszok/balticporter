@@ -48,11 +48,9 @@ class PortFixtureSpec extends PortSuite:
   }
 
   test("EVERY entry point is FATAL about an undischarged obligation — `parse` most of all") {
-    // `port` and `portAll` took `CatalogLog(fatal = true)` and `parse` took `CatalogLog.discarding`
-    // — the log for a caller that does not want one. That is backwards: an undischarged obligation
-    // is a LOWERING ARM that returned without consulting a difference the catalog attaches to it,
-    // so a FRONTEND-ONLY spec is the closest witness there is, and it was the one path where a
-    // lowering could stop asking with every spec still green (`DESIGN.md` §2.
+    // an undischarged obligation is a lowering arm that returned without consulting a difference
+    // the catalog attaches to it, so a frontend-only spec must enforce this too, or a lowering
+    // could stop asking with every porting spec still green.
     val (_, log) = PortFixture.parseWith("package demo; public class P { void f(byte b) { b += 3; } }")
     assert(log.fatal, "the frontend-only fixture must enforce what the porting ones enforce")
     // JS-E03 and JS-E17 are both discharged; nothing is left.

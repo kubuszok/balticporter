@@ -1,8 +1,6 @@
 package balticporter.runtime
 
-/** The support types' BEHAVIOUR, which nothing checked while they were a string literal in a transform — they were only ever compiled as part of a port, and only the port's own tests could have
-  * caught a defect in them. CLAUDE.md §3: a green compile says nothing.
-  */
+/** The support types' behaviour, exercised directly: they are otherwise only ever compiled as part of a port, where a green compile alone would not catch a defect in them. */
 class JavaIteratorSpec extends munit.FunSuite:
 
   test("remove() defaults to java.util.Iterator's own documented default") {
@@ -31,8 +29,8 @@ class JavaIteratorSpec extends munit.FunSuite:
     // Which makes `JavaIterator.from`'s `case ji: JavaIterator[A] => ji` fast path unreachable:
     // its argument is a `scala.collection.Iterator`, and nothing can be both. Pinned rather than
     // removed — the branch is harmless, and the fact is the reason it looks like it should work.
-    // It is CLAUDE.md §4.5 again: `hasNext` and `hasNext()` are the SAME member to Scala, and
-    // "neither has parameters" is the error you get.
+    // `hasNext` and `hasNext()` are the same member to Scala, and "neither has parameters" is the
+    // error you get.
     assert(
       !compiletime.testing.typeChecks(
         """
@@ -55,7 +53,7 @@ class JavaIteratorSpec extends munit.FunSuite:
     intercept[UnsupportedOperationException](xs.iterator().remove())
   }
 
-  // ---- removing iterator (K36) ----
+  // ---- removing iterator ----
 
   test("removing: iterates all elements of a Buffer") {
     val buf = scala.collection.mutable.ArrayBuffer(10, 20, 30)
@@ -160,8 +158,8 @@ class JavaIteratorSpec extends munit.FunSuite:
   }
 
   test("JavaIterable carries foreach so a `for` over the java shape works — and JavaIterator does not") {
-    // CLAUDE.md §4.5: `foreach` on BOTH made every `for` over an iterable-and-iterator class
-    // ambiguous. This asserts the asymmetry is still there.
+    // `foreach` on both made every `for` over an iterable-and-iterator class ambiguous; this
+    // asserts the asymmetry is still there.
     val xs: JavaIterable[Int] = JavaIterable.from(List(1, 2, 3))
     var sum = 0
     for x <- xs do sum += x

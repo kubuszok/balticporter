@@ -93,12 +93,8 @@ trait JavaCollection[A] extends JavaIterable[A] {
     out
   }
 
-  /** `Collection.toArray(T[])` — the ARRAY-TAKING twin, which four of simple-graphs' classes override and which was simply absent: `method toArray overrides nothing`, reported only once RefChecks
-    * ran.
-    */
-
-  /** `T <: java.lang.Object`, not a bare `T`. Java's implicit type-parameter bound IS `Object`, and the port renders it — `toArray[U <: java.lang.Object]` — so a shim declaring `[T]` (bound `Any`)
-    * has a DIFFERENT signature and overrides nothing. Same rule as `contains(Object)` above, one level in: scala's `Any` is not java's `Object`, and RefChecks is the only thing that says so.
+  /** `Collection.toArray(T[])` — java's implicit bound on `T` is `Object`, so the shim declares `T <: java.lang.Object` rather than a bare `T` (bound `Any`); a bare `T` has a different erased
+    * signature and overrides nothing.
     */
   def toArray[T <: java.lang.Object](a: scala.Array[T]): scala.Array[T] = {
     val n   = size()
@@ -202,10 +198,8 @@ object JavaCollection {
 
   /** `java.util.Collections.unmodifiableCollection`, with java's own signature. */
   def unmodifiable[T](c: JavaCollection[? <: T]): JavaCollection[T] = new JavaCollection[T] {
-    // the WRAPPED collection's iterator may be removal-capable ([[from]] now is), and java's
-    // `unmodifiableCollection` returns one whose `remove()` throws — otherwise a caller removes
-    // through a view that rejects `remove`, which is the read-only guarantee gone with a green
-    // compile. Delegation is not enough here; the removal has to be refused explicitly.
+    // the wrapped collection's iterator may itself support removal, so its `remove()` is refused
+    // explicitly here rather than delegated — java's `unmodifiableCollection` never allows it.
     def iterator(): JavaIterator[T] = new JavaIterator[T] {
       private val u = c.iterator()
       def hasNext():         Boolean = u.hasNext()
