@@ -296,7 +296,7 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   // -------------------------------------------------------------------------------------------
   // LAMBDA BODY — the shape `TestFrameworkTransform` creates
 
-  test("a local inside a LAMBDA body that shadows an inherited member is renamed (C16.1)") {
+  test("a local inside a LAMBDA body that shadows an inherited member is renamed") {
     val out = emit(
       """package demo;
         |class Base {

@@ -64,7 +64,7 @@ class InheritedFormalCastSpec extends munit.FunSuite:
     )
     assert(
       !flat.head.contains("hs.asInstanceOf[scala.Array[scala.Array"),
-      s"the argument itself was cast to a two-dimensional type; that compiles and throws (G26)\n${flat.head}"
+      s"the argument itself was cast to a two-dimensional type; that compiles and throws\n${flat.head}"
     )
     assert(
       !flat.head.contains("?H") && !flat.head.contains("scala.Array[?]"),

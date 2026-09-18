@@ -139,7 +139,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   // …AND THE DEPENDENT STILL COERCES
   // -------------------------------------------------------------------------
 
-  test("a dependent that mints nothing does not retype without a published port map (O8)") {
+  test("a dependent that mints nothing does not retype without a published port map") {
     val (p, root) = model()
     val after     = run(p, root, phase, "dep")
     // A formal on a callee this run does not emit is read off the BASE'S PUBLISHED PORT MAP.

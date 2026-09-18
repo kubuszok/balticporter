@@ -191,7 +191,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
 
     // non-fatal gap, not a fatal error — the dependent follows the base's published plan
     val fatal = surface.gaps.filter(_.fatal)
-    assertEquals(clue(fatal), Nil, "a descriptor disagreement on a non-owned type is not fatal (D15)")
+    assertEquals(clue(fatal), Nil, "a descriptor disagreement on a non-owned type is not fatal")
     val baseGaps = surface.gaps.filter(_.subject == "p.Base")
     assertEquals(clue(baseGaps).size, 1, "still recorded as a gap for p.Base")
     assert(clue(baseGaps.head.why).contains("(String)"), "the message names the ROW it disagrees with")

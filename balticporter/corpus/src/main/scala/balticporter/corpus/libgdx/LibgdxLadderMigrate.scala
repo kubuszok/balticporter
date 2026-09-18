@@ -818,7 +818,7 @@ object LibgdxLadder:
                 1,
                 "def add(actors: sge.scenes.scene2d.Actor*): sge.scenes.scene2d.ui.Table = { for (a <- actors) add(lowlevel.Nullable(a)); this }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.ui.Table#add(Actor*)"),
-                Some("sge's varargs add: `table.add(a1, a2, a3)` (K6.5)"),
+                Some("sge's varargs add: `table.add(a1, a2, a3)`"),
                 false
               ),
               // sge's Table.stack takes Actor*; port takes Array[Actor]
@@ -912,7 +912,7 @@ object LibgdxLadder:
                 1,
                 "def this(frameDuration: scala.Float, keyFrames: T*)(using mk: lowlevel.MkArray[T]) = {\n    this(frameDuration, mk.create(0))\n    val da = lowlevel.util.DynamicArray[T](true, keyFrames.size)\n    for (k <- keyFrames) da.add(k)\n    this.setKeyFrames(mk.copyOf(da.items.asInstanceOf[scala.Array[T]], da.size))\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.Animation#<init>(T*)"),
-                Some("sge's varargs ctor: `Animation[String](0.1f, \"a\", \"b\", \"c\")` (K6.5)"),
+                Some("sge's varargs ctor: `Animation[String](0.1f, \"a\", \"b\", \"c\")`"),
                 false
               )
             ),
@@ -922,7 +922,7 @@ object LibgdxLadder:
                 1,
                 "def this(processors: sge.InputProcessor*) = {\n    this()\n    for (p <- processors) this.processors.add(p)\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.InputMultiplexer#<init>(InputProcessor*)"),
-                Some("sge's varargs ctor: `InputMultiplexer(p1, p2)` (K6.5)"),
+                Some("sge's varargs ctor: `InputMultiplexer(p1, p2)`"),
                 false
               )
             ),
@@ -932,7 +932,7 @@ object LibgdxLadder:
                 1,
                 "def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: sge.graphics.VertexAttribute*)(using sge.Sge) =\n    this(isStatic, numVertices, new sge.graphics.VertexAttributes(attributes.toArray))",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.VertexBufferObject#<init>(VertexAttribute*)"),
-                Some("sge's varargs ctor: `VertexBufferObject(true, 4, positionAttr())` (K6.5)"),
+                Some("sge's varargs ctor: `VertexBufferObject(true, 4, positionAttr())`"),
                 false
               )
             ),
@@ -942,7 +942,7 @@ object LibgdxLadder:
                 1,
                 "def sequence(actions: sge.scenes.scene2d.Action*): sge.scenes.scene2d.actions.SequenceAction = {\n    val action = new sge.scenes.scene2d.actions.SequenceAction()\n    for (a <- actions) action.addAction(a)\n    action\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.actions.Actions#sequence(Action*)"),
-                Some("sge's varargs sequence: `Actions.sequence(moves*)` (K6.5)"),
+                Some("sge's varargs sequence: `Actions.sequence(moves*)`"),
                 true
               ),
               balticporter.transform.AddMembersTransform.MemberSpec(
@@ -950,7 +950,7 @@ object LibgdxLadder:
                 1,
                 "def parallel(actions: sge.scenes.scene2d.Action*): sge.scenes.scene2d.actions.ParallelAction = {\n    val action = new sge.scenes.scene2d.actions.ParallelAction()\n    for (a <- actions) action.addAction(a)\n    action\n  }",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.scenes.scene2d.actions.Actions#parallel(Action*)"),
-                Some("sge's varargs parallel: `Actions.parallel(actions*)` (K6.5)"),
+                Some("sge's varargs parallel: `Actions.parallel(actions*)`"),
                 true
               )
             ),
@@ -960,7 +960,7 @@ object LibgdxLadder:
                 1,
                 "def this(numVertices: scala.Int, attributes: sge.graphics.VertexAttribute*) =\n    this(numVertices, new sge.graphics.VertexAttributes(attributes.toArray))",
                 balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.VertexArray#<init>(VertexAttribute*)"),
-                Some("sge's varargs ctor: `VertexArray(4, positionAttr())` (K6.5)"),
+                Some("sge's varargs ctor: `VertexArray(4, positionAttr())`"),
                 false
               )
             )

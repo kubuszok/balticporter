@@ -177,7 +177,7 @@ class RewriteCallSitesSpec extends PortSuite:
   // -------------------------------------------------------------------------------------------
 
   test(
-    "a retyping phase's site count CANNOT be taken before it runs — its own `transformType` moves nothing until `run` has resolved its tables (K5.10)"
+    "a retyping phase's site count CANNOT be taken before it runs — its own `transformType` moves nothing until `run` has resolved its tables"
   ) {
     val before    = balticporter.frontend.spoon.SpoonTir.fromSource(src)
     val ph        = new CollectionsTransform

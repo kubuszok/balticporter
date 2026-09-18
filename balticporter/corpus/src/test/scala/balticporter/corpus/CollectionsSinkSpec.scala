@@ -57,7 +57,7 @@ class CollectionsSinkSpec extends PortSuite:
     val (_, _, _, out) = ported(Shape)
     assert(
       clue(out).contains("sb.append(balticporter.runtime.JavaCollections.Reified.toJavaValue(value))"),
-      "the port's data model holds both representations at an `Object` slot (K18), so the " +
+      "the port's data model holds both representations at an `Object` slot, so the " +
         "question is asked of the OBJECT — the helper is identity for everything else"
     )
   }

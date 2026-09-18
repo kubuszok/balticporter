@@ -154,7 +154,7 @@ class CollectionClosureCheckSpec extends PortSuite:
     assertEquals(clue(orphans), Set.empty[String])
   }
 
-  test("a finding is held to the units the run EMITS — a dependent never reports its base's (D2)") {
+  test("a finding is held to the units the run EMITS — a dependent never reports its base's") {
     // Unfiltered, this check reported the SAME two findings for libGDX core, libGDX's test suite
     // and both Ashley source sets: `AsyncExecutor`'s two `java.util.concurrent` queues, seen four
     // times, three of them by a repository that cannot act on them. A finding an agent cannot fix

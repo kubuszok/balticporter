@@ -160,7 +160,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     assertEquals(clue(fs).map(_.render), Nil)
   }
 
-  test("a stranded slot is held to the units the run EMITS — a dependent never reports its base's (D2)") {
+  test("a stranded slot is held to the units the run EMITS — a dependent never reports its base's") {
     // The same structural-ownership filter `OmissionCheck` and `PortabilityCheck.inEmittedCode` carry: a dependent
     // port's program contains its base's units, and a slot stranded inside one of those is the
     // base's finding.

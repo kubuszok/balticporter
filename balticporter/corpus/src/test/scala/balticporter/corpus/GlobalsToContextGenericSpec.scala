@@ -296,7 +296,7 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   private def aliasHolder = base.copy(members = Map("svc" -> "svc", "gl" -> "svc.getGl()"), through = Map("demo.Prof" -> "svc"))
 
-  test("a write REFRESHING an alias from the path it is mapped to is elided — never the setter's call (K57)") {
+  test("a write REFRESHING an alias from the path it is mapped to is elided — never the setter's call") {
     val (_, _, log, out) = portedFrom(aliasSrc, aliasHolder)
     val enable           = out.substring(out.indexOf("def enable"), out.indexOf("def swap"))
     assertEquals(enable.split("setGl").length - 1, 1, s"java's own setter call stays; the refresh adds none:\n$enable")

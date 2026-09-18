@@ -68,7 +68,7 @@ class CollectionsCarrierSpec extends PortSuite:
     val (_, _, out) = ported(JacksonShape)
     assert(
       clue(out).contains("scala.collection.mutable.Map[java.lang.String, java.lang.Object]"),
-      "a per-ARGUMENT list is exactly what a RuleScope exclusion cannot express (K16)"
+      "a per-ARGUMENT list is exactly what a RuleScope exclusion cannot express"
     )
     assert(
       out.contains("def toMap(") && out.contains("): scala.collection.mutable.Map["),

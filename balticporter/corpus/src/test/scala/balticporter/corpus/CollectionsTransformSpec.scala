@@ -1949,7 +1949,7 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "classOf[demo.ObjMap")
   }
 
-  test("a classOf literal at a JDK-table type keeps java's class (K20)") {
+  test("a classOf literal at a JDK-table type keeps java's class") {
     // A classOf whose inner type is a JDK-table source (java.util.List) must not be retyped.
     // A reified carrier holds java's own class, and `fromJava` bridges at the
     // use.  The retarget entry for ObjMap must still sync -- both cases in one test.
@@ -2487,7 +2487,7 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "JavaIterator.from(s.orderedItems.iterator).toArray")
   }
 
-  test("a type test at a PARAMETERISED retarget target is erased to a wildcard and counted (K18)") {
+  test("a type test at a PARAMETERISED retarget target is erased to a wildcard and counted") {
     import CollectionsTransform.RetargetArg.*
     val ph = new CollectionsTransform(
       retarget = Map("demo.CharArr" -> "lowlevel.util.DynamicArray"),
