@@ -47,8 +47,7 @@ enum Severity:
   /** a checked NON-difference: the two languages agree and this row records that they were checked */
   case NoImpact
 
-/** where the engine stands on a difference TODAY. Re-derived mechanically (`scripts/catalog-status.sh`) and pinned by `ClosedTwinStatusSpec`, never transcribed by hand — a status is a claim about a
-  * moving target.
+/** where the engine stands on a difference TODAY — never transcribed by hand from a stale note, because a status is a claim about a moving target.
   */
 enum Status:
   /** the engine reproduces Java's meaning; [[Difference.evidence]] names the symbol that does it */
@@ -76,9 +75,9 @@ enum Status:
 /** the empirical record this row PREDICTS, which is what makes the catalog answerable to reality rather than to itself.
   */
 enum Twin:
-  /** an entry in the project's frozen limits record, by its stable id (`F5`, `C12`, `K5.6`) — the id `ClosedTwinStatusSpec` resolves
+  /** the measured observation that this difference exists and how it showed up — one plain sentence carrying the fact itself, rather than a pointer to where it was recorded.
     */
-  case EngineLimit(id: String)
+  case Measured(evidence: String)
 
   /** the project rules' table of java-statement semantics differences — rows an agent is expected to know by heart
     */

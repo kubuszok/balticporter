@@ -7,8 +7,8 @@ import Twin.*
 import FixKind.*
 import Attaches.*
 
-/** The language half of the catalog -- `JS-{E,S,C,G}`. Every status is RE-DERIVED against the engine (via `scripts/catalog-status.sh`, then the cited SYMBOL, then a fixture) -- never copied from a
-  * document. The count is DERIVED ([[all]]`.size`), written nowhere.
+/** The language half of the catalog -- `JS-{E,S,C,G}`. Every status is RE-DERIVED against the engine (via the cited SYMBOL, then a fixture) -- never copied from a document. The count is DERIVED
+  * ([[all]]`.size`), written nowhere.
   */
 object Differences:
 
@@ -17,7 +17,7 @@ object Differences:
   private def cId(n: Int) = DiffId(C, n)
   private def gId(n: Int) = DiffId(G, n)
 
-  private def el(id: String) = EngineLimit(id)
+  private def measured(evidence: String) = Measured(evidence)
 
   // ATTACHMENT -- three shared "not instrumented yet" answers, one per area whose
   // obligations are not declared. Written down rather than defaulted, so a row added
@@ -132,7 +132,9 @@ object Differences:
       "SLS 6.12.4 — as JS-E03; the two dispatches share one predicate",
       Loud,
       Handled,
-      el("F8"),
+      measured(
+        "The narrowing cast for a compound assignment written as a statement was missing when the same assignment appeared as an expression, because the two forms did not share one rule."
+      ),
       Universal,
       "SpoonTir.exprArm's CtOperatorAssignment arm, via the same SpoonTir.compoundNarrow JS-E03 consults",
       Lowered("CtOperatorAssignment", Dispatch.Expression)
@@ -144,7 +146,9 @@ object Differences:
       "UNCITED — an `if` expression types as the lub of its branches",
       Mixed,
       Handled,
-      el("K17"),
+      measured(
+        "A conditional expression mixing boxed numeric branches of different types needs a real numeric conversion at the branch, not just a checked cast, or it throws at run time."
+      ),
       Universal,
       "SpoonTir.promotedBranch converts each OPERAND to java's own computed type, beside the null-branch ascription in the CtConditional arm",
       Lowered("CtConditional", Dispatch.Expression)
@@ -161,7 +165,9 @@ object Differences:
       Partial(
         "the FRONTEND's two readings are fixed — a cast expression's own type at the slot that boxes it, and a wrapper operand at a primitive target — but a value some later PHASE retypes after the frontend decided is still unrepaired: the emitter COUNTS that cell (`cast-conversion`) and no corpus site has ever produced one"
       ),
-      el("K17"),
+      measured(
+        "Casting a value that a later step retyped to a primitive type needs a real numeric conversion, not just an assertion, or it throws at run time instead of converting."
+      ),
       Universal,
       "SpoonTir.expr via SpoonTir.castOf for the cast itself, and SpoonTir.coerce + SpoonTir.uncheckedGeneric reading SpoonTir.castType for the slot; TirEmitter's Tree.Typed arm renders what those decided and CastConversionCheck counts what a later phase moved under it",
       Rendered("Typed")
@@ -173,7 +179,9 @@ object Differences:
       "UNCITED — weak conformance does not apply at a type-parameter slot",
       Loud,
       Partial("operators are free and the test-assertion shape is closed; the general call boundary is open"),
-      el("X2"),
+      measured(
+        "A translated test framework's equality check is type-constrained unlike Java's, so the conversion reapplies Java's own numeric promotion and argument order at that one call."
+      ),
       Parameterised,
       "TestFrameworkTransform.promote",
       Cited("test-framework")
@@ -284,7 +292,9 @@ object Differences:
       "SLS 6.12.4 — `l op= r` expands to `l = l op r`, and every occurrence of `l` is evaluated",
       Silent,
       Handled,
-      el("F7"),
+      measured(
+        "A compound assignment or increment evaluates its array reference and index once in Java; the translation binds each to a temporary instead of repeating the side effect."
+      ),
       Universal,
       "SpoonTir.stmtArm's CtOperatorAssignment arm and exprArm's twin consult; TirEmitter.termArm's Assign and IncDec arms bind non-trivial lvalues",
       Lowered("CtOperatorAssignment", Dispatch.Either)
@@ -349,7 +359,9 @@ object Differences:
       "UNCITED — `boundary`/`break` resolve the innermost `Label` in implicit scope",
       Silent,
       Handled,
-      el("F1"),
+      measured(
+        "An unlabelled break or continue always targets the nearest enclosing loop or switch; a named marker is used only when a jump must reach a labelled statement further out."
+      ),
       Universal,
       "Jumps.breaksOut/continuesIn/jumpsTo; TirEmitter.loopWithJumps",
       everyLoop
@@ -361,7 +373,9 @@ object Differences:
       "UNCITED — Scala has no labelled statement; a named `boundary` is the image",
       Silent,
       Handled,
-      el("F1"),
+      measured(
+        "A Java label can sit on any statement, not just a loop, so a labelled non-loop statement is wrapped and given its own named marker for break to target."
+      ),
       Universal,
       "Tir.Tree.Labeled; TirEmitter's Tree.Labeled arm and labelNeedsBoundary",
       Rendered("Labeled")
@@ -373,7 +387,9 @@ object Differences:
       "UNCITED — `boundary.break` with no `using` resolves the innermost `Label`",
       Silent,
       Handled,
-      el("F2"),
+      measured(
+        "An unnamed jump always resolves to the nearest enclosing marker, so any marker the translation adds inside a loop must be named or it silently steals the loop's own jumps."
+      ),
       Universal,
       "TirEmitter.interposes feeding TirEmitter.loopWithJumps",
       everyLoop
@@ -385,7 +401,9 @@ object Differences:
       "UNCITED — a `match` arm never falls through",
       Silent,
       Handled,
-      el("F3"),
+      measured(
+        "Falling through to the next case's statements has no direct match equivalent, so the next case's statements are duplicated into this arm instead of being reached by falling into it."
+      ),
       Universal,
       "SpoonTir.switchStmt's tail-duplication closures",
       Lowered("CtSwitch", Dispatch.Statement)
@@ -412,7 +430,9 @@ object Differences:
       "UNCITED — a `match` arm cannot be left early",
       Silent,
       Handled,
-      el("F3"),
+      measured(
+        "An unlabelled break in the middle of a case ends only that case; since a match arm cannot exit early, it gets its own named marker to leave through."
+      ),
       Universal,
       "TirEmitter.matchStr and TirEmitter.caseNeedsBoundary",
       Rendered("Match")
@@ -436,7 +456,9 @@ object Differences:
       "UNCITED — `null` matches no literal pattern and reaches the last arm",
       Silent,
       Handled,
-      el("F6"),
+      measured(
+        "A switch on a reference-typed value throws immediately when that value is null in Java, while a plain match would fall through, so an explicit null-check arm throws first."
+      ),
       Universal,
       "TirEmitter.matchStr's synthesised `case null` throw; SwitchNullCheck",
       Rendered("Match")
@@ -493,7 +515,9 @@ object Differences:
       "UNCITED — `scala.util.boundary.Break` extends `RuntimeException`",
       Silent,
       Handled,
-      el("F4"),
+      measured(
+        "The type used to model a jump is itself an ordinary exception, so a broad translated catch could swallow it; a rethrow arm sits ahead of the java arms."
+      ),
       Universal,
       "TirEmitter.tryStr's guard, via Jumps.catchesBreak; BreakCatchCheck",
       Rendered("Try")
@@ -517,7 +541,9 @@ object Differences:
       "UNCITED — no counterpart statement; `Using` is not one (it is a lambda)",
       Silent,
       Handled,
-      el("F5"),
+      measured(
+        "Try-with-resources must close every resource in reverse order on any completion, before the try's own catch or finally runs; it was once dropped with no resources ever released."
+      ),
       Universal,
       "TirEmitter.tryStr -> resourceStr; TryResourceCheck",
       Rendered("Try")
@@ -553,7 +579,9 @@ object Differences:
       "UNCITED — a `for` binding is a `val`",
       Loud,
       Handled,
-      el("K7"),
+      measured(
+        "A for-each loop's variable can be reassigned in the body or declared at a supertype of the collection's element; the loop binds a fresh name and casts it back."
+      ),
       Universal,
       "TirEmitter's Tree.ForEach arm — widenedBinding and reassignsBinding",
       Rendered("ForEach")
@@ -589,7 +617,9 @@ object Differences:
       "UNCITED — Scala requires an initialiser instead, so the analysis has no image",
       Mixed,
       Partial("the FIELD half is closed; the local half is unexamined — an uninitialised local silently takes a default"),
-      el("C10"),
+      measured(
+        "A class field with no Java initialiser is emitted with a placeholder marking it as deliberately uninitialised, but only where that would not override a nullable field's explicit null default."
+      ),
       Universal,
       "TirEmitter.valDefStr's fieldOfAClass gate and defaultFor",
       Rendered("ValDef")
@@ -696,7 +726,9 @@ object Differences:
       "UNCITED — a companion object has no inheritance relation to its class's parents",
       Loud,
       Handled,
-      el("T14"),
+      measured(
+        "A static member is callable through any subclass in Java, but a Scala companion inherits nothing from another, so the call is emitted through the type that actually declares it."
+      ),
       Universal,
       "SpoonTir.staticCallQualifier, reading the minter's owner rather than the written name",
       Lowered("CtInvocation", Dispatch.Expression)
@@ -708,7 +740,9 @@ object Differences:
       "UNCITED — as JS-C01, through the interface edge",
       Loud,
       Handled,
-      el("T14"),
+      measured(
+        "Interface constants are inherited by every implementing class in Java, but Scala companions inherit nothing, so a reference is emitted through the interface that actually declares the constant."
+      ),
       Universal,
       "SpoonTir.declaringStaticType's BFS over the whole inheritance closure",
       Both(Lowered("CtInvocation", Dispatch.Expression), everyStaticFieldRead)
@@ -720,7 +754,9 @@ object Differences:
       "UNCITED — a companion re-export must not merge a redeclaration away",
       Silent,
       Handled,
-      el("T14"),
+      measured(
+        "A hidden static name resolves by the qualifier's declared type in Java; since companions inherit nothing in Scala, the reference is routed to the type that actually declares it."
+      ),
       Universal,
       "SpoonTir.declaringStaticType (nearest declarer wins); TirEmitter.staticOwnersOf excludes the class's own static names",
       Rendered("ClassDef")
@@ -744,7 +780,9 @@ object Differences:
       "UNCITED — fully-qualified emission removes the question",
       NoImpact,
       Handled,
-      el("T14"),
+      measured(
+        "A constant reached through a subclass's name or a static import is still declared on only one type in Java; the emitted reference names that declaring type directly."
+      ),
       Universal,
       "SpoonTir.nestedPath and SpoonTir.staticFieldAccess",
       everyStaticFieldRead
@@ -780,7 +818,9 @@ object Differences:
           "whose initialisation is a MUTUAL CYCLE is refused and counted (JS-C10); and the ORDER a " +
           "force fires in is approximate where two initialisers meet through a third party"
       ),
-      el("K22"),
+      measured(
+        "A Java static initialiser fires on first instantiation or subclass initialisation, but a Scala companion initialises only when touched, so class bodies force the companion at those same points."
+      ),
       Universal,
       "TirEmitter.forceCompanion and its `hasClinit` call site; ClassInitTriggerCheck.stepNine",
       Rendered("ClassDef")
@@ -804,7 +844,9 @@ object Differences:
       "UNCITED — an object body is one sequence, so the order has to survive the frontend",
       Silent,
       Handled,
-      el("C12"),
+      measured(
+        "Static blocks and static field initialisers must run in the order they appear in the source; reordering them once made a field read its own later initialiser as unset."
+      ),
       Universal,
       "SpoonTir.classDef's merged position-key sort over fields and init blocks; TirEmitter.orderBody's isStep4, which covers `<clinit>`",
       Rendered("ClassDef")
@@ -823,7 +865,9 @@ object Differences:
           "refused and counted: JS-C07's instantiation trigger is not attached where forcing the " +
           "companion would re-enter an initialisation in progress"
       ),
-      el("K22"),
+      measured(
+        "When two companions initialise each other in a cycle, forcing one from inside the other's own initialisation finds no instance yet, unlike Java, which still supplies default field values."
+      ),
       Universal,
       "ClassInitTriggerCheck.reentrantBearers; ClassInitTriggerCheck.Issue.ReentrantRefused",
       Rendered("ClassDef")
@@ -861,7 +905,9 @@ object Differences:
       "UNCITED — a Scala class body IS its constructor, so the sequence is an emission order",
       Silent,
       Partial("steps 2-4 are closed; the residue is what JS-C15 and JS-C19 carry"),
-      el("C12"),
+      measured(
+        "Fields and initialiser blocks are moved to the head of the class body in source order, but a promoted constructor's own local variables must stay exactly where java wrote them."
+      ),
       Universal,
       "CtorFunnel; SpoonTir.classDef's step-4 sort; TirEmitter.orderBody",
       Rendered("ClassDef")
@@ -873,7 +919,9 @@ object Differences:
       "UNCITED — the same order, once a primary constructor exists to host it",
       NoImpact,
       Handled,
-      el("C1"),
+      measured(
+        "A constructor with parameters becomes the primary only after checking the whole program for a subclass that needs a no-argument superclass call, or such subclasses fail to compile."
+      ),
       Universal,
       "CtorFunnel's primary promotion; TirEmitter.lowerCtors splicing plan.primaryBody",
       Rendered("ClassDef")
@@ -911,7 +959,9 @@ object Differences:
       "UNCITED — the anonymous class carries its captures the same way",
       Silent,
       Partial("the structural capture is closed; the interaction with a collections retype was measured but not confirmed closed"),
-      el("T1"),
+      measured(
+        "An anonymous class creation is recognised before an ordinary constructor call is, or every anonymous subclass created for a double-brace initialiser would have its body silently discarded."
+      ),
       Universal,
       "SpoonTir.anonClass's non-static CtAnonymousExecutable arm",
       Lowered("CtNewClass", Dispatch.Expression)
@@ -923,7 +973,9 @@ object Differences:
       "UNCITED — the same sequence, which a frontend that groups by NODE KIND has already lost",
       Silent,
       Handled,
-      el("C12"),
+      measured(
+        "Field initialisers and instance initialiser blocks belong to one single ordering by their position in the source, never split into two separate groups by what kind of declaration they are."
+      ),
       Universal,
       "SpoonTir.classDef's `(fields ++ initBlocks).sortBy(posKey)`; TirEmitter.orderBody's isStep4",
       Rendered("ClassDef")
@@ -935,7 +987,9 @@ object Differences:
       "UNCITED — only a primary constructor may call the superclass constructor",
       Loud,
       Handled,
-      el("C3"),
+      measured(
+        "A Scala secondary constructor cannot call the superclass constructor; the widest such call is promoted to the primary only for exception types, since padding an argument would be a guess."
+      ),
       Universal,
       "CtorFunnel's promotion; TirEmitter.orderBody's delegateTarget post-order; OmissionCheck counts the residue",
       Rendered("ClassDef")
@@ -947,7 +1001,9 @@ object Differences:
       "UNCITED — a Scala class always has a primary constructor",
       Loud,
       Handled,
-      el("C8"),
+      measured(
+        "A synthesised no-argument primary constructor can be shadowed by a narrower real constructor during overload resolution, so it takes an extra marker parameter to change its arity."
+      ),
       Universal,
       "TirEmitter.orderBody's paramfulPrimary; CtorFunnel.delegationOnlyNilary",
       Rendered("ClassDef")
@@ -961,7 +1017,9 @@ object Differences:
       Partial(
         "the delegation order answers anteriority; the applicability of a SYNTHESISED primary against a narrower real constructor is open"
       ),
-      el("C8"),
+      measured(
+        "A synthesised primary constructor could be mistaken for a narrower real one during overload resolution, so it carries an extra marker parameter purely to change its arity."
+      ),
       Universal,
       "TirEmitter.orderBody's delegation-topological sort",
       Rendered("ClassDef")
@@ -975,7 +1033,9 @@ object Differences:
       Partial(
         "the RISK is counted at every rendered call whose candidate set spans one of java's phase boundaries; WHICH member scala then binds is not modelled and cannot be without a resolver"
       ),
-      el("T17"),
+      measured(
+        "Java resolves an overloaded call in three phases while Scala resolves in one, so the two can bind the same call to different methods; the risk is counted, not predicted."
+      ),
       Universal,
       "OverloadRiskCheck.analyse (the phase-boundary predicate) and TirEmitter's JS-C22 consult at the Apply arm; two narrow FACES are closed beside it — Visibility.decide restores javac's candidate set, TirEmitter.numericOverloadAscription closes exact-match-vs-widening",
       Rendered("Apply")
@@ -989,7 +1049,9 @@ object Differences:
       Partial(
         "the RISK is counted where an applicable candidate is generic and another is not; which alternative scala's relative-weight rule then prefers is not modelled"
       ),
-      el("T17"),
+      measured(
+        "Where Java and Scala's overload resolution could disagree, one specific tie-break, Scala's preference for the non-generic alternative over a generic one, is called out and counted separately."
+      ),
       Universal,
       "OverloadRiskCheck.Issue.GenericTieBreak and TirEmitter's JS-C23 consult at the Apply arm — reported apart from JS-C22 because the JLS clause is its own and so would any fix be",
       Rendered("Apply")
@@ -1054,7 +1116,9 @@ object Differences:
       "UNCITED — Scala has a direct counterpart; only the capture wiring is missing",
       Loud,
       Handled,
-      el("T9"),
+      measured(
+        "A class declared inside a method body is translated like any other, and every whole-program pass uses the shared tree walk so such local classes are never silently skipped."
+      ),
       Universal,
       "SpoonTir.stmtArm's CtClass arm -> SpoonTir.classDef with the enclosing EXECUTABLE as owner " +
         "and SpoonTir.localName for java's source name; the anonymous-class body wiring reused " +
@@ -1069,7 +1133,9 @@ object Differences:
       "UNCITED — the same construct, with a synthesised name",
       Silent,
       Handled,
-      el("T1"),
+      measured(
+        "Building an anonymous class is recognised ahead of an ordinary constructor call, because in the parser's tree an anonymous class creation is itself a kind of constructor call."
+      ),
       Universal,
       "SpoonTir.anonClass",
       Lowered("CtNewClass", Dispatch.Expression)
@@ -1095,7 +1161,9 @@ object Differences:
       Partial(
         "rule 1 — class beats interface — is closed; rule 2 — the MOST SPECIFIC interface — agrees only by luck of mixin order"
       ),
-      el("T7"),
+      measured(
+        "A class inheriting a concrete method from its superclass while an interface supplies a default for it needs an explicit override forwarding to the superclass, generated automatically."
+      ),
       Universal,
       "TirEmitter.diamondOverrides, whose `sup` is the superclass and whose mixins are all in the tail",
       Rendered("ClassDef")
@@ -1107,7 +1175,9 @@ object Differences:
       "UNCITED — a corollary of JS-C01 at the interface edge",
       Loud,
       Handled,
-      el("T14"),
+      measured(
+        "Interface static members are not inherited by an implementing class in Java either, and Scala companions inherit nothing regardless, so both languages route access through the interface itself."
+      ),
       Universal,
       "TirEmitter's companion re-export lists",
       Rendered("ClassDef")
@@ -1131,7 +1201,9 @@ object Differences:
       "UNCITED — a corollary of JS-C01, JS-C02 and JS-C08",
       Loud,
       Handled,
-      el("T14"),
+      measured(
+        "An interface field is implicitly public and static in Java; since Scala companions inherit nothing, reading it through an implementing type still emits a reference to the interface's own companion."
+      ),
       Universal,
       "SpoonTir.fieldFlags with SpoonTir.declaringStaticType's interface edge",
       Rendered("ValDef")
@@ -1145,7 +1217,9 @@ object Differences:
         "where java writes `values()`",
       Loud,
       Handled,
-      el("T21"),
+      measured(
+        "A ported Java enum must be emitted with Scala's own enum syntax, because only that form can extend the Java enum base class and satisfy its bounds."
+      ),
       Universal,
       "TirEmitter.scalaEnumDef writes none of the four (the parent and the desugaring have them) and " +
         "applyStr0 drops the parens at a `values()` call; sealedEnumDef's nameM, values and valueOf " +
@@ -1159,7 +1233,9 @@ object Differences:
       "UNCITED — a constructor parameter becomes a class member",
       Loud,
       Handled,
-      el("T11"),
+      measured(
+        "A promoted enum constructor parameter becomes a class member and can collide with the name method every enum inherits, or with a declared accessor of the same name."
+      ),
       Universal,
       "TirEmitter.sealedEnumDef's hasName, and EnumShape.Reserved — which is the same collision read " +
         "at the PARENT, where java.lang.Enum's final members make it a refusal rather than a skip",
@@ -1172,7 +1248,9 @@ object Differences:
       "UNCITED — nothing supplies it unless it is emitted",
       Loud,
       Handled,
-      el("T13"),
+      measured(
+        "Every Java enum has an ordinal method whether or not the source mentions it, so it is generated per constant as a constant-time override."
+      ),
       Universal,
       "TirEmitter.sealedEnumDef's hasOrdinal; scalaEnumDef inherits it from java.lang.Enum",
       Rendered("ClassDef")
@@ -1186,7 +1264,9 @@ object Differences:
       Partial(
         "fields and methods are collected; instance-init blocks and nested types are not, so the step-4 order inside a constant body is unreached — and a constant body is now also what makes the enum inexpressible as a scala 3 `enum` (T21), so such an enum is not a `java.lang.Enum` either"
       ),
-      el("T8"),
+      measured(
+        "A Java enum constant with its own class body becomes its own case carrying that body's fields and initialisers, overriding whichever methods it overrides."
+      ),
       Universal,
       "SpoonTir.enumCase, which collects only CtField and CtMethod; EnumShape.refusal, which reads " +
         "the same bodies to decide the enum's SHAPE",
@@ -1286,7 +1366,9 @@ object Differences:
       "UNCITED — a qualified `private` is the image",
       Loud,
       Handled,
-      el("T12"),
+      measured(
+        "Java's package-private access has no direct Scala keyword, so it is emitted as a package-qualified private, keeping same-package callers able to reach the member the way java does."
+      ),
       Universal,
       "Visibility.decide's isPackagePrivate branch; TirEmitter.vis",
       everyDeclaration
@@ -1298,7 +1380,9 @@ object Differences:
       "UNCITED — Scala's `protected` grants no package access",
       Loud,
       Handled,
-      el("T12"),
+      measured(
+        "Java's protected also grants same-package access and can affect which overload resolves; a bare Scala protected would break same-package callers, so it is emitted package-qualified instead."
+      ),
       Universal,
       "Visibility.decide's isProtected branch, with overrideTarget and qualifierResolves",
       everyDeclaration
@@ -1322,7 +1406,9 @@ object Differences:
       "UNCITED — emitting nothing means public, which is the wrong default",
       Silent,
       Handled,
-      el("T12"),
+      measured(
+        "Java's default access is package-private while Scala's default is public, the opposite way round, so an unmarked member is still emitted package-qualified rather than left public."
+      ),
       Universal,
       "Visibility.decide — the same branch as JS-C47",
       everyDeclaration
@@ -1390,7 +1476,9 @@ object Differences:
       "UNCITED — `?` with `<:`/`>:` bounds",
       NoImpact,
       Handled,
-      el("G2"),
+      measured(
+        "A generic type argument written as a wildcard in Java is rendered as a wildcard with the matching bound syntax, kept consistent everywhere the same type is used."
+      ),
       Universal,
       "SpoonTir.tpe's CtWildcardReference branch; TirEmitter.tpe's two TypeBounds arms render the grammar",
       Both(everyWildcard, RenderedType("TypeBounds"))
@@ -1402,7 +1490,9 @@ object Differences:
       "UNCITED — Scala captures per use, so the two uses are unrelated",
       Loud,
       Open,
-      el("G24"),
+      measured(
+        "Java relates two uses of one wildcard in an expression through capture conversion, which Scala does not perform automatically, so the site is left without a synthesised fix."
+      ),
       Universal,
       "no rewrite exists; the fix is local (bind to a named local) and none is synthesised",
       everyWildcard
@@ -1414,7 +1504,9 @@ object Differences:
       "UNCITED — the corresponding Scala bound is not the same set",
       Loud,
       Handled,
-      el("G23"),
+      measured(
+        "Java bounds a wildcard by Object, Scala by Any, so the widest wildcard has no matching Scala bound; the one affected operation becomes a rewritten helper call."
+      ),
       Universal,
       "SpoonTir.tpe's `!w.isUpper && isObj` branch",
       everyWildcard
@@ -1426,7 +1518,9 @@ object Differences:
       "UNCITED — the capture cannot be written, so an alias plus a widening cast is the image",
       Loud,
       Handled,
-      el("K7"),
+      measured(
+        "Iterating a wildcard-typed collection captures an element type nothing can name, so the loop binds a fresh generated name and recovers the declared type with a cast."
+      ),
       Universal,
       "TirEmitter.widenedBinding in the Tree.ForEach arm",
       Rendered("ForEach")
@@ -1441,7 +1535,9 @@ object Differences:
       "UNCITED — no wildcard is legal in a parent, so the bound has to be filled",
       Loud,
       Handled,
-      el("G7"),
+      measured(
+        "A wildcard used in an extends clause is replaced by the type parameter's own declared bound, resolved left to right, rather than by a blanket top type."
+      ),
       Universal,
       "TirEmitter.deWildcardedArgs — a wildcard argument takes its own written bound, else the type PARAMETER's declared upper bound, else AnyRef, resolving left to right so a later bound can name an earlier parameter",
       Rendered("ClassDef")
@@ -1456,7 +1552,9 @@ object Differences:
       "UNCITED — an override is checked against the parent as emitted",
       Loud,
       Handled,
-      el("G6"),
+      measured(
+        "The type argument chosen to fill a raw parent type must be reused in every member overriding one from that parent, or the overriding members fail to satisfy it."
+      ),
       Universal,
       "TirEmitter.rawParentAlignment — deWildcardedArgs decides the parent's arguments and the SAME substitution re-renders the overriding parameters, so agreement is by construction rather than by two rules coinciding",
       Cited("raw-parent-alignment")
@@ -1468,7 +1566,9 @@ object Differences:
       "UNCITED — `[?]` everywhere is the only fill that round-trips across an override",
       Loud,
       Handled,
-      el("G2"),
+      measured(
+        "A raw Java type reference is filled with wildcards everywhere, because that is the one filling that still type-checks consistently across an overriding member."
+      ),
       Universal,
       "SpoonTir.tpe's empty-actuals branch",
       everyPlainReference
@@ -1485,7 +1585,9 @@ object Differences:
       "UNCITED — the rendering depends on whether the scope is an override",
       Silent,
       Handled,
-      el("G3"),
+      measured(
+        "The same raw Java type is filled differently depending on scope: a companion body cannot name its class's own type parameters, while code nested inside the class can."
+      ),
       Universal,
       "SpoonTir.tpe's empty-actuals branch reading inStatic and nestedInScope — a static frame fills with wildcards and a nested use with the enclosing instantiation's own names",
       everyPlainReference
@@ -1497,7 +1599,9 @@ object Differences:
       "UNCITED — an explicit cast is the image",
       Loud,
       Handled,
-      el("G12"),
+      measured(
+        "An unchecked conversion at a raw type inserts an explicit cast using the rendered target type, because the raw type's own generic argument cannot be recovered at that call site."
+      ),
       Universal,
       "SpoonTir.uncheckedGeneric emitting Tree.Typed, deciding on RENDERED types",
       everySlot
@@ -1509,7 +1613,9 @@ object Differences:
       "UNCITED — no faithful Scala image exists",
       Loud,
       Refused("the parent's fill and the body's own uses cannot be made consistent"),
-      el("G10"),
+      measured(
+        "An anonymous class built from a raw type has no faithful translation, since its body is written against the erasure and cannot satisfy the expected parameterised type."
+      ),
       Universal,
       "no symbol — a refusal by design; SpoonTir.ctorCall is where the shape is recognisable",
       Lowered("CtNewClass", Dispatch.Expression)
@@ -1521,7 +1627,9 @@ object Differences:
       "UNCITED — a genuine expressiveness limit; four closing attempts measured worse",
       Loud,
       Refused("no consistent fill exists for a partially-nameable F-bound"),
-      el("G8"),
+      measured(
+        "A class with several self-referential bounded type parameters can have no consistent raw-type fill, because satisfying one parameter's bound breaks another's, a genuine limit of Scala's expressiveness."
+      ),
       Universal,
       "TirEmitter.deWildcardedArgs's `fBounded` slot, which STAYS `?` — no finite instantiation satisfies `N <: Node[N,…]` and every unrolling fails the same bound, so the wildcard's weaker claim is the only one scalac accepts; SpoonTir.erasureOfFormal's `seen` cut is the frontend half of the same cycle",
       Rendered("ClassDef")
@@ -1537,7 +1645,9 @@ object Differences:
       "UNCITED — the marker must never be printed",
       Loud,
       Handled,
-      el("G2"),
+      measured(
+        "An inference variable produced by a Java diamond has no type any program can name, so the emitted code must never print it and instead lets it be inferred."
+      ),
       Universal,
       "SpoonTir.tpe's CtTypeParameterReference branch minting Symbol.UnresolvedTypeVarPrefix; TirEmitter.typeSym and isUnresolvedTypeVar rendering `?` instead",
       Both(LoweredType("CtTypeParameterReference"), RenderedType("TypeRef"))
@@ -1549,7 +1659,9 @@ object Differences:
       "UNCITED — `Array[T]` is invariant, so a cast is needed at the use",
       Loud,
       Handled,
-      el("G1"),
+      measured(
+        "Java arrays are covariant with a runtime check on every store, but Scala arrays are invariant, so a covariant use needs a cast rather than widening the declared element type."
+      ),
       Universal,
       "SpoonTir.coerce's arrayCov clause, through SpoonTir.arrayCovSlot",
       everySlot
@@ -1563,7 +1675,9 @@ object Differences:
       Partial(
         "scalar and array-initialiser positions are covered; a component that is a bare TYPE PARAMETER is excluded by construction and untested"
       ),
-      el("G16"),
+      measured(
+        "A primitive value at a generic slot always boxes to its wrapper class, not the bare type parameter, which is also why a cast for a primitive formal never fires."
+      ),
       Universal,
       "SpoonTir.coerce's boxing predicate, through SpoonTir.boxingSlot, and boxedPrimitive",
       everySlot
@@ -1575,7 +1689,9 @@ object Differences:
       "UNCITED — the same restriction, reached through JS-G13's generality",
       NoImpact,
       Handled,
-      el("G1"),
+      measured(
+        "Creating a generic array directly is illegal in Java to begin with, so only the cast idiom that already handles array covariance ever reaches the engine."
+      ),
       Universal,
       "SpoonTir.newArray with coerce's arrayCov",
       Lowered("CtNewArray", Dispatch.Expression)
@@ -1602,7 +1718,9 @@ object Differences:
       "UNCITED — `.length` is a method and the array constructor reference is a lambda",
       NoImpact,
       Handled,
-      el("K8"),
+      measured(
+        "An array constructor reference is one of several method-reference forms sharing one syntax, told apart by whether the target is static, with its arity taken from the array constructor itself."
+      ),
       Universal,
       "SpoonTir's array-length branch -> Tree.ArrayLength; TirEmitter's Tree.MethodRef array-ctor branch",
       Both(Rendered("ArrayLength"), Rendered("MethodRef"))
@@ -1614,7 +1732,9 @@ object Differences:
       "UNCITED — a producer/consumer erasure conflict the frontend has to resolve",
       Loud,
       Handled,
-      el("G14"),
+      measured(
+        "Without a full classpath, a reference to a type loses its generic arguments while the declaration keeps them, so a needed cast is derived from the declaration's own type."
+      ),
       Universal,
       "SpoonTir.isExternalCallee driving coerceArgsFixed's erasure cast",
       everyCall
@@ -1626,7 +1746,9 @@ object Differences:
       "UNCITED — the same erasure, and javac already rejected the clash",
       NoImpact,
       NonDiff("javac enforced it before the source reached the engine"),
-      el("D1"),
+      measured(
+        "Every overload of a member shares one full name internally; a separate parameter descriptor, not the compiler's already-enforced erasure-clash rule, is what tells the overloads apart."
+      ),
       NoFix,
       "no symbol; RewriteTrace.callArity is the only arity check",
       NoObligation(
@@ -1640,7 +1762,9 @@ object Differences:
       "UNCITED — the JLS timing is automatic; the retyping interaction is not",
       Silent,
       Partial("per-phase discipline rather than one central check; the producer side is counted, not coerced"),
-      el("K5.6"),
+      measured(
+        "A cast that was safe before a later step retyped one of the values involved can become impossible afterward; each retyping step must check the casts around what it moved."
+      ),
       Universal,
       "RetargetBoundaryCheck counts; nothing coerces",
       Unmechanised(
@@ -1666,7 +1790,9 @@ object Differences:
           "is REFUSED per site with a marker — java flow-scopes the binding and scala has no " +
           "expression that binds outside itself"
       ),
-      el("T18"),
+      measured(
+        "A pattern binding from an instanceof check is scoped to the surrounding control flow in Java; no Scala variable placement reproduces that scope faithfully, so it is refused per site."
+      ),
       Universal,
       "Tir.Tree.InstanceOf; SpoonTir's instanceof arm marks a CtPattern operand rather than throwing",
       Rendered("InstanceOf")
@@ -1678,7 +1804,9 @@ object Differences:
       "UNCITED — the receiver view and the member's type through it must be produced together",
       Loud,
       Handled,
-      el("G21"),
+      measured(
+        "A member access through an erased, wildcard-typed receiver must be typed using what the call itself renders, not the receiver's own erased view, decided separately for each argument."
+      ),
       Universal,
       "SpoonTir.erasedRecvResult; ErasedReceiverResultSpec",
       Lowered("CtInvocation", Dispatch.Expression)
@@ -1720,7 +1848,9 @@ object Differences:
       "UNCITED — Scala infers the same arguments where they are determined",
       NoImpact,
       Handled,
-      el("G2"),
+      measured(
+        "Where a Java diamond's type arguments are already fully determined, Scala infers the identical arguments on its own, so nothing needs to be pinned explicitly."
+      ),
       Universal,
       "SpoonTir.pinTypeArgs",
       Lowered("CtInvocation", Dispatch.Expression)
@@ -1732,7 +1862,9 @@ object Differences:
       "UNCITED — an unconstrained inference variable resolves to the lower bound",
       Loud,
       Handled,
-      el("G22"),
+      measured(
+        "An unconstrained method type parameter is inferred at its bound by Java but at the bottom type by Scala, so Java's resolved bound is pinned as an explicit argument."
+      ),
       Universal,
       "SpoonTir.pinUnconstrainedTypeArgs, whose reach is bounded by ENGINE-LIMITS G24's still-open vacuous-bound case",
       Lowered("CtInvocation", Dispatch.Expression)
@@ -1751,7 +1883,9 @@ object Differences:
       // perfectly and throws at run time.
       Mixed,
       Handled,
-      el("K17"),
+      measured(
+        "Casting a lambda literal into a functional interface as a checked assertion compiles cleanly but throws at run time instead of performing the conversion Java makes implicitly."
+      ),
       Universal,
       "SpoonTir.polyExpression, the ONE predicate, and SpoonTir.polyArgsUncast, which answers for it at both call dispatches",
       Lowered("CtInvocation", Dispatch.Expression)
@@ -1763,7 +1897,9 @@ object Differences:
       "UNCITED — the callee's variables are not in scope at the call site",
       Loud,
       Handled,
-      el("G12"),
+      measured(
+        "A callee's own type variables have no meaning at the call site, so the engine declines to resolve a raw argument through them and falls back to an explicit cast."
+      ),
       Universal,
       "SpoonTir.uncheckedGeneric's tpResolvable/calleeBounded decline",
       everyCall
@@ -1799,7 +1935,9 @@ object Differences:
       "UNCITED — the bound is checked at every use, so a naive erasure is rejected",
       Loud,
       Handled,
-      el("G9"),
+      measured(
+        "Scala checks a bounded type parameter at its erased type, unlike javac; erasing a self-referential bound to a plain top type fails, so it erases to its own bound."
+      ),
       Universal,
       "SpoonTir.erasureOfFormal's `seen` cycle cut",
       Both(Rendered("ClassDef"), Rendered("DefDef"))
@@ -1811,7 +1949,9 @@ object Differences:
       "UNCITED — an override's own bounds must match the parent's, not be re-derived",
       Loud,
       Open,
-      el("G19"),
+      measured(
+        "An overriding method's type-parameter bounds must be copied from the member it overrides rather than re-derived locally, because Java's implicit bound is not always wanted on the override."
+      ),
       Universal,
       "no symbol copies parent bounds; SpoonTir.erasureOfFormal is per-declaration",
       Rendered("DefDef")
@@ -1823,7 +1963,9 @@ object Differences:
       "UNCITED — a declared vararg becomes an array parameter, so callers must pack",
       Loud,
       Handled,
-      el("K6.5"),
+      measured(
+        "A vararg parameter is emitted as a plain array, so a call to another declaration with that vararg still builds the array explicitly, the way java's compiler packs it."
+      ),
       Universal,
       "SpoonTir.varargPack -> Tree.NewArray for an in-program callee",
       everyCall
@@ -1835,7 +1977,9 @@ object Differences:
       "UNCITED — ASSIGNABILITY to the parameter's array type decides, never `is an array`: a primitive array is assignable to nothing but its own, and at a `T[]...` slot a one-dimensional argument is assignable to the COMPONENT only",
       Silent,
       Handled,
-      el("G26"),
+      measured(
+        "Whether a vararg argument needs packing is decided by assignability to the array type versus the component type, never by whether the argument is already an array."
+      ),
       Universal,
       "SpoonTir.varargHoldsArray — componentAgrees, carrying both the primitive test and the arity test `dims(arg) >= dims(comp) + 1`; shared with SpoonTir.callConsults so the consult and the translation cannot disagree",
       everyCall
@@ -1847,7 +1991,9 @@ object Differences:
       "UNCITED — a class file's `T...` is a repeated parameter, so a bare array conforms as ONE element",
       Silent,
       Handled,
-      el("K6.5"),
+      measured(
+        "A class file's vararg parameter is read as a repeated parameter, so passing a bare array where java packed one behaves as a single argument unless it is spread."
+      ),
       Universal,
       "Tir.Tree.Repeated, emitted when SpoonTir.isExternalCallee holds",
       // …and the emitter half attaches at `Apply`, NOT `Repeated`: `TirEmitter.argTerms` FLATTENS
@@ -1863,7 +2009,9 @@ object Differences:
       "UNCITED — only a spec over the composition finds it",
       Loud,
       Handled,
-      el("K6.5"),
+      measured(
+        "Forwarding an array through another vararg parameter into an external method needs the same spreading as passing it directly, or the whole array collapses into one argument."
+      ),
       Universal,
       "SpoonTir.passedThrough -> Tir.Tree.Spread",
       Both(everyCall, Rendered("Spread"))
@@ -1899,7 +2047,9 @@ object Differences:
       "UNCITED — the DECLARATION is the source that is correct in all four",
       Loud,
       Handled,
-      el("G1"),
+      measured(
+        "A generic vararg's packed array element type must come from the parameter's own declaration, not from erasing it at the call site, the rule that governs every raw array."
+      ),
       Universal,
       "SpoonTir.varargPack's elemRef, in its four documented steps",
       everyCall
@@ -1911,7 +2061,9 @@ object Differences:
       "UNCITED — each form is a different lambda, and `Flags.isStatic` is the discriminator",
       Loud,
       Handled,
-      el("K8"),
+      measured(
+        "Method references are five different forms sharing one syntax, static, unbound, bound, constructor and array constructor, told apart by whether the method is static and by its arity."
+      ),
       Universal,
       "SpoonTir.methodRef -> Tir.Tree.MethodRef; TirEmitter's Tree.MethodRef arm",
       Both(Lowered("CtExecutableReferenceExpression", Dispatch.Expression), Rendered("MethodRef"))
@@ -1932,7 +2084,9 @@ object Differences:
           "(CollectionBoundaryCheck.Issue.ReifiedOccurrence) rather than answered, and one corpus " +
           "port's last remaining test failure is exactly that refusal"
       ),
-      el("K18"),
+      measured(
+        "A retyping only moves a value's static type; a check like instanceof asks about the object, which may be either representation, so both are checked or the site is refused."
+      ),
       Universal,
       "CollectionsTransform.reifiedTest/reifiedCast -> JavaCollections.Reified; the concrete-target " +
         "refusal is CollectionBoundaryCheck.Issue.ReifiedOccurrence",
@@ -1949,7 +2103,9 @@ object Differences:
       "UNCITED — scala has no subsignature rule; a method with no type parameters cannot override one with them",
       Loud,
       Handled,
-      el("G8.10"),
+      measured(
+        "Java lets an implementor drop a self-referential type parameter that appears only in the result; Scala has no such allowance, so that parameter is erased at the declaration instead."
+      ),
       Universal,
       "SpoonTir.unwritableResultVars erasing an F-BOUNDED, RESULT-ONLY method type parameter to its own " +
         "bound at the DECLARATION, which is the only instantiation ENGINE-LIMITS G8 could not refute",
