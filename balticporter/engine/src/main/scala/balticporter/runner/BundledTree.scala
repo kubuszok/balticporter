@@ -10,8 +10,8 @@ object BundledTree:
 
   val IndexName = "INDEX"
 
-  /** make `dest` hold exactly the indexed tree: every listed file written (left alone when its bytes already match, so mtimes stay stable), every other file under `dest` removed. A listed resource the
-    * loader cannot find is FATAL — a silently shorter tree is a port with a type missing.
+  /** make `dest` hold exactly the indexed tree: every listed file written (left alone when its bytes already match, so mtimes stay stable), every other file under `dest` removed. A listed resource
+    * the loader cannot find is FATAL — a silently shorter tree is a port with a type missing.
     */
   def extract(loader: ClassLoader, prefix: String, dest: Path): Path =
     val indexRes = s"$prefix/$IndexName"
@@ -23,7 +23,7 @@ object BundledTree:
     val written = listed.map { rel =>
       val target = root.resolve(rel).normalize
       require(target.startsWith(root), s"bundled tree: `$rel` escapes $root")
-      val in = Option(loader.getResourceAsStream(s"$prefix/$rel")).getOrElse(throw new IllegalStateException(s"bundled tree: `$indexRes` lists `$rel`, which is not on the classpath"))
+      val in    = Option(loader.getResourceAsStream(s"$prefix/$rel")).getOrElse(throw new IllegalStateException(s"bundled tree: `$indexRes` lists `$rel`, which is not on the classpath"))
       val bytes =
         try in.readAllBytes()
         finally in.close()
